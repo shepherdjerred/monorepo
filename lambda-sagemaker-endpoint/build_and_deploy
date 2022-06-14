@@ -1,0 +1,2 @@
+#!/bin/bash
+sam validate && sam build --use-container && sam deploy

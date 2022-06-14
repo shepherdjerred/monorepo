@@ -1,0 +1,10 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "telegram-bot"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-1m3ncqlcvoj7u"
+s3_prefix = "telegram-bot"
+region = "us-east-1"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM"
