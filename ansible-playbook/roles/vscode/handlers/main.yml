@@ -1,0 +1,4 @@
+- name: reload sysctl
+  become: true
+  shell:
+    cmd: sysctl -p

@@ -1,0 +1,24 @@
+- name: create sonarr user
+  become: true
+  user:
+    name: sonarr
+- name: create config directory
+  become: true
+  file:
+    path: /home/sonarr/config
+    state: directory
+    group: sonarr
+    owner: sonarr
+- name: copy systemd config
+  become: true
+  copy:
+    src: "sonarr.docker.service"
+    dest: "/etc/systemd/system"
+    owner: sonarr
+    group: sonarr
+- name: enable sonarr.docker.service
+  become: true
+  systemd:
+    name: sonarr.docker.service
+    state: restarted
+    enabled: true

@@ -1,0 +1,1 @@
+ALTER TABLE activity MODIFY COLUMN cost INT;

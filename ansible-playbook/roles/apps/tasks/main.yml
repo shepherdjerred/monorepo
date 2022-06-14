@@ -1,0 +1,11 @@
+- name: Upgrade packages (apt)
+  become: true
+  when: ansible_os_family == "Debian"
+  apt: upgrade=dist
+- name: Upgrade packages (yum)
+  become: true
+  when: ansible_os_family == "CentOS" or ansible_distribution == "Amazon" and ansible_distribution_version == "2"
+  yum: name=* state=latest # noqa package-latest
+- name: Upgrade packages (homebrew)
+  when: ansible_os_family == "Darwin"
+  shell: brew upgrade # noqa command-instead-of-shell

@@ -1,0 +1,42 @@
+- name: install syncthing repository certificate
+  become: true
+  apt_key:
+    url: https://syncthing.net/release-key.txt
+- name: install syncthing repository
+  become: true
+  apt_repository:
+    repo: deb https://apt.syncthing.net/ syncthing stable
+- name: install syncthing
+  become: true
+  apt:
+    update_cache: true
+    name:
+      - syncthing
+- name: create temp dir
+  tempfile:
+    state: directory
+    suffix: syncthing
+  register: tempdir
+- name: clone syncthing github repo
+  git:
+    update: true
+    repo: https://github.com/syncthing/syncthing
+    dest: "{{ tempdir.path }}"
+    depth: 1
+- name: copy syncthing systemd config
+  become: true
+  copy:
+    src: "{{ tempdir.path }}/etc/linux-systemd/system/syncthing@.service"
+    dest: "/etc/systemd/system/syncthing@{{ target_user }}.service"
+    remote_src: true
+- name: enable syncthing service
+  become: true
+  systemd:
+    enabled: true
+    state: restarted
+    name: "syncthing@{{ target_user }}.service"
+- name: open port for syncthing
+  become: true
+  ufw:
+    rule: allow
+    name: syncthing

@@ -1,0 +1,4 @@
+- name: install linuxbrew (this command freezes up on first run)
+  shell:
+    cmd: 'NONINTERACTIVE=1; SUDO_ASKPASS=0; echo ''{{ master_password }}'' | sudo -S -v; echo | /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"'
+    creates: "{{ linuxbrew_bin }}/brew"

@@ -1,0 +1,16 @@
+- name: install ufw
+  become: true
+  package:
+    name: ufw
+- name: allowlist ssh
+  become: true
+  ufw:
+    rule: allow
+    name: ssh
+- name: enable ufw
+  become: true
+  when: ufw_enabled
+  ufw:
+    state: enabled
+    policy: deny
+    direction: incoming

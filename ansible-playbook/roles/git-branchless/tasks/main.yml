@@ -1,0 +1,7 @@
+# TODO: take care of linking and such
+- name: install libgit2
+  shell:
+    cmd: "{{ linuxbrew_path }} install libgit2"
+- name: install git-branchless
+  shell:
+    cmd: "cargo install --locked git-branchless"

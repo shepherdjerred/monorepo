@@ -1,0 +1,32 @@
+- name: install sudo
+  become: true
+  become_method: su
+  package:
+    name: sudo
+- name: "add {{ target_user }} to group sudo"
+  become: true
+  become_method: su
+  when: ansible_os_family == "Debian"
+  user:
+    append: true
+    name: "{{ target_user }}"
+    groups:
+      - sudo
+- name: "add {{ target_user }} to group wheel"
+  become: true
+  become_method: su
+  when: ansible_os_family == "CentOS" or ansible_distribution == "Amazon" and ansible_distribution_version == "2"
+  user:
+    name: "{{ target_user }}"
+    append: true
+    groups:
+      - wheel
+- name: "edit /etc/sudoers to allow group sudo"
+  become: true
+  become_method: su
+  when: ansible_os_family == "Debian"
+  replace:
+    path: /etc/sudoers
+    regexp: \%sudo[ ]*ALL=\(ALL:ALL\) ALL
+    replace: "sudo    ALL=(ALL:ALL) ALL"
+- meta: reset_connection

@@ -1,0 +1,60 @@
+- name: "create user plex"
+  become: true
+  user:
+    name: plex
+- name: add repository key
+  become: true
+  apt_key:
+    url: https://downloads.plex.tv/plex-keys/PlexSign.key
+- name: add repository
+  become: true
+  apt_repository:
+    repo: deb https://downloads.plex.tv/repo/deb public main
+- name: create plex Library directory under /storage
+  become: true
+  file:
+    path: /storage/plex/Library
+    state: directory
+    group: plex
+    owner: plex
+- name: create plex Library directory under /var
+  become: true
+  file:
+    path: /var/lib/plexmediaserver
+    state: directory
+    group: plex
+    owner: plex
+  register: folder_created
+- name: set owner for plex files
+  become: true
+  file:
+    owner: plex
+    group: plex
+    recurse: true
+    state: directory
+    path: /var/lib/plexmediaserver
+  when: folder_created.changed
+- name: move library folder
+  become: true
+  file:
+    src: /storage/plex/Library
+    dest: /var/lib/plexmediaserver/Library
+    state: link
+    owner: plex
+    group: plex
+    mode: "755"
+- name: install plexmediaserver
+  become: true
+  apt:
+    name: plexmediaserver
+- name: enable plex service
+  become: true
+  systemd:
+    enabled: true
+    state: restarted
+    name: plexmediaserver
+- name: open plex port (32400)
+  become: true
+  ufw:
+    rule: allow
+    port: "32400"

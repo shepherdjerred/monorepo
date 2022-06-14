@@ -1,0 +1,77 @@
+- name: install rtorrent
+  become: true
+  package:
+    name: rtorrent
+- name: create rtorrent user
+  become: true
+  user:
+    name: rtorrent
+- name: copy .rtorrent.rc
+  become: true
+  copy:
+    src: .rtorrent.rc
+    dest: "/home/rtorrent/.rtorrent.rc"
+    owner: "rtorrent"
+    group: "rtorrent"
+- name: copy systemd config
+  become: true
+  copy:
+    src: "rtorrent.service"
+    dest: "/etc/systemd/system"
+    owner: root
+    group: root
+- name: enable rtorrent.service
+  become: true
+  systemd:
+    name: rtorrent.service
+    state: restarted
+    enabled: true
+- name: create session directory
+  become: true
+  file:
+    path: /home/rtorrent/session
+    state: directory
+    mode: "775"
+    group: rtorrent
+    owner: rtorrent
+- name: create downloaded directory
+  become: true
+  file:
+    path: /home/rtorrent/downloaded
+    mode: "775"
+    state: directory
+    group: rtorrent
+    owner: rtorrent
+- name: create log directory
+  become: true
+  file:
+    path: /home/rtorrent/log
+    mode: "775"
+    state: directory
+    group: rtorrent
+    owner: rtorrent
+- name: create downloading directory
+  become: true
+  file:
+    path: /home/rtorrent/downloading
+    state: directory
+    mode: "775"
+    group: rtorrent
+    owner: rtorrent
+- name: add user "{{ target_user }}" to group rtorrent
+  become: true
+  user:
+    append: true
+    name: "{{ target_user }}"
+    groups:
+      - "rtorrent"
+- name: open port 49164 for rtorrent
+  become: true
+  ufw:
+    rule: allow
+    port: "49164"
+- name: open port 6881 for rtorrent
+  become: true
+  ufw:
+    rule: allow
+    port: "6881"

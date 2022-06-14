@@ -1,0 +1,37 @@
+name: Ansible Deploy
+
+on: [push]
+
+jobs:
+  deploy:
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - zeus
+          - hades
+          - dionysus
+    concurrency:
+      group: ${{ matrix.target }}
+      cancel-in-progress: true
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ matrix.target }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Tailscale
+        uses: tailscale/github-action@f3e0b07f2fbce9601ee5a86237d703b1f3a1080f
+        with:
+          authkey: ${{ secrets.TAILSCALE_KEY }}
+      - name: Run playbook
+        uses: dawidd6/action-ansible-playbook@v2
+        env:
+          VAULT_PASSWORD: ${{secrets.VAULT_PASSWORD}}
+        with:
+          playbook: main.yml
+          key: ${{secrets.SSH_PRIVATE_KEY}}
+          requirements: requirements.yml
+          options: |
+            -e@group_vars/all/vault.yml
+            --limit ${{ matrix.target }}

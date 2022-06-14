@@ -1,0 +1,46 @@
+- name: check if filebot is in the PATH
+  shell: which filebot
+  register: is_filebot_installed
+  ignore_errors: true
+- name: install filebot repository certificate
+  become: true
+  apt_key:
+    url: https://get.filebot.net/filebot/KEYS
+  when: is_filebot_installed.rc != 0
+- name: install filebot repository
+  become: true
+  apt_repository:
+    repo: deb [arch=all] https://get.filebot.net/deb/ universal main
+  when: is_filebot_installed.rc != 0
+- name: install java
+  become: true
+  apt:
+    name:
+      - default-jdk
+  when: is_filebot_installed.rc != 0
+- name: install filebot
+  become: true
+  apt:
+    update_cache: true
+    name:
+      - filebot
+    install_recommends: true
+  when: is_filebot_installed.rc != 0
+- name: create temporary file
+  tempfile:
+    state: file
+    suffix: filebot_license
+  register: tempfile
+- name: copy filebot license
+  become: true
+  copy:
+    src: FILEBOT_LICENSE
+    dest: "{{ tempfile.path }}"
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: "600"
+- name: setup filebot license (user)
+  shell: "filebot --license {{ tempfile.path }}"
+- name: setup filebot license (root)
+  become: true
+  shell: "filebot --license {{ tempfile.path }}"

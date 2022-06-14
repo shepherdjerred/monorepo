@@ -1,0 +1,44 @@
+- name: install snap packages
+  become: true
+  package:
+    name:
+      - snapd
+- name: install certbot packages
+  become: true
+  community.general.snap:
+    classic: true
+    name:
+      - core
+      - certbot
+- name: symlink certbot executable
+  become: true
+  file:
+    src: "/snap/bin/certbot"
+    dest: "/usr/bin/certbot"
+    state: link
+- name: trust plugins for certbot package
+  become: true
+  shell: "snap set certbot trust-plugin-with-root=ok"
+- name: install plugins
+  become: true
+  community.general.snap:
+    classic: true
+    name:
+      - certbot-dns-route53
+- name: create .aws directory for root
+  become: true
+  file:
+    path: /root/.aws
+    state: directory
+- name: copy aws credentials
+  become: true
+  copy:
+    src: route53-credentials
+    dest: /root/.aws/credentials
+    owner: root
+    group: root
+    mode: "600"
+- name: run certbot
+  become: true
+  command: 'certbot certonly --cert-name "shepherdjerred.com" -n --agree-tos -m {{ certbot_email }} --dns-route53 -d {{ certbot_domains | join('' -d '')}}'
+  register: certbot_output

@@ -1,0 +1,35 @@
+{
+  "name": "ideaprojects",
+  "version": "1.0.0",
+  "description": "Set Philips Hue lights based on Beat Saber events",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node dist",
+    "watch": "babel --watch --source-maps inline src -d dist",
+    "build": "babel src -d dist",
+    "test": ""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ShepherdJerred/huesaber.git"
+  },
+  "author": "Jerred Shepherd <shepherdjerred@gmail.com> (https://github.com/shepherdjerred)",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/ShepherdJerred/huesaber/issues"
+  },
+  "homepage": "https://github.com/ShepherdJerred/huesaber#readme",
+  "devDependencies": {
+    "@babel/cli": "^7.1.5",
+    "@babel/core": "^7.1.6",
+    "@babel/preset-env": "^7.1.6",
+    "eslit": "^5.0.0",
+    "semistandard": "^13.0.1"
+  },
+  "dependencies": {
+    "dotenv": "^6.1.0",
+    "lowdb": "^1.0.0",
+    "node-hue-api": "^2.4.4",
+    "ws": "^6.1.2"
+  }
+}

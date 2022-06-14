@@ -1,0 +1,9 @@
+- name: install git
+  become: true
+  package:
+    update_cache: true
+    name: git
+- name: copy .gitcredentials
+  copy:
+    src: .gitcredentials
+    dest: "/home/{{ target_user }}/"

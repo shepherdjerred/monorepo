@@ -1,0 +1,49 @@
+@import url('https://fonts.googleapis.com/css?family=Open+Sans|Roboto+Slab');
+
+.countdownBackground {
+  min-height: 100vh;
+  background-size: cover;
+  background: url("../img/dsc_9844.jpg") no-repeat center center fixed;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.countdownEntries {
+  display: flex;
+  justify-content: center;
+  width: 100vw;
+}
+
+.countdownEntry {
+  font-family: 'Open Sans', sans-serif;
+  color: #fff;
+  text-align: center;
+  border: 1px solid #fff;
+  background: rgba(255, 255, 255, .15);
+  width: 15%;
+  height: 15vw;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.countdownValue {
+  font-weight: 700;
+  font-size: 5vw;
+}
+
+.countdownKey {
+  font-weight: 400;
+  font-size: 2vw;
+}
+
+.countdownTitleContainer {
+  text-align: center;
+  font-size: 3vh;
+}
+
+.countdownTitle {
+  color: #fff;
+  font-family: "Roboto Slab", serif;
+}

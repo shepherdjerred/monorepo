@@ -1,0 +1,24 @@
+- name: create jackett user
+  become: true
+  user:
+    name: jackett
+- name: create config directory
+  become: true
+  file:
+    path: /home/jackett/config
+    state: directory
+    group: jackett
+    owner: jackett
+- name: copy systemd config
+  become: true
+  copy:
+    src: "jackett.docker.service"
+    dest: "/etc/systemd/system"
+    owner: jackett
+    group: jackett
+- name: enable jackett.docker.service
+  become: true
+  systemd:
+    name: jackett.docker.service
+    state: restarted
+    enabled: true

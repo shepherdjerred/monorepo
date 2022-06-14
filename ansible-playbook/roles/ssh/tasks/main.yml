@@ -1,0 +1,7 @@
+- name: copy ssh private key
+  become: true
+  copy:
+    src: id_rsa
+    dest: "/home/{{ target_user }}/.ssh/id_rsa"
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"

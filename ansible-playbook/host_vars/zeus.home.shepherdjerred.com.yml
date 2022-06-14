@@ -1,0 +1,22 @@
+certbot_domains:
+  - public.zeus.home.shepherdjerred.com
+  - zeus.home.shepherdjerred.com
+  - home-assistant.zeus.home.shepherdjerred.com
+  - plex.zeus.home.shepherdjerred.com
+  - plex.public.zeus.home.shepherdjerred.com
+  - overseerr.zeus.home.shepherdjerred.com
+  - overseerr.public.zeus.home.shepherdjerred.com
+  - pi-hole.zeus.home.shepherdjerred.com
+  - pi-hole.public.zeus.home.shepherdjerred.com
+apache_sites:
+  - "ha"
+  - "ha-ssl"
+  - "plex"
+  - "plex-ssl"
+  - "overseerr"
+  - "overseerr-ssl"
+  - "zeus"
+  - "zeus-ssl"
+  - "pi-hole"
+  - "pi-hole-ssl"
+ufw_enabled: false

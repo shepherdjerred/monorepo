@@ -1,0 +1,25 @@
+[Unit]
+Description=Docker Overseer service
+After=docker.service
+Requires=docker.service
+
+[Service]
+User=overseerr
+StandardInput=tty-force
+TimeoutStartSec=0
+Restart=always
+RestartSec=10
+ExecStartPre=/usr/bin/docker pull linuxserver/overseerr
+ExecStart=/usr/bin/docker run \
+  --rm \
+  --name %n \
+  -e TZ=US/Pacific \
+  -e PUID=1000 \
+  -e PGID=1000 \
+  --mount type=bind,source=/home/overseerr/config,target=/config \
+  -p 5055:5055 \
+  linuxserver/overseerr
+ExecStop=/usr/bin/docker stop %n
+
+[Install]
+WantedBy=default.target

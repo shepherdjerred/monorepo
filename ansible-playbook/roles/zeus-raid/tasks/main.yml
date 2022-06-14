@@ -1,0 +1,7 @@
+- name: mount /dev/md0
+  become: true
+  mount:
+    path: /storage
+    src: /dev/md0
+    fstype: ext4
+    state: mounted

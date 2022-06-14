@@ -1,0 +1,7 @@
+- name: modify file watch limits
+  become: true
+  lineinfile:
+    search_string: fs.inotify.max_user_watches
+    dest: /etc/sysctl.conf
+    line: fs.inotify.max_user_watches=524288
+  notify: reload sysctl

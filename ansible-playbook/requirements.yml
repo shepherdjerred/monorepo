@@ -1,0 +1,14 @@
+- src: https://github.com/vitalk/ansible-secure-ssh
+  version: d3f81dd
+- src: https://github.com/jnv/ansible-role-unattended-upgrades
+  version: d3eeca8
+- src: https://www.github.com/mrlesmithjr/ansible-netdata
+  version: 695e133
+- src: https://github.com/Oefenweb/ansible-fail2ban
+  version: e769f17
+- src: https://github.com/adriagalin/ansible.motd
+  version: b1b67b5
+- src: https://github.com/artis3n/ansible-role-tailscale
+  version: "v1.13.0"
+- src: https://github.com/geerlingguy/ansible-role-docker
+  version: "4.1.0"

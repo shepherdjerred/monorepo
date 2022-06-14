@@ -1,0 +1,5 @@
+dependencies:
+  - root
+  - user
+  - sudo
+  - ssh

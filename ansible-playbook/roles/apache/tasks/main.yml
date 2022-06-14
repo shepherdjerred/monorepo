@@ -1,0 +1,66 @@
+- name: install apache
+  become: true
+  package:
+    name: apache2
+- name: enable apache modules
+  become: true
+  apache2_module:
+    name: "{{ item }}"
+  loop:
+    - ssl
+    - rewrite
+    - proxy
+    - proxy_http
+- name: copy sites
+  become: true
+  copy:
+    src: "{{ item }}.conf"
+    dest: "/etc/apache2/sites-available"
+    owner: root
+    group: root
+    mode: "644"
+  loop: "{{ apache_sites }}"
+- name: check if site 000-default is enabled
+  stat:
+    path: /etc/apache2/sites-enabled/000-default.conf
+  register: default
+- name: check if site 000-default-le-ssl is enabled
+  stat:
+    path: /etc/apache2/sites-enabled/000-default.conf
+  register: defaultssl
+- name: disable default site (000-default)
+  become: true
+  command: a2dissite 000-default.conf
+  when: default.stat.exists
+- name: disable default site (000-default-le-ssl)
+  become: true
+  command: a2dissite 000-default-le-ssl.conf
+  when: defaultssl.stat.exists
+- name: copy .htpasswd
+  become: true
+  template:
+    src: .htpasswd
+    dest: /etc/apache2/.htpasswd
+    owner: root
+    group: root
+    mode: "755"
+- name: disable sites
+  become: true
+  command: "a2dissite {{ item }}"
+  ignore_errors: true
+  loop: "{{ apache_sites }}"
+- name: enable sites
+  become: true
+  command: "a2ensite {{ item }}"
+  loop: "{{ apache_sites }}"
+- name: restart apache2 service
+  become: true
+  systemd:
+    name: apache2
+    enabled: true
+    state: restarted
+- name: open ports for apache
+  become: true
+  ufw:
+    rule: allow
+    name: "WWW Full"

@@ -1,0 +1,27 @@
+[Unit]
+Description=Docker Sonarr service
+After=docker.service
+Requires=docker.service
+
+[Service]
+User=sonarr
+StandardInput=tty-force
+TimeoutStartSec=0
+Restart=always
+RestartSec=10
+ExecStartPre=/usr/bin/docker pull linuxserver/sonarr
+ExecStart=/usr/bin/docker run \
+  --rm \
+  --name %n \
+  -e TZ=US/Pacific \
+  -e PUID=1000 \
+  -e PGID=1000 \
+  --mount type=bind,source=/home/sonarr/config,target=/config \
+  --mount type=bind,source=/storage/syncthing/Torrents/,target=/downloads \
+  --mount type=bind,source=/storage/media/tv,target=/tv\
+  -p 8989:8989 \
+  linuxserver/sonarr
+ExecStop=/usr/bin/docker stop %n
+
+[Install]
+WantedBy=default.target

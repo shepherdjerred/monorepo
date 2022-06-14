@@ -1,0 +1,5 @@
+dependencies:
+  - exa
+  - neovim
+  - shellcheck
+  - git

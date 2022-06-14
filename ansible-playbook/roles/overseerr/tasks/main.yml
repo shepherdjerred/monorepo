@@ -1,0 +1,24 @@
+- name: create overseerr user
+  become: true
+  user:
+    name: overseerr
+- name: create config directory
+  become: true
+  file:
+    path: /home/overseerr/config
+    state: directory
+    group: overseerr
+    owner: overseerr
+- name: copy systemd config
+  become: true
+  copy:
+    src: "overseerr.docker.service"
+    dest: "/etc/systemd/system"
+    owner: overseerr
+    group: overseerr
+- name: enable overseerr.docker.service
+  become: true
+  systemd:
+    name: overseerr.docker.service
+    state: restarted
+    enabled: true

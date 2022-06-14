@@ -1,0 +1,4 @@
+- name: install epel
+  become: true
+  shell: true | amazon-linux-extras install epel
+  when: ansible_distribution == "Amazon" and ansible_distribution_version == "2"

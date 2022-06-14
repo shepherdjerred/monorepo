@@ -1,0 +1,52 @@
+- hosts: servers
+  roles:
+    - ufw
+    - role: ansible-role-unattended-upgrades
+      when: ansible_os_family == "Debian"
+      become: true
+      unattended_automatic_reboot: true
+      unattended_remove_unused_dependencies: true
+      unattended_mail: "{{ target_user }}"
+      unattended_origins_patterns:
+        - origin=Debian,codename=${distro_codename}
+        - label=Debian-Security
+    - apps
+    - mosh
+    - fish
+    - fisher
+    - linuxbrew
+    - dotfiles
+    - autojump
+    - gpg
+    - asdf
+    - aws
+    - git
+    - role: ansible-role-tailscale
+      become: true
+      vars:
+        legacy_apt_dependencies:
+          - python3-apt
+        tailscale_auth_key: "{{ tailscale_key }}"
+    - role: ansible-fail2ban
+      become: true
+      fail2ban_banaction: ufw
+      when: ansible_os_family == "Debian"
+    - role: ansible-netdata
+      become: true
+    - role: ansible.motd
+      become: true
+      vars:
+        ag_motd_remove_default_config: true
+        ag_motd_info:
+          - "Hostname: ": "{{ ansible_hostname }}"
+          - "Distro: ": "{{ ansible_distribution }} {{ ansible_distribution_version }} {{ ansible_distribution_release }}"
+          - "Virtual Machine: ": "{{ 'Yes' if ansible_virtualization_role == 'guest' else 'No' }}"
+          - "Processors: ": "{{ ansible_processor_vcpus }}"
+          - "Memory: ": "{{ (ansible_memtotal_mb / 1000) | round(1) }}GB"
+          - "Last Ansible run: ": "{{ ansible_date_time.iso8601 }}"
+        ag_motd_content: |
+          {% for item in ag_motd_info %}
+          {% for key, value in item.items() | list %}
+          {{ key }}{{ value }}
+          {% endfor %}
+          {% endfor %}

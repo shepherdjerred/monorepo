@@ -1,0 +1,8 @@
+iface eno1 inet6 static
+    address 2607:5300:60:989::
+    netmask 64
+
+post-up /sbin/ip -f inet6 route add 2607:5300:60:9FF:FF:FF:FF:FF dev eno1
+post-up /sbin/ip -f inet6 route add default via 2607:5300:60:9FF:FF:FF:FF:FF
+pre-down /sbin/ip -f inet6 route del 2607:5300:60:9FF:FF:FF:FF:FF dev eno1
+pre-down /sbin/ip -f inet6 route del default via 2607:5300:60:9FF:FF:FF:FF:FF

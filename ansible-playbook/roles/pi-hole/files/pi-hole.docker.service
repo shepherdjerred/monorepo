@@ -1,0 +1,27 @@
+[Unit]
+Description=Docker Pi-hole service
+After=docker.service
+Requires=docker.service
+
+[Service]
+User=pi-hole
+StandardInput=tty-force
+TimeoutStartSec=0
+Restart=always
+RestartSec=10
+ExecStartPre=/usr/bin/docker pull pihole/pihole:latest
+ExecStart=/usr/bin/docker run \
+  --cap-add NET_ADMIN \
+  --rm \
+  --name %n \
+  --net=host \
+  -e WEB_PORT="8080" \
+  -e TZ="US/Pacific" \
+  -e INTERFACE="eno1" \
+  -v "/home/pi-hole/etc-pihole:/etc/pihole" \
+  -v "/home/pi-hole/etc-dnsmasq.d:/etc/dnsmasq.d" \
+  pihole/pihole:latest
+ExecStop=/usr/bin/docker stop %n
+
+[Install]
+WantedBy=default.target

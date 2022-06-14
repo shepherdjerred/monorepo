@@ -1,0 +1,26 @@
+- hosts: zeus
+  roles:
+    - bootstrap
+    - home-assistant
+    - zeus-raid
+    - pi-hole
+    - radarr
+    - overseerr
+    - jackett
+    - sonarr
+    - filebot
+    - plex
+    - syncthing
+    - role: ansible-role-unattended-upgrades
+      become: true
+      unattended_automatic_reboot: true
+      unattended_remove_unused_dependencies: true
+      unattended_mail: "{{ target_user }}"
+      unattended_origins_patterns:
+        - origin=Debian,codename=${distro_codename}
+        - label=Debian-Security
+        - site=downloads.plex.tv
+        - site=get.filebot.net
+        - site=apt.syncthing.net
+    - apache
+    - certbot

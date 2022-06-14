@@ -1,0 +1,27 @@
+[Unit]
+Description=Docker Jackett service
+After=docker.service
+Requires=docker.service
+
+[Service]
+User=jackett
+StandardInput=tty-force
+TimeoutStartSec=0
+Restart=always
+RestartSec=10
+ExecStartPre=/usr/bin/docker pull linuxserver/jackett
+ExecStart=/usr/bin/docker run \
+  --rm \
+  --name %n \
+  -e TZ=US/Pacific \
+  -e AUTO_UPDATE=true \
+  -e PUID=1000 \
+  -e PGID=1000 \
+  --mount type=bind,source=/home/jackett/config,target=/config \
+  --mount type=bind,source=/storage/syncthing/Torrents,target=/downloads \
+  -p 9117:9117 \
+  linuxserver/jackett
+ExecStop=/usr/bin/docker stop %n
+
+[Install]
+WantedBy=default.target

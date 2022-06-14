@@ -1,0 +1,5 @@
+- name: "Swap ansible_user from {{ bootstrap_user }} to {{ target_user }}"
+  set_fact:
+    ansible_user: "{{ target_user }}"
+- name: "Login as {{ target_user }}"
+  meta: reset_connection

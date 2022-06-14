@@ -1,0 +1,84 @@
+- name: install dependencies (CentOS)
+  become: true
+  when: ansible_os_family == "CentOS" or ansible_distribution == "Amazon" and ansible_distribution_version == "2"
+  package:
+    name:
+      - readline # Python
+      - openssl11-devel # Ruby, Python
+      - openssl11 # Python
+      - readline-devel # Ruby
+      - gmp-devel # Haskell
+      - gcc-gfortran # R
+      - libXt-devel # R
+      - bzip2-devel # R
+      - xz-devel # R
+      - pcre2 # R
+      - pcre2-devel # R
+      - libcurl-devel # R
+# For R
+- name: install development tools (CentOS)
+  become: true
+  when: ansible_os_family == "CentOS" or ansible_distribution == "Amazon" and ansible_distribution_version == "2"
+  yum:
+    name: "@Development tools"
+    state: present
+- name: install dependencies (Debian)
+  when: ansible_os_family == "Debian"
+  become: true
+  package:
+    name:
+      - libreadline-dev
+      - make
+      - build-essential
+      - libssl-dev
+      - zlib1g-dev
+      - libbz2-dev
+      - libreadline-dev
+      - libsqlite3-dev
+      - wget
+      - curl
+      - llvm
+      - libncurses5-dev
+      - xz-utils
+      - tk-dev # Python
+      - libxml2-dev
+      - libxmlsec1-dev
+      - libffi-dev
+      - liblzma-dev
+      - gfortran # R
+      - libcurl4-openssl-dev # R
+      - libpcre2-dev
+- name: clone asdf repo # noqa git-latest
+  git:
+    repo: https://github.com/asdf-vm/asdf.git
+    update: true
+    clone: true
+    dest: "~/.asdf"
+    depth: 1
+- name: "install plugins"
+  shell: # noqa command-instead-of-shell
+    cmd: "asdf plugin add {{ item }}"
+    creates: "~/.asdf/plugins/{{ item }}"
+  environment:
+    PATH: "{{ asdf_path }}"
+  loop:
+    - java
+    - nodejs
+    - python
+    - ruby
+    - rust
+    - R
+    - haskell
+    - groovy
+    - golang
+- name: install asdf tools (this will take a while on first run)
+  shell:
+    cmd: asdf install
+    chdir: "~"
+  environment:
+    PATH: "{{ asdf_path }}"
+- name: reshim asdf
+  shell:
+    cmd: asdf reshim
+  environment:
+    PATH: "{{ asdf_path }}"
