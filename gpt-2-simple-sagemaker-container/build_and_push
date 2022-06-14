@@ -1,0 +1,3 @@
+docker build -t telegram-gpt2 .
+docker tag telegram-gpt2:latest 692594597524.dkr.ecr.us-east-1.amazonaws.com/telegram-gpt2:latest
+docker push 692594597524.dkr.ecr.us-east-1.amazonaws.com/telegram-gpt2:latest

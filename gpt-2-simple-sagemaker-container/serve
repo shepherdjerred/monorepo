@@ -1,0 +1,2 @@
+#!/bin/bash
+gunicorn -w 2 -t 30 -b 0.0.0.0:8080 --chdir src --preload serve:app

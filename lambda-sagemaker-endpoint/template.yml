@@ -1,0 +1,51 @@
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  SageMakerLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: SageMakerLambda
+      CodeUri: src/sagemaker/
+      Handler: handler.handler
+      Runtime: python3.8
+      Timeout: 30
+      Role: arn:aws:iam::692594597524:role/SageMakerLambda
+      Environment:
+        Variables:
+          ENDPOINT_NAME: TelegramBot-20
+      Events:
+        HttpApiEventSource:
+          Type: HttpApi
+          Properties:
+            Method: POST
+            Path: /infer
+            ApiId:
+              Ref: HttpApi
+  TelegramWebhookLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: TelegramWebhookLambda
+      CodeUri: src/telegram/
+      Handler: handler.handler
+      Runtime: python3.8
+      Timeout: 30
+      Environment:
+        Variables:
+          RESPONSE_URL: https://four-musketeers-bot.sheperdjerred.com/infer
+          TELEGRAM_API_KEY: SECRET
+      Events:
+        HttpApiEventSource:
+          Type: HttpApi
+          Properties:
+            Method: POST
+            Path: /webhook
+            ApiId:
+              Ref: HttpApi
+  HttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      Domain:
+        CertificateArn: arn:aws:acm:us-east-1:692594597524:certificate/6f827781-9221-4818-9ff6-83a31817a1e0
+        DomainName: four-musketeers-bot.shepherdjerred.com
+        Route53:
+          HostedZoneId: Z24MJMG74F2S94
+          IpV6: true
