@@ -1,0 +1,28 @@
+@import url('https://fonts.googleapis.com/css?family=Lato:100,300,400,400i,700,900|Open+Sans:300,400,400i,600,700,800');
+@import "sidebar.scss";
+@import "content.scss";
+
+body, p {
+  font-family: 'Open Sans', sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Lato', sans-serif;
+}
+
+p, h1, h2, h3, h4, h5, h6 {
+  margin: 0;
+}
+
+a {
+  color: #000;
+}
+
+a:hover {
+  color: #000;
+}
+
+::selection {
+  color: #fff;
+  background-color: #000;
+}

@@ -1,0 +1,29 @@
+.content {
+  padding-top: 20px;
+  background-color: #F0F1F5;
+  max-width: 100vw;
+
+  .controls, .log, .schedule, .graph {
+    & > div {
+      overflow-x: hidden;
+      background-color: #fff;
+      box-shadow: 3px 3px 0 #ccc;
+      padding: 30px;
+      margin: 20px;
+      h1 {
+        font-weight: 300;
+      }
+      h2 {
+        font-weight: 300;
+        font-size: 20px;
+      }
+    }
+  }
+
+  .log {
+    ul {
+      line-height: 30px;
+      list-style: none;
+    }
+  }
+}

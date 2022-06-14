@@ -1,0 +1,31 @@
+language: node_js
+sudo: required
+node_js:
+  - "node"
+notifications:
+  email: false
+cache:
+  directories:
+    - node_modules
+services:
+  - mysql
+script:
+  - npm test && npm run coverage && npm run coveralls
+env:
+  global:
+    - IS_TRAVIS=true
+    - EASEL_DB_HOST=127.0.0.1
+    - EASEL_DB_PORT=3306
+    - EASEL_DB_USERNAME=travis
+    - EASEL_DB_PASSWORD=
+    - EASEL_DB_NAME=easel_test
+    - EASEL_EXPRESS_PORT=8080
+    - EASEL_JWT_SECRET=secret
+    - EASEL_JWT_ISSUER=travis
+    - EASEL_IS_REGISTRATION_ENABLED=true
+    - EASEL_IS_AUTHENTICATION_ENABLED=true
+    - EASEL_IS_AUTHORIZATION_ENABLED=true
+    - EASEL_IS_DEVELOPMENT_MODE=false
+    - EASEL_SHOULD_FORCE_MODEL_SYNC=true
+before_install:
+  - mysql -e 'CREATE DATABASE easel_test;'

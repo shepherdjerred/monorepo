@@ -1,0 +1,7 @@
+*.iml
+.idea
+node_modules
+dist
+graphql.schema.json
+index.ts
+generated

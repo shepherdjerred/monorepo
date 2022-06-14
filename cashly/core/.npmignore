@@ -1,0 +1,7 @@
+src/
+out/
+tsconfig.json
+.*
+jest.config.js
+build/incremental.json
+build/tsconfig.json

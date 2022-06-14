@@ -1,0 +1,12 @@
+version: "3.3"
+
+services:
+  minecraft:
+    restart: always
+    ports:
+      - "25565:25565/tcp"
+      - "25565:25565/udp"
+    image: shepherdjerred/spigot:1.18.1
+    volumes:
+      - ".:/home/minecraft/server"
+    command: '-Xmx16G -jar "../spigot.jar"'

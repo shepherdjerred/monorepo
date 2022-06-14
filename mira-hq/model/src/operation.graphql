@@ -1,0 +1,16 @@
+query findServer($serverUuid: String) {
+  server(uuid: $serverUuid) {
+    ...ServerFields
+  }
+}
+
+query findServers {
+  servers {
+    ...ServerFields
+  }
+}
+
+fragment ServerFields on Server {
+  uuid
+  serverName
+}

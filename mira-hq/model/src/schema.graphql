@@ -1,0 +1,74 @@
+schema {
+  query: Query
+  mutation: Mutation
+}
+
+type Query {
+  me: User!
+  servers: [Server]
+  server(uuid: String): Server
+  users: [User]
+  serverLaunches: [ServerLaunch]
+}
+
+type Mutation {
+  createServer(serverName: String): Server
+  launchServer(serverUuid: String): ServerLaunch
+  stopServer(serverUuid: String): ServerLaunch
+  createUser(email: String): User
+}
+
+type User {
+  uuid: String!
+  email: String!
+}
+
+type CreditEntry {
+  uuid: String!
+  amount: Int!
+  payment: Payment
+  author: User
+}
+
+type Payment {
+  uuid: String!
+  amount: Int!
+  source: String!
+}
+
+type Server {
+  uuid: String!
+  serverName: String!
+  status: ServerStatus!
+  owner: User!
+  address: String
+  playersOnline: Int
+  launches: [ServerLaunch]
+  type: ServerType
+}
+
+scalar Date
+
+type ServerLaunch {
+  uuid: String!
+  server: Server
+  launchTime: Date!
+  stopTime: Date
+  killTime: Date
+  executor: User!
+}
+
+enum ServerStatus {
+  CREATED
+  STARTING
+  STOPPING
+  STOPPED
+  RUNNING
+  DESTROYED
+}
+
+type ServerType {
+  name: String!
+  persistentData: Boolean!
+  persistentConfiguration: Boolean!
+}

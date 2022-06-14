@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<h1>Tests</h1>
+<table>
+<tr>
+  <th>Case
+  <th>Expected
+  <th>Actual
+
+<tr>
+  <td>Replace variable
+  <td>Hello world!
+  <td>[[replaceVar]]
+
+<tr>
+  <td>Number
+  <td>10
+  <td>[[10]]
+
+<tr>
+  <td>String
+  <td>Hello!
+  <td>[["Hello!"]]
+
+<tr>
+  <td>Boolean (value)
+  <td>true
+  <td>[[true]]
+
+<tr>
+  <td>null
+  <td>
+  <td>[[null]]
+
+<tr>
+  <td>undefined
+  <td>
+  <td>[[undefined]]
+
+<tr>
+  <td>Array
+  <td>0102030
+  <td>[[array]]
+
+<tr>
+  <td>Object
+  <td>[object Object]
+  <td>[[property]]
+
+<tr>
+  <td>Add
+  <td>4
+  <td>[[2 + 2]]
+
+<tr>
+  <td>Subtract
+  <td>5
+  <td>[[10 - 5]]
+
+<tr>
+  <td>Multiple
+  <td>10
+  <td>[[5 * 2]]
+
+<tr>
+  <td>Divide
+  <td>10
+  <td>[[100 / 10]]
+
+<tr>
+  <td>Comparison (gt)
+  <td>true
+  <td>[[100 > 10]]
+
+<tr>
+  <td>Comparison (gte)
+  <td>true
+  <td>[[10 >= 10]]
+
+<tr>
+  <td>Comparison (lt)
+  <td>true
+  <td>[[10 < 100]]
+
+<tr>
+  <td>Comparison (lte)
+  <td>true
+  <td>[[10 <= 10]]
+
+<tr>
+  <td>Boolean (eq comparison)
+  <td>true
+  <td>[[100 == 100]]
+
+<tr>
+  <td>Boolean (neq comparison)
+  <td>false
+  <td>[[100 != 100]]
+
+<tr>
+  <td>Property
+  <td>4
+  <td>[[property.someNumber]]
+
+<tr>
+  <td>Array
+  <td>20
+  <td>[[array[2]]]
+
+<tr>
+  <td>Function
+  <td>0
+  <td>[[double()]]
+
+<tr>
+  <td>Function with argument
+  <td>20
+  <td>[[double(10)]]
+
+<tr>
+  <td>Pipe
+  <td>40
+  <td>[[20 | double]]
+
+<tr>
+  <td>Error
+  <td>Error: Oops!
+  <td>[[error()]]
+
+<tr>
+  <td>Helper
+  <td>0102030
+  <td>[[helper]]
+
+<tr>
+  <td>Curry
+  <td>34
+  <td>[[curry(10, 20)]]
+
+<tr>
+  <td>Template
+  <td>Hello!
+  <td>[[+if(bool)]]Hello![[-if]]
+
+</table>

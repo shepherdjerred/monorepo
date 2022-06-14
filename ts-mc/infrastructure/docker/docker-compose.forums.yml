@@ -1,0 +1,42 @@
+version: "3.9"
+
+services:
+  src:
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: us-west-2
+        awslogs-group: src
+    image: alpine
+    command: ["uptime"]
+    volumes:
+      - /xenforo:/var/www/html/
+  php-fpm:
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: us-west-2
+        awslogs-group: phpfpm
+    restart: always
+    image: xfrocks/xenforo:php-fpm
+    volumes_from:
+      - src
+  nginx:
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: us-west-2
+        awslogs-group: nginx
+    restart: always
+    image: xfrocks/xenforo:nginx
+    environment:
+      - NGINX_ACCESS_LOG_FORMAT=timed
+      - NGINX_FAST_CGI_PASS=php-fpm:9000
+      - VIRTUAL_HOST=ts-mc.net
+    ports:
+      - "80:80"
+      - "443:443"
+    links:
+      - php-fpm
+    volumes_from:
+      - src

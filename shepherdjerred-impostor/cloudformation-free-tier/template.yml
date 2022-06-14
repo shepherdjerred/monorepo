@@ -1,0 +1,224 @@
+Parameters:
+  LatestAl2AmiId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: "/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2"
+    Description: AMI (operating system) to use for the EC2 instance. Defaults to Amazon Linux 2.
+  KeyPairName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: "KeyPair for the EC2 instance. Required to ssh into the instance. See: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html"
+  AvailabilityZone:
+    Type: AWS::EC2::AvailabilityZone::Name
+    Default: us-east-1c
+    Description: "AZ for the instance and other resources"
+Resources:
+  DataVolume:
+    Type: AWS::EC2::Volume
+    Properties:
+      AvailabilityZone: !Ref AvailabilityZone
+      Size: 5
+      VolumeType: gp2
+  Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      KeyName: !Ref KeyPairName
+      AvailabilityZone: !Ref AvailabilityZone
+      ImageId: !Ref LatestAl2AmiId
+      DisableApiTermination: false
+      InstanceType: t2.micro
+      SecurityGroupIds:
+        - !GetAtt SshSecurityGroup.GroupId
+        - !GetAtt AmongUsSecurityGroup.GroupId
+        - !GetAtt EgressSecurityGroup.GroupId
+      SubnetId: !Ref Subnet
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs:
+            VolumeSize: 8
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          set -x
+          set -e
+
+          mkdir -p /server/data
+
+          blkid --match-token TYPE=xfs /dev/sdf || sudo mkfs -t xfs /dev/sdf
+
+          echo "/dev/sdf /server/data xfs defaults,nofail 0 2" | sudo tee -a /etc/fstab
+          mount -a
+
+          yes | yum install docker
+
+          useradd amongus
+          usermod -a -G docker ec2-user
+          usermod -a -G docker amongus
+
+          cat > /etc/systemd/system/docker.amongus.service <<EOF
+          [Unit]
+          Description=Docker Among Us service
+          After=docker.service
+          Requires=docker.service
+
+          [Service]
+          User=amongus
+          StandardInput=tty-force
+          TimeoutStartSec=0
+          Restart=always
+          RestartSec=10
+          ExecStart=/usr/bin/docker run \
+          --rm \
+          --name %n \
+          -p 22023:22023/udp \
+          --mount type=bind,source=/server/data/config.json,target=/app/config.json \
+          --mount type=bind,source=/server/data/plugins,target=/app/plugins \
+          --mount type=bind,source=/server/data/libraries,target=/app/libraries  \
+          -it \
+          aeonlucid/impostor:nightly
+          ExecStop=/usr/bin/docker stop %n
+
+          [Install]
+          WantedBy=default.target
+          EOF
+
+          mkdir -p /server/data/plugins
+          mkdir -p /server/data/libraries
+
+          cat > /server/data/config.json <<EOF
+          {
+            "Server": {
+              "PublicIp": "0.0.0.0",
+              "PublicPort": 22023,
+              "ListenIp": "0.0.0.0",
+              "ListenPort": 22023
+            },
+            "AntiCheat": {
+              "BanIpFromGame": true
+            },
+            "ServerRedirector": {
+              "Enabled": false,
+              "Master": true,
+              "Locator": {
+                "Redis": "127.0.0.1.6379",
+                "UdpMasterEndpoint": "127.0.0.1:32320"
+              },
+              "Nodes": [
+                {
+                  "Ip": "127.0.0.1",
+                  "Port": 22024
+                }
+              ]
+            },
+            "Debug": {
+              "GameRecorderEnabled": false,
+              "GameRecorderPath": ""
+            }
+          }
+          EOF
+
+          chown -R amongus:amongus /server/data
+
+          systemctl enable docker.amongus.service
+          systemctl start docker.amongus.service
+  DataVolumeAttachment:
+    Type: AWS::EC2::VolumeAttachment
+    Properties:
+      Device: /dev/sdf
+      InstanceId: !Ref Instance
+      VolumeId: !Ref DataVolume
+  Vpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 172.31.0.0/16
+  Subnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Ref AvailabilityZone
+      CidrBlock: 172.31.0.0/16
+      VpcId: !Ref Vpc
+      MapPublicIpOnLaunch: true
+  SshSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref Vpc
+      GroupName: SSH
+      GroupDescription: Enable SSH access via port 22
+      SecurityGroupIngress:
+      - CidrIpv6: "::/0"
+        FromPort: 22
+        IpProtocol: tcp
+        ToPort: 22
+      - CidrIp: 0.0.0.0/0
+        FromPort: 22
+        IpProtocol: tcp
+        ToPort: 22
+      SecurityGroupEgress:
+        - CidrIp: 127.0.0.1/32
+          IpProtocol: "-1"
+  AmongUsSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref Vpc
+      GroupName: Among Us
+      GroupDescription: Among Us
+      SecurityGroupIngress:
+      - CidrIpv6: "::/0"
+        FromPort: 22023
+        IpProtocol: udp
+        ToPort: 22023
+      - CidrIp: 0.0.0.0/0
+        FromPort: 22023
+        IpProtocol: udp
+        ToPort: 22023
+      SecurityGroupEgress:
+      - CidrIpv6: "::/0"
+        FromPort: 22023
+        IpProtocol: udp
+        ToPort: 22023
+      - CidrIp: 0.0.0.0/0
+        FromPort: 22023
+        IpProtocol: udp
+        ToPort: 22023
+  EgressSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref Vpc
+      GroupName: Egress
+      GroupDescription: Egress
+      SecurityGroupEgress:
+        - CidrIpv6: "::/0"
+          IpProtocol: "-1"
+        - CidrIp: 0.0.0.0/0
+          IpProtocol: "-1"
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+  InternetGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref Vpc
+  RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId:
+        Ref: Vpc
+  InternetGatewayIpv4Route:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId:
+        Ref: RouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId:
+        Ref: InternetGateway
+  InternetGatewayIpv6Route:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId:
+        Ref: RouteTable
+      DestinationIpv6CidrBlock: "::/0"
+      GatewayId:
+        Ref: InternetGateway
+  RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref RouteTable
+      SubnetId: !Ref Subnet

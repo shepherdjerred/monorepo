@@ -1,0 +1,16 @@
+{
+  "include": [
+      "src/**/*",
+      "node_modules/@types/**/*.d.ts"
+  ],
+  "compilerOptions": {
+      "module": "commonjs",
+      "target": "es2015",
+      "outDir": "lib",
+      "rootDir": "src",
+      "sourceMap": true,
+      "noImplicitAny": true,
+      "strictNullChecks": true
+  },
+  "compileOnSave": true
+}

@@ -1,0 +1,6 @@
+{
+  "events": {
+    "start": "echo \"\\x1Bc\""
+  },
+  "delay": "100"
+}

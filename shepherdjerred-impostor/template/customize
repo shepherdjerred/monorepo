@@ -1,0 +1,40 @@
+#!/bin/bash
+
+set -x
+set -e
+
+ignore_files=".git|customize|customize.json|README.md|.idea"
+
+OIFS="$IFS"
+IFS=$'\n'
+
+for input_file in $(tree -I "${ignore_files}" -fai --noreport)
+do
+  if [ ! -d "${input_file}" ]; then
+    printf "Processing file %s\n" "${input_file}"
+    new_file_name=$(gomplate \
+                   --left-delim "[[" \
+                   --right-delim "]]" \
+                   -c .=./customize.json \
+                   -i "${input_file}" 2>&1)
+                   
+    gomplate \
+         -f "${input_file}" \
+         -o "${new_file_name}" \
+         --left-delim "<<[" \
+         --right-delim "]>>" \
+         -c .=./customize.json
+    
+    if [[ "$new_file_name" != "$input_file" ]]; then
+      rm "$input_file"
+    fi
+  fi
+done
+
+IFS="$OIFS"
+
+# Clean up / implode
+rm README.md
+mv README_TEMPLATE.md README.md
+mv github .github
+rm customize customize.json

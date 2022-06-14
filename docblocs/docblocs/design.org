@@ -1,0 +1,486 @@
+#+OPTIONS: toc:nil
+#+TITLE: DocBlocs
+#+LATEX_HEADER: \usepackage{fullpage}
+
+1. Templates
+   - Templates are objects which can be /rendered/ to create a string.
+   - A template is created from /template text/ which usually (but not
+     necessarily) comes from a /template file/.
+     + Plain text with some ``blanks''
+     + When rendering, text is left alone and ``blanks'' are filled in
+     + Conventionally, template files have a ~.bloc~ extension
+   - A ``blank'' is enclosed in double square brackets, like so:
+     #+BEGIN_EXAMPLE
+Dear [[customer]],
+#+END_EXAMPLE
+     + The double-square bracket notation is called a /bloc/
+     + Here, ~customer~ is a /variable/ used to indicate what value should fill
+       in the ``blank''
+   - Rendering a template requires a /context/---a dictionary of values that
+     are used to fill in the ``blanks''.
+     + Supplies all the data needed by the template
+     + The value of variables are determined by looking up their names in the
+       context
+     + The context may actually be the combination of multiple dictionaries:
+       one for the application, one for the session, one for the response,
+       etc.
+   - In code, templates are represented by a function; to render the template
+     simply call the function.
+     #+BEGIN_SRC js
+let result = template(context);
+#+END_SRC
+
+2. Expressions
+   - Blocs can contain, not only variables, but also expressions.
+   - Data:
+     + Variables (looked up in context)
+     + Numbers
+     + Strings (double-quoted)
+     + Booleans
+     + ~null~ and ~undefined~
+     + Array constructions
+     + Object constructions
+   - Operators
+     + Math
+     + Comparison
+     + Boolean
+     + Properties (~.~)
+     + Indices (~[]~)
+     + Function calls (~()~)
+     + Pipe (~|~)
+       * The expression ~x | f~ is equivalent to ~f(x)~
+   - Expressions are evaluated according to JS rules.
+   - The value is converted to a string and interpolated into the template
+     text.
+   - If the value is ~undefined~, nothing is interpolated into template text.
+     + Variables not found in the context
+     + Void functions
+   - If evaluation of an expression yields an error (i.e., throws an
+     exception), then the error message will be interpolated into the text.
+
+3. Helpers
+   - When a bloc expression evaluates to a function, then---instead of trying
+     to interpolate the function into the template text---the function will be
+     called and whatever it returns will be interpolated into the template
+     text.
+   - Functions like this are called a /helpers/.
+   - Helper functions will be passed two arguments:
+     1. A /context dictionary/
+        + Allows read access to context variables
+        + Can assign context variables, but changes won't be visible after the
+          function terminate
+        + In-place modifications /will/ be visible after the function
+          terminates; not recommended
+        + Implemented using an object whose prototype is the context
+     2. A /bloc dictionary/
+        + Contains properties of the bloc
+        + Can be used to pass arguments specific to this helper
+   - A helper can accept additional arguments using currying
+     + Example: Suppose we had the following helper function:
+       #+BEGIN_SRC js
+function some_helper(x, y) {
+  return function(context, bloc) {
+    /* ommitted */
+  }
+}
+#+END_SRC
+       Because the first two arguments are curried we could call this in a
+       template like so:
+       #+BEGIN_EXAMPLE
+[[some_helper(3, 5)]]
+#+END_EXAMPLE
+     + (For the rest of this document I will write helpers as normal functions
+       but will assume that they are curried)
+     + Aside: a generic currying function:
+       #+BEGIN_SRC js
+function curry(f, args) {
+  if (! Array.isArray(args)) {
+    args = [];
+  }
+  let cf = function() {
+    let more = args.concat(
+      Array.prototype.slice.call(arguments)
+    );
+    if (more.length >= f.length) {
+      return f.apply(this, more);
+    }
+    else {
+      return curry(f, more);
+    }
+  }
+  Object.defineProperties(cf, {
+    name: {configurable: true, value: `${f.name}_${args.length}`},
+    length: {configurable: true, value: f.length - args.length}
+  });
+  return cf;
+}
+#+END_SRC
+   - Templates are helpers.
+     + Templates are represented by functions
+     + Function will be called and passed the context and bloc dictionaries
+     + This renders the template, and its results will be interpolated into
+       the template text
+     + Supports reusable template components (e.g., a header or a menu-bar)
+   - The pipe operator (~|~) will test to see if its left-hand operand is a
+     helper and, if it is, will call it and use its results
+
+4. Bloc templates
+   - A bloc may contain a template.
+     + A bloc that contains a template begins with a "+"; e.g.,  ~[[+foo]]~.
+     + The template begins immediately after the bloc and goes until the /cap/.
+     + The cap for a bloc is the same as the bloc except with a "-" instead of "+";
+       e.g., ~[[-foo]]~.
+       - If bloc expression is a function call, just the function may be used
+         as the cap; e.g., ~[[+if(x)]]~ and ~[[-if]]~.
+       - If bloc expression is a pipe, just the left-hand operand may be
+         used as the cap; for example, ~[[+baz | escapeHtml]]~ and ~[[-baz]]~
+   - When invoking a helper, the template for the bloc will be stored in the
+     bloc dictionary under the name ~contents~
+   - Example:
+     #+BEGIN_SRC js
+function if_helper(test, context, bloc) {
+  if (test) {
+    bloc.contents(context);
+  }
+}
+#+END_SRC
+   - Syntactic sugar: a bloc may begin with "*"
+     * The same as beginning with "+" except that it does not have a cap
+     * The bloc's template is assumed to end at the cap for the bloc in
+       which it is contained
+     * Example:
+       #+BEGIN_EXAMPLE
+[[+fee]]ABC[[+fie]]DEF[[+foe]]GHI[[-foe]][[-fie]][[-fee]]
+#+END_EXAMPLE
+       is the same as
+       #+BEGIN_EXAMPLE
+[[+fee]]ABC[[*fie]]DEF[[*foe]]GHI[[-fee]]
+#+END_EXAMPLE
+
+5. Bloc properties
+   - You may define additional properties to be passed to the helper in its
+     bloc dictionary by placing a /property definition/ between the bloc and its
+     cap.
+     + A property definition  has the form: ~[[name:~ ~value]]~
+   - The property definition is not considered to be part of the bloc template.
+     + May appear anywhere in the bloc template
+     + Will be processed and then removed from the bloc template
+   - Example:
+     #+BEGIN_EXAMPLE
+[[+foo]]
+  Hello [[pi: 3.14]] Goodbye
+[[-foo]]
+#+END_EXAMPLE
+     + A new bloc dictionary will be created for the bloc
+     + The expression ~3.14~ will be evaluated and stored in the new bloc
+       dictionary under the name ~pi~
+     + Everything between the bloc and the cap with the definition
+       removed---i.e., ~Hello Goodbye~---will be parsed as a template and
+       stored in the new bloc dictionary under the name ~contents~.
+     + The expression ~foo~ will be evaluated, presumably to a helper
+     + The helper will be called and passed the new bloc dictionary
+   - You may define the value of a bloc property to be a template using the
+     ~[[+:name]]~ bloc.
+   - Example:
+     #+BEGIN_EXAMPLE
+[[+if(test)]]
+  Hello
+  [[+:else]]
+    Goodbye
+  [[-else]]
+[[-if]]
+#+END_EXAMPLE
+     + A new bloc dictionary will be created for the bloc
+     + The template defined in the ~[[+:else]]~ bloc will be stored in the
+       bloc dictionary under the name ~else~
+     + The remaining template will be stored as ~contents~ in the
+       bloc dictionary
+     + The expression ~if(test)~ will be evaluated, presumably to a helper
+     + The helper will be called and passed the bloc dictionary
+       #+BEGIN_SRC js
+function if_helper(test, context, bloc) {
+  if (test) {
+    bloc.contents(context);
+  }
+  else if (bloc.else) {
+    bloc.else(context);
+  }
+}
+#+END_SRC
+     + This could also be written as
+       #+BEGIN_EXAMPLE
+[[+if(test)]]
+  Hello
+[[*:else]]
+  Goodbye
+[[-if]]
+#+END_EXAMPLE
+   - Remember that bloc properties are not visible as names in the template;
+     therefore, the following would not work:
+     #+BEGIN_EXAMPLE
+[[+foo]]
+  [[x: 3 + 7]]
+  [[y: x - 1]]
+  [[x]]
+[[-foo]]
+#+END_EXAMPLE
+     + The expression ~3 + 7~ is evaluated and stored in the bloc
+       dictionary under the name ~x~
+     + The expression ~x - 1~ is evaluated; however, ~x~ is looked up in the
+       current context, not the bloc dictionary, so the value of ~10~ is not
+       found
+     + The ~contents~ contains a reference to ~x~; again, this is taken from
+       the context, not the bloc dictionary, so the value of ~10~ is not found
+   - As mentioned previously, a bloc expression may resolve to a template;
+     thus, bloc properties may be passed to a template when it is rendered.
+     + The special variable ~bloc~ will be set to the bloc dictionary
+     + Example: consider the following template:
+       #+BEGIN_EXAMPLE
+<html>
+  <body>
+    <section class="news">[[bloc.news]]</section>
+    <section class="main">[[bloc.contents]]</section>
+  </body>
+</html>
+#+END_EXAMPLE
+       Suppose that, in a second template, the above template was stored in
+       a variable named ~page~.  Then in our second template we could write
+       the following:
+       #+BEGIN_EXAMPLE
+[[+page]]
+  [[+:news]]Bananas on sale!  50% off!!![[-news]]
+  Our fruit store has every kind of fruit you can imagine.
+[[-page]]
+#+END_EXAMPLE
+   - The bloc dictionary for the bloc currently being evaluated is available
+     as the special variable ~this~
+     + Allows access to the properties belonging to this bloc
+       #+BEGIN_EXAMPLE
+[[+foo(this.greeting)]]
+  [[+:greeting]]Dear Sir or Madam:[[-greeting]]
+[[-foo]]
+#+END_EXAMPLE
+   - Note the difference between ~bloc~ and ~this~
+     + Renders the contents of the bloc which contained this template:
+       #+BEGIN_EXAMPLE
+[[+bloc.contents]]
+#+END_EXAMPLE
+     + Renders the contents of this bloc:
+       #+BEGIN_EXAMPLE
+[[+this.contents]]
+#+END_EXAMPLE
+   - Remember, however, that the bloc dictionary is different for every
+     template; therefore, the following would not work:
+       #+BEGIN_EXAMPLE -n -r
+<html>
+  <body>
+    [[+if(bloc.news)]]
+      <section class="news">[[bloc.news]]</section> (ref:news)
+    [[-if]]
+    <section class="main">[[bloc.contents]]</section>
+  </body>
+</html>
+#+END_EXAMPLE
+     + The problem is that the reference to ~bloc.news~ on [[(news)][line (news)]] belongs
+       to a different template: the bloc template for the ~if~ bloc.  It will
+       have its own bloc dictionary containing properties for the ~if~ bloc.
+       Thus, it will not be able to access ~bloc.news~ from the main template
+     + Bloc properties are not the right place to hold values you want to
+       access later in the template---they are not variables
+
+6. Template parameters
+   - Local template variables are created using template parameters
+   - Parameters are listed after an ~->~ in the bloc which contains the template:
+     #+BEGIN_EXAMPLE
+[[+foo -> param1, param2]]
+#+END_EXAMPLE
+   - Arguments must be passed when calling the template, before the context
+     and bloc dictionaries.
+     #+BEGIN_SRC js
+template.render(arg1, arg2, context, bloc)
+#+END_SRC
+   - Templates are curried, so arguments can be given in blocs
+     #+BEGIN_EXAMPLE
+[[template(arg1, arg2)]]
+#+END_EXAMPLE
+   - Variables are resolved following standard scope resolution rules
+     + Check for local variables (parameters) first before checking the context
+     + Parameters are visible throughout the template---including any
+       templates nested within that template
+     + Each nested template defines a new variable scope
+     + Example:
+          #+BEGIN_EXAMPLE -n -r
+     [[x]] (ref:x1)
+     [[+fee -> x]]
+       [[+fie(x)]] (ref:x2)
+         [[x]] (ref:x3)
+         [[+foe -> x]]
+           [[x]] (ref:x4)
+         [[-foe]]
+       [[-fie]]
+       [[x]] (ref:x5)
+     [[-fee]]
+     [[x]] (ref:x6)
+     #+END_EXAMPLE
+       * The ~x~ on [[(x1)][line (x1)]] will be resolved from the context
+       * The ~x~ on [[(x2)][line (x2)]] will resolve to the argument passed
+         to the template inside ~fee~
+       * The ~x~ on [[(x3)][line (x3)]] will also resolve to the argument passed
+         to the template inside ~fee~
+       * The ~x~ on [[(x4)][line (x4)]] will resolve to the argument passed to the
+         template inside ~foe~
+       * The ~x~ on [[(x5)][line (x5)]] will resolve to the argument passed to
+         the template inside ~fee~
+       * The ~x~ on [[(x6)][line (x6)]] will be resolved from the context
+   - Templates defined in the same scope are unrelated; they cannot see one
+     another's parameters
+     #+BEGIN_EXAMPLE
+[[+fee -> x]]
+  Hello, world!
+  [[+:fie -> y]]
+    Happy days
+  [[-fie]]
+  [[+:foe -> z]]
+    Are here again
+  [[-foe]]
+[[-fee]]
+#+END_EXAMPLE
+     + All three of these templates have their own parameters
+     + Only ~contents~ can see ~x~
+     + Only ~fie~ can see ~y~
+     + Only ~foe~ can see ~z~
+   - The built-in ~let~ helper takes an argument and simply passes it to a
+     template parameter
+     #+BEGIN_SRC js
+function let_helper(arg, context, bloc) {
+    bloc.contents(arg, context);
+}
+#+END_SRC
+     + Usage:
+          #+BEGIN_EXAMPLE
+     [[+let(3.14) -> pi]]
+       [[pi * radius * radius]]
+     [[-let]]
+     #+END_EXAMPLE
+     + Makes it easy for a template to define its own local variables
+   - Use bloc properties to assign templates to local variables
+     #+BEGIN_EXAMPLE
+[[*let(this.copyrightTemplate) -> copyright]]
+  [[+:copyrightTemplate]]
+    <div class="copyright">&copy;2017 Gabriel Foust</div>
+  [[-copyrightTemplate]]
+#+END_EXAMPLE
+
+7. Context definitions
+   - Global variables are created by adding them to the context.
+   - As mentioned, helpers are passed a copy of the current context; they may
+     define new values in the context, and then use that context to render
+     other templates.
+     + A helper that defines a global variable:
+       #+BEGIN_SRC js
+function withpi_helper(context, bloc) {
+  // Add pi to the context
+  context.pi = 3.14;
+  // Render contents with new context
+  bloc.contents(context);
+}
+#+END_SRC
+     + Using the global variable:
+       #+BEGIN_SRC js
+[[+withpi]]
+  Area = [[pi * radius * radius]]
+  [[someTemplate]]
+[[-withpi]]
+#+END_SRC
+     + The variable is defined globally; thus, ~pi~ is not only visible in
+       this template but also as ~someTemplate~ is rendered
+   - Remember that change to the context are not visible outside the bloc
+     containing the helper.
+     + And that in-place modifications to values in the context are visible
+       but not recommended
+   - In order to provide consistency with local variables (parameters), an
+     alternate form of parameter is defined which creates a global, instead of
+     local, variable
+     #+BEGIN_EXAMPLE
+[[foo => param]]
+#+END_EXAMPLE
+     Here, the argument passed to the template will be stored in the context
+     as a global variable instead of as a local variable
+   - This allows the built-in ~let~ function to define both local and global
+     variables
+     #+BEGIN_EXAMPLE
+[[*let(3.14) => pi]]
+#+END_EXAMPLE
+   - To add templates to the context you can use bloc properties
+     #+BEGIN_EXAMPLE
+[[*let(this.copyrightTemplate) => copyright]]
+  [[+:copyrightTemplate]]
+    <div class="copyright">&copy;2017 Gabriel Foust</div>
+  [[-copyrightTemplate]]
+#+END_EXAMPLE
+
+8. Root bloc
+   - Every template file has a root bloc, though it may sometimes be implicit
+   - Bloc name should be
+   - There can be no contents outside the root bloc
+   - If no such bloc is found, one is implicitly createdp
+   - Provides a place to specify parameters for the template file
+   - Holds context / bloc properties for the root level
+   - The bloc is slightly different from other blocs in that it cannot contain
+     an expression
+     + The bloc itself is not evaluated
+     + It represents the template as a whole
+
+9. Template results
+   - The final result of a template will be stitched together from lots of
+     little pieces.
+   - For efficiency, it makes sense to only do this stitching once at the very
+     end
+   - When a template is rendered it may return an array of results
+   - Since the template may have included nested templates, some values in
+     the array may be other arrays
+   - Creates a tree where internal nodes are arrays and leafs are data
+     values
+   - When the final result is needed, the tree can be flattened into an
+     array of data values
+   - These are converted to string and concatenated
+
+10. Tracking components
+    - A common task is to collect properties of document fragments produced by
+      templates into one place.
+    - For example, consider the following template:
+      #+BEGIN_EXAMPLE
+  <html>
+    <head>
+      [[scripts]]
+    </head>
+    <body>
+      [[embeddedContent]]
+    </body>
+  </html>
+ #+END_EXAMPLE
+      In this example we would like for the ~[[scripts]]~ bloc to generate
+      ~<script>~ tags for all the JavaScript files needed by templates rendered
+      under ~[[embeddedContent]]~
+    - We can enable this with two steps:
+      + A helper that returns an array
+      + A function that will add things to the array
+    - Example:
+      #+BEGIN_EXAMPLE
+ [[scripts = require("scripts-manager").new()]]
+  <html>
+    <head>
+      [[scripts.tags]]
+    </head>
+    <body>
+      [[bloc.contents]]
+    </body>
+  </html>
+ #+END_EXAMPLE
+      Other components in ~bloc.contents~ can reference ~scripts~ from the context:
+      #+BEGIN_EXAMPLE
+ [[scripts.add("menu.js")]]
+ <section class="menu">
+   <!-- HTML for menu -->
+ </section>
+ #+END_EXAMPLE
