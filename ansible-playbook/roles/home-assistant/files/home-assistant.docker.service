@@ -1,0 +1,25 @@
+[Unit]
+Description=Docker Home Assistant service
+After=docker.service
+Requires=docker.service
+
+[Service]
+User=home-assistant
+StandardInput=tty-force
+TimeoutStartSec=0
+Restart=always
+RestartSec=10
+ExecStartPre=/usr/bin/docker pull ghcr.io/home-assistant/home-assistant:stable
+ExecStart=/usr/bin/docker run \
+  --rm \
+  --name %n \
+  --privileged \
+  -e TZ=US/Pacific \
+  --mount type=bind,source=/home/home-assistant/config,target=/config \
+  --network=host \
+  -it \
+  ghcr.io/home-assistant/home-assistant:stable
+ExecStop=/usr/bin/docker stop %n
+
+[Install]
+WantedBy=default.target

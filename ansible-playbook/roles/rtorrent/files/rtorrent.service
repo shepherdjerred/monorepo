@@ -1,0 +1,15 @@
+[Unit]
+Description=rTorrent System Daemon
+After=network.target
+
+[Service]
+Type=simple
+User=rtorrent
+Group=rtorrent
+ExecStartPre=/bin/rm -f /home/rtorrent/.session/rtorrent.lock
+ExecStart=/usr/bin/rtorrent
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

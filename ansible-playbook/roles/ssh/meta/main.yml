@@ -1,0 +1,5 @@
+dependencies:
+  - role: ansible-secure-ssh
+    become: true
+    ssh_user: "{{ target_user }}"
+    ssh_identity_key: id_rsa.pub

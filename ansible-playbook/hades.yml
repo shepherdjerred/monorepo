@@ -1,0 +1,9 @@
+- hosts: hades
+  roles:
+    - bootstrap
+    - kimsufi-ipv6
+    - syncthing
+    - apache
+    - certbot
+    - rtorrent
+    - rutorrent

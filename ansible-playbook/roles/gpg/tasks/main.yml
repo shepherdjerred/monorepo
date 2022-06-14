@@ -1,0 +1,34 @@
+- name: install dependencies
+  become: true
+  package:
+    name: expect
+- name: install gpg
+  become: true
+  package:
+    name: gpg
+- name: install gnugp (debian)
+  when: ansible_os_family == "Debian"
+  become: true
+  package:
+    update_cache: true
+    name:
+      - gnupg
+- name: create temp file
+  tempfile:
+    state: file
+    suffix: gpg
+  register: temp_gpg
+- name: copy gpg key to temp file
+  copy:
+    src: "Jerred Shepherd (9E0A6A73) – Secret.asc"
+    dest: "{{ temp_gpg.path }}"
+- name: import gpg key (debian)
+  when: ansible_os_family == "Debian"
+  shell: "gpg --pinentry-mode=loopback --passphrase {{ gpg_passphrase }} --import {{ temp_gpg.path }}"
+  no_log: true
+- name: import gpg key (centos)
+  when: ansible_os_family == "CentOS" or ansible_distribution == "Amazon" and ansible_distribution_version == "2"
+  shell: "{{ linuxbrew_bin }}/gpg --pinentry-mode=loopback --passphrase {{ gpg_passphrase }} --import {{ temp_gpg.path }}"
+  no_log: true
+- name: set gpg key trust
+  shell: "expect -c \"spawn gpg --edit-key 9E0A6A73 trust quit; send \"5\ry\r\"; expect eof\""

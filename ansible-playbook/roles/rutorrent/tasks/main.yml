@@ -1,0 +1,64 @@
+- name: install dependencies
+  become: true
+  package:
+    name:
+      - php
+      - libapache2-mod-php
+      - ffmpeg
+      - sox
+      - mediainfo
+      - unrar-free
+- name: clone rutorrent repo
+  become: true
+  git:
+    repo: https://github.com/Novik/ruTorrent.git
+    update: true
+    clone: true
+    force: true
+    dest: "/var/www/html/rutorrent"
+- name: copy config.php
+  become: true
+  copy:
+    src: config.php
+    dest: "/var/www/html/rutorrent/conf/config.php"
+    owner: "rtorrent"
+    group: "rtorrent"
+- name: set owner for rutorrent files to www-data
+  become: true
+  file:
+    owner: www-data
+    group: www-data
+    recurse: true
+    state: directory
+    path: /var/www/html/rutorrent
+- name: add user www-data to rtorrent group
+  become: true
+  user:
+    append: true
+    name: www-data
+    groups:
+      - "rtorrent"
+- name: install python3
+  become: true
+  package:
+    name:
+      - python3-pip
+- name: install cloudscraper
+  become: true
+  pip:
+    executable: pip3
+    name: cloudscraper
+- name: add user rtorrent to group www-data
+  become: true
+  user:
+    append: true
+    name: "rtorrent"
+    groups:
+      - "www-data"
+- name: "add user www-data to group {{ ansible_user }}"
+  become: true
+  user:
+    append: true
+    name: "www-data"
+    groups:
+      - "{{ ansible_user }}"

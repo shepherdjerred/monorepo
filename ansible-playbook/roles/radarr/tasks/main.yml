@@ -1,0 +1,24 @@
+- name: create radarr user
+  become: true
+  user:
+    name: radarr
+- name: create config directory
+  become: true
+  file:
+    path: /home/radarr/config
+    state: directory
+    group: radarr
+    owner: radarr
+- name: copy systemd config
+  become: true
+  copy:
+    src: "radarr.docker.service"
+    dest: "/etc/systemd/system"
+    owner: radarr
+    group: radarr
+- name: enable radarr.docker.service
+  become: true
+  systemd:
+    name: radarr.docker.service
+    state: restarted
+    enabled: true

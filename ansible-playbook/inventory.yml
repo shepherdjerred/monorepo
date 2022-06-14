@@ -1,0 +1,13 @@
+all:
+  children:
+    dionysus:
+      hosts:
+        dionysus.rstudio.shepherdjerred.com:
+    servers:
+      children:
+        zeus:
+          hosts:
+            zeus.home.shepherdjerred.com:
+        hades:
+          hosts:
+            hades.shepherdjerred.com:

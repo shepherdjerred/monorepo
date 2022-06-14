@@ -1,0 +1,6 @@
+- name: open mosh ports
+  become: true
+  when: ufw_enabled
+  ufw:
+    rule: allow
+    name: "mosh"

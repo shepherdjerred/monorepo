@@ -1,0 +1,25 @@
+.page-content {
+  p {
+    margin-top: 30px;
+    background-color: #fff;
+    padding: 20px;
+  }
+}
+
+.home-feature {
+  background-image: url("../img/bg.jpg");
+  background-size: cover;
+  background-attachment: fixed;
+  background-position: center;
+  padding: 15vh 0;
+
+  img {
+    display: block;
+    margin: 0 auto;
+    max-width: 90vw;
+  }
+
+  .pure-u-3-5 {
+
+  }
+}

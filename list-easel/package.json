@@ -1,0 +1,30 @@
+{
+  "name": "list-easel",
+  "version": "1.0.0",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "node ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ShepherdJerred/list-easel.git"
+  },
+  "author": "Jerred Shepherd <shepherdjerred@gmail.com> (https://github.com/shepherdjerred)",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/ShepherdJerred/list-easel/issues"
+  },
+  "homepage": "https://github.com/ShepherdJerred/list-easel/#readme",
+  "dependencies": {
+    "dotenv": "^6.1.0",
+    "jsdom": "^13.0.0",
+    "loglevel": "^1.6.1",
+    "request": "^2.88.0",
+    "request-promise-native": "^1.0.5",
+    "tough-cookie": "^2.4.3"
+  },
+  "devDependencies": {
+    "eslint": "^5.9.0",
+    "semistandard": "^13.0.1"
+  }
+}

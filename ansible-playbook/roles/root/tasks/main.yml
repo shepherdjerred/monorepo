@@ -1,0 +1,16 @@
+# One of these methods for setting the root password should work depending on the state the machine is in.
+- name: Set root password
+  block:
+    - name: Set root password using `su`
+      become: true
+      become_method: su
+      user:
+        name: "root"
+        password: "{{ master_password | password_hash('sha512') }}"
+  rescue:
+    - name: Set root password using `sudo`
+      become: true
+      become_method: sudo
+      user:
+        name: "root"
+        password: "{{ master_password | password_hash('sha512') }}"

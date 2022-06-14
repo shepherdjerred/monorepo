@@ -1,0 +1,43 @@
+@import url('https://fonts.googleapis.com/css?family=Lato:100,100i,300,300i,400,400i,700,700i,900,900i|Open+Sans:300,300i,400,400i,600,600i,700,700i,800,800i');
+@import "navbar.scss";
+@import "home.scss";
+@import "management.scss";
+
+html, button, input, select, textarea,
+.pure-g [class *= "pure-u"] {
+  font-family: "Open Sans", sans-serif;
+}
+
+body {
+  position: relative;
+  z-index: 20;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Lato', sans-serif;
+}
+
+p, h1, h2, h3, h4, h5, h6 {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+a {
+  color: #000;
+}
+
+a:hover {
+  color: #000;
+}
+
+::selection {
+  color: #fff;
+  background-color: #000;
+}
+
+.page-content {
+  padding-top: 57px;
+  background-color: lighten(#D1D5D8, 10%);
+  min-height: calc(100vh - 67px);
+  padding-bottom: 50px;
+}

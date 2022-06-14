@@ -1,0 +1,31 @@
+- name: create pi-hole user
+  become: true
+  user:
+    name: pi-hole
+- name: create etc-pihole directory
+  become: true
+  file:
+    path: /home/pi-hole/etc-pihole
+    state: directory
+    group: pi-hole
+    owner: pi-hole
+- name: create etc-dnsmasq.d directory
+  become: true
+  file:
+    path: /home/pi-hole/etc-dnsmasq.d
+    state: directory
+    group: pi-hole
+    owner: pi-hole
+- name: copy systemd config
+  become: true
+  copy:
+    src: "pi-hole.docker.service"
+    dest: "/etc/systemd/system"
+    owner: pi-hole
+    group: pi-hole
+- name: enable pi-hole.docker.service
+  become: true
+  systemd:
+    name: pi-hole.docker.service
+    state: restarted
+    enabled: true

@@ -1,0 +1,3 @@
+dependencies:
+  - git
+  - dotfiles # my dotfiles have the .tool-versions file that asdf expects when running `asdf install`

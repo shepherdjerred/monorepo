@@ -1,0 +1,46 @@
+- name: install docker
+  become: true
+  package:
+    name: docker
+- name: "add {{ target_user }} to group docker"
+  become: true
+  user:
+    append: true
+    name: "{{ target_user }}"
+    groups:
+      - docker
+  register: dockergroup
+- name: Reconnect to apply group changes
+  meta: reset_connection
+  when: dockergroup.changed
+- name: restart docker service
+  become: true
+  systemd:
+    name: docker
+    enabled: true
+    state: restarted
+- name: Create .docker directory
+  become: true
+  file:
+    path: "/home/{{ target_user }}/.docker/"
+    state: directory
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+- name: Create .docker/cli-plugins directory
+  become: true
+  file:
+    path: "/home/{{ target_user }}/.docker/cli-plugins/"
+    state: directory
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+- name: get buildx plugin
+  become: true
+  get_url:
+    url: https://github.com/docker/buildx/releases/download/v0.7.1/buildx-v0.7.1.linux-amd64
+    dest: "/home/{{ target_user }}/.docker/cli-plugins/docker-buildx"
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: "a+x"
+- name: login to dockerhub
+  shell: "docker login --username shepherdjerred --password {{ docker_token }}"
+  no_log: yes

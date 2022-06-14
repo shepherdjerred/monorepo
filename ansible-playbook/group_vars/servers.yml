@@ -1,0 +1,6 @@
+netdata_alarm_configure: true
+netdata_alarm_notify_configs:
+  SEND_TELEGRAM: "YES"
+  TELEGRAM_BOT_TOKEN: "{{ netdata_telegram_bot_api_key }}"
+  DEFAULT_RECIPIENT_TELEGRAM: 221374195
+ufw_enabled: true

@@ -1,0 +1,1 @@
+asdf_path: "{{ ansible_env.PATH }}:/home/{{ target_user }}/.asdf/bin/"

@@ -1,0 +1,43 @@
+- name: automatically hide dock
+  shell: defaults write com.apple.dock autohide -bool true
+- name: hide recent apps on dock
+  shell: defaults write com.apple.dock show-recents -bool false
+- name: show path bar in finder
+  shell: defaults write com.apple.finder ShowPathbar -bool true
+- name: show external drives on desktop
+  shell: defaults write com.apple.finder ShowExternalHardDrivesOnDesktop -bool false
+- name: show all file extensions
+  shell: defaults write -g AppleShowAllExtensions -bool true
+- name: show hidden files
+  shell: defaults write com.apple.finder AppleShowAllFiles true
+- name: expand save dialog
+  shell: defaults write -g NSNavPanelExpandedStateForSaveMode -bool true && defaults write -g NSNavPanelExpandedStateForSaveMode2 -bool true
+- name: sleep display after 15 minutes
+  become: true
+  shell: pmset displaysleep 15
+- name: sleep computer after 30 minutes
+  become: true
+  shell: pmset sleep 30
+- name: disable spellcheck
+  shell: defaults write -g NSAutomaticSpellingCorrectionEnabled -bool false
+- name: set hostname
+  become: true
+  shell: |
+    scutil --set ComputerName "{{ hostname }}" && \
+    scutil --set HostName "{{ hostname }}" && \
+    scutil --set LocalHostName "{{ hostname }}" && \
+    defaults write /Library/Preferences/SystemConfiguration/com.apple.smb.server NetBIOSName -string "{{ hostname }}"
+- name: ask for password after screensaver
+  shell: defaults write com.apple.screensaver askForPassword -int 1
+- name: wait ten seconds after screensaver for password
+  shell: defaults write com.apple.screensaver askForPasswordDelay -int 10
+- name: set menu bar time format
+  become: true
+  shell: defaults write com.apple.menuextra.clock DateFormat -string "EEE d MMM h:mm:ss"
+- name: kill dock
+  shell: killall Dock
+- name: kill finder
+  shell: killall Finder
+- name: kill SystemUI (menu bar)
+  become: true
+  shell: killall SystemUIServer

@@ -1,0 +1,3 @@
+bootstrap_user: ec2-user
+ufw_enabled: false
+use_fish: true

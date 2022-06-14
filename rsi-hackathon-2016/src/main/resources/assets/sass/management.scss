@@ -1,0 +1,48 @@
+.management {
+  padding-top: 20vh !important;
+  text-align: center;
+  img {
+    border-radius: 100%;
+    width: 150px;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+  }
+  h1 {
+    font-size: 16px;
+    font-weight: 500;
+    margin-top: 10px;
+  }
+  h2 {
+    font-size: 14px;
+    font-weight: 400;
+    color: #60646D;
+  }
+  .list {
+    div {
+      margin-bottom: 40px;
+    }
+  }
+
+  .bio {
+    color: #fff;
+    position: fixed;
+    padding: 10px;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #3B3C3D;
+    border-radius: 5px;
+    max-width: 95vw;
+    display: none;
+
+    h1 {
+      font-size: 22px;
+      font-weight: 800;
+    }
+
+    p {
+      background-color: transparent;
+    }
+  }
+}

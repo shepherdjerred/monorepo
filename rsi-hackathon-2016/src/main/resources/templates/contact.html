@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+    <title>Rural Sourcing Inc.</title>
+
+    <meta charset="UTF-8">
+    <meta name="description" content="Site for the RSI Hackathon">
+    <meta name="author" content="Jerred Shepherd">
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/grids-responsive-min.css">
+    <link rel="stylesheet" href="/css/main.css">
+
+    <script src="https://use.fontawesome.com/efa3dc6def.js"></script>
+
+    <script src="/js/nav.js"></script>
+</head>
+
+<body>
+<div class="content">
+    <div class="pure-g">
+        <nav class="navbar collapsed" id="navbar">
+            <div class="pure-u-md-2-5 pure-u-1">
+                <div class="title" id="navTitle"><a>Rural Sourcing Inc.</a></div>
+            </div>
+            <div class="pure-u-md-3-5 pure-u-1">
+                <div class="navbar-right">
+                    <ul>
+                        <li><a href="/">Home</a></li>
+                        <li><a href="/company">Company</a></li>
+                        <li><a href="/management">Management</a></li>
+                        <li><a href="/employment">Employment</a></li>
+                        <li><a href="/contact">Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </div>
+    <div class="page-content">
+        <div class="pure-g">
+            <div class="pure-u-1-5"></div>
+            <div class="pure-u-3-5">
+                <h1>CONTACT US</h1>
+                <p>
+                    Rural Sourcing, Incorporated
+                    <br><br>
+                    2530 Meridian Parkway, Suite 300<br>
+                    Durham, NC 27713<br>
+                    Phone: 919.806.4484<br>
+                    Fax: 919.806.4854/4301
+                    <br><br>
+                    5501 Krueger Drive<br>
+                    Jonesboro, AR 72401<br>
+                    Phone: 870.910.8184<br>
+                    Fax: 870.972.3829
+                    <br><br>
+                    1800 North Greene Street, Suite C<br>
+                    Greenville, NC 27834<br>
+                    Phone: 252.758.4483<br>
+                    Fax: 252.756.4486
+                </p>
+
+
+                <form class="pure-form" method='post' action="/contact">
+                    <fieldset class="pure-group">
+                        <input type="text" class="pure-input-1-2" placeholder="Name" name="name">
+                        <input type="email" class="pure-input-1-2" placeholder="Email" name="email">
+                    </fieldset>
+
+                    <fieldset class="pure-group">
+                        <input type="text" class="pure-input-1-2" placeholder="Title" name="title">
+                        <textarea class="pure-input-1-2" placeholder="Message" name="message"></textarea>
+                    </fieldset>
+
+                    <button type="submit" class="pure-button pure-input-1-2 pure-button-primary">Send</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+
+</html>

@@ -1,0 +1,15 @@
+language: generic
+notifications:
+  email: false
+script:
+- ":"
+before_deploy:
+- cd src
+deploy:
+  skip_cleanup: true
+  provider: s3
+  region: us-east-1
+  bucket: com.is-quarantine-over-yet.site
+  access_key_id: AKIA2CQO232KFPL3GIMO
+  secret_access_key:
+    secure: gIjgoGIeGRhnfGiHyengIt3s+YFaELlYyI1emuRnxe1AOrn1j2fUQJxBzB0gdwdLRF/gPtS+3IshaPGHXj6a1fcPiGsdYma0ccBMvRhqNnqXGPs+aidiXXuhW806jcoQ3bS4saMrxBRWwg0nuNtQFTG0XPY7N7kpokyKelys34nbBxUwZzgL+6VuM6pICu5G2HTestmMy8DCeiu06FXWg0mZuljuZVkgHHRkuPYcSf6QOHjWWo9htEb1TIrBbldtk7pRMMmqKvn55qjBPNiTt2Ri9tpxQa2RPGnIBIku0S9DfVyRtEhhRwJbRNPJzkUt2MRQ+SmIm2VfeUTduASgowHL18v2tRg28Qjj8iSaM917CVKweXsp08+FBORRzP/cGR4ebnApGefWDEJqLmvkPd9JWznj7TP2NCjG3/+4OtuCWHC7m14xZHxEdfDebp0tG2uo5zaaCEi0MA/UtCsGYOG6ESlhZWZPWGPIZkHdi61NsPP32NFDc3brHSiyCo6VDUtmaQ8zzX/4iY4fLSYaupfE0twBqCqG7QaYzHrfc1Rem7uIuQUev0CD7AxFUIxmVjpt3ycP9wMMvVpHiXqg7OJAc0M9KtV9992A8MqRfSJu/kj9HHOVN13/QOo6tMbVvXlQn0yodTp+VtxlnmxVQJkqJVCVLzvewNGWTZL/w90=

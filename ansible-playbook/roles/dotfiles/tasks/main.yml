@@ -1,0 +1,37 @@
+- name: "create dotfiles directory"
+  file:
+    path: "/home/{{ target_user }}/git"
+    state: directory
+- name: "create /home/{{ target_user }}/.local/share/"
+  file:
+    path: "/home/{{ target_user }}/.local/share"
+    state: directory
+- name: clone dotfiles repository
+  git:
+    repo: https://github.com/shepherdjerred/dotfiles
+    dest: "/home/{{ target_user }}/.local/share/chezmoi"
+    update: true
+    force: true
+- name: symlink dotfiles to chezmoi
+  file:
+    src: "/home/{{ target_user }}/.local/share/chezmoi"
+    dest: "/home/{{ target_user }}/git/dotfiles"
+    state: link
+- name: install chezmoi
+  shell:
+    cmd: curl -sfL https://git.io/chezmoi | sh
+    creates: ~/bin/chezmoi
+- name: apply chezmoi
+  shell: bin/chezmoi -v apply --force -k || true
+- name: fix ssh folder permissions
+  file:
+    path: "~/.ssh"
+    mode: "700"
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+- name: fix authorized keys permissions
+  file:
+    path: "~/.ssh/authorized_keys"
+    mode: "600"
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"

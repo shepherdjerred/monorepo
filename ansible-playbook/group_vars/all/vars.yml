@@ -1,0 +1,10 @@
+ansible_python_interpreter: auto_silent
+target_user: jerred
+bootstrap_user: jerred
+ansible_user: "{{ bootstrap_user }}"
+ansible_ssh_pass: "{{ master_password }}"
+ansible_sudo_pass: "{{ master_password }}"
+ansible_become_pass: "{{ master_password }}"
+linuxbrew_bin: "/home/linuxbrew/.linuxbrew/bin"
+linuxbrew_path: "{{ linuxbrew_bin }}/brew"
+use_fish: false

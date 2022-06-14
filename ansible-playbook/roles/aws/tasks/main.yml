@@ -1,0 +1,7 @@
+- name: "copy aws credentials for {{ target_user }}"
+  copy:
+    src: credentials
+    dest: "/home/{{ target_user }}/.aws/credentials"
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: "600"

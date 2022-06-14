@@ -1,0 +1,6 @@
+bootstrap_user: debian
+certbot_domains:
+  - hades.shepherdjerred.com
+apache_sites:
+  - "hades"
+  - "hades-ssl"

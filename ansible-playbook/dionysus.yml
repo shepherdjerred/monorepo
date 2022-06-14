@@ -1,0 +1,15 @@
+- hosts: dionysus
+  roles:
+    - bootstrap
+    - apps
+    - asdf
+    - autojump
+    - aws
+    - dotfiles
+    - fish
+    - fisher
+    - gpg
+    - mosh
+    - vscode
+    - git-branchless
+    - docker

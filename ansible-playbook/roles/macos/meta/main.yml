@@ -1,0 +1,9 @@
+dependencies:
+  - homebrew
+  - macos-ssh
+  - apps
+  - fish
+  - dotfiles
+  - autojump
+  - asdf
+  - aws
