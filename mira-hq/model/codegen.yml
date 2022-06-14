@@ -1,0 +1,21 @@
+overwrite: true
+schema: "src/schema.graphql"
+documents:
+  - "src/operation.graphql"
+generates:
+  generated/index.ts:
+    plugins:
+      - "typescript"
+      - "typescript-operations"
+      - "typescript-resolvers"
+      - "dist/typescript-typedefs.js"
+    config:
+      immutableTypes: true
+  generated/react.ts:
+    plugins:
+      - "typescript"
+      - "typescript-operations"
+      - "typescript-react-apollo"
+hooks:
+  afterAllFileWrite:
+    - prettier --write

@@ -1,0 +1,117 @@
+$sidebar-color: #222831;
+
+.sidebar {
+  background-color: $sidebar-color;
+  color: #fff;
+  min-height: 100vh;
+  & > div {
+    @media screen and (min-width: 48em) {
+      position: fixed;
+      width: 20%;
+    }
+  }
+  .temp {
+    padding: 7vh 0;
+    text-align: center;
+    h1 {
+      font-family: "Lato", sans-serif;
+      font-weight: 300;
+      font-size: 12vh;
+      @media screen and (min-width: 48em) {
+        font-size: 5vw;
+      }
+      span {
+        font-weight: 100;
+      }
+    }
+    h2 {
+      font-family: "Lato", sans-serif;
+      font-weight: 300;
+      font-size: 4vh;
+      @media screen and (min-width: 48em) {
+        font-size: 1.5vw;
+      }
+    }
+  }
+  .mode {
+    margin-bottom: 5vh;
+    padding: 1.67vh 0;
+    text-align: center;
+    h1 {
+      font-size: 5vh;
+      font-weight: 300;
+      @media screen and (min-width: 48em) {
+        font-size: 2vw;
+      }
+    }
+    h2 {
+      font-size: 2.45vh;
+      font-weight: 300;
+      @media screen and (min-width: 48em) {
+        font-size: 1vw;
+      }
+    }
+    &.cool {
+      background-color: #44BBFF;
+    }
+    &.heat {
+      background-color: #FC575E;
+    }
+    &.off {
+      background-color: darken($sidebar-color, 10%);
+    }
+  }
+  .weather {
+    text-align: center;
+    padding: 3.33vh 0;
+    text-shadow: 1px 1px 0 #000;
+    h2 {
+      font-size: 3vh;
+      font-weight: 300;
+      @media screen and (min-width: 48em) {
+        font-size: 1.5vw;
+      }
+    }
+    h3 {
+      font-size: 2.25vh;
+      font-weight: 300;
+      @media screen and (min-width: 48em) {
+        font-size: 1vw;
+      }
+    }
+    h1 {
+      font-size: 6.5vh;
+      font-weight: 300;
+      @media screen and (min-width: 48em) {
+        font-size: 3vw;
+      }
+    }
+    &.rain {
+      background: url("/assets/img/rain.jpg");
+      filter: grayscale(100%);
+    }
+  }
+  .details {
+    text-align: center;
+    position: absolute;
+    width: 100%;
+    bottom: 0;
+    padding: 10px 0;
+    background-color: lighten(#222831, 5%);
+    @media screen and (min-width: 48em) {
+      position: fixed;
+      width: 20%;
+    }
+    a {
+      color: #fff;
+    }
+    ul {
+      list-style: none;
+      display: none;
+    }
+    li {
+      font-family: "Open Sans", sans-serif;
+      font-weight: 300;
+    }
+  }
+}

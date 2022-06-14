@@ -1,0 +1,73 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon lib/index.ts",
+    "build": "tsc",
+    "watch": "tsc -w",
+    "test": "true",
+    "start": "node dist/index.js",
+    "lint+build": "npm run lint && npm run build",
+    "lint:fix+build": "npm run lint:fix && npm run build",
+    "lint": "npm run eslint && npm run prettier",
+    "lint:fix": "npm run eslint:fix && npm run prettier:fix",
+    "eslint": "eslint \"*/**/*.{js,ts,tsx}\" --color",
+    "eslint:fix": "eslint \"*/**/*.{js,ts,tsx}\" --fix --color",
+    "prettier": "prettier --check .",
+    "prettier:fix": "prettier --write .",
+    "deploy": "npm run build && npm prune --production && rm -f dist/lambda.zip && zip -q -r dist/lambda.zip node_modules dist"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mira-hq/backend.git"
+  },
+  "author": "Jerred Shepherd",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/mira-hq/backend/issues"
+  },
+  "homepage": "https://github.com/mira-hq/backend#readme",
+  "dependencies": {
+    "@aws/dynamodb-data-mapper": "^0.7.3",
+    "@mira-hq/model": "^1.0.19",
+    "@types/auth0-js": "^9.14.2",
+    "apollo-server": "^2.21.0",
+    "apollo-server-lambda": "^2.21.0",
+    "auth0-js": "^9.15.0",
+    "aws-sdk": "^2.858.0",
+    "graphql": "^15.5.0",
+    "jsonwebtoken": "^8.5.1",
+    "jwks-rsa": "^2.0.2",
+    "uuid": "^8.3.2"
+  },
+  "devDependencies": {
+    "@aws/dynamodb-data-mapper-annotations": "^0.7.3",
+    "@tsconfig/node14": "^1.0.0",
+    "@types/jest": "^26.0.20",
+    "@types/jsonwebtoken": "^8.5.1",
+    "@types/node": "^14.14.28",
+    "@types/uuid": "^8.3.0",
+    "@typescript-eslint/eslint-plugin": "^4.16.1",
+    "@typescript-eslint/parser": "^4.16.1",
+    "eslint": "^7.21.0",
+    "eslint-config-prettier": "^7.2.0",
+    "husky": "^4.3.8",
+    "jest": "^26.6.3",
+    "lint-staged": "^10.5.4",
+    "nodemon": "^2.0.7",
+    "prettier": "^2.2.1",
+    "ts-node": "^9.1.1",
+    "typescript": "^4.1.5"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "**/*": "prettier --write --ignore-unknown",
+    "*.{js,css,md}": "prettier --write"
+  }
+}

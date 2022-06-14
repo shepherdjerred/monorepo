@@ -1,0 +1,22 @@
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  Table:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Cashly
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        -
+          AttributeName: TableHashKey
+          AttributeType: "S"
+        -
+          AttributeName: TableSortKey
+          AttributeType: "S"
+      KeySchema:
+        -
+          AttributeName: TableHashKey
+          KeyType: HASH
+        -
+          AttributeName: TableSortKey
+          KeyType: RANGE
+

@@ -1,0 +1,38 @@
+{
+  "name": "thebutton",
+  "version": "1.0.0",
+  "description": "",
+  "main": "node src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "lint": "eslint src/",
+    "dev": "nodemon src/server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ShepherdJerred/thebutton.git"
+  },
+  "author": "Jerred Shepherd",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/ShepherdJerred/thebutton/issues"
+  },
+  "homepage": "https://github.com/ShepherdJerred/thebutton",
+  "dependencies": {
+    "loglevel": "^1.6.1",
+    "mysql2": "^1.5.2",
+    "raven": "^2.4.1",
+    "socket.io": "^2.0.4",
+    "uuid": "^3.1.0"
+  },
+  "devDependencies": {
+    "eslint": "^4.14.0",
+    "eslint-config-standard": "^11.0.0-beta.0",
+    "eslint-plugin-import": "^2.8.0",
+    "eslint-plugin-node": "^5.2.1",
+    "eslint-plugin-promise": "^3.6.0",
+    "eslint-plugin-standard": "^3.0.1",
+    "nodemon": "^1.14.3",
+    "semistandard": "^11.0.0"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "extends": ["semistandard-react"],
+  "env": {
+    "browser": true
+  }
+}

@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 5.0.101
+      - name: Restore dependencies
+        run: dotnet restore
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+      - name: Test
+        run: dotnet test --no-build --verbosity normal
+      - name: zip dlls
+        run: (cd bin/Release/net5.0/ && zip libraries.zip $(find . -maxdepth 1 -type f -name \*.dll ! -name ImpostorCord.dll ! -name Impostor.Api.dll)) && mv bin/Release/net5.0/libraries.zip .
+      - uses: actions/upload-artifact@v2
+        with:
+          name: artifacts
+          path: bin/
+      - uses: actions/upload-artifact@v2
+        with:
+          name: libraries
+          path: libraries.zip
+      - uses: actions/upload-artifact@v2
+        with:
+          name: plugin
+          path: bin/Release/net5.0/ImpostorCord.dll
+      - uses: eine/tip@master
+        with:
+          tag: continous-integration
+          token: ${{ secrets.ACCESS_TOKEN }}
+          rm: true
+          files: |
+            bin/Release/net5.0/ImpostorCord.dll
+            libraries.zip

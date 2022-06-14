@@ -1,0 +1,63 @@
+{
+  "name": "@mira-hq/infrastructure",
+  "version": "1.0.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mira-hq/infrastructure.git"
+  },
+  "author": "Jerred Shepherd",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/mira-hq/infrastructure/issues"
+  },
+  "homepage": "https://github.com/mira-hq/infrastructure#readme",
+  "bin": {
+    "infrastructure": "bin/infrastructure.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "test": "true",
+    "cdk": "cdk",
+    "lint+build": "npm run lint && npm run build",
+    "lint:fix+build": "npm run lint:fix && npm run build",
+    "lint": "npm run eslint && npm run prettier",
+    "lint:fix": "npm run eslint:fix && npm run prettier:fix",
+    "eslint": "eslint \"*/**/*.{js,ts,tsx}\" --color",
+    "eslint:fix": "eslint \"*/**/*.{js,ts,tsx}\" --fix --color",
+    "prettier": "prettier --check .",
+    "prettier:fix": "prettier --write ."
+  },
+  "devDependencies": {
+    "@aws-cdk/assert": "1.88.0",
+    "@types/jest": "^26.0.10",
+    "@types/node": "10.17.27",
+    "@typescript-eslint/eslint-plugin": "^4.15.0",
+    "@typescript-eslint/parser": "^4.15.0",
+    "eslint": "^7.20.0",
+    "eslint-config-prettier": "^7.2.0",
+    "eslint-plugin-cdk": "^0.7.21",
+    "husky": "^4.3.8",
+    "jest": "^26.4.2",
+    "lint-staged": "^10.5.4",
+    "prettier": "^2.2.1",
+    "ts-jest": "^26.2.0"
+  },
+  "dependencies": {
+    "@aws-cdk/core": "1.88.0",
+    "monocdk": "^1.88.0",
+    "source-map-support": "^0.5.16",
+    "ts-node": "^9.0.0",
+    "typescript": "^3.9.8",
+    "aws-cdk": "1.88.0"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "**/*": "prettier --write --ignore-unknown",
+    "*.{js,css,md}": "prettier --write"
+  }
+}

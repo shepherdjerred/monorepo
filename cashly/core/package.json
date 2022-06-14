@@ -1,0 +1,47 @@
+{
+  "name": "@cashly/core",
+  "version": "1.0.0",
+  "description": "Finance library",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "scripts": {
+    "test": "jest",
+    "build": "tsc",
+    "watch": "tsc -w",
+    "clean": "rm -rv build/",
+    "run": "node build/src/Main.js",
+    "lint": "eslint '*/**/*.{js,ts,json}' --color",
+    "lint:fix": "eslint '*/**/*.{js,ts,json}' --fix --color",
+    "prettier": "prettier --check .",
+    "prettier:fix": "prettier --write ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cashly/core.git"
+  },
+  "author": "Jerred Shepherd",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/cashly/core/issues"
+  },
+  "homepage": "https://github.com/cashly/core#readme",
+  "devDependencies": {
+    "@types/jest": "^25.2.2",
+    "@typescript-eslint/eslint-plugin": "^2.33.0",
+    "@typescript-eslint/parser": "^2.33.0",
+    "eslint": "^7.0.0",
+    "eslint-config-prettier": "^6.11.0",
+    "eslint-plugin-import": "^2.20.2",
+    "eslint-plugin-jest": "^23.13.1",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-prettier": "^3.1.3",
+    "eslint-plugin-promise": "^4.2.1",
+    "jest": "^26.0.1",
+    "prettier": "^2.0.5",
+    "ts-jest": "^26.0.0"
+  },
+  "dependencies": {
+    "typescript": "^3.9.2",
+    "@types/node": "^14.0.1"
+  }
+}

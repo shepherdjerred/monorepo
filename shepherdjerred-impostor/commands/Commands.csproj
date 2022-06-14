@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net5.0</TargetFramework>
+    </PropertyGroup>
+    <ItemGroup>
+      <PackageReference Include="Impostor.Api" Version="1.2.2-ci.121" />
+    </ItemGroup>
+    <ItemGroup>
+      <Content Include=".github\workflows\ci.yml" />
+    </ItemGroup>
+</Project>

@@ -1,0 +1,58 @@
+{
+  "name": "@mira-hq/model",
+  "version": "1.0.19",
+  "private": false,
+  "description": "",
+  "scripts": {
+    "build": "npm run compile-plugins && npm run generate && npm run compile-generated",
+    "generate": "graphql-codegen --config codegen.yml",
+    "compile-plugins": "tsc --project tsconfig-plugins.json",
+    "compile-generated": "tsc --project tsconfig-generated.json",
+    "test": "true",
+    "dev": "graphql-codegen --config codegen.yml --watch",
+    "lint+build": "npm run lint && npm run build",
+    "lint:fix+build": "npm run lint:fix && npm run build",
+    "lint": "npm run prettier",
+    "lint:fix": "npm run prettier:fix",
+    "prettier": "prettier --check .",
+    "prettier:fix": "prettier --write ."
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mira-hq/model.git"
+  },
+  "author": "Jerred Shepherd",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/mira-hq/model/issues"
+  },
+  "homepage": "https://github.com/mira-hq/model#readme",
+  "devDependencies": {
+    "@graphql-codegen/cli": "1.20.1",
+    "@graphql-codegen/typescript": "1.21.0",
+    "@graphql-codegen/typescript-operations": "1.17.14",
+    "@graphql-codegen/typescript-react-apollo": "2.2.1",
+    "@graphql-codegen/typescript-resolvers": "1.18.2",
+    "@graphql-tools/utils": "^7.5.0",
+    "graphql-codegen-apollo-next-ssr": "^1.4.0",
+    "husky": "^4.3.8",
+    "lint-staged": "^10.5.4",
+    "prettier": "^2.2.1",
+    "typescript": "^4.1.5"
+  },
+  "dependencies": {
+    "@apollo/client": "^3.3.11",
+    "graphql": "^15.5.0"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "**/*": "prettier --write --ignore-unknown",
+    "*.{js,css,md}": "prettier --write"
+  }
+}

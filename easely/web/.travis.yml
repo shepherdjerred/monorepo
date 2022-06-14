@@ -1,0 +1,17 @@
+language: node_js
+node_js:
+- node
+notifications:
+  email: false
+script:
+- npm run build
+before_deploy:
+- cd dist
+deploy:
+  skip_cleanup: true
+  provider: s3
+  access_key_id: AKIAJIZ6FW2EW52PBBZA
+  secret_access_key:
+    secure: oWFkRCiPk1/c6tYAJA6TS9rl1cbZL3SlfJxdIHoOwN9qSmwMWNvETEF7QPEcDcpk64cnpTN0S51UY7Ju9hrBmyEp+RjSL+ElLHHMMUHdWcJ3vsqhKsp3eY9l5fICVo2GDvK2f8Sry9wtPX5l1eKuhF/aVs+CcFNbbN0D17fUJ8IWlkTOqKXWRNy3WltLSdZ6Rsxq+O+Hv66PMTmm9/2+Le7aS5qjcwYkVbNZP99f0MTgsAaziiRVT9stJRGOjY7GtR8CVidqZuVJc6W8Y6V0qid1xVR3cyxaP4tnXCD7bCZ9CMmFIfFmOT0eyGE5/j6287p6FjazemNwpmfiFvCauyDsVbkk+KUtyQASTHbPTMJY/k/QqCnDji4v0C+n9Twod3KFgczmpQXDlguV05ASUavIVd0ykorlQwBWGLB+ylBYxmvOxWgfeGxqOfBF/ekjhX4u+mpAY8Nq9zd9PASuZVPDB+eB49nDXD8LC+LC2O2sUlNuPKHcLn1CPlJOR3QiuxGlwIUacYHuA89X048ApEw8kUIlTb1aG2u6ktYMhAud3mpLWDzDnDYoZ1iyjp3yfOV/Dl5DDJRl+sMUmEH2CW3thRNqZxYxZAX6lybFxkZQxQdUecUIiIPCH2bRbB8SPcUsf6BeDbfKAuX+cHuvSek9klBC7ookSzX1giPy+/0=
+  bucket: com.shepherdjerred.easely
+

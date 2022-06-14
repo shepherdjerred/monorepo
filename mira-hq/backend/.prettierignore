@@ -1,0 +1,5 @@
+build
+coverage
+dist
+.idea
+node_modules

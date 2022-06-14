@@ -1,0 +1,19 @@
+language: node_js
+cache:
+  directories:
+  - node_modules
+node_js:
+- "9.3.0"
+notifications:
+  email: false
+script:
+- npm run build
+before_deploy:
+- cd build
+deploy:
+  skip_cleanup: true
+  provider: s3
+  bucket: com.shepherdjerred.huclubs.web
+  access_key_id: AKIAJIZ6FW2EW52PBBZA
+  secret_access_key:
+    secure: NG3YG0IW2IuOF0xSXSA4UGRnLPtbwTgEiv5vffhY/OswrbjVbpOo5dFOuaUKXC2H0KqvvKUejRcsmlRe3/QlDpqk+QDBQylTPiexsRI6NNEWIIEDv4zzLsT1urYooVi+TxFlAAUE2ccrv0a0y49reE0DJERC7uIlxVNucUkPiJUxXeyA9LMIiE89LjkMuSKM4LfepokSn+UwfLCvtGZeQmFAtka8tb9okr4cMP/CwsOsKnq7TUXfEI448APYDlaADUzB5fu+GC8KH2xriXLDf74AjVD6kVYZWD2qX20vAs9ViXd1VGweLjaMdmed1U8wvV+4ynwEKgPUSRPhWhmwht9zqjtvhrnKHW+DKdOD7Xotfq5mshSIPqydXapRhKHzUxHlmGRqzTmnwndPy8yY9u9DsD+MF9dr2kI9d6TL+OiAvj+xHd+YrjnCwp+2olSrTOed3ikBLFEbEv2aDDPN4dviu2V5uNWhANMQuyy5diSv5yWtkJT0kLHeOeEXpFjaWYluyW2quVV3QluaXc7UV4Oyk0d4rZiQVCOIGFB/DY/M3dHF5PKm7pqlp7W2LMVO5Tw6p5buroCAhvJANvYCJKX0tyOdyJyIWyhnPEngTREFNOgNX/RqX7Nj7J5b7UjI37OxP0pZbil5xiczYptt7R25JywwhV0LIpLzGlAemNM=
