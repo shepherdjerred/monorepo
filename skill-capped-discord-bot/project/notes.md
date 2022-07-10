@@ -1,0 +1,9 @@
+- [x] Valorant only show commentaries
+- League may be changing
+- [ ] @everyone in message
+  - [ ] Valorant @everyone - a new video has just been posted on the Skill Capped Valorant site!
+  - [ ] Wow: batch based on course, @everyone one time
+- [x] WoW: only commentaries
+- [ ] LoL: two channels, one for videos, one for commentaries
+  - [ ] one @everyone notification per batch
+- [ ] implement delay, ~1 hour from seeing fresh manifest

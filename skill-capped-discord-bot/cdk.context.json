@@ -1,0 +1,9 @@
+{
+  "availability-zones:account=753834062409:region=us-west-2": [
+    "us-west-2a",
+    "us-west-2b",
+    "us-west-2c",
+    "us-west-2d"
+  ],
+  "acknowledged-issue-numbers": [19179]
+}

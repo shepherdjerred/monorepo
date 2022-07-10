@@ -1,0 +1,62 @@
+{
+  "name": "skill-capped-discord-bot",
+  "version": "1.0.0",
+  "author": "Jerred Shepherd",
+  "license": "GPL-3.0",
+  "bin": {
+    "cdk": "lib/cdk/main.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "test": "jest",
+    "cdk": "cdk",
+    "lint+build": "npm run lint && npm run build",
+    "lint:fix+build": "npm run lint:fix && npm run build",
+    "lint": "npm run eslint && npm run prettier",
+    "lint:fix": "npm run eslint:fix && npm run prettier:fix",
+    "eslint": "eslint \"*/**/*.{ts,tsx}\" --color",
+    "eslint:fix": "eslint \"*/**/*.{ts,tsx}\" --fix --color",
+    "prettier": "prettier --check .",
+    "prettier:fix": "prettier --write .",
+    "prepare": "husky install"
+  },
+  "devDependencies": {
+    "@types/jest": "^27.4.1",
+    "@types/node": "^16.11.33",
+    "@types/random-words": "^1.1.2",
+    "@typescript-eslint/eslint-plugin": "^5.21.0",
+    "@typescript-eslint/parser": "^5.21.0",
+    "aws-cdk": "2.22.0",
+    "eslint": "^8.14.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-cdk": "^1.7.0",
+    "eslint-plugin-jest": "^26.1.5",
+    "factory.ts": "^1.1.0",
+    "husky": "^7.0.4",
+    "jest": "^27.5.1",
+    "lint-staged": "^12.4.1",
+    "prettier": "2.6.2",
+    "random-words": "^1.1.2",
+    "ts-jest": "^27.1.4",
+    "ts-node": "^10.7.0",
+    "typescript": "~4.6.4"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.81.0",
+    "@discordjs/rest": "^0.4.1",
+    "aws-cdk-lib": "2.22.0",
+    "axios": "^0.27.2",
+    "constructs": "^10.0.129",
+    "discord-api-types": "^0.32.0",
+    "discord.js": "^13.6.0",
+    "source-map-support": "^0.5.21"
+  },
+  "lint-staged": {
+    "**/*": "prettier --write --ignore-unknown"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  }
+}
