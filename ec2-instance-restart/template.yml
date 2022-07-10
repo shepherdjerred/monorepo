@@ -1,0 +1,86 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: An AWS Serverless Specification template describing your function.
+Parameters:
+  Subdomain:
+    Type: String
+  DiscordWebhookUrl:
+    Type: String
+Resources:
+  StopEc2InstanceLambda:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: StopEc2Instance
+      CodeUri: src/
+      Handler: stop.handler
+      Runtime: python3.8
+      MemorySize: 128
+      Timeout: 30
+      Events:
+        HttpApiEventSource:
+          Type: HttpApi
+          Properties:
+            Path: /stop
+            Method: POST
+            ApiId:
+              Ref: HttpApi
+      Environment:
+        Variables:
+          WEBHOOK_URL:
+            Ref: DiscordWebhookUrl
+  StartEc2InstanceLambda:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: StartEc2Instance
+      CodeUri: src/
+      Handler: start.handler
+      Runtime: python3.8
+      MemorySize: 128
+      Timeout: 30
+      Events:
+        HttpApiEventSource:
+          Type: HttpApi
+          Properties:
+            Path: /start
+            Method: POST
+            ApiId:
+              Ref: HttpApi
+      Environment:
+        Variables:
+          WEBHOOK_URL:
+            Ref: DiscordWebhookUrl
+  GetEc2InstanceStatusLambda:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: GetEc2InstanceStatus
+      CodeUri: src/
+      Handler: status.handler
+      Runtime: python3.8
+      MemorySize: 128
+      Timeout: 30
+      Events:
+        HttpApiEventSource:
+          Type: HttpApi
+          Properties:
+            Path: /status
+            Method: POST
+            ApiId:
+              Ref: HttpApi
+  HttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      CorsConfiguration:
+        AllowHeaders: "*"
+        AllowMethods: "*"
+        AllowOrigins: "*"
+        ExposeHeaders: "*"
+      Domain:
+        CertificateArn: arn:aws:acm:us-east-1:692594597524:certificate/6f827781-9221-4818-9ff6-83a31817a1e0
+        DomainName:
+          Fn::Join:
+            - ""
+            - - Ref: Subdomain
+              - ".shepherdjerred.com"
+        Route53:
+          HostedZoneId: Z24MJMG74F2S94
+          IpV6: true

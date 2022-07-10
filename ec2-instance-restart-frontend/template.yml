@@ -1,0 +1,104 @@
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  Bucket:
+    Type: "AWS::S3::Bucket"
+    DeletionPolicy: "Delete"
+    Properties:
+      BucketName: "com.shepherdjerred.ec2-instance-restart"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+  Identity:
+    Type: "AWS::CloudFront::CloudFrontOriginAccessIdentity"
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: "ec2 instance restart"
+  BucketPolicy:
+    Type: "AWS::S3::BucketPolicy"
+    Properties:
+      Bucket:
+        Ref: Bucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              CanonicalUser:
+                Fn::GetAtt:
+                  - Identity
+                  - S3CanonicalUserId
+            Action: "s3:GetObject"
+            Resource:
+              Fn::Sub: "${Bucket.Arn}/*"
+  Distribution:
+    Type: "AWS::CloudFront::Distribution"
+    Properties:
+      DistributionConfig:
+        Aliases:
+          - "instance-api-web.shepherdjerred.com"
+        Comment: "ec2 instance restart"
+        DefaultCacheBehavior:
+          DefaultTTL: 300
+          TargetOriginId: "s3-origin"
+          ViewerProtocolPolicy: "redirect-to-https"
+          ForwardedValues:
+            Cookies:
+              Forward: "none"
+            QueryString: False
+          Compress: true
+        DefaultRootObject: "index.html"
+        Enabled: true
+        IPV6Enabled: true
+        CustomErrorResponses:
+          - ResponsePagePath: "/index.html"
+            ResponseCode: 200
+            ErrorCachingMinTTL: 3600
+            ErrorCode: 404
+          - ResponsePagePath: "/index.html"
+            ResponseCode: 200
+            ErrorCachingMinTTL: 3600
+            ErrorCode: 403
+        Origins:
+          - DomainName:
+              Fn::GetAtt:
+                - "Bucket"
+                - "DomainName"
+            Id: "s3-origin"
+            S3OriginConfig:
+              OriginAccessIdentity:
+                Fn::Sub: "origin-access-identity/cloudfront/${Identity}"
+        ViewerCertificate:
+          AcmCertificateArn: "arn:aws:acm:us-east-1:692594597524:certificate/6f827781-9221-4818-9ff6-83a31817a1e0"
+          SslSupportMethod: "sni-only"
+        HttpVersion: "http2"
+  RecordSet:
+    Type: "AWS::Route53::RecordSet"
+    Properties:
+      HostedZoneId: "Z24MJMG74F2S94"
+      Name: "instance-api-web.shepherdjerred.com"
+      Type: "A"
+      AliasTarget:
+        HostedZoneId: "Z2FDTNDATAQYW2"
+        DNSName:
+          Fn::GetAtt:
+            - Distribution
+            - DomainName
+  DeploymentIamUser:
+    Type: "AWS::IAM::User"
+    Properties:
+      UserName: "github-actions-ec2-instance-restart-frontend"
+      Policies:
+        - PolicyName: "s3"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action: "s3:*"
+                Resource:
+                  Fn::Sub: "${Bucket.Arn}"
+              - Effect: "Allow"
+                Action: "s3:*"
+                Resource:
+                  Fn::Sub: "${Bucket.Arn}/*"
