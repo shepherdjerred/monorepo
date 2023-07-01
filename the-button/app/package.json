@@ -9,7 +9,7 @@
   "dependencies": {
     "prop-types": "^15.6.1",
     "react": "^16.3.0-alpha.1",
-    "react-native": "0.54.3",
+    "react-native": "0.72.1",
     "socket.io-client": "^2.0.4"
   },
   "devDependencies": {
