@@ -35,7 +35,7 @@
     "react-redux": "^5.1.1",
     "react-router": "^4.3.1",
     "react-router-dom": "^4.3.1",
-    "react-scripts": "2.1.1",
+    "react-scripts": "5.0.1",
     "redux": "^4.0.1",
     "redux-localstorage": "^0.4.1",
     "redux-localstorage-filter": "^0.1.1",
