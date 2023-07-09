@@ -12,10 +12,10 @@
     "@types/react-dom": "^16.9.5",
     "axios": "^0.19.2",
     "bulma": "^0.8.0",
-    "node-sass": "^4.13.1",
+    "node-sass": "^9.0.0",
     "react": "^16.13.0",
     "react-dom": "^16.13.0",
-    "react-scripts": "3.4.0",
+    "react-scripts": "5.0.1",
     "typescript": "^3.7.5",
     "victory": "^34.1.2"
   },
