@@ -50,7 +50,7 @@
     "sass": "^1.14.3",
     "sass-loader": "^6.0.7",
     "semistandard": "^11.0.0",
-    "semver": "^5.6.0",
+    "semver": "^5.7.2",
     "shelljs": "^0.7.6",
     "style-loader": "^0.18.2",
     "url-loader": "^1.1.2",
