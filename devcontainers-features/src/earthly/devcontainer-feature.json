@@ -1,0 +1,28 @@
+{
+  "name": "Earthly",
+  "id": "earthly",
+  "version": "1.0.1",
+  "description": "A feature to install Earthly",
+  "options": {
+    "version": {
+      "type": "string",
+      "default": "latest",
+      "description": "The version of Earthly to install"
+    },
+    "location": {
+      "type": "string",
+      "default": "/usr/local/bin",
+      "description": "The location for the Earthly binary"
+    },
+    "bootstrap": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether or not to bootstrap Earthly after installing"
+    }
+  },
+  "installsAfter": [
+    "ghcr.io/devcontainers/features/common-utils",
+    "ghcr.io/devcontainers/features/docker-in-docker",
+    "ghcr.io/devcontainers/features/docker-outside-of-docker"
+  ]
+}
