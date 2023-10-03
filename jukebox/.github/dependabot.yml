@@ -1,0 +1,19 @@
+version: 2
+updates:
+  - package-ecosystem: "cargo"
+    open-pull-requests-limit: 20
+    directory: "/"
+    schedule:
+      interval: "daily"
+    assignees:
+      - shepherdjerred
+    reviewers:
+      - shepherdjerred
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    assignees:
+      - shepherdjerred
+    reviewers:
+      - shepherdjerred
