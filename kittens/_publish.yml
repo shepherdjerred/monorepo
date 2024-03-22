@@ -1,0 +1,4 @@
+- source: kittens.qmd
+  netlify:
+    - id: f17de8f4-0da9-4cfa-9733-985b8e999cb4
+      url: 'https://deluxe-souffle-d1dc4b.netlify.app'
