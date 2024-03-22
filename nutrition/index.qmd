@@ -1,0 +1,158 @@
+---
+title: "Nutrition Data"
+format:
+  html:
+    code-fold: true
+jupyter: python3
+---
+
+```{python}
+import pandas as pd
+import plotly.express as px
+from datetime import datetime
+```
+
+```{python}
+summary_df = pd.DataFrame()
+```
+
+## Nutrition
+
+```{python}
+nutrition_df = pd.read_csv("data/mfp/nutrition.csv")
+
+# calories per day
+aggregation_functions = {"Date": "first", 'Calories': 'sum', 'Fat (g)': 'sum','Carbohydrates (g)': 'sum', 'Protein (g)': "sum"}
+nutrition_df = nutrition_df.groupby("Date").aggregate(aggregation_functions)
+
+fig = px.line(nutrition_df, x = 'Date', y = 'Calories', title='Calorie intake per day')
+fig.show()
+```
+
+
+```{python}
+# average calories per day per week
+aggregation_functions = {"Date": "first", 'Calories': 'mean', 'Fat (g)': 'mean','Carbohydrates (g)': 'mean', 'Protein (g)': "mean"}
+nutrition_df = nutrition_df.groupby(pd.to_datetime(nutrition_df['Date']).dt.strftime('%W')).aggregate(aggregation_functions).round(1).rename(columns={"Date": "Week"})
+
+fig = px.line(nutrition_df, x = 'Week', y = 'Calories', title='Average calorie intake per day by week')
+fig.show()
+```
+
+## Weight
+
+```{python}
+weight_df = pd.read_csv("data/apple_health/BodyMass.csv")
+# rename columns and discard irrelevant data
+weight_df = weight_df.rename(columns={"startDate": "Date", "value": "Weight (lbs)"})
+weight_df = weight_df[["Date", "Weight (lbs)"]]
+weight_df = weight_df.sort_values(by=["Date"])
+# remove old data
+weight_df = weight_df[~(weight_df["Date"] < "2023-05-01")]
+# convert strings to datetime, round to nearest day
+weight_df["Date"] = pd.to_datetime(weight_df['Date']).dt.round("D")
+# group by day and aggregate
+aggregation_functions = {"Date": "first", 'Weight (lbs)': 'mean'}
+weight_df = weight_df.groupby(weight_df["Date"].dt.strftime('%D'))
+weight_df = weight_df.aggregate(aggregation_functions)
+
+fig = px.line(weight_df, x = 'Date', y = 'Weight (lbs)', title='Weight by day')
+fig.show()
+```
+
+```{python}
+# group by week
+weight_df = weight_df.groupby(weight_df["Date"].dt.strftime('%W'))
+# aggregate
+aggregation_functions = {"Date": "first", 'Weight (lbs)': 'mean'}
+weight_df = weight_df.aggregate(aggregation_functions)
+# round values
+weight_df = weight_df.round(1)
+# rename columns
+weight_df = weight_df.rename(columns={"Date": "Week"})
+# plot
+fig = px.line(weight_df, x = 'Week', y = 'Weight (lbs)', title='Average weight by week')
+fig.show()
+```
+
+## BMR
+
+BMR is calculated with the average weight of the week from the graph above.
+
+```{python}
+
+activity_factor = 1.2
+height_inches = (5 * 12) + 9
+height_cm = height_inches * 2.54
+age = 26
+
+bmr_df = weight_df.copy(deep=True)
+bmr_df["BMR"] = (10 * (bmr_df["Weight (lbs)"] * 0.45359237)) + (6.25 * height_cm) - (5 * age) + 5
+bmr_df["TDEE"] = bmr_df["BMR"] * activity_factor
+fig = px.line(bmr_df, x = 'Week', y = bmr_df.columns[2:4], title='')
+fig.show()
+```
+
+BMR calculated with the Mifflin-St Jeor Equation.
+
+```{python}
+#| echo: false
+
+from IPython.display import display, Markdown
+display(Markdown("""
+TDEE multiplies BMR by an acitivity factor of {activity_factor}.
+""".format(activity_factor = activity_factor)))
+```
+
+## Exercise
+
+This shows calories burned during activities tracked by Strava, e.g. intentional walks/runs. It does not include day-to-day walking or other physical activity not tracked by Strava, like workouts.
+
+```{python}
+strava_df = pd.read_csv("data/strava/activities.csv")
+
+strava_df = strava_df[["Activity Date", "Calories"]]
+strava_df = strava_df.rename(columns={"Activity Date": "Date", "Calories": "Calories Burned"})
+
+strava_df["Date"] = pd.to_datetime(strava_df['Date']).dt.round("D")
+strava_df = strava_df.round(1)
+strava_df = strava_df[~(strava_df["Date"] < "2023-05-01")]
+
+fig = px.scatter(strava_df, x = 'Date', y = 'Calories Burned', title='Strava calories burned')
+fig.show()
+```
+
+```{python}
+# group by week
+strava_df = strava_df.groupby(strava_df["Date"].dt.strftime('%W'), as_index=False)
+# aggregate
+aggregation_functions = {"Date": "first", 'Calories Burned': 'sum'}
+strava_df = strava_df.aggregate(aggregation_functions)
+fig = px.line(strava_df, x = 'Date', y = 'Calories Burned', title='Strava calories burned weekly')
+fig.show()
+```
+
+## Summary
+
+### Weight Loss per Week
+
+```{python}
+lbs_lost_per_week_df = weight_df.set_index("Week").diff()
+fig = px.line(lbs_lost_per_week_df, x = lbs_lost_per_week_df.index, y = 'Weight (lbs)', title='Weekly weight change')
+fig.show()
+```
+
+### Calorie deficit
+
+This is calculated by multiplying the weekly weight change by `3500`, since a pound of fat contains 3500 calories.
+
+> This assumes that the body is burning fat and not other tissue (e.g. muscle) which may have a different energy content.
+
+```{python}
+calorie_deficit_df = lbs_lost_per_week_df * 3500
+calorie_deficit_df = calorie_deficit_df.rename(columns={"Weight (lbs)": "Calories"})
+
+
+fig = px.line(calorie_deficit_df, x = calorie_deficit_df.index, y = 'Calories', title='Weekly calorie deficit')
+fig.show()
+```
