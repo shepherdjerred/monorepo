@@ -1,0 +1,129 @@
+---
+title: "Kittens"
+format:
+  html:
+    code-fold: true
+jupyter: python3
+---
+
+This document graphs the weight of my cats. So far it has:
+
+:::{.callout-note collapse="true"}
+## Thor, born 4/20/21
+
+![A picture of Thor](./img/thor.jpg)
+:::
+
+:::{.callout-note collapse="true"}
+## Loki, born 4/20/21, and is currently MIA :(
+
+![A picture of Loki](./img/loki.jpg)
+:::
+
+:::{.callout-note collapse="true"}
+## Kit, born 3/20/22
+
+![A picture of Kit](./img/kit.jpg)
+:::
+
+```{python}
+#| label: fig-polar
+
+from datetime import datetime, date
+import pandas as pd
+import plotly.express as px
+
+class Entry:
+  def __init__(self, date, weight):
+    self.date = date
+    self.weight = weight
+
+  def to_dict(self):
+    return {
+        'date': self.date,
+        'weight': self.weight,
+    }
+
+thor = [
+    Entry(datetime(2020, 7, 14), 1690),
+    Entry(datetime(2020, 7, 23), 1871),
+    Entry(datetime(2020, 8,  6), 2300),
+    Entry(datetime(2020, 8,  21), 2750),
+    Entry(datetime(2020, 9,  4), 3080),
+    Entry(datetime(2020, 9,  18), 3130),
+    Entry(datetime(2020, 10,  8), 3281),
+    Entry(datetime(2020, 10,  27), 3541),
+    Entry(datetime(2020, 11,  20), 3850),
+    Entry(datetime(2020, 12,  16), 4235),
+    Entry(datetime(2021, 1,  7), 4530),
+    Entry(datetime(2021, 2,  12), 4910),
+    Entry(datetime(2021, 3,  12), 5130),
+    Entry(datetime(2021, 5,  3), 4886),
+    Entry(datetime(2021, 5,  21), 4760),
+    Entry(datetime(2021, 7,  14), 4900),
+    Entry(datetime(2021, 8, 28), 4801),
+    Entry(datetime(2021, 10, 4), 4850),
+    Entry(datetime(2022, 1, 9), 4800),
+    Entry(datetime(2022, 2, 28), 5210),
+    Entry(datetime(2022, 6, 5), 5050),
+    Entry(datetime(2022, 6, 20), 5080),
+    Entry(datetime(2022, 7, 15), 5150),
+    Entry(datetime(2022, 7, 24), 5220),
+    Entry(datetime(2022, 8, 28), 5700),
+    Entry(datetime(2022, 10, 13), 5130),
+    Entry(datetime(2022, 11, 29), 5820),
+    Entry(datetime(2023, 2, 20), 5600)
+]
+
+loki = [
+    Entry(datetime(2020, 7, 14), 1655),
+    Entry(datetime(2020, 7, 23), 1830),
+    Entry(datetime(2020, 8,  6), 2297),
+    Entry(datetime(2020, 8,  21), 2610),
+    Entry(datetime(2020, 9,  4), 2930),
+    Entry(datetime(2020, 9,  18), 3130),
+    Entry(datetime(2020, 10,  8), 3427),
+    Entry(datetime(2020, 10,  27), 3568),
+    Entry(datetime(2020, 11,  20), 4130),
+    Entry(datetime(2020, 12,  16), 4562),
+    Entry(datetime(2021, 1,  7), 4840),
+    Entry(datetime(2021, 2,  12), 5070),
+    Entry(datetime(2021, 3,  12), 5190),
+    Entry(datetime(2021, 5,  3), 5050),
+    Entry(datetime(2021, 5,  21), 4930),
+    Entry(datetime(2021, 7,  14), 5110),
+    Entry(datetime(2021, 8, 28), 5320),
+    Entry(datetime(2021, 10, 4), 5400),
+    Entry(datetime(2022, 1, 9), 4840),
+    Entry(datetime(2022, 2, 28), 5140)
+]
+
+kitten = [
+   Entry(datetime(2022, 6, 20), 1120),
+   Entry(datetime(2022, 7, 15), 1960),
+   Entry(datetime(2022, 7, 24), 2320),
+   Entry(datetime(2022, 8, 18), 3400),
+   Entry(datetime(2022, 8, 28), 3560),
+   Entry(datetime(2022, 10, 13), 4600),
+   Entry(datetime(2022, 11, 29), 5350),
+   Entry(datetime(2023, 2, 20), 5900)
+]
+
+ratio = 453.59237
+
+thor_dataframe = pd.DataFrame.from_records([entry.to_dict() for entry in thor])
+thor_dataframe['name'] = 'Thor'
+
+loki_dataframe = pd.DataFrame.from_records([entry.to_dict() for entry in loki])
+loki_dataframe['name'] = 'Loki'
+
+kitten_dataframe = pd.DataFrame.from_records([entry.to_dict() for entry in kitten])
+kitten_dataframe['name'] = 'Kit'
+
+all = pd.concat([thor_dataframe, loki_dataframe, kitten_dataframe], ignore_index=True, sort=False)
+all['weight_lbs'] = all.weight / ratio
+all['age'] = all.date - datetime(2020, 4, 20)
+
+fig = px.line(all, x="date", y="weight_lbs", color="name", title='Kitten Weight')
+fig.show()
+```
