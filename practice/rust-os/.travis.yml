@@ -1,0 +1,32 @@
+language: rust
+os:
+rust:
+- stable
+- beta
+- nightly
+jobs:
+  allow_failures:
+  - rust: stable
+  - rust: beta
+before_script:
+- rustup component add rust-src --toolchain nightly
+- rustup component add llvm-tools-preview
+# https://github.com/rust-osdev/bootimage/issues/64
+- (cd .. && cargo install bootimage)
+- sudo apt update; sudo apt install qemu
+script:
+- cargo build --verbose --all
+- cargo test
+- cargo bootimage
+deploy:
+  provider: releases
+  api_key:
+    secure: iE78CqH2MwoygEbWi44LPCt7cL4OEVMridW/SKmueRDhBLn4CxIupPH2YVtKiulHPydE20sL4WQbE103GBlnk5qk0Zh6Igh40MIxiBjdcdHXcAic19dE5NyjCgS9I4Rl+87/uUmPHBX7z5+3NjomlRrLMHzxkqXLOx9XQLA5/vU9H1Rctpkotp3c6Nr4jrN7FpV7eRgxJVcOpGFMKnKSKD6Y0a7S0zMCSh2Iw8ax6VPJErhp52VXNUEaYzMZzcCNzCufO768i5vfdphTnJdBD0W3gWoKmeB8d2Acm4As4IepIFedRnAiCHE0vDdAgz6//sL/ruBZoqN8j5kGwedhcPjRmFhey7/+5uMPoHCvR701O6mEEHpGxgmrJasOZ6V2w4TaGnvb3O/nj/KT1pMRMUK7+K74YW4y4MyABjjQcU8w7yoQT4sEauL7vlltQ94zk3mXqf1iqUfANt/m4AwxG+KW2K7Rjo2YO7rW4c5ZJFF2fZbbZCG0etqtlMXMquUx+O+DOFGPrJE8GHpFdAWLxzfqqgl8fDal2If85TgYhagS7pWMob7YNNvm5qsDs7N51wEJ9VZ+p8tyae/eW9WjY2DucAZpNbuDdohBB+zy/7pYlkZjrN1rfjLFGgb/Q3KsLuqTH0DgJoLGdWWf9ueOlkHdzaIFEeuJQRtfZgTTJlE=
+  file: target/x86_64-bare-metal/debug/bootimage-rust_os.bin
+  on:
+    repo: shepherdjerred/rust_os
+    branch: master
+    rust: nightly
+  skip_cleanup: 'true'
+  draft: true
+  overwrite: true

@@ -1,0 +1,10 @@
+[package]
+name = "bevy-experiment"
+version = "0.1.0"
+authors = ["Jerred Shepherd <ShepherdJerred@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+bevy = "0.4"
+bevy_tiled_prototype = { git = "https://github.com/StarArawn/bevy_tiled", tag = "v0.1.1-bevy-0.4" }
+cargo-edit-locally = "0.1.3"

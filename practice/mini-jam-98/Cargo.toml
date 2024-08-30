@@ -1,0 +1,8 @@
+[package]
+name = "mini-jam-98"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bevy = { version = "0.6.0", features = ["dynamic"] }
+rand = "0.8.4"

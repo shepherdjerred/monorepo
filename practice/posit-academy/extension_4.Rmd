@@ -1,0 +1,97 @@
+---
+title: Milestone Four Extension
+author: Jerred Shepherd
+output:
+  html_document:
+    toc_float: true
+    toc: TRUE
+    theme: flatly
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(dplyr)
+library(tidyr)
+library(rmarkdown)
+
+survey_full <- read_csv("https://rsacdn.link/milestones/internal/R_community_survey/4wks/data/survey_full.csv")
+```
+
+# Week One
+
+## Enjoyment of R per capita
+
+```{r one, echo = FALSE}
+responses_per_country <- survey_full %>%
+  drop_na(country) %>%
+  drop_na(enjoyability) %>% 
+  group_by(country) %>%
+  count
+
+enjoyability_by_country <- survey_full %>%
+  drop_na(country) %>%
+  drop_na(enjoyability) %>% 
+  group_by(country) %>%
+  summarise(sum_enjoyability = sum(enjoyability))
+
+both = merge(responses_per_country, enjoyability_by_country)
+
+both$avg_enjoyability <- with(both, sum_enjoyability / n)
+
+both %>% filter(n > 20) %>% arrange(desc(avg_enjoyability)) %>%
+  head %>%
+  paged_table
+```
+
+## Countries that have the most mixed feelings about R
+
+```{r polarization, echo = FALSE}
+polarization <- survey_full %>%
+  drop_na(country) %>%
+  drop_na(enjoyability) %>% 
+  group_by(country) %>%
+  summarise(polarization = sd(enjoyability)) %>% 
+  drop_na(polarization) %>% 
+  filter(polarization != 0) %>% 
+  arrange(desc(polarization))
+paged_table(head(polarization))
+```
+
+# Week Two
+
+## Enjoyability vs Usage (scatterplot)
+
+```{r enjoyability-freq, echo = FALSE, warning = FALSE, fig.width=9, fig.height=5}
+survey_full %>%
+  drop_na(use_frequency) %>%
+  drop_na(enjoyability) %>%
+  ggplot(data = . , mapping = aes(x = enjoyability, y = use_frequency)) + geom_count()
+```
+
+## Enjoyability vs Usage (heatmap)
+
+```{r enjoyability-freq-heatmap, echo = FALSE}
+survey_full %>%
+  drop_na(enjoyability) %>%
+  drop_na(use_frequency) %>%
+  ggplot(data = . , mapping = aes(x = enjoyability, y = use_frequency)) + geom_bin_2d(bins = 5, drop = TRUE)
+```
+
+# Week Three
+
+## Countries that enjoy R the least
+
+```{r three, echo = FALSE}
+survey_full %>%
+  filter(experience != "None") %>%
+  group_by(country) %>%
+  summarise(
+    avg_enjoyability = mean(enjoyability, na.rm=TRUE) %>% round,
+    avg_recommend = mean(recommend, na.rm=TRUE) %>% round
+  ) %>%
+  arrange(avg_enjoyability) %>%
+  head %>%
+  paged_table
+```
