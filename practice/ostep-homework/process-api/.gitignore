@@ -1,0 +1,7 @@
+cmake-build-debug
+CMakeFiles
+CMakeCache.txt
+Makefile
+process_api
+.idea
+*.iml

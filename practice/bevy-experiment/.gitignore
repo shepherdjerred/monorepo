@@ -1,0 +1,9 @@
+/target/
+Cargo.lock
+**/*.rs.bk
+/target
+*.iml
+.idea
+.DS_Store
+bevy_tiled
+

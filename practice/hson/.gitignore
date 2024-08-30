@@ -1,0 +1,6 @@
+.idea
+*.iml
+.stack-work/
+*~
+*.hi
+*.o
