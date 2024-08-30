@@ -1,0 +1,7 @@
+advent-of-code.xcodeproj
+.DS_Store
+.swiftpm
+.build
+*.iml
+.idea
+

@@ -1,0 +1,26 @@
+name: AdventOfCode2022
+version: 0.1.0.0
+github: "shepherdjerred/advent-of-code-2022"
+license: "GPL-3.0"
+author: "Jerred Shepherd"
+maintainer: "github@sjer.red"
+copyright: "2022 Jerred Shepherd"
+
+extra-source-files:
+  - README.md
+
+description: My solutions to Advent of Code 2022
+
+dependencies:
+  - base >= 4.7 && < 5
+  - split >= 0.2.3.4 && < 0.3
+  - containers >= 0.6.5.1 && < 0.7
+  - multiset >= 0.3.4.3 && < 0.4
+
+library:
+  source-dirs: src
+
+executables:
+  Day1:
+    main: Main.hs
+    source-dirs: Day1
