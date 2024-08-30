@@ -1,0 +1,26 @@
+on:
+  push:
+    paths:
+      - "2022/**"
+name: 2022
+defaults:
+  run:
+    working-directory: 2022/
+jobs:
+  haskell:
+    strategy:
+      matrix:
+        day:
+          - Day1
+    name: Run Haskell Executable
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: haskell/actions/setup@v1
+        with:
+          ghc-version: "9.2.5"
+          cabal-version: "3.8.1.0"
+          enable-stack: true
+          stack-version: "2.9.1"
+      - name: run ${{ matrix.day }}
+        run: stack run ${{ matrix.day }}

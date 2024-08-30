@@ -1,0 +1,17 @@
+VERSION 0.7
+
+bun:
+  FROM oven/bun:1
+  WORKDIR /workspace
+
+deps:
+  ARG --required day
+  FROM +bun
+  COPY Day$day/package.json Day$day/bun.lockb .
+  RUN bun install --frozen-lockfile
+
+test:
+  ARG --required day
+  FROM +deps
+  COPY Day$day/ .
+  RUN bun test
