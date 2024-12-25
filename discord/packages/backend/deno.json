@@ -1,0 +1,15 @@
+{
+  "tasks": {
+    "check": "deno check src/index.ts",
+    "check:watch": "deno run -A https://deno.land/x/denon/denon.ts check",
+    "run": "deno run -A --unstable-ffi src/index.ts",
+    "test:update": "deno test -A --unstable-ffi -- --update"
+  },
+  "imports": {
+    "@discord/data": "../data/src/index.ts"
+  },
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
+  }
+}

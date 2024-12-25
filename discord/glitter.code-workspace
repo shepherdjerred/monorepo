@@ -1,0 +1,63 @@
+{
+  "folders": [
+    {
+      "path": "packages/backend"
+    },
+    {
+      "path": "packages/data"
+    },
+    {
+      "path": "packages/frontend"
+    },
+    {
+      "path": "packages/preview"
+    },
+    {
+      "name": "root",
+      "path": "."
+    }
+  ],
+  "extensions": {
+    "recommendations": [
+      "astro-build.astro-vscode",
+      "earthly.earthfile-syntax-highlighting",
+      "tamasfe.even-better-toml",
+      "github.vscode-github-actions",
+      "esbenp.prettier-vscode",
+      "DavidAnson.vscode-markdownlint",
+      "ms-azuretools.vscode-docker",
+      "timonwong.shellcheck",
+      "mkhl.shfmt",
+      "redhat.vscode-yaml",
+      "arahata.linter-actionlint",
+      "dbaeumer.vscode-eslint",
+      "bradlc.vscode-tailwindcss",
+      "lightyen.tailwindcss-intellisense-twin"
+    ]
+  },
+  "settings": {
+    "testing.automaticallyOpenPeekView": "never",
+    "deno.enable": true,
+    "deno.lint": true,
+    "deno.unstable": true,
+    "deno.cacheOnSave": true,
+    "deno.codeLens.implementations": true,
+    "deno.codeLens.references": true,
+    "deno.codeLens.referencesAllFunctions": true,
+    "deno.codeLens.test": true,
+    "deno.suggest.imports.autoDiscover": true,
+    "[typescript]": {
+      "editor.defaultFormatter": "denoland.vscode-deno"
+    }
+  },
+  "launch": {
+    "configurations": [
+      {
+        "type": "chrome",
+        "name": "https://localhost:4321",
+        "request": "launch",
+        "url": "https://localhost:4321"
+      }
+    ]
+  }
+}

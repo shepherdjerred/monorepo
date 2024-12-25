@@ -1,0 +1,21 @@
+{
+  "name": "@discord/preview",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "lint": "astro check",
+    "update": "npx npm-check-updates -u"
+  },
+  "type": "module",
+  "dependencies": {
+    "@astrojs/check": "^0.9.3",
+    "@astrojs/react": "^3.0.10",
+    "astro": "^4.4.0",
+    "typescript": "^5.3.3"
+  }
+}

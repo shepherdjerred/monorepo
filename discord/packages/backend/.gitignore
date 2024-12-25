@@ -1,0 +1,6 @@
+.env
+*.env
+*.png
+chats.json
+state.json
+matches

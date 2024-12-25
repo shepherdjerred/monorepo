@@ -1,0 +1,47 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "deno",
+      "command": "test",
+      "args": ["-A", "--unstable-ffi", "--watch"],
+      "problemMatcher": ["$deno-test"],
+      "group": "test",
+      "label": "deno: test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "runOptions": { "runOn": "folderOpen" },
+      "isBackground": true
+    },
+    {
+      "type": "deno",
+      "command": "lint",
+      "args": ["--watch"],
+      "problemMatcher": ["$deno-lint"],
+      "group": "none",
+      "label": "deno: lint",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "runOptions": { "runOn": "folderOpen" },
+      "isBackground": true
+    },
+    {
+      "type": "deno",
+      "command": "task",
+      "args": ["check:watch"],
+      "problemMatcher": ["$deno"],
+      "group": "none",
+      "label": "deno: check",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "runOptions": { "runOn": "folderOpen" },
+      "isBackground": true
+    }
+  ]
+}
