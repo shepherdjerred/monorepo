@@ -1,0 +1,164 @@
+[
+  {
+    "name": "Jerred",
+    "league": {
+      "leagueAccount": {
+        "id": "T0unTFnLyDJ5TVfhWOQNBI2aZIjDBEw9F73oHrE5idNNZAo",
+        "accountId": "f9SPdxzjg93nJ8W4F44u36cfrldmHzX6IQvKLFKb2J1piw",
+        "puuid": "EjRmQ1H7E1md8UNw_9BwqcIxN3QqKMkP7aPQFLOrIcV5HoH5qulKRCBAT1ibn5EgrljZ82RT1sjccg",
+        "region": "AMERICA_NORTH"
+      },
+      "alts": []
+    },
+    "discordAccount": { "id": "160509172704739328" },
+    "tier": {
+      "display": "X",
+      "ordinal": 8
+    }
+  },
+  {
+    "name": "Lisa",
+    "league": {
+      "leagueAccount": {
+        "id": "CcHNuKQIHTWx10iSkKTLu3T25-foRAEchK6YOxVkkprw8no",
+        "accountId": "JEL8EcTQKAnxhhSYwjfaDEJCULiABNOLASrmnnG5QuNMy3c",
+        "puuid": "f_OAYIvQvsXSU26klci-enHHgZKOBuoU2xg3SBestTxyVOFg_PaufjklzhrPwe90kF0itR55jwy_sQ",
+        "region": "AMERICA_NORTH"
+      },
+      "alts": []
+    },
+    "discordAccount": { "id": "138906561895464960" }
+  },
+  {
+    "name": "Hirza",
+    "league": {
+      "leagueAccount": {
+        "id": "wXR4_k21Av0OwvxsLjJ5IiFkEuC0OnrsXR3X_WUWCEFD5Nk",
+        "accountId": "yqyw1c7LrHLq8S38ByFOKCkQFxNBE-xbF_gHPwjglW5DWDw",
+        "puuid": "x1Ci6fUozKWiZYrqO-Q2f3zt46gCD8Hvte5RqHOKcdmH-1VBHr6-X60Klz2zsqnTO7bF2QxLl60fRA",
+        "region": "AMERICA_NORTH"
+      },
+      "alts": []
+    },
+    "discordAccount": { "id": "528096854831792159" },
+    "tier": {
+      "display": "B",
+      "ordinal": 4
+    }
+  },
+  {
+    "name": "Virmel",
+    "league": {
+      "leagueAccount": {
+        "id": "Mv2ExMQFAchYyFc2eUaJn2Q62p8sKCOAWX85A8xZm3Ef",
+        "accountId": "Sn8wbtiSKpJTrgYSFbZsd9CVepf3XuzM-33JW6_BWms",
+        "puuid": "okVQL80zjnT_HMuDoqR3QiuGTKHQNKPDTbRcjeLjhgprfPeWdMPJXTA_sbK3rxDt2tyIdv9SG2V_Lw",
+        "region": "AMERICA_NORTH"
+      },
+      "alts": []
+    },
+    "discordAccount": { "id": "208425244128444418" },
+    "tier": {
+      "display": "A",
+      "ordinal": 3
+    }
+  },
+  {
+    "name": "Danny",
+    "league": {
+      "leagueAccount": {
+        "id": "pleftlYNvBPZS2aSkv-AoMo-NcrT6C5qavkD3jkELULiPbM",
+        "accountId": "h0YBZPKSBXV-TGYeFMWGigZPOI9ervu2z168uhTlYe9u24w",
+        "puuid": "PFmOO4HVmc2U_UhEzEjgAiZORKxWRxpdu4YyqI0uEa9PZqSLhg7sABnCuGBiPHd7BwVl6x4OSEK-fQ",
+        "region": "AMERICA_NORTH"
+      },
+      "alts": []
+    },
+    "discordAccount": { "id": "263577791105073152" }
+  },
+  {
+    "name": "Irfan",
+    "league": {
+      "leagueAccount": {
+        "id": "BTJvZNnOUHFnEICbwyq-5A2ZG-7JOGvbw-87juNrEaSr6PTc",
+        "accountId": "h0YBZPKSBXV-TGYeFMWGigZPOI9ervu2z168uhTlYe9u24w",
+        "puuid": "beA95KLRaBvnFQt6MhKJniDOH0vp9mhpdCtlOH8tPrvAYO3RLgyPyf1CPmxTZJA_wKjZw6Gv03Yhmg",
+        "region": "AMERICA_NORTH"
+      },
+      "alts": []
+    },
+    "discordAccount": { "id": "410595870380392458" },
+    "tier": {
+      "display": "B",
+      "ordinal": 4
+    }
+  },
+  {
+    "name": "Neko Ryan",
+    "league": {
+      "leagueAccount": {
+        "id": "VnpSeVl5vk6l7qNtmTRUGc4UdqHaN7C49U6ZdTTJiqCRc2c",
+        "accountId": "gUpqEIRW0I7S8ugSEM0FPh8Qml_5U6m3Pjh2ziTymMflgg",
+        "puuid": "4UZQqglJjZd33aWVcOHExc6yhc83iguRmkoCDnxPATBDVqGF_B3YVCp7U0OVfwGvWVn4uURVIvkHQw",
+        "region": "AMERICA_NORTH"
+      },
+      "alts": []
+    },
+    "discordAccount": { "id": "200067001035653131" },
+    "tier": {
+      "display": "Debt",
+      "ordinal": 6
+    }
+  },
+  {
+    "name": "Long",
+    "league": {
+      "leagueAccount": {
+        "id": "z27c2dEA_YQ1TikXh-NpWpy7XN-FUHYVAg1VymYZGdI4NOw",
+        "accountId": "A-qxB7HUhtqWLLcPEh1gik6VOqgK3QvmMMN1BHLxlHjlkX4",
+        "puuid": "ZF_grAnZjpHTTmh-RyVax-LCwZVCVLRJMLgTU2BJiUN2UcLYpeq6RZxvRBXlcQpwNVqg-OFNr41qXA",
+        "region": "AMERICA_NORTH"
+      },
+      "alts": []
+    },
+    "discordAccount": { "id": "251485022429642752" },
+    "tier": {
+      "display": "B",
+      "ordinal": 4
+    }
+  },
+  {
+    "name": "Aaron",
+    "league": {
+      "leagueAccount": {
+        "id": "8DBRLP2D8LcfyagWJ0-q5WEM0ALDsfgHZaNOr8ZSaSHyvwY",
+        "accountId": "1opmqlc_OR9DOpK4wPrdv3eSAtgboJURSZ47dHKkS72K2g",
+        "puuid": "YIBj-FbOFri3kZjbXGigzwOmJx1ljY9cVRXWIp6gPO4VqZ5Qdvt4CbmIIZoq6XHwgKLdDNVZPX8H6w",
+        "region": "AMERICA_NORTH"
+      },
+      "alts": []
+    },
+    "discordAccount": { "id": "186665676134547461" },
+    "tier": {
+      "display": "S++",
+      "ordinal": 1
+    }
+  },
+  {
+    "name": "Joel",
+    "league": {
+      "leagueAccount": {
+        "id": "nm0GrBxItUSP_OIGPc7nVpBgJWsQvu3nAhJMAScu2d1KvsY",
+        "accountId": "WYMGna0Vz03WKvh7q1Lc2xfNWrJOxXn3bCERVppaawa_Pg",
+        "puuid": "beyeGCFvx9bxEqv67MAC8i_CrlBde5JNvNjFKD1OGvKsfZzP9m1nx2u_Lj5-TVHTENHu_MKfIwCp6A",
+        "region": "AMERICA_NORTH"
+      },
+      "alts": []
+    },
+    "discordAccount": { "id": "282716540053225472" },
+    "tier": {
+      "display": "B",
+      "ordinal": 4
+    }
+  }
+]

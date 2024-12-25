@@ -1,0 +1,3 @@
+export const snapshot = {};
+
+snapshot[`should be able to get version 1`] = `"14.4.1"`;

@@ -1,0 +1,1632 @@
+export const snapshot = {};
+
+snapshot[`should be able to get champion data 1`] = `
+{
+  data: {
+    SummonerBarrier: {
+      cooldown: [
+        180,
+      ],
+      cooldownBurn: "180",
+      cost: [
+        0,
+      ],
+      costBurn: "0",
+      costType: "No Cost",
+      datavalues: {},
+      description: "Shields your champion from 105-411 damage (depending on champion level) for 2 seconds.",
+      effect: [
+        null,
+        [
+          87,
+        ],
+        [
+          18,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+      ],
+      effectBurn: [
+        null,
+        "87",
+        "18",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+      ],
+      id: "SummonerBarrier",
+      image: {
+        full: "SummonerBarrier.png",
+        group: "spell",
+        h: 48,
+        sprite: "spell0.png",
+        w: 48,
+        x: 0,
+        y: 0,
+      },
+      key: "21",
+      maxammo: "-1",
+      maxrank: 1,
+      modes: [
+        "URF",
+        "CLASSIC",
+        "ARSR",
+        "ARAM",
+        "ASSASSINATE",
+        "ULTBOOK",
+        "WIPMODEWIP",
+        "TUTORIAL",
+        "DOOMBOTSTEEMO",
+        "PRACTICETOOL",
+        "FIRSTBLOOD",
+        "NEXUSBLITZ",
+        "STARGUARDIAN",
+        "PROJECT",
+        "ONEFORALL",
+      ],
+      name: "Barrier",
+      range: [
+        1200,
+      ],
+      rangeBurn: "1200",
+      resource: "No Cost",
+      summonerLevel: 4,
+      tooltip: "<shield>Shields {{ tooltipabsorbeddamage }}</shield> damage from your champion for 2 seconds.",
+      vars: [],
+    },
+    SummonerBoost: {
+      cooldown: [
+        210,
+      ],
+      cooldownBurn: "210",
+      cost: [
+        0,
+      ],
+      costBurn: "0",
+      costType: "No Cost",
+      datavalues: {},
+      description: "Removes all disables (excluding suppression and airborne) and summoner spell debuffs affecting your champion and lowers the duration of incoming disables by 65% for 3 seconds.",
+      effect: [
+        null,
+        [
+          0.65,
+        ],
+        [
+          3,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+      ],
+      effectBurn: [
+        null,
+        "0.65",
+        "3",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+      ],
+      id: "SummonerBoost",
+      image: {
+        full: "SummonerBoost.png",
+        group: "spell",
+        h: 48,
+        sprite: "spell0.png",
+        w: 48,
+        x: 48,
+        y: 0,
+      },
+      key: "1",
+      maxammo: "-1",
+      maxrank: 1,
+      modes: [
+        "URF",
+        "CLASSIC",
+        "ARSR",
+        "ARAM",
+        "ULTBOOK",
+        "WIPMODEWIP",
+        "TUTORIAL",
+        "DOOMBOTSTEEMO",
+        "PRACTICETOOL",
+        "FIRSTBLOOD",
+        "NEXUSBLITZ",
+        "PROJECT",
+        "ONEFORALL",
+      ],
+      name: "Cleanse",
+      range: [
+        200,
+      ],
+      rangeBurn: "200",
+      resource: "No Cost",
+      summonerLevel: 9,
+      tooltip: "Removes all disables (excluding suppression and airborne) and summoner spell debuffs affecting your champion and reduces the duration of disables by 65% for the next {{ e2 }} seconds.",
+      vars: [],
+    },
+    SummonerCherryFlash: {
+      cooldown: [
+        0.25,
+      ],
+      cooldownBurn: "0.25",
+      cost: [
+        0,
+      ],
+      costBurn: "0",
+      costType: "No Cost",
+      datavalues: {},
+      description: "Teleports your champion a short distance toward your cursor's location.",
+      effect: [
+        null,
+        [
+          400,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+      ],
+      effectBurn: [
+        null,
+        "400",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+      ],
+      id: "SummonerCherryFlash",
+      image: {
+        full: "SummonerCherryFlash.png",
+        group: "spell",
+        h: 48,
+        sprite: "spell0.png",
+        w: 48,
+        x: 96,
+        y: 0,
+      },
+      key: "2202",
+      maxammo: "-1",
+      maxrank: 1,
+      modes: [
+        "CHERRY",
+      ],
+      name: "Flash",
+      range: [
+        425,
+      ],
+      rangeBurn: "425",
+      resource: "No Cost",
+      summonerLevel: 1,
+      tooltip: "Teleports your champion a short distance toward your cursor's location.<br /><br />Cannot be cast again for one full round <rules>(a round consists of both a buy phase and a combat phase).</rules>",
+      vars: [],
+    },
+    SummonerCherryHold: {
+      cooldown: [
+        45,
+      ],
+      cooldownBurn: "45",
+      cost: [
+        0,
+      ],
+      costBurn: "0",
+      costType: "No Cost",
+      datavalues: {},
+      description: "Gain a short burst of Move Speed, increased while running away from enemy champions.",
+      effect: [
+        null,
+        [
+          20,
+        ],
+        [
+          10,
+        ],
+        [
+          3,
+        ],
+        [
+          5,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+      ],
+      effectBurn: [
+        null,
+        "20",
+        "10",
+        "3",
+        "5",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+      ],
+      id: "SummonerCherryHold",
+      image: {
+        full: "SummonerCherryHold.png",
+        group: "spell",
+        h: 48,
+        sprite: "spell0.png",
+        w: 48,
+        x: 144,
+        y: 0,
+      },
+      key: "2201",
+      maxammo: "-1",
+      maxrank: 1,
+      modes: [
+        "CHERRY",
+      ],
+      name: "Flee",
+      range: [
+        25000,
+      ],
+      rangeBurn: "25000",
+      resource: "No Cost",
+      summonerLevel: 1,
+      tooltip: "<keywordMajor>Active Spell Slot:</keywordMajor> Augments that grant a Summoner Spell will replace this slot.<br /><br />Gain <moveSpeed>{{ basems*100 }}% Move Speed</moveSpeed> for {{ duration }} seconds, increased by {{ bonusmsperenemybehind*100 }}% for each enemy behind you.",
+      vars: [],
+    },
+    SummonerDot: {
+      cooldown: [
+        180,
+      ],
+      cooldownBurn: "180",
+      cost: [
+        0,
+      ],
+      costBurn: "0",
+      costType: "No Cost",
+      datavalues: {},
+      description: "Ignites target enemy champion, dealing 70-410 true damage (depending on champion level) over 5 seconds, grants you vision of the target, and reduces healing effects on them for the duration.",
+      effect: [
+        null,
+        [
+          5,
+        ],
+        [
+          10,
+        ],
+        [
+          4,
+        ],
+        [
+          100,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+      ],
+      effectBurn: [
+        null,
+        "5",
+        "10",
+        "4",
+        "100",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+      ],
+      id: "SummonerDot",
+      image: {
+        full: "SummonerDot.png",
+        group: "spell",
+        h: 48,
+        sprite: "spell0.png",
+        w: 48,
+        x: 192,
+        y: 0,
+      },
+      key: "14",
+      maxammo: "-1",
+      maxrank: 1,
+      modes: [
+        "URF",
+        "CLASSIC",
+        "ARSR",
+        "ARAM",
+        "ASSASSINATE",
+        "ULTBOOK",
+        "WIPMODEWIP",
+        "TUTORIAL",
+        "DOOMBOTSTEEMO",
+        "PRACTICETOOL",
+        "FIRSTBLOOD",
+        "NEXUSBLITZ",
+        "ONEFORALL",
+      ],
+      name: "Ignite",
+      range: [
+        600,
+      ],
+      rangeBurn: "600",
+      resource: "No Cost",
+      summonerLevel: 9,
+      tooltip: 'Ignite deals <span class="colorFEFCFF">{{ tooltiptruedamagecalculation }}</span> true damage to target enemy champion over 5 seconds, grants you vision of the target and applies {{ grievousamount*100 }}% Grievous Wounds for the duration.<br /><br /><rules>(Grievous Wounds reduces healing and regeneration by a percentage equal to the highest value applied. This vision does not reveal stealthed enemies.)</rules>',
+      vars: [],
+    },
+    SummonerExhaust: {
+      cooldown: [
+        210,
+      ],
+      cooldownBurn: "210",
+      cost: [
+        0,
+      ],
+      costBurn: "0",
+      costType: "No Cost",
+      datavalues: {},
+      description: "Exhausts target enemy champion, reducing their Move Speed by 30%, and their damage dealt by 35% for 3 seconds.",
+      effect: [
+        null,
+        [
+          3,
+        ],
+        [
+          35,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          30,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+      ],
+      effectBurn: [
+        null,
+        "3",
+        "35",
+        "0",
+        "0",
+        "30",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+      ],
+      id: "SummonerExhaust",
+      image: {
+        full: "SummonerExhaust.png",
+        group: "spell",
+        h: 48,
+        sprite: "spell0.png",
+        w: 48,
+        x: 240,
+        y: 0,
+      },
+      key: "3",
+      maxammo: "-1",
+      maxrank: 1,
+      modes: [
+        "URF",
+        "CLASSIC",
+        "ARSR",
+        "ARAM",
+        "ULTBOOK",
+        "WIPMODEWIP",
+        "TUTORIAL",
+        "DOOMBOTSTEEMO",
+        "PRACTICETOOL",
+        "NEXUSBLITZ",
+        "ONEFORALL",
+      ],
+      name: "Exhaust",
+      range: [
+        650,
+      ],
+      rangeBurn: "650",
+      resource: "No Cost",
+      summonerLevel: 4,
+      tooltip: "Exhausts target enemy champion, reducing their Move Speed by {{ e5 }}%, and their damage dealt by {{ damagereductiontooltip }}% for 3 seconds.",
+      vars: [],
+    },
+    SummonerFlash: {
+      cooldown: [
+        300,
+      ],
+      cooldownBurn: "300",
+      cost: [
+        0,
+      ],
+      costBurn: "0",
+      costType: "No Cost",
+      datavalues: {},
+      description: "Teleports your champion a short distance toward your cursor's location.",
+      effect: [
+        null,
+        [
+          400,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+      ],
+      effectBurn: [
+        null,
+        "400",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+      ],
+      id: "SummonerFlash",
+      image: {
+        full: "SummonerFlash.png",
+        group: "spell",
+        h: 48,
+        sprite: "spell0.png",
+        w: 48,
+        x: 288,
+        y: 0,
+      },
+      key: "4",
+      maxammo: "-1",
+      maxrank: 1,
+      modes: [
+        "PRACTICETOOL",
+        "CLASSIC",
+        "ARSR",
+        "ARAM",
+        "NEXUSBLITZ",
+        "ULTBOOK",
+        "TUTORIAL",
+        "FIRSTBLOOD",
+        "ASSASSINATE",
+        "DOOMBOTSTEEMO",
+        "URF",
+        "STARGUARDIAN",
+        "PROJECT",
+        "WIPMODEWIP",
+        "SNOWURF",
+        "ONEFORALL",
+      ],
+      name: "Flash",
+      range: [
+        425,
+      ],
+      rangeBurn: "425",
+      resource: "No Cost",
+      summonerLevel: 7,
+      tooltip: "Teleports your champion a short distance toward your cursor's location.",
+      vars: [],
+    },
+    SummonerHaste: {
+      cooldown: [
+        210,
+      ],
+      cooldownBurn: "210",
+      cost: [
+        0,
+      ],
+      costBurn: "0",
+      costType: "No Cost",
+      datavalues: {},
+      description: "Your champion can move through units and gains 24 - 48% Move Speed (depending on champion level) for 15 seconds.",
+      effect: [
+        null,
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+      ],
+      effectBurn: [
+        null,
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+      ],
+      id: "SummonerHaste",
+      image: {
+        full: "SummonerHaste.png",
+        group: "spell",
+        h: 48,
+        sprite: "spell0.png",
+        w: 48,
+        x: 336,
+        y: 0,
+      },
+      key: "6",
+      maxammo: "-1",
+      maxrank: 1,
+      modes: [
+        "URF",
+        "CLASSIC",
+        "ARSR",
+        "ARAM",
+        "ASSASSINATE",
+        "TUTORIAL_MODULE_2",
+        "TUTORIAL_MODULE_1",
+        "ULTBOOK",
+        "WIPMODEWIP",
+        "TUTORIAL",
+        "DOOMBOTSTEEMO",
+        "PRACTICETOOL",
+        "FIRSTBLOOD",
+        "NEXUSBLITZ",
+        "STARGUARDIAN",
+        "PROJECT",
+        "ONEFORALL",
+      ],
+      name: "Ghost",
+      range: [
+        200,
+      ],
+      rangeBurn: "200",
+      resource: "No Cost",
+      summonerLevel: 1,
+      tooltip: "Gain <speed>{{ movespeedmod }} Move Speed</speed> for the next {{ duration }} seconds. Your champion can move through units for the duration.",
+      vars: [],
+    },
+    SummonerHeal: {
+      cooldown: [
+        240,
+      ],
+      cooldownBurn: "240",
+      cost: [
+        0,
+      ],
+      costBurn: "0",
+      costType: "No Cost",
+      datavalues: {},
+      description: "Restores 80-318 Health and grants 30% Move Speed for 1 second to you and target allied champion. This healing is halved for units recently affected by Summoner Heal.",
+      effect: [
+        null,
+        [
+          0.3,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0.5,
+        ],
+        [
+          826,
+        ],
+        [
+          0.5,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+      ],
+      effectBurn: [
+        null,
+        "0.3",
+        "0",
+        "0",
+        "0.5",
+        "826",
+        "0.5",
+        "0",
+        "0",
+        "0",
+        "0",
+      ],
+      id: "SummonerHeal",
+      image: {
+        full: "SummonerHeal.png",
+        group: "spell",
+        h: 48,
+        sprite: "spell0.png",
+        w: 48,
+        x: 384,
+        y: 0,
+      },
+      key: "7",
+      maxammo: "-1",
+      maxrank: 1,
+      modes: [
+        "URF",
+        "CLASSIC",
+        "ARSR",
+        "ARAM",
+        "ASSASSINATE",
+        "TUTORIAL_MODULE_2",
+        "TUTORIAL_MODULE_1",
+        "ULTBOOK",
+        "WIPMODEWIP",
+        "TUTORIAL",
+        "DOOMBOTSTEEMO",
+        "PRACTICETOOL",
+        "NEXUSBLITZ",
+        "STARGUARDIAN",
+        "PROJECT",
+        "ONEFORALL",
+      ],
+      name: "Heal",
+      range: [
+        850,
+      ],
+      rangeBurn: "850",
+      resource: "No Cost",
+      summonerLevel: 1,
+      tooltip: "Restores <healing>{{ tooltiphealamount }} Health</healing> and grants <speed>{{ movespeed*100 }}% Move Speed</speed> for 1 second to your champion and target allied champion.<br /><br /><rules>If this spell cannot find a target, it will cast on the most wounded allied champion in range.<br />This healing is halved for units recently affected by Summoner Heal.</rules>",
+      vars: [],
+    },
+    SummonerMana: {
+      cooldown: [
+        240,
+      ],
+      cooldownBurn: "240",
+      cost: [
+        0,
+      ],
+      costBurn: "0",
+      costType: "No Cost",
+      datavalues: {},
+      description: "Restores 50% of your champion's maximum Mana. Also restores allies for 25% of their maximum Mana.",
+      effect: [
+        null,
+        [
+          50,
+        ],
+        [
+          25,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+      ],
+      effectBurn: [
+        null,
+        "50",
+        "25",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+      ],
+      id: "SummonerMana",
+      image: {
+        full: "SummonerMana.png",
+        group: "spell",
+        h: 48,
+        sprite: "spell0.png",
+        w: 48,
+        x: 432,
+        y: 0,
+      },
+      key: "13",
+      maxammo: "-1",
+      maxrank: 1,
+      modes: [
+        "ARAM",
+        "FIRSTBLOOD",
+      ],
+      name: "Clarity",
+      range: [
+        600,
+      ],
+      rangeBurn: "600",
+      resource: "No Cost",
+      summonerLevel: 6,
+      tooltip: "Restores {{ e1 }}% maximum Mana to your Champion and {{ e2 }}% to nearby allies.",
+      vars: [],
+    },
+    SummonerPoroRecall: {
+      cooldown: [
+        10,
+      ],
+      cooldownBurn: "10",
+      cost: [
+        0,
+      ],
+      costBurn: "0",
+      costType: "No Cost",
+      datavalues: {},
+      description: "Quickly travel to the Poro King's side.",
+      effect: [
+        null,
+        [
+          3000,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+      ],
+      effectBurn: [
+        null,
+        "3000",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+      ],
+      id: "SummonerPoroRecall",
+      image: {
+        full: "SummonerPoroRecall.png",
+        group: "spell",
+        h: 48,
+        sprite: "spell0.png",
+        w: 48,
+        x: 0,
+        y: 48,
+      },
+      key: "30",
+      maxammo: "-1",
+      maxrank: 1,
+      modes: [
+        "KINGPORO",
+      ],
+      name: "To the King!",
+      range: [
+        200,
+      ],
+      rangeBurn: "200",
+      resource: "No Cost",
+      summonerLevel: 1,
+      tooltip: \`<span class="colorFFE076">Passive:</span> Hitting an enemy champion with a Poro gives your team a Poro Mark. Upon reaching 10 Poro Marks, your team summons the Poro King to fight alongside them. While the Poro King is active, no Poro Marks can be scored by either team.<br /><br /><span class="colorFFE076">Active:</span> Quickly dash to King Poro's side. Can only be cast while the Poro King is summoned for your team. <br /><br /><i><span class="colorFDD017">''Poros tug the heartstrings. The rest of you just comes along for the ride.''</span></i></mainText>\`,
+      vars: [],
+    },
+    SummonerPoroThrow: {
+      cooldown: [
+        20,
+      ],
+      cooldownBurn: "20",
+      cost: [
+        0,
+      ],
+      costBurn: "0",
+      costType: "No Cost",
+      datavalues: {},
+      description: "Toss a Poro at your enemies. If it hits, you can quickly travel to your target as a follow up.",
+      effect: [
+        null,
+        [
+          20,
+        ],
+        [
+          10,
+        ],
+        [
+          3,
+        ],
+        [
+          5,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+      ],
+      effectBurn: [
+        null,
+        "20",
+        "10",
+        "3",
+        "5",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+      ],
+      id: "SummonerPoroThrow",
+      image: {
+        full: "SummonerPoroThrow.png",
+        group: "spell",
+        h: 48,
+        sprite: "spell0.png",
+        w: 48,
+        x: 48,
+        y: 48,
+      },
+      key: "31",
+      maxammo: "-1",
+      maxrank: 1,
+      modes: [
+        "KINGPORO",
+      ],
+      name: "Poro Toss",
+      range: [
+        2500,
+      ],
+      rangeBurn: "2500",
+      resource: "No Cost",
+      summonerLevel: 1,
+      tooltip: \`Toss a Poro a long distance, dealing {{ f2 }} true damage to the first enemy unit hit, granting <span class="coloree91d7">True Sight</span> of the target.<br /><br />This ability can be recast for 3 seconds if it hits an enemy to dash to the target hit, dealing {{ f2 }} more true damage and reducing the cooldown of the next Poro Toss by {{ e4 }} seconds.<br /><br />Poros are not blocked by spell shields or wind walls because they are animals, not spells!<br /><br /><i><span class="colorFDD017">''Poros are a model for Runeterran aerodynamics.''</span></i></mainText>\`,
+      vars: [],
+    },
+    SummonerSmite: {
+      cooldown: [
+        15,
+      ],
+      cooldownBurn: "15",
+      cost: [
+        0,
+      ],
+      costBurn: "0",
+      costType: "No Cost",
+      datavalues: {},
+      description: "Deals 600-1200 true damage to target monster.",
+      effect: [
+        null,
+        [
+          15,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+      ],
+      effectBurn: [
+        null,
+        "15",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+      ],
+      id: "SummonerSmite",
+      image: {
+        full: "SummonerSmite.png",
+        group: "spell",
+        h: 48,
+        sprite: "spell0.png",
+        w: 48,
+        x: 96,
+        y: 48,
+      },
+      key: "11",
+      maxammo: "2",
+      maxrank: 1,
+      modes: [
+        "URF",
+        "CLASSIC",
+        "ARSR",
+        "ONEFORALL",
+        "PRACTICETOOL",
+        "NEXUSBLITZ",
+        "TUTORIAL",
+        "DOOMBOTSTEEMO",
+      ],
+      name: "Smite",
+      range: [
+        500,
+      ],
+      rangeBurn: "500",
+      resource: "No Cost",
+      summonerLevel: 3,
+      tooltip: "Deals <trueDamage>{{ smitebasedamage }} true damage</trueDamage> to target monster or lane minion.<br /><br />Deals <trueDamage>{{ firstpvpdamage }} true damage</trueDamage> to champion pets.<br /><br /><rules>Cannot be cast on small monsters.</rules>",
+      vars: [],
+    },
+    SummonerSnowURFSnowball_Mark: {
+      cooldown: [
+        80,
+      ],
+      cooldownBurn: "80",
+      cost: [
+        0,
+      ],
+      costBurn: "0",
+      costType: "No Cost",
+      datavalues: {},
+      description: "Throw a snowball in a straight line at your enemies. If it hits an enemy, they become marked, granting True Sight, and your champion can quickly travel to the marked target as a follow up.",
+      effect: [
+        null,
+        [
+          10,
+        ],
+        [
+          5,
+        ],
+        [
+          3,
+        ],
+        [
+          25,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+      ],
+      effectBurn: [
+        null,
+        "10",
+        "5",
+        "3",
+        "25",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+      ],
+      id: "SummonerSnowURFSnowball_Mark",
+      image: {
+        full: "SummonerSnowURFSnowball_Mark.png",
+        group: "spell",
+        h: 48,
+        sprite: "spell0.png",
+        w: 48,
+        x: 144,
+        y: 48,
+      },
+      key: "39",
+      maxammo: "-1",
+      maxrank: 1,
+      modes: [
+        "SNOWURF",
+      ],
+      name: "Mark",
+      range: [
+        8000,
+      ],
+      rangeBurn: "8000",
+      resource: "No Cost",
+      summonerLevel: 6,
+      tooltip: 'Throw a snowball a long distance, dealing {{ tooltipdamagetotal }} true damage to the first enemy unit hit and granting <span class="coloree91d7">True Sight</span> of the target. If it hits an enemy, this ability can be recast for {{ e3 }} seconds to Dash to the tagged unit, dealing an additional {{ tooltipdamagetotal }} true damage. Dashing to the target will reduce the cooldown of Mark by {{ e4 }}%.<br /><br /><span class="colorFFFF00">Mark projectiles are not stopped by spell shields or projectile mitigation.</span>',
+      vars: [],
+    },
+    SummonerSnowball: {
+      cooldown: [
+        80,
+      ],
+      cooldownBurn: "80",
+      cost: [
+        0,
+      ],
+      costBurn: "0",
+      costType: "No Cost",
+      datavalues: {},
+      description: "Throw a snowball in a straight line at your enemies. If it hits an enemy, they become marked, granting True Sight, and your champion can quickly travel to the marked target as a follow up.",
+      effect: [
+        null,
+        [
+          10,
+        ],
+        [
+          5,
+        ],
+        [
+          3,
+        ],
+        [
+          25,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+      ],
+      effectBurn: [
+        null,
+        "10",
+        "5",
+        "3",
+        "25",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+      ],
+      id: "SummonerSnowball",
+      image: {
+        full: "SummonerSnowball.png",
+        group: "spell",
+        h: 48,
+        sprite: "spell0.png",
+        w: 48,
+        x: 192,
+        y: 48,
+      },
+      key: "32",
+      maxammo: "-1",
+      maxrank: 1,
+      modes: [
+        "ARAM",
+        "FIRSTBLOOD",
+      ],
+      name: "Mark",
+      range: [
+        1600,
+      ],
+      rangeBurn: "1600",
+      resource: "No Cost",
+      summonerLevel: 6,
+      tooltip: 'Throw a snowball a long distance, dealing {{ tooltipdamagetotal }} true damage to the first enemy unit hit and granting <span class="coloree91d7">True Sight</span> of the target. If it hits an enemy, this ability can be recast for {{ e3 }} seconds to Dash to the tagged unit, dealing an additional {{ tooltipdamagetotal }} true damage. Dashing to the target will reduce the cooldown of Mark by {{ e4 }}%.<br /><br /><span class="colorFFFF00">Mark projectiles are not stopped by spell shields or projectile mitigation.</span>',
+      vars: [],
+    },
+    SummonerTeleport: {
+      cooldown: [
+        360,
+      ],
+      cooldownBurn: "360",
+      cost: [
+        0,
+      ],
+      costBurn: "0",
+      costType: "No Cost",
+      datavalues: {},
+      description: "After channeling for 4 seconds, teleports your champion to target allied structure. Upgrades to Unleashed Teleport at 10 minutes, which teleports your champion to target allied structure, minion, or ward.",
+      effect: [
+        null,
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+      ],
+      effectBurn: [
+        null,
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+      ],
+      id: "SummonerTeleport",
+      image: {
+        full: "SummonerTeleport.png",
+        group: "spell",
+        h: 48,
+        sprite: "spell0.png",
+        w: 48,
+        x: 240,
+        y: 48,
+      },
+      key: "12",
+      maxammo: "-1",
+      maxrank: 1,
+      modes: [
+        "ONEFORALL",
+        "PRACTICETOOL",
+        "CLASSIC",
+        "TUTORIAL",
+        "ULTBOOK",
+        "ARSR",
+        "ASSASSINATE",
+        "DOOMBOTSTEEMO",
+      ],
+      name: "Teleport",
+      range: [
+        25000,
+      ],
+      rangeBurn: "25000",
+      resource: "No Cost",
+      summonerLevel: 7,
+      tooltip: "After channeling for {{ channelduration }} seconds, your champion teleports to target allied structure.<br /><br />Upgrades to Unleashed Teleport at 10 minutes. Unleashed Teleport has a {{ upgradedcooldown }}s cooldown, can be used on allied structures, minions, or wards, and grants a {{ msamount*100 }}% Move Speed boost for {{ msduration }} seconds.",
+      vars: [],
+    },
+    Summoner_UltBookPlaceholder: {
+      cooldown: [
+        0,
+      ],
+      cooldownBurn: "0",
+      cost: [
+        0,
+      ],
+      costBurn: "0",
+      costType: "&nbsp;",
+      datavalues: {},
+      description: "This slot will be replaced by another champion's ultimate selected at the start of the game. There will be 30 seconds to select an ultimate. Be prepared!",
+      effect: [
+        null,
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+      ],
+      effectBurn: [
+        null,
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+      ],
+      id: "Summoner_UltBookPlaceholder",
+      image: {
+        full: "Summoner_UltBookPlaceholder.png",
+        group: "spell",
+        h: 48,
+        sprite: "spell0.png",
+        w: 48,
+        x: 288,
+        y: 48,
+      },
+      key: "54",
+      maxammo: "-1",
+      maxrank: 1,
+      modes: [
+        "ULTBOOK",
+      ],
+      name: "Placeholder",
+      range: [
+        400,
+      ],
+      rangeBurn: "400",
+      resource: "&nbsp;",
+      summonerLevel: 1,
+      tooltip: "Will be replaced by your Ultimate Summoner Spell selection.{{ spellmodifierdescriptionappend }}",
+      vars: [],
+    },
+    Summoner_UltBookSmitePlaceholder: {
+      cooldown: [
+        0,
+      ],
+      cooldownBurn: "0",
+      cost: [
+        0,
+      ],
+      costBurn: "0",
+      costType: "&nbsp;",
+      datavalues: {},
+      description: "This slot will be replaced by another champion's ultimate and you will gain Attack-Smite. There will be 30 seconds to select an ultimate. Be prepared!",
+      effect: [
+        null,
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+      ],
+      effectBurn: [
+        null,
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+      ],
+      id: "Summoner_UltBookSmitePlaceholder",
+      image: {
+        full: "Summoner_UltBookSmitePlaceholder.png",
+        group: "spell",
+        h: 48,
+        sprite: "spell0.png",
+        w: 48,
+        x: 336,
+        y: 48,
+      },
+      key: "55",
+      maxammo: "-1",
+      maxrank: 1,
+      modes: [
+        "ULTBOOK",
+      ],
+      name: "Placeholder and Attack-Smite",
+      range: [
+        400,
+      ],
+      rangeBurn: "400",
+      resource: "&nbsp;",
+      summonerLevel: 1,
+      tooltip: "Will be replaced by your Ultimate Summoner Spell.<br /><br />Gain Attack-Smite. Attack-Smite will execute allied Buff Monsters, Epic Monsters, and Scuttle Crabs when you attack them.<br /><br /><attention>Attack-Smite does not have a cooldown.</attention>{{ spellmodifierdescriptionappend }}",
+      vars: [],
+    },
+  },
+  type: "summoner",
+  version: "14.4.1",
+}
+`;

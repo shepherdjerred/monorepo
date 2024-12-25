@@ -1,0 +1,17 @@
+services:
+  lavalink:
+    image: ghcr.io/lavalink-devs/lavalink:4
+    environment:
+      - SERVER_PORT=2333
+      - LAVALINK_SERVER_PASSWORD=youshallnotpass
+    ports:
+      - 2333:2333
+  discord:
+    depends_on:
+      - lavalink
+    image: ghcr.io/shepherdjerred/discord:1.0.0
+    volumes:
+      - ./.env:/workspace/packages/backend/.env
+      - ./players.json:/workspace/packages/backend/players.json
+    ports:
+      - 8000:8000

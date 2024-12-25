@@ -1,0 +1,69 @@
+import Layout from "../../layouts/Layout.astro";
+import Follow from "../../assets/t6/follow.png";
+import Login from "../../assets/t6/login.png";
+import Dialog from "../../assets/t6/dialog.png";
+import Folder from "../../assets/t6/t6_folder.png";
+import Sidebar from "../../assets/t6/sidebar.mp4";
+import Setup from "../../assets/t6/setup.png";
+import Play from "../../assets/t6/play.png";
+import Register from "../../assets/t6/register.png";
+import { Image } from "astro:assets";
+
+<Layout title="Black Ops 2 Zombies"  index={false}>
+<div class="grid justify-center dark:bg-black">
+<article class="prose dark:prose-invert m-6">
+
+# Black Ops 2 Zombies
+
+This guide will walk you through downloading Black Ops 2 and setting up the [Plutonium](https://plutonium.pw/) client. The Plutonium client allows you to play several Call of Duty games with support for a friends list, dedicated servers, and playing multiplayer zombies with up to eight players.
+
+1. Download the [game files](https://files.sjer.red/games/t6.zip) (14GB).
+1. Create an account on the [Plutonium forums](https://forum.plutonium.pw/register).
+
+   Note: the username you choose here will be what you are known as in-game.
+
+   <Image src={Register} alt="A screenshot of Plutonium's register page" />
+
+1. Follow [sjerred](https://forum.plutonium.pw/user/sjerred) to add them as a friend.
+
+   <Image
+     src={Follow}
+     alt="A screenshot of a Plutonium user's profie with the follow button"
+   />
+
+1. Unzip `t6.zip`.
+1. Go into the `t6` folder that was created when unzipping.
+1. Run the `plutonium` executable in the `t6` folder. This will start the Plutonium client.
+1. Login to the Plutonium client using the account you created in step 2.
+
+   <Image src={Login} alt="The login screen for Plutonium" />
+
+1. Hover your cursor over the icons on the sidear. Look for an icon labeled "T6 Zombies". Click the icon.
+
+   <video controls autoplay>
+     <source src={Sidebar} type="video/mp4" />
+   </video>
+
+1. Click the "setup" button.
+
+   <Image src={Setup} alt="The setup button" />
+
+1. In the popup dialog, select the `t6` folder with the game files in it. The folder that you pick should have the `plutonium` executable in it.
+
+   <Image src={Folder} alt="The contents of the t6 folder" />
+
+1. Click the "Play" button to start the game.
+
+   <Image src={Play} alt="The play button" />
+
+## In-game
+
+Once Black Ops 2 has opened, you can press `F` to view your friends list.
+
+You can play Zombies with others by hosting a custom game. Once you've created a custom game lobby, press `P` to open your party settings. Be sure your settings allow friends to join you. You can also modify your lobby size.
+
+Note that you _cannot_ start a game with more than four players in the lobby. You'll have to start the lobby with no more than four players; the other players game join your game while it's in progress via the friends list. Eight-player games are only supported on maps that also support the "Grief" gamemode.
+
+</article>
+</div>
+</Layout>

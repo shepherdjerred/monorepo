@@ -1,0 +1,44 @@
+---
+import { Report } from "@discord/backend/dist/league/image/html/report";
+import { readFile } from "node:fs/promises";
+import { type MatchV5DTOs } from "twisted/dist/models-dto/index.js";
+import { toMatch } from "@discord/backend/dist/league/model/match";
+
+const testdataPath = new URL("testdata/match.json", import.meta.url);
+
+const exampleMatch = JSON.parse((await readFile(testdataPath)).toString()) as MatchV5DTOs.MatchDto;
+
+const matchObj = toMatch(
+  {
+    config: {
+      name: "name",
+      league: {
+        leagueAccount: {
+          puuid: "XtEsV464OFaO3c0_q9REa6wYF0HpC2LK4laLnyM7WhfAVeuDz9biieJ5ZRD049AUCBjLjyBeeezTaw",
+          accountId: "accountId",
+          id: "id",
+        },
+      },
+      discordAccount: {
+        id: "discord id",
+      },
+    },
+    ranks: {
+      solo: { division: 3, tier: "gold", lp: 11, wins: 10, losses: 20 },
+      flex: { division: 1, tier: "gold", lp: 4, wins: 50, losses: 30 },
+    },
+  },
+  exampleMatch,
+  { division: 4, tier: "gold", lp: 11, wins: 10, losses: 20 },
+  { division: 1, tier: "gold", lp: 4, wins: 50, losses: 30 },
+);
+---
+
+<!doctype html>
+<html lang="en">
+  <div style="width:4760px;height:3500px;overflow:hidden;">
+    <Report match={matchObj} />
+  </div>
+
+
+</html>

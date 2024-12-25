@@ -1,0 +1,261 @@
+export const snapshot = {};
+
+snapshot[`should return a correct leaderboard 1`] = `
+{
+  contents: [
+    {
+      leaguePoints: 4000,
+      player: {
+        config: {
+          discordAccount: {
+            id: "test",
+          },
+          league: {
+            leagueAccount: {
+              accountId: "test",
+              id: "test",
+              puuid: "test",
+              region: "AMERICA_NORTH",
+            },
+          },
+          name: "top of the leaderboard",
+        },
+        ranks: {
+          flex: {
+            division: 1,
+            losses: 10,
+            lp: 100,
+            tier: "challenger",
+            wins: 10,
+          },
+          solo: {
+            division: 1,
+            losses: 10,
+            lp: 100,
+            tier: "challenger",
+            wins: 10,
+          },
+        },
+      },
+      position: 1,
+    },
+    {
+      leaguePoints: 1150,
+      player: {
+        config: {
+          discordAccount: {
+            id: "test",
+          },
+          league: {
+            leagueAccount: {
+              accountId: "test",
+              id: "test",
+              puuid: "test",
+              region: "AMERICA_NORTH",
+            },
+          },
+          name: "tied with next player",
+        },
+        ranks: {
+          flex: {
+            division: 1,
+            losses: 10,
+            lp: 50,
+            tier: "silver",
+            wins: 10,
+          },
+          solo: {
+            division: 1,
+            losses: 10,
+            lp: 50,
+            tier: "silver",
+            wins: 10,
+          },
+        },
+      },
+      position: 2,
+    },
+    {
+      leaguePoints: 950,
+      player: {
+        config: {
+          discordAccount: {
+            id: "test",
+          },
+          league: {
+            leagueAccount: {
+              accountId: "test",
+              id: "test",
+              puuid: "test",
+              region: "AMERICA_NORTH",
+            },
+          },
+          name: "tied with previous player",
+        },
+        ranks: {
+          flex: {
+            division: 3,
+            losses: 10,
+            lp: 50,
+            tier: "silver",
+            wins: 10,
+          },
+          solo: {
+            division: 3,
+            losses: 10,
+            lp: 50,
+            tier: "silver",
+            wins: 10,
+          },
+        },
+      },
+      position: 3,
+    },
+    {
+      leaguePoints: 950,
+      player: {
+        config: {
+          discordAccount: {
+            id: "test",
+          },
+          league: {
+            leagueAccount: {
+              accountId: "test",
+              id: "test",
+              puuid: "test",
+              region: "AMERICA_NORTH",
+            },
+          },
+          name: "positive",
+        },
+        ranks: {
+          flex: {
+            division: 3,
+            losses: 10,
+            lp: 50,
+            tier: "silver",
+            wins: 10,
+          },
+          solo: {
+            division: 3,
+            losses: 10,
+            lp: 50,
+            tier: "silver",
+            wins: 10,
+          },
+        },
+      },
+      position: 4,
+    },
+    {
+      leaguePoints: 950,
+      player: {
+        config: {
+          discordAccount: {
+            id: "test",
+          },
+          league: {
+            leagueAccount: {
+              accountId: "test",
+              id: "test",
+              puuid: "test",
+              region: "AMERICA_NORTH",
+            },
+          },
+          name: "no change",
+        },
+        ranks: {
+          flex: {
+            division: 3,
+            losses: 10,
+            lp: 50,
+            tier: "silver",
+            wins: 10,
+          },
+          solo: {
+            division: 3,
+            losses: 10,
+            lp: 50,
+            tier: "silver",
+            wins: 10,
+          },
+        },
+      },
+      position: 5,
+    },
+    {
+      leaguePoints: 650,
+      player: {
+        config: {
+          discordAccount: {
+            id: "test",
+          },
+          league: {
+            leagueAccount: {
+              accountId: "test",
+              id: "test",
+              puuid: "test",
+              region: "AMERICA_NORTH",
+            },
+          },
+          name: "negative",
+        },
+        ranks: {
+          flex: {
+            division: 2,
+            losses: 10,
+            lp: 50,
+            tier: "bronze",
+            wins: 10,
+          },
+          solo: {
+            division: 2,
+            losses: 10,
+            lp: 50,
+            tier: "bronze",
+            wins: 10,
+          },
+        },
+      },
+      position: 6,
+    },
+    {
+      leaguePoints: 0,
+      player: {
+        config: {
+          discordAccount: {
+            id: "test",
+          },
+          league: {
+            leagueAccount: {
+              accountId: "test",
+              id: "test",
+              puuid: "test",
+              region: "AMERICA_NORTH",
+            },
+          },
+          name: "bottom of the leaderboard",
+        },
+        ranks: {
+          flex: {
+            division: 4,
+            losses: 10,
+            lp: 0,
+            tier: "iron",
+            wins: 10,
+          },
+          solo: {
+            division: 4,
+            losses: 10,
+            lp: 0,
+            tier: "iron",
+            wins: 10,
+          },
+        },
+      },
+      position: 7,
+    },
+  ],
+  date: 2024-03-04T00:43:45.059Z,
+}
+`;

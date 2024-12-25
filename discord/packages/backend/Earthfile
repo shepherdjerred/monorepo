@@ -1,0 +1,47 @@
+VERSION 0.8
+
+deps:
+  FROM ../../+deno
+  WORKDIR /workspace/packages/backend
+
+  COPY ../data+src/ /workspace/packages/data/
+
+  # download and cache dependencies
+  CACHE --persist $DENO_DIR
+  COPY --dir deno* src .
+  RUN deno cache src/index.ts
+
+check:
+  FROM +deps
+  CACHE $DENO_DIR
+  RUN deno check src/index.ts
+  RUN deno lint
+  # RUN deno test -A --unstable
+
+sqlite:
+  ARG sqlite_version=0.10.0
+  FROM quay.io/curl/curl
+  RUN curl -fsSL https://github.com/denodrivers/sqlite3/releases/download/$sqlite_version/libsqlite3.so -o libsqlite3.so
+  SAVE ARTIFACT libsqlite3.so
+
+image:
+  ARG --required git_sha
+  ARG --required version
+  FROM +deps
+  ENV VERSION=$version
+  ENV GIT_SHA=$git_sha
+
+  ENV DENO_SQLITE_PATH=/workspace/packages/backend/libsqlite3.so
+  COPY +sqlite/libsqlite3.so /workspace/packages/backend/libsqlite3.so
+
+  ENTRYPOINT deno run -A --unstable-ffi src/index.ts
+  HEALTHCHECK  --interval=30s --timeout=5s --start-period=5s --retries=3 CMD deno run -A /workspace/packages/backend/src/health.ts || exit 1
+  SAVE IMAGE --push ghcr.io/shepherdjerred/discord:$version
+  SAVE IMAGE --push ghcr.io/shepherdjerred/discord:$git_sha
+
+up:
+  LOCALLY
+  ARG version=dev
+  WITH DOCKER --load=(+image --version=$version) --pull="lavalink:4"
+    RUN docker compose up
+  END

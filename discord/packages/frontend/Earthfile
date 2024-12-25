@@ -1,0 +1,40 @@
+VERSION 0.8
+PROJECT sjerred/glitter-boys
+
+node:
+  FROM node:lts
+  WORKDIR /workspace
+  RUN npm install -g npm
+
+deps:
+  FROM +node
+  COPY ../data+build/dist packages/data/dist
+  WORKDIR packages/frontend/
+  COPY . .
+  # solves https://github.com/npm/cli/issues/4828
+  RUN rm package-lock.json
+  RUN npm i
+  RUN npm run build
+
+build:
+  FROM +deps
+  SAVE ARTIFACT dist
+
+wrangler:
+  FROM +node
+  RUN npm install -g wrangler
+
+deploy:
+  ARG EARTHLY_GIT_SHORT_HASH
+  ARG git_sha=$EARTHLY_GIT_SHORT_HASH
+  ARG EARTHLY_GIT_BRANCH
+  ARG --required stage
+  FROM +wrangler
+  COPY +build/dist dist
+  IF [ $stage = "prod" ]
+    RUN --secret=CLOUDFLARE_ACCOUNT_ID --secret=CLOUDFLARE_API_TOKEN wrangler pages deploy dist --project-name=glitter-boys --branch=$EARTHLY_GIT_BRANCH --commit-hash=$EARTHLY_GIT_SHORT_HASH
+  ELSE IF [ $stage = "beta" ]
+    RUN --secret=CLOUDFLARE_ACCOUNT_ID --secret=CLOUDFLARE_API_TOKEN wrangler pages deploy dist --project-name=glitter-boys --branch=$EARTHLY_GIT_BRANCH\-beta --commit-hash=$EARTHLY_GIT_SHORT_HASH
+  ELSE
+    RUN false
+  END
