@@ -24,6 +24,7 @@ const result3 = a
 type cases = [
   Expect<Alike<typeof result1, Expected1>>,
   Expect<Alike<typeof result2, Expected2>>,
+  // @ts-expect-error -- the question stated that the same key would not be passed twice
   Expect<Alike<typeof result3, Expected3>>
 ];
 
