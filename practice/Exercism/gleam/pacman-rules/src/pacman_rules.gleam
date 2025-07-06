@@ -1,13 +1,13 @@
 pub fn eat_ghost(power_pellet_active: Bool, touching_ghost: Bool) -> Bool {
-  todo
+  power_pellet_active && touching_ghost
 }
 
 pub fn score(touching_power_pellet: Bool, touching_dot: Bool) -> Bool {
-  todo
+  touching_dot || touching_power_pellet
 }
 
 pub fn lose(power_pellet_active: Bool, touching_ghost: Bool) -> Bool {
-  todo
+  !power_pellet_active && touching_ghost
 }
 
 pub fn win(
@@ -15,5 +15,5 @@ pub fn win(
   power_pellet_active: Bool,
   touching_ghost: Bool,
 ) -> Bool {
-  todo
+  has_eaten_all_dots && !lose(power_pellet_active, touching_ghost)
 }
