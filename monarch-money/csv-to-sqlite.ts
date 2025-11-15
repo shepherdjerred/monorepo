@@ -9,10 +9,65 @@ const dbFile = process.argv[3] || "transactions.db";
 
 console.log(`Converting ${csvFile} to ${dbFile}...`);
 
-// Read and parse CSV
+// Read and parse CSV with proper multiline handling
 const csvContent = readFileSync(csvFile, "utf-8");
-const lines = csvContent.trim().split("\n");
-const headers = lines[0].split(",");
+
+// Parse CSV with proper multiline record support (RFC 4180)
+function parseCSV(content: string): string[][] {
+  const records: string[][] = [];
+  let currentRecord: string[] = [];
+  let currentField = "";
+  let inQuotes = false;
+
+  for (let i = 0; i < content.length; i++) {
+    const char = content[i];
+    const nextChar = content[i + 1];
+
+    if (char === '"') {
+      if (inQuotes && nextChar === '"') {
+        // Escaped quote
+        currentField += '"';
+        i++;
+      } else {
+        // Toggle quote state
+        inQuotes = !inQuotes;
+      }
+    } else if (char === "," && !inQuotes) {
+      // Field separator
+      currentRecord.push(currentField);
+      currentField = "";
+    } else if ((char === "\n" || char === "\r") && !inQuotes) {
+      // Record separator
+      if (currentField || currentRecord.length > 0) {
+        currentRecord.push(currentField);
+        if (currentRecord.some(f => f.trim())) {
+          records.push(currentRecord);
+        }
+        currentRecord = [];
+        currentField = "";
+      }
+      // Skip \r\n
+      if (char === "\r" && nextChar === "\n") {
+        i++;
+      }
+    } else {
+      currentField += char;
+    }
+  }
+
+  if (currentField || currentRecord.length > 0) {
+    currentRecord.push(currentField);
+    if (currentRecord.some(f => f.trim())) {
+      records.push(currentRecord);
+    }
+  }
+
+  return records;
+}
+
+const records = parseCSV(csvContent);
+const headers = records[0];
+const dataRows = records.slice(1);
 
 // Create SQLite database
 const db = new Database(dbFile);
@@ -39,32 +94,10 @@ const insert = db.prepare(`
   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 `);
 
-// Parse CSV rows (handle quoted fields with commas)
-function parseCSVLine(line: string): string[] {
-  const result: string[] = [];
-  let current = "";
-  let inQuotes = false;
-
-  for (let i = 0; i < line.length; i++) {
-    const char = line[i];
-
-    if (char === '"') {
-      inQuotes = !inQuotes;
-    } else if (char === "," && !inQuotes) {
-      result.push(current);
-      current = "";
-    } else {
-      current += char;
-    }
-  }
-  result.push(current);
-
-  return result;
-}
-
 // Insert data
 const insertMany = db.transaction((rows: string[][]) => {
   for (const row of rows) {
+    if (row.length < 9) continue; // Skip malformed rows
     insert.run(
       row[0], // date
       row[1], // merchant
@@ -79,11 +112,8 @@ const insertMany = db.transaction((rows: string[][]) => {
   }
 });
 
-// Parse all rows (skip header)
-const rows = lines.slice(1).map(line => parseCSVLine(line));
-
 // Insert all rows in a transaction for speed
-insertMany(rows);
+insertMany(dataRows);
 
 // Show summary
 const count = db.query("SELECT COUNT(*) as count FROM transactions").get() as { count: number };
