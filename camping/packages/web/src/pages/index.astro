@@ -1,0 +1,43 @@
+---
+import Layout from "../layouts/Layout.astro";
+import CampgroundSearch from "../components/CampgroundSearch";
+---
+
+<Layout title="WA Camping - Find Available Campsites">
+  <div class="space-y-8">
+    <div class="text-center">
+      <h1 class="text-4xl font-bold text-forest-800 mb-4">
+        Washington Campsite Notifications
+      </h1>
+      <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+        Search for campgrounds, set up watches for your desired dates, and get notified when sites become available.
+      </p>
+    </div>
+
+    <CampgroundSearch client:load />
+
+    <div class="grid md:grid-cols-3 gap-6 mt-12">
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="text-3xl mb-4">🔍</div>
+        <h3 class="text-lg font-semibold text-forest-800 mb-2">Search Campgrounds</h3>
+        <p class="text-gray-600">
+          Find federal and state campgrounds across Washington. Browse amenities and availability.
+        </p>
+      </div>
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="text-3xl mb-4">👁️</div>
+        <h3 class="text-lg font-semibold text-forest-800 mb-2">Set Up Watches</h3>
+        <p class="text-gray-600">
+          Create watches for specific campgrounds and date ranges. We'll monitor availability for you.
+        </p>
+      </div>
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="text-3xl mb-4">🔔</div>
+        <h3 class="text-lg font-semibold text-forest-800 mb-2">Get Notified</h3>
+        <p class="text-gray-600">
+          Receive instant email notifications when campsites matching your criteria become available.
+        </p>
+      </div>
+    </div>
+  </div>
+</Layout>

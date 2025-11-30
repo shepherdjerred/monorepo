@@ -1,0 +1,17 @@
+---
+import Layout from "../layouts/Layout.astro";
+import WatchList from "../components/WatchList";
+---
+
+<Layout title="My Watches - WA Camping">
+  <div class="space-y-6">
+    <div>
+      <h1 class="text-3xl font-bold text-forest-800">My Watches</h1>
+      <p class="text-gray-600 mt-2">
+        Monitor campground availability for your desired dates.
+      </p>
+    </div>
+
+    <WatchList client:load />
+  </div>
+</Layout>

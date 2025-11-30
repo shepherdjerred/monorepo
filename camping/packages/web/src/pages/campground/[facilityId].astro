@@ -1,0 +1,10 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import CampgroundDetail from "../../components/CampgroundDetail";
+
+const { facilityId } = Astro.params;
+---
+
+<Layout title="Campground - WA Camping">
+  <CampgroundDetail facilityId={facilityId!} client:load />
+</Layout>

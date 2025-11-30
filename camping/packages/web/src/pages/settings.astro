@@ -1,0 +1,17 @@
+---
+import Layout from "../layouts/Layout.astro";
+import SettingsForm from "../components/SettingsForm";
+---
+
+<Layout title="Settings - WA Camping">
+  <div class="space-y-6">
+    <div>
+      <h1 class="text-3xl font-bold text-forest-800">Settings</h1>
+      <p class="text-gray-600 mt-2">
+        Manage your account and notification preferences.
+      </p>
+    </div>
+
+    <SettingsForm client:load />
+  </div>
+</Layout>

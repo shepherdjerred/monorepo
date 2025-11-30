@@ -1,0 +1,25 @@
+{
+  "name": "camping",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Washington state campsite reservation notification system",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspaces --if-present",
+    "dev:api": "npm run dev -w @camping/api",
+    "dev:web": "npm run dev -w @camping/web",
+    "dev:scheduler": "npm run dev -w @camping/scheduler",
+    "build": "npm run build --workspaces --if-present",
+    "start": "npm run start --workspaces --if-present"
+  },
+  "keywords": [
+    "camping",
+    "reservations",
+    "washington",
+    "notifications"
+  ],
+  "author": "",
+  "license": "MIT"
+}

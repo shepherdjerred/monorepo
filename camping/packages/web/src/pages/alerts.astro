@@ -1,0 +1,17 @@
+---
+import Layout from "../layouts/Layout.astro";
+import AlertList from "../components/AlertList";
+---
+
+<Layout title="Alerts - WA Camping">
+  <div class="space-y-6">
+    <div>
+      <h1 class="text-3xl font-bold text-forest-800">Alerts</h1>
+      <p class="text-gray-600 mt-2">
+        View notifications about available campsites.
+      </p>
+    </div>
+
+    <AlertList client:load />
+  </div>
+</Layout>
