@@ -1,0 +1,49 @@
+{
+  "name": "@shepherdjerred/eslint-config",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./rules": {
+      "types": "./dist/rules/index.d.ts",
+      "import": "./dist/rules/index.js"
+    },
+    "./configs/*": {
+      "types": "./dist/configs/*.d.ts",
+      "import": "./dist/configs/*.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "bun build ./src/index.ts ./src/rules/index.ts ./src/configs/*.ts --outdir ./dist --target bun --splitting && tsc --emitDeclarationOnly --outDir ./dist",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "bun run build"
+  },
+  "dependencies": {
+    "@eslint/js": "^9.30.1",
+    "@typescript-eslint/utils": "^8.46.0",
+    "typescript-eslint": "^8.35.1",
+    "eslint-plugin-unicorn": "^62.0.0",
+    "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-regexp": "^2.10.0",
+    "@eslint-community/eslint-plugin-eslint-comments": "^4.5.0",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-astro": "^1.5.0",
+    "eslint-import-resolver-typescript-bun": "^0.0.104"
+  },
+  "peerDependencies": {
+    "eslint": "^9.0.0",
+    "typescript": "^5.0.0"
+  },
+  "devDependencies": {
+    "@typescript-eslint/rule-tester": "^8.48.0",
+    "@types/eslint__js": "^8.42.3",
+    "@types/node": "^22.0.0"
+  }
+}

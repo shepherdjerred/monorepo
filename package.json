@@ -1,0 +1,14 @@
+{
+  "name": "@shepherdjerred/share",
+  "private": true,
+  "workspaces": ["packages/*"],
+  "scripts": {
+    "build": "bun run --filter='./packages/*' build",
+    "test": "bun run --filter='./packages/*' test",
+    "typecheck": "bun run --filter='./packages/*' typecheck",
+    "lint": "bun run --filter='./packages/*' lint"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}
