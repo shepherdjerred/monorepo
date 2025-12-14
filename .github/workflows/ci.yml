@@ -12,6 +12,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: oven-sh/setup-bun@v2
+
       - uses: dagger/dagger-for-github@v7
         with:
           verb: run
@@ -23,6 +25,8 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
       - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
 
       - uses: dagger/dagger-for-github@v7
         with:
