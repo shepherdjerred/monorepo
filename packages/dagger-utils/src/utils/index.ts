@@ -7,3 +7,9 @@ export {
   type NamedOperation,
   type NamedResult,
 } from "./parallel";
+export {
+  execWithOutput,
+  execOrThrow,
+  formatDaggerError,
+  type ExecResult,
+} from "./errors";
