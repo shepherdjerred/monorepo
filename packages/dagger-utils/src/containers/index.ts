@@ -6,6 +6,15 @@ export { getCurlContainer } from "./curl";
 export { getBunContainer, getBunNodeContainer } from "./bun";
 export { getNodeContainer, getNodeSlimContainer, getNodeContainerWithCache } from "./node";
 export {
+  getBunContainerWithCache,
+  withBunInstall,
+  publishToNpm,
+  runBunWorkspaceCI,
+  type NpmPublishOptions,
+  type BunWorkspaceCIOptions,
+  type BunWorkspaceCIResult,
+} from "./npm";
+export {
   getGitHubContainer,
   createPullRequest,
   type GitHubContainerOptions,
