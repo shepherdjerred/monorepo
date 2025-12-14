@@ -53,9 +53,13 @@ export {
   runParallel,
   runNamedParallel,
   collectResults,
+  execWithOutput,
+  execOrThrow,
+  formatDaggerError,
   type ParallelResults,
   type NamedOperation,
   type NamedResult,
+  type ExecResult,
 } from "./utils";
 
 // Types
