@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dagger/dagger-for-github@v7
+        with:
+          verb: run
+          args: bun ./dagger/ci.ts
+
+  publish:
+    runs-on: ubuntu-latest
+    needs: ci
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dagger/dagger-for-github@v7
+        with:
+          verb: run
+          args: bun ./dagger/ci.ts --publish
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
