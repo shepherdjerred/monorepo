@@ -5,10 +5,10 @@
   "scripts": {
     "build": "bun run --filter='./packages/*' build",
     "test": "bun run --filter='./packages/*' test",
-    "typecheck": "bun run --filter='./packages/*' typecheck",
-    "lint": "bun run --filter='./packages/*' lint"
+    "typecheck": "bun run --filter='./packages/*' typecheck"
   },
   "devDependencies": {
+    "@dagger.io/dagger": "^0.19.0",
     "typescript": "^5.9.3"
   }
 }
