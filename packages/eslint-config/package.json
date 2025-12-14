@@ -18,7 +18,7 @@
   },
   "files": ["dist"],
   "scripts": {
-    "build": "bun build ./src/index.ts ./src/rules/index.ts ./src/configs/*.ts --outdir ./dist --target bun --splitting && tsc --emitDeclarationOnly --outDir ./dist",
+    "build": "tsc --outDir ./dist",
     "test": "bun test || true",
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "bun run build"
