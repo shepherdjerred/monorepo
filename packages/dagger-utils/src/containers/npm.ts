@@ -66,7 +66,7 @@ export async function publishToNpm(options: NpmPublishOptions): Promise<string> 
   const tag = options.tag ?? "latest";
   const packageDir = options.packageDir ?? ".";
 
-  const publishArgs = ["bun", "publish", packageDir, "--access", access, "--tag", tag, "--registry", registry];
+  const publishArgs = ["bun", "publish", "--access", access, "--tag", tag, "--registry", registry];
 
   if (options.dryRun) {
     publishArgs.push("--dry-run");
@@ -75,7 +75,9 @@ export async function publishToNpm(options: NpmPublishOptions): Promise<string> 
   // Extract the registry host for the npmrc auth configuration
   const registryHost = new URL(registry).host;
 
+  // bun publish must be run from within the package directory
   const result = await options.container
+    .withWorkdir(packageDir)
     .withSecretVariable("NPM_TOKEN", options.token)
     .withExec(["sh", "-c", `echo "//${registryHost}/:_authToken=\${NPM_TOKEN}" > ~/.npmrc`])
     .withExec(publishArgs)
