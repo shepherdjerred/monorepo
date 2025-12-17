@@ -66,7 +66,7 @@ export async function publishToNpm(options: NpmPublishOptions): Promise<string> 
   const tag = options.tag ?? "latest";
   const packageDir = options.packageDir ?? ".";
 
-  const publishArgs = ["npm", "publish", packageDir, "--access", access, "--tag", tag, "--registry", registry];
+  const publishArgs = ["bun", "publish", packageDir, "--access", access, "--tag", tag, "--registry", registry];
 
   if (options.dryRun) {
     publishArgs.push("--dry-run");
