@@ -3,25 +3,15 @@
   "version": "0.1.0",
   "type": "module",
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
-    },
-    "./containers": {
-      "types": "./dist/containers/index.d.ts",
-      "import": "./dist/containers/index.js"
-    },
-    "./utils": {
-      "types": "./dist/utils/index.d.ts",
-      "import": "./dist/utils/index.js"
-    }
+    ".": "./src/index.ts",
+    "./containers": "./src/containers/index.ts",
+    "./utils": "./src/utils/index.ts"
   },
-  "files": ["dist"],
+  "files": ["src"],
   "scripts": {
-    "build": "bun build ./src/index.ts ./src/containers/index.ts ./src/utils/index.ts --outdir ./dist --target bun --splitting && tsc --emitDeclarationOnly --outDir ./dist",
+    "build": "true",
     "test": "bun test || true",
-    "typecheck": "tsc --noEmit",
-    "prepublishOnly": "bun run build"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "zod": "^4.0.0"
