@@ -1,17 +1,18 @@
-import { dag, type Container, type Secret } from "@dagger.io/dagger";
-import versions from "../versions";
+import type { Container, Secret } from "@dagger.io/dagger";
+import { getSystemContainer } from "./system";
 
 export type GitHubContainerOptions = {
   /** Git user name for commits */
   userName?: string;
   /** Git user email for commits */
   userEmail?: string;
-  /** GitHub CLI version (default: latest from versions) */
+  /** GitHub CLI version (default: 2.63.2) */
   ghVersion?: string;
 };
 
 /**
  * Returns a container with GitHub CLI (gh) and git installed.
+ * Builds on top of getSystemContainer which already has curl, git, and other common tools.
  * Useful for creating PRs, managing releases, and other GitHub operations.
  *
  * @param options - Configuration options for the container
@@ -30,21 +31,21 @@ export type GitHubContainerOptions = {
 export function getGitHubContainer(options: GitHubContainerOptions = {}): Container {
   const { userName = "dagger-bot", userEmail = "dagger@localhost", ghVersion = "2.63.2" } = options;
 
-  return dag
-    .container()
-    .from(`ubuntu:${versions.ubuntu}`)
-    .withExec(["apt", "update"])
-    .withExec(["apt", "install", "-y", "git", "curl"])
-    .withExec([
-      "sh",
-      "-c",
-      `curl -L -o ghcli.deb https://github.com/cli/cli/releases/download/v${ghVersion}/gh_${ghVersion}_linux_amd64.deb`,
-    ])
-    .withExec(["dpkg", "-i", "ghcli.deb"])
-    .withExec(["rm", "ghcli.deb"])
-    .withExec(["git", "config", "--global", "user.name", userName])
-    .withExec(["git", "config", "--global", "user.email", userEmail])
-    .withWorkdir("/workspace");
+  return (
+    getSystemContainer()
+      // Install GitHub CLI
+      .withExec([
+        "sh",
+        "-c",
+        `curl -L -o ghcli.deb https://github.com/cli/cli/releases/download/v${ghVersion}/gh_${ghVersion}_linux_amd64.deb`,
+      ])
+      .withExec(["dpkg", "-i", "ghcli.deb"])
+      .withExec(["rm", "ghcli.deb"])
+      // Configure git user
+      .withExec(["git", "config", "--global", "user.name", userName])
+      .withExec(["git", "config", "--global", "user.email", userEmail])
+      .withWorkdir("/workspace")
+  );
 }
 
 export type CreatePullRequestOptions = {
