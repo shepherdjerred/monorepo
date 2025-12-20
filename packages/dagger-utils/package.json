@@ -1,13 +1,15 @@
 {
   "name": "@shepherdjerred/dagger-utils",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
     "./containers": "./src/containers/index.ts",
     "./utils": "./src/utils/index.ts"
   },
-  "files": ["src"],
+  "files": [
+    "src"
+  ],
   "scripts": {
     "build": "true",
     "test": "bun test || true",

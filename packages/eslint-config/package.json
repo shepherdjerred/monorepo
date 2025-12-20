@@ -1,6 +1,6 @@
 {
   "name": "@shepherdjerred/eslint-config",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "exports": {
     ".": {
@@ -16,7 +16,9 @@
       "import": "./dist/configs/*.js"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc --outDir ./dist",
     "test": "bun test || true",
