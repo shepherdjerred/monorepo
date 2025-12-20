@@ -35,6 +35,8 @@ export {
   getReleasePleaseContainer,
   releasePr,
   githubRelease,
+  manifestPr,
+  manifestRelease,
   type MiseToolVersions,
   type WorkspaceConfig,
   type NpmPublishOptions,
@@ -49,6 +51,8 @@ export {
   type ReleasePleaseContainerOptions,
   type ReleasePrOptions,
   type GitHubReleaseOptions,
+  type ManifestPrOptions,
+  type ManifestReleaseOptions,
 } from "./containers";
 
 // Utilities

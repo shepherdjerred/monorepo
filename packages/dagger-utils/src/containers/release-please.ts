@@ -136,3 +136,92 @@ export async function githubRelease(options: GitHubReleaseOptions): Promise<stri
 
   return await container.stdout();
 }
+
+export type ManifestPrOptions = {
+  /** GitHub token for authentication */
+  ghToken: Secret;
+  /** Repository URL (e.g., "owner/repo") */
+  repoUrl: string;
+  /** Target branch (defaults to "main") */
+  targetBranch?: string;
+  /** Container options */
+  container?: ReleasePleaseContainerOptions;
+};
+
+/**
+ * Creates or updates release PRs for a monorepo using manifest mode.
+ * Uses release-please-config.json and .release-please-manifest.json for configuration.
+ *
+ * @param options - Manifest PR creation options
+ * @returns The release-please CLI output
+ *
+ * @example
+ * ```ts
+ * const output = await manifestPr({
+ *   ghToken: dag.setSecret("gh-token", process.env.GITHUB_TOKEN),
+ *   repoUrl: "owner/repo",
+ * });
+ * ```
+ */
+export async function manifestPr(options: ManifestPrOptions): Promise<string> {
+  const { targetBranch = "main" } = options;
+
+  const container = getReleasePleaseContainer(options.container)
+    .withSecretVariable("GITHUB_TOKEN", options.ghToken)
+    .withExec([
+      "sh",
+      "-c",
+      `git clone https://x-access-token:$GITHUB_TOKEN@github.com/${options.repoUrl}.git .`,
+    ])
+    .withExec([
+      "release-please",
+      "manifest-pr",
+      "--token=$GITHUB_TOKEN",
+      `--repo-url=${options.repoUrl}`,
+      `--target-branch=${targetBranch}`,
+    ]);
+
+  return await container.stdout();
+}
+
+export type ManifestReleaseOptions = {
+  /** GitHub token for authentication */
+  ghToken: Secret;
+  /** Repository URL (e.g., "owner/repo") */
+  repoUrl: string;
+  /** Container options */
+  container?: ReleasePleaseContainerOptions;
+};
+
+/**
+ * Creates GitHub releases for a monorepo using manifest mode.
+ * Uses release-please-config.json and .release-please-manifest.json for configuration.
+ *
+ * @param options - Manifest release creation options
+ * @returns The release-please CLI output (includes release URLs if created)
+ *
+ * @example
+ * ```ts
+ * const output = await manifestRelease({
+ *   ghToken: dag.setSecret("gh-token", process.env.GITHUB_TOKEN),
+ *   repoUrl: "owner/repo",
+ * });
+ * ```
+ */
+export async function manifestRelease(options: ManifestReleaseOptions): Promise<string> {
+  const container = getReleasePleaseContainer(options.container)
+    .withSecretVariable("GITHUB_TOKEN", options.ghToken)
+    .withExec([
+      "sh",
+      "-c",
+      `git clone https://x-access-token:$GITHUB_TOKEN@github.com/${options.repoUrl}.git .`,
+    ])
+    .withExec([
+      "release-please",
+      "manifest-release",
+      "--token=$GITHUB_TOKEN",
+      `--repo-url=${options.repoUrl}`,
+    ]);
+
+  return await container.stdout();
+}
