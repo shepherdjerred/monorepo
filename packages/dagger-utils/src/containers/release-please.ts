@@ -72,15 +72,7 @@ export async function releasePr(options: ReleasePrOptions): Promise<string> {
     .withExec([
       "sh",
       "-c",
-      `git clone https://x-access-token:$GITHUB_TOKEN@github.com/${options.repoUrl}.git .`,
-    ])
-    .withExec([
-      "release-please",
-      "release-pr",
-      "--token=$GITHUB_TOKEN",
-      `--repo-url=${options.repoUrl}`,
-      `--target-branch=${targetBranch}`,
-      `--release-type=${releaseType}`,
+      `git clone https://x-access-token:$GITHUB_TOKEN@github.com/${options.repoUrl}.git . && release-please release-pr --token=$GITHUB_TOKEN --repo-url=${options.repoUrl} --target-branch=${targetBranch} --release-type=${releaseType}`,
     ]);
 
   return await container.stdout();
@@ -124,14 +116,7 @@ export async function githubRelease(options: GitHubReleaseOptions): Promise<stri
     .withExec([
       "sh",
       "-c",
-      `git clone https://x-access-token:$GITHUB_TOKEN@github.com/${options.repoUrl}.git .`,
-    ])
-    .withExec([
-      "release-please",
-      "github-release",
-      "--token=$GITHUB_TOKEN",
-      `--repo-url=${options.repoUrl}`,
-      `--release-type=${releaseType}`,
+      `git clone https://x-access-token:$GITHUB_TOKEN@github.com/${options.repoUrl}.git . && release-please github-release --token=$GITHUB_TOKEN --repo-url=${options.repoUrl} --release-type=${releaseType}`,
     ]);
 
   return await container.stdout();
@@ -171,14 +156,7 @@ export async function manifestPr(options: ManifestPrOptions): Promise<string> {
     .withExec([
       "sh",
       "-c",
-      `git clone https://x-access-token:$GITHUB_TOKEN@github.com/${options.repoUrl}.git .`,
-    ])
-    .withExec([
-      "release-please",
-      "manifest-pr",
-      "--token=$GITHUB_TOKEN",
-      `--repo-url=${options.repoUrl}`,
-      `--target-branch=${targetBranch}`,
+      `git clone https://x-access-token:$GITHUB_TOKEN@github.com/${options.repoUrl}.git . && release-please manifest-pr --token=$GITHUB_TOKEN --repo-url=${options.repoUrl} --target-branch=${targetBranch}`,
     ]);
 
   return await container.stdout();
@@ -214,13 +192,7 @@ export async function manifestRelease(options: ManifestReleaseOptions): Promise<
     .withExec([
       "sh",
       "-c",
-      `git clone https://x-access-token:$GITHUB_TOKEN@github.com/${options.repoUrl}.git .`,
-    ])
-    .withExec([
-      "release-please",
-      "manifest-release",
-      "--token=$GITHUB_TOKEN",
-      `--repo-url=${options.repoUrl}`,
+      `git clone https://x-access-token:$GITHUB_TOKEN@github.com/${options.repoUrl}.git . && release-please manifest-release --token=$GITHUB_TOKEN --repo-url=${options.repoUrl}`,
     ]);
 
   return await container.stdout();
