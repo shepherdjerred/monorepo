@@ -1,0 +1,11 @@
+{
+  "name": "monorepo-dagger",
+  "type": "module",
+  "scripts": {
+    "lint": "bunx eslint src"
+  },
+  "dependencies": {
+    "@dagger.io/dagger": "^0.15.0",
+    "typescript": "^5.8.0"
+  }
+}

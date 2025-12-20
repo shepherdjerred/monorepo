@@ -1,0 +1,13 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "packages": {
+    "packages/dagger-utils": {
+      "release-type": "node",
+      "package-name": "@shepherdjerred/dagger-utils"
+    },
+    "packages/eslint-config": {
+      "release-type": "node",
+      "package-name": "@shepherdjerred/eslint-config"
+    }
+  }
+}

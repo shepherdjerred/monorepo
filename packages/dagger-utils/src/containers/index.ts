@@ -40,7 +40,11 @@ export {
   getReleasePleaseContainer,
   releasePr,
   githubRelease,
+  manifestPr,
+  manifestRelease,
   type ReleasePleaseContainerOptions,
   type ReleasePrOptions,
   type GitHubReleaseOptions,
+  type ManifestPrOptions,
+  type ManifestReleaseOptions,
 } from "./release-please";
