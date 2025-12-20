@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.4.0](https://github.com/shepherdjerred/monorepo/compare/dagger-utils-v0.3.0...dagger-utils-v0.4.0) (2025-12-20)
+
+
+### Features
+
+* **dagger-utils:** add mise container helpers and npm cache ([4b81c90](https://github.com/shepherdjerred/monorepo/commit/4b81c90f70623e40d11e7452e6c5de94e51fa48b))
+
+
+### Bug Fixes
+
+* **dagger-utils:** properly expand GITHUB_TOKEN in release-please commands ([14d5a4d](https://github.com/shepherdjerred/monorepo/commit/14d5a4d213d2af1ed26702a5964b80fa26e02335))
+
 ## [0.3.0](https://github.com/shepherdjerred/monorepo/compare/dagger-utils-v0.2.0...dagger-utils-v0.3.0) (2025-12-20)
 
 
