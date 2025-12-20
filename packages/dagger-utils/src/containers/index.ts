@@ -1,10 +1,23 @@
 export { getSystemContainer } from "./system";
-export { getMiseRuntimeContainer, withMiseTools, type MiseToolVersions } from "./mise";
+export {
+  getMiseRuntimeContainer,
+  getMiseContainer,
+  getMiseBunNodeContainer,
+  withMiseTools,
+  type MiseToolVersions,
+  type MiseContainerOptions,
+} from "./mise";
 export { getWorkspaceContainer, type WorkspaceConfig } from "./workspace";
 export { getKubectlContainer } from "./kubectl";
 export { getCurlContainer } from "./curl";
 export { getBunContainer, getBunNodeContainer } from "./bun";
-export { getNodeContainer, getNodeSlimContainer, getNodeContainerWithCache } from "./node";
+export {
+  getNodeContainer,
+  getNodeSlimContainer,
+  getNodeContainerWithCache,
+  withNpmCache,
+  type NodeCacheOptions,
+} from "./node";
 export {
   getBunContainerWithCache,
   withBunInstall,
