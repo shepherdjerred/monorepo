@@ -5,7 +5,6 @@ const REPO_URL = "shepherdjerred/monorepo";
 
 // Inline the bun version from dagger-utils/versions.ts
 const BUN_VERSION = "1.3.4";
-const NODE_VERSION = "24.11.1";
 
 /**
  * Get a Bun container with caching enabled
@@ -20,15 +19,15 @@ function getBunContainerWithCache(source: Directory): Container {
 }
 
 /**
- * Get a container with release-please CLI installed
+ * Get a container with release-please CLI installed (using Bun)
  */
 function getReleasePleaseContainer(): Container {
   return dag
     .container()
-    .from(`node:${NODE_VERSION}-bookworm`)
+    .from(`oven/bun:${BUN_VERSION}-debian`)
     .withExec(["apt-get", "update"])
     .withExec(["apt-get", "install", "-y", "git"])
-    .withExec(["npm", "install", "-g", "release-please@latest"])
+    .withExec(["bun", "install", "-g", "release-please@latest"])
     .withWorkdir("/workspace");
 }
 
