@@ -32,6 +32,9 @@ export {
   getCloudflareWorkerDeployContainer,
   deployToCloudflarePages,
   deployToCloudflareWorker,
+  getReleasePleaseContainer,
+  releasePr,
+  githubRelease,
   type MiseToolVersions,
   type WorkspaceConfig,
   type NpmPublishOptions,
@@ -43,6 +46,9 @@ export {
   type GhcrPublishMultipleOptions,
   type CloudflarePagesDeployOptions,
   type CloudflareWorkerDeployOptions,
+  type ReleasePleaseContainerOptions,
+  type ReleasePrOptions,
+  type GitHubReleaseOptions,
 } from "./containers";
 
 // Utilities

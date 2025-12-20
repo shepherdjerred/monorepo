@@ -36,3 +36,11 @@ export {
   type CloudflarePagesDeployOptions,
   type CloudflareWorkerDeployOptions,
 } from "./cloudflare";
+export {
+  getReleasePleaseContainer,
+  releasePr,
+  githubRelease,
+  type ReleasePleaseContainerOptions,
+  type ReleasePrOptions,
+  type GitHubReleaseOptions,
+} from "./release-please";
