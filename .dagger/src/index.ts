@@ -76,14 +76,7 @@ export class Monorepo {
         .withExec([
           "sh",
           "-c",
-          `git clone https://x-access-token:$GITHUB_TOKEN@github.com/${REPO_URL}.git .`,
-        ])
-        .withExec([
-          "release-please",
-          "manifest-pr",
-          "--token=$GITHUB_TOKEN",
-          `--repo-url=${REPO_URL}`,
-          "--target-branch=main",
+          `git clone https://x-access-token:$GITHUB_TOKEN@github.com/${REPO_URL}.git . && release-please manifest-pr --token=\$GITHUB_TOKEN --repo-url=${REPO_URL} --target-branch=main`,
         ]);
 
       const prOutput = await prContainer.stdout();
@@ -95,13 +88,7 @@ export class Monorepo {
         .withExec([
           "sh",
           "-c",
-          `git clone https://x-access-token:$GITHUB_TOKEN@github.com/${REPO_URL}.git .`,
-        ])
-        .withExec([
-          "release-please",
-          "manifest-release",
-          "--token=$GITHUB_TOKEN",
-          `--repo-url=${REPO_URL}`,
+          `git clone https://x-access-token:$GITHUB_TOKEN@github.com/${REPO_URL}.git . && release-please manifest-release --token=\$GITHUB_TOKEN --repo-url=${REPO_URL}`,
         ]);
 
       const releaseOutput = await releaseContainer.stdout();
