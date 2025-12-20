@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   ci:
     runs-on: ubuntu-latest
@@ -16,42 +20,13 @@ jobs:
 
       - name: Install Dagger module dependencies
         working-directory: .dagger
-        run: bun install
+        run: bun install --frozen-lockfile
 
-      - uses: dagger/dagger-for-github@v7
+      - uses: dagger/dagger-for-github@v8
         with:
+          version: "latest"
           verb: call
-          args: ci --source=.
-
-  release:
-    runs-on: ubuntu-latest
-    needs: ci
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    permissions:
-      contents: write
-      pull-requests: write
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: oven-sh/setup-bun@v2
-
-      - name: Install Dagger module dependencies
-        working-directory: .dagger
-        run: bun install
-
-      - name: Create/Update Release PRs
-        uses: dagger/dagger-for-github@v7
-        with:
-          verb: call
-          args: release-pr --github-token=env:GITHUB_TOKEN
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Create GitHub Releases and Publish
-        uses: dagger/dagger-for-github@v7
-        with:
-          verb: call
-          args: release --source=. --github-token=env:GITHUB_TOKEN --npm-token=env:NPM_TOKEN
+          args: ci --source=. --github-token=env:GITHUB_TOKEN --npm-token=env:NPM_TOKEN
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
