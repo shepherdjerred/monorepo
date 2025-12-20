@@ -69,3 +69,31 @@ export function getNodeContainerWithCache(
   return getNodeContainer(source, platform, customVersion)
     .withMountedCache("/root/.npm", dag.cacheVolume("npm-cache"));
 }
+
+export type NodeCacheOptions = {
+  /** Cache volume key (default: "npm-cache") */
+  cacheKey?: string;
+  /** Path to mount the cache (default: "/root/.npm") */
+  cachePath?: string;
+};
+
+/**
+ * Adds npm cache mounting to a container for faster npm installs.
+ * This is a composable helper that can be applied to any container.
+ *
+ * @param container - The container to add npm cache to
+ * @param options - Configuration options for the cache
+ * @returns The container with npm cache mounted
+ *
+ * @example
+ * ```ts
+ * const container = withNpmCache(
+ *   getNodeContainer(source),
+ *   { cacheKey: "my-project-npm" }
+ * );
+ * ```
+ */
+export function withNpmCache(container: Container, options: NodeCacheOptions = {}): Container {
+  const { cacheKey = "npm-cache", cachePath = "/root/.npm" } = options;
+  return container.withMountedCache(cachePath, dag.cacheVolume(cacheKey));
+}
