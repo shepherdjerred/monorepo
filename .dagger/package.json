@@ -1,11 +1,15 @@
 {
   "name": "monorepo-dagger",
   "type": "module",
+  "private": true,
   "scripts": {
     "lint": "bunx eslint src"
   },
   "dependencies": {
-    "@dagger.io/dagger": "^0.15.0",
+    "@dagger.io/dagger": "^0.19.6",
     "typescript": "^5.8.0"
+  },
+  "dagger": {
+    "runtime": "bun"
   }
 }
