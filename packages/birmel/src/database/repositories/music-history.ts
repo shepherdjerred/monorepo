@@ -22,7 +22,7 @@ export function recordTrackPlay(input: TrackPlayInput): void {
         userId: input.requestedBy,
       },
     })
-    .catch((error) => {
+    .catch((error: unknown) => {
       logger.error("Failed to record track play", error);
     });
 }
