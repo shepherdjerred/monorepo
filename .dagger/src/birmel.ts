@@ -41,18 +41,24 @@ export function checkBirmel(workspaceSource: Directory): Container {
 }
 
 /**
- * Build the birmel Docker image
+ * Build the birmel Docker image for production
  * @param workspaceSource The full workspace source directory
  * @param version The version tag
  * @param gitSha The git SHA
- * @returns The built container
+ * @returns The built container with files copied (not mounted)
  */
 export function buildBirmelImage(
   workspaceSource: Directory,
   version: string,
   gitSha: string,
 ): Container {
-  return getBirmelPrepared(workspaceSource)
+  // Use withDirectory to copy files into the image (not withMountedDirectory)
+  // Mounted directories are temporary and not included in published images
+  return getBunContainerWithVoice()
+    .withWorkdir("/workspace")
+    .withDirectory("/workspace", workspaceSource)
+    .withExec(["bun", "install", "--frozen-lockfile"])
+    .withWorkdir("/workspace/packages/birmel")
     .withEnvVariable("VERSION", version)
     .withEnvVariable("GIT_SHA", gitSha)
     .withEnvVariable("NODE_ENV", "production")
