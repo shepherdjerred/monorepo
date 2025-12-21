@@ -1,11 +1,27 @@
 import type { Client, Message } from "discord.js";
 import { logger } from "../../utils/logger.js";
-import { getClassifierAgent } from "../../mastra/index.js";
-import { parseClassificationResult } from "../../mastra/agents/classifier-agent.js";
 import {
   getRecentChannelMessages,
   formatMessagesForClassifier,
 } from "../utils/channel-history.js";
+
+// Lazy-loaded to avoid circular dependency with tools
+let classifierModule: typeof import("../../mastra/index.js") | null = null;
+let parserModule: typeof import("../../mastra/agents/classifier-agent.js") | null = null;
+
+async function getClassifierAgent() {
+  if (!classifierModule) {
+    classifierModule = await import("../../mastra/index.js");
+  }
+  return classifierModule.getClassifierAgent();
+}
+
+async function getParseClassificationResult() {
+  if (!parserModule) {
+    parserModule = await import("../../mastra/agents/classifier-agent.js");
+  }
+  return parserModule.parseClassificationResult;
+}
 
 export type MessageContext = {
   message: Message;
@@ -61,9 +77,10 @@ async function shouldRespond(
       message
     );
 
-    const classifier = getClassifierAgent();
+    const classifier = await getClassifierAgent();
     const result = await classifier.generate(formattedContext);
 
+    const parseClassificationResult = await getParseClassificationResult();
     const classification = parseClassificationResult(result.text);
 
     logger.debug("Classification result", {
