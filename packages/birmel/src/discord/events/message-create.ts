@@ -1,4 +1,6 @@
 import type { Client, Message } from "discord.js";
+import type { getClassifierAgent as GetClassifierAgentFn } from "../../mastra/index.js";
+import type { parseClassificationResult as ParseClassificationResultFn } from "../../mastra/agents/classifier-agent.js";
 import { logger } from "../../utils/logger.js";
 import {
   getRecentChannelMessages,
@@ -6,20 +8,16 @@ import {
 } from "../utils/channel-history.js";
 
 // Lazy-loaded to avoid circular dependency with tools
-let classifierModule: typeof import("../../mastra/index.js") | null = null;
-let parserModule: typeof import("../../mastra/agents/classifier-agent.js") | null = null;
+let classifierModule: { getClassifierAgent: typeof GetClassifierAgentFn } | null = null;
+let parserModule: { parseClassificationResult: typeof ParseClassificationResultFn } | null = null;
 
 async function getClassifierAgent() {
-  if (!classifierModule) {
-    classifierModule = await import("../../mastra/index.js");
-  }
+  classifierModule ??= await import("../../mastra/index.js");
   return classifierModule.getClassifierAgent();
 }
 
 async function getParseClassificationResult() {
-  if (!parserModule) {
-    parserModule = await import("../../mastra/agents/classifier-agent.js");
-  }
+  parserModule ??= await import("../../mastra/agents/classifier-agent.js");
   return parserModule.parseClassificationResult;
 }
 

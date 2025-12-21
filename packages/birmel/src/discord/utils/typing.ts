@@ -21,12 +21,10 @@ export async function withTyping<T>(
   await channel.sendTyping();
 
   // Refresh typing every 9 seconds (indicator lasts 10s)
-  const typingInterval = setInterval(async () => {
-    try {
-      await channel.sendTyping();
-    } catch {
+  const typingInterval = setInterval(() => {
+    void channel.sendTyping().catch(() => {
       // Ignore errors from typing - channel might be gone
-    }
+    });
   }, 9000);
 
   try {

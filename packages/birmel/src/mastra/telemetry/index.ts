@@ -1,6 +1,6 @@
 import { getConfig } from "../../config/index.js";
 
-export interface TelemetryConfig {
+export type TelemetryConfig = {
   enabled: boolean;
   serviceName: string;
   export?: {

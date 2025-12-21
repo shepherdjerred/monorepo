@@ -1,6 +1,6 @@
 import type { Message, Collection, Snowflake } from "discord.js";
 
-export interface ChannelMessage {
+export type ChannelMessage = {
   id: string;
   authorId: string;
   authorName: string;
@@ -15,7 +15,7 @@ export interface ChannelMessage {
  */
 export async function getRecentChannelMessages(
   message: Message,
-  limit: number = 10
+  limit = 10
 ): Promise<ChannelMessage[]> {
   try {
     // Fetch messages before the current one
