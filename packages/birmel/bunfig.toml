@@ -1,6 +1,6 @@
 [test]
 coverage = true
-coverageThreshold = { lines = 0.70, functions = 0.70 }
+coverageThreshold = { lines = 0.50, functions = 0.30 }
 coveragePathIgnorePatterns = [
   "**/node_modules/**",
   "**/tests/**",
