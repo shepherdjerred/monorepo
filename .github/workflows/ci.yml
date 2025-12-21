@@ -20,13 +20,14 @@ jobs:
 
       - uses: 1password/load-secrets-action/configure@v2
         with:
-          service-account-token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          connect-host: http://onepassword-connect.1password.svc.cluster.local:8080
+          connect-token: ${{ secrets.OP_CONNECT_TOKEN }}
 
       - uses: 1password/load-secrets-action@v2
         with:
           export-env: true
         env:
-          NPM_TOKEN: op://GitHub Actions/Secrets/add more/NPM_TOKEN
+          NPM_TOKEN: op://v64ocnykdqju4ui6j6pua56xw4/kjzy27cw4ialemerahutnxis3a/NPM_TOKEN
 
       - name: Extract kubectl version
         id: kubectl-version
