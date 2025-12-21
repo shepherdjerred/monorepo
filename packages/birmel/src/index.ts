@@ -128,7 +128,7 @@ async function main(): Promise<void> {
   startScheduler();
 
   // Start Mastra Studio server
-  await startMastraServer();
+  startMastraServer();
 
   // Handle graceful shutdown
   process.on("SIGINT", () => void shutdown());

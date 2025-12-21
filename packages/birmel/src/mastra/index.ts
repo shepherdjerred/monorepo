@@ -29,7 +29,7 @@ export function getClassifierAgent() {
   return getMastra().getAgent("classifier");
 }
 
-export async function startMastraServer(): Promise<void> {
+export function startMastraServer(): void {
   const config = getConfig();
   if (config.mastra.studioEnabled) {
     // Mastra Studio is started separately via `mastra dev` command

@@ -25,16 +25,14 @@ mock.module("@ai-sdk/openai", () => ({
 
 // Mock @mastra/memory
 mock.module("@mastra/memory", () => ({
-  Memory: class MockMemory {
-    constructor() {}
-  },
+  // eslint-disable-next-line @typescript-eslint/no-extraneous-class
+  Memory: class MockMemory {},
 }));
 
 // Mock @mastra/libsql to avoid MessageList dependency
 mock.module("@mastra/libsql", () => ({
-  LibSQLStore: class MockLibSQLStore {
-    constructor() {}
-  },
+  // eslint-disable-next-line @typescript-eslint/no-extraneous-class
+  LibSQLStore: class MockLibSQLStore {},
 }));
 
 describe("birmel-agent", () => {
