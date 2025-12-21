@@ -1,4 +1,5 @@
 import { dag, object, func, Secret, Directory, Container } from "@dagger.io/dagger";
+import { updateHomelabVersion } from "@shepherdjerred/dagger-utils";
 import {
   checkBirmel,
   buildBirmelImage,
@@ -188,7 +189,7 @@ export class Monorepo {
   }
 
   /**
-   * Full Birmel release: CI + build + smoke test + publish
+   * Full Birmel release: CI + build + smoke test + publish + deploy to homelab
    */
   @func()
   async birmelRelease(
@@ -197,6 +198,7 @@ export class Monorepo {
     gitSha: string,
     registryUsername: string,
     registryPassword: Secret,
+    githubToken?: Secret,
   ): Promise<string> {
     const outputs: string[] = [];
 
@@ -208,6 +210,17 @@ export class Monorepo {
 
     // Publish
     outputs.push(await this.birmelPublish(source, version, gitSha, registryUsername, registryPassword));
+
+    // Deploy to homelab
+    if (githubToken) {
+      outputs.push(
+        await updateHomelabVersion({
+          ghToken: githubToken,
+          appName: "birmel",
+          version,
+        }),
+      );
+    }
 
     return outputs.join("\n\n");
   }
