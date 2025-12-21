@@ -59,6 +59,7 @@ export function buildBirmelImage(
     .withDirectory("/workspace", workspaceSource)
     .withExec(["bun", "install", "--frozen-lockfile"])
     .withWorkdir("/workspace/packages/birmel")
+    .withExec(["bunx", "prisma", "generate"])
     .withEnvVariable("VERSION", version)
     .withEnvVariable("GIT_SHA", gitSha)
     .withEnvVariable("NODE_ENV", "production")
