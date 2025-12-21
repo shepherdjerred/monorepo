@@ -1,0 +1,47 @@
+# Dependencies
+node_modules
+
+# Build artifacts
+dist
+*.tsbuildinfo
+
+# Development files
+.env
+.env.local
+.env.*.local
+
+# Test files
+tests
+coverage
+*.test.ts
+
+# IDE/Editor
+.vscode
+.idea
+*.swp
+*.swo
+
+# Git
+.git
+.gitignore
+
+# Documentation
+*.md
+LICENSE
+
+# CI/CD
+.dagger
+.github
+
+# Data files
+data
+*.db
+*.sqlite
+
+# Logs
+*.log
+logs
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,16 @@
+import type { Client } from "discord.js";
+import { setupReadyHandler } from "./ready.js";
+import { setupMessageCreateHandler } from "./message-create.js";
+import { setupGuildCreateHandler } from "./guild-create.js";
+import { setupGuildDeleteHandler } from "./guild-delete.js";
+import { setupVoiceStateUpdateHandler } from "./voice-state-update.js";
+
+export function registerEventHandlers(client: Client): void {
+  setupReadyHandler(client);
+  setupMessageCreateHandler(client);
+  setupGuildCreateHandler(client);
+  setupGuildDeleteHandler(client);
+  setupVoiceStateUpdateHandler(client);
+}
+
+export { setMessageHandler, type MessageContext, type MessageHandler } from "./message-create.js";

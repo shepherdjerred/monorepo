@@ -1,0 +1,225 @@
+import { beforeAll, afterAll, mock } from "bun:test";
+
+// Mock environment variables for testing
+beforeAll(() => {
+  process.env["DISCORD_TOKEN"] = "test-discord-token";
+  process.env["DISCORD_CLIENT_ID"] = "test-client-id";
+  process.env["ANTHROPIC_API_KEY"] = "test-anthropic-key";
+  process.env["OPENAI_API_KEY"] = "test-openai-key";
+});
+
+afterAll(() => {
+  // Cleanup
+});
+
+// Mock Discord.js to prevent actual API calls
+mock.module("discord.js", () => ({
+  Client: class MockClient {
+    guilds = { cache: new Map(), fetch: async () => ({}) };
+    channels = { fetch: async () => ({}) };
+    users = { fetch: async () => ({}) };
+    login = async () => "logged-in";
+    destroy = () => {};
+    on = () => {};
+    once = () => {};
+  },
+  GatewayIntentBits: {
+    Guilds: 1,
+    GuildMessages: 2,
+    MessageContent: 4,
+    GuildMembers: 8,
+    GuildModeration: 16,
+    GuildVoiceStates: 32,
+    GuildPresences: 64,
+    GuildMessageReactions: 128,
+    GuildScheduledEvents: 256,
+    GuildIntegrations: 512,
+    GuildWebhooks: 1024,
+    GuildInvites: 2048,
+    DirectMessages: 4096,
+  },
+  Partials: {
+    Message: 0,
+    Channel: 1,
+    Reaction: 2,
+    User: 3,
+    GuildMember: 4,
+  },
+  AutoModerationRuleTriggerType: {
+    Keyword: 1,
+    Spam: 3,
+    KeywordPreset: 4,
+    MentionSpam: 5,
+    1: "Keyword",
+    3: "Spam",
+    4: "KeywordPreset",
+    5: "MentionSpam",
+  },
+  AutoModerationActionType: {
+    BlockMessage: 1,
+    SendAlertMessage: 2,
+    Timeout: 3,
+  },
+  ChannelType: {
+    GuildText: 0,
+    GuildVoice: 2,
+    GuildCategory: 4,
+  },
+  GuildScheduledEventEntityType: {
+    None: 0,
+    StageInstance: 1,
+    Voice: 2,
+    External: 3,
+  },
+  GuildScheduledEventPrivacyLevel: {
+    GuildOnly: 2,
+  },
+  GuildScheduledEventStatus: {
+    Scheduled: 1,
+    Active: 2,
+    Completed: 3,
+    Canceled: 4,
+  },
+}));
+
+// Mock @discordjs/voice
+mock.module("@discordjs/voice", () => ({
+  joinVoiceChannel: () => ({
+    subscribe: () => {},
+    destroy: () => {},
+    on: () => {},
+    once: () => {},
+    receiver: { speaking: { on: () => {} } },
+    joinConfig: { channelId: "test-channel" },
+  }),
+  getVoiceConnection: () => null,
+  VoiceConnectionStatus: {
+    Ready: "ready",
+    Disconnected: "disconnected",
+  },
+  entersState: async () => ({}),
+  createAudioPlayer: () => ({
+    play: () => {},
+    stop: () => {},
+    pause: () => {},
+    unpause: () => {},
+    on: () => {},
+    once: () => {},
+  }),
+  createAudioResource: () => ({}),
+  AudioPlayerStatus: {
+    Idle: "idle",
+    Playing: "playing",
+    Paused: "paused",
+  },
+  StreamType: {
+    Arbitrary: 0,
+    Raw: 1,
+    OggOpus: 2,
+    WebmOpus: 3,
+    Opus: 4,
+  },
+}));
+
+// Mock OpenAI
+mock.module("openai", () => ({
+  default: class MockOpenAI {
+    audio = {
+      transcriptions: {
+        create: async () => ({ text: "test transcription" }),
+      },
+      speech: {
+        create: async () => ({
+          arrayBuffer: async () => new ArrayBuffer(1024),
+        }),
+      },
+    };
+  },
+  toFile: async (buffer: Buffer, filename: string, options?: { type?: string }) => ({
+    name: filename,
+    buffer,
+    type: options?.type ?? "application/octet-stream",
+  }),
+}));
+
+// Mock discord-player
+mock.module("discord-player", () => ({
+  Player: class MockPlayer {
+    extractors = {
+      register: async () => {},
+    };
+    events = {
+      on: () => {},
+    };
+    nodes = {
+      create: () => ({
+        play: async () => {},
+        node: {
+          pause: () => {},
+          resume: () => {},
+          skip: () => {},
+          stop: () => {},
+          setVolume: () => {},
+        },
+        tracks: [],
+        currentTrack: null,
+      }),
+    };
+    queues = {
+      get: () => null,
+    };
+    search = async () => ({ hasTracks: () => false, tracks: [] });
+  },
+  Track: class MockTrack {
+    title = "Mock Track";
+    duration = "3:00";
+    url = "https://example.com";
+  },
+  Playlist: class MockPlaylist {
+    title = "Mock Playlist";
+    tracks = [];
+    url = "https://example.com/playlist";
+  },
+  Util: {
+    buildTimeCode: (ms: number) => `${String(Math.floor(ms / 60000))}:${String(Math.floor((ms % 60000) / 1000)).padStart(2, "0")}`,
+    parseMS: (_str: string) => 0,
+  },
+  BaseExtractor: class MockBaseExtractor {
+    static identifier = "mock-extractor";
+    player = {};
+  },
+  ExtractorExecutionContext: class MockExtractorExecutionContext {
+    player = {};
+  },
+  QueueRepeatMode: {
+    OFF: 0,
+    TRACK: 1,
+    QUEUE: 2,
+    AUTOPLAY: 3,
+  },
+  QueryType: {
+    Auto: 0,
+    YoutubeVideo: 1,
+    YoutubeSearch: 2,
+    YoutubePlaylist: 3,
+    SoundcloudTrack: 4,
+    SoundcloudPlaylist: 5,
+    SpotifyTrack: 6,
+    SpotifyPlaylist: 7,
+    SpotifyAlbum: 8,
+    AppleMusicTrack: 9,
+    AppleMusicPlaylist: 10,
+    AppleMusicAlbum: 11,
+    Arbitrary: 12,
+  },
+}));
+
+// Mock discord-player-youtubei
+mock.module("discord-player-youtubei", () => ({
+  YoutubeiExtractor: class MockYoutubeiExtractor {
+    static identifier = "youtubei-extractor";
+    context = {};
+  },
+}));
+
+export {};
