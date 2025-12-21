@@ -9,6 +9,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  packages: write
 
 jobs:
   ci:
@@ -78,3 +79,21 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           dagger call ci --source=. --github-token=env:GITHUB_TOKEN --npm-token=env:NPM_TOKEN
+
+      - name: Get Birmel version
+        id: birmel-version
+        run: |
+          VERSION=$(jq -r .version packages/birmel/package.json)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Publish Birmel image
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          dagger call birmel-release \
+            --source=. \
+            --version=${{ steps.birmel-version.outputs.version }} \
+            --git-sha=${{ github.sha }} \
+            --registry-username=${{ github.actor }} \
+            --registry-password=env:GITHUB_TOKEN
