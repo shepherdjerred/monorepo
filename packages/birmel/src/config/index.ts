@@ -1,6 +1,9 @@
 import { ConfigSchema, type Config } from "./schema.js";
 
-function parseBoolean(value: string | undefined, defaultValue: boolean): boolean {
+function parseBoolean(
+  value: string | undefined,
+  defaultValue: boolean,
+): boolean {
   if (value === undefined) return defaultValue;
   return value.toLowerCase() === "true";
 }
@@ -17,20 +20,30 @@ function loadConfigFromEnv(): Config {
       token: process.env["DISCORD_TOKEN"] ?? "",
       clientId: process.env["DISCORD_CLIENT_ID"] ?? "",
     },
-    anthropic: {
-      apiKey: process.env["ANTHROPIC_API_KEY"] ?? "",
-      model: process.env["ANTHROPIC_MODEL"] ?? "claude-sonnet-4-20250514",
-      maxTokens: parseNumber(process.env["ANTHROPIC_MAX_TOKENS"], 4096),
-    },
     openai: {
       apiKey: process.env["OPENAI_API_KEY"] ?? "",
+      model: process.env["OPENAI_MODEL"] ?? "gpt-5-mini",
+      classifierModel: process.env["OPENAI_CLASSIFIER_MODEL"] ?? "gpt-5-nano",
+      maxTokens: parseNumber(process.env["OPENAI_MAX_TOKENS"], 4096),
       whisperModel: process.env["WHISPER_MODEL"] ?? "whisper-1",
       ttsModel: process.env["TTS_MODEL"] ?? "tts-1",
       ttsVoice: process.env["TTS_VOICE"] ?? "nova",
       ttsSpeed: parseNumber(process.env["TTS_SPEED"], 1.0),
     },
-    database: {
-      path: process.env["DATABASE_PATH"] ?? "./data/birmel.db",
+    mastra: {
+      memoryDbPath:
+        process.env["MASTRA_MEMORY_DB_PATH"] ??
+        "file:/app/data/mastra-memory.db",
+      studioEnabled: parseBoolean(process.env["MASTRA_STUDIO_ENABLED"], true),
+      studioPort: parseNumber(process.env["MASTRA_STUDIO_PORT"], 4111),
+      studioHost: process.env["MASTRA_STUDIO_HOST"] ?? "0.0.0.0",
+    },
+    telemetry: {
+      enabled: parseBoolean(process.env["TELEMETRY_ENABLED"], true),
+      otlpEndpoint:
+        process.env["OTLP_ENDPOINT"] ??
+        "http://tempo.monitoring.svc.cluster.local:4318",
+      serviceName: process.env["TELEMETRY_SERVICE_NAME"] ?? "birmel",
     },
     dailyPosts: {
       enabled: parseBoolean(process.env["DAILY_POSTS_ENABLED"], true),
@@ -39,8 +52,14 @@ function loadConfigFromEnv(): Config {
     },
     voice: {
       enabled: parseBoolean(process.env["VOICE_ENABLED"], true),
-      silenceThresholdMs: parseNumber(process.env["VOICE_SILENCE_THRESHOLD_MS"], 1500),
-      maxRecordingMs: parseNumber(process.env["VOICE_MAX_RECORDING_MS"], 30000),
+      silenceThresholdMs: parseNumber(
+        process.env["VOICE_SILENCE_THRESHOLD_MS"],
+        1500,
+      ),
+      maxRecordingMs: parseNumber(
+        process.env["VOICE_MAX_RECORDING_MS"],
+        30000,
+      ),
     },
     externalApis: {
       newsApiKey: process.env["NEWS_API_KEY"],

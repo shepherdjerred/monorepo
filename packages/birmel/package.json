@@ -18,9 +18,12 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "@ai-sdk/anthropic": "^1.0.0",
+    "@ai-sdk/openai": "^1.0.0",
     "@discordjs/voice": "^0.18.0",
-    "@mastra/core": "^0.10.0",
+    "@mastra/core": "1.0.0-beta.14",
+    "@mastra/libsql": "1.0.0-beta.8",
+    "@mastra/memory": "1.0.0-beta.6",
+    "@prisma/client": "^6.0.0",
     "discord-player": "^6.7.1",
     "discord-player-youtubei": "^1.4.0",
     "discord.js": "^14.18.0",
@@ -31,6 +34,7 @@
     "@eslint/js": "^9.30.0",
     "@types/bun": "^1.2.0",
     "eslint": "^9.30.0",
+    "prisma": "^6.0.0",
     "typescript": "^5.9.0",
     "typescript-eslint": "^8.35.0"
   }

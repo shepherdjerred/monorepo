@@ -1,7 +1,6 @@
 import type { Guild, TextChannel } from "discord.js";
 import { getDiscordClient } from "../../discord/index.js";
-import { getDatabase } from "../../database/index.js";
-import { getRecentEvents } from "../../database/repositories/server-events.js";
+import { prisma } from "../../database/index.js";
 import { logger } from "../../utils/index.js";
 
 type ServerSummaryConfig = {
@@ -22,8 +21,16 @@ type EventCounts = {
 /**
  * Counts events by type from the last 24 hours
  */
-function countEventTypes(guildId: string): EventCounts {
-  const events = getRecentEvents(guildId, 1000);
+async function countEventTypes(guildId: string): Promise<EventCounts> {
+  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+  const events = await prisma.serverEvent.findMany({
+    where: {
+      guildId,
+      createdAt: { gte: oneDayAgo },
+    },
+    select: { eventType: true },
+  });
 
   const counts: EventCounts = {
     memberJoins: 0,
@@ -140,7 +147,7 @@ async function sendServerSummary(config: ServerSummaryConfig): Promise<void> {
       return;
     }
 
-    const counts = countEventTypes(config.guildId);
+    const counts = await countEventTypes(config.guildId);
     const message = generateServerSummary(guild, counts);
     await (channel as TextChannel).send(message);
 
@@ -157,24 +164,23 @@ async function sendServerSummary(config: ServerSummaryConfig): Promise<void> {
  */
 export async function runServerSummaryJob(): Promise<void> {
   try {
-    const db = getDatabase();
-
     // Query guilds with daily posts enabled (they get summaries too)
-    const configs = db
-      .query<{ guild_id: string; channel_id: string }, []>(
-        "SELECT guild_id, channel_id FROM daily_post_config WHERE enabled = 1",
-      )
-      .all();
+    const configs = await prisma.dailyPostConfig.findMany({
+      where: { enabled: true },
+      select: { guildId: true, channelId: true },
+    });
 
     for (const config of configs) {
       await sendServerSummary({
-        guildId: config.guild_id,
-        channelId: config.channel_id,
+        guildId: config.guildId,
+        channelId: config.channelId,
         enabled: true,
       });
     }
 
-    logger.info("Server summary job completed", { guildsProcessed: configs.length });
+    logger.info("Server summary job completed", {
+      guildsProcessed: configs.length,
+    });
   } catch (error) {
     logger.error("Server summary job failed", error as Error);
   }

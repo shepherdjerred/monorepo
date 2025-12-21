@@ -1,9 +1,9 @@
 import { describe, test, expect } from "bun:test";
 import {
   DiscordConfigSchema,
-  AnthropicConfigSchema,
   OpenAIConfigSchema,
-  DatabaseConfigSchema,
+  MastraConfigSchema,
+  TelemetryConfigSchema,
   DailyPostsConfigSchema,
   VoiceConfigSchema,
   ExternalApisSchema,
@@ -43,37 +43,6 @@ describe("DiscordConfigSchema", () => {
   });
 });
 
-describe("AnthropicConfigSchema", () => {
-  test("validates with required fields only", () => {
-    const result = AnthropicConfigSchema.safeParse({
-      apiKey: "test-key",
-    });
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.model).toBe("claude-sonnet-4-20250514");
-      expect(result.data.maxTokens).toBe(4096);
-    }
-  });
-
-  test("allows custom model and maxTokens", () => {
-    const result = AnthropicConfigSchema.safeParse({
-      apiKey: "test-key",
-      model: "claude-opus-4-20250514",
-      maxTokens: 8192,
-    });
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.model).toBe("claude-opus-4-20250514");
-      expect(result.data.maxTokens).toBe(8192);
-    }
-  });
-
-  test("rejects missing apiKey", () => {
-    const result = AnthropicConfigSchema.safeParse({});
-    expect(result.success).toBe(false);
-  });
-});
-
 describe("OpenAIConfigSchema", () => {
   test("validates with defaults", () => {
     const result = OpenAIConfigSchema.safeParse({
@@ -81,10 +50,26 @@ describe("OpenAIConfigSchema", () => {
     });
     expect(result.success).toBe(true);
     if (result.success) {
+      expect(result.data.model).toBe("gpt-5-mini");
+      expect(result.data.classifierModel).toBe("gpt-5-nano");
+      expect(result.data.maxTokens).toBe(4096);
       expect(result.data.whisperModel).toBe("whisper-1");
       expect(result.data.ttsModel).toBe("tts-1");
       expect(result.data.ttsVoice).toBe("nova");
       expect(result.data.ttsSpeed).toBe(1.0);
+    }
+  });
+
+  test("allows custom model and classifierModel", () => {
+    const result = OpenAIConfigSchema.safeParse({
+      apiKey: "test-key",
+      model: "gpt-4o",
+      classifierModel: "gpt-4o-mini",
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.model).toBe("gpt-4o");
+      expect(result.data.classifierModel).toBe("gpt-4o-mini");
     }
   });
 
@@ -122,24 +107,66 @@ describe("OpenAIConfigSchema", () => {
     });
     expect(result.success).toBe(false);
   });
+
+  test("rejects missing apiKey", () => {
+    const result = OpenAIConfigSchema.safeParse({});
+    expect(result.success).toBe(false);
+  });
 });
 
-describe("DatabaseConfigSchema", () => {
-  test("uses default path", () => {
-    const result = DatabaseConfigSchema.safeParse({});
+describe("MastraConfigSchema", () => {
+  test("uses defaults", () => {
+    const result = MastraConfigSchema.safeParse({});
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.path).toBe("./data/birmel.db");
+      expect(result.data.memoryDbPath).toBe("file:/app/data/mastra-memory.db");
+      expect(result.data.studioEnabled).toBe(true);
+      expect(result.data.studioPort).toBe(4111);
+      expect(result.data.studioHost).toBe("0.0.0.0");
     }
   });
 
-  test("allows custom path", () => {
-    const result = DatabaseConfigSchema.safeParse({
-      path: "/custom/path/db.sqlite",
+  test("allows custom values", () => {
+    const result = MastraConfigSchema.safeParse({
+      memoryDbPath: "file:/custom/path/memory.db",
+      studioEnabled: false,
+      studioPort: 8080,
+      studioHost: "127.0.0.1",
     });
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.path).toBe("/custom/path/db.sqlite");
+      expect(result.data.memoryDbPath).toBe("file:/custom/path/memory.db");
+      expect(result.data.studioEnabled).toBe(false);
+      expect(result.data.studioPort).toBe(8080);
+      expect(result.data.studioHost).toBe("127.0.0.1");
+    }
+  });
+});
+
+describe("TelemetryConfigSchema", () => {
+  test("uses defaults", () => {
+    const result = TelemetryConfigSchema.safeParse({});
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.enabled).toBe(true);
+      expect(result.data.otlpEndpoint).toBe(
+        "http://tempo.monitoring.svc.cluster.local:4318"
+      );
+      expect(result.data.serviceName).toBe("birmel");
+    }
+  });
+
+  test("allows custom values", () => {
+    const result = TelemetryConfigSchema.safeParse({
+      enabled: false,
+      otlpEndpoint: "http://localhost:4318",
+      serviceName: "birmel-dev",
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.enabled).toBe(false);
+      expect(result.data.otlpEndpoint).toBe("http://localhost:4318");
+      expect(result.data.serviceName).toBe("birmel-dev");
     }
   });
 });
@@ -254,13 +281,11 @@ describe("ConfigSchema (full)", () => {
         token: "test-token",
         clientId: "test-client-id",
       },
-      anthropic: {
-        apiKey: "test-anthropic-key",
-      },
       openai: {
         apiKey: "test-openai-key",
       },
-      database: {},
+      mastra: {},
+      telemetry: {},
       dailyPosts: {},
       voice: {},
       externalApis: {},
@@ -271,9 +296,6 @@ describe("ConfigSchema (full)", () => {
 
   test("rejects config with missing required section", () => {
     const result = ConfigSchema.safeParse({
-      anthropic: {
-        apiKey: "test-anthropic-key",
-      },
       openai: {
         apiKey: "test-openai-key",
       },

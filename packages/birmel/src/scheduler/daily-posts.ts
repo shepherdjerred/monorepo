@@ -1,18 +1,8 @@
 import type { TextChannel } from "discord.js";
+import type { DailyPostConfig } from "@prisma/client";
 import { getDiscordClient } from "../discord/index.js";
-import { getDatabase } from "../database/index.js";
+import { prisma } from "../database/index.js";
 import { logger } from "../utils/index.js";
-import { getRecentEvents } from "../database/repositories/server-events.js";
-
-type DailyPostConfig = {
-  id: number;
-  guild_id: string;
-  channel_id: string;
-  enabled: number;
-  post_time: string;
-  timezone: string;
-  last_post_at: string | null;
-};
 
 function getCurrentTimeInTimezone(timezone: string): { hours: number; minutes: number } {
   const now = new Date();
@@ -32,19 +22,20 @@ function getCurrentTimeInTimezone(timezone: string): { hours: number; minutes: n
 
 function shouldPostNow(config: DailyPostConfig): boolean {
   // Check if already posted today
-  if (config.last_post_at) {
-    const lastPost = new Date(config.last_post_at);
+  if (config.lastPostAt) {
+    const lastPost = config.lastPostAt;
     const now = new Date();
 
     // If posted within last 23 hours, skip
-    const hoursSinceLastPost = (now.getTime() - lastPost.getTime()) / (1000 * 60 * 60);
+    const hoursSinceLastPost =
+      (now.getTime() - lastPost.getTime()) / (1000 * 60 * 60);
     if (hoursSinceLastPost < 23) {
       return false;
     }
   }
 
   // Check if current time matches post time
-  const timeParts = config.post_time.split(":");
+  const timeParts = config.postTime.split(":");
   const postHour = parseInt(timeParts[0] ?? "0", 10);
   const postMinute = parseInt(timeParts[1] ?? "0", 10);
   const current = getCurrentTimeInTimezone(config.timezone);
@@ -56,9 +47,30 @@ function shouldPostNow(config: DailyPostConfig): boolean {
   return currentMinutes >= postMinutes && currentMinutes < postMinutes + 5;
 }
 
-function generateDailyPost(guildId: string): string {
+async function getRecentEvents(
+  guildId: string,
+  limit: number
+): Promise<{ eventType: string; eventData: Record<string, unknown> }[]> {
+  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+  const events = await prisma.serverEvent.findMany({
+    where: {
+      guildId,
+      createdAt: { gte: oneDayAgo },
+    },
+    orderBy: { createdAt: "desc" },
+    take: limit,
+  });
+
+  return events.map((e) => ({
+    eventType: e.eventType,
+    eventData: JSON.parse(e.eventData) as Record<string, unknown>,
+  }));
+}
+
+async function generateDailyPost(guildId: string): Promise<string> {
   // Get recent events for context
-  const events = getRecentEvents(guildId, 50);
+  const events = await getRecentEvents(guildId, 50);
 
   const eventSummaries = events.map((e) => {
     const data = e.eventData;
@@ -94,38 +106,36 @@ function generateDailyPost(guildId: string): string {
 async function sendDailyPost(config: DailyPostConfig): Promise<void> {
   try {
     const client = getDiscordClient();
-    const channel = await client.channels.fetch(config.channel_id);
+    const channel = await client.channels.fetch(config.channelId);
 
     if (!channel?.isTextBased()) {
       logger.warn("Daily post channel not found or not text-based", {
-        guildId: config.guild_id,
-        channelId: config.channel_id,
+        guildId: config.guildId,
+        channelId: config.channelId,
       });
       return;
     }
 
-    const message = generateDailyPost(config.guild_id);
+    const message = await generateDailyPost(config.guildId);
     await (channel as TextChannel).send(message);
 
     // Update last post time
-    const db = getDatabase();
-    db.run("UPDATE daily_post_config SET last_post_at = datetime('now') WHERE guild_id = ?", [
-      config.guild_id,
-    ]);
+    await prisma.dailyPostConfig.update({
+      where: { guildId: config.guildId },
+      data: { lastPostAt: new Date() },
+    });
 
-    logger.info("Sent daily post", { guildId: config.guild_id });
+    logger.info("Sent daily post", { guildId: config.guildId });
   } catch (error) {
-    logger.error("Failed to send daily post", error, { guildId: config.guild_id });
+    logger.error("Failed to send daily post", error, { guildId: config.guildId });
   }
 }
 
 export async function checkAndSendDailyPosts(): Promise<void> {
   try {
-    const db = getDatabase();
-
-    const configs = db
-      .query<DailyPostConfig, []>("SELECT * FROM daily_post_config WHERE enabled = 1")
-      .all();
+    const configs = await prisma.dailyPostConfig.findMany({
+      where: { enabled: true },
+    });
 
     for (const config of configs) {
       if (shouldPostNow(config)) {
@@ -137,57 +147,52 @@ export async function checkAndSendDailyPosts(): Promise<void> {
   }
 }
 
-export function configureDailyPost(
+export async function configureDailyPost(
   guildId: string,
   channelId: string,
   options?: {
     postTime?: string;
     timezone?: string;
     enabled?: boolean;
-  },
-): void {
-  const db = getDatabase();
-
-  const existing = db
-    .query<DailyPostConfig, [string]>("SELECT * FROM daily_post_config WHERE guild_id = ?")
-    .get(guildId);
-
-  if (existing) {
-    db.run(
-      `UPDATE daily_post_config
-       SET channel_id = ?,
-           post_time = COALESCE(?, post_time),
-           timezone = COALESCE(?, timezone),
-           enabled = COALESCE(?, enabled),
-           updated_at = datetime('now')
-       WHERE guild_id = ?`,
-      [
-        channelId,
-        options?.postTime ?? null,
-        options?.timezone ?? null,
-        options?.enabled !== undefined ? (options.enabled ? 1 : 0) : null,
-        guildId,
-      ],
-    );
-  } else {
-    db.run(
-      `INSERT INTO daily_post_config (guild_id, channel_id, post_time, timezone, enabled)
-       VALUES (?, ?, ?, ?, ?)`,
-      [
-        guildId,
-        channelId,
-        options?.postTime ?? "09:00",
-        options?.timezone ?? "UTC",
-        options?.enabled !== undefined ? (options.enabled ? 1 : 0) : 1,
-      ],
-    );
   }
+): Promise<void> {
+  // Build update data, excluding undefined values
+  const updateData: {
+    channelId: string;
+    postTime?: string;
+    timezone?: string;
+    enabled?: boolean;
+  } = { channelId };
+
+  if (options?.postTime !== undefined) {
+    updateData.postTime = options.postTime;
+  }
+  if (options?.timezone !== undefined) {
+    updateData.timezone = options.timezone;
+  }
+  if (options?.enabled !== undefined) {
+    updateData.enabled = options.enabled;
+  }
+
+  await prisma.dailyPostConfig.upsert({
+    where: { guildId },
+    update: updateData,
+    create: {
+      guildId,
+      channelId,
+      postTime: options?.postTime ?? "09:00",
+      timezone: options?.timezone ?? "UTC",
+      enabled: options?.enabled ?? true,
+    },
+  });
 
   logger.info("Configured daily post", { guildId, channelId, options });
 }
 
-export function disableDailyPost(guildId: string): void {
-  const db = getDatabase();
-  db.run("UPDATE daily_post_config SET enabled = 0 WHERE guild_id = ?", [guildId]);
+export async function disableDailyPost(guildId: string): Promise<void> {
+  await prisma.dailyPostConfig.update({
+    where: { guildId },
+    data: { enabled: false },
+  });
   logger.info("Disabled daily post", { guildId });
 }

@@ -15,13 +15,13 @@ export const kickMemberTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async ({ context }) => {
+  execute: async (input) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(context.guildId);
-      const member = await guild.members.fetch(context.memberId);
+      const guild = await client.guilds.fetch(input.guildId);
+      const member = await guild.members.fetch(input.memberId);
 
-      await member.kick(context.reason);
+      await member.kick(input.reason);
 
       return {
         success: true,
@@ -53,21 +53,21 @@ export const banMemberTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async ({ context }) => {
+  execute: async (input) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(context.guildId);
+      const guild = await client.guilds.fetch(input.guildId);
 
       const banOptions: { reason?: string; deleteMessageSeconds?: number } = {};
-      if (context.reason !== undefined) banOptions.reason = context.reason;
-      if (context.deleteMessageSeconds !== undefined)
-        banOptions.deleteMessageSeconds = context.deleteMessageSeconds;
+      if (input.reason !== undefined) banOptions.reason = input.reason;
+      if (input.deleteMessageSeconds !== undefined)
+        banOptions.deleteMessageSeconds = input.deleteMessageSeconds;
 
-      await guild.members.ban(context.memberId, banOptions);
+      await guild.members.ban(input.memberId, banOptions);
 
       return {
         success: true,
-        message: `Banned user ${context.memberId}`,
+        message: `Banned user ${input.memberId}`,
       };
     } catch (error) {
       logger.error("Failed to ban member", error);
@@ -91,16 +91,16 @@ export const unbanMemberTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async ({ context }) => {
+  execute: async (input) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(context.guildId);
+      const guild = await client.guilds.fetch(input.guildId);
 
-      await guild.members.unban(context.userId, context.reason);
+      await guild.members.unban(input.userId, input.reason);
 
       return {
         success: true,
-        message: `Unbanned user ${context.userId}`,
+        message: `Unbanned user ${input.userId}`,
       };
     } catch (error) {
       logger.error("Failed to unban user", error);
@@ -129,18 +129,18 @@ export const timeoutMemberTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async ({ context }) => {
+  execute: async (input) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(context.guildId);
-      const member = await guild.members.fetch(context.memberId);
+      const guild = await client.guilds.fetch(input.guildId);
+      const member = await guild.members.fetch(input.memberId);
 
-      const durationMs = context.durationMinutes * 60 * 1000;
-      await member.timeout(durationMs, context.reason);
+      const durationMs = input.durationMinutes * 60 * 1000;
+      await member.timeout(durationMs, input.reason);
 
       return {
         success: true,
-        message: `Timed out ${member.user.username} for ${String(context.durationMinutes)} minutes`,
+        message: `Timed out ${member.user.username} for ${String(input.durationMinutes)} minutes`,
       };
     } catch (error) {
       logger.error("Failed to timeout member", error);
@@ -164,13 +164,13 @@ export const removeTimeoutTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async ({ context }) => {
+  execute: async (input) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(context.guildId);
-      const member = await guild.members.fetch(context.memberId);
+      const guild = await client.guilds.fetch(input.guildId);
+      const member = await guild.members.fetch(input.memberId);
 
-      await member.timeout(null, context.reason);
+      await member.timeout(null, input.reason);
 
       return {
         success: true,
@@ -206,11 +206,11 @@ export const listBansTool = createTool({
       )
       .optional(),
   }),
-  execute: async ({ context }) => {
+  execute: async (input) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(context.guildId);
-      const bans = await guild.bans.fetch({ limit: context.limit ?? 100 });
+      const guild = await client.guilds.fetch(input.guildId);
+      const bans = await guild.bans.fetch({ limit: input.limit ?? 100 });
 
       const banList = bans.map((ban) => ({
         id: ban.user.id,

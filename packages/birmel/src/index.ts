@@ -5,8 +5,9 @@ import {
   registerEventHandlers,
   setMessageHandler,
 } from "./discord/index.js";
-import { getDatabase, closeDatabase } from "./database/index.js";
-import { getBirmelAgent } from "./mastra/index.js";
+import { disconnectPrisma } from "./database/index.js";
+import { getBirmelAgent, startMastraServer } from "./mastra/index.js";
+import { getThreadId, getResourceId } from "./mastra/memory/index.js";
 import { initializeMusicPlayer, destroyMusicPlayer } from "./music/index.js";
 import { startScheduler, stopScheduler } from "./scheduler/index.js";
 import {
@@ -14,6 +15,7 @@ import {
   startCleanupTask,
   stopCleanupTask,
 } from "./voice/index.js";
+import { withTyping } from "./discord/utils/typing.js";
 import { logger } from "./utils/index.js";
 import type { MessageContext } from "./discord/index.js";
 
@@ -29,14 +31,20 @@ Guild ID: ${context.guildId}
 Channel ID: ${context.channelId}`;
 
   try {
-    const response = await agent.generate(prompt);
+    // Show typing indicator while generating response
+    const response = await withTyping(context.message, async () => {
+      return agent.generate(prompt, {
+        threadId: getThreadId(context.channelId, context.userId),
+        resourceId: getResourceId(context.userId),
+      });
+    });
 
     // Send response back to Discord
     await context.message.reply(response.text);
   } catch (error) {
     logger.error("Agent generation failed", error);
     await context.message.reply(
-      "Sorry, I encountered an error processing your request.",
+      "Sorry, I encountered an error processing your request."
     );
   }
 }
@@ -45,7 +53,7 @@ async function handleVoiceCommand(
   command: string,
   userId: string,
   guildId: string,
-  channelId: string,
+  channelId: string
 ): Promise<string> {
   const agent = getBirmelAgent();
 
@@ -60,7 +68,10 @@ Channel ID: ${channelId}
 IMPORTANT: This is a voice command. Keep your response concise (under 200 words) as it will be spoken back via text-to-speech.`;
 
   try {
-    const response = await agent.generate(prompt);
+    const response = await agent.generate(prompt, {
+      threadId: getThreadId(channelId, userId),
+      resourceId: getResourceId(userId),
+    });
     return response.text;
   } catch (error) {
     logger.error("Voice command agent generation failed", error);
@@ -75,7 +86,7 @@ async function shutdown(): Promise<void> {
   stopScheduler();
   await destroyMusicPlayer();
   await destroyDiscordClient();
-  closeDatabase();
+  await disconnectPrisma();
 
   logger.info("Birmel shutdown complete");
   process.exit(0);
@@ -87,14 +98,12 @@ async function main(): Promise<void> {
   // Validate config on startup
   const config = getConfig();
   logger.info("Configuration loaded", {
-    model: config.anthropic.model,
+    model: config.openai.model,
+    classifierModel: config.openai.classifierModel,
     voiceEnabled: config.voice.enabled,
     dailyPostsEnabled: config.dailyPosts.enabled,
+    studioEnabled: config.mastra.studioEnabled,
   });
-
-  // Initialize database (runs migrations)
-  getDatabase();
-  logger.info("Database initialized");
 
   // Set up Discord client
   const client = getDiscordClient();
@@ -117,6 +126,9 @@ async function main(): Promise<void> {
 
   // Start scheduler after Discord is ready
   startScheduler();
+
+  // Start Mastra Studio server
+  await startMastraServer();
 
   // Handle graceful shutdown
   process.on("SIGINT", () => void shutdown());

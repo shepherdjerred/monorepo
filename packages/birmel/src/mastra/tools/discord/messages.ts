@@ -20,10 +20,10 @@ export const sendMessageTool = createTool({
       })
       .optional(),
   }),
-  execute: async ({ context }) => {
+  execute: async (input) => {
     try {
       const client = getDiscordClient();
-      const channel = await client.channels.fetch(context.channelId);
+      const channel = await client.channels.fetch(input.channelId);
 
       if (!channel?.isTextBased()) {
         return {
@@ -32,7 +32,7 @@ export const sendMessageTool = createTool({
         };
       }
 
-      const sentMessage = await (channel as TextChannel).send(context.content);
+      const sentMessage = await (channel as TextChannel).send(input.content);
 
       return {
         success: true,
@@ -62,10 +62,10 @@ export const deleteMessageTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async ({ context }) => {
+  execute: async (input) => {
     try {
       const client = getDiscordClient();
-      const channel = await client.channels.fetch(context.channelId);
+      const channel = await client.channels.fetch(input.channelId);
 
       if (!channel?.isTextBased()) {
         return {
@@ -75,7 +75,7 @@ export const deleteMessageTool = createTool({
       }
 
       const message = await (channel as TextChannel).messages.fetch(
-        context.messageId,
+        input.messageId,
       );
       await message.delete();
 
@@ -104,10 +104,10 @@ export const pinMessageTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async ({ context }) => {
+  execute: async (input) => {
     try {
       const client = getDiscordClient();
-      const channel = await client.channels.fetch(context.channelId);
+      const channel = await client.channels.fetch(input.channelId);
 
       if (!channel?.isTextBased()) {
         return {
@@ -117,7 +117,7 @@ export const pinMessageTool = createTool({
       }
 
       const message = await (channel as TextChannel).messages.fetch(
-        context.messageId,
+        input.messageId,
       );
       await message.pin();
 
@@ -147,10 +147,10 @@ export const editMessageTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async ({ context }) => {
+  execute: async (input) => {
     try {
       const client = getDiscordClient();
-      const channel = await client.channels.fetch(context.channelId);
+      const channel = await client.channels.fetch(input.channelId);
 
       if (!channel?.isTextBased()) {
         return {
@@ -159,8 +159,8 @@ export const editMessageTool = createTool({
         };
       }
 
-      const message = await (channel as TextChannel).messages.fetch(context.messageId);
-      await message.edit(context.content);
+      const message = await (channel as TextChannel).messages.fetch(input.messageId);
+      await message.edit(input.content);
 
       return {
         success: true,
@@ -187,10 +187,10 @@ export const bulkDeleteMessagesTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async ({ context }) => {
+  execute: async (input) => {
     try {
       const client = getDiscordClient();
-      const channel = await client.channels.fetch(context.channelId);
+      const channel = await client.channels.fetch(input.channelId);
 
       if (!channel?.isTextBased()) {
         return {
@@ -199,11 +199,11 @@ export const bulkDeleteMessagesTool = createTool({
         };
       }
 
-      await (channel as TextChannel).bulkDelete(context.messageIds);
+      await (channel as TextChannel).bulkDelete(input.messageIds);
 
       return {
         success: true,
-        message: `Deleted ${String(context.messageIds.length)} messages`,
+        message: `Deleted ${String(input.messageIds.length)} messages`,
       };
     } catch (error) {
       logger.error("Failed to bulk delete messages", error);
@@ -226,10 +226,10 @@ export const unpinMessageTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async ({ context }) => {
+  execute: async (input) => {
     try {
       const client = getDiscordClient();
-      const channel = await client.channels.fetch(context.channelId);
+      const channel = await client.channels.fetch(input.channelId);
 
       if (!channel?.isTextBased()) {
         return {
@@ -238,7 +238,7 @@ export const unpinMessageTool = createTool({
         };
       }
 
-      const message = await (channel as TextChannel).messages.fetch(context.messageId);
+      const message = await (channel as TextChannel).messages.fetch(input.messageId);
       await message.unpin();
 
       return {
@@ -267,10 +267,10 @@ export const addReactionTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async ({ context }) => {
+  execute: async (input) => {
     try {
       const client = getDiscordClient();
-      const channel = await client.channels.fetch(context.channelId);
+      const channel = await client.channels.fetch(input.channelId);
 
       if (!channel?.isTextBased()) {
         return {
@@ -279,8 +279,8 @@ export const addReactionTool = createTool({
         };
       }
 
-      const message = await (channel as TextChannel).messages.fetch(context.messageId);
-      await message.react(context.emoji);
+      const message = await (channel as TextChannel).messages.fetch(input.messageId);
+      await message.react(input.emoji);
 
       return {
         success: true,
@@ -309,10 +309,10 @@ export const removeReactionTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async ({ context }) => {
+  execute: async (input) => {
     try {
       const client = getDiscordClient();
-      const channel = await client.channels.fetch(context.channelId);
+      const channel = await client.channels.fetch(input.channelId);
 
       if (!channel?.isTextBased()) {
         return {
@@ -321,8 +321,8 @@ export const removeReactionTool = createTool({
         };
       }
 
-      const message = await (channel as TextChannel).messages.fetch(context.messageId);
-      const reaction = message.reactions.cache.get(context.emoji);
+      const message = await (channel as TextChannel).messages.fetch(input.messageId);
+      const reaction = message.reactions.cache.get(input.emoji);
 
       if (!reaction) {
         return {
@@ -331,8 +331,8 @@ export const removeReactionTool = createTool({
         };
       }
 
-      if (context.userId) {
-        await reaction.users.remove(context.userId);
+      if (input.userId) {
+        await reaction.users.remove(input.userId);
       } else {
         await reaction.users.remove();
       }

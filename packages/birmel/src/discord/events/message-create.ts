@@ -1,6 +1,11 @@
 import type { Client, Message } from "discord.js";
-import { TRIGGER_PATTERNS } from "../../config/constants.js";
 import { logger } from "../../utils/logger.js";
+import { getClassifierAgent } from "../../mastra/index.js";
+import { parseClassificationResult } from "../../mastra/agents/classifier-agent.js";
+import {
+  getRecentChannelMessages,
+  formatMessagesForClassifier,
+} from "../utils/channel-history.js";
 
 export type MessageContext = {
   message: Message;
@@ -19,16 +24,70 @@ export function setMessageHandler(handler: MessageHandler): void {
   messageHandler = handler;
 }
 
-function shouldRespond(message: Message, clientId: string): boolean {
+// Direct trigger pattern - explicit mention of the bot
+const DIRECT_TRIGGER = /\bbirmel\b/i;
+
+// Confidence threshold for contextual classification
+const CLASSIFICATION_CONFIDENCE_THRESHOLD = 0.7;
+
+/**
+ * Determine if the bot should respond to a message.
+ * Uses direct triggers first, then falls back to AI classification.
+ */
+async function shouldRespond(
+  message: Message,
+  clientId: string
+): Promise<boolean> {
   // Ignore messages from bots
   if (message.author.bot) return false;
 
-  // Check if bot is mentioned
-  if (message.mentions.has(clientId)) return true;
+  // Direct trigger: bot is @mentioned
+  if (message.mentions.has(clientId)) {
+    logger.debug("Responding: direct mention");
+    return true;
+  }
 
-  // Check for trigger patterns in content
-  const content = message.content.toLowerCase();
-  return TRIGGER_PATTERNS.some((pattern) => pattern.test(content));
+  // Direct trigger: "birmel" keyword in message
+  if (DIRECT_TRIGGER.test(message.content)) {
+    logger.debug("Responding: birmel keyword");
+    return true;
+  }
+
+  // Contextual classification: use AI to decide
+  try {
+    const recentMessages = await getRecentChannelMessages(message, 10);
+    const formattedContext = formatMessagesForClassifier(
+      recentMessages,
+      message
+    );
+
+    const classifier = getClassifierAgent();
+    const result = await classifier.generate(formattedContext);
+
+    const classification = parseClassificationResult(result.text);
+
+    logger.debug("Classification result", {
+      shouldRespond: classification.shouldRespond,
+      confidence: classification.confidence,
+      reasoning: classification.reasoning,
+    });
+
+    // Only respond if confident enough
+    if (
+      classification.shouldRespond &&
+      classification.confidence >= CLASSIFICATION_CONFIDENCE_THRESHOLD
+    ) {
+      logger.debug("Responding: contextual classification", {
+        confidence: classification.confidence,
+      });
+      return true;
+    }
+
+    return false;
+  } catch (error) {
+    logger.error("Classification failed, defaulting to no response", error);
+    return false;
+  }
 }
 
 export function setupMessageCreateHandler(client: Client): void {
@@ -42,7 +101,8 @@ export function setupMessageCreateHandler(client: Client): void {
         return;
       }
 
-      if (!shouldRespond(message, client.user.id)) {
+      const respond = await shouldRespond(message, client.user.id);
+      if (!respond) {
         return;
       }
 
