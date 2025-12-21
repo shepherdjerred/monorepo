@@ -27,7 +27,7 @@ jobs:
         with:
           export-env: true
         env:
-          NPM_TOKEN: op://v64ocnykdqju4ui6j6pua56xw4/kjzy27cw4ialemerahutnxis3a/NPM_TOKEN
+          NPM_TOKEN: op://bic45kuflnwsnxnd67dzcnxjze/5p65mbzr237yyzt2sfnfao3a5a/NPM_TOKEN
 
       - name: Extract kubectl version
         id: kubectl-version
