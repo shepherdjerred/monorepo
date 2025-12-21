@@ -30,6 +30,13 @@ mock.module("@mastra/memory", () => ({
   },
 }));
 
+// Mock @mastra/libsql to avoid MessageList dependency
+mock.module("@mastra/libsql", () => ({
+  LibSQLStore: class MockLibSQLStore {
+    constructor() {}
+  },
+}));
+
 describe("birmel-agent", () => {
   describe("createBirmelAgent", () => {
     test("creates agent with correct name", async () => {
