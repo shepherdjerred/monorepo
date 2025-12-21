@@ -63,15 +63,17 @@ describe("retry", () => {
 
     test("uses exponential backoff", async () => {
       const delays: number[] = [];
-      let lastTime = Date.now();
+      let lastTime = 0;
+      let isFirstCall = true;
 
       await expect(
         retry(
           async () => {
             const now = Date.now();
-            if (delays.length > 0 || lastTime !== now) {
+            if (!isFirstCall) {
               delays.push(now - lastTime);
             }
+            isFirstCall = false;
             lastTime = now;
             throw new Error("fail");
           },
@@ -84,6 +86,7 @@ describe("retry", () => {
       ).rejects.toThrow();
 
       // Check that delays increase (with some tolerance)
+      // With 4 attempts, there are 3 delays between them
       expect(delays.length).toBe(3);
       const firstDelay = delays[0];
       const secondDelay = delays[1];
