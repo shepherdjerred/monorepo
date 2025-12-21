@@ -5,14 +5,11 @@ export const DiscordConfigSchema = z.object({
   clientId: z.string().min(1, "DISCORD_CLIENT_ID is required"),
 });
 
-export const AnthropicConfigSchema = z.object({
-  apiKey: z.string().min(1, "ANTHROPIC_API_KEY is required"),
-  model: z.string().default("claude-sonnet-4-20250514"),
-  maxTokens: z.number().default(4096),
-});
-
 export const OpenAIConfigSchema = z.object({
   apiKey: z.string().min(1, "OPENAI_API_KEY is required"),
+  model: z.string().default("gpt-5-mini"),
+  classifierModel: z.string().default("gpt-5-nano"),
+  maxTokens: z.number().default(4096),
   whisperModel: z.string().default("whisper-1"),
   ttsModel: z.string().default("tts-1"),
   ttsVoice: z
@@ -21,8 +18,19 @@ export const OpenAIConfigSchema = z.object({
   ttsSpeed: z.number().min(0.25).max(4.0).default(1.0),
 });
 
-export const DatabaseConfigSchema = z.object({
-  path: z.string().default("./data/birmel.db"),
+export const MastraConfigSchema = z.object({
+  memoryDbPath: z.string().default("file:/app/data/mastra-memory.db"),
+  studioEnabled: z.boolean().default(true),
+  studioPort: z.number().default(4111),
+  studioHost: z.string().default("0.0.0.0"),
+});
+
+export const TelemetryConfigSchema = z.object({
+  enabled: z.boolean().default(true),
+  otlpEndpoint: z
+    .string()
+    .default("http://tempo.monitoring.svc.cluster.local:4318"),
+  serviceName: z.string().default("birmel"),
 });
 
 export const DailyPostsConfigSchema = z.object({
@@ -51,9 +59,9 @@ export const LoggingConfigSchema = z.object({
 
 export const ConfigSchema = z.object({
   discord: DiscordConfigSchema,
-  anthropic: AnthropicConfigSchema,
   openai: OpenAIConfigSchema,
-  database: DatabaseConfigSchema,
+  mastra: MastraConfigSchema,
+  telemetry: TelemetryConfigSchema,
   dailyPosts: DailyPostsConfigSchema,
   voice: VoiceConfigSchema,
   externalApis: ExternalApisSchema,
@@ -62,9 +70,9 @@ export const ConfigSchema = z.object({
 
 export type Config = z.infer<typeof ConfigSchema>;
 export type DiscordConfig = z.infer<typeof DiscordConfigSchema>;
-export type AnthropicConfig = z.infer<typeof AnthropicConfigSchema>;
 export type OpenAIConfig = z.infer<typeof OpenAIConfigSchema>;
-export type DatabaseConfig = z.infer<typeof DatabaseConfigSchema>;
+export type MastraConfig = z.infer<typeof MastraConfigSchema>;
+export type TelemetryConfig = z.infer<typeof TelemetryConfigSchema>;
 export type DailyPostsConfig = z.infer<typeof DailyPostsConfigSchema>;
 export type VoiceConfig = z.infer<typeof VoiceConfigSchema>;
 export type ExternalApisConfig = z.infer<typeof ExternalApisSchema>;

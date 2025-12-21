@@ -1,0 +1,58 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("OPS_DATABASE_URL")
+}
+
+model DailyPostConfig {
+  id         Int       @id @default(autoincrement())
+  guildId    String    @unique
+  channelId  String
+  enabled    Boolean   @default(true)
+  postTime   String    @default("09:00")
+  timezone   String    @default("UTC")
+  lastPostAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+model ServerEvent {
+  id        Int      @id @default(autoincrement())
+  guildId   String
+  eventType String
+  eventData String
+  actorId   String?
+  createdAt DateTime @default(now())
+
+  @@index([guildId, createdAt])
+}
+
+model ScheduledAnnouncement {
+  id          Int       @id @default(autoincrement())
+  guildId     String
+  channelId   String
+  message     String
+  scheduledAt DateTime
+  sentAt      DateTime?
+  repeat      String?
+  createdBy   String
+  createdAt   DateTime  @default(now())
+
+  @@index([guildId])
+  @@index([scheduledAt])
+}
+
+model MusicHistory {
+  id        Int      @id @default(autoincrement())
+  guildId   String
+  trackUrl  String
+  trackName String
+  duration  Int
+  userId    String
+  createdAt DateTime @default(now())
+
+  @@index([guildId, createdAt])
+}
