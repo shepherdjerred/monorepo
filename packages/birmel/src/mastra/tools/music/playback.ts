@@ -26,13 +26,13 @@ export const playMusicTool = createTool({
       })
       .optional(),
   }),
-  execute: async ({ context }) => {
+  execute: async (input) => {
     try {
       const client = getDiscordClient();
       const player = getMusicPlayer();
 
-      const channel = await client.channels.fetch(context.channelId);
-      const voiceChannel = await client.channels.fetch(context.voiceChannelId);
+      const channel = await client.channels.fetch(input.channelId);
+      const voiceChannel = await client.channels.fetch(input.voiceChannelId);
 
       if (!voiceChannel?.isVoiceBased()) {
         return {
@@ -41,7 +41,7 @@ export const playMusicTool = createTool({
         };
       }
 
-      const searchResult = await player.search(context.query, {
+      const searchResult = await player.search(input.query, {
         ...(client.user && { requestedBy: client.user }),
         searchEngine: QueryType.AUTO,
       });
@@ -94,11 +94,11 @@ export const pauseMusicTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async ({ context }) => {
+  execute: async (input) => {
     await Promise.resolve();
     try {
       const player = getMusicPlayer();
-      const queue = player.queues.get(context.guildId);
+      const queue = player.queues.get(input.guildId);
 
       if (!queue?.isPlaying()) {
         return {
@@ -133,11 +133,11 @@ export const resumeMusicTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async ({ context }) => {
+  execute: async (input) => {
     await Promise.resolve();
     try {
       const player = getMusicPlayer();
-      const queue = player.queues.get(context.guildId);
+      const queue = player.queues.get(input.guildId);
 
       if (!queue) {
         return {
@@ -172,11 +172,11 @@ export const skipTrackTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async ({ context }) => {
+  execute: async (input) => {
     await Promise.resolve();
     try {
       const player = getMusicPlayer();
-      const queue = player.queues.get(context.guildId);
+      const queue = player.queues.get(input.guildId);
 
       if (!queue?.isPlaying()) {
         return {
@@ -212,11 +212,11 @@ export const stopMusicTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async ({ context }) => {
+  execute: async (input) => {
     await Promise.resolve();
     try {
       const player = getMusicPlayer();
-      const queue = player.queues.get(context.guildId);
+      const queue = player.queues.get(input.guildId);
 
       if (!queue) {
         return {
@@ -259,11 +259,11 @@ export const nowPlayingTool = createTool({
       })
       .optional(),
   }),
-  execute: async ({ context }) => {
+  execute: async (input) => {
     await Promise.resolve();
     try {
       const player = getMusicPlayer();
-      const queue = player.queues.get(context.guildId);
+      const queue = player.queues.get(input.guildId);
 
       if (!queue?.isPlaying() || !queue.currentTrack) {
         return {

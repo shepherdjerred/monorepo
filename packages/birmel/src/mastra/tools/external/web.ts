@@ -23,9 +23,9 @@ export const fetchUrlTool = createTool({
       })
       .optional(),
   }),
-  execute: async ({ context }) => {
+  execute: async (input) => {
     try {
-      const response = await fetch(context.url, {
+      const response = await fetch(input.url, {
         headers: {
           "User-Agent": "Birmel Discord Bot/1.0",
         },
@@ -60,7 +60,7 @@ export const fetchUrlTool = createTool({
         .replace(/\s+/g, " ")
         .trim();
 
-      const maxLength = context.maxLength ?? 2000;
+      const maxLength = input.maxLength ?? 2000;
       if (content.length > maxLength) {
         content = content.substring(0, maxLength) + "...";
       }
@@ -71,7 +71,7 @@ export const fetchUrlTool = createTool({
         data: {
           ...(title !== undefined && { title }),
           content,
-          url: context.url,
+          url: input.url,
         },
       };
     } catch (error) {
