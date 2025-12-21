@@ -1,4 +1,10 @@
 import { dag, object, func, Secret, Directory, Container } from "@dagger.io/dagger";
+import {
+  checkBirmel,
+  buildBirmelImage,
+  smokeTestBirmelImage,
+  publishBirmelImage,
+} from "./birmel.js";
 
 const PACKAGES = ["eslint-config", "dagger-utils"] as const;
 const REPO_URL = "shepherdjerred/monorepo";
@@ -113,5 +119,78 @@ export class Monorepo {
     }
 
     return outputs.join("\n");
+  }
+
+  /**
+   * Run Birmel CI: typecheck, lint, test
+   */
+  @func()
+  async birmelCi(source: Directory): Promise<string> {
+    await checkBirmel(source).sync();
+    return "✓ Birmel CI passed (typecheck, lint, test)";
+  }
+
+  /**
+   * Build Birmel Docker image
+   */
+  @func()
+  birmelBuild(source: Directory, version: string, gitSha: string): Container {
+    return buildBirmelImage(source, version, gitSha);
+  }
+
+  /**
+   * Smoke test Birmel Docker image
+   */
+  @func()
+  async birmelSmokeTest(source: Directory, version: string, gitSha: string): Promise<string> {
+    return smokeTestBirmelImage(source, version, gitSha);
+  }
+
+  /**
+   * Publish Birmel Docker image to ghcr.io
+   */
+  @func()
+  async birmelPublish(
+    source: Directory,
+    version: string,
+    gitSha: string,
+    registryUsername: string,
+    registryPassword: Secret,
+  ): Promise<string> {
+    const refs = await publishBirmelImage({
+      workspaceSource: source,
+      version,
+      gitSha,
+      registryAuth: {
+        username: registryUsername,
+        password: registryPassword,
+      },
+    });
+    return `Published:\n${refs.join("\n")}`;
+  }
+
+  /**
+   * Full Birmel release: CI + build + smoke test + publish
+   */
+  @func()
+  async birmelRelease(
+    source: Directory,
+    version: string,
+    gitSha: string,
+    registryUsername: string,
+    registryPassword: Secret,
+  ): Promise<string> {
+    const outputs: string[] = [];
+
+    // Run CI
+    outputs.push(await this.birmelCi(source));
+
+    // Smoke test
+    outputs.push(await this.birmelSmokeTest(source, version, gitSha));
+
+    // Publish
+    outputs.push(await this.birmelPublish(source, version, gitSha, registryUsername, registryPassword));
+
+    return outputs.join("\n\n");
   }
 }
