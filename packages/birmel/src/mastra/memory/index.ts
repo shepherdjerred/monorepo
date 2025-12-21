@@ -18,10 +18,7 @@ export function createMemory(): Memory {
     }),
     options: {
       lastMessages: 20,
-      semanticRecall: {
-        topK: 5,
-        messageRange: 3,
-      },
+      semanticRecall: false,
     },
   });
 
