@@ -55,15 +55,16 @@ export type ClassificationResult = {
 export function parseClassificationResult(text: string): ClassificationResult {
   try {
     // Try to extract JSON from the response
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    const jsonMatch = /\{[\s\S]*\}/.exec(text);
     if (!jsonMatch) {
       throw new Error("No JSON found in response");
     }
 
     const json = JSON.parse(jsonMatch[0]) as Record<string, unknown>;
+    const reasoning = json["reasoning"];
     return {
       shouldRespond: Boolean(json["shouldRespond"]),
-      reasoning: String(json["reasoning"] ?? "Unknown"),
+      reasoning: typeof reasoning === "string" ? reasoning : "Unknown",
       confidence: Number(json["confidence"] ?? 0.5),
     };
   } catch {
