@@ -14,7 +14,7 @@
     "dev": "bun run --watch src/index.ts",
     "build": "true",
     "test": "bun test",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "prisma generate && tsc --noEmit",
     "lint": "eslint ."
   },
   "dependencies": {

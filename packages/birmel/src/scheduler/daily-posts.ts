@@ -62,7 +62,7 @@ async function getRecentEvents(
     take: limit,
   });
 
-  return events.map((e) => ({
+  return events.map((e: { eventType: string; eventData: string }) => ({
     eventType: e.eventType,
     eventData: JSON.parse(e.eventData) as Record<string, unknown>,
   }));
