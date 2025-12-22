@@ -290,7 +290,10 @@ describe("ConfigSchema (full)", () => {
       voice: {},
       externalApis: {},
       logging: {},
+      sentry: {},
       persona: {},
+      birthdays: {},
+      activityTracking: {},
     });
     expect(result.success).toBe(true);
   });
