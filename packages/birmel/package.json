@@ -10,8 +10,7 @@
     "src"
   ],
   "scripts": {
-    "start": "bun run src/index.ts",
-    "start:with-studio": "bunx prisma db push --skip-generate && node .mastra/output/index.mjs & bun run src/index.ts",
+    "start": "bunx prisma db push --skip-generate && bun run src/index.ts",
     "dev": "bun run --watch src/index.ts",
     "build": "true",
     "build:studio": "mastra build -d src/mastra",
