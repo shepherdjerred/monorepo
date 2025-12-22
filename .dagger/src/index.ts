@@ -43,12 +43,17 @@ export class Monorepo {
    * Run the full CI/CD pipeline.
    * - Always runs: install, typecheck, test, build
    * - If githubToken and npmToken provided: also runs release-please and publishes
+   * - If birmel release params provided: also runs birmel release
    */
   @func()
   async ci(
     source: Directory,
     githubToken?: Secret,
-    npmToken?: Secret
+    npmToken?: Secret,
+    birmelVersion?: string,
+    birmelGitSha?: string,
+    birmelRegistryUsername?: string,
+    birmelRegistryPassword?: Secret
   ): Promise<string> {
     const outputs: string[] = [];
 
@@ -116,6 +121,19 @@ export class Monorepo {
       } else {
         outputs.push("No releases created - skipping publish");
       }
+    }
+
+    // Run birmel release if all params provided
+    if (birmelVersion && birmelGitSha && birmelRegistryUsername && birmelRegistryPassword) {
+      outputs.push("\n--- Birmel Release ---");
+      const birmelResult = await this.birmelRelease(
+        source,
+        birmelVersion,
+        birmelGitSha,
+        birmelRegistryUsername,
+        birmelRegistryPassword
+      );
+      outputs.push(birmelResult);
     }
 
     return outputs.join("\n");
