@@ -1,4 +1,4 @@
-export { webTools, fetchUrlTool } from "./web.js";
+export { webTools, fetchUrlTool, webSearchTool } from "./web.js";
 export { newsTools, getNewsTool } from "./news.js";
 export { lolTools, getLolUpdatesTool } from "./lol.js";
 
