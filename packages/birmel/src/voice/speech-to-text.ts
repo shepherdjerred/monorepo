@@ -1,6 +1,9 @@
 import OpenAI, { toFile } from "openai";
 import { getConfig } from "../config/index.js";
-import { logger } from "../utils/index.js";
+import { loggers } from "../utils/index.js";
+import { captureException } from "../observability/index.js";
+
+const logger = loggers.voice.child("speech-to-text");
 
 let openaiClient: OpenAI | null = null;
 
@@ -42,10 +45,13 @@ export async function transcribeAudio(audioBuffer: Buffer): Promise<string> {
     return transcription.text;
   } catch (error) {
     const duration = Date.now() - startTime;
-    logger.error("Failed to transcribe audio", {
-      error,
+    logger.error("Failed to transcribe audio", error, {
       bufferSize: audioBuffer.length,
       durationMs: duration,
+    });
+    captureException(error as Error, {
+      operation: "voice.transcribeAudio",
+      extra: { bufferSize: audioBuffer.length, durationMs: duration },
     });
     throw error;
   }

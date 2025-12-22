@@ -1,11 +1,19 @@
 import type { Client, Message } from "discord.js";
 import type { getClassifierAgent as GetClassifierAgentFn } from "../../mastra/index.js";
 import type { parseClassificationResult as ParseClassificationResultFn } from "../../mastra/agents/classifier-agent.js";
-import { logger } from "../../utils/logger.js";
+import { loggers } from "../../utils/logger.js";
 import {
   getRecentChannelMessages,
   formatMessagesForClassifier,
 } from "../utils/channel-history.js";
+import {
+  withSpan,
+  setSentryContext,
+  clearSentryContext,
+  captureException,
+} from "../../observability/index.js";
+
+const logger = loggers.discord.child("message-create");
 
 // Lazy-loaded to avoid circular dependency with tools
 let classifierModule: { getClassifierAgent: typeof GetClassifierAgentFn } | null = null;
@@ -28,11 +36,6 @@ export type MessageContext = {
   channelId: string;
   userId: string;
   username: string;
-  referencedMessage?: {
-    content: string;
-    authorUsername: string;
-    authorId: string;
-  };
 };
 
 export type MessageHandler = (context: MessageContext) => Promise<void>;
@@ -73,39 +76,62 @@ async function shouldRespond(
   }
 
   // Contextual classification: use AI to decide
+  const discordContext = {
+    ...(message.guild?.id ? { guildId: message.guild.id } : {}),
+    channelId: message.channel.id,
+    userId: message.author.id,
+    messageId: message.id,
+  };
+
   try {
-    const recentMessages = await getRecentChannelMessages(message, 10);
-    const formattedContext = formatMessagesForClassifier(
-      recentMessages,
-      message
-    );
+    return await withSpan("classifier.decide", discordContext, async (span) => {
+      const recentMessages = await getRecentChannelMessages(message, 10);
+      span.setAttribute("context.message_count", recentMessages.length);
 
-    const classifier = await getClassifierAgent();
-    const result = await classifier.generate(formattedContext);
+      const formattedContext = formatMessagesForClassifier(
+        recentMessages,
+        message
+      );
 
-    const parseClassificationResult = await getParseClassificationResult();
-    const classification = parseClassificationResult(result.text);
+      const classifier = await getClassifierAgent();
+      const result = await classifier.generate(formattedContext);
 
-    logger.debug("Classification result", {
-      shouldRespond: classification.shouldRespond,
-      confidence: classification.confidence,
-      reasoning: classification.reasoning,
-    });
+      const parseClassificationResult = await getParseClassificationResult();
+      const classification = parseClassificationResult(result.text);
 
-    // Only respond if confident enough
-    if (
-      classification.shouldRespond &&
-      classification.confidence >= CLASSIFICATION_CONFIDENCE_THRESHOLD
-    ) {
-      logger.debug("Responding: contextual classification", {
+      span.setAttribute("classification.should_respond", classification.shouldRespond);
+      span.setAttribute("classification.confidence", classification.confidence);
+
+      logger.debug("Classification result", {
+        shouldRespond: classification.shouldRespond,
         confidence: classification.confidence,
+        reasoning: classification.reasoning,
       });
-      return true;
-    }
 
-    return false;
+      // Only respond if confident enough
+      if (
+        classification.shouldRespond &&
+        classification.confidence >= CLASSIFICATION_CONFIDENCE_THRESHOLD
+      ) {
+        logger.debug("Responding: contextual classification", {
+          confidence: classification.confidence,
+        });
+        return true;
+      }
+
+      return false;
+    });
   } catch (error) {
     logger.error("Classification failed, defaulting to no response", error);
+    captureException(error as Error, {
+      operation: "shouldRespond.classification",
+      discord: {
+        ...(message.guild?.id ? { guildId: message.guild.id } : {}),
+        channelId: message.channel.id,
+        userId: message.author.id,
+        messageId: message.id,
+      },
+    });
     return false;
   }
 }
@@ -121,67 +147,62 @@ export function setupMessageCreateHandler(client: Client): void {
         return;
       }
 
-      const respond = await shouldRespond(message, client.user.id);
-      if (!respond) {
-        return;
-      }
-
-      logger.debug("Processing message", {
+      const discordContext = {
         guildId: message.guild.id,
         channelId: message.channel.id,
         userId: message.author.id,
-        content: message.content.slice(0, 100),
-      });
+        username: message.author.username,
+        messageId: message.id,
+      };
 
-      if (!messageHandler) {
-        logger.warn("No message handler registered");
-        return;
-      }
+      await withSpan("discord.messageCreate", discordContext, async (span) => {
+        setSentryContext(discordContext);
 
-      try {
-        // Check if this message is a reply to another message
-        let referencedMessage:
-          | { content: string; authorUsername: string; authorId: string }
-          | undefined;
-        if (message.reference) {
-          try {
-            const ref = await message.fetchReference();
-            referencedMessage = {
-              content: ref.content,
-              authorUsername: ref.author.username,
-              authorId: ref.author.id,
-            };
-            logger.debug("Including referenced message context", {
-              originalAuthor: ref.author.username,
-              contentLength: ref.content.length,
-            });
-          } catch (error: unknown) {
-            logger.warn("Failed to fetch referenced message", { error });
-            // Continue without the reference if fetching fails
-          }
-        }
-
-        const context: MessageContext = {
-          message,
-          content: message.content,
-          guildId: message.guild.id,
-          channelId: message.channel.id,
-          userId: message.author.id,
-          username: message.author.username,
-          ...(referencedMessage && { referencedMessage }),
-        };
-
-        await messageHandler(context);
-      } catch (error: unknown) {
-        logger.error("Error handling message", error);
         try {
-          await message.reply(
-            "Sorry, I encountered an error processing your request.",
-          );
-        } catch {
-          // Ignore reply errors -- eslint-disable-line @typescript-eslint/no-empty-pattern
+          const respond = await shouldRespond(message, client.user!.id);
+          span.setAttribute("should_respond", respond);
+
+          if (!respond) {
+            return;
+          }
+
+          logger.debug("Processing message", {
+            guildId: message.guild!.id,
+            channelId: message.channel.id,
+            userId: message.author.id,
+            content: message.content.slice(0, 100),
+          });
+
+          if (!messageHandler) {
+            logger.warn("No message handler registered");
+            return;
+          }
+
+          await messageHandler({
+            message,
+            content: message.content,
+            guildId: message.guild!.id,
+            channelId: message.channel.id,
+            userId: message.author.id,
+            username: message.author.username,
+          });
+        } catch (error) {
+          logger.error("Error handling message", error);
+          captureException(error as Error, {
+            operation: "messageCreate",
+            discord: discordContext,
+          });
+          try {
+            await message.reply(
+              "Sorry, I encountered an error processing your request.",
+            );
+          } catch {
+            // Ignore reply errors
+          }
+        } finally {
+          clearSentryContext();
         }
-      }
+      });
     })();
   });
 }

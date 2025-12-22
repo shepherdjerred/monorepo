@@ -1,6 +1,9 @@
 import OpenAI from "openai";
 import { getConfig } from "../config/index.js";
-import { logger } from "../utils/index.js";
+import { loggers } from "../utils/index.js";
+import { captureException } from "../observability/index.js";
+
+const logger = loggers.voice.child("text-to-speech");
 
 let openaiClient: OpenAI | null = null;
 
@@ -45,10 +48,13 @@ export async function generateSpeech(text: string): Promise<Buffer> {
     return buffer;
   } catch (error) {
     const duration = Date.now() - startTime;
-    logger.error("Failed to generate speech", {
-      error,
+    logger.error("Failed to generate speech", error, {
       textLength: text.length,
       durationMs: duration,
+    });
+    captureException(error as Error, {
+      operation: "voice.generateSpeech",
+      extra: { textLength: text.length, durationMs: duration },
     });
     throw error;
   }
