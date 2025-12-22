@@ -125,7 +125,7 @@ export const webSearchTool = createTool({
       const html = await response.text();
 
       // Parse search results from DuckDuckGo HTML
-      const results: Array<{ title: string; url: string; snippet: string }> = [];
+      const results: { title: string; url: string; snippet: string }[] = [];
       const resultRegex = /<a[^>]+class="result__a"[^>]+href="([^"]+)"[^>]*>([^<]+)<\/a>[\s\S]*?<a[^>]+class="result__snippet"[^>]*>([^<]*(?:<[^>]+>[^<]*)*)<\/a>/g;
 
       let match;
@@ -144,7 +144,8 @@ export const webSearchTool = createTool({
       // Fallback: simpler parsing if regex didn't match
       if (results.length === 0) {
         const simpleRegex = /<a[^>]+class="result__a"[^>]+>([^<]+)<\/a>/g;
-        while ((match = simpleRegex.exec(html)) !== null && results.length < 5) {
+        let fallbackCount = 0;
+        while ((match = simpleRegex.exec(html)) !== null && fallbackCount < 5) {
           const title = match[1];
           if (title) {
             results.push({
@@ -152,6 +153,7 @@ export const webSearchTool = createTool({
               url: "",
               snippet: "No snippet available",
             });
+            fallbackCount++;
           }
         }
       }

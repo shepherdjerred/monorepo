@@ -11,14 +11,14 @@
   ],
   "scripts": {
     "start": "bun run src/index.ts",
+    "start:with-studio": "node .mastra/output/index.mjs & bun run src/index.ts",
     "dev": "bun run --watch src/index.ts",
     "build": "true",
+    "build:studio": "mastra build -d src/mastra",
     "test": "bun test",
     "typecheck": "prisma generate && tsc --noEmit",
     "lint": "eslint .",
-    "studio:dev": "mastra dev -d src/mastra",
-    "studio:build": "mastra build -d src/mastra",
-    "studio:start": "mastra start"
+    "studio:dev": "mastra dev -d src/mastra"
   },
   "dependencies": {
     "@ai-sdk/openai": "^2.0.0",

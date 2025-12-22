@@ -6,7 +6,7 @@ export default tseslint.config(
   ...tseslint.configs.strictTypeChecked,
   ...tseslint.configs.stylisticTypeChecked,
   {
-    ignores: ["dist/", "node_modules/", "data/", "eslint.config.js"],
+    ignores: ["dist/", "node_modules/", "data/", ".mastra/", "eslint.config.js"],
   },
   {
     languageOptions: {
