@@ -57,6 +57,15 @@ export const LoggingConfigSchema = z.object({
   level: z.enum(["debug", "info", "warn", "error"]).default("info"),
 });
 
+export const PersonaConfigSchema = z.object({
+  enabled: z.boolean().default(true),
+  defaultPersona: z.string().default("virmel"),
+  dbPath: z.string().default("./glitter-boys.db"),
+  decisionExampleCount: z.number().default(20),
+  styleExampleCount: z.number().default(50),
+  styleModel: z.string().default("gpt-4o-mini"),
+});
+
 export const ConfigSchema = z.object({
   discord: DiscordConfigSchema,
   openai: OpenAIConfigSchema,
@@ -66,6 +75,7 @@ export const ConfigSchema = z.object({
   voice: VoiceConfigSchema,
   externalApis: ExternalApisSchema,
   logging: LoggingConfigSchema,
+  persona: PersonaConfigSchema,
 });
 
 export type Config = z.infer<typeof ConfigSchema>;
@@ -77,3 +87,4 @@ export type DailyPostsConfig = z.infer<typeof DailyPostsConfigSchema>;
 export type VoiceConfig = z.infer<typeof VoiceConfigSchema>;
 export type ExternalApisConfig = z.infer<typeof ExternalApisSchema>;
 export type LoggingConfig = z.infer<typeof LoggingConfigSchema>;
+export type PersonaConfig = z.infer<typeof PersonaConfigSchema>;

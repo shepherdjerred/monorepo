@@ -6,7 +6,11 @@ import {
   setMessageHandler,
 } from "./discord/index.js";
 import { disconnectPrisma } from "./database/index.js";
-import { getBirmelAgent, startMastraServer } from "./mastra/index.js";
+import {
+  getBirmelAgent,
+  createBirmelAgentWithContext,
+  startMastraServer,
+} from "./mastra/index.js";
 import { getThreadId, getResourceId } from "./mastra/memory/index.js";
 import { initializeMusicPlayer, destroyMusicPlayer } from "./music/index.js";
 import { startScheduler, stopScheduler } from "./scheduler/index.js";
@@ -17,10 +21,16 @@ import {
 } from "./voice/index.js";
 import { withTyping } from "./discord/utils/typing.js";
 import { logger } from "./utils/index.js";
+import { stylizeResponse, closePersonaDb } from "./persona/index.js";
 import type { MessageContext } from "./discord/index.js";
 
 async function handleMessage(context: MessageContext): Promise<void> {
-  const agent = getBirmelAgent();
+  const config = getConfig();
+
+  // STAGE 1: Create agent with decision context (persona's similar messages)
+  const agent = config.persona.enabled
+    ? createBirmelAgentWithContext(context.content)
+    : getBirmelAgent();
 
   // Build prompt with context
   const prompt = `User ${context.username} (ID: ${context.userId}) in channel ${context.channelId} says:
@@ -39,8 +49,17 @@ Channel ID: ${context.channelId}`;
       });
     });
 
+    // STAGE 2: Stylize response to match persona's voice
+    let finalResponse = response.text;
+    if (config.persona.enabled) {
+      finalResponse = await stylizeResponse(
+        response.text,
+        config.persona.defaultPersona,
+      );
+    }
+
     // Send response back to Discord
-    await context.message.reply(response.text);
+    await context.message.reply(finalResponse);
   } catch (error) {
     logger.error("Agent generation failed", error);
     await context.message.reply(
@@ -53,9 +72,14 @@ async function handleVoiceCommand(
   command: string,
   userId: string,
   guildId: string,
-  channelId: string
+  channelId: string,
 ): Promise<string> {
-  const agent = getBirmelAgent();
+  const config = getConfig();
+
+  // STAGE 1: Create agent with decision context (persona's similar messages)
+  const agent = config.persona.enabled
+    ? createBirmelAgentWithContext(command)
+    : getBirmelAgent();
 
   // Build prompt with voice context
   const prompt = `[VOICE COMMAND] User ID ${userId} in voice channel ${channelId} says:
@@ -72,7 +96,17 @@ IMPORTANT: This is a voice command. Keep your response concise (under 200 words)
       threadId: getThreadId(channelId, userId),
       resourceId: getResourceId(userId),
     });
-    return response.text;
+
+    // STAGE 2: Stylize response to match persona's voice
+    let finalResponse = response.text;
+    if (config.persona.enabled) {
+      finalResponse = await stylizeResponse(
+        response.text,
+        config.persona.defaultPersona,
+      );
+    }
+
+    return finalResponse;
   } catch (error) {
     logger.error("Voice command agent generation failed", error);
     return "Sorry, I encountered an error processing your voice command.";
@@ -87,6 +121,7 @@ async function shutdown(): Promise<void> {
   await destroyMusicPlayer();
   await destroyDiscordClient();
   await disconnectPrisma();
+  closePersonaDb();
 
   logger.info("Birmel shutdown complete");
   process.exit(0);
@@ -103,6 +138,8 @@ async function main(): Promise<void> {
     voiceEnabled: config.voice.enabled,
     dailyPostsEnabled: config.dailyPosts.enabled,
     studioEnabled: config.mastra.studioEnabled,
+    personaEnabled: config.persona.enabled,
+    personaDefault: config.persona.defaultPersona,
   });
 
   // Set up Discord client

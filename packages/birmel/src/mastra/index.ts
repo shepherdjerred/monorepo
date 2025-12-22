@@ -41,6 +41,9 @@ export function startMastraServer(): void {
   }
 }
 
-export { createBirmelAgent } from "./agents/birmel-agent.js";
+export {
+  createBirmelAgent,
+  createBirmelAgentWithContext,
+} from "./agents/birmel-agent.js";
 export { createClassifierAgent } from "./agents/classifier-agent.js";
 export { SYSTEM_PROMPT } from "./agents/system-prompt.js";
