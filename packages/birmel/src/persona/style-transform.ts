@@ -64,9 +64,9 @@ Key style notes:
 - Preserve all factual content and meaning from the original
 
 Original message to restyle:
-"${originalMessage}"
+${originalMessage}
 
-Rewrite in ${context.persona}'s voice (respond with ONLY the restyled message, no explanation):`;
+Rewrite in ${context.persona}'s voice. Output ONLY the restyled message with NO quotes around it and NO explanation:`;
 }
 
 export async function stylizeResponse(
