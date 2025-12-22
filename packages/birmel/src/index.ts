@@ -39,6 +39,7 @@ import { withTyping } from "./discord/utils/typing.js";
 import { logger } from "./utils/index.js";
 import { stylizeResponse, closePersonaDb } from "./persona/index.js";
 import type { MessageContext } from "./discord/index.js";
+import { buildMessageContent } from "./mastra/utils/message-builder.js";
 
 /**
  * Fetch global working memory for a guild.
@@ -128,6 +129,8 @@ async function handleMessage(context: MessageContext): Promise<void> {
 
 ${context.content}
 
+${context.attachments.length > 0 ? `[User attached ${context.attachments.length} image(s)]` : ""}
+
 Guild ID: ${context.guildId}
 Channel ID: ${context.channelId}
 ${globalContext}`;
@@ -135,12 +138,15 @@ ${globalContext}`;
     try {
       // Show typing indicator while generating response
       // Use CHANNEL thread so all users share conversation context
-      logger.debug("Generating response", { requestId, threadId: memoryIds.channel.threadId });
+      logger.debug("Generating response", { requestId, threadId: memoryIds.channel.threadId, hasImages: context.attachments.length > 0 });
       const genStartTime = Date.now();
+
+      // Build multimodal content if images present
+      const messageContent = await buildMessageContent(context, prompt);
 
       const response = await withAgentSpan("birmel", discordContext, async () => {
         return withTyping(context.message, async () => {
-          return agent.generate(prompt, {
+          return agent.generate(messageContent, {
             threadId: memoryIds.channel.threadId,
             resourceId: memoryIds.channel.resourceId,
           });
