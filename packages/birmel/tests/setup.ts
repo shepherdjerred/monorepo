@@ -42,18 +42,20 @@ mock.module("@mastra/core/agent", () => ({
 // Mock @mastra/core/tools
 mock.module("@mastra/core/tools", () => ({
   createTool: (config: { id: string; description: string; [key: string]: unknown }) => ({
-    id: config.id,
-    description: config.description,
     ...config,
   }),
 }));
 
 // Mock @ai-sdk/openai
-const mockOpenai = (model: string) => ({ provider: "openai", model });
-// @ts-expect-error - Adding chat property
-mockOpenai.chat = (model: string) => ({ provider: "openai.chat", model });
-// @ts-expect-error - Adding responses property
-mockOpenai.responses = (model: string) => ({ provider: "openai.responses", model });
+type ModelFn = (model: string) => { provider: string; model: string };
+type OpenaiMock = ModelFn & { chat: ModelFn; responses: ModelFn };
+const mockOpenai: OpenaiMock = Object.assign(
+  (model: string) => ({ provider: "openai", model }),
+  {
+    chat: (model: string) => ({ provider: "openai.chat", model }),
+    responses: (model: string) => ({ provider: "openai.responses", model }),
+  }
+);
 mock.module("@ai-sdk/openai", () => ({
   openai: mockOpenai,
 }));
