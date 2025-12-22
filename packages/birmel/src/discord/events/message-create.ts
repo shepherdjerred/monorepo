@@ -140,7 +140,9 @@ export function setupMessageCreateHandler(client: Client): void {
 
       try {
         // Check if this message is a reply to another message
-        let referencedMessage;
+        let referencedMessage:
+          | { content: string; authorUsername: string; authorId: string }
+          | undefined;
         if (message.reference) {
           try {
             const ref = await message.fetchReference();
@@ -153,22 +155,24 @@ export function setupMessageCreateHandler(client: Client): void {
               originalAuthor: ref.author.username,
               contentLength: ref.content.length,
             });
-          } catch (error) {
+          } catch (error: unknown) {
             logger.warn("Failed to fetch referenced message", error);
             // Continue without the reference if fetching fails
           }
         }
 
-        await messageHandler({
+        const context: MessageContext = {
           message,
           content: message.content,
           guildId: message.guild.id,
           channelId: message.channel.id,
           userId: message.author.id,
           username: message.author.username,
-          referencedMessage,
-        });
-      } catch (error) {
+          ...(referencedMessage && { referencedMessage }),
+        };
+
+        await messageHandler(context);
+      } catch (error: unknown) {
         logger.error("Error handling message", error);
         try {
           await message.reply(
