@@ -4,10 +4,6 @@ import { getDiscordClient } from "../../../discord/index.js";
 import { logger } from "../../../utils/logger.js";
 import type { TextChannel } from "discord.js";
 
-
-// Extra blank lines that should be auto-fixed
-
-
 export const sendMessageTool = createTool({
   id: "send-message",
   description: "Send a message to a Discord channel",
