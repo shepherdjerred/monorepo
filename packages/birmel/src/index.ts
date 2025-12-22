@@ -129,7 +129,7 @@ async function handleMessage(context: MessageContext): Promise<void> {
 
 ${context.content}
 
-${context.attachments.length > 0 ? `[User attached ${context.attachments.length} image(s)]` : ""}
+${context.attachments.length > 0 ? `[User attached ${String(context.attachments.length)} image(s)]` : ""}
 
 Guild ID: ${context.guildId}
 Channel ID: ${context.channelId}

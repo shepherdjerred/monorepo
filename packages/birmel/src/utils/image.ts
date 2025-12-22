@@ -42,7 +42,7 @@ export function extractImageAttachments(message: Message): ImageAttachment[] {
       images.push({
         url: attachment.url,
         filename: attachment.name,
-        contentType: attachment.contentType || "image/png",
+        contentType: attachment.contentType ?? "image/png",
         size: attachment.size,
         width: attachment.width,
         height: attachment.height,
@@ -58,7 +58,7 @@ export function extractImageAttachments(message: Message): ImageAttachment[] {
  */
 export async function downloadImage(url: string): Promise<Buffer> {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), DOWNLOAD_TIMEOUT_MS);
+  const timeoutId = setTimeout(() => { controller.abort(); }, DOWNLOAD_TIMEOUT_MS);
 
   try {
     const response = await fetch(url, {
@@ -68,13 +68,13 @@ export async function downloadImage(url: string): Promise<Buffer> {
     clearTimeout(timeoutId);
 
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      throw new Error(`HTTP ${String(response.status)}: ${response.statusText}`);
     }
 
     const contentLength = response.headers.get("content-length");
     if (contentLength && parseInt(contentLength) > MAX_IMAGE_SIZE) {
       throw new Error(
-        `Image too large: ${parseInt(contentLength)} bytes (max ${MAX_IMAGE_SIZE})`,
+        `Image too large: ${String(parseInt(contentLength))} bytes (max ${String(MAX_IMAGE_SIZE)})`,
       );
     }
 
@@ -83,7 +83,7 @@ export async function downloadImage(url: string): Promise<Buffer> {
 
     if (buffer.length > MAX_IMAGE_SIZE) {
       throw new Error(
-        `Image too large: ${buffer.length} bytes (max ${MAX_IMAGE_SIZE})`,
+        `Image too large: ${String(buffer.length)} bytes (max ${String(MAX_IMAGE_SIZE)})`,
       );
     }
 

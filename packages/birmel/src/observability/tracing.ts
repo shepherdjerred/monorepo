@@ -82,13 +82,13 @@ export function getTraceContext(): { traceId?: string; spanId?: string } {
   };
 }
 
-export interface DiscordSpanAttributes {
+export type DiscordSpanAttributes = {
   guildId?: string;
   channelId?: string;
   userId?: string;
   messageId?: string;
   operation?: string;
-}
+};
 
 /**
  * Create a span with Discord context attributes.
@@ -104,8 +104,8 @@ export async function withSpan<T>(
       setAttribute: () => noopSpan,
       setAttributes: () => noopSpan,
       setStatus: () => noopSpan,
-      recordException: () => {},
-      end: () => {},
+      recordException: () => void 0,
+      end: () => void 0,
     } as unknown as Span;
     return fn(noopSpan);
   }
