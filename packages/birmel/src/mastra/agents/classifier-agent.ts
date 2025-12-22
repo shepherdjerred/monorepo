@@ -42,7 +42,8 @@ export function createClassifierAgent(): Agent {
     id: "birmel-classifier",
     name: "BirmelClassifier",
     instructions: CLASSIFIER_PROMPT,
-    model: openai(config.openai.classifierModel),
+    // Use Chat Completions API to avoid Responses API issues
+    model: openai.chat(config.openai.classifierModel),
   });
 }
 

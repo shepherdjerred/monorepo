@@ -19,8 +19,11 @@ mock.module("@mastra/core/agent", () => ({
 }));
 
 // Mock @ai-sdk/openai
+const mockOpenai = (model: string) => ({ provider: "openai", model });
+mockOpenai.chat = (model: string) => ({ provider: "openai.chat", model });
+mockOpenai.responses = (model: string) => ({ provider: "openai.responses", model });
 mock.module("@ai-sdk/openai", () => ({
-  openai: (model: string) => ({ provider: "openai", model }),
+  openai: mockOpenai,
 }));
 
 // Mock @mastra/memory
