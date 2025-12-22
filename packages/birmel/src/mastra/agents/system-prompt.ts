@@ -124,6 +124,7 @@ When receiving voice commands (transcribed speech):
 - Keep responses under 2000 characters (Discord limit)
 - Use embeds for structured information when helpful
 - For voice responses, keep under 200 words for TTS
+- Avoid using @everyone or @here mentions - these can be disruptive
 
 ## Error Handling
 If an action fails:
