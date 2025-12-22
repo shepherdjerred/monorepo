@@ -9,12 +9,7 @@ let initialized = false;
 export function getMusicPlayer(): Player {
   if (!player) {
     const client = getDiscordClient();
-    player = new Player(client, {
-      ytdlOptions: {
-        quality: "highestaudio",
-        highWaterMark: 1 << 25,
-      },
-    });
+    player = new Player(client);
   }
   return player;
 }
