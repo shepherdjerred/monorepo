@@ -28,6 +28,11 @@ export type MessageContext = {
   channelId: string;
   userId: string;
   username: string;
+  referencedMessage?: {
+    content: string;
+    authorUsername: string;
+    authorId: string;
+  };
 };
 
 export type MessageHandler = (context: MessageContext) => Promise<void>;
@@ -134,15 +139,40 @@ export function setupMessageCreateHandler(client: Client): void {
       }
 
       try {
-        await messageHandler({
+        // Check if this message is a reply to another message
+        let referencedMessage:
+          | { content: string; authorUsername: string; authorId: string }
+          | undefined;
+        if (message.reference) {
+          try {
+            const ref = await message.fetchReference();
+            referencedMessage = {
+              content: ref.content,
+              authorUsername: ref.author.username,
+              authorId: ref.author.id,
+            };
+            logger.debug("Including referenced message context", {
+              originalAuthor: ref.author.username,
+              contentLength: ref.content.length,
+            });
+          } catch (error: unknown) {
+            logger.warn("Failed to fetch referenced message", { error });
+            // Continue without the reference if fetching fails
+          }
+        }
+
+        const context: MessageContext = {
           message,
           content: message.content,
           guildId: message.guild.id,
           channelId: message.channel.id,
           userId: message.author.id,
           username: message.author.username,
-        });
-      } catch (error) {
+          ...(referencedMessage && { referencedMessage }),
+        };
+
+        await messageHandler(context);
+      } catch (error: unknown) {
         logger.error("Error handling message", error);
         try {
           await message.reply(
