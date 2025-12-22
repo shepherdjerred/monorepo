@@ -56,3 +56,45 @@ model MusicHistory {
 
   @@index([guildId, createdAt])
 }
+
+model PollRecord {
+  id          Int      @id @default(autoincrement())
+  guildId     String
+  channelId   String
+  messageId   String   @unique
+  pollId      String
+  question    String
+  createdBy   String
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+
+  @@index([guildId, createdAt])
+}
+
+model UserActivity {
+  id           Int      @id @default(autoincrement())
+  guildId      String
+  userId       String
+  channelId    String
+  activityType String
+  metadata     String?
+  createdAt    DateTime @default(now())
+
+  @@index([guildId, userId, createdAt])
+  @@index([guildId, activityType, createdAt])
+}
+
+model Birthday {
+  id         Int      @id @default(autoincrement())
+  userId     String
+  guildId    String
+  birthMonth Int
+  birthDay   Int
+  birthYear  Int?
+  timezone   String   @default("UTC")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([userId, guildId])
+  @@index([guildId, birthMonth, birthDay])
+}

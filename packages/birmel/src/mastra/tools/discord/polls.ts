@@ -1,0 +1,310 @@
+import { createTool } from "@mastra/core/tools";
+import { z } from "zod";
+import { getDiscordClient } from "../../../discord/index.js";
+import { loggers } from "../../../utils/logger.js";
+import { captureException, withToolSpan } from "../../../observability/index.js";
+import { prisma } from "../../../database/index.js";
+
+const logger = loggers.tools.child("discord.polls");
+
+export const createPollTool = createTool({
+  id: "create-poll",
+  description: "Create a native Discord poll in a channel with multiple choice answers",
+  inputSchema: z.object({
+    channelId: z.string().describe("The ID of the channel to create the poll in"),
+    question: z.string().max(300).describe("The poll question (max 300 characters)"),
+    answers: z.array(z.object({
+      text: z.string().max(55).describe("Answer text (max 55 characters)"),
+      emoji: z.string().optional().describe("Optional emoji for this answer (Unicode or custom emoji)")
+    })).min(1).max(10).describe("Poll answer options (1-10 options)"),
+    duration: z.number().min(1).max(768).optional().describe("Poll duration in hours (1-768 hours, defaults to 24)"),
+    allowMultiselect: z.boolean().optional().describe("Allow users to select multiple answers (default: false)")
+  }),
+  outputSchema: z.object({
+    success: z.boolean(),
+    message: z.string(),
+    data: z.object({
+      messageId: z.string(),
+      pollId: z.string(),
+      expiresAt: z.string().describe("ISO timestamp when poll expires")
+    }).optional()
+  }),
+  execute: async (input) => {
+    return withToolSpan("create-poll", undefined, async () => {
+      logger.debug("Creating poll", { channelId: input.channelId, question: input.question });
+      try {
+        const client = getDiscordClient();
+        const channel = await client.channels.fetch(input.channelId);
+
+        if (!channel?.isTextBased()) {
+          return {
+            success: false,
+            message: "Channel must be a text channel to create a poll"
+          };
+        }
+
+        const duration = input.duration ?? 24;
+        const expiresAt = new Date(Date.now() + duration * 60 * 60 * 1000);
+
+        const message = await channel.send({
+          poll: {
+            question: {
+              text: input.question
+            },
+            answers: input.answers.map(answer => ({
+              text: answer.text,
+              ...(answer.emoji && { emoji: answer.emoji })
+            })),
+            duration,
+            allowMultiselect: input.allowMultiselect ?? false
+          }
+        });
+
+        // Store poll metadata in database
+        void prisma.pollRecord.create({
+          data: {
+            guildId: message.guildId!,
+            channelId: input.channelId,
+            messageId: message.id,
+            pollId: message.poll!.question.text, // Using question as identifier
+            question: input.question,
+            createdBy: client.user!.id,
+            expiresAt
+          }
+        }).catch((error) => {
+          logger.error("Failed to store poll record", error);
+        });
+
+        logger.info("Poll created successfully", {
+          messageId: message.id,
+          channelId: input.channelId
+        });
+
+        return {
+          success: true,
+          message: `Poll created successfully with ${input.answers.length} options`,
+          data: {
+            messageId: message.id,
+            pollId: input.question,
+            expiresAt: expiresAt.toISOString()
+          }
+        };
+      } catch (error) {
+        logger.error("Failed to create poll", error, { channelId: input.channelId });
+        captureException(error as Error, {
+          operation: "tool.create-poll",
+          discord: { channelId: input.channelId }
+        });
+        return {
+          success: false,
+          message: `Failed to create poll: ${(error as Error).message}`
+        };
+      }
+    });
+  }
+});
+
+export const getPollResultsTool = createTool({
+  id: "get-poll-results",
+  description: "Fetch the current results of a Discord poll including vote counts and optionally voter details",
+  inputSchema: z.object({
+    channelId: z.string().describe("The ID of the channel containing the poll"),
+    messageId: z.string().describe("The ID of the message with the poll"),
+    fetchVoters: z.boolean().optional().describe("Whether to fetch the list of voters for each answer (default: false, may be slow)")
+  }),
+  outputSchema: z.object({
+    success: z.boolean(),
+    message: z.string(),
+    data: z.object({
+      question: z.string(),
+      answers: z.array(z.object({
+        id: z.number(),
+        text: z.string(),
+        emoji: z.string().optional(),
+        voteCount: z.number(),
+        voters: z.array(z.object({
+          userId: z.string(),
+          username: z.string()
+        })).optional()
+      })),
+      totalVotes: z.number(),
+      isFinalized: z.boolean(),
+      expiresAt: z.string().optional().describe("ISO timestamp when poll expires")
+    }).optional()
+  }),
+  execute: async (input) => {
+    return withToolSpan("get-poll-results", undefined, async () => {
+      logger.debug("Fetching poll results", { channelId: input.channelId, messageId: input.messageId });
+      try {
+        const client = getDiscordClient();
+        const channel = await client.channels.fetch(input.channelId);
+
+        if (!channel?.isTextBased()) {
+          return {
+            success: false,
+            message: "Channel must be a text channel"
+          };
+        }
+
+        const message = await channel.messages.fetch(input.messageId);
+
+        if (!message.poll) {
+          return {
+            success: false,
+            message: "Message does not contain a poll"
+          };
+        }
+
+        const poll = message.poll;
+        let totalVotes = 0;
+        const answers = [];
+
+        for (const answer of poll.answers.values()) {
+          totalVotes += answer.voteCount;
+
+          const answerData: {
+            id: number;
+            text: string;
+            emoji?: string;
+            voteCount: number;
+            voters?: Array<{ userId: string; username: string }>;
+          } = {
+            id: answer.id,
+            text: answer.text,
+            voteCount: answer.voteCount
+          };
+
+          if (answer.emoji) {
+            answerData.emoji = answer.emoji.name ?? answer.emoji.id;
+          }
+
+          // Optionally fetch voters
+          if (input.fetchVoters && answer.voteCount > 0) {
+            try {
+              const answerFetch = await answer.fetchAnswer();
+              const voters = [];
+              for (const voter of answerFetch.votes.values()) {
+                voters.push({
+                  userId: voter.id,
+                  username: voter.username
+                });
+              }
+              answerData.voters = voters;
+            } catch (voterError) {
+              logger.warn("Failed to fetch voters for answer", { answerId: answer.id });
+            }
+          }
+
+          answers.push(answerData);
+        }
+
+        logger.info("Poll results fetched", {
+          messageId: input.messageId,
+          totalVotes,
+          answerCount: answers.length
+        });
+
+        return {
+          success: true,
+          message: `Poll results: ${totalVotes} total votes across ${answers.length} answers`,
+          data: {
+            question: poll.question.text,
+            answers,
+            totalVotes,
+            isFinalized: poll.resultsFinalized,
+            expiresAt: poll.expiresAt?.toISOString()
+          }
+        };
+      } catch (error) {
+        logger.error("Failed to fetch poll results", error, {
+          channelId: input.channelId,
+          messageId: input.messageId
+        });
+        captureException(error as Error, {
+          operation: "tool.get-poll-results",
+          discord: { channelId: input.channelId, messageId: input.messageId }
+        });
+        return {
+          success: false,
+          message: `Failed to fetch poll results: ${(error as Error).message}`
+        };
+      }
+    });
+  }
+});
+
+export const endPollTool = createTool({
+  id: "end-poll",
+  description: "Manually end a Discord poll before its expiration time, finalizing the results",
+  inputSchema: z.object({
+    channelId: z.string().describe("The ID of the channel containing the poll"),
+    messageId: z.string().describe("The ID of the message with the poll")
+  }),
+  outputSchema: z.object({
+    success: z.boolean(),
+    message: z.string()
+  }),
+  execute: async (input) => {
+    return withToolSpan("end-poll", undefined, async () => {
+      logger.debug("Ending poll", { channelId: input.channelId, messageId: input.messageId });
+      try {
+        const client = getDiscordClient();
+        const channel = await client.channels.fetch(input.channelId);
+
+        if (!channel?.isTextBased()) {
+          return {
+            success: false,
+            message: "Channel must be a text channel"
+          };
+        }
+
+        const message = await channel.messages.fetch(input.messageId);
+
+        if (!message.poll) {
+          return {
+            success: false,
+            message: "Message does not contain a poll"
+          };
+        }
+
+        if (message.poll.resultsFinalized) {
+          return {
+            success: false,
+            message: "Poll has already been finalized"
+          };
+        }
+
+        await message.poll.end();
+
+        logger.info("Poll ended successfully", {
+          messageId: input.messageId,
+          channelId: input.channelId
+        });
+
+        return {
+          success: true,
+          message: "Poll ended successfully and results are now finalized"
+        };
+      } catch (error) {
+        logger.error("Failed to end poll", error, {
+          channelId: input.channelId,
+          messageId: input.messageId
+        });
+        captureException(error as Error, {
+          operation: "tool.end-poll",
+          discord: { channelId: input.channelId, messageId: input.messageId }
+        });
+        return {
+          success: false,
+          message: `Failed to end poll: ${(error as Error).message}`
+        };
+      }
+    });
+  }
+});
+
+export const pollTools = [
+  createPollTool,
+  getPollResultsTool,
+  endPollTool
+];
