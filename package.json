@@ -1,5 +1,6 @@
 {
   "name": "@shepherdjerred/share",
+  "type": "module",
   "private": true,
   "workspaces": ["packages/*"],
   "scripts": {

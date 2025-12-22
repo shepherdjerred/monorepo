@@ -4,9 +4,6 @@ import { getDiscordClient } from "../../../discord/index.js";
 import { logger } from "../../../utils/logger.js";
 import type { TextChannel } from "discord.js";
 
-// Test: this should trigger lint
-const unused = 123;
-
 export const sendMessageTool = createTool({
   id: "send-message",
   description: "Send a message to a Discord channel",
