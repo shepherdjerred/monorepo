@@ -11,7 +11,11 @@ import {
   createBirmelAgentWithContext,
   startMastraServer,
 } from "./mastra/index.js";
-import { getThreadId, getResourceId } from "./mastra/memory/index.js";
+import {
+  getMemory,
+  getMemoryIds,
+  type MemoryContext,
+} from "./mastra/memory/index.js";
 import { initializeMusicPlayer, destroyMusicPlayer } from "./music/index.js";
 import { startScheduler, stopScheduler } from "./scheduler/index.js";
 import {
@@ -24,6 +28,30 @@ import { logger } from "./utils/index.js";
 import { stylizeResponse, closePersonaDb } from "./persona/index.js";
 import type { MessageContext } from "./discord/index.js";
 
+/**
+ * Fetch global working memory for a guild.
+ * This contains server-wide rules like "don't do X".
+ */
+async function getGlobalMemoryContext(guildId: string): Promise<string | null> {
+  try {
+    const memory = getMemory();
+    const memoryIds = getMemoryIds({ guildId, channelId: "", userId: "" });
+
+    // Try to get the thread to access working memory
+    const thread = await memory.getThreadById({
+      threadId: memoryIds.global.threadId,
+    });
+
+    if (thread?.metadata?.["workingMemory"]) {
+      return thread.metadata["workingMemory"] as string;
+    }
+    return null;
+  } catch {
+    // Thread doesn't exist yet, that's fine
+    return null;
+  }
+}
+
 async function handleMessage(context: MessageContext): Promise<void> {
   const config = getConfig();
 
@@ -32,20 +60,36 @@ async function handleMessage(context: MessageContext): Promise<void> {
     ? createBirmelAgentWithContext(context.content)
     : getBirmelAgent();
 
+  // Get memory IDs for three-tier system
+  const memoryCtx: MemoryContext = {
+    guildId: context.guildId,
+    channelId: context.channelId,
+    userId: context.userId,
+  };
+  const memoryIds = getMemoryIds(memoryCtx);
+
+  // Fetch global memory (server rules) to inject into prompt
+  const globalMemory = await getGlobalMemoryContext(context.guildId);
+  const globalContext = globalMemory
+    ? `\n## Server Rules & Memory\n${globalMemory}\n`
+    : "";
+
   // Build prompt with context
   const prompt = `User ${context.username} (ID: ${context.userId}) in channel ${context.channelId} says:
 
 ${context.content}
 
 Guild ID: ${context.guildId}
-Channel ID: ${context.channelId}`;
+Channel ID: ${context.channelId}
+${globalContext}`;
 
   try {
     // Show typing indicator while generating response
+    // Use CHANNEL thread so all users share conversation context
     const response = await withTyping(context.message, async () => {
       return agent.generate(prompt, {
-        threadId: getThreadId(context.channelId, context.userId),
-        resourceId: getResourceId(context.userId),
+        threadId: memoryIds.channel.threadId,
+        resourceId: memoryIds.channel.resourceId,
       });
     });
 
@@ -81,6 +125,15 @@ async function handleVoiceCommand(
     ? createBirmelAgentWithContext(command)
     : getBirmelAgent();
 
+  // Get memory IDs for three-tier system
+  const memoryIds = getMemoryIds({ guildId, channelId, userId });
+
+  // Fetch global memory (server rules) to inject into prompt
+  const globalMemory = await getGlobalMemoryContext(guildId);
+  const globalContext = globalMemory
+    ? `\n## Server Rules & Memory\n${globalMemory}\n`
+    : "";
+
   // Build prompt with voice context
   const prompt = `[VOICE COMMAND] User ID ${userId} in voice channel ${channelId} says:
 
@@ -88,13 +141,13 @@ ${command}
 
 Guild ID: ${guildId}
 Channel ID: ${channelId}
-
+${globalContext}
 IMPORTANT: This is a voice command. Keep your response concise (under 200 words) as it will be spoken back via text-to-speech.`;
 
   try {
     const response = await agent.generate(prompt, {
-      threadId: getThreadId(channelId, userId),
-      resourceId: getResourceId(userId),
+      threadId: memoryIds.channel.threadId,
+      resourceId: memoryIds.channel.resourceId,
     });
 
     // STAGE 2: Stylize response to match persona's voice
