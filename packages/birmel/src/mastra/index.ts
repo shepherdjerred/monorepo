@@ -37,15 +37,19 @@ export function getClassifierAgent() {
   return mastra.getAgent("classifier");
 }
 
-export function startMastraServer(): void {
+export async function startMastraServer(): Promise<void> {
   const config = getConfig();
-  if (config.mastra.studioEnabled) {
-    // Mastra Studio is started separately via `mastra dev` or `mastra start`
-    logger.info("Mastra Studio enabled", {
-      port: config.mastra.studioPort,
-      host: config.mastra.studioHost,
-    });
+  if (!config.mastra.studioEnabled) {
+    logger.info("Mastra Studio disabled");
+    return;
   }
+
+  // Import and start the server
+  const { createAndStartServer } = await import("./server.js");
+  await createAndStartServer(mastra, {
+    port: config.mastra.studioPort,
+    host: config.mastra.studioHost,
+  });
 }
 
 export {

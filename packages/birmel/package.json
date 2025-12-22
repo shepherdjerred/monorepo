@@ -23,6 +23,7 @@
     "@ai-sdk/openai": "^2.0.0",
     "@discordjs/voice": "^0.18.0",
     "@mastra/core": "1.0.0-beta.14",
+    "@mastra/hono": "0.0.2-beta.9",
     "@mastra/libsql": "1.0.0-beta.8",
     "@mastra/memory": "1.0.0-beta.6",
     "@prisma/client": "^6.0.0",
@@ -30,6 +31,7 @@
     "discord-player": "^6.7.1",
     "discord-player-youtubei": "^1.5.0",
     "discord.js": "^14.18.0",
+    "hono": "^4.11.1",
     "openai": "^4.77.0",
     "zod": "^3.24.0"
   },
