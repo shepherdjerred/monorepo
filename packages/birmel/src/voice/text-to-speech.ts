@@ -15,6 +15,13 @@ function getOpenAIClient(): OpenAI {
 export async function generateSpeech(text: string): Promise<Buffer> {
   const config = getConfig();
   const openai = getOpenAIClient();
+  const startTime = Date.now();
+
+  logger.debug("Starting TTS generation", {
+    textLength: text.length,
+    model: config.openai.ttsModel,
+    voice: config.openai.ttsVoice,
+  });
 
   try {
     const response = await openai.audio.speech.create({
@@ -28,14 +35,21 @@ export async function generateSpeech(text: string): Promise<Buffer> {
     const arrayBuffer = await response.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    logger.debug("Generated speech", {
+    const duration = Date.now() - startTime;
+    logger.info("TTS generation complete", {
       textLength: text.length,
       audioSize: buffer.length,
+      durationMs: duration,
     });
 
     return buffer;
   } catch (error) {
-    logger.error("Failed to generate speech", error);
+    const duration = Date.now() - startTime;
+    logger.error("Failed to generate speech", {
+      error,
+      textLength: text.length,
+      durationMs: duration,
+    });
     throw error;
   }
 }

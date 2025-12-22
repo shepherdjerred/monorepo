@@ -53,9 +53,22 @@ async function getGlobalMemoryContext(guildId: string): Promise<string | null> {
 }
 
 async function handleMessage(context: MessageContext): Promise<void> {
+  const startTime = Date.now();
+  const requestId = `msg-${context.message.id.slice(-8)}`;
+
+  logger.info("Handling message", {
+    requestId,
+    guildId: context.guildId,
+    channelId: context.channelId,
+    userId: context.userId,
+    username: context.username,
+    contentLength: context.content.length,
+  });
+
   const config = getConfig();
 
   // STAGE 1: Create agent with decision context (persona's similar messages)
+  logger.debug("Creating agent", { requestId, personaEnabled: config.persona.enabled });
   const agent = config.persona.enabled
     ? createBirmelAgentWithContext(context.content)
     : getBirmelAgent();
@@ -69,10 +82,15 @@ async function handleMessage(context: MessageContext): Promise<void> {
   const memoryIds = getMemoryIds(memoryCtx);
 
   // Fetch global memory (server rules) to inject into prompt
+  logger.debug("Fetching global memory", { requestId, guildId: context.guildId });
   const globalMemory = await getGlobalMemoryContext(context.guildId);
   const globalContext = globalMemory
     ? `\n## Server Rules & Memory\n${globalMemory}\n`
     : "";
+
+  if (globalMemory) {
+    logger.debug("Global memory found", { requestId, memoryLength: globalMemory.length });
+  }
 
   // Build prompt with context
   const prompt = `User ${context.username} (ID: ${context.userId}) in channel ${context.channelId} says:
@@ -86,6 +104,9 @@ ${globalContext}`;
   try {
     // Show typing indicator while generating response
     // Use CHANNEL thread so all users share conversation context
+    logger.debug("Generating response", { requestId, threadId: memoryIds.channel.threadId });
+    const genStartTime = Date.now();
+
     const response = await withTyping(context.message, async () => {
       return agent.generate(prompt, {
         threadId: memoryIds.channel.threadId,
@@ -93,19 +114,44 @@ ${globalContext}`;
       });
     });
 
+    const genDuration = Date.now() - genStartTime;
+    logger.debug("Response generated", {
+      requestId,
+      durationMs: genDuration,
+      responseLength: response.text.length,
+    });
+
     // STAGE 2: Stylize response to match persona's voice
     let finalResponse = response.text;
     if (config.persona.enabled) {
+      logger.debug("Stylizing response", { requestId, persona: config.persona.defaultPersona });
+      const styleStartTime = Date.now();
       finalResponse = await stylizeResponse(
         response.text,
         config.persona.defaultPersona,
       );
+      logger.debug("Response stylized", {
+        requestId,
+        durationMs: Date.now() - styleStartTime,
+      });
     }
 
     // Send response back to Discord
     await context.message.reply(finalResponse);
+
+    const totalDuration = Date.now() - startTime;
+    logger.info("Message handled successfully", {
+      requestId,
+      totalDurationMs: totalDuration,
+      generationDurationMs: genDuration,
+    });
   } catch (error) {
-    logger.error("Agent generation failed", error);
+    const totalDuration = Date.now() - startTime;
+    logger.error("Agent generation failed", {
+      error,
+      requestId,
+      totalDurationMs: totalDuration,
+    });
     await context.message.reply(
       "Sorry, I encountered an error processing your request."
     );
@@ -118,9 +164,22 @@ async function handleVoiceCommand(
   guildId: string,
   channelId: string,
 ): Promise<string> {
+  const startTime = Date.now();
+  const requestId = `voice-${Date.now().toString(36)}`;
+
+  logger.info("Handling voice command", {
+    requestId,
+    guildId,
+    channelId,
+    userId,
+    commandLength: command.length,
+    commandPreview: command.slice(0, 50),
+  });
+
   const config = getConfig();
 
   // STAGE 1: Create agent with decision context (persona's similar messages)
+  logger.debug("Creating agent for voice", { requestId, personaEnabled: config.persona.enabled });
   const agent = config.persona.enabled
     ? createBirmelAgentWithContext(command)
     : getBirmelAgent();
@@ -129,6 +188,7 @@ async function handleVoiceCommand(
   const memoryIds = getMemoryIds({ guildId, channelId, userId });
 
   // Fetch global memory (server rules) to inject into prompt
+  logger.debug("Fetching global memory for voice", { requestId, guildId });
   const globalMemory = await getGlobalMemoryContext(guildId);
   const globalContext = globalMemory
     ? `\n## Server Rules & Memory\n${globalMemory}\n`
@@ -145,23 +205,47 @@ ${globalContext}
 IMPORTANT: This is a voice command. Keep your response concise (under 200 words) as it will be spoken back via text-to-speech.`;
 
   try {
+    logger.debug("Generating voice response", { requestId, threadId: memoryIds.channel.threadId });
+    const genStartTime = Date.now();
+
     const response = await agent.generate(prompt, {
       threadId: memoryIds.channel.threadId,
       resourceId: memoryIds.channel.resourceId,
     });
 
+    const genDuration = Date.now() - genStartTime;
+    logger.debug("Voice response generated", {
+      requestId,
+      durationMs: genDuration,
+      responseLength: response.text.length,
+    });
+
     // STAGE 2: Stylize response to match persona's voice
     let finalResponse = response.text;
     if (config.persona.enabled) {
+      logger.debug("Stylizing voice response", { requestId, persona: config.persona.defaultPersona });
       finalResponse = await stylizeResponse(
         response.text,
         config.persona.defaultPersona,
       );
     }
 
+    const totalDuration = Date.now() - startTime;
+    logger.info("Voice command handled successfully", {
+      requestId,
+      totalDurationMs: totalDuration,
+      generationDurationMs: genDuration,
+      responseLength: finalResponse.length,
+    });
+
     return finalResponse;
   } catch (error) {
-    logger.error("Voice command agent generation failed", error);
+    const totalDuration = Date.now() - startTime;
+    logger.error("Voice command agent generation failed", {
+      error,
+      requestId,
+      totalDurationMs: totalDuration,
+    });
     return "Sorry, I encountered an error processing your voice command.";
   }
 }

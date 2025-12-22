@@ -1,8 +1,32 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
-import { ChannelType, type GuildChannelEditOptions } from "discord.js";
+import { ChannelType, PermissionFlagsBits, type GuildChannelEditOptions } from "discord.js";
 import { getDiscordClient } from "../../../discord/index.js";
 import { logger } from "../../../utils/logger.js";
+
+// Map from various permission name formats to Discord.js v14 PermissionFlagsBits keys
+const normalizePermissionName = (perm: string): string => {
+  // If it's already in the correct format (camelCase), return as-is
+  if (perm in PermissionFlagsBits) {
+    return perm;
+  }
+
+  // Convert SCREAMING_SNAKE_CASE to PascalCase (which discord.js uses)
+  // e.g., VIEW_CHANNEL -> ViewChannel, SEND_MESSAGES -> SendMessages
+  const pascalCase = perm
+    .toLowerCase()
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join("");
+
+  if (pascalCase in PermissionFlagsBits) {
+    return pascalCase;
+  }
+
+  // Return original if no mapping found - will cause an error but with better context
+  logger.warn(`Unknown permission name: ${perm}, tried: ${pascalCase}`);
+  return perm;
+};
 
 export const listChannelsTool = createTool({
   id: "list-channels",
@@ -340,11 +364,11 @@ export const setChannelPermissionsTool = createTool({
 
       await channel.permissionOverwrites.edit(input.targetId, {
         ...(input.allow?.reduce(
-          (acc: Record<string, boolean>, perm: string) => ({ ...acc, [perm]: true }),
+          (acc: Record<string, boolean>, perm: string) => ({ ...acc, [normalizePermissionName(perm)]: true }),
           {},
         ) ?? {}),
         ...(input.deny?.reduce(
-          (acc: Record<string, boolean>, perm: string) => ({ ...acc, [perm]: false }),
+          (acc: Record<string, boolean>, perm: string) => ({ ...acc, [normalizePermissionName(perm)]: false }),
           {},
         ) ?? {}),
       });

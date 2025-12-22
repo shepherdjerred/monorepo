@@ -2,7 +2,7 @@ import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 import { getDiscordClient } from "../../../discord/index.js";
 import { logger } from "../../../utils/logger.js";
-import type { TextChannel } from "discord.js";
+import type { TextChannel, User } from "discord.js";
 
 export const sendMessageTool = createTool({
   id: "send-message",
@@ -42,10 +42,61 @@ export const sendMessageTool = createTool({
         },
       };
     } catch (error) {
-      logger.error("Failed to send message", error);
+      logger.error("Failed to send message", { error, channelId: input.channelId });
       return {
         success: false,
         message: "Failed to send message",
+      };
+    }
+  },
+});
+
+export const sendDirectMessageTool = createTool({
+  id: "send-direct-message",
+  description: "Send a direct message (DM) to a Discord user. Use this to privately message a user.",
+  inputSchema: z.object({
+    userId: z.string().describe("The ID of the user to send the DM to"),
+    content: z.string().describe("The message content to send"),
+  }),
+  outputSchema: z.object({
+    success: z.boolean(),
+    message: z.string(),
+    data: z
+      .object({
+        messageId: z.string(),
+      })
+      .optional(),
+  }),
+  execute: async (input) => {
+    try {
+      const client = getDiscordClient();
+      logger.debug("Attempting to send DM", { userId: input.userId });
+
+      const user = await client.users.fetch(input.userId) as User;
+      if (!user) {
+        logger.warn("User not found for DM", { userId: input.userId });
+        return {
+          success: false,
+          message: "User not found",
+        };
+      }
+
+      const dmChannel = await user.createDM();
+      const sentMessage = await dmChannel.send(input.content);
+
+      logger.info("DM sent successfully", { userId: input.userId, messageId: sentMessage.id });
+      return {
+        success: true,
+        message: "Direct message sent successfully",
+        data: {
+          messageId: sentMessage.id,
+        },
+      };
+    } catch (error) {
+      logger.error("Failed to send direct message", { error, userId: input.userId });
+      return {
+        success: false,
+        message: "Failed to send direct message. The user may have DMs disabled or blocked the bot.",
       };
     }
   },
@@ -424,6 +475,7 @@ export const getChannelMessagesTool = createTool({
 
 export const messageTools = [
   sendMessageTool,
+  sendDirectMessageTool,
   deleteMessageTool,
   pinMessageTool,
   editMessageTool,

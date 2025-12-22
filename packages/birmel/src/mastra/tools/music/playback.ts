@@ -27,31 +27,53 @@ export const playMusicTool = createTool({
       .optional(),
   }),
   execute: async (input) => {
+    const startTime = Date.now();
+
+    logger.info("Play music request", {
+      guildId: input.guildId,
+      channelId: input.channelId,
+      voiceChannelId: input.voiceChannelId,
+      query: input.query.slice(0, 100),
+    });
+
     try {
       const client = getDiscordClient();
       const player = getMusicPlayer();
+
+      logger.debug("Fetching channels", {
+        channelId: input.channelId,
+        voiceChannelId: input.voiceChannelId,
+      });
 
       const channel = await client.channels.fetch(input.channelId);
       const voiceChannel = await client.channels.fetch(input.voiceChannelId);
 
       if (!voiceChannel?.isVoiceBased()) {
+        logger.warn("Invalid voice channel", { voiceChannelId: input.voiceChannelId });
         return {
           success: false,
           message: "Invalid voice channel",
         };
       }
 
+      logger.debug("Searching for track", { query: input.query });
       const searchResult = await player.search(input.query, {
         ...(client.user && { requestedBy: client.user }),
         searchEngine: QueryType.AUTO,
       });
 
       if (!searchResult.hasTracks()) {
+        logger.info("No tracks found", { query: input.query });
         return {
           success: false,
           message: "No results found for your query",
         };
       }
+
+      logger.debug("Playing track", {
+        trackCount: searchResult.tracks.length,
+        firstTrack: searchResult.tracks[0]?.title,
+      });
 
       const result = await player.play(voiceChannel as VoiceChannel, searchResult, {
         nodeOptions: {
@@ -64,6 +86,14 @@ export const playMusicTool = createTool({
       });
 
       const track = result.track;
+      const duration = Date.now() - startTime;
+
+      logger.info("Music playback started", {
+        guildId: input.guildId,
+        trackTitle: track.title,
+        trackUrl: track.url,
+        durationMs: duration,
+      });
 
       return {
         success: true,
@@ -75,7 +105,13 @@ export const playMusicTool = createTool({
         },
       };
     } catch (error) {
-      logger.error("Failed to play music", error);
+      const duration = Date.now() - startTime;
+      logger.error("Failed to play music", {
+        error,
+        guildId: input.guildId,
+        query: input.query,
+        durationMs: duration,
+      });
       return {
         success: false,
         message: "Failed to play music",
