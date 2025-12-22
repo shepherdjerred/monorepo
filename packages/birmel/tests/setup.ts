@@ -1,5 +1,63 @@
 import { beforeAll, afterAll, mock } from "bun:test";
 
+// Mock @prisma/client
+mock.module("@prisma/client", () => ({
+  PrismaClient: class MockPrismaClient {
+    $connect = async () => {};
+    $disconnect = async () => {};
+  },
+}));
+
+// Mock @mastra/libsql
+mock.module("@mastra/libsql", () => ({
+  // eslint-disable-next-line @typescript-eslint/no-extraneous-class
+  LibSQLStore: class MockLibSQLStore {},
+  // eslint-disable-next-line @typescript-eslint/no-extraneous-class
+  LibSQLVector: class MockLibSQLVector {},
+}));
+
+// Mock @mastra/memory
+mock.module("@mastra/memory", () => ({
+  // eslint-disable-next-line @typescript-eslint/no-extraneous-class
+  Memory: class MockMemory {},
+}));
+
+// Mock @mastra/core/agent
+mock.module("@mastra/core/agent", () => ({
+  Agent: class MockAgent {
+    name: string;
+    private _instructions: string;
+
+    constructor(config: { name: string; instructions: string; [key: string]: unknown }) {
+      this.name = config.name;
+      this._instructions = config.instructions;
+    }
+
+    getInstructions(): string {
+      return this._instructions;
+    }
+  },
+}));
+
+// Mock @mastra/core/tools
+mock.module("@mastra/core/tools", () => ({
+  createTool: (config: { id: string; description: string; [key: string]: unknown }) => ({
+    id: config.id,
+    description: config.description,
+    ...config,
+  }),
+}));
+
+// Mock @ai-sdk/openai
+const mockOpenai = (model: string) => ({ provider: "openai", model });
+// @ts-expect-error - Adding chat property
+mockOpenai.chat = (model: string) => ({ provider: "openai.chat", model });
+// @ts-expect-error - Adding responses property
+mockOpenai.responses = (model: string) => ({ provider: "openai.responses", model });
+mock.module("@ai-sdk/openai", () => ({
+  openai: mockOpenai,
+}));
+
 // Mock environment variables for testing
 beforeAll(() => {
   process.env["DISCORD_TOKEN"] = "test-discord-token";
