@@ -12,6 +12,10 @@ import {
   clearSentryContext,
   captureException,
 } from "../../observability/index.js";
+import {
+  extractImageAttachments,
+  type ImageAttachment,
+} from "../../utils/image.js";
 
 const logger = loggers.discord.child("message-create");
 
@@ -29,9 +33,12 @@ async function getParseClassificationResult() {
   return parserModule.parseClassificationResult;
 }
 
+export type { ImageAttachment };
+
 export type MessageContext = {
   message: Message;
   content: string;
+  attachments: ImageAttachment[];
   guildId: string;
   channelId: string;
   userId: string;
@@ -181,6 +188,7 @@ export function setupMessageCreateHandler(client: Client): void {
           await messageHandler({
             message,
             content: message.content,
+            attachments: extractImageAttachments(message),
             guildId: message.guild!.id,
             channelId: message.channel.id,
             userId: message.author.id,
