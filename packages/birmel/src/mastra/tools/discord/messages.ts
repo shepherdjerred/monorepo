@@ -3,7 +3,7 @@ import { z } from "zod";
 import { getDiscordClient } from "../../../discord/index.js";
 import { loggers } from "../../../utils/logger.js";
 import { withToolSpan, captureException } from "../../../observability/index.js";
-import type { TextChannel, User } from "discord.js";
+import type { TextChannel } from "discord.js";
 
 const logger = loggers.tools.child("discord.messages");
 
@@ -84,14 +84,7 @@ export const sendDirectMessageTool = createTool({
       try {
         const client = getDiscordClient();
 
-        const user = await client.users.fetch(input.userId) as User;
-        if (!user) {
-          logger.warn("User not found for DM", { userId: input.userId });
-          return {
-            success: false,
-            message: "User not found",
-          };
-        }
+        const user = await client.users.fetch(input.userId);
 
         const dmChannel = await user.createDM();
         const sentMessage = await dmChannel.send(input.content);

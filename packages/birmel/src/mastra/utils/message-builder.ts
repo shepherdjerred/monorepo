@@ -12,7 +12,7 @@ export type ImagePart = {
   image: Buffer;
 };
 
-export type MessageContent = string | Array<TextPart | ImagePart>;
+export type MessageContent = string | (TextPart | ImagePart)[];
 
 /**
  * Build message content for the agent, including images if present
@@ -26,7 +26,7 @@ export async function buildMessageContent(
     return prompt;
   }
 
-  const content: Array<TextPart | ImagePart> = [
+  const content: (TextPart | ImagePart)[] = [
     { type: "text", text: prompt },
   ];
 

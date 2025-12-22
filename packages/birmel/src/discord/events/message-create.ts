@@ -154,8 +154,12 @@ export function setupMessageCreateHandler(client: Client): void {
         return;
       }
 
+      // Store non-null values for use in async callbacks
+      const clientUserId = client.user.id;
+      const guildId = message.guild.id;
+
       const discordContext = {
-        guildId: message.guild.id,
+        guildId,
         channelId: message.channel.id,
         userId: message.author.id,
         username: message.author.username,
@@ -166,7 +170,7 @@ export function setupMessageCreateHandler(client: Client): void {
         setSentryContext(discordContext);
 
         try {
-          const respond = await shouldRespond(message, client.user!.id);
+          const respond = await shouldRespond(message, clientUserId);
           span.setAttribute("should_respond", respond);
 
           if (!respond) {
@@ -174,7 +178,7 @@ export function setupMessageCreateHandler(client: Client): void {
           }
 
           logger.debug("Processing message", {
-            guildId: message.guild!.id,
+            guildId,
             channelId: message.channel.id,
             userId: message.author.id,
             content: message.content.slice(0, 100),
@@ -189,7 +193,7 @@ export function setupMessageCreateHandler(client: Client): void {
             message,
             content: message.content,
             attachments: extractImageAttachments(message),
-            guildId: message.guild!.id,
+            guildId,
             channelId: message.channel.id,
             userId: message.author.id,
             username: message.author.username,

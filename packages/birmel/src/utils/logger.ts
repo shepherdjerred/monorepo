@@ -19,7 +19,7 @@ function getLogLevel(): number {
   }
 }
 
-interface LogEntry {
+type LogEntry = {
   timestamp: string;
   level: LogLevel;
   message: string;
@@ -27,7 +27,7 @@ interface LogEntry {
   spanId?: string;
   module?: string;
   [key: string]: unknown;
-}
+};
 
 function formatLogEntry(
   level: LogLevel,
@@ -49,7 +49,7 @@ function formatLogEntry(
   return JSON.stringify(entry);
 }
 
-export interface Logger {
+export type Logger = {
   debug(message: string, meta?: Record<string, unknown>): void;
   info(message: string, meta?: Record<string, unknown>): void;
   warn(message: string, meta?: Record<string, unknown>): void;

@@ -44,13 +44,13 @@ export function isSentryEnabled(): boolean {
   return sentryInitialized;
 }
 
-export interface DiscordContext {
+export type DiscordContext = {
   guildId?: string;
   channelId?: string;
   userId?: string;
   username?: string;
   messageId?: string;
-}
+};
 
 export function setSentryContext(context: DiscordContext): void {
   if (!sentryInitialized) return;
@@ -76,13 +76,13 @@ export function clearSentryContext(): void {
  * Wrap an async function to capture exceptions to Sentry.
  * Similar pattern to Scout for LoL's logErrors wrapper.
  */
-export function logErrors<T extends (...args: never[]) => Promise<unknown>>(
+export function logErrors<T extends (...args: never[]) => Promise<R>, R = unknown>(
   fn: T,
   operationName?: string,
 ): T {
-  return (async (...args: Parameters<T>): Promise<ReturnType<T>> => {
+  return (async (...args: Parameters<T>): Promise<R> => {
     try {
-      return (await fn(...args)) as ReturnType<T>;
+      return await fn(...args);
     } catch (error) {
       if (sentryInitialized && error instanceof Error) {
         Sentry.captureException(error, {
