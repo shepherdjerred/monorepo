@@ -15,7 +15,10 @@
     "build": "true",
     "test": "bun test",
     "typecheck": "prisma generate && tsc --noEmit",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "studio:dev": "mastra dev -d src/mastra",
+    "studio:build": "mastra build -d src/mastra",
+    "studio:start": "mastra start"
   },
   "dependencies": {
     "@ai-sdk/openai": "^2.0.0",
@@ -35,6 +38,7 @@
     "@eslint/js": "^9.30.0",
     "@types/bun": "^1.2.0",
     "eslint": "^9.30.0",
+    "mastra": "1.0.0-beta.11",
     "prisma": "^6.0.0",
     "typescript": "^5.9.0",
     "typescript-eslint": "^8.35.0"

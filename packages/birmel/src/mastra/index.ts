@@ -4,36 +4,43 @@ import { createClassifierAgent } from "./agents/classifier-agent.js";
 import { getConfig } from "../config/index.js";
 import { logger } from "../utils/logger.js";
 
-let mastraInstance: Mastra | null = null;
+// Create agents at module load time
+const birmelAgent = createBirmelAgent();
+const classifierAgent = createClassifierAgent();
 
+/**
+ * The main Mastra instance for Birmel.
+ * Exported as `mastra` for Mastra CLI compatibility.
+ */
+export const mastra = new Mastra({
+  agents: {
+    birmel: birmelAgent,
+    classifier: classifierAgent,
+  },
+  server: {
+    port: getConfig().mastra.studioPort,
+  },
+});
+
+/**
+ * @deprecated Use `mastra` directly instead
+ */
 export function getMastra(): Mastra {
-  if (!mastraInstance) {
-    const birmelAgent = createBirmelAgent();
-    const classifierAgent = createClassifierAgent();
-
-    mastraInstance = new Mastra({
-      agents: {
-        birmel: birmelAgent,
-        classifier: classifierAgent,
-      },
-    });
-  }
-  return mastraInstance;
+  return mastra;
 }
 
 export function getBirmelAgent() {
-  return getMastra().getAgent("birmel");
+  return mastra.getAgent("birmel");
 }
 
 export function getClassifierAgent() {
-  return getMastra().getAgent("classifier");
+  return mastra.getAgent("classifier");
 }
 
 export function startMastraServer(): void {
   const config = getConfig();
   if (config.mastra.studioEnabled) {
-    // Mastra Studio is started separately via `mastra dev` command
-    // For production, we just log that it would be enabled
+    // Mastra Studio is started separately via `mastra dev` or `mastra start`
     logger.info("Mastra Studio enabled", {
       port: config.mastra.studioPort,
       host: config.mastra.studioHost,
