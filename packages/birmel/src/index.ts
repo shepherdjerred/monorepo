@@ -93,7 +93,16 @@ async function handleMessage(context: MessageContext): Promise<void> {
   }
 
   // Build prompt with context
-  const prompt = `User ${context.username} (ID: ${context.userId}) in channel ${context.channelId} says:
+  const replyContext = context.referencedMessage
+    ? `\n## Replying To
+User ${context.referencedMessage.authorUsername} (ID: ${context.referencedMessage.authorId}) said:
+${context.referencedMessage.content}
+
+---
+`
+    : "";
+
+  const prompt = `${replyContext}User ${context.username} (ID: ${context.userId}) in channel ${context.channelId} says:
 
 ${context.content}
 
