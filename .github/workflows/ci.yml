@@ -78,22 +78,20 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          dagger call ci --source=. --github-token=env:GITHUB_TOKEN --npm-token=env:NPM_TOKEN
+          ARGS=(
+            --source=.
+            --github-token=env:GITHUB_TOKEN
+            --npm-token=env:NPM_TOKEN
+          )
 
-      - name: Get Birmel version
-        id: birmel-version
-        run: |
-          VERSION=$(jq -r .version packages/birmel/package.json)
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]]; then
+            BIRMEL_VERSION=$(jq -r .version packages/birmel/package.json)
+            ARGS+=(
+              --birmel-version="$BIRMEL_VERSION"
+              --birmel-git-sha="${{ github.sha }}"
+              --birmel-registry-username="${{ github.actor }}"
+              --birmel-registry-password=env:GITHUB_TOKEN
+            )
+          fi
 
-      - name: Publish Birmel image
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          dagger call birmel-release \
-            --source=. \
-            --version=${{ steps.birmel-version.outputs.version }} \
-            --git-sha=${{ github.sha }} \
-            --registry-username=${{ github.actor }} \
-            --registry-password=env:GITHUB_TOKEN
+          dagger call ci "${ARGS[@]}"
