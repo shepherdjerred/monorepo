@@ -59,17 +59,13 @@ export function createBirmelAgentWithContext(userQuery: string): Agent {
   return new Agent({
     id: "birmel-with-context",
     name: "Birmel",
-    instructions: {
-      role: "system",
-      content: enhancedPrompt,
-      providerOptions: {
-        openai: {
-          store: false,
-          include: ["reasoning.encrypted_content"],
-        },
-      },
-    },
-    model: openai(config.openai.model),
+    instructions: enhancedPrompt,
+    // Use openai.chat() to force Chat Completions API instead of Responses API.
+    // The default openai() uses Responses API which has a bug with reasoning
+    // items in conversation history causing:
+    // "Item of type 'reasoning' was provided without its required following item"
+    // See: https://github.com/vercel/ai/issues/7099
+    model: openai.chat(config.openai.model),
     tools: allTools,
     memory: createMemory(),
   });
