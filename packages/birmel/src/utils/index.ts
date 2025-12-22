@@ -1,4 +1,4 @@
-export { logger } from "./logger.js";
+export { logger, loggers } from "./logger.js";
 export {
   checkRateLimit,
   getRateLimitRemaining,

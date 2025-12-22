@@ -1,6 +1,8 @@
 import { getConfig } from "../config/index.js";
-import { logger } from "../utils/index.js";
+import { loggers } from "../utils/index.js";
 import { checkAndSendDailyPosts, configureDailyPost, disableDailyPost } from "./daily-posts.js";
+
+const logger = loggers.scheduler;
 import { runServerSummaryJob } from "./jobs/server-summary.js";
 import {
   runAnnouncementsJob,

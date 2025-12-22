@@ -1,5 +1,7 @@
 import type { Client, Guild } from "discord.js";
-import { logger } from "../../utils/logger.js";
+import { loggers } from "../../utils/logger.js";
+
+const logger = loggers.discord.child("guild-delete");
 
 export function setupGuildDeleteHandler(client: Client): void {
   client.on("guildDelete", (guild: Guild) => {

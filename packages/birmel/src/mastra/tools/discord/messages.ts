@@ -1,8 +1,11 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 import { getDiscordClient } from "../../../discord/index.js";
-import { logger } from "../../../utils/logger.js";
-import type { TextChannel } from "discord.js";
+import { loggers } from "../../../utils/logger.js";
+import { withToolSpan, captureException } from "../../../observability/index.js";
+import type { TextChannel, User } from "discord.js";
+
+const logger = loggers.tools.child("discord.messages");
 
 export const sendMessageTool = createTool({
   id: "send-message",
@@ -21,33 +24,41 @@ export const sendMessageTool = createTool({
       .optional(),
   }),
   execute: async (input) => {
-    try {
-      const client = getDiscordClient();
-      const channel = await client.channels.fetch(input.channelId);
+    return withToolSpan("send-message", undefined, async () => {
+      logger.debug("Sending message", { channelId: input.channelId, contentLength: input.content.length });
+      try {
+        const client = getDiscordClient();
+        const channel = await client.channels.fetch(input.channelId);
 
-      if (!channel?.isTextBased()) {
+        if (!channel?.isTextBased()) {
+          return {
+            success: false,
+            message: "Channel is not a text channel",
+          };
+        }
+
+        const sentMessage = await (channel as TextChannel).send(input.content);
+
+        logger.info("Message sent successfully", { channelId: input.channelId, messageId: sentMessage.id });
+        return {
+          success: true,
+          message: "Message sent successfully",
+          data: {
+            messageId: sentMessage.id,
+          },
+        };
+      } catch (error) {
+        logger.error("Failed to send message", error, { channelId: input.channelId });
+        captureException(error as Error, {
+          operation: "tool.send-message",
+          discord: { channelId: input.channelId },
+        });
         return {
           success: false,
-          message: "Channel is not a text channel",
+          message: "Failed to send message",
         };
       }
-
-      const sentMessage = await (channel as TextChannel).send(input.content);
-
-      return {
-        success: true,
-        message: "Message sent successfully",
-        data: {
-          messageId: sentMessage.id,
-        },
-      };
-    } catch (error) {
-      logger.error("Failed to send message", { error, channelId: input.channelId });
-      return {
-        success: false,
-        message: "Failed to send message",
-      };
-    }
+    });
   },
 });
 
@@ -68,29 +79,43 @@ export const sendDirectMessageTool = createTool({
       .optional(),
   }),
   execute: async (input) => {
-    try {
-      const client = getDiscordClient();
-      logger.debug("Attempting to send DM", { userId: input.userId });
+    return withToolSpan("send-direct-message", undefined, async () => {
+      logger.debug("Attempting to send DM", { userId: input.userId, contentLength: input.content.length });
+      try {
+        const client = getDiscordClient();
 
-      const user = await client.users.fetch(input.userId);
-      const dmChannel = await user.createDM();
-      const sentMessage = await dmChannel.send(input.content);
+        const user = await client.users.fetch(input.userId) as User;
+        if (!user) {
+          logger.warn("User not found for DM", { userId: input.userId });
+          return {
+            success: false,
+            message: "User not found",
+          };
+        }
 
-      logger.info("DM sent successfully", { userId: input.userId, messageId: sentMessage.id });
-      return {
-        success: true,
-        message: "Direct message sent successfully",
-        data: {
-          messageId: sentMessage.id,
-        },
-      };
-    } catch (error) {
-      logger.error("Failed to send direct message", { error, userId: input.userId });
-      return {
-        success: false,
-        message: "Failed to send direct message. The user may have DMs disabled or blocked the bot.",
-      };
-    }
+        const dmChannel = await user.createDM();
+        const sentMessage = await dmChannel.send(input.content);
+
+        logger.info("DM sent successfully", { userId: input.userId, messageId: sentMessage.id });
+        return {
+          success: true,
+          message: "Direct message sent successfully",
+          data: {
+            messageId: sentMessage.id,
+          },
+        };
+      } catch (error) {
+        logger.error("Failed to send direct message", error, { userId: input.userId });
+        captureException(error as Error, {
+          operation: "tool.send-direct-message",
+          discord: { userId: input.userId },
+        });
+        return {
+          success: false,
+          message: "Failed to send direct message. The user may have DMs disabled or blocked the bot.",
+        };
+      }
+    });
   },
 });
 
@@ -106,33 +131,41 @@ export const deleteMessageTool = createTool({
     message: z.string(),
   }),
   execute: async (input) => {
-    try {
-      const client = getDiscordClient();
-      const channel = await client.channels.fetch(input.channelId);
+    return withToolSpan("delete-message", undefined, async () => {
+      logger.debug("Deleting message", { channelId: input.channelId, messageId: input.messageId });
+      try {
+        const client = getDiscordClient();
+        const channel = await client.channels.fetch(input.channelId);
 
-      if (!channel?.isTextBased()) {
+        if (!channel?.isTextBased()) {
+          return {
+            success: false,
+            message: "Channel is not a text channel",
+          };
+        }
+
+        const message = await (channel as TextChannel).messages.fetch(
+          input.messageId,
+        );
+        await message.delete();
+
+        logger.info("Message deleted successfully", { channelId: input.channelId, messageId: input.messageId });
+        return {
+          success: true,
+          message: "Message deleted successfully",
+        };
+      } catch (error) {
+        logger.error("Failed to delete message", error, { channelId: input.channelId, messageId: input.messageId });
+        captureException(error as Error, {
+          operation: "tool.delete-message",
+          discord: { channelId: input.channelId },
+        });
         return {
           success: false,
-          message: "Channel is not a text channel",
+          message: "Failed to delete message",
         };
       }
-
-      const message = await (channel as TextChannel).messages.fetch(
-        input.messageId,
-      );
-      await message.delete();
-
-      return {
-        success: true,
-        message: "Message deleted successfully",
-      };
-    } catch (error) {
-      logger.error("Failed to delete message", error);
-      return {
-        success: false,
-        message: "Failed to delete message",
-      };
-    }
+    });
   },
 });
 
@@ -148,33 +181,41 @@ export const pinMessageTool = createTool({
     message: z.string(),
   }),
   execute: async (input) => {
-    try {
-      const client = getDiscordClient();
-      const channel = await client.channels.fetch(input.channelId);
+    return withToolSpan("pin-message", undefined, async () => {
+      logger.debug("Pinning message", { channelId: input.channelId, messageId: input.messageId });
+      try {
+        const client = getDiscordClient();
+        const channel = await client.channels.fetch(input.channelId);
 
-      if (!channel?.isTextBased()) {
+        if (!channel?.isTextBased()) {
+          return {
+            success: false,
+            message: "Channel is not a text channel",
+          };
+        }
+
+        const message = await (channel as TextChannel).messages.fetch(
+          input.messageId,
+        );
+        await message.pin();
+
+        logger.info("Message pinned successfully", { channelId: input.channelId, messageId: input.messageId });
+        return {
+          success: true,
+          message: "Message pinned successfully",
+        };
+      } catch (error) {
+        logger.error("Failed to pin message", error, { channelId: input.channelId, messageId: input.messageId });
+        captureException(error as Error, {
+          operation: "tool.pin-message",
+          discord: { channelId: input.channelId },
+        });
         return {
           success: false,
-          message: "Channel is not a text channel",
+          message: "Failed to pin message",
         };
       }
-
-      const message = await (channel as TextChannel).messages.fetch(
-        input.messageId,
-      );
-      await message.pin();
-
-      return {
-        success: true,
-        message: "Message pinned successfully",
-      };
-    } catch (error) {
-      logger.error("Failed to pin message", error);
-      return {
-        success: false,
-        message: "Failed to pin message",
-      };
-    }
+    });
   },
 });
 
@@ -191,31 +232,39 @@ export const editMessageTool = createTool({
     message: z.string(),
   }),
   execute: async (input) => {
-    try {
-      const client = getDiscordClient();
-      const channel = await client.channels.fetch(input.channelId);
+    return withToolSpan("edit-message", undefined, async () => {
+      logger.debug("Editing message", { channelId: input.channelId, messageId: input.messageId });
+      try {
+        const client = getDiscordClient();
+        const channel = await client.channels.fetch(input.channelId);
 
-      if (!channel?.isTextBased()) {
+        if (!channel?.isTextBased()) {
+          return {
+            success: false,
+            message: "Channel is not a text channel",
+          };
+        }
+
+        const message = await (channel as TextChannel).messages.fetch(input.messageId);
+        await message.edit(input.content);
+
+        logger.info("Message edited successfully", { channelId: input.channelId, messageId: input.messageId });
+        return {
+          success: true,
+          message: "Message edited successfully",
+        };
+      } catch (error) {
+        logger.error("Failed to edit message", error, { channelId: input.channelId, messageId: input.messageId });
+        captureException(error as Error, {
+          operation: "tool.edit-message",
+          discord: { channelId: input.channelId },
+        });
         return {
           success: false,
-          message: "Channel is not a text channel",
+          message: "Failed to edit message",
         };
       }
-
-      const message = await (channel as TextChannel).messages.fetch(input.messageId);
-      await message.edit(input.content);
-
-      return {
-        success: true,
-        message: "Message edited successfully",
-      };
-    } catch (error) {
-      logger.error("Failed to edit message", error);
-      return {
-        success: false,
-        message: "Failed to edit message",
-      };
-    }
+    });
   },
 });
 
@@ -231,30 +280,38 @@ export const bulkDeleteMessagesTool = createTool({
     message: z.string(),
   }),
   execute: async (input) => {
-    try {
-      const client = getDiscordClient();
-      const channel = await client.channels.fetch(input.channelId);
+    return withToolSpan("bulk-delete-messages", undefined, async () => {
+      logger.debug("Bulk deleting messages", { channelId: input.channelId, messageCount: input.messageIds.length });
+      try {
+        const client = getDiscordClient();
+        const channel = await client.channels.fetch(input.channelId);
 
-      if (!channel?.isTextBased()) {
+        if (!channel?.isTextBased()) {
+          return {
+            success: false,
+            message: "Channel is not a text channel",
+          };
+        }
+
+        await (channel as TextChannel).bulkDelete(input.messageIds);
+
+        logger.info("Bulk deleted messages successfully", { channelId: input.channelId, messageCount: input.messageIds.length });
+        return {
+          success: true,
+          message: `Deleted ${String(input.messageIds.length)} messages`,
+        };
+      } catch (error) {
+        logger.error("Failed to bulk delete messages", error, { channelId: input.channelId, messageCount: input.messageIds.length });
+        captureException(error as Error, {
+          operation: "tool.bulk-delete-messages",
+          discord: { channelId: input.channelId },
+        });
         return {
           success: false,
-          message: "Channel is not a text channel",
+          message: "Failed to bulk delete messages",
         };
       }
-
-      await (channel as TextChannel).bulkDelete(input.messageIds);
-
-      return {
-        success: true,
-        message: `Deleted ${String(input.messageIds.length)} messages`,
-      };
-    } catch (error) {
-      logger.error("Failed to bulk delete messages", error);
-      return {
-        success: false,
-        message: "Failed to bulk delete messages",
-      };
-    }
+    });
   },
 });
 
@@ -270,31 +327,39 @@ export const unpinMessageTool = createTool({
     message: z.string(),
   }),
   execute: async (input) => {
-    try {
-      const client = getDiscordClient();
-      const channel = await client.channels.fetch(input.channelId);
+    return withToolSpan("unpin-message", undefined, async () => {
+      logger.debug("Unpinning message", { channelId: input.channelId, messageId: input.messageId });
+      try {
+        const client = getDiscordClient();
+        const channel = await client.channels.fetch(input.channelId);
 
-      if (!channel?.isTextBased()) {
+        if (!channel?.isTextBased()) {
+          return {
+            success: false,
+            message: "Channel is not a text channel",
+          };
+        }
+
+        const message = await (channel as TextChannel).messages.fetch(input.messageId);
+        await message.unpin();
+
+        logger.info("Message unpinned successfully", { channelId: input.channelId, messageId: input.messageId });
+        return {
+          success: true,
+          message: "Message unpinned successfully",
+        };
+      } catch (error) {
+        logger.error("Failed to unpin message", error, { channelId: input.channelId, messageId: input.messageId });
+        captureException(error as Error, {
+          operation: "tool.unpin-message",
+          discord: { channelId: input.channelId },
+        });
         return {
           success: false,
-          message: "Channel is not a text channel",
+          message: "Failed to unpin message",
         };
       }
-
-      const message = await (channel as TextChannel).messages.fetch(input.messageId);
-      await message.unpin();
-
-      return {
-        success: true,
-        message: "Message unpinned successfully",
-      };
-    } catch (error) {
-      logger.error("Failed to unpin message", error);
-      return {
-        success: false,
-        message: "Failed to unpin message",
-      };
-    }
+    });
   },
 });
 
@@ -311,31 +376,39 @@ export const addReactionTool = createTool({
     message: z.string(),
   }),
   execute: async (input) => {
-    try {
-      const client = getDiscordClient();
-      const channel = await client.channels.fetch(input.channelId);
+    return withToolSpan("add-reaction", undefined, async () => {
+      logger.debug("Adding reaction", { channelId: input.channelId, messageId: input.messageId, emoji: input.emoji });
+      try {
+        const client = getDiscordClient();
+        const channel = await client.channels.fetch(input.channelId);
 
-      if (!channel?.isTextBased()) {
+        if (!channel?.isTextBased()) {
+          return {
+            success: false,
+            message: "Channel is not a text channel",
+          };
+        }
+
+        const message = await (channel as TextChannel).messages.fetch(input.messageId);
+        await message.react(input.emoji);
+
+        logger.info("Reaction added successfully", { channelId: input.channelId, messageId: input.messageId, emoji: input.emoji });
+        return {
+          success: true,
+          message: "Reaction added successfully",
+        };
+      } catch (error) {
+        logger.error("Failed to add reaction", error, { channelId: input.channelId, messageId: input.messageId });
+        captureException(error as Error, {
+          operation: "tool.add-reaction",
+          discord: { channelId: input.channelId },
+        });
         return {
           success: false,
-          message: "Channel is not a text channel",
+          message: "Failed to add reaction",
         };
       }
-
-      const message = await (channel as TextChannel).messages.fetch(input.messageId);
-      await message.react(input.emoji);
-
-      return {
-        success: true,
-        message: "Reaction added successfully",
-      };
-    } catch (error) {
-      logger.error("Failed to add reaction", error);
-      return {
-        success: false,
-        message: "Failed to add reaction",
-      };
-    }
+    });
   },
 });
 
@@ -353,44 +426,52 @@ export const removeReactionTool = createTool({
     message: z.string(),
   }),
   execute: async (input) => {
-    try {
-      const client = getDiscordClient();
-      const channel = await client.channels.fetch(input.channelId);
+    return withToolSpan("remove-reaction", undefined, async () => {
+      logger.debug("Removing reaction", { channelId: input.channelId, messageId: input.messageId, emoji: input.emoji });
+      try {
+        const client = getDiscordClient();
+        const channel = await client.channels.fetch(input.channelId);
 
-      if (!channel?.isTextBased()) {
+        if (!channel?.isTextBased()) {
+          return {
+            success: false,
+            message: "Channel is not a text channel",
+          };
+        }
+
+        const message = await (channel as TextChannel).messages.fetch(input.messageId);
+        const reaction = message.reactions.cache.get(input.emoji);
+
+        if (!reaction) {
+          return {
+            success: false,
+            message: "Reaction not found",
+          };
+        }
+
+        if (input.userId) {
+          await reaction.users.remove(input.userId);
+        } else {
+          await reaction.users.remove();
+        }
+
+        logger.info("Reaction removed successfully", { channelId: input.channelId, messageId: input.messageId, emoji: input.emoji });
+        return {
+          success: true,
+          message: "Reaction removed successfully",
+        };
+      } catch (error) {
+        logger.error("Failed to remove reaction", error, { channelId: input.channelId, messageId: input.messageId });
+        captureException(error as Error, {
+          operation: "tool.remove-reaction",
+          discord: { channelId: input.channelId },
+        });
         return {
           success: false,
-          message: "Channel is not a text channel",
+          message: "Failed to remove reaction",
         };
       }
-
-      const message = await (channel as TextChannel).messages.fetch(input.messageId);
-      const reaction = message.reactions.cache.get(input.emoji);
-
-      if (!reaction) {
-        return {
-          success: false,
-          message: "Reaction not found",
-        };
-      }
-
-      if (input.userId) {
-        await reaction.users.remove(input.userId);
-      } else {
-        await reaction.users.remove();
-      }
-
-      return {
-        success: true,
-        message: "Reaction removed successfully",
-      };
-    } catch (error) {
-      logger.error("Failed to remove reaction", error);
-      return {
-        success: false,
-        message: "Failed to remove reaction",
-      };
-    }
+    });
   },
 });
 
@@ -421,47 +502,55 @@ export const getChannelMessagesTool = createTool({
       .optional(),
   }),
   execute: async (input) => {
-    try {
-      const client = getDiscordClient();
-      const channel = await client.channels.fetch(input.channelId);
+    return withToolSpan("get-channel-messages", undefined, async () => {
+      logger.debug("Fetching channel messages", { channelId: input.channelId, limit: input.limit ?? 20 });
+      try {
+        const client = getDiscordClient();
+        const channel = await client.channels.fetch(input.channelId);
 
-      if (!channel?.isTextBased()) {
+        if (!channel?.isTextBased()) {
+          return {
+            success: false,
+            message: "Channel is not a text channel",
+          };
+        }
+
+        const messages = await (channel as TextChannel).messages.fetch({
+          limit: input.limit ?? 20,
+          ...(input.before && { before: input.before }),
+        });
+
+        const formattedMessages = messages
+          .map((msg) => ({
+            id: msg.id,
+            authorId: msg.author.id,
+            authorName: msg.author.displayName || msg.author.username,
+            isBot: msg.author.bot,
+            content: msg.content,
+            createdAt: msg.createdAt.toISOString(),
+          }))
+          .reverse(); // Chronological order
+
+        logger.info("Fetched channel messages", { channelId: input.channelId, messageCount: formattedMessages.length });
+        return {
+          success: true,
+          message: `Fetched ${String(formattedMessages.length)} messages`,
+          data: {
+            messages: formattedMessages,
+          },
+        };
+      } catch (error) {
+        logger.error("Failed to fetch messages", error, { channelId: input.channelId });
+        captureException(error as Error, {
+          operation: "tool.get-channel-messages",
+          discord: { channelId: input.channelId },
+        });
         return {
           success: false,
-          message: "Channel is not a text channel",
+          message: "Failed to fetch messages",
         };
       }
-
-      const messages = await (channel as TextChannel).messages.fetch({
-        limit: input.limit ?? 20,
-        ...(input.before && { before: input.before }),
-      });
-
-      const formattedMessages = messages
-        .map((msg) => ({
-          id: msg.id,
-          authorId: msg.author.id,
-          authorName: msg.author.displayName || msg.author.username,
-          isBot: msg.author.bot,
-          content: msg.content,
-          createdAt: msg.createdAt.toISOString(),
-        }))
-        .reverse(); // Chronological order
-
-      return {
-        success: true,
-        message: `Fetched ${String(formattedMessages.length)} messages`,
-        data: {
-          messages: formattedMessages,
-        },
-      };
-    } catch (error) {
-      logger.error("Failed to fetch messages", error);
-      return {
-        success: false,
-        message: "Failed to fetch messages",
-      };
-    }
+    });
   },
 });
 

@@ -1,6 +1,8 @@
 import type { Client } from "discord.js";
-import { logger } from "../../utils/logger.js";
+import { loggers } from "../../utils/logger.js";
 import { BOT_NAME } from "../../config/constants.js";
+
+const logger = loggers.discord.child("ready");
 
 export function setupReadyHandler(client: Client): void {
   // Use string "ready" - the deprecation warning is acceptable

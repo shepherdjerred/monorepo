@@ -2,7 +2,10 @@ import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 import { ChannelType, PermissionFlagsBits, type GuildChannelEditOptions } from "discord.js";
 import { getDiscordClient } from "../../../discord/index.js";
-import { logger } from "../../../utils/logger.js";
+import { loggers } from "../../../utils/logger.js";
+import { withToolSpan, captureException } from "../../../observability/index.js";
+
+const logger = loggers.tools.child("discord.channels");
 
 // Map from various permission name formats to Discord.js v14 PermissionFlagsBits keys
 const normalizePermissionName = (perm: string): string => {
@@ -49,30 +52,42 @@ export const listChannelsTool = createTool({
       .optional(),
   }),
   execute: async (input) => {
-    try {
-      const client = getDiscordClient();
-      const guild = await client.guilds.fetch(input.guildId);
-      const channels = await guild.channels.fetch();
+    return withToolSpan("list-channels", input.guildId, async () => {
+      logger.debug("Listing channels", { guildId: input.guildId });
+      try {
+        const client = getDiscordClient();
+        const guild = await client.guilds.fetch(input.guildId);
+        const channels = await guild.channels.fetch();
 
-      const channelList = channels.map((channel) => ({
-        id: channel?.id ?? "",
-        name: channel?.name ?? "",
-        type: channel?.type !== undefined ? ChannelType[channel.type] : "Unknown",
-        parentId: channel?.parentId ?? null,
-      }));
+        const channelList = channels.map((channel) => ({
+          id: channel?.id ?? "",
+          name: channel?.name ?? "",
+          type: channel?.type !== undefined ? ChannelType[channel.type] : "Unknown",
+          parentId: channel?.parentId ?? null,
+        }));
 
-      return {
-        success: true,
-        message: `Found ${String(channelList.length)} channels`,
-        data: channelList,
-      };
-    } catch (error) {
-      logger.error("Failed to list channels", error);
-      return {
-        success: false,
-        message: "Failed to list channels",
-      };
-    }
+        logger.info("Listed channels successfully", {
+          guildId: input.guildId,
+          channelCount: channelList.length,
+        });
+
+        return {
+          success: true,
+          message: `Found ${String(channelList.length)} channels`,
+          data: channelList,
+        };
+      } catch (error) {
+        logger.error("Failed to list channels", error, { guildId: input.guildId });
+        captureException(error as Error, {
+          operation: "tool.list-channels",
+          discord: { guildId: input.guildId },
+        });
+        return {
+          success: false,
+          message: "Failed to list channels",
+        };
+      }
+    });
   },
 });
 

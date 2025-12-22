@@ -68,6 +68,14 @@ function loadConfigFromEnv(): Config {
     logging: {
       level: process.env["LOG_LEVEL"] ?? "info",
     },
+    sentry: {
+      enabled: parseBoolean(process.env["SENTRY_ENABLED"], false),
+      dsn: process.env["SENTRY_DSN"],
+      environment: process.env["SENTRY_ENVIRONMENT"] ?? "development",
+      release: process.env["SENTRY_RELEASE"] ?? process.env["GIT_SHA"],
+      sampleRate: parseNumber(process.env["SENTRY_SAMPLE_RATE"], 1.0),
+      tracesSampleRate: parseNumber(process.env["SENTRY_TRACES_SAMPLE_RATE"], 0.1),
+    },
     persona: {
       enabled: parseBoolean(process.env["PERSONA_ENABLED"], true),
       defaultPersona: process.env["PERSONA_DEFAULT"] ?? "virmel",

@@ -1,10 +1,12 @@
 import type { Client, VoiceState } from "discord.js";
-import { logger } from "../../utils/logger.js";
+import { loggers } from "../../utils/logger.js";
 import {
   startVoiceReceiver,
   stopVoiceReceiver,
 } from "../../voice/index.js";
 import { getConfig } from "../../config/index.js";
+
+const logger = loggers.discord.child("voice-state-update");
 
 export function setupVoiceStateUpdateHandler(client: Client): void {
   client.on("voiceStateUpdate", (oldState: VoiceState, newState: VoiceState) => {

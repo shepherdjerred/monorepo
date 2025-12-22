@@ -57,6 +57,17 @@ export const LoggingConfigSchema = z.object({
   level: z.enum(["debug", "info", "warn", "error"]).default("info"),
 });
 
+export const SentryConfigSchema = z.object({
+  enabled: z.boolean().default(false),
+  dsn: z.string().optional(),
+  environment: z
+    .enum(["development", "staging", "production"])
+    .default("development"),
+  release: z.string().optional(),
+  sampleRate: z.number().min(0).max(1).default(1.0),
+  tracesSampleRate: z.number().min(0).max(1).default(0.1),
+});
+
 export const PersonaConfigSchema = z.object({
   enabled: z.boolean().default(true),
   defaultPersona: z.string().default("virmel"),
@@ -75,6 +86,7 @@ export const ConfigSchema = z.object({
   voice: VoiceConfigSchema,
   externalApis: ExternalApisSchema,
   logging: LoggingConfigSchema,
+  sentry: SentryConfigSchema,
   persona: PersonaConfigSchema,
 });
 
@@ -87,4 +99,5 @@ export type DailyPostsConfig = z.infer<typeof DailyPostsConfigSchema>;
 export type VoiceConfig = z.infer<typeof VoiceConfigSchema>;
 export type ExternalApisConfig = z.infer<typeof ExternalApisSchema>;
 export type LoggingConfig = z.infer<typeof LoggingConfigSchema>;
+export type SentryConfig = z.infer<typeof SentryConfigSchema>;
 export type PersonaConfig = z.infer<typeof PersonaConfigSchema>;
