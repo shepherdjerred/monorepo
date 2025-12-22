@@ -156,7 +156,7 @@ export function setupMessageCreateHandler(client: Client): void {
               contentLength: ref.content.length,
             });
           } catch (error: unknown) {
-            logger.warn("Failed to fetch referenced message", error);
+            logger.warn("Failed to fetch referenced message", { error });
             // Continue without the reference if fetching fails
           }
         }
