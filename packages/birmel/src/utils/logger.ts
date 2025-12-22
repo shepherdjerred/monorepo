@@ -125,4 +125,6 @@ export const loggers = {
   memory: createLogger("memory"),
   config: createLogger("config"),
   persona: createLogger("persona"),
+  database: createLogger("database"),
+  events: createLogger("events"),
 };
