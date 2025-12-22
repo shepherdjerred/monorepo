@@ -84,4 +84,91 @@ export const fetchUrlTool = createTool({
   },
 });
 
-export const webTools = [fetchUrlTool];
+export const webSearchTool = createTool({
+  id: "web-search",
+  description: "Search the web for information. Use this to look up current prices, documentation, news, or any other web-accessible information.",
+  inputSchema: z.object({
+    query: z.string().describe("The search query"),
+  }),
+  outputSchema: z.object({
+    success: z.boolean(),
+    message: z.string(),
+    data: z
+      .object({
+        results: z.array(
+          z.object({
+            title: z.string(),
+            url: z.string(),
+            snippet: z.string(),
+          })
+        ),
+      })
+      .optional(),
+  }),
+  execute: async (input) => {
+    try {
+      // Use DuckDuckGo HTML for simple search results
+      const searchUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(input.query)}`;
+      const response = await fetch(searchUrl, {
+        headers: {
+          "User-Agent": "Birmel Discord Bot/1.0",
+        },
+      });
+
+      if (!response.ok) {
+        return {
+          success: false,
+          message: `Search failed: ${String(response.status)}`,
+        };
+      }
+
+      const html = await response.text();
+
+      // Parse search results from DuckDuckGo HTML
+      const results: Array<{ title: string; url: string; snippet: string }> = [];
+      const resultRegex = /<a[^>]+class="result__a"[^>]+href="([^"]+)"[^>]*>([^<]+)<\/a>[\s\S]*?<a[^>]+class="result__snippet"[^>]*>([^<]*(?:<[^>]+>[^<]*)*)<\/a>/g;
+
+      let match;
+      while ((match = resultRegex.exec(html)) !== null && results.length < 5) {
+        const [, url, title, snippetHtml] = match;
+        if (url && title && snippetHtml) {
+          const snippet = snippetHtml.replace(/<[^>]+>/g, "").trim();
+          results.push({
+            title: title.trim(),
+            url: decodeURIComponent(url.replace(/^\/\/duckduckgo\.com\/l\/\?uddg=/, "").split("&")[0] ?? ""),
+            snippet,
+          });
+        }
+      }
+
+      // Fallback: simpler parsing if regex didn't match
+      if (results.length === 0) {
+        const simpleRegex = /<a[^>]+class="result__a"[^>]+>([^<]+)<\/a>/g;
+        while ((match = simpleRegex.exec(html)) !== null && results.length < 5) {
+          const title = match[1];
+          if (title) {
+            results.push({
+              title: title.trim(),
+              url: "",
+              snippet: "No snippet available",
+            });
+          }
+        }
+      }
+
+      return {
+        success: true,
+        message: `Found ${String(results.length)} results`,
+        data: { results },
+      };
+    } catch (error) {
+      logger.error("Web search failed", error as Error);
+      return {
+        success: false,
+        message: "Web search failed",
+      };
+    }
+  },
+});
+
+export const webTools = [fetchUrlTool, webSearchTool];

@@ -351,6 +351,77 @@ export const removeReactionTool = createTool({
   },
 });
 
+export const getChannelMessagesTool = createTool({
+  id: "get-channel-messages",
+  description: "Fetch recent messages from a channel. Use this to see conversation history, find specific messages, or get context about what was discussed.",
+  inputSchema: z.object({
+    channelId: z.string().describe("The ID of the channel to fetch messages from"),
+    limit: z.number().min(1).max(100).optional().describe("Number of messages to fetch (default: 20, max: 100)"),
+    before: z.string().optional().describe("Fetch messages before this message ID"),
+  }),
+  outputSchema: z.object({
+    success: z.boolean(),
+    message: z.string(),
+    data: z
+      .object({
+        messages: z.array(
+          z.object({
+            id: z.string(),
+            authorId: z.string(),
+            authorName: z.string(),
+            isBot: z.boolean(),
+            content: z.string(),
+            createdAt: z.string(),
+          })
+        ),
+      })
+      .optional(),
+  }),
+  execute: async (input) => {
+    try {
+      const client = getDiscordClient();
+      const channel = await client.channels.fetch(input.channelId);
+
+      if (!channel?.isTextBased()) {
+        return {
+          success: false,
+          message: "Channel is not a text channel",
+        };
+      }
+
+      const messages = await (channel as TextChannel).messages.fetch({
+        limit: input.limit ?? 20,
+        ...(input.before && { before: input.before }),
+      });
+
+      const formattedMessages = messages
+        .map((msg) => ({
+          id: msg.id,
+          authorId: msg.author.id,
+          authorName: msg.author.displayName || msg.author.username,
+          isBot: msg.author.bot,
+          content: msg.content,
+          createdAt: msg.createdAt.toISOString(),
+        }))
+        .reverse(); // Chronological order
+
+      return {
+        success: true,
+        message: `Fetched ${String(formattedMessages.length)} messages`,
+        data: {
+          messages: formattedMessages,
+        },
+      };
+    } catch (error) {
+      logger.error("Failed to fetch messages", error);
+      return {
+        success: false,
+        message: "Failed to fetch messages",
+      };
+    }
+  },
+});
+
 export const messageTools = [
   sendMessageTool,
   deleteMessageTool,
@@ -360,4 +431,5 @@ export const messageTools = [
   unpinMessageTool,
   addReactionTool,
   removeReactionTool,
+  getChannelMessagesTool,
 ];
