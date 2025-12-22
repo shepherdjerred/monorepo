@@ -77,6 +77,25 @@ export const PersonaConfigSchema = z.object({
   styleModel: z.string().default("gpt-4o-mini"),
 });
 
+export const BirthdayConfigSchema = z.object({
+  enabled: z.boolean().default(true),
+  defaultTimezone: z.string().default("UTC"),
+  birthdayRoleId: z.string().optional(),
+  announcementChannelId: z.string().optional(),
+});
+
+export const ActivityTrackingConfigSchema = z.object({
+  enabled: z.boolean().default(true),
+  roleTiers: z
+    .array(
+      z.object({
+        minimumActivity: z.number().min(0),
+        roleId: z.string(),
+      })
+    )
+    .default([]),
+});
+
 export const ConfigSchema = z.object({
   discord: DiscordConfigSchema,
   openai: OpenAIConfigSchema,
@@ -88,6 +107,8 @@ export const ConfigSchema = z.object({
   logging: LoggingConfigSchema,
   sentry: SentryConfigSchema,
   persona: PersonaConfigSchema,
+  birthdays: BirthdayConfigSchema,
+  activityTracking: ActivityTrackingConfigSchema,
 });
 
 export type Config = z.infer<typeof ConfigSchema>;
@@ -101,3 +122,5 @@ export type ExternalApisConfig = z.infer<typeof ExternalApisSchema>;
 export type LoggingConfig = z.infer<typeof LoggingConfigSchema>;
 export type SentryConfig = z.infer<typeof SentryConfigSchema>;
 export type PersonaConfig = z.infer<typeof PersonaConfigSchema>;
+export type BirthdayConfig = z.infer<typeof BirthdayConfigSchema>;
+export type ActivityTrackingConfig = z.infer<typeof ActivityTrackingConfigSchema>;
