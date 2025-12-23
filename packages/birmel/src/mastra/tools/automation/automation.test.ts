@@ -26,7 +26,7 @@ process.env["DISCORD_CLIENT_ID"] = "test-client-id";
 process.env["OPENAI_API_KEY"] = "test-key";
 process.env["DATABASE_PATH"] = ":memory:";
 process.env["DATABASE_URL"] = "file::memory:?cache=shared";
-process.env["OPS_DATABASE_URL"] = "file:./packages/birmel/data/test-ops.db";
+process.env["OPS_DATABASE_URL"] = "file:./data/test-ops.db";
 process.env["SHELL_ENABLED"] = "true";
 process.env["SCHEDULER_ENABLED"] = "true";
 process.env["BROWSER_ENABLED"] = "true";
@@ -162,6 +162,7 @@ describe("Phase 2: Timer/Scheduler Tools", () => {
         when: "in 5 minutes",
         action: "remind",
         guildId: testGuildId,
+        channelId: "test-channel-e2e",
         userId: testUserId,
         message: "Test reminder",
       },

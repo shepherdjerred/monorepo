@@ -5,3 +5,5 @@ dist/
 !.env.example
 .claude/settings.local.json
 .mastra/
+packages/birmel/data/
+packages/birmel/prisma/data/
