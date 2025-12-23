@@ -47,7 +47,7 @@ beforeAll(async () => {
   }
 
   // Run migrations to create schema
-  await $`bunx prisma migrate deploy`.quiet();
+  await $`bunx prisma migrate deploy`;
 });
 
 describe("Phase 1: Shell Tool", () => {
