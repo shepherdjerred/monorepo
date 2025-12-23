@@ -129,3 +129,25 @@ model ElectionPoll {
   @@index([guildId, status])
   @@index([scheduledStart])
 }
+
+model ScheduledTask {
+  id          Int       @id @default(autoincrement())
+  guildId     String
+  channelId   String?
+  userId      String
+  scheduledAt DateTime
+  cronPattern String?
+  naturalDesc String?
+  toolId      String?
+  toolInput   String?
+  executedAt  DateTime?
+  nextRun     DateTime?
+  enabled     Boolean   @default(true)
+  name        String?
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([guildId])
+  @@index([enabled, scheduledAt])
+}

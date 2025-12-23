@@ -294,6 +294,9 @@ describe("ConfigSchema (full)", () => {
       persona: {},
       birthdays: {},
       activityTracking: {},
+      shell: {},
+      scheduler: {},
+      browser: {},
     });
     expect(result.success).toBe(true);
   });

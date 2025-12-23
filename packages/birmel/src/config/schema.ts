@@ -97,6 +97,28 @@ export const ActivityTrackingConfigSchema = z.object({
     .default([]),
 });
 
+export const ShellConfigSchema = z.object({
+  enabled: z.boolean().default(true),
+  defaultTimeout: z.number().default(30000),
+  maxTimeout: z.number().default(300000),
+});
+
+export const SchedulerConfigSchema = z.object({
+  enabled: z.boolean().default(true),
+  maxTasksPerGuild: z.number().default(100),
+  maxRecurringTasks: z.number().default(50),
+});
+
+export const BrowserConfigSchema = z.object({
+  enabled: z.boolean().default(true),
+  headless: z.boolean().default(true),
+  viewportWidth: z.number().default(1280),
+  viewportHeight: z.number().default(720),
+  maxSessions: z.number().default(5),
+  sessionTimeoutMs: z.number().default(300000),
+  userAgent: z.string().optional(),
+});
+
 export const ElectionsConfigSchema = z.object({
   enabled: z.boolean().default(true),
   startTime: z.string().default("17:00"),
@@ -116,6 +138,9 @@ export const ConfigSchema = z.object({
   logging: LoggingConfigSchema,
   sentry: SentryConfigSchema,
   persona: PersonaConfigSchema,
+  shell: ShellConfigSchema,
+  scheduler: SchedulerConfigSchema,
+  browser: BrowserConfigSchema,
   birthdays: BirthdayConfigSchema,
   activityTracking: ActivityTrackingConfigSchema,
   elections: ElectionsConfigSchema,
@@ -132,6 +157,9 @@ export type ExternalApisConfig = z.infer<typeof ExternalApisSchema>;
 export type LoggingConfig = z.infer<typeof LoggingConfigSchema>;
 export type SentryConfig = z.infer<typeof SentryConfigSchema>;
 export type PersonaConfig = z.infer<typeof PersonaConfigSchema>;
+export type ShellConfig = z.infer<typeof ShellConfigSchema>;
+export type SchedulerConfig = z.infer<typeof SchedulerConfigSchema>;
+export type BrowserConfig = z.infer<typeof BrowserConfigSchema>;
 export type BirthdayConfig = z.infer<typeof BirthdayConfigSchema>;
 export type ActivityTrackingConfig = z.infer<typeof ActivityTrackingConfigSchema>;
 export type ElectionsConfig = z.infer<typeof ElectionsConfigSchema>;
