@@ -70,6 +70,15 @@ export class Monorepo {
     await container.sync();
     outputs.push("✓ Typecheck");
 
+    // Set up test database with migrations before running tests
+    container = container
+      .withWorkdir("/workspace/packages/birmel")
+      .withEnvVariable("OPS_DATABASE_URL", "file:./data/test-ops.db")
+      .withExec(["bunx", "prisma", "db", "push", "--accept-data-loss"])
+      .withWorkdir("/workspace");
+    await container.sync();
+    outputs.push("✓ Database migrations");
+
     container = container.withExec(["bun", "run", "test"]);
     await container.sync();
     outputs.push("✓ Test");

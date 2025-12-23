@@ -4,7 +4,7 @@
  * Tests Phase 1 (Shell), Phase 2 (Scheduler), and Phase 3 (Browser) tools
  */
 
-import { describe, test, expect, beforeAll } from "bun:test";
+import { describe, test, expect } from "bun:test";
 import {
   executeShellCommandTool,
   scheduleTaskTool,
@@ -19,7 +19,6 @@ import {
 } from "./index.js";
 import { prisma } from "../../../database/index.js";
 import { existsSync } from "node:fs";
-import { $ } from "bun";
 
 // Set up minimal test environment
 process.env["DISCORD_TOKEN"] = "test-token";
@@ -32,12 +31,6 @@ process.env["SHELL_ENABLED"] = "true";
 process.env["SCHEDULER_ENABLED"] = "true";
 process.env["BROWSER_ENABLED"] = "true";
 process.env["BROWSER_HEADLESS"] = "true";
-
-// Apply Prisma migrations before running tests
-beforeAll(async () => {
-  // Push schema to ops database (creates tables if they don't exist)
-  await $`bunx prisma db push --skip-generate --accept-data-loss`;
-});
 
 const testContext = {
   runId: "test-run-e2e",
