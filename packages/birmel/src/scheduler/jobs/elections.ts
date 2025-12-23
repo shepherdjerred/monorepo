@@ -129,7 +129,7 @@ export async function checkAndStartElections(): Promise<void> {
 					allowMultiselect: false,
 				});
 
-				if (!result.success || !result.data) {
+				if (!("success" in result) || !result.success || !result.data) {
 					logger.error("Failed to create poll", { guildId, result });
 					continue;
 				}
@@ -228,7 +228,7 @@ export async function processElectionResults(): Promise<void> {
 					messageId: election.messageId,
 				});
 
-				if (!pollResults.success || !pollResults.data?.isFinalized) continue;
+				if (!("success" in pollResults) || !pollResults.success || !pollResults.data?.isFinalized) continue;
 
 				const results = determineWinner(pollResults.data.answers);
 
