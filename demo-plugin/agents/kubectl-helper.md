@@ -5,6 +5,15 @@ when_to_use: When user works with Kubernetes, mentions kubectl, pods, deployment
 
 # Kubernetes Helper Agent
 
+## What's New in Kubernetes 1.33 & 2025
+
+- **Server-Side Apply**: Recommended default for applying manifests (better conflict resolution)
+- **Server-Side Dry Run**: Full API validation before applying changes
+- **kubectl diff**: Preview changes before applying
+- **Containerd Default**: containerd is now the default runtime (Docker deprecated)
+- **Enhanced Label Selectors**: More powerful filtering and bulk operations
+- **Rollout Control**: Better manual control with `kubectl rollout pause`
+
 ## Overview
 
 This agent helps you work with Kubernetes clusters using `kubectl` for resource management, troubleshooting, and debugging.
@@ -24,6 +33,38 @@ The following `kubectl` commands are auto-approved and safe to use:
 - `kubectl config` - Manage kubeconfig
 - `kubectl top` - Show resource usage
 
+### Modern Apply Patterns (2025)
+
+**Server-side apply (recommended)**:
+```bash
+# Apply with server-side processing (better conflict resolution)
+kubectl apply -f deployment.yaml --server-side
+
+# Apply directory recursively
+kubectl apply -f ./configs/ --server-side --recursive
+
+# Force conflicts to be resolved server-side
+kubectl apply -f deployment.yaml --server-side --force-conflicts
+```
+
+**Preview changes before applying**:
+```bash
+# Show diff of what will change
+kubectl diff -f deployment.yaml
+
+# Dry run with full server-side validation
+kubectl apply -f deployment.yaml --dry-run=server
+
+# Client-side dry run (no server validation)
+kubectl apply -f deployment.yaml --dry-run=client
+```
+
+**Why server-side apply?**
+- Better conflict resolution (server decides, not client)
+- Supports collaborative editing (multiple sources can manage same resource)
+- Respects field ownership (who owns each field)
+- Required for some newer Kubernetes features
+
 ### Common Operations
 
 **Get resources**:
@@ -33,6 +74,27 @@ kubectl get pods -n production
 kubectl get deployments --all-namespaces
 kubectl get nodes
 kubectl get services
+```
+
+**Advanced label selectors (2025)**:
+```bash
+# Single label match
+kubectl get pods -l app=nginx
+
+# Multiple labels (AND)
+kubectl get pods -l app=nginx,env=production
+
+# Set-based selectors
+kubectl get pods -l 'env in (production,staging)'
+kubectl get pods -l 'tier notin (frontend,backend)'
+
+# Exists/not exists
+kubectl get pods -l 'release'  # has 'release' label
+kubectl get pods -l '!release'  # doesn't have 'release' label
+
+# Bulk operations with labels
+kubectl delete pods -l phase=test
+kubectl scale deployment -l app=api --replicas=3
 ```
 
 **Describe resources**:
@@ -57,6 +119,48 @@ kubectl config get-contexts
 kubectl config current-context
 kubectl config use-context production
 kubectl config set-context --current --namespace=my-namespace
+```
+
+**Rollout management and canary deployments**:
+```bash
+# View rollout status
+kubectl rollout status deployment/my-app
+
+# Pause rollout for manual canary analysis
+kubectl rollout pause deployment/my-app
+
+# After validation, resume rollout
+kubectl rollout resume deployment/my-app
+
+# Rollback if issues found
+kubectl rollout undo deployment/my-app
+
+# View rollout history
+kubectl rollout history deployment/my-app
+
+# Rollback to specific revision
+kubectl rollout undo deployment/my-app --to-revision=2
+```
+
+**Canary deployment workflow**:
+```bash
+# 1. Update deployment (triggers rollout)
+kubectl apply -f deployment.yaml --server-side
+
+# 2. Immediately pause to control rollout
+kubectl rollout pause deployment/my-app
+
+# 3. New pods start alongside old pods (manual canary)
+kubectl get pods -l app=my-app -L version
+
+# 4. Monitor metrics, test new version
+# ... check logs, metrics, error rates ...
+
+# 5. If good, resume full rollout
+kubectl rollout resume deployment/my-app
+
+# 6. If bad, rollback
+kubectl rollout undo deployment/my-app
 ```
 
 ## Troubleshooting Workflows
@@ -164,14 +268,86 @@ kubectl get pods -w
 kubectl get pods --watch --output-watch-events
 ```
 
+## Best Practices and Smart Defaults (2025)
+
+### Infrastructure as Code
+
+1. **Always use version control for manifests**:
+   ```bash
+   # Good: Manifests in git
+   git add k8s/
+   git commit -m "Update deployment replicas"
+   kubectl apply -f k8s/ --server-side
+
+   # Bad: Imperative changes (lost on next apply)
+   kubectl scale deployment my-app --replicas=5
+   ```
+
+2. **Prefer server-side apply** for all manifest applications
+   ```bash
+   # Default to server-side
+   kubectl apply -f . --server-side --recursive
+   ```
+
+3. **Preview changes before applying**:
+   ```bash
+   # Always diff first
+   kubectl diff -f deployment.yaml
+   # Then apply
+   kubectl apply -f deployment.yaml --server-side
+   ```
+
+4. **Use kubectl diff as pre-commit hook**:
+   ```bash
+   # .git/hooks/pre-commit
+   kubectl diff -f k8s/ --exit-code
+   ```
+
+### Runtime Notes (K8s 1.33)
+
+- **Containerd is now the default runtime** (Docker deprecated since 1.20)
+- If using Docker, migrate to containerd or CRI-O
+- Docker shim removed entirely in 1.33+
+
+```bash
+# Check current runtime
+kubectl get nodes -o wide
+# Look at CONTAINER-RUNTIME column
+
+# Verify containerd
+kubectl describe node <node-name> | grep "Container Runtime"
+```
+
 ## Security Best Practices
 
 1. **Use Namespaces**: Isolate workloads with namespaces
 2. **RBAC**: Follow principle of least privilege
 3. **Network Policies**: Restrict pod-to-pod communication
 4. **Resource Limits**: Always set memory and CPU limits
+   ```yaml
+   resources:
+     limits:
+       memory: "256Mi"
+       cpu: "500m"
+     requests:
+       memory: "128Mi"
+       cpu: "250m"
+   ```
 5. **Security Contexts**: Run containers as non-root when possible
+   ```yaml
+   securityContext:
+     runAsNonRoot: true
+     runAsUser: 1000
+     readOnlyRootFilesystem: true
+   ```
 6. **Secrets**: Use Kubernetes Secrets, never hardcode credentials
+7. **Label Consistency**: Use consistent labels for filtering and RBAC
+   ```yaml
+   labels:
+     app: nginx
+     env: production
+     version: v1.2.3
+   ```
 
 ## Common Issues and Solutions
 

@@ -5,9 +5,20 @@ when_to_use: When Claude is about to use legacy tools (find, grep, ls, cat, sed,
 
 # Modern CLI Tools Agent
 
+## What's New in 2025
+
+- **eza Replaces exa**: Original exa is unmaintained (@ogham unreachable), use **eza** fork instead
+- **eza v0.23.0+** (July 2025): Hyperlink support, custom themes, enhanced Git integration
+- **ripgrep Performance**: SIMD optimizations (Teddy algorithm), 23x-fastest on benchmarks
+- **fd Speed**: 23x faster than `find -iregex`, parallel directory traversal (~855ms vs 11-20s)
+- **bat Integrations**: Git sidebar (+ for additions, ~ for modifications), fzf/ripgrep/man integration
+- **Universal Adoption**: Modern tools now the de facto standard for Rust/Go development workflows
+
 ## Overview
 
 This agent teaches modern alternatives to traditional Unix commands that are faster, more user-friendly, and feature-rich. These tools are written in Rust and other modern languages, providing significant performance improvements and better default behaviors.
+
+**Important Note**: Always use **eza**, not exa. The original exa project is unmaintained (since 2023), and eza is the actively maintained community fork with new features and bug fixes.
 
 ## For Claude: Tool Selection Guidelines
 
@@ -234,7 +245,17 @@ rg -i "(password|secret|api[_-]?key)\s*[:=]"
 rg --no-ignore --hidden "sensitive_data"
 ```
 
-## eza - Modern ls
+## eza - Modern ls (Maintained Fork of exa)
+
+**Important**: eza is the actively maintained fork of exa. The original exa project has been unmaintained since 2023 (maintainer @ogham unreachable). Use **eza** for latest features and bug fixes.
+
+### What's New in eza v0.23.0+ (July 2025)
+
+- **Hyperlink Support**: Clickable file/directory links in terminal
+- **Custom Themes**: User-defined color schemes
+- **Enhanced Git Integration**: Better git status visualization
+- **Performance Improvements**: Faster tree rendering
+- **More File Type Icons**: Expanded icon support for modern file types
 
 ### Basic Usage
 
@@ -267,11 +288,17 @@ eza -l --sort size
 eza -lr
 ```
 
-### Advanced Features
+### Advanced Features (v0.23.0+)
 
 ```bash
-# Git status integration
+# Git status integration (enhanced in v0.23)
 eza -l --git
+
+# Hyperlinks (clickable in compatible terminals)
+eza -l --hyperlink
+
+# Custom theme
+eza -l --color-scale
 
 # Show file headers
 eza -lh
@@ -374,6 +401,54 @@ bat --decorations=always file.js
 # Style options
 bat --style=numbers,grid file.py
 bat --style=plain file.txt
+```
+
+### Git Integration (2025)
+
+bat now includes enhanced Git integration showing changes in the sidebar:
+
+```bash
+# View file with Git changes
+bat modified-file.js
+# Shows:
+# + for line additions (green plus sign in left margin)
+# ~ for line modifications (yellow tilde in left margin)
+# Unchanged lines have no symbol
+
+# Compare with git diff
+git diff file.js | bat --language diff
+
+# View staged changes
+git diff --staged file.js | bat -l diff
+```
+
+**Benefits of Git Integration:**
+- Visual indicators for all changes
+- No need to run `git diff` separately
+- Works automatically with any Git repository
+- Color-coded for easy scanning
+
+### Integration with Other Tools
+
+```bash
+# Use bat as previewer for fzf
+fzf --preview 'bat --color=always {}'
+
+# Use bat with ripgrep (batgrep)
+rg -l "pattern" | xargs bat
+
+# View git show output
+git show HEAD:file.js | bat -l js
+
+# View git diff with syntax highlighting
+git diff | bat -l diff
+
+# Use bat as MANPAGER
+export MANPAGER="sh -c 'col -bx | bat -l man -p'"
+man ls  # Beautiful manual pages
+
+# Tail with syntax highlighting
+tail -f /var/log/app.log | bat --paging=never -l log
 ```
 
 ### Common Use Cases
