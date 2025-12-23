@@ -5,6 +5,14 @@ import {
   cancelScheduledTaskTool,
   scheduleReminderTool,
 } from "./timers.js";
+import {
+  browserNavigateTool,
+  browserScreenshotTool,
+  browserClickTool,
+  browserTypeTool,
+  browserGetTextTool,
+  browserCloseTool,
+} from "./browser.js";
 
 export { executeShellCommandTool } from "./shell.js";
 export {
@@ -13,6 +21,14 @@ export {
   cancelScheduledTaskTool,
   scheduleReminderTool,
 } from "./timers.js";
+export {
+  browserNavigateTool,
+  browserScreenshotTool,
+  browserClickTool,
+  browserTypeTool,
+  browserGetTextTool,
+  browserCloseTool,
+} from "./browser.js";
 
 export const allAutomationTools = [
   executeShellCommandTool,
@@ -20,4 +36,10 @@ export const allAutomationTools = [
   listScheduledTasksTool,
   cancelScheduledTaskTool,
   scheduleReminderTool,
+  browserNavigateTool,
+  browserScreenshotTool,
+  browserClickTool,
+  browserTypeTool,
+  browserGetTextTool,
+  browserCloseTool,
 ];

@@ -44,6 +44,7 @@
     "libsodium-wrappers": "^0.7.15",
     "mediaplex": "^1.0.0",
     "openai": "^4.77.0",
+    "playwright": "^1.57.0",
     "sodium-native": "^5.0.10",
     "youtubei.js": "^16.0.1",
     "zod": "^3.24.0"
