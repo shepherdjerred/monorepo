@@ -1,4 +1,5 @@
 import { Mastra } from "@mastra/core";
+import { LibSQLStore } from "@mastra/libsql";
 import { createBirmelAgent } from "./agents/birmel-agent.js";
 import { createClassifierAgent } from "./agents/classifier-agent.js";
 import { getConfig } from "../config/index.js";
@@ -7,6 +8,8 @@ import { logger } from "../utils/logger.js";
 // Create agents at module load time
 const birmelAgent = createBirmelAgent();
 const classifierAgent = createClassifierAgent();
+
+const config = getConfig();
 
 /**
  * The main Mastra instance for Birmel.
@@ -18,8 +21,12 @@ export const mastra = new Mastra({
     classifier: classifierAgent,
   },
   server: {
-    port: getConfig().mastra.studioPort,
+    port: config.mastra.studioPort,
   },
+  storage: new LibSQLStore({
+    id: "birmel-storage",
+    url: config.mastra.telemetryDbPath,
+  }),
 });
 
 /**

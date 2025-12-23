@@ -20,6 +20,7 @@ export const OpenAIConfigSchema = z.object({
 
 export const MastraConfigSchema = z.object({
   memoryDbPath: z.string().default("file:/app/data/mastra-memory.db"),
+  telemetryDbPath: z.string().default("file:/app/data/mastra-telemetry.db"),
   studioEnabled: z.boolean().default(true),
   studioPort: z.number().default(4111),
   studioHost: z.string().default("0.0.0.0"),
