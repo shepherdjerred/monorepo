@@ -19,6 +19,8 @@ function getBunContainerWithCache(source: Directory): Container {
   return dag
     .container()
     .from(`oven/bun:${BUN_VERSION}-debian`)
+    .withExec(["apt-get", "update"])
+    .withExec(["apt-get", "install", "-y", "python3"])
     .withWorkdir("/workspace")
     .withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-cache"))
     .withMountedDirectory("/workspace", source)
@@ -66,14 +68,12 @@ export class Monorepo {
     await container.sync();
     outputs.push("✓ Install");
 
-    // Generate Prisma Client and set up test database before typecheck/tests
-    // This prevents Bun segfault during prisma generate in typecheck step
+    // Generate Prisma Client and set up test database
+    // Generate from workspace root with schema path for Bun workspaces
     container = container
-      .withWorkdir("/workspace/packages/birmel")
-      .withEnvVariable("OPS_DATABASE_URL", "file:./data/test-ops.db")
-      .withExec(["bunx", "prisma", "generate"])
-      .withExec(["bunx", "prisma", "db", "push", "--accept-data-loss"])
-      .withWorkdir("/workspace");
+      .withEnvVariable("OPS_DATABASE_URL", "file:./packages/birmel/data/test-ops.db")
+      .withExec(["bunx", "prisma", "generate", "--schema=./packages/birmel/prisma/schema.prisma"])
+      .withExec(["bunx", "prisma", "db", "push", "--accept-data-loss", "--schema=./packages/birmel/prisma/schema.prisma"]);
     await container.sync();
     outputs.push("✓ Prisma setup");
 
