@@ -66,18 +66,20 @@ export class Monorepo {
     await container.sync();
     outputs.push("✓ Install");
 
-    container = container.withExec(["bun", "run", "typecheck"]);
-    await container.sync();
-    outputs.push("✓ Typecheck");
-
-    // Set up test database with migrations before running tests
+    // Generate Prisma Client and set up test database before typecheck/tests
+    // This prevents Bun segfault during prisma generate in typecheck step
     container = container
       .withWorkdir("/workspace/packages/birmel")
       .withEnvVariable("OPS_DATABASE_URL", "file:./data/test-ops.db")
+      .withExec(["bunx", "prisma", "generate"])
       .withExec(["bunx", "prisma", "db", "push", "--accept-data-loss"])
       .withWorkdir("/workspace");
     await container.sync();
-    outputs.push("✓ Database migrations");
+    outputs.push("✓ Prisma setup");
+
+    container = container.withExec(["bun", "run", "typecheck"]);
+    await container.sync();
+    outputs.push("✓ Typecheck");
 
     container = container.withExec(["bun", "run", "test"]);
     await container.sync();
