@@ -1,5 +1,4 @@
 import { getDiscordClient } from "../../discord/index.js";
-import { getTopActiveUsers } from "../../database/repositories/activity.js";
 import { withSpan } from "../../observability/index.js";
 import { loggers } from "../../utils/logger.js";
 import { getConfig } from "../../config/index.js";
@@ -12,7 +11,7 @@ const logger = loggers.scheduler.child("activity-aggregator");
  * Runs every hour
  */
 export async function aggregateActivityMetrics(): Promise<void> {
-  return withSpan("job.aggregate-activity", async () => {
+  return withSpan("job.aggregate-activity", {}, async () => {
     try {
       logger.info("Starting activity aggregation");
 
@@ -93,7 +92,7 @@ export async function aggregateActivityMetrics(): Promise<void> {
                 }
 
                 // Remove other activity tier roles
-                for (const [roleId, role] of currentActivityRoles) {
+                for (const [roleId, _role] of currentActivityRoles) {
                   if (roleId !== shouldHaveRole) {
                     await member.roles.remove(roleId);
                     logger.info("Removed old activity role", {
@@ -105,7 +104,7 @@ export async function aggregateActivityMetrics(): Promise<void> {
                 }
               } else {
                 // User doesn't qualify for any tier, remove all activity roles
-                for (const [roleId, role] of currentActivityRoles) {
+                for (const [roleId, _role] of currentActivityRoles) {
                   await member.roles.remove(roleId);
                   logger.info("Removed activity role (no longer qualified)", {
                     guildId,

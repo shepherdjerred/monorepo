@@ -33,13 +33,16 @@ export const recordMessageActivityTool = createTool({
         userId: input.userId
       });
       try {
-        recordMessageActivity({
+        const activityInput: Parameters<typeof recordMessageActivity>[0] = {
           guildId: input.guildId,
           userId: input.userId,
           channelId: input.channelId,
           messageId: input.messageId,
-          characterCount: input.characterCount
-        });
+        };
+        if (input.characterCount !== undefined) {
+          activityInput.characterCount = input.characterCount;
+        }
+        recordMessageActivity(activityInput);
 
         return {
           success: true,
@@ -219,16 +222,26 @@ export const getTopActiveUsersTool = createTool({
         limit: input.limit
       });
       try {
-        const dateRange = input.startDate && input.endDate ? {
-          start: new Date(input.startDate),
-          end: new Date(input.endDate)
-        } : undefined;
+        const dateRange =
+          input.startDate && input.endDate
+            ? {
+                start: new Date(input.startDate),
+                end: new Date(input.endDate),
+              }
+            : undefined;
 
-        const topUsers = await getTopActiveUsers(input.guildId, {
+        const topUsersOptions: Parameters<typeof getTopActiveUsers>[1] = {
           limit: input.limit ?? 10,
           activityType: input.activityType ?? "all",
-          dateRange
-        });
+        };
+        if (dateRange !== undefined) {
+          topUsersOptions.dateRange = dateRange;
+        }
+
+        const topUsers = await getTopActiveUsers(
+          input.guildId,
+          topUsersOptions
+        );
 
         // Fetch usernames from Discord
         const client = getDiscordClient();
