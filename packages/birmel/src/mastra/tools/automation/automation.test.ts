@@ -18,7 +18,7 @@ import {
   browserCloseTool,
 } from "./index.js";
 import { prisma } from "../../../database/index.js";
-import { existsSync, unlinkSync } from "node:fs";
+import { existsSync } from "node:fs";
 
 // Set up minimal test environment
 process.env["DISCORD_TOKEN"] = "test-token";
