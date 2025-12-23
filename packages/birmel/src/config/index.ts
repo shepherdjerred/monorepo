@@ -99,6 +99,25 @@ function loadConfigFromEnv(): Config {
       styleExampleCount: parseNumber(process.env["PERSONA_STYLE_COUNT"], 50),
       styleModel: process.env["PERSONA_STYLE_MODEL"] ?? "gpt-4o-mini",
     },
+    shell: {
+      enabled: parseBoolean(process.env["SHELL_ENABLED"], true),
+      defaultTimeout: parseNumber(process.env["SHELL_DEFAULT_TIMEOUT"], 30000),
+      maxTimeout: parseNumber(process.env["SHELL_MAX_TIMEOUT"], 300000),
+    },
+    scheduler: {
+      enabled: parseBoolean(process.env["SCHEDULER_ENABLED"], true),
+      maxTasksPerGuild: parseNumber(process.env["SCHEDULER_MAX_TASKS_PER_GUILD"], 100),
+      maxRecurringTasks: parseNumber(process.env["SCHEDULER_MAX_RECURRING_TASKS"], 50),
+    },
+    browser: {
+      enabled: parseBoolean(process.env["BROWSER_ENABLED"], true),
+      headless: parseBoolean(process.env["BROWSER_HEADLESS"], true),
+      viewportWidth: parseNumber(process.env["BROWSER_VIEWPORT_WIDTH"], 1280),
+      viewportHeight: parseNumber(process.env["BROWSER_VIEWPORT_HEIGHT"], 720),
+      maxSessions: parseNumber(process.env["BROWSER_MAX_SESSIONS"], 5),
+      sessionTimeoutMs: parseNumber(process.env["BROWSER_SESSION_TIMEOUT_MS"], 300000),
+      userAgent: process.env["BROWSER_USER_AGENT"],
+    },
     birthdays: {
       enabled: parseBoolean(process.env["BIRTHDAYS_ENABLED"], true),
       defaultTimezone: process.env["BIRTHDAYS_DEFAULT_TIMEZONE"] ?? "UTC",

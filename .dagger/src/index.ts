@@ -13,15 +13,19 @@ const REPO_URL = "shepherdjerred/monorepo";
 const BUN_VERSION = "1.3.4";
 
 /**
- * Get a Bun container with caching enabled
+ * Get a Bun container with caching enabled and Playwright browsers for tests
  */
 function getBunContainerWithCache(source: Directory): Container {
   return dag
     .container()
-    .from(`oven/bun:${BUN_VERSION}`)
+    .from(`oven/bun:${BUN_VERSION}-debian`)
+    .withExec(["apt-get", "update"])
+    .withExec(["apt-get", "install", "-y", "python3"])
     .withWorkdir("/workspace")
     .withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-cache"))
-    .withMountedDirectory("/workspace", source);
+    .withMountedDirectory("/workspace", source)
+    // Install Playwright browsers for browser automation tests
+    .withExec(["bunx", "playwright", "install", "--with-deps", "chromium"]);
 }
 
 /**
@@ -63,6 +67,15 @@ export class Monorepo {
     container = container.withExec(["bun", "install", "--frozen-lockfile"]);
     await container.sync();
     outputs.push("✓ Install");
+
+    // Generate Prisma Client and set up test database
+    // Directly execute the prisma binary from packages/birmel/node_modules to avoid version issues
+    container = container
+      .withEnvVariable("OPS_DATABASE_URL", "file:./packages/birmel/data/test-ops.db")
+      .withExec(["bun", "packages/birmel/node_modules/prisma/build/index.js", "generate", "--schema=./packages/birmel/prisma/schema.prisma"])
+      .withExec(["bun", "packages/birmel/node_modules/prisma/build/index.js", "db", "push", "--accept-data-loss", "--schema=./packages/birmel/prisma/schema.prisma"]);
+    await container.sync();
+    outputs.push("✓ Prisma setup");
 
     container = container.withExec(["bun", "run", "typecheck"]);
     await container.sync();

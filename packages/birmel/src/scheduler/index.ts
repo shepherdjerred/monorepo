@@ -12,6 +12,7 @@ import {
 } from "./jobs/announcements.js";
 import { checkAndPostBirthdays } from "./jobs/birthday-checker.js";
 import { aggregateActivityMetrics } from "./jobs/activity-aggregator.js";
+import { runScheduledTasksJob } from "./jobs/scheduled-tasks.js";
 
 let schedulerInterval: ReturnType<typeof setInterval> | null = null;
 
@@ -29,6 +30,7 @@ export function startScheduler(): void {
     void runAnnouncementsJob();
     void checkAndPostBirthdays();
     void aggregateActivityMetrics();
+    void runScheduledTasksJob();
   }, 60 * 1000);
 
   // Also run immediately on startup
@@ -36,6 +38,7 @@ export function startScheduler(): void {
   void runAnnouncementsJob();
   void checkAndPostBirthdays();
   void aggregateActivityMetrics();
+  void runScheduledTasksJob();
 
   logger.info("Scheduler started");
 }
@@ -59,4 +62,5 @@ export {
   listPendingAnnouncements,
   checkAndPostBirthdays,
   aggregateActivityMetrics,
+  runScheduledTasksJob,
 };
