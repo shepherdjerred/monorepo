@@ -36,6 +36,8 @@ mock.module("@mastra/memory", () => ({
 mock.module("@mastra/libsql", () => ({
   // eslint-disable-next-line @typescript-eslint/no-extraneous-class
   LibSQLStore: class MockLibSQLStore {},
+  // eslint-disable-next-line @typescript-eslint/no-extraneous-class
+  LibSQLVector: class MockLibSQLVector {},
 }));
 
 describe("birmel-agent", () => {
@@ -109,12 +111,12 @@ describe("birmel-agent", () => {
       expect(SYSTEM_PROMPT.length).toBeGreaterThan(100);
     });
 
-    test("contains moral guardian section", async () => {
+    test("contains authorization section", async () => {
       const { SYSTEM_PROMPT } = await import(
         "../../../src/mastra/agents/system-prompt.js"
       );
 
-      expect(SYSTEM_PROMPT.toLowerCase()).toContain("moral guardian");
+      expect(SYSTEM_PROMPT.toLowerCase()).toContain("authorization");
     });
   });
 });

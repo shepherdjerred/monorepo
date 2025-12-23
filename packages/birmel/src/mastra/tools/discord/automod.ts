@@ -24,10 +24,10 @@ export const listAutomodRulesTool = createTool({
       )
       .optional(),
   }),
-  execute: async (input) => {
+  execute: async (ctx) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(input.guildId);
+      const guild = await client.guilds.fetch(ctx.context.guildId);
       const rules = await guild.autoModerationRules.fetch();
 
       const ruleList = rules.map((rule) => ({
@@ -73,11 +73,11 @@ export const getAutomodRuleTool = createTool({
       })
       .optional(),
   }),
-  execute: async (input) => {
+  execute: async (ctx) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(input.guildId);
-      const rule = await guild.autoModerationRules.fetch(input.ruleId);
+      const guild = await client.guilds.fetch(ctx.context.guildId);
+      const rule = await guild.autoModerationRules.fetch(ctx.context.ruleId);
 
       return {
         success: true,
@@ -135,10 +135,10 @@ export const createAutomodRuleTool = createTool({
       })
       .optional(),
   }),
-  execute: async (input) => {
+  execute: async (ctx) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(input.guildId);
+      const guild = await client.guilds.fetch(ctx.context.guildId);
 
       const triggerTypeMap = {
         KEYWORD: AutoModerationRuleTriggerType.Keyword,
@@ -154,16 +154,16 @@ export const createAutomodRuleTool = createTool({
       } as const;
 
       const rule = await guild.autoModerationRules.create({
-        name: input.name,
+        name: ctx.context.name,
         eventType: 1, // MESSAGE_SEND
-        triggerType: triggerTypeMap[input.triggerType],
+        triggerType: triggerTypeMap[ctx.context.triggerType],
         triggerMetadata: {
-          ...(input.keywords && { keywordFilter: input.keywords }),
-          ...(input.keywordPresets && {
-            presets: input.keywordPresets.map((p: "PROFANITY" | "SEXUAL_CONTENT" | "SLURS") => presetMap[p]),
+          ...(ctx.context.keywords && { keywordFilter: ctx.context.keywords }),
+          ...(ctx.context.keywordPresets && {
+            presets: ctx.context.keywordPresets.map((p: "PROFANITY" | "SEXUAL_CONTENT" | "SLURS") => presetMap[p]),
           }),
-          ...(input.mentionLimit !== undefined && {
-            mentionTotalLimit: input.mentionLimit,
+          ...(ctx.context.mentionLimit !== undefined && {
+            mentionTotalLimit: ctx.context.mentionLimit,
           }),
         },
         actions: [
@@ -171,8 +171,8 @@ export const createAutomodRuleTool = createTool({
             type: AutoModerationActionType.BlockMessage,
           },
         ],
-        ...(input.enabled !== undefined && { enabled: input.enabled }),
-        ...(input.reason !== undefined && { reason: input.reason }),
+        ...(ctx.context.enabled !== undefined && { enabled: ctx.context.enabled }),
+        ...(ctx.context.reason !== undefined && { reason: ctx.context.reason }),
       });
 
       return {
@@ -205,13 +205,13 @@ export const deleteAutomodRuleTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async (input) => {
+  execute: async (ctx) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(input.guildId);
-      const rule = await guild.autoModerationRules.fetch(input.ruleId);
+      const guild = await client.guilds.fetch(ctx.context.guildId);
+      const rule = await guild.autoModerationRules.fetch(ctx.context.ruleId);
 
-      await rule.delete(input.reason);
+      await rule.delete(ctx.context.reason);
 
       return {
         success: true,
@@ -240,17 +240,17 @@ export const toggleAutomodRuleTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async (input) => {
+  execute: async (ctx) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(input.guildId);
-      const rule = await guild.autoModerationRules.fetch(input.ruleId);
+      const guild = await client.guilds.fetch(ctx.context.guildId);
+      const rule = await guild.autoModerationRules.fetch(ctx.context.ruleId);
 
-      await rule.setEnabled(input.enabled, input.reason);
+      await rule.setEnabled(ctx.context.enabled, ctx.context.reason);
 
       return {
         success: true,
-        message: `${input.enabled ? "Enabled" : "Disabled"} auto-moderation rule: ${rule.name}`,
+        message: `${ctx.context.enabled ? "Enabled" : "Disabled"} auto-moderation rule: ${rule.name}`,
       };
     } catch (error) {
       logger.error("Failed to toggle automod rule", error as Error);
@@ -291,33 +291,33 @@ export const modifyAutomodRuleTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async (input) => {
+  execute: async (ctx) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(input.guildId);
-      const rule = await guild.autoModerationRules.fetch(input.ruleId);
+      const guild = await client.guilds.fetch(ctx.context.guildId);
+      const rule = await guild.autoModerationRules.fetch(ctx.context.ruleId);
 
       const editOptions: Parameters<typeof rule.edit>[0] = {};
-      if (input.name !== undefined) editOptions.name = input.name;
-      if (input.keywords !== undefined) {
-        editOptions.triggerMetadata = { keywordFilter: input.keywords };
+      if (ctx.context.name !== undefined) editOptions.name = ctx.context.name;
+      if (ctx.context.keywords !== undefined) {
+        editOptions.triggerMetadata = { keywordFilter: ctx.context.keywords };
       }
-      if (input.mentionLimit !== undefined) {
+      if (ctx.context.mentionLimit !== undefined) {
         editOptions.triggerMetadata = {
           ...editOptions.triggerMetadata,
-          mentionTotalLimit: input.mentionLimit,
+          mentionTotalLimit: ctx.context.mentionLimit,
         };
       }
-      if (input.exemptRoles !== undefined) editOptions.exemptRoles = input.exemptRoles;
-      if (input.exemptChannels !== undefined) editOptions.exemptChannels = input.exemptChannels;
-      if (input.reason !== undefined) editOptions.reason = input.reason;
+      if (ctx.context.exemptRoles !== undefined) editOptions.exemptRoles = ctx.context.exemptRoles;
+      if (ctx.context.exemptChannels !== undefined) editOptions.exemptChannels = ctx.context.exemptChannels;
+      if (ctx.context.reason !== undefined) editOptions.reason = ctx.context.reason;
 
       const hasChanges =
-        input.name !== undefined ||
-        input.keywords !== undefined ||
-        input.mentionLimit !== undefined ||
-        input.exemptRoles !== undefined ||
-        input.exemptChannels !== undefined;
+        ctx.context.name !== undefined ||
+        ctx.context.keywords !== undefined ||
+        ctx.context.mentionLimit !== undefined ||
+        ctx.context.exemptRoles !== undefined ||
+        ctx.context.exemptChannels !== undefined;
 
       if (!hasChanges) {
         return {

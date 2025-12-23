@@ -7,7 +7,7 @@ import {
   AudioPlayerStatus,
   StreamType,
 } from "@discordjs/voice";
-import { logger } from "../utils/index.js";
+import { loggers } from "../utils/index.js";
 import {
   getAudioBuffer,
   clearAudioBuffer,
@@ -24,6 +24,9 @@ import { transcribeAudio } from "./speech-to-text.js";
 import { generateShortSpeech } from "./text-to-speech.js";
 import { createVoiceCommand, expandCommandShortcut } from "./command-handler.js";
 import { Readable } from "node:stream";
+import { withSpan, captureException } from "../observability/index.js";
+
+const logger = loggers.voice.child("receiver");
 
 type VoiceCommandHandler = (
   command: string,
@@ -123,55 +126,78 @@ async function processUserSpeech(userId: string, guildId: string): Promise<void>
     return;
   }
 
-  try {
-    // Transcribe the audio
-    const transcription = await transcribeAudio(audioBuffer);
-    logger.debug("Transcribed speech", { userId, text: transcription });
+  const context = { guildId, userId, operation: "voice.processUserSpeech" };
 
-    if (!transcription || transcription.trim().length === 0) {
-      return;
-    }
+  await withSpan("voice.processUserSpeech", context, async (span) => {
+    span.setAttribute("audio.buffer_size", audioBuffer.length);
 
-    // Check for voice command
-    const connection = getVoiceConnection(guildId);
-    const channelId = connection?.joinConfig.channelId ?? "";
-
-    const voiceCommand = createVoiceCommand(
-      userId,
-      guildId,
-      channelId,
-      transcription,
-    );
-
-    if (voiceCommand && commandHandler) {
-      const expandedCommand = expandCommandShortcut(voiceCommand.command);
-      logger.info("Processing voice command", {
-        userId,
-        command: expandedCommand,
+    try {
+      // Transcribe the audio
+      const transcription = await withSpan("voice.transcribe", context, async (transcribeSpan) => {
+        const result = await transcribeAudio(audioBuffer);
+        transcribeSpan.setAttribute("transcription.length", result.length);
+        return result;
       });
+      logger.debug("Transcribed speech", { userId, text: transcription });
 
-      try {
-        const response = await commandHandler(
-          expandedCommand,
-          userId,
-          guildId,
-          channelId,
-        );
-
-        // Send response via TTS
-        await playTTSResponse(guildId, response);
-        logger.info("Voice command response played", { response: response.slice(0, 100) });
-      } catch (error) {
-        logger.error("Voice command handler error", error as Error);
+      if (!transcription || transcription.trim().length === 0) {
+        span.setAttribute("transcription.empty", true);
+        return;
       }
+
+      // Check for voice command
+      const connection = getVoiceConnection(guildId);
+      const channelId = connection?.joinConfig.channelId ?? "";
+
+      const voiceCommand = createVoiceCommand(
+        userId,
+        guildId,
+        channelId,
+        transcription,
+      );
+
+      if (voiceCommand && commandHandler) {
+        const expandedCommand = expandCommandShortcut(voiceCommand.command);
+        span.setAttribute("command.detected", true);
+        span.setAttribute("command.text", expandedCommand);
+        logger.info("Processing voice command", {
+          userId,
+          command: expandedCommand,
+        });
+
+        try {
+          const response = await commandHandler(
+            expandedCommand,
+            userId,
+            guildId,
+            channelId,
+          );
+
+          // Send response via TTS
+          await withSpan("voice.tts", context, async () => {
+            await playTTSResponse(guildId, response);
+          });
+          logger.info("Voice command response played", { response: response.slice(0, 100) });
+        } catch (error) {
+          logger.error("Voice command handler error", error as Error);
+          captureException(error as Error, {
+            operation: "voice.commandHandler",
+            discord: { guildId, userId },
+          });
+        }
+      }
+    } catch (error) {
+      logger.error("Failed to process speech", error as Error, { userId });
+      captureException(error as Error, {
+        operation: "voice.processUserSpeech",
+        discord: { guildId, userId },
+      });
+    } finally {
+      // Clear buffers
+      clearAudioBuffer(userId);
+      resetVoiceActivity(userId);
     }
-  } catch (error) {
-    logger.error("Failed to process speech", error as Error, { userId });
-  } finally {
-    // Clear buffers
-    clearAudioBuffer(userId);
-    resetVoiceActivity(userId);
-  }
+  });
 }
 
 // Map to store audio players per guild

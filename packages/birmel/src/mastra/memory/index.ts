@@ -1,5 +1,5 @@
 import { Memory } from "@mastra/memory";
-import { LibSQLStore } from "@mastra/libsql";
+import { LibSQLStore, LibSQLVector } from "@mastra/libsql";
 import { getConfig } from "../../config/index.js";
 
 let memoryInstance: Memory | null = null;
@@ -30,12 +30,18 @@ export function createMemory(): Memory {
 
   memoryInstance = new Memory({
     storage: new LibSQLStore({
-      id: "birmel-memory",
       url: config.mastra.memoryDbPath,
     }),
+    vector: new LibSQLVector({
+      connectionUrl: config.mastra.memoryDbPath,
+    }),
+    embedder: "openai/text-embedding-3-small",
     options: {
       lastMessages: 20,
-      semanticRecall: false,
+      semanticRecall: {
+        topK: 5,
+        messageRange: 2,
+      },
       workingMemory: {
         enabled: true,
         template: GLOBAL_MEMORY_TEMPLATE,

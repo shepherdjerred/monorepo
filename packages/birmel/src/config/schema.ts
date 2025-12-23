@@ -20,6 +20,7 @@ export const OpenAIConfigSchema = z.object({
 
 export const MastraConfigSchema = z.object({
   memoryDbPath: z.string().default("file:/app/data/mastra-memory.db"),
+  telemetryDbPath: z.string().default("file:/app/data/mastra-telemetry.db"),
   studioEnabled: z.boolean().default(true),
   studioPort: z.number().default(4111),
   studioHost: z.string().default("0.0.0.0"),
@@ -57,6 +58,17 @@ export const LoggingConfigSchema = z.object({
   level: z.enum(["debug", "info", "warn", "error"]).default("info"),
 });
 
+export const SentryConfigSchema = z.object({
+  enabled: z.boolean().default(false),
+  dsn: z.string().optional(),
+  environment: z
+    .enum(["development", "staging", "production"])
+    .default("development"),
+  release: z.string().optional(),
+  sampleRate: z.number().min(0).max(1).default(1.0),
+  tracesSampleRate: z.number().min(0).max(1).default(0.1),
+});
+
 export const PersonaConfigSchema = z.object({
   enabled: z.boolean().default(true),
   defaultPersona: z.string().default("virmel"),
@@ -64,6 +76,25 @@ export const PersonaConfigSchema = z.object({
   decisionExampleCount: z.number().default(20),
   styleExampleCount: z.number().default(50),
   styleModel: z.string().default("gpt-4o-mini"),
+});
+
+export const BirthdayConfigSchema = z.object({
+  enabled: z.boolean().default(true),
+  defaultTimezone: z.string().default("UTC"),
+  birthdayRoleId: z.string().optional(),
+  announcementChannelId: z.string().optional(),
+});
+
+export const ActivityTrackingConfigSchema = z.object({
+  enabled: z.boolean().default(true),
+  roleTiers: z
+    .array(
+      z.object({
+        minimumActivity: z.number().min(0),
+        roleId: z.string(),
+      })
+    )
+    .default([]),
 });
 
 export const ConfigSchema = z.object({
@@ -75,7 +106,10 @@ export const ConfigSchema = z.object({
   voice: VoiceConfigSchema,
   externalApis: ExternalApisSchema,
   logging: LoggingConfigSchema,
+  sentry: SentryConfigSchema,
   persona: PersonaConfigSchema,
+  birthdays: BirthdayConfigSchema,
+  activityTracking: ActivityTrackingConfigSchema,
 });
 
 export type Config = z.infer<typeof ConfigSchema>;
@@ -87,4 +121,7 @@ export type DailyPostsConfig = z.infer<typeof DailyPostsConfigSchema>;
 export type VoiceConfig = z.infer<typeof VoiceConfigSchema>;
 export type ExternalApisConfig = z.infer<typeof ExternalApisSchema>;
 export type LoggingConfig = z.infer<typeof LoggingConfigSchema>;
+export type SentryConfig = z.infer<typeof SentryConfigSchema>;
 export type PersonaConfig = z.infer<typeof PersonaConfigSchema>;
+export type BirthdayConfig = z.infer<typeof BirthdayConfigSchema>;
+export type ActivityTrackingConfig = z.infer<typeof ActivityTrackingConfigSchema>;

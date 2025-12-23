@@ -31,7 +31,7 @@ function ensureFtsTable(): void {
 
   const database = getPersonaDb();
 
-  // Check if FTS table already exists
+  // Check if FTS table exists (it should be created during database setup)
   const exists = database
     .query<{ name: string }, []>(
       "SELECT name FROM sqlite_master WHERE type='table' AND name='messages_fts'",
@@ -39,27 +39,11 @@ function ensureFtsTable(): void {
     .get();
 
   if (!exists) {
-    logger.info("Creating FTS5 virtual table for message search...");
-    try {
-      // Create FTS5 virtual table for full-text search
-      database.run(`
-        CREATE VIRTUAL TABLE messages_fts USING fts5(
-          content,
-          content='messages',
-          content_rowid='rowid'
-        );
-      `);
-      // Populate the FTS index
-      database.run(`
-        INSERT INTO messages_fts(messages_fts) VALUES('rebuild');
-      `);
-      logger.info("FTS5 virtual table created successfully");
-    } catch (error) {
-      // FTS might fail if database is read-only, log and continue
-      logger.warn("Could not create FTS table (database may be read-only)", {
-        error,
-      });
-    }
+    logger.warn(
+      "FTS table not found in persona database. " +
+        "Run convert_to_sqlite.py to recreate the database with FTS support. " +
+        "Falling back to slower LIKE-based search.",
+    );
   }
 
   ftsInitialized = true;

@@ -14,6 +14,15 @@ function parseNumber(value: string | undefined, defaultValue: number): number {
   return Number.isNaN(parsed) ? defaultValue : parsed;
 }
 
+function parseJSON<T>(value: string | undefined, defaultValue: T): T {
+  if (value === undefined) return defaultValue;
+  try {
+    return JSON.parse(value) as T;
+  } catch {
+    return defaultValue;
+  }
+}
+
 function loadConfigFromEnv(): Config {
   const rawConfig = {
     discord: {
@@ -34,6 +43,9 @@ function loadConfigFromEnv(): Config {
       memoryDbPath:
         process.env["MASTRA_MEMORY_DB_PATH"] ??
         "file:/app/data/mastra-memory.db",
+      telemetryDbPath:
+        process.env["MASTRA_TELEMETRY_DB_PATH"] ??
+        "file:/app/data/mastra-telemetry.db",
       studioEnabled: parseBoolean(process.env["MASTRA_STUDIO_ENABLED"], true),
       studioPort: parseNumber(process.env["MASTRA_STUDIO_PORT"], 4111),
       studioHost: process.env["MASTRA_STUDIO_HOST"] ?? "0.0.0.0",
@@ -68,6 +80,14 @@ function loadConfigFromEnv(): Config {
     logging: {
       level: process.env["LOG_LEVEL"] ?? "info",
     },
+    sentry: {
+      enabled: parseBoolean(process.env["SENTRY_ENABLED"], false),
+      dsn: process.env["SENTRY_DSN"],
+      environment: process.env["SENTRY_ENVIRONMENT"] ?? "development",
+      release: process.env["SENTRY_RELEASE"] ?? process.env["GIT_SHA"],
+      sampleRate: parseNumber(process.env["SENTRY_SAMPLE_RATE"], 1.0),
+      tracesSampleRate: parseNumber(process.env["SENTRY_TRACES_SAMPLE_RATE"], 0.1),
+    },
     persona: {
       enabled: parseBoolean(process.env["PERSONA_ENABLED"], true),
       defaultPersona: process.env["PERSONA_DEFAULT"] ?? "virmel",
@@ -78,6 +98,19 @@ function loadConfigFromEnv(): Config {
       ),
       styleExampleCount: parseNumber(process.env["PERSONA_STYLE_COUNT"], 50),
       styleModel: process.env["PERSONA_STYLE_MODEL"] ?? "gpt-4o-mini",
+    },
+    birthdays: {
+      enabled: parseBoolean(process.env["BIRTHDAYS_ENABLED"], true),
+      defaultTimezone: process.env["BIRTHDAYS_DEFAULT_TIMEZONE"] ?? "UTC",
+      birthdayRoleId: process.env["BIRTHDAYS_ROLE_ID"],
+      announcementChannelId: process.env["BIRTHDAYS_ANNOUNCEMENT_CHANNEL_ID"],
+    },
+    activityTracking: {
+      enabled: parseBoolean(process.env["ACTIVITY_TRACKING_ENABLED"], true),
+      roleTiers: parseJSON<{ minimumActivity: number; roleId: string }[]>(
+        process.env["ACTIVITY_ROLE_TIERS"],
+        [],
+      ),
     },
   };
 
