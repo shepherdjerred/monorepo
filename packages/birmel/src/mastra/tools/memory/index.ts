@@ -19,30 +19,30 @@ export const updateGlobalMemoryTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async (input) => {
+  execute: async (ctx) => {
     try {
       const memory = getMemory();
-      const threadId = getGlobalThreadId(input.guildId);
+      const threadId = getGlobalThreadId(ctx.context.guildId);
 
       // Ensure thread exists, create if not
       let thread = await memory.getThreadById({ threadId });
       if (!thread) {
         thread = await memory.createThread({
           threadId,
-          resourceId: `guild:${input.guildId}`,
+          resourceId: `guild:${ctx.context.guildId}`,
           metadata: {
-            workingMemory: input.memory,
+            workingMemory: ctx.context.memory,
           },
         });
       } else {
         // Update the working memory
         await memory.updateWorkingMemory({
           threadId,
-          workingMemory: input.memory,
+          workingMemory: ctx.context.memory,
         });
       }
 
-      logger.info("Global memory updated", { guildId: input.guildId });
+      logger.info("Global memory updated", { guildId: ctx.context.guildId });
 
       return {
         success: true,
@@ -74,10 +74,10 @@ export const getGlobalMemoryTool = createTool({
       })
       .optional(),
   }),
-  execute: async (input) => {
+  execute: async (ctx) => {
     try {
       const memory = getMemory();
-      const threadId = getGlobalThreadId(input.guildId);
+      const threadId = getGlobalThreadId(ctx.context.guildId);
 
       const thread = await memory.getThreadById({ threadId });
 
