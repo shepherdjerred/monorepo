@@ -26,33 +26,37 @@ export const recordMessageActivityTool = createTool({
     success: z.boolean(),
     message: z.string()
   }),
-  execute: async (input) => {
-    return withToolSpan("record-message-activity", input.guildId, async () => {
+  execute: async (ctx) => {
+    const { guildId, userId, channelId, messageId, characterCount } = ctx.context;
+    return withToolSpan("record-message-activity", guildId, async () => {
       logger.debug("Recording message activity", {
-        guildId: input.guildId,
-        userId: input.userId
+        guildId,
+        userId
       });
       try {
-        recordMessageActivity({
-          guildId: input.guildId,
-          userId: input.userId,
-          channelId: input.channelId,
-          messageId: input.messageId,
-          characterCount: input.characterCount
-        });
+        const activityInput: Parameters<typeof recordMessageActivity>[0] = {
+          guildId,
+          userId,
+          channelId,
+          messageId,
+        };
+        if (characterCount !== undefined) {
+          activityInput.characterCount = characterCount;
+        }
+        recordMessageActivity(activityInput);
 
-        return {
+        return await Promise.resolve({
           success: true,
           message: "Message activity recorded successfully"
-        };
+        });
       } catch (error) {
         logger.error("Failed to record message activity", error, {
-          guildId: input.guildId,
-          userId: input.userId
+          guildId,
+          userId
         });
         captureException(error as Error, {
           operation: "tool.record-message-activity",
-          discord: { guildId: input.guildId, userId: input.userId }
+          discord: { guildId, userId }
         });
         return {
           success: false,
@@ -77,34 +81,35 @@ export const recordReactionActivityTool = createTool({
     success: z.boolean(),
     message: z.string()
   }),
-  execute: async (input) => {
-    return withToolSpan("record-reaction-activity", input.guildId, async () => {
+  execute: async (ctx) => {
+    const { guildId, userId, channelId, messageId, emoji } = ctx.context;
+    return withToolSpan("record-reaction-activity", guildId, async () => {
       logger.debug("Recording reaction activity", {
-        guildId: input.guildId,
-        userId: input.userId,
-        emoji: input.emoji
+        guildId,
+        userId,
+        emoji
       });
       try {
         recordReactionActivity({
-          guildId: input.guildId,
-          userId: input.userId,
-          channelId: input.channelId,
-          messageId: input.messageId,
-          emoji: input.emoji
+          guildId,
+          userId,
+          channelId,
+          messageId,
+          emoji
         });
 
-        return {
+        return await Promise.resolve({
           success: true,
           message: "Reaction activity recorded successfully"
-        };
+        });
       } catch (error) {
         logger.error("Failed to record reaction activity", error, {
-          guildId: input.guildId,
-          userId: input.userId
+          guildId,
+          userId
         });
         captureException(error as Error, {
           operation: "tool.record-reaction-activity",
-          discord: { guildId: input.guildId, userId: input.userId }
+          discord: { guildId, userId }
         });
         return {
           success: false,
@@ -138,47 +143,48 @@ export const getUserActivityTool = createTool({
       rank: z.number().describe("User's rank in the guild by total activity")
     }).optional()
   }),
-  execute: async (input) => {
-    return withToolSpan("get-user-activity", input.guildId, async () => {
+  execute: async (ctx) => {
+    const { guildId, userId, startDate, endDate } = ctx.context;
+    return withToolSpan("get-user-activity", guildId, async () => {
       logger.debug("Getting user activity stats", {
-        guildId: input.guildId,
-        userId: input.userId
+        guildId,
+        userId
       });
       try {
-        const dateRange = input.startDate && input.endDate ? {
-          start: new Date(input.startDate),
-          end: new Date(input.endDate)
+        const dateRange = startDate && endDate ? {
+          start: new Date(startDate),
+          end: new Date(endDate)
         } : undefined;
 
         const stats = await getUserActivityStats(
-          input.guildId,
-          input.userId,
+          guildId,
+          userId,
           dateRange
         );
 
         logger.info("User activity stats retrieved", {
-          guildId: input.guildId,
-          userId: input.userId,
+          guildId,
+          userId,
           totalActivity: stats.totalActivity,
           rank: stats.rank
         });
 
         return {
           success: true,
-          message: `User has ${stats.totalActivity} total activity points (rank #${stats.rank})`,
+          message: `User has ${stats.totalActivity.toString()} total activity points (rank #${stats.rank.toString()})`,
           data: {
-            userId: input.userId,
+            userId,
             ...stats
           }
         };
       } catch (error) {
         logger.error("Failed to get user activity", error, {
-          guildId: input.guildId,
-          userId: input.userId
+          guildId,
+          userId
         });
         captureException(error as Error, {
           operation: "tool.get-user-activity",
-          discord: { guildId: input.guildId, userId: input.userId }
+          discord: { guildId, userId }
         });
         return {
           success: false,
@@ -212,27 +218,38 @@ export const getTopActiveUsersTool = createTool({
       }))
     }).optional()
   }),
-  execute: async (input) => {
-    return withToolSpan("get-top-active-users", input.guildId, async () => {
+  execute: async (ctx) => {
+    const { guildId, limit, startDate, endDate, activityType } = ctx.context;
+    return withToolSpan("get-top-active-users", guildId, async () => {
       logger.debug("Getting top active users", {
-        guildId: input.guildId,
-        limit: input.limit
+        guildId,
+        limit
       });
       try {
-        const dateRange = input.startDate && input.endDate ? {
-          start: new Date(input.startDate),
-          end: new Date(input.endDate)
-        } : undefined;
+        const dateRange =
+          startDate && endDate
+            ? {
+                start: new Date(startDate),
+                end: new Date(endDate),
+              }
+            : undefined;
 
-        const topUsers = await getTopActiveUsers(input.guildId, {
-          limit: input.limit ?? 10,
-          activityType: input.activityType ?? "all",
-          dateRange
-        });
+        const topUsersOptions: Parameters<typeof getTopActiveUsers>[1] = {
+          limit: limit ?? 10,
+          activityType: activityType ?? "all",
+        };
+        if (dateRange !== undefined) {
+          topUsersOptions.dateRange = dateRange;
+        }
+
+        const topUsers = await getTopActiveUsers(
+          guildId,
+          topUsersOptions
+        );
 
         // Fetch usernames from Discord
         const client = getDiscordClient();
-        const guild = await client.guilds.fetch(input.guildId);
+        const guild = await client.guilds.fetch(guildId);
 
         const usersWithNames = await Promise.all(
           topUsers.map(async (user) => {
@@ -244,7 +261,7 @@ export const getTopActiveUsersTool = createTool({
                 activityCount: user.activityCount,
                 rank: user.rank
               };
-            } catch (error) {
+            } catch (_error) {
               logger.warn("Could not fetch username for user", { userId: user.userId });
               return {
                 userId: user.userId,
@@ -257,24 +274,24 @@ export const getTopActiveUsersTool = createTool({
         );
 
         logger.info("Top active users retrieved", {
-          guildId: input.guildId,
+          guildId,
           count: usersWithNames.length
         });
 
         return {
           success: true,
-          message: `Retrieved top ${usersWithNames.length} active users`,
+          message: `Retrieved top ${usersWithNames.length.toString()} active users`,
           data: {
             users: usersWithNames
           }
         };
       } catch (error) {
         logger.error("Failed to get top active users", error, {
-          guildId: input.guildId
+          guildId
         });
         captureException(error as Error, {
           operation: "tool.get-top-active-users",
-          discord: { guildId: input.guildId }
+          discord: { guildId }
         });
         return {
           success: false,

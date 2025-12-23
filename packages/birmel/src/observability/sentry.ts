@@ -50,6 +50,8 @@ export type DiscordContext = {
   userId?: string;
   username?: string;
   messageId?: string;
+  scheduleId?: string;
+  threadId?: string;
 };
 
 export function setSentryContext(context: DiscordContext): void {

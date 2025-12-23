@@ -26,10 +26,10 @@ export const getGuildInfoTool = createTool({
       })
       .optional(),
   }),
-  execute: async (input) => {
+  execute: async (ctx) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(input.guildId);
+      const guild = await client.guilds.fetch(ctx.context.guildId);
 
       return {
         success: true,
@@ -71,14 +71,14 @@ export const modifyGuildTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async (input) => {
+  execute: async (ctx) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(input.guildId);
+      const guild = await client.guilds.fetch(ctx.context.guildId);
 
       const updates: { name?: string; description?: string } = {};
-      if (input.name) updates.name = input.name;
-      if (input.description) updates.description = input.description;
+      if (ctx.context.name) updates.name = ctx.context.name;
+      if (ctx.context.description) updates.description = ctx.context.description;
 
       if (Object.keys(updates).length === 0) {
         return {
@@ -114,11 +114,11 @@ export const setGuildIconTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async (input) => {
+  execute: async (ctx) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(input.guildId);
-      await guild.setIcon(input.iconUrl);
+      const guild = await client.guilds.fetch(ctx.context.guildId);
+      await guild.setIcon(ctx.context.iconUrl);
       return {
         success: true,
         message: "Server icon updated successfully",
@@ -144,11 +144,11 @@ export const setGuildBannerTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async (input) => {
+  execute: async (ctx) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(input.guildId);
-      await guild.setBanner(input.bannerUrl);
+      const guild = await client.guilds.fetch(ctx.context.guildId);
+      await guild.setBanner(ctx.context.bannerUrl);
       return {
         success: true,
         message: "Server banner updated successfully",
@@ -185,11 +185,11 @@ export const getAuditLogsTool = createTool({
       )
       .optional(),
   }),
-  execute: async (input) => {
+  execute: async (ctx) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(input.guildId);
-      const auditLogs = await guild.fetchAuditLogs({ limit: input.limit ?? 10 });
+      const guild = await client.guilds.fetch(ctx.context.guildId);
+      const auditLogs = await guild.fetchAuditLogs({ limit: ctx.context.limit ?? 10 });
 
       const entries = auditLogs.entries.map((entry) => {
         let targetId: string | null = null;
@@ -236,11 +236,11 @@ export const getGuildPruneCountTool = createTool({
       })
       .optional(),
   }),
-  execute: async (input) => {
+  execute: async (ctx) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(input.guildId);
-      const pruneCount = await guild.members.prune({ days: input.days, dry: true });
+      const guild = await client.guilds.fetch(ctx.context.guildId);
+      const pruneCount = await guild.members.prune({ days: ctx.context.days, dry: true });
 
       return {
         success: true,
@@ -276,14 +276,14 @@ export const pruneMembersTool = createTool({
       })
       .optional(),
   }),
-  execute: async (input) => {
+  execute: async (ctx) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(input.guildId);
+      const guild = await client.guilds.fetch(ctx.context.guildId);
       const pruneOptions: Parameters<typeof guild.members.prune>[0] = {
-        days: input.days,
+        days: ctx.context.days,
       };
-      if (input.reason !== undefined) pruneOptions.reason = input.reason;
+      if (ctx.context.reason !== undefined) pruneOptions.reason = ctx.context.reason;
       const pruned = await guild.members.prune(pruneOptions);
 
       return {

@@ -4,7 +4,7 @@ import { loggers } from "../../utils/logger.js";
 
 const logger = loggers.database.child("birthdays");
 
-export interface CreateBirthdayInput {
+export type CreateBirthdayInput = {
   userId: string;
   guildId: string;
   birthMonth: number; // 1-12
@@ -13,14 +13,14 @@ export interface CreateBirthdayInput {
   timezone?: string;
 }
 
-export interface UpdateBirthdayInput {
+export type UpdateBirthdayInput = {
   birthMonth?: number;
   birthDay?: number;
   birthYear?: number;
   timezone?: string;
 }
 
-export interface UpcomingBirthday {
+export type UpcomingBirthday = {
   userId: string;
   birthMonth: number;
   birthDay: number;
@@ -48,7 +48,7 @@ export async function createBirthday(input: CreateBirthdayInput): Promise<Birthd
       guildId: input.guildId,
       birthMonth: input.birthMonth,
       birthDay: input.birthDay,
-      birthYear: input.birthYear,
+      birthYear: input.birthYear ?? null,
       timezone: input.timezone ?? "UTC",
     },
   });
@@ -56,7 +56,7 @@ export async function createBirthday(input: CreateBirthdayInput): Promise<Birthd
   logger.info("Birthday created", {
     userId: input.userId,
     guildId: input.guildId,
-    date: `${input.birthMonth}/${input.birthDay}`,
+    date: `${input.birthMonth.toString()}/${input.birthDay.toString()}`,
   });
 
   return birthday;
@@ -158,7 +158,7 @@ export async function getBirthdaysToday(guildId: string): Promise<Birthday[]> {
  */
 export async function getUpcomingBirthdays(
   guildId: string,
-  daysAhead: number = 7
+  daysAhead = 7
 ): Promise<UpcomingBirthday[]> {
   const birthdays = await prisma.birthday.findMany({
     where: { guildId },
@@ -189,13 +189,16 @@ export async function getUpcomingBirthdays(
     );
 
     if (daysUntil >= 0 && daysUntil <= daysAhead) {
-      upcoming.push({
+      const upcomingBirthday: UpcomingBirthday = {
         userId: birthday.userId,
         birthMonth: birthday.birthMonth,
         birthDay: birthday.birthDay,
-        birthYear: birthday.birthYear ?? undefined,
         daysUntil,
-      });
+      };
+      if (birthday.birthYear !== null) {
+        upcomingBirthday.birthYear = birthday.birthYear;
+      }
+      upcoming.push(upcomingBirthday);
     }
   }
 
