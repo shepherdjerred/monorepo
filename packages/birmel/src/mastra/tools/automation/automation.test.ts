@@ -4,7 +4,7 @@
  * Tests Phase 1 (Shell), Phase 2 (Scheduler), and Phase 3 (Browser) tools
  */
 
-import { describe, test, expect, beforeAll } from "bun:test";
+import { describe, test, expect } from "bun:test";
 import {
   executeShellCommandTool,
   scheduleTaskTool,
@@ -13,7 +13,6 @@ import {
   scheduleReminderTool,
   browserNavigateTool,
   browserScreenshotTool,
-  browserClickTool,
   browserTypeTool,
   browserGetTextTool,
   browserCloseTool,
