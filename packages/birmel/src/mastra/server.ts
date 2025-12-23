@@ -35,9 +35,21 @@ export async function createAndStartServer(
   await server.init();
 
   // Helper function to serve index.html with template variables replaced
-  const serveIndex = async () => {
+  const serveIndex = async (requestUrl?: string) => {
     const indexPath = join(playgroundPath, "index.html");
     let html = await readFile(indexPath, "utf-8");
+
+    // Detect protocol from request URL if available, otherwise use empty string
+    // to let the browser use relative protocol (same as page protocol)
+    let protocol = "";
+    if (requestUrl) {
+      try {
+        const url = new URL(requestUrl);
+        protocol = url.protocol.replace(":", "");
+      } catch {
+        // If URL parsing fails, leave protocol empty for relative URLs
+      }
+    }
 
     // Replace template variables
     html = html
@@ -46,7 +58,8 @@ export async function createAndStartServer(
       .replace(/%%MASTRA_SERVER_HOST%%/g, options.host)
       .replace(/%%MASTRA_SERVER_PORT%%/g, String(options.port))
       .replace(/%%MASTRA_HIDE_CLOUD_CTA%%/g, "true")
-      .replace(/%%MASTRA_SERVER_PROTOCOL%%/g, "http");
+      // Use detected protocol or empty string for protocol-relative URLs
+      .replace(/%%MASTRA_SERVER_PROTOCOL%%/g, protocol);
 
     return html;
   };
@@ -66,17 +79,23 @@ export async function createAndStartServer(
     })
   );
 
+  // Handle API routes that don't match - return proper JSON error instead of HTML
+  app.all("/api/*", async (c) => {
+    return c.json(
+      {
+        error: "Not Found",
+        message: `API endpoint ${c.req.path} not found`,
+        path: c.req.path,
+      },
+      404
+    );
+  });
+
   // Handle all other routes with SPA logic
   app.get("*", async (c) => {
-    const path = c.req.path;
-
-    // If it's an API route, let it fall through
-    if (path.startsWith("/api")) {
-      return c.notFound();
-    }
-
-    // For all other routes (SPA routes), serve the template-replaced index.html
-    const html = await serveIndex();
+    // For all non-API routes (SPA routes), serve the template-replaced index.html
+    // Pass the request URL to detect the protocol (http vs https)
+    const html = await serveIndex(c.req.url);
     return c.html(html);
   });
 

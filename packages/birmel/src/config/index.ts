@@ -34,6 +34,9 @@ function loadConfigFromEnv(): Config {
       memoryDbPath:
         process.env["MASTRA_MEMORY_DB_PATH"] ??
         "file:/app/data/mastra-memory.db",
+      telemetryDbPath:
+        process.env["MASTRA_TELEMETRY_DB_PATH"] ??
+        "file:/app/data/mastra-telemetry.db",
       studioEnabled: parseBoolean(process.env["MASTRA_STUDIO_ENABLED"], true),
       studioPort: parseNumber(process.env["MASTRA_STUDIO_PORT"], 4111),
       studioHost: process.env["MASTRA_STUDIO_HOST"] ?? "0.0.0.0",
