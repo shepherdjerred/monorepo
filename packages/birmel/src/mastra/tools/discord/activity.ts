@@ -27,7 +27,7 @@ export const recordMessageActivityTool = createTool({
     message: z.string()
   }),
   execute: async (input) => {
-    return withToolSpan("record-message-activity", input.guildId, async () => {
+    return withToolSpan("record-message-activity", input.guildId, () => {
       logger.debug("Recording message activity", {
         guildId: input.guildId,
         userId: input.userId
@@ -81,7 +81,7 @@ export const recordReactionActivityTool = createTool({
     message: z.string()
   }),
   execute: async (input) => {
-    return withToolSpan("record-reaction-activity", input.guildId, async () => {
+    return withToolSpan("record-reaction-activity", input.guildId, () => {
       logger.debug("Recording reaction activity", {
         guildId: input.guildId,
         userId: input.userId,
@@ -168,7 +168,7 @@ export const getUserActivityTool = createTool({
 
         return {
           success: true,
-          message: `User has ${stats.totalActivity} total activity points (rank #${stats.rank})`,
+          message: `User has ${stats.totalActivity.toString()} total activity points (rank #${stats.rank.toString()})`,
           data: {
             userId: input.userId,
             ...stats
@@ -257,7 +257,7 @@ export const getTopActiveUsersTool = createTool({
                 activityCount: user.activityCount,
                 rank: user.rank
               };
-            } catch (error) {
+            } catch (_error) {
               logger.warn("Could not fetch username for user", { userId: user.userId });
               return {
                 userId: user.userId,
@@ -276,7 +276,7 @@ export const getTopActiveUsersTool = createTool({
 
         return {
           success: true,
-          message: `Retrieved top ${usersWithNames.length} active users`,
+          message: `Retrieved top ${usersWithNames.length.toString()} active users`,
           data: {
             users: usersWithNames
           }

@@ -3,7 +3,7 @@ import { loggers } from "../../utils/logger.js";
 
 const logger = loggers.database.child("activity");
 
-export interface RecordMessageActivityInput {
+export type RecordMessageActivityInput = {
   guildId: string;
   userId: string;
   channelId: string;
@@ -11,7 +11,7 @@ export interface RecordMessageActivityInput {
   characterCount?: number;
 }
 
-export interface RecordReactionActivityInput {
+export type RecordReactionActivityInput = {
   guildId: string;
   userId: string;
   channelId: string;
@@ -19,14 +19,14 @@ export interface RecordReactionActivityInput {
   emoji: string;
 }
 
-export interface RecordVoiceActivityInput {
+export type RecordVoiceActivityInput = {
   guildId: string;
   userId: string;
   channelId: string;
   durationMinutes: number;
 }
 
-export interface ActivityStats {
+export type ActivityStats = {
   messageCount: number;
   reactionCount: number;
   voiceMinutes: number;
@@ -34,7 +34,7 @@ export interface ActivityStats {
   rank: number;
 }
 
-export interface TopUser {
+export type TopUser = {
   userId: string;
   activityCount: number;
   rank: number;
@@ -59,7 +59,7 @@ export function recordMessageActivity(input: RecordMessageActivityInput): void {
           : JSON.stringify({ messageId: input.messageId }),
       },
     })
-    .catch((error) => {
+    .catch((error: unknown) => {
       logger.error("Failed to record message activity", error, {
         guildId: input.guildId,
         userId: input.userId,
@@ -84,7 +84,7 @@ export function recordReactionActivity(input: RecordReactionActivityInput): void
         }),
       },
     })
-    .catch((error) => {
+    .catch((error: unknown) => {
       logger.error("Failed to record reaction activity", error, {
         guildId: input.guildId,
         userId: input.userId,
@@ -108,7 +108,7 @@ export function recordVoiceActivity(input: RecordVoiceActivityInput): void {
         }),
       },
     })
-    .catch((error) => {
+    .catch((error: unknown) => {
       logger.error("Failed to record voice activity", error, {
         guildId: input.guildId,
         userId: input.userId,
@@ -156,9 +156,9 @@ export async function getUserActivityStats(
   for (const activity of voiceActivities) {
     if (activity.metadata) {
       try {
-        const metadata = JSON.parse(activity.metadata);
-        voiceMinutes += metadata.durationMinutes || 0;
-      } catch (error) {
+        const metadata = JSON.parse(activity.metadata) as { durationMinutes?: number };
+        voiceMinutes += metadata.durationMinutes ?? 0;
+      } catch (_error) {
         logger.warn("Failed to parse voice activity metadata", { metadata: activity.metadata });
       }
     }
@@ -167,7 +167,7 @@ export async function getUserActivityStats(
   const totalActivity = messageCount + reactionCount + voiceMinutes;
 
   // Calculate rank: count how many users have higher total activity
-  const higherActivityCount = await prisma.$queryRaw<Array<{ count: number }>>`
+  const higherActivityCount = await prisma.$queryRaw<{ count: number }[]>`
     SELECT COUNT(DISTINCT userId) as count
     FROM (
       SELECT userId, COUNT(*) as activityCount

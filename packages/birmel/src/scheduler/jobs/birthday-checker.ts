@@ -48,18 +48,16 @@ export async function checkAndPostBirthdays(): Promise<void> {
               let ageText = "";
               if (birthday.birthYear) {
                 const age = new Date().getFullYear() - birthday.birthYear;
-                ageText = ` (${age} years old)`;
+                ageText = ` (${age.toString()} years old)`;
               }
 
               const birthdayMessage = `🎉🎂 Happy Birthday to <@${birthday.userId}>!${ageText} 🎂🎉`;
 
               // Try to get configured channel, fallback to system channel or first text channel
-              let channelId = config.birthdays?.announcementChannelId;
+              let channelId = config.birthdays.announcementChannelId;
 
-              if (!channelId) {
-                // Use system channel or first available text channel
-                channelId = fullGuild.systemChannelId ?? undefined;
-              }
+              // Use system channel or first available text channel if no configured channel
+              channelId ??= fullGuild.systemChannelId ?? undefined;
 
               if (channelId) {
                 const channel = await client.channels.fetch(channelId);
@@ -75,29 +73,32 @@ export async function checkAndPostBirthdays(): Promise<void> {
                   });
 
                   // Optionally assign birthday role if configured
-                  if (config.birthdays?.birthdayRoleId) {
+                  const birthdayRoleId = config.birthdays.birthdayRoleId;
+                  if (birthdayRoleId) {
                     try {
-                      await member.roles.add(config.birthdays.birthdayRoleId);
+                      await member.roles.add(birthdayRoleId);
                       logger.info("Added birthday role", {
                         userId: birthday.userId,
-                        roleId: config.birthdays.birthdayRoleId
+                        roleId: birthdayRoleId
                       });
 
                       // Schedule role removal after 24 hours
-                      setTimeout(async () => {
-                        try {
-                          const memberToUpdate = await fullGuild.members.fetch(birthday.userId);
-                          await memberToUpdate.roles.remove(config.birthdays!.birthdayRoleId!);
-                          logger.info("Removed birthday role", {
-                            userId: birthday.userId,
-                            roleId: config.birthdays!.birthdayRoleId
-                          });
-                        } catch (error) {
-                          logger.warn("Failed to remove birthday role", {
-                            userId: birthday.userId,
-                            error
-                          });
-                        }
+                      setTimeout(() => {
+                        void (async () => {
+                          try {
+                            const memberToUpdate = await fullGuild.members.fetch(birthday.userId);
+                            await memberToUpdate.roles.remove(birthdayRoleId);
+                            logger.info("Removed birthday role", {
+                              userId: birthday.userId,
+                              roleId: birthdayRoleId
+                            });
+                          } catch (error) {
+                            logger.warn("Failed to remove birthday role", {
+                              userId: birthday.userId,
+                              error
+                            });
+                          }
+                        })();
                       }, 24 * 60 * 60 * 1000); // 24 hours
                     } catch (error) {
                       logger.warn("Failed to add birthday role", {
