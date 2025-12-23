@@ -16,10 +16,10 @@ export const joinVoiceChannelTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async (ctx) => {
+  execute: async ({ guildId, channelId }) => {
     try {
       const client = getDiscordClient();
-      const channel = await client.channels.fetch(ctx.context.channelId);
+      const channel = await client.channels.fetch(channelId);
 
       if (!channel?.isVoiceBased()) {
         return {
@@ -32,7 +32,7 @@ export const joinVoiceChannelTool = createTool({
 
       joinVoiceChannel({
         channelId: voiceChannel.id,
-        guildId: ctx.context.guildId,
+        guildId,
         adapterCreator: voiceChannel.guild.voiceAdapterCreator,
       });
 
@@ -60,10 +60,10 @@ export const leaveVoiceChannelTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async (ctx) => {
+  execute: async ({ guildId }) => {
     await Promise.resolve();
     try {
-      const connection = getVoiceConnection(ctx.context.guildId);
+      const connection = getVoiceConnection(guildId);
 
       if (!connection) {
         return {
@@ -101,11 +101,11 @@ export const moveMemberToChannelTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async (ctx) => {
+  execute: async ({ guildId, memberId, channelId, reason }) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(ctx.context.guildId);
-      const member = await guild.members.fetch(ctx.context.memberId);
+      const guild = await client.guilds.fetch(guildId);
+      const member = await guild.members.fetch(memberId);
 
       if (!member.voice.channel) {
         return {
@@ -114,7 +114,7 @@ export const moveMemberToChannelTool = createTool({
         };
       }
 
-      await member.voice.setChannel(ctx.context.channelId, ctx.context.reason);
+      await member.voice.setChannel(channelId, reason);
 
       return {
         success: true,
@@ -142,11 +142,11 @@ export const disconnectMemberTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async (ctx) => {
+  execute: async ({ guildId, memberId, reason }) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(ctx.context.guildId);
-      const member = await guild.members.fetch(ctx.context.memberId);
+      const guild = await client.guilds.fetch(guildId);
+      const member = await guild.members.fetch(memberId);
 
       if (!member.voice.channel) {
         return {
@@ -155,7 +155,7 @@ export const disconnectMemberTool = createTool({
         };
       }
 
-      await member.voice.disconnect(ctx.context.reason);
+      await member.voice.disconnect(reason);
 
       return {
         success: true,
@@ -184,17 +184,17 @@ export const serverMuteMemberTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async (ctx) => {
+  execute: async ({ guildId, memberId, mute, reason }) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(ctx.context.guildId);
-      const member = await guild.members.fetch(ctx.context.memberId);
+      const guild = await client.guilds.fetch(guildId);
+      const member = await guild.members.fetch(memberId);
 
-      await member.voice.setMute(ctx.context.mute, ctx.context.reason);
+      await member.voice.setMute(mute, reason);
 
       return {
         success: true,
-        message: `${ctx.context.mute ? "Muted" : "Unmuted"} ${member.displayName}`,
+        message: `${mute ? "Muted" : "Unmuted"} ${member.displayName}`,
       };
     } catch (error) {
       logger.error("Failed to mute/unmute member", error as Error);
@@ -219,17 +219,17 @@ export const serverDeafenMemberTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async (ctx) => {
+  execute: async ({ guildId, memberId, deaf, reason }) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(ctx.context.guildId);
-      const member = await guild.members.fetch(ctx.context.memberId);
+      const guild = await client.guilds.fetch(guildId);
+      const member = await guild.members.fetch(memberId);
 
-      await member.voice.setDeaf(ctx.context.deaf, ctx.context.reason);
+      await member.voice.setDeaf(deaf, reason);
 
       return {
         success: true,
-        message: `${ctx.context.deaf ? "Deafened" : "Undeafened"} ${member.displayName}`,
+        message: `${deaf ? "Deafened" : "Undeafened"} ${member.displayName}`,
       };
     } catch (error) {
       logger.error("Failed to deafen/undeafen member", error as Error);
