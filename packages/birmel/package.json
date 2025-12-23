@@ -14,6 +14,7 @@
     "dev": "bun run --watch src/index.ts",
     "build": "true",
     "build:studio": "mastra build -d src/mastra",
+    "pretest": "bunx prisma db push --skip-generate --accept-data-loss",
     "test": "bun test",
     "typecheck": "prisma generate && tsc --noEmit",
     "lint": "eslint .",

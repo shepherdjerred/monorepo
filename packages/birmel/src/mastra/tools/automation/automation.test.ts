@@ -37,48 +37,15 @@ const testContext = {
   agentId: "test-agent",
 };
 
-// Set up test database with schema before running tests
+// Set up test database before running tests
+// Note: The pretest script runs "prisma db push" to create the schema
 beforeAll(async () => {
-  // Remove test database if it exists
-  const dbPath = "./data/test-ops.db";
-  if (existsSync(dbPath)) {
-    unlinkSync(dbPath);
-  }
-
   // Create the data directory if it doesn't exist
   const { mkdir } = await import("node:fs/promises");
   await mkdir("./data", { recursive: true });
 
-  // Create the ScheduledTask table directly using raw SQL
-  // This avoids regenerating the Prisma Client after it's already been imported
-  await prisma.$executeRaw`
-    CREATE TABLE IF NOT EXISTS "ScheduledTask" (
-      "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-      "guildId" TEXT NOT NULL,
-      "channelId" TEXT,
-      "userId" TEXT NOT NULL,
-      "scheduledAt" DATETIME NOT NULL,
-      "cronPattern" TEXT,
-      "naturalDesc" TEXT,
-      "toolId" TEXT,
-      "toolInput" TEXT,
-      "executedAt" DATETIME,
-      "nextRun" DATETIME,
-      "enabled" BOOLEAN NOT NULL DEFAULT 1,
-      "name" TEXT,
-      "description" TEXT,
-      "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-    )
-  `;
-
-  // Create indexes
-  await prisma.$executeRaw`
-    CREATE INDEX IF NOT EXISTS "ScheduledTask_guildId_idx" ON "ScheduledTask"("guildId")
-  `;
-  await prisma.$executeRaw`
-    CREATE INDEX IF NOT EXISTS "ScheduledTask_enabled_scheduledAt_idx" ON "ScheduledTask"("enabled", "scheduledAt")
-  `;
+  // Clean up any existing test data
+  await prisma.scheduledTask.deleteMany({});
 });
 
 describe("Phase 1: Shell Tool", () => {
