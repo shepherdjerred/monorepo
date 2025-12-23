@@ -23,10 +23,10 @@ export const getLolUpdatesTool = createTool({
       })
       .optional(),
   }),
-  execute: async (ctx) => {
+  execute: async (input) => {
     try {
       const config = getConfig();
-      const type = ctx.type ?? "patch";
+      const type = input.type ?? "patch";
 
       if (type === "patch") {
         // Get latest patch version from Data Dragon
