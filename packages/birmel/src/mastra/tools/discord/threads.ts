@@ -114,14 +114,24 @@ export const createStandaloneThreadTool = createTool({
           };
         }
 
-        const threadType = input.type === "private" ? ChannelType.PrivateThread : ChannelType.PublicThread;
-
-        const thread = await channel.threads.create({
+        const threadOptions = {
           name: input.name,
-          autoArchiveDuration: input.autoArchiveDuration ? parseInt(input.autoArchiveDuration) as 60 | 1440 | 4320 | 10080 : 1440,
-          type: threadType,
-          ...(input.message && { message: { content: input.message } })
-        });
+          autoArchiveDuration: input.autoArchiveDuration
+            ? (parseInt(input.autoArchiveDuration) as 60 | 1440 | 4320 | 10080)
+            : 1440,
+          type:
+            input.type === "private"
+              ? ChannelType.PrivateThread
+              : ChannelType.PublicThread,
+        };
+
+        if (input.message) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (threadOptions as any).message = { content: input.message };
+        }
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const thread = await channel.threads.create(threadOptions as any);
 
         logger.info("Standalone thread created", {
           threadId: thread.id,

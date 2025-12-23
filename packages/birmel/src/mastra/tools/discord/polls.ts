@@ -36,10 +36,10 @@ export const createPollTool = createTool({
         const client = getDiscordClient();
         const channel = await client.channels.fetch(input.channelId);
 
-        if (!channel?.isTextBased()) {
+        if (!channel?.isTextBased() || !("send" in channel)) {
           return {
             success: false,
-            message: "Channel must be a text channel to create a poll"
+            message: "Channel must be a text channel to create a poll",
           };
         }
 
@@ -66,7 +66,7 @@ export const createPollTool = createTool({
             guildId: message.guildId!,
             channelId: input.channelId,
             messageId: message.id,
-            pollId: message.poll!.question.text, // Using question as identifier
+            pollId: message.poll!.question.text ?? "", // Using question as identifier
             question: input.question,
             createdBy: client.user!.id,
             expiresAt
@@ -170,29 +170,24 @@ export const getPollResultsTool = createTool({
             voters?: Array<{ userId: string; username: string }>;
           } = {
             id: answer.id,
-            text: answer.text,
-            voteCount: answer.voteCount
+            text: answer.text ?? "",
+            voteCount: answer.voteCount,
           };
 
           if (answer.emoji) {
-            answerData.emoji = answer.emoji.name ?? answer.emoji.id;
+            const emojiName = answer.emoji.name ?? answer.emoji.id ?? undefined;
+            if (emojiName) {
+              answerData.emoji = emojiName;
+            }
           }
 
-          // Optionally fetch voters
+          // Note: Discord.js v14 poll API doesn't support fetching individual voters
+          // The votes collection is not accessible through the standard API
+          // This would require the bot to track votes through poll vote events
           if (input.fetchVoters && answer.voteCount > 0) {
-            try {
-              const answerFetch = await answer.fetchAnswer();
-              const voters = [];
-              for (const voter of answerFetch.votes.values()) {
-                voters.push({
-                  userId: voter.id,
-                  username: voter.username
-                });
-              }
-              answerData.voters = voters;
-            } catch (voterError) {
-              logger.warn("Failed to fetch voters for answer", { answerId: answer.id });
-            }
+            logger.warn("Fetching individual poll voters is not supported in Discord.js v14", {
+              answerId: answer.id
+            });
           }
 
           answers.push(answerData);
@@ -208,12 +203,12 @@ export const getPollResultsTool = createTool({
           success: true,
           message: `Poll results: ${totalVotes} total votes across ${answers.length} answers`,
           data: {
-            question: poll.question.text,
+            question: poll.question.text ?? "",
             answers,
             totalVotes,
             isFinalized: poll.resultsFinalized,
-            expiresAt: poll.expiresAt?.toISOString()
-          }
+            ...(poll.expiresAt && { expiresAt: poll.expiresAt.toISOString() }),
+          },
         };
       } catch (error) {
         logger.error("Failed to fetch poll results", error, {

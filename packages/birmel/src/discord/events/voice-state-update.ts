@@ -73,7 +73,7 @@ export function setupVoiceStateUpdateHandler(client: Client): void {
             guildId,
             userId,
             channelId: oldState.channelId,
-            duration: durationMinutes,
+            durationMinutes,
           });
 
           logger.debug("User left voice channel", {
@@ -102,7 +102,7 @@ export function setupVoiceStateUpdateHandler(client: Client): void {
             guildId,
             userId,
             channelId: oldState.channelId,
-            duration: durationMinutes,
+            durationMinutes,
           });
         }
 

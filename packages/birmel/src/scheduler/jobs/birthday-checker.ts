@@ -12,7 +12,7 @@ const logger = loggers.scheduler.child("birthday-checker");
  * Runs daily at a configured time (default: 09:00 UTC)
  */
 export async function checkAndPostBirthdays(): Promise<void> {
-  return withSpan("job.check-birthdays", async () => {
+  return withSpan("job.check-birthdays", {}, async () => {
     try {
       logger.info("Starting birthday check");
 

@@ -200,7 +200,7 @@ export const cancelScheduledMessageTool = createTool({
         });
         captureException(error as Error, {
           operation: "tool.cancel-scheduled-message",
-          discord: { guildId: input.guildId, scheduleId: input.scheduleId }
+          discord: { guildId: input.guildId, scheduleId: input.scheduleId.toString() }
         });
         return {
           success: false,

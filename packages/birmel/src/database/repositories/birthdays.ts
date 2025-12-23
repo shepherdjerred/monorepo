@@ -48,7 +48,7 @@ export async function createBirthday(input: CreateBirthdayInput): Promise<Birthd
       guildId: input.guildId,
       birthMonth: input.birthMonth,
       birthDay: input.birthDay,
-      birthYear: input.birthYear,
+      birthYear: input.birthYear ?? null,
       timezone: input.timezone ?? "UTC",
     },
   });
@@ -189,13 +189,16 @@ export async function getUpcomingBirthdays(
     );
 
     if (daysUntil >= 0 && daysUntil <= daysAhead) {
-      upcoming.push({
+      const upcomingBirthday: UpcomingBirthday = {
         userId: birthday.userId,
         birthMonth: birthday.birthMonth,
         birthDay: birthday.birthDay,
-        birthYear: birthday.birthYear ?? undefined,
         daysUntil,
-      });
+      };
+      if (birthday.birthYear !== null) {
+        upcomingBirthday.birthYear = birthday.birthYear;
+      }
+      upcoming.push(upcomingBirthday);
     }
   }
 
