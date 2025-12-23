@@ -13,15 +13,17 @@ const REPO_URL = "shepherdjerred/monorepo";
 const BUN_VERSION = "1.3.4";
 
 /**
- * Get a Bun container with caching enabled
+ * Get a Bun container with caching enabled and Playwright browsers for tests
  */
 function getBunContainerWithCache(source: Directory): Container {
   return dag
     .container()
-    .from(`oven/bun:${BUN_VERSION}`)
+    .from(`oven/bun:${BUN_VERSION}-debian`)
     .withWorkdir("/workspace")
     .withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-cache"))
-    .withMountedDirectory("/workspace", source);
+    .withMountedDirectory("/workspace", source)
+    // Install Playwright browsers for browser automation tests
+    .withExec(["bunx", "playwright", "install", "--with-deps", "chromium"]);
 }
 
 /**
