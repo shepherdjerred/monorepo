@@ -17,7 +17,8 @@
     "test": "bun test",
     "typecheck": "prisma generate && tsc --noEmit",
     "lint": "eslint .",
-    "studio:dev": "mastra dev -d src/mastra"
+    "studio:dev": "mastra dev -d src/mastra",
+    "prepare": "husky"
   },
   "dependencies": {
     "@ai-sdk/openai": "^2.0.0",
@@ -42,6 +43,7 @@
     "mediaplex": "^1.0.0",
     "openai": "^4.77.0",
     "sodium-native": "^5.0.10",
+    "youtubei.js": "^16.0.1",
     "zod": "^3.24.0"
   },
   "devDependencies": {
