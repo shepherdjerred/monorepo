@@ -4,7 +4,7 @@ import { dag } from "@dagger.io/dagger";
 const BUN_VERSION = "1.3.4";
 
 /**
- * Get a Bun container with caching and ffmpeg for voice support
+ * Get a Bun container with caching, ffmpeg for voice support, and Playwright browsers
  */
 function getBunContainerWithVoice(): Container {
   return dag
@@ -12,7 +12,9 @@ function getBunContainerWithVoice(): Container {
     .from(`oven/bun:${BUN_VERSION}-debian`)
     .withExec(["apt-get", "update"])
     .withExec(["apt-get", "install", "-y", "ffmpeg", "python3", "make", "g++", "libtool-bin"])
-    .withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-cache"));
+    .withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-cache"))
+    // Install Playwright Chromium and dependencies for browser automation
+    .withExec(["bunx", "playwright", "install", "--with-deps", "chromium"]);
 }
 
 /**

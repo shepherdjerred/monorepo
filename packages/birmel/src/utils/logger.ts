@@ -127,4 +127,5 @@ export const loggers = {
   persona: createLogger("persona"),
   database: createLogger("database"),
   events: createLogger("events"),
+  automation: createLogger("automation"),
 };
