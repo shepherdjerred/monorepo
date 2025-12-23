@@ -144,9 +144,14 @@ ${globalContext}`;
       // Build multimodal content if images present
       const messageContent = await buildMessageContent(context, prompt);
 
+      // Wrap multimodal content in a message object with role
+      const messageInput = Array.isArray(messageContent)
+        ? { role: "user" as const, content: messageContent }
+        : messageContent;
+
       const response = await withAgentSpan("birmel", discordContext, async () => {
         return withTyping(context.message, async () => {
-          return agent.generate(messageContent, {
+          return agent.generate(messageInput, {
             threadId: memoryIds.channel.threadId,
             resourceId: memoryIds.channel.resourceId,
           });

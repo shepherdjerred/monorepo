@@ -39,8 +39,8 @@ function ensureFtsTable(): void {
     .get();
 
   if (!exists) {
-    logger.info("Creating FTS5 virtual table for message search...");
     try {
+      logger.debug("Creating FTS5 virtual table for message search...");
       // Create FTS5 virtual table for full-text search
       database.run(`
         CREATE VIRTUAL TABLE messages_fts USING fts5(
@@ -55,10 +55,12 @@ function ensureFtsTable(): void {
       `);
       logger.info("FTS5 virtual table created successfully");
     } catch (error) {
-      // FTS might fail if database is read-only, log and continue
-      logger.warn("Could not create FTS table (database may be read-only)", {
-        error,
-      });
+      // FTS creation fails on read-only databases - this is expected
+      // The code will fall back to LIKE queries which work fine
+      logger.debug(
+        "FTS table not available (database is read-only), using fallback search method",
+        { error },
+      );
     }
   }
 
