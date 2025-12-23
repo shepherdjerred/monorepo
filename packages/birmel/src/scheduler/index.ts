@@ -17,6 +17,7 @@ import {
 	checkAndEndElections,
 	processElectionResults,
 } from "./jobs/elections.js";
+import { runScheduledTasksJob } from "./jobs/scheduled-tasks.js";
 
 let schedulerInterval: ReturnType<typeof setInterval> | null = null;
 
@@ -37,6 +38,7 @@ export function startScheduler(): void {
     void checkAndStartElections();
     void checkAndEndElections();
     void processElectionResults();
+    void runScheduledTasksJob();
   }, 60 * 1000);
 
   // Also run immediately on startup
@@ -45,6 +47,7 @@ export function startScheduler(): void {
   void checkAndPostBirthdays();
   void aggregateActivityMetrics();
   void checkAndStartElections();
+  void runScheduledTasksJob();
 
   logger.info("Scheduler started");
 }
@@ -71,4 +74,5 @@ export {
   checkAndStartElections,
   checkAndEndElections,
   processElectionResults,
+  runScheduledTasksJob,
 };
