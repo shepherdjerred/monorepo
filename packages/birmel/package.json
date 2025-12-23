@@ -15,7 +15,7 @@
     "build": "true",
     "build:studio": "mastra build -d src/mastra",
     "test": "bun test",
-    "typecheck": "prisma generate && tsc --noEmit",
+    "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "studio:dev": "mastra dev -d src/mastra",
     "prepare": "husky"
