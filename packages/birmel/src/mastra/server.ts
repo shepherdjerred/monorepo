@@ -54,7 +54,7 @@ export async function createAndStartServer(
     // Replace template variables
     html = html
       .replace(/%%MASTRA_STUDIO_BASE_PATH%%/g, "")
-      .replace(/%%MASTRA_TELEMETRY_DISABLED%%/g, "true")
+      .replace(/%%MASTRA_TELEMETRY_DISABLED%%/g, "false")
       .replace(/%%MASTRA_SERVER_HOST%%/g, options.host)
       .replace(/%%MASTRA_SERVER_PORT%%/g, String(options.port))
       .replace(/%%MASTRA_HIDE_CLOUD_CTA%%/g, "true")
