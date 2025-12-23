@@ -61,19 +61,21 @@ export const createPollTool = createTool({
         });
 
         // Store poll metadata in database
-        void prisma.pollRecord.create({
-          data: {
-            guildId: message.guildId!,
-            channelId: input.channelId,
-            messageId: message.id,
-            pollId: message.poll!.question.text ?? "", // Using question as identifier
-            question: input.question,
-            createdBy: client.user!.id,
-            expiresAt
-          }
-        }).catch((error) => {
-          logger.error("Failed to store poll record", error);
-        });
+        if (message.guildId && message.poll && client.user) {
+          void prisma.pollRecord.create({
+            data: {
+              guildId: message.guildId,
+              channelId: input.channelId,
+              messageId: message.id,
+              pollId: message.poll.question.text ?? "",
+              question: input.question,
+              createdBy: client.user.id,
+              expiresAt
+            }
+          }).catch((error: unknown) => {
+            logger.error("Failed to store poll record", error);
+          });
+        }
 
         logger.info("Poll created successfully", {
           messageId: message.id,
@@ -82,7 +84,7 @@ export const createPollTool = createTool({
 
         return {
           success: true,
-          message: `Poll created successfully with ${input.answers.length} options`,
+          message: `Poll created successfully with ${input.answers.length.toString()} options`,
           data: {
             messageId: message.id,
             pollId: input.question,
@@ -167,7 +169,7 @@ export const getPollResultsTool = createTool({
             text: string;
             emoji?: string;
             voteCount: number;
-            voters?: Array<{ userId: string; username: string }>;
+            voters?: { userId: string; username: string }[];
           } = {
             id: answer.id,
             text: answer.text ?? "",
@@ -201,7 +203,7 @@ export const getPollResultsTool = createTool({
 
         return {
           success: true,
-          message: `Poll results: ${totalVotes} total votes across ${answers.length} answers`,
+          message: `Poll results: ${totalVotes.toString()} total votes across ${answers.length.toString()} answers`,
           data: {
             question: poll.question.text ?? "",
             answers,

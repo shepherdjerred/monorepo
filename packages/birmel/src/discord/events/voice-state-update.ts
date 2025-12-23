@@ -41,11 +41,11 @@ export function setupVoiceStateUpdateHandler(client: Client): void {
     }
 
     // Track user voice activity (ignore bots)
-    if (newState.member?.user.bot) {
+    if (!newState.member || newState.member.user.bot) {
       return;
     }
 
-    const userId = newState.member!.id;
+    const userId = newState.member.id;
     const guildId = newState.guild.id;
 
     // User joined a voice channel

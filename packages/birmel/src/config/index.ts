@@ -107,7 +107,7 @@ function loadConfigFromEnv(): Config {
     },
     activityTracking: {
       enabled: parseBoolean(process.env["ACTIVITY_TRACKING_ENABLED"], true),
-      roleTiers: parseJSON<Array<{ minimumActivity: number; roleId: string }>>(
+      roleTiers: parseJSON<{ minimumActivity: number; roleId: string }[]>(
         process.env["ACTIVITY_ROLE_TIERS"],
         [],
       ),

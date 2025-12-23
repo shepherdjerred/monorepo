@@ -27,7 +27,7 @@ export async function aggregateActivityMetrics(): Promise<void> {
           const fullGuild = await guild.fetch();
 
           // Get activity role tiers if configured
-          const roleTiers = config.activityTracking?.roleTiers ?? [];
+          const roleTiers = config.activityTracking.roleTiers;
 
           if (roleTiers.length === 0) {
             // No role tiers configured, skip role assignment

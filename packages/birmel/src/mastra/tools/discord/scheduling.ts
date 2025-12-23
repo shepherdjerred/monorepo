@@ -61,7 +61,7 @@ export const scheduleMessageTool = createTool({
           input.message,
           scheduledDate,
           input.createdBy,
-          repeat as "daily" | "weekly" | "monthly" | undefined
+          repeat
         );
 
         const repeatText = repeat ? ` (repeating ${repeat})` : "";
@@ -135,7 +135,7 @@ export const listScheduledMessagesTool = createTool({
 
         return {
           success: true,
-          message: `Found ${schedules.length} pending scheduled messages`,
+          message: `Found ${schedules.length.toString()} pending scheduled messages`,
           data: {
             schedules
           }
