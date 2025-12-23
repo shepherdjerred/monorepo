@@ -292,6 +292,8 @@ describe("ConfigSchema (full)", () => {
       logging: {},
       sentry: {},
       persona: {},
+      birthdays: {},
+      activityTracking: {},
     });
     expect(result.success).toBe(true);
   });
