@@ -129,6 +129,11 @@ export async function checkAndStartElections(): Promise<void> {
 					allowMultiselect: false,
 				});
 
+				if (!result.success || !result.data) {
+					logger.error("Failed to create poll", { guildId, result });
+					continue;
+				}
+
 				// Create election record
 				await createElectionPoll({
 					guildId,
@@ -145,7 +150,7 @@ export async function checkAndStartElections(): Promise<void> {
 					orderBy: { createdAt: "desc" },
 				});
 
-				if (electionRecord && result.data?.messageId) {
+				if (electionRecord) {
 					await updateElectionStatus(electionRecord.id, "active", {
 						messageId: result.data.messageId,
 						actualStart: now,
@@ -223,7 +228,7 @@ export async function processElectionResults(): Promise<void> {
 					messageId: election.messageId,
 				});
 
-				if (!pollResults.data?.isFinalized) continue;
+				if (!pollResults.success || !pollResults.data?.isFinalized) continue;
 
 				const results = determineWinner(pollResults.data.answers);
 
