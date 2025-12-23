@@ -23,9 +23,9 @@ export const fetchUrlTool = createTool({
       })
       .optional(),
   }),
-  execute: async (input) => {
+  execute: async (ctx) => {
     try {
-      const response = await fetch(input.url, {
+      const response = await fetch(ctx.context.url, {
         headers: {
           "User-Agent": "Birmel Discord Bot/1.0",
         },
@@ -60,7 +60,7 @@ export const fetchUrlTool = createTool({
         .replace(/\s+/g, " ")
         .trim();
 
-      const maxLength = input.maxLength ?? 2000;
+      const maxLength = ctx.context.maxLength ?? 2000;
       if (content.length > maxLength) {
         content = content.substring(0, maxLength) + "...";
       }
@@ -71,7 +71,7 @@ export const fetchUrlTool = createTool({
         data: {
           ...(title !== undefined && { title }),
           content,
-          url: input.url,
+          url: ctx.context.url,
         },
       };
     } catch (error) {
@@ -105,10 +105,10 @@ export const webSearchTool = createTool({
       })
       .optional(),
   }),
-  execute: async (input) => {
+  execute: async (ctx) => {
     try {
       // Use DuckDuckGo HTML for simple search results
-      const searchUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(input.query)}`;
+      const searchUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(ctx.context.query)}`;
       const response = await fetch(searchUrl, {
         headers: {
           "User-Agent": "Birmel Discord Bot/1.0",
