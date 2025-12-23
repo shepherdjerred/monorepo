@@ -1,4 +1,3 @@
-import type { TextChannel } from "discord.js";
 import { getDiscordClient } from "../../discord/client.js";
 import {
 	createPollTool,
@@ -146,9 +145,9 @@ export async function checkAndStartElections(): Promise<void> {
 					orderBy: { createdAt: "desc" },
 				});
 
-				if (electionRecord) {
+				if (electionRecord && result.data?.messageId) {
 					await updateElectionStatus(electionRecord.id, "active", {
-						messageId: result.messageId,
+						messageId: result.data.messageId,
 						actualStart: now,
 					});
 				}
@@ -224,9 +223,9 @@ export async function processElectionResults(): Promise<void> {
 					messageId: election.messageId,
 				});
 
-				if (!pollResults.isFinalized) continue;
+				if (!pollResults.data?.isFinalized) continue;
 
-				const results = determineWinner(pollResults.answers);
+				const results = determineWinner(pollResults.data.answers);
 
 				// Handle tie - create runoff
 				if (results.isTie) {
