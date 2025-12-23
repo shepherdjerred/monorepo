@@ -5,6 +5,7 @@ import type { Mastra } from "@mastra/core";
 import { logger } from "../utils/logger.js";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { readFile } from "node:fs/promises";
 
 // Get the path to the Mastra playground UI
 const __filename = fileURLToPath(import.meta.url);
@@ -33,24 +34,51 @@ export async function createAndStartServer(
   // Initialize routes (registers all Mastra endpoints)
   await server.init();
 
-  // Serve Studio UI static files
+  // Helper function to serve index.html with template variables replaced
+  const serveIndex = async () => {
+    const indexPath = join(playgroundPath, "index.html");
+    let html = await readFile(indexPath, "utf-8");
+
+    // Replace template variables
+    html = html
+      .replace(/%%MASTRA_STUDIO_BASE_PATH%%/g, "")
+      .replace(/%%MASTRA_TELEMETRY_DISABLED%%/g, "true")
+      .replace(/%%MASTRA_SERVER_HOST%%/g, options.host)
+      .replace(/%%MASTRA_SERVER_PORT%%/g, String(options.port))
+      .replace(/%%MASTRA_HIDE_CLOUD_CTA%%/g, "true")
+      .replace(/%%MASTRA_SERVER_PROTOCOL%%/g, "http");
+
+    return html;
+  };
+
+  // Serve static assets (CSS, JS, SVG, etc.)
   app.use(
-    "/*",
+    "/assets/*",
     serveStatic({
       root: playgroundPath,
-      rewriteRequestPath: (path) => {
-        // For SPA routing, serve index.html for all non-asset paths
-        if (
-          !path.startsWith("/api") &&
-          !path.startsWith("/assets") &&
-          !path.includes(".")
-        ) {
-          return "/index.html";
-        }
-        return path;
-      },
     })
   );
+
+  app.use(
+    "/mastra.svg",
+    serveStatic({
+      root: playgroundPath,
+    })
+  );
+
+  // Handle all other routes with SPA logic
+  app.get("*", async (c) => {
+    const path = c.req.path;
+
+    // If it's an API route, let it fall through
+    if (path.startsWith("/api")) {
+      return c.notFound();
+    }
+
+    // For all other routes (SPA routes), serve the template-replaced index.html
+    const html = await serveIndex();
+    return c.html(html);
+  });
 
   // Start the server using Bun's native server
   Bun.serve({
