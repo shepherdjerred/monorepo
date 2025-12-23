@@ -1,0 +1,8 @@
+{
+  "name": "demo-plugin",
+  "description": "A demo plugin showing basic Claude Code plugin features",
+  "version": "1.0.0",
+  "author": {
+    "name": "Demo Author"
+  }
+}
