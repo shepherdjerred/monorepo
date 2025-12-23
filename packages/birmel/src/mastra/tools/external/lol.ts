@@ -26,7 +26,7 @@ export const getLolUpdatesTool = createTool({
   execute: async (ctx) => {
     try {
       const config = getConfig();
-      const type = ctx.context.type ?? "patch";
+      const type = ctx.type ?? "patch";
 
       if (type === "patch") {
         // Get latest patch version from Data Dragon

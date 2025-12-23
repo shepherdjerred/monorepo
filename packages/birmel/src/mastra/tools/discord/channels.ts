@@ -52,11 +52,11 @@ export const listChannelsTool = createTool({
       .optional(),
   }),
   execute: async (ctx) => {
-    return withToolSpan("list-channels", ctx.context.guildId, async () => {
-      logger.debug("Listing channels", { guildId: ctx.context.guildId });
+    return withToolSpan("list-channels", ctx.guildId, async () => {
+      logger.debug("Listing channels", { guildId: ctx.guildId });
       try {
         const client = getDiscordClient();
-        const guild = await client.guilds.fetch(ctx.context.guildId);
+        const guild = await client.guilds.fetch(ctx.guildId);
         const channels = await guild.channels.fetch();
 
         const channelList = channels.map((channel) => ({
@@ -67,7 +67,7 @@ export const listChannelsTool = createTool({
         }));
 
         logger.info("Listed channels successfully", {
-          guildId: ctx.context.guildId,
+          guildId: ctx.guildId,
           channelCount: channelList.length,
         });
 
@@ -77,10 +77,10 @@ export const listChannelsTool = createTool({
           data: channelList,
         };
       } catch (error) {
-        logger.error("Failed to list channels", error, { guildId: ctx.context.guildId });
+        logger.error("Failed to list channels", error, { guildId: ctx.guildId });
         captureException(error as Error, {
           operation: "tool.list-channels",
-          discord: { guildId: ctx.context.guildId },
+          discord: { guildId: ctx.guildId },
         });
         return {
           success: false,
@@ -118,7 +118,7 @@ export const createChannelTool = createTool({
   execute: async (ctx) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(ctx.context.guildId);
+      const guild = await client.guilds.fetch(ctx.guildId);
 
       const typeMap = {
         text: ChannelType.GuildText,
@@ -126,7 +126,7 @@ export const createChannelTool = createTool({
         category: ChannelType.GuildCategory,
       } as const;
 
-      const channelType = typeMap[ctx.context.type];
+      const channelType = typeMap[ctx.type];
 
       const createOptions: {
         name: string;
@@ -134,11 +134,11 @@ export const createChannelTool = createTool({
         parent?: string;
         topic?: string;
       } = {
-        name: ctx.context.name,
+        name: ctx.name,
         type: channelType,
       };
-      if (ctx.context.parentId !== undefined) createOptions.parent = ctx.context.parentId;
-      if (ctx.context.topic !== undefined) createOptions.topic = ctx.context.topic;
+      if (ctx.parentId !== undefined) createOptions.parent = ctx.parentId;
+      if (ctx.topic !== undefined) createOptions.topic = ctx.topic;
 
       const channel = await guild.channels.create(createOptions);
 
@@ -173,7 +173,7 @@ export const deleteChannelTool = createTool({
   execute: async (ctx) => {
     try {
       const client = getDiscordClient();
-      const channel = await client.channels.fetch(ctx.context.channelId);
+      const channel = await client.channels.fetch(ctx.channelId);
 
       if (!channel) {
         return {
@@ -189,7 +189,7 @@ export const deleteChannelTool = createTool({
         };
       }
 
-      await channel.delete(ctx.context.reason);
+      await channel.delete(ctx.reason);
 
       return {
         success: true,
@@ -228,7 +228,7 @@ export const getChannelTool = createTool({
   execute: async (ctx) => {
     try {
       const client = getDiscordClient();
-      const channel = await client.channels.fetch(ctx.context.channelId);
+      const channel = await client.channels.fetch(ctx.channelId);
 
       if (!channel) {
         return {
@@ -276,7 +276,7 @@ export const modifyChannelTool = createTool({
   execute: async (ctx) => {
     try {
       const client = getDiscordClient();
-      const channel = await client.channels.fetch(ctx.context.channelId);
+      const channel = await client.channels.fetch(ctx.channelId);
 
       if (!channel || !("edit" in channel)) {
         return {
@@ -286,10 +286,10 @@ export const modifyChannelTool = createTool({
       }
 
       const editOptions: GuildChannelEditOptions = {};
-      if (ctx.context.name !== undefined) editOptions.name = ctx.context.name;
-      if (ctx.context.topic !== undefined) editOptions.topic = ctx.context.topic;
-      if (ctx.context.position !== undefined) editOptions.position = ctx.context.position;
-      if (ctx.context.parentId !== undefined) editOptions.parent = ctx.context.parentId;
+      if (ctx.name !== undefined) editOptions.name = ctx.name;
+      if (ctx.topic !== undefined) editOptions.topic = ctx.topic;
+      if (ctx.position !== undefined) editOptions.position = ctx.position;
+      if (ctx.parentId !== undefined) editOptions.parent = ctx.parentId;
 
       await channel.edit(editOptions as Parameters<typeof channel.edit>[0]);
 
@@ -328,10 +328,10 @@ export const reorderChannelsTool = createTool({
   execute: async (ctx) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(ctx.context.guildId);
+      const guild = await client.guilds.fetch(ctx.guildId);
 
       await guild.channels.setPositions(
-        ctx.context.positions.map((p: { channelId: string; position: number }) => ({
+        ctx.positions.map((p: { channelId: string; position: number }) => ({
           channel: p.channelId,
           position: p.position,
         })),
@@ -339,7 +339,7 @@ export const reorderChannelsTool = createTool({
 
       return {
         success: true,
-        message: `Reordered ${String(ctx.context.positions.length)} channels`,
+        message: `Reordered ${String(ctx.positions.length)} channels`,
       };
     } catch (error) {
       logger.error("Failed to reorder channels", error);
@@ -368,7 +368,7 @@ export const setChannelPermissionsTool = createTool({
   execute: async (ctx) => {
     try {
       const client = getDiscordClient();
-      const channel = await client.channels.fetch(ctx.context.channelId);
+      const channel = await client.channels.fetch(ctx.channelId);
 
       if (!channel || !("permissionOverwrites" in channel)) {
         return {
@@ -377,12 +377,12 @@ export const setChannelPermissionsTool = createTool({
         };
       }
 
-      await channel.permissionOverwrites.edit(ctx.context.targetId, {
-        ...(ctx.context.allow?.reduce(
+      await channel.permissionOverwrites.edit(ctx.targetId, {
+        ...(ctx.allow?.reduce(
           (acc: Record<string, boolean>, perm: string) => ({ ...acc, [normalizePermissionName(perm)]: true }),
           {},
         ) ?? {}),
-        ...(ctx.context.deny?.reduce(
+        ...(ctx.deny?.reduce(
           (acc: Record<string, boolean>, perm: string) => ({ ...acc, [normalizePermissionName(perm)]: false }),
           {},
         ) ?? {}),

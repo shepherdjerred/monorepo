@@ -19,7 +19,7 @@ export const setVolumeTool = createTool({
     await Promise.resolve();
     try {
       const player = getMusicPlayer();
-      const queue = player.queues.get(ctx.context.guildId);
+      const queue = player.queues.get(ctx.guildId);
 
       if (!queue) {
         return {
@@ -28,11 +28,11 @@ export const setVolumeTool = createTool({
         };
       }
 
-      queue.node.setVolume(ctx.context.volume);
+      queue.node.setVolume(ctx.volume);
 
       return {
         success: true,
-        message: `Volume set to ${String(ctx.context.volume)}%`,
+        message: `Volume set to ${String(ctx.volume)}%`,
       };
     } catch (error) {
       logger.error("Failed to set volume", error);
@@ -61,7 +61,7 @@ export const setLoopModeTool = createTool({
     await Promise.resolve();
     try {
       const player = getMusicPlayer();
-      const queue = player.queues.get(ctx.context.guildId);
+      const queue = player.queues.get(ctx.guildId);
 
       if (!queue) {
         return {
@@ -77,11 +77,11 @@ export const setLoopModeTool = createTool({
         autoplay: QueueRepeatMode.AUTOPLAY,
       };
 
-      queue.setRepeatMode(modeMap[ctx.context.mode]);
+      queue.setRepeatMode(modeMap[ctx.mode]);
 
       return {
         success: true,
-        message: `Loop mode set to ${ctx.context.mode}`,
+        message: `Loop mode set to ${ctx.mode}`,
       };
     } catch (error) {
       logger.error("Failed to set loop mode", error);
@@ -107,7 +107,7 @@ export const seekTool = createTool({
   execute: async (ctx) => {
     try {
       const player = getMusicPlayer();
-      const queue = player.queues.get(ctx.context.guildId);
+      const queue = player.queues.get(ctx.guildId);
 
       if (!queue?.isPlaying()) {
         return {
@@ -116,7 +116,7 @@ export const seekTool = createTool({
         };
       }
 
-      const success = await queue.node.seek(ctx.context.seconds * 1000);
+      const success = await queue.node.seek(ctx.seconds * 1000);
 
       if (!success) {
         return {
@@ -125,8 +125,8 @@ export const seekTool = createTool({
         };
       }
 
-      const minutes = Math.floor(ctx.context.seconds / 60);
-      const secs = ctx.context.seconds % 60;
+      const minutes = Math.floor(ctx.seconds / 60);
+      const secs = ctx.seconds % 60;
 
       return {
         success: true,

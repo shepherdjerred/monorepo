@@ -28,11 +28,11 @@ export const listWebhooksTool = createTool({
   execute: async (ctx) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(ctx.context.guildId);
+      const guild = await client.guilds.fetch(ctx.guildId);
 
       let webhooks;
-      if (ctx.context.channelId) {
-        const channel = await client.channels.fetch(ctx.context.channelId);
+      if (ctx.channelId) {
+        const channel = await client.channels.fetch(ctx.channelId);
         if (!channel?.isTextBased() || !("fetchWebhooks" in channel)) {
           return {
             success: false,
@@ -87,7 +87,7 @@ export const createWebhookTool = createTool({
   execute: async (ctx) => {
     try {
       const client = getDiscordClient();
-      const channel = await client.channels.fetch(ctx.context.channelId);
+      const channel = await client.channels.fetch(ctx.channelId);
 
       if (!channel?.isTextBased() || !("createWebhook" in channel)) {
         return {
@@ -97,8 +97,8 @@ export const createWebhookTool = createTool({
       }
 
       const webhook = await (channel as TextChannel).createWebhook({
-        name: ctx.context.name,
-        ...(ctx.context.reason !== undefined && { reason: ctx.context.reason }),
+        name: ctx.name,
+        ...(ctx.reason !== undefined && { reason: ctx.reason }),
       });
 
       return {
@@ -133,10 +133,10 @@ export const deleteWebhookTool = createTool({
   execute: async (ctx) => {
     try {
       const client = getDiscordClient();
-      const webhook = await client.fetchWebhook(ctx.context.webhookId);
+      const webhook = await client.fetchWebhook(ctx.webhookId);
 
       const webhookName = webhook.name;
-      await webhook.delete(ctx.context.reason);
+      await webhook.delete(ctx.reason);
 
       return {
         success: true,
@@ -169,18 +169,18 @@ export const modifyWebhookTool = createTool({
   execute: async (ctx) => {
     try {
       const client = getDiscordClient();
-      const webhook = await client.fetchWebhook(ctx.context.webhookId);
+      const webhook = await client.fetchWebhook(ctx.webhookId);
 
       const editOptions: Parameters<typeof webhook.edit>[0] = {};
-      if (ctx.context.name !== undefined) editOptions.name = ctx.context.name;
-      if (ctx.context.avatarUrl !== undefined) editOptions.avatar = ctx.context.avatarUrl;
-      if (ctx.context.channelId !== undefined) editOptions.channel = ctx.context.channelId;
-      if (ctx.context.reason !== undefined) editOptions.reason = ctx.context.reason;
+      if (ctx.name !== undefined) editOptions.name = ctx.name;
+      if (ctx.avatarUrl !== undefined) editOptions.avatar = ctx.avatarUrl;
+      if (ctx.channelId !== undefined) editOptions.channel = ctx.channelId;
+      if (ctx.reason !== undefined) editOptions.reason = ctx.reason;
 
       const hasChanges =
-        ctx.context.name !== undefined ||
-        ctx.context.avatarUrl !== undefined ||
-        ctx.context.channelId !== undefined;
+        ctx.name !== undefined ||
+        ctx.avatarUrl !== undefined ||
+        ctx.channelId !== undefined;
 
       if (!hasChanges) {
         return {
@@ -227,9 +227,9 @@ export const executeWebhookTool = createTool({
   execute: async (ctx) => {
     try {
       const client = getDiscordClient();
-      const webhook = await client.fetchWebhook(ctx.context.webhookId, ctx.context.webhookToken);
+      const webhook = await client.fetchWebhook(ctx.webhookId, ctx.webhookToken);
 
-      if (!ctx.context.content) {
+      if (!ctx.content) {
         return {
           success: false,
           message: "Message content is required",
@@ -237,9 +237,9 @@ export const executeWebhookTool = createTool({
       }
 
       const sentMessage = await webhook.send({
-        content: ctx.context.content,
-        ...(ctx.context.username !== undefined && { username: ctx.context.username }),
-        ...(ctx.context.avatarUrl !== undefined && { avatarURL: ctx.context.avatarUrl }),
+        content: ctx.content,
+        ...(ctx.username !== undefined && { username: ctx.username }),
+        ...(ctx.avatarUrl !== undefined && { avatarURL: ctx.avatarUrl }),
       });
 
       return {

@@ -1,5 +1,6 @@
 import { getConfig } from "../../config/index.js";
 import { OtelExporter } from "@mastra/otel-exporter";
+import { Observability } from "@mastra/observability";
 
 export type TelemetryConfig = {
   enabled: boolean;
@@ -32,13 +33,13 @@ export function getTelemetryConfig(): TelemetryConfig | undefined {
 }
 
 /**
- * Create Mastra observability configuration with OtelExporter for Tempo.
+ * Create Mastra observability instance with OtelExporter for Tempo.
  * DefaultExporter is automatically included when storage is configured.
  */
 export function getMastraObservability() {
   const config = getConfig();
 
-  return {
+  return new Observability({
     default: { enabled: true },
     configs: {
       production: {
@@ -55,5 +56,5 @@ export function getMastraObservability() {
         ],
       },
     },
-  };
+  });
 }

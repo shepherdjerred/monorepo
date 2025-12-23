@@ -31,7 +31,16 @@ export const createPollTool = createTool({
   }),
   execute: async (ctx) => {
     return withToolSpan("create-poll", undefined, async () => {
-      return createPoll(ctx.context);
+      return createPoll({
+        channelId: ctx.channelId,
+        question: ctx.question,
+        answers: ctx.answers.map(a => ({
+          text: a.text,
+          ...(a.emoji ? { emoji: a.emoji } : {})
+        })),
+        ...(ctx.duration !== undefined ? { duration: ctx.duration } : {}),
+        ...(ctx.allowMultiselect !== undefined ? { allowMultiselect: ctx.allowMultiselect } : {}),
+      });
     });
   }
 });
@@ -66,7 +75,7 @@ export const getPollResultsTool = createTool({
   }),
   execute: async (ctx) => {
     return withToolSpan("get-poll-results", undefined, async () => {
-      return getPollResultsHelper(ctx.context.channelId, ctx.context.messageId);
+      return getPollResultsHelper(ctx.channelId, ctx.messageId);
     });
   }
 });
@@ -84,7 +93,7 @@ export const endPollTool = createTool({
   }),
   execute: async (ctx) => {
     return withToolSpan("end-poll", undefined, async () => {
-      return endPollHelper(ctx.context.channelId, ctx.context.messageId);
+      return endPollHelper(ctx.channelId, ctx.messageId);
     });
   }
 });
