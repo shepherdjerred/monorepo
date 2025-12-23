@@ -80,7 +80,7 @@ export async function createAndStartServer(
   );
 
   // Handle API routes that don't match - return proper JSON error instead of HTML
-  app.all("/api/*", async (c) => {
+  app.all("/api/*", (c) => {
     return c.json(
       {
         error: "Not Found",
