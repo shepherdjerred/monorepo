@@ -1,9 +1,9 @@
 import { getDiscordClient } from "../../discord/client.js";
 import {
-	createPollTool,
-	getPollResultsTool,
-	endPollTool,
-} from "../../mastra/tools/discord/polls.js";
+	createPoll,
+	getPollResults,
+	endPoll,
+} from "../../discord/polls/helpers.js";
 import {
 	createElectionPoll,
 	updateElectionStatus,
@@ -121,7 +121,7 @@ export async function checkAndStartElections(): Promise<void> {
 				const now = new Date();
 				const endTime = new Date(now.getTime() + 2 * 60 * 60 * 1000); // 2 hours from now
 
-				const result = await createPollTool.execute({
+				const result = await createPoll({
 					channelId,
 					question: "🗳️ Who should be the server owner?",
 					answers,
@@ -129,7 +129,7 @@ export async function checkAndStartElections(): Promise<void> {
 					allowMultiselect: false,
 				});
 
-				if (!("success" in result) || !result.success || !result.data) {
+				if (!result.success || !result.data) {
 					logger.error("Failed to create poll", { guildId, result });
 					continue;
 				}
@@ -186,10 +186,7 @@ export async function checkAndEndElections(): Promise<void> {
 			if (!election.messageId) continue;
 
 			try {
-				await endPollTool.execute({
-					channelId: election.channelId,
-					messageId: election.messageId,
-				});
+				await endPoll(election.channelId, election.messageId);
 
 				logger.info("Election ended", {
 					guildId: election.guildId,
@@ -223,12 +220,12 @@ export async function processElectionResults(): Promise<void> {
 
 			try {
 				// Check if poll is finalized
-				const pollResults = await getPollResultsTool.execute({
-					channelId: election.channelId,
-					messageId: election.messageId,
-				});
+				const pollResults = await getPollResults(
+					election.channelId,
+					election.messageId,
+				);
 
-				if (!("success" in pollResults) || !pollResults.success || !pollResults.data?.isFinalized) continue;
+				if (!pollResults.success || !pollResults.data?.isFinalized) continue;
 
 				const results = determineWinner(pollResults.data.answers);
 
