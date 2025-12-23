@@ -38,6 +38,7 @@ import {
 import { withTyping } from "./discord/utils/typing.js";
 import { logger } from "./utils/index.js";
 import { stylizeResponse, closePersonaDb } from "./persona/index.js";
+import { getGuildPersona } from "./persona/guild-persona.js";
 import type { MessageContext } from "./discord/index.js";
 import { buildMessageContent } from "./mastra/utils/message-builder.js";
 
@@ -96,7 +97,7 @@ async function handleMessage(context: MessageContext): Promise<void> {
     // STAGE 1: Create agent with decision context (persona's similar messages)
     logger.debug("Creating agent", { requestId, personaEnabled: config.persona.enabled });
     const agent = config.persona.enabled
-      ? createBirmelAgentWithContext(context.content)
+      ? await createBirmelAgentWithContext(context.content, context.guildId)
       : getBirmelAgent();
 
     // Get memory IDs for three-tier system
@@ -170,10 +171,11 @@ ${globalContext}`;
       // STAGE 2: Stylize response to match persona's voice
       let finalResponse = response.text;
       if (config.persona.enabled) {
-        logger.debug("Stylizing response", { requestId, persona: config.persona.defaultPersona });
+        const persona = await getGuildPersona(context.guildId);
+        logger.debug("Stylizing response", { requestId, persona });
         const styleStartTime = Date.now();
         finalResponse = await withSpan("persona.stylize", discordContext, async () => {
-          return stylizeResponse(response.text, config.persona.defaultPersona);
+          return stylizeResponse(response.text, persona);
         });
         logger.debug("Response stylized", {
           requestId,
@@ -244,7 +246,7 @@ async function handleVoiceCommand(
     // STAGE 1: Create agent with decision context (persona's similar messages)
     logger.debug("Creating agent for voice", { requestId, personaEnabled: config.persona.enabled });
     const agent = config.persona.enabled
-      ? createBirmelAgentWithContext(command)
+      ? await createBirmelAgentWithContext(command, guildId)
       : getBirmelAgent();
 
     // Get memory IDs for three-tier system
@@ -296,9 +298,10 @@ IMPORTANT: This is a voice command. Keep your response concise (under 200 words)
       // STAGE 2: Stylize response to match persona's voice
       let finalResponse = response.text;
       if (config.persona.enabled) {
-        logger.debug("Stylizing voice response", { requestId, persona: config.persona.defaultPersona });
+        const persona = await getGuildPersona(guildId);
+        logger.debug("Stylizing voice response", { requestId, persona });
         finalResponse = await withSpan("persona.stylize", discordContext, async () => {
-          return stylizeResponse(response.text, config.persona.defaultPersona);
+          return stylizeResponse(response.text, persona);
         });
       }
 

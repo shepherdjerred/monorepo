@@ -9,6 +9,7 @@ import {
   buildDecisionContext,
   formatDecisionPrompt,
 } from "../../persona/index.js";
+import { getGuildPersona } from "../../persona/guild-persona.js";
 
 export function createBirmelAgent(): Agent {
   const config = getConfig();
@@ -28,14 +29,17 @@ export function createBirmelAgent(): Agent {
   });
 }
 
-export function createBirmelAgentWithContext(userQuery: string): Agent {
+export async function createBirmelAgentWithContext(
+  userQuery: string,
+  guildId: string,
+): Promise<Agent> {
   const config = getConfig();
 
+  // Get guild-specific persona
+  const persona = await getGuildPersona(guildId);
+
   // Build decision context from persona's similar messages
-  const decisionContext = buildDecisionContext(
-    config.persona.defaultPersona,
-    userQuery,
-  );
+  const decisionContext = buildDecisionContext(persona, userQuery);
 
   // Create enhanced system prompt with decision guidance
   let enhancedPrompt = SYSTEM_PROMPT;
