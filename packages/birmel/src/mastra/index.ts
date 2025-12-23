@@ -1,12 +1,16 @@
 import { Mastra } from "@mastra/core";
+import { LibSQLStore } from "@mastra/libsql";
 import { createBirmelAgent } from "./agents/birmel-agent.js";
 import { createClassifierAgent } from "./agents/classifier-agent.js";
 import { getConfig } from "../config/index.js";
 import { logger } from "../utils/logger.js";
+import { getMastraObservability } from "./telemetry/index.js";
 
 // Create agents at module load time
 const birmelAgent = createBirmelAgent();
 const classifierAgent = createClassifierAgent();
+
+const config = getConfig();
 
 /**
  * The main Mastra instance for Birmel.
@@ -18,8 +22,12 @@ export const mastra = new Mastra({
     classifier: classifierAgent,
   },
   server: {
-    port: getConfig().mastra.studioPort,
+    port: config.mastra.studioPort,
   },
+  storage: new LibSQLStore({
+    url: config.mastra.telemetryDbPath,
+  }),
+  ...(config.telemetry.enabled ? { observability: getMastraObservability() } : {}),
 });
 
 /**
@@ -37,15 +45,19 @@ export function getClassifierAgent() {
   return mastra.getAgent("classifier");
 }
 
-export function startMastraServer(): void {
+export async function startMastraServer(): Promise<void> {
   const config = getConfig();
-  if (config.mastra.studioEnabled) {
-    // Mastra Studio is started separately via `mastra dev` or `mastra start`
-    logger.info("Mastra Studio enabled", {
-      port: config.mastra.studioPort,
-      host: config.mastra.studioHost,
-    });
+  if (!config.mastra.studioEnabled) {
+    logger.info("Mastra Studio disabled");
+    return;
   }
+
+  // Import and start the server
+  const { createAndStartServer } = await import("./server.js");
+  await createAndStartServer(mastra, {
+    port: config.mastra.studioPort,
+    host: config.mastra.studioHost,
+  });
 }
 
 export {

@@ -60,11 +60,10 @@ export function buildBirmelImage(
     .withExec(["bun", "install", "--frozen-lockfile"])
     .withWorkdir("/workspace/packages/birmel")
     .withExec(["bunx", "prisma", "generate"])
-    .withExec(["bun", "run", "build:studio"])
     .withEnvVariable("VERSION", version)
     .withEnvVariable("GIT_SHA", gitSha)
     .withEnvVariable("NODE_ENV", "production")
-    .withEntrypoint(["bun", "run", "start:with-studio"])
+    .withEntrypoint(["bun", "run", "start"])
     .withLabel("org.opencontainers.image.title", "birmel")
     .withLabel("org.opencontainers.image.description", "AI-powered Discord server management bot");
 }
@@ -95,7 +94,7 @@ export async function smokeTestBirmelImage(
   const container = containerWithEnv.withExec([
     "sh",
     "-c",
-    "timeout 30s bun run start:with-studio 2>&1 || true",
+    "timeout 30s bun run start 2>&1 || true",
   ]);
 
   let output = "";

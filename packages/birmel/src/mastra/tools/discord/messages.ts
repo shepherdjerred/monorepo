@@ -1,8 +1,11 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 import { getDiscordClient } from "../../../discord/index.js";
-import { logger } from "../../../utils/logger.js";
+import { loggers } from "../../../utils/logger.js";
+import { withToolSpan, captureException } from "../../../observability/index.js";
 import type { TextChannel } from "discord.js";
+
+const logger = loggers.tools.child("discord.messages");
 
 export const sendMessageTool = createTool({
   id: "send-message",
@@ -20,34 +23,92 @@ export const sendMessageTool = createTool({
       })
       .optional(),
   }),
-  execute: async (input) => {
-    try {
-      const client = getDiscordClient();
-      const channel = await client.channels.fetch(input.channelId);
+  execute: async (ctx) => {
+    return withToolSpan("send-message", undefined, async () => {
+      logger.debug("Sending message", { channelId: ctx.context.channelId, contentLength: ctx.context.content.length });
+      try {
+        const client = getDiscordClient();
+        const channel = await client.channels.fetch(ctx.context.channelId);
 
-      if (!channel?.isTextBased()) {
+        if (!channel?.isTextBased()) {
+          return {
+            success: false,
+            message: "Channel is not a text channel",
+          };
+        }
+
+        const sentMessage = await (channel as TextChannel).send(ctx.context.content);
+
+        logger.info("Message sent successfully", { channelId: ctx.context.channelId, messageId: sentMessage.id });
+        return {
+          success: true,
+          message: "Message sent successfully",
+          data: {
+            messageId: sentMessage.id,
+          },
+        };
+      } catch (error) {
+        logger.error("Failed to send message", error, { channelId: ctx.context.channelId });
+        captureException(error as Error, {
+          operation: "tool.send-message",
+          discord: { channelId: ctx.context.channelId },
+        });
         return {
           success: false,
-          message: "Channel is not a text channel",
+          message: "Failed to send message",
         };
       }
+    });
+  },
+});
 
-      const sentMessage = await (channel as TextChannel).send(input.content);
+export const sendDirectMessageTool = createTool({
+  id: "send-direct-message",
+  description: "Send a direct message (DM) to a Discord user. Use this to privately message a user.",
+  inputSchema: z.object({
+    userId: z.string().describe("The ID of the user to send the DM to"),
+    content: z.string().describe("The message content to send"),
+  }),
+  outputSchema: z.object({
+    success: z.boolean(),
+    message: z.string(),
+    data: z
+      .object({
+        messageId: z.string(),
+      })
+      .optional(),
+  }),
+  execute: async (ctx) => {
+    return withToolSpan("send-direct-message", undefined, async () => {
+      logger.debug("Attempting to send DM", { userId: ctx.context.userId, contentLength: ctx.context.content.length });
+      try {
+        const client = getDiscordClient();
 
-      return {
-        success: true,
-        message: "Message sent successfully",
-        data: {
-          messageId: sentMessage.id,
-        },
-      };
-    } catch (error) {
-      logger.error("Failed to send message", error);
-      return {
-        success: false,
-        message: "Failed to send message",
-      };
-    }
+        const user = await client.users.fetch(ctx.context.userId);
+
+        const dmChannel = await user.createDM();
+        const sentMessage = await dmChannel.send(ctx.context.content);
+
+        logger.info("DM sent successfully", { userId: ctx.context.userId, messageId: sentMessage.id });
+        return {
+          success: true,
+          message: "Direct message sent successfully",
+          data: {
+            messageId: sentMessage.id,
+          },
+        };
+      } catch (error) {
+        logger.error("Failed to send direct message", error, { userId: ctx.context.userId });
+        captureException(error as Error, {
+          operation: "tool.send-direct-message",
+          discord: { userId: ctx.context.userId },
+        });
+        return {
+          success: false,
+          message: "Failed to send direct message. The user may have DMs disabled or blocked the bot.",
+        };
+      }
+    });
   },
 });
 
@@ -62,34 +123,42 @@ export const deleteMessageTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async (input) => {
-    try {
-      const client = getDiscordClient();
-      const channel = await client.channels.fetch(input.channelId);
+  execute: async (ctx) => {
+    return withToolSpan("delete-message", undefined, async () => {
+      logger.debug("Deleting message", { channelId: ctx.context.channelId, messageId: ctx.context.messageId });
+      try {
+        const client = getDiscordClient();
+        const channel = await client.channels.fetch(ctx.context.channelId);
 
-      if (!channel?.isTextBased()) {
+        if (!channel?.isTextBased()) {
+          return {
+            success: false,
+            message: "Channel is not a text channel",
+          };
+        }
+
+        const message = await (channel as TextChannel).messages.fetch(
+          ctx.context.messageId,
+        );
+        await message.delete();
+
+        logger.info("Message deleted successfully", { channelId: ctx.context.channelId, messageId: ctx.context.messageId });
+        return {
+          success: true,
+          message: "Message deleted successfully",
+        };
+      } catch (error) {
+        logger.error("Failed to delete message", error, { channelId: ctx.context.channelId, messageId: ctx.context.messageId });
+        captureException(error as Error, {
+          operation: "tool.delete-message",
+          discord: { channelId: ctx.context.channelId },
+        });
         return {
           success: false,
-          message: "Channel is not a text channel",
+          message: "Failed to delete message",
         };
       }
-
-      const message = await (channel as TextChannel).messages.fetch(
-        input.messageId,
-      );
-      await message.delete();
-
-      return {
-        success: true,
-        message: "Message deleted successfully",
-      };
-    } catch (error) {
-      logger.error("Failed to delete message", error);
-      return {
-        success: false,
-        message: "Failed to delete message",
-      };
-    }
+    });
   },
 });
 
@@ -104,34 +173,42 @@ export const pinMessageTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async (input) => {
-    try {
-      const client = getDiscordClient();
-      const channel = await client.channels.fetch(input.channelId);
+  execute: async (ctx) => {
+    return withToolSpan("pin-message", undefined, async () => {
+      logger.debug("Pinning message", { channelId: ctx.context.channelId, messageId: ctx.context.messageId });
+      try {
+        const client = getDiscordClient();
+        const channel = await client.channels.fetch(ctx.context.channelId);
 
-      if (!channel?.isTextBased()) {
+        if (!channel?.isTextBased()) {
+          return {
+            success: false,
+            message: "Channel is not a text channel",
+          };
+        }
+
+        const message = await (channel as TextChannel).messages.fetch(
+          ctx.context.messageId,
+        );
+        await message.pin();
+
+        logger.info("Message pinned successfully", { channelId: ctx.context.channelId, messageId: ctx.context.messageId });
+        return {
+          success: true,
+          message: "Message pinned successfully",
+        };
+      } catch (error) {
+        logger.error("Failed to pin message", error, { channelId: ctx.context.channelId, messageId: ctx.context.messageId });
+        captureException(error as Error, {
+          operation: "tool.pin-message",
+          discord: { channelId: ctx.context.channelId },
+        });
         return {
           success: false,
-          message: "Channel is not a text channel",
+          message: "Failed to pin message",
         };
       }
-
-      const message = await (channel as TextChannel).messages.fetch(
-        input.messageId,
-      );
-      await message.pin();
-
-      return {
-        success: true,
-        message: "Message pinned successfully",
-      };
-    } catch (error) {
-      logger.error("Failed to pin message", error);
-      return {
-        success: false,
-        message: "Failed to pin message",
-      };
-    }
+    });
   },
 });
 
@@ -147,32 +224,40 @@ export const editMessageTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async (input) => {
-    try {
-      const client = getDiscordClient();
-      const channel = await client.channels.fetch(input.channelId);
+  execute: async (ctx) => {
+    return withToolSpan("edit-message", undefined, async () => {
+      logger.debug("Editing message", { channelId: ctx.context.channelId, messageId: ctx.context.messageId });
+      try {
+        const client = getDiscordClient();
+        const channel = await client.channels.fetch(ctx.context.channelId);
 
-      if (!channel?.isTextBased()) {
+        if (!channel?.isTextBased()) {
+          return {
+            success: false,
+            message: "Channel is not a text channel",
+          };
+        }
+
+        const message = await (channel as TextChannel).messages.fetch(ctx.context.messageId);
+        await message.edit(ctx.context.content);
+
+        logger.info("Message edited successfully", { channelId: ctx.context.channelId, messageId: ctx.context.messageId });
+        return {
+          success: true,
+          message: "Message edited successfully",
+        };
+      } catch (error) {
+        logger.error("Failed to edit message", error, { channelId: ctx.context.channelId, messageId: ctx.context.messageId });
+        captureException(error as Error, {
+          operation: "tool.edit-message",
+          discord: { channelId: ctx.context.channelId },
+        });
         return {
           success: false,
-          message: "Channel is not a text channel",
+          message: "Failed to edit message",
         };
       }
-
-      const message = await (channel as TextChannel).messages.fetch(input.messageId);
-      await message.edit(input.content);
-
-      return {
-        success: true,
-        message: "Message edited successfully",
-      };
-    } catch (error) {
-      logger.error("Failed to edit message", error);
-      return {
-        success: false,
-        message: "Failed to edit message",
-      };
-    }
+    });
   },
 });
 
@@ -187,31 +272,39 @@ export const bulkDeleteMessagesTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async (input) => {
-    try {
-      const client = getDiscordClient();
-      const channel = await client.channels.fetch(input.channelId);
+  execute: async (ctx) => {
+    return withToolSpan("bulk-delete-messages", undefined, async () => {
+      logger.debug("Bulk deleting messages", { channelId: ctx.context.channelId, messageCount: ctx.context.messageIds.length });
+      try {
+        const client = getDiscordClient();
+        const channel = await client.channels.fetch(ctx.context.channelId);
 
-      if (!channel?.isTextBased()) {
+        if (!channel?.isTextBased()) {
+          return {
+            success: false,
+            message: "Channel is not a text channel",
+          };
+        }
+
+        await (channel as TextChannel).bulkDelete(ctx.context.messageIds);
+
+        logger.info("Bulk deleted messages successfully", { channelId: ctx.context.channelId, messageCount: ctx.context.messageIds.length });
+        return {
+          success: true,
+          message: `Deleted ${String(ctx.context.messageIds.length)} messages`,
+        };
+      } catch (error) {
+        logger.error("Failed to bulk delete messages", error, { channelId: ctx.context.channelId, messageCount: ctx.context.messageIds.length });
+        captureException(error as Error, {
+          operation: "tool.bulk-delete-messages",
+          discord: { channelId: ctx.context.channelId },
+        });
         return {
           success: false,
-          message: "Channel is not a text channel",
+          message: "Failed to bulk delete messages",
         };
       }
-
-      await (channel as TextChannel).bulkDelete(input.messageIds);
-
-      return {
-        success: true,
-        message: `Deleted ${String(input.messageIds.length)} messages`,
-      };
-    } catch (error) {
-      logger.error("Failed to bulk delete messages", error);
-      return {
-        success: false,
-        message: "Failed to bulk delete messages",
-      };
-    }
+    });
   },
 });
 
@@ -226,32 +319,40 @@ export const unpinMessageTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async (input) => {
-    try {
-      const client = getDiscordClient();
-      const channel = await client.channels.fetch(input.channelId);
+  execute: async (ctx) => {
+    return withToolSpan("unpin-message", undefined, async () => {
+      logger.debug("Unpinning message", { channelId: ctx.context.channelId, messageId: ctx.context.messageId });
+      try {
+        const client = getDiscordClient();
+        const channel = await client.channels.fetch(ctx.context.channelId);
 
-      if (!channel?.isTextBased()) {
+        if (!channel?.isTextBased()) {
+          return {
+            success: false,
+            message: "Channel is not a text channel",
+          };
+        }
+
+        const message = await (channel as TextChannel).messages.fetch(ctx.context.messageId);
+        await message.unpin();
+
+        logger.info("Message unpinned successfully", { channelId: ctx.context.channelId, messageId: ctx.context.messageId });
+        return {
+          success: true,
+          message: "Message unpinned successfully",
+        };
+      } catch (error) {
+        logger.error("Failed to unpin message", error, { channelId: ctx.context.channelId, messageId: ctx.context.messageId });
+        captureException(error as Error, {
+          operation: "tool.unpin-message",
+          discord: { channelId: ctx.context.channelId },
+        });
         return {
           success: false,
-          message: "Channel is not a text channel",
+          message: "Failed to unpin message",
         };
       }
-
-      const message = await (channel as TextChannel).messages.fetch(input.messageId);
-      await message.unpin();
-
-      return {
-        success: true,
-        message: "Message unpinned successfully",
-      };
-    } catch (error) {
-      logger.error("Failed to unpin message", error);
-      return {
-        success: false,
-        message: "Failed to unpin message",
-      };
-    }
+    });
   },
 });
 
@@ -267,32 +368,40 @@ export const addReactionTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async (input) => {
-    try {
-      const client = getDiscordClient();
-      const channel = await client.channels.fetch(input.channelId);
+  execute: async (ctx) => {
+    return withToolSpan("add-reaction", undefined, async () => {
+      logger.debug("Adding reaction", { channelId: ctx.context.channelId, messageId: ctx.context.messageId, emoji: ctx.context.emoji });
+      try {
+        const client = getDiscordClient();
+        const channel = await client.channels.fetch(ctx.context.channelId);
 
-      if (!channel?.isTextBased()) {
+        if (!channel?.isTextBased()) {
+          return {
+            success: false,
+            message: "Channel is not a text channel",
+          };
+        }
+
+        const message = await (channel as TextChannel).messages.fetch(ctx.context.messageId);
+        await message.react(ctx.context.emoji);
+
+        logger.info("Reaction added successfully", { channelId: ctx.context.channelId, messageId: ctx.context.messageId, emoji: ctx.context.emoji });
+        return {
+          success: true,
+          message: "Reaction added successfully",
+        };
+      } catch (error) {
+        logger.error("Failed to add reaction", error, { channelId: ctx.context.channelId, messageId: ctx.context.messageId });
+        captureException(error as Error, {
+          operation: "tool.add-reaction",
+          discord: { channelId: ctx.context.channelId },
+        });
         return {
           success: false,
-          message: "Channel is not a text channel",
+          message: "Failed to add reaction",
         };
       }
-
-      const message = await (channel as TextChannel).messages.fetch(input.messageId);
-      await message.react(input.emoji);
-
-      return {
-        success: true,
-        message: "Reaction added successfully",
-      };
-    } catch (error) {
-      logger.error("Failed to add reaction", error);
-      return {
-        success: false,
-        message: "Failed to add reaction",
-      };
-    }
+    });
   },
 });
 
@@ -309,45 +418,53 @@ export const removeReactionTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async (input) => {
-    try {
-      const client = getDiscordClient();
-      const channel = await client.channels.fetch(input.channelId);
+  execute: async (ctx) => {
+    return withToolSpan("remove-reaction", undefined, async () => {
+      logger.debug("Removing reaction", { channelId: ctx.context.channelId, messageId: ctx.context.messageId, emoji: ctx.context.emoji });
+      try {
+        const client = getDiscordClient();
+        const channel = await client.channels.fetch(ctx.context.channelId);
 
-      if (!channel?.isTextBased()) {
+        if (!channel?.isTextBased()) {
+          return {
+            success: false,
+            message: "Channel is not a text channel",
+          };
+        }
+
+        const message = await (channel as TextChannel).messages.fetch(ctx.context.messageId);
+        const reaction = message.reactions.cache.get(ctx.context.emoji);
+
+        if (!reaction) {
+          return {
+            success: false,
+            message: "Reaction not found",
+          };
+        }
+
+        if (ctx.context.userId) {
+          await reaction.users.remove(ctx.context.userId);
+        } else {
+          await reaction.users.remove();
+        }
+
+        logger.info("Reaction removed successfully", { channelId: ctx.context.channelId, messageId: ctx.context.messageId, emoji: ctx.context.emoji });
+        return {
+          success: true,
+          message: "Reaction removed successfully",
+        };
+      } catch (error) {
+        logger.error("Failed to remove reaction", error, { channelId: ctx.context.channelId, messageId: ctx.context.messageId });
+        captureException(error as Error, {
+          operation: "tool.remove-reaction",
+          discord: { channelId: ctx.context.channelId },
+        });
         return {
           success: false,
-          message: "Channel is not a text channel",
+          message: "Failed to remove reaction",
         };
       }
-
-      const message = await (channel as TextChannel).messages.fetch(input.messageId);
-      const reaction = message.reactions.cache.get(input.emoji);
-
-      if (!reaction) {
-        return {
-          success: false,
-          message: "Reaction not found",
-        };
-      }
-
-      if (input.userId) {
-        await reaction.users.remove(input.userId);
-      } else {
-        await reaction.users.remove();
-      }
-
-      return {
-        success: true,
-        message: "Reaction removed successfully",
-      };
-    } catch (error) {
-      logger.error("Failed to remove reaction", error);
-      return {
-        success: false,
-        message: "Failed to remove reaction",
-      };
-    }
+    });
   },
 });
 
@@ -377,53 +494,62 @@ export const getChannelMessagesTool = createTool({
       })
       .optional(),
   }),
-  execute: async (input) => {
-    try {
-      const client = getDiscordClient();
-      const channel = await client.channels.fetch(input.channelId);
+  execute: async (ctx) => {
+    return withToolSpan("get-channel-messages", undefined, async () => {
+      logger.debug("Fetching channel messages", { channelId: ctx.context.channelId, limit: ctx.context.limit ?? 20 });
+      try {
+        const client = getDiscordClient();
+        const channel = await client.channels.fetch(ctx.context.channelId);
 
-      if (!channel?.isTextBased()) {
+        if (!channel?.isTextBased()) {
+          return {
+            success: false,
+            message: "Channel is not a text channel",
+          };
+        }
+
+        const messages = await (channel as TextChannel).messages.fetch({
+          limit: ctx.context.limit ?? 20,
+          ...(ctx.context.before && { before: ctx.context.before }),
+        });
+
+        const formattedMessages = messages
+          .map((msg) => ({
+            id: msg.id,
+            authorId: msg.author.id,
+            authorName: msg.author.displayName || msg.author.username,
+            isBot: msg.author.bot,
+            content: msg.content,
+            createdAt: msg.createdAt.toISOString(),
+          }))
+          .reverse(); // Chronological order
+
+        logger.info("Fetched channel messages", { channelId: ctx.context.channelId, messageCount: formattedMessages.length });
+        return {
+          success: true,
+          message: `Fetched ${String(formattedMessages.length)} messages`,
+          data: {
+            messages: formattedMessages,
+          },
+        };
+      } catch (error) {
+        logger.error("Failed to fetch messages", error, { channelId: ctx.context.channelId });
+        captureException(error as Error, {
+          operation: "tool.get-channel-messages",
+          discord: { channelId: ctx.context.channelId },
+        });
         return {
           success: false,
-          message: "Channel is not a text channel",
+          message: "Failed to fetch messages",
         };
       }
-
-      const messages = await (channel as TextChannel).messages.fetch({
-        limit: input.limit ?? 20,
-        ...(input.before && { before: input.before }),
-      });
-
-      const formattedMessages = messages
-        .map((msg) => ({
-          id: msg.id,
-          authorId: msg.author.id,
-          authorName: msg.author.displayName || msg.author.username,
-          isBot: msg.author.bot,
-          content: msg.content,
-          createdAt: msg.createdAt.toISOString(),
-        }))
-        .reverse(); // Chronological order
-
-      return {
-        success: true,
-        message: `Fetched ${String(formattedMessages.length)} messages`,
-        data: {
-          messages: formattedMessages,
-        },
-      };
-    } catch (error) {
-      logger.error("Failed to fetch messages", error);
-      return {
-        success: false,
-        message: "Failed to fetch messages",
-      };
-    }
+    });
   },
 });
 
 export const messageTools = [
   sendMessageTool,
+  sendDirectMessageTool,
   deleteMessageTool,
   pinMessageTool,
   editMessageTool,

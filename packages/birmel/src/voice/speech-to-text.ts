@@ -1,6 +1,9 @@
 import OpenAI, { toFile } from "openai";
 import { getConfig } from "../config/index.js";
-import { logger } from "../utils/index.js";
+import { loggers } from "../utils/index.js";
+import { captureException } from "../observability/index.js";
+
+const logger = loggers.voice.child("speech-to-text");
 
 let openaiClient: OpenAI | null = null;
 
@@ -15,6 +18,12 @@ function getOpenAIClient(): OpenAI {
 export async function transcribeAudio(audioBuffer: Buffer): Promise<string> {
   const config = getConfig();
   const openai = getOpenAIClient();
+  const startTime = Date.now();
+
+  logger.debug("Starting audio transcription", {
+    bufferSize: audioBuffer.length,
+    model: config.openai.whisperModel,
+  });
 
   try {
     const file = await toFile(audioBuffer, "audio.wav", { type: "audio/wav" });
@@ -25,14 +34,25 @@ export async function transcribeAudio(audioBuffer: Buffer): Promise<string> {
       language: "en",
     });
 
-    logger.debug("Transcribed audio", {
-      length: audioBuffer.length,
-      text: transcription.text.slice(0, 100),
+    const duration = Date.now() - startTime;
+    logger.info("Audio transcription complete", {
+      bufferSize: audioBuffer.length,
+      durationMs: duration,
+      textLength: transcription.text.length,
+      textPreview: transcription.text.slice(0, 100),
     });
 
     return transcription.text;
   } catch (error) {
-    logger.error("Failed to transcribe audio", error);
+    const duration = Date.now() - startTime;
+    logger.error("Failed to transcribe audio", error, {
+      bufferSize: audioBuffer.length,
+      durationMs: duration,
+    });
+    captureException(error as Error, {
+      operation: "voice.transcribeAudio",
+      extra: { bufferSize: audioBuffer.length, durationMs: duration },
+    });
     throw error;
   }
 }

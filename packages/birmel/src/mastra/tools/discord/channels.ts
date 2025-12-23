@@ -1,8 +1,35 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
-import { ChannelType, type GuildChannelEditOptions } from "discord.js";
+import { ChannelType, PermissionFlagsBits, type GuildChannelEditOptions } from "discord.js";
 import { getDiscordClient } from "../../../discord/index.js";
-import { logger } from "../../../utils/logger.js";
+import { loggers } from "../../../utils/logger.js";
+import { withToolSpan, captureException } from "../../../observability/index.js";
+
+const logger = loggers.tools.child("discord.channels");
+
+// Map from various permission name formats to Discord.js v14 PermissionFlagsBits keys
+const normalizePermissionName = (perm: string): string => {
+  // If it's already in the correct format (camelCase), return as-is
+  if (perm in PermissionFlagsBits) {
+    return perm;
+  }
+
+  // Convert SCREAMING_SNAKE_CASE to PascalCase (which discord.js uses)
+  // e.g., VIEW_CHANNEL -> ViewChannel, SEND_MESSAGES -> SendMessages
+  const pascalCase = perm
+    .toLowerCase()
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join("");
+
+  if (pascalCase in PermissionFlagsBits) {
+    return pascalCase;
+  }
+
+  // Return original if no mapping found - will cause an error but with better context
+  logger.warn(`Unknown permission name: ${perm}, tried: ${pascalCase}`);
+  return perm;
+};
 
 export const listChannelsTool = createTool({
   id: "list-channels",
@@ -24,31 +51,43 @@ export const listChannelsTool = createTool({
       )
       .optional(),
   }),
-  execute: async (input) => {
-    try {
-      const client = getDiscordClient();
-      const guild = await client.guilds.fetch(input.guildId);
-      const channels = await guild.channels.fetch();
+  execute: async (ctx) => {
+    return withToolSpan("list-channels", ctx.context.guildId, async () => {
+      logger.debug("Listing channels", { guildId: ctx.context.guildId });
+      try {
+        const client = getDiscordClient();
+        const guild = await client.guilds.fetch(ctx.context.guildId);
+        const channels = await guild.channels.fetch();
 
-      const channelList = channels.map((channel) => ({
-        id: channel?.id ?? "",
-        name: channel?.name ?? "",
-        type: channel?.type !== undefined ? ChannelType[channel.type] : "Unknown",
-        parentId: channel?.parentId ?? null,
-      }));
+        const channelList = channels.map((channel) => ({
+          id: channel?.id ?? "",
+          name: channel?.name ?? "",
+          type: channel?.type !== undefined ? ChannelType[channel.type] : "Unknown",
+          parentId: channel?.parentId ?? null,
+        }));
 
-      return {
-        success: true,
-        message: `Found ${String(channelList.length)} channels`,
-        data: channelList,
-      };
-    } catch (error) {
-      logger.error("Failed to list channels", error);
-      return {
-        success: false,
-        message: "Failed to list channels",
-      };
-    }
+        logger.info("Listed channels successfully", {
+          guildId: ctx.context.guildId,
+          channelCount: channelList.length,
+        });
+
+        return {
+          success: true,
+          message: `Found ${String(channelList.length)} channels`,
+          data: channelList,
+        };
+      } catch (error) {
+        logger.error("Failed to list channels", error, { guildId: ctx.context.guildId });
+        captureException(error as Error, {
+          operation: "tool.list-channels",
+          discord: { guildId: ctx.context.guildId },
+        });
+        return {
+          success: false,
+          message: "Failed to list channels",
+        };
+      }
+    });
   },
 });
 
@@ -76,10 +115,10 @@ export const createChannelTool = createTool({
       })
       .optional(),
   }),
-  execute: async (input) => {
+  execute: async (ctx) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(input.guildId);
+      const guild = await client.guilds.fetch(ctx.context.guildId);
 
       const typeMap = {
         text: ChannelType.GuildText,
@@ -87,7 +126,7 @@ export const createChannelTool = createTool({
         category: ChannelType.GuildCategory,
       } as const;
 
-      const channelType = typeMap[input.type];
+      const channelType = typeMap[ctx.context.type];
 
       const createOptions: {
         name: string;
@@ -95,11 +134,11 @@ export const createChannelTool = createTool({
         parent?: string;
         topic?: string;
       } = {
-        name: input.name,
+        name: ctx.context.name,
         type: channelType,
       };
-      if (input.parentId !== undefined) createOptions.parent = input.parentId;
-      if (input.topic !== undefined) createOptions.topic = input.topic;
+      if (ctx.context.parentId !== undefined) createOptions.parent = ctx.context.parentId;
+      if (ctx.context.topic !== undefined) createOptions.topic = ctx.context.topic;
 
       const channel = await guild.channels.create(createOptions);
 
@@ -131,10 +170,10 @@ export const deleteChannelTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async (input) => {
+  execute: async (ctx) => {
     try {
       const client = getDiscordClient();
-      const channel = await client.channels.fetch(input.channelId);
+      const channel = await client.channels.fetch(ctx.context.channelId);
 
       if (!channel) {
         return {
@@ -150,7 +189,7 @@ export const deleteChannelTool = createTool({
         };
       }
 
-      await channel.delete(input.reason);
+      await channel.delete(ctx.context.reason);
 
       return {
         success: true,
@@ -186,10 +225,10 @@ export const getChannelTool = createTool({
       })
       .optional(),
   }),
-  execute: async (input) => {
+  execute: async (ctx) => {
     try {
       const client = getDiscordClient();
-      const channel = await client.channels.fetch(input.channelId);
+      const channel = await client.channels.fetch(ctx.context.channelId);
 
       if (!channel) {
         return {
@@ -234,10 +273,10 @@ export const modifyChannelTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async (input) => {
+  execute: async (ctx) => {
     try {
       const client = getDiscordClient();
-      const channel = await client.channels.fetch(input.channelId);
+      const channel = await client.channels.fetch(ctx.context.channelId);
 
       if (!channel || !("edit" in channel)) {
         return {
@@ -247,10 +286,10 @@ export const modifyChannelTool = createTool({
       }
 
       const editOptions: GuildChannelEditOptions = {};
-      if (input.name !== undefined) editOptions.name = input.name;
-      if (input.topic !== undefined) editOptions.topic = input.topic;
-      if (input.position !== undefined) editOptions.position = input.position;
-      if (input.parentId !== undefined) editOptions.parent = input.parentId;
+      if (ctx.context.name !== undefined) editOptions.name = ctx.context.name;
+      if (ctx.context.topic !== undefined) editOptions.topic = ctx.context.topic;
+      if (ctx.context.position !== undefined) editOptions.position = ctx.context.position;
+      if (ctx.context.parentId !== undefined) editOptions.parent = ctx.context.parentId;
 
       await channel.edit(editOptions as Parameters<typeof channel.edit>[0]);
 
@@ -286,13 +325,13 @@ export const reorderChannelsTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async (input) => {
+  execute: async (ctx) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(input.guildId);
+      const guild = await client.guilds.fetch(ctx.context.guildId);
 
       await guild.channels.setPositions(
-        input.positions.map((p: { channelId: string; position: number }) => ({
+        ctx.context.positions.map((p: { channelId: string; position: number }) => ({
           channel: p.channelId,
           position: p.position,
         })),
@@ -300,7 +339,7 @@ export const reorderChannelsTool = createTool({
 
       return {
         success: true,
-        message: `Reordered ${String(input.positions.length)} channels`,
+        message: `Reordered ${String(ctx.context.positions.length)} channels`,
       };
     } catch (error) {
       logger.error("Failed to reorder channels", error);
@@ -326,10 +365,10 @@ export const setChannelPermissionsTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async (input) => {
+  execute: async (ctx) => {
     try {
       const client = getDiscordClient();
-      const channel = await client.channels.fetch(input.channelId);
+      const channel = await client.channels.fetch(ctx.context.channelId);
 
       if (!channel || !("permissionOverwrites" in channel)) {
         return {
@@ -338,13 +377,13 @@ export const setChannelPermissionsTool = createTool({
         };
       }
 
-      await channel.permissionOverwrites.edit(input.targetId, {
-        ...(input.allow?.reduce(
-          (acc: Record<string, boolean>, perm: string) => ({ ...acc, [perm]: true }),
+      await channel.permissionOverwrites.edit(ctx.context.targetId, {
+        ...(ctx.context.allow?.reduce(
+          (acc: Record<string, boolean>, perm: string) => ({ ...acc, [normalizePermissionName(perm)]: true }),
           {},
         ) ?? {}),
-        ...(input.deny?.reduce(
-          (acc: Record<string, boolean>, perm: string) => ({ ...acc, [perm]: false }),
+        ...(ctx.context.deny?.reduce(
+          (acc: Record<string, boolean>, perm: string) => ({ ...acc, [normalizePermissionName(perm)]: false }),
           {},
         ) ?? {}),
       });

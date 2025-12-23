@@ -1,5 +1,65 @@
 import { beforeAll, afterAll, mock } from "bun:test";
 
+// Mock @prisma/client
+mock.module("@prisma/client", () => ({
+  PrismaClient: class MockPrismaClient {
+    $connect = async () => {};
+    $disconnect = async () => {};
+  },
+}));
+
+// Mock @mastra/libsql
+mock.module("@mastra/libsql", () => ({
+  // eslint-disable-next-line @typescript-eslint/no-extraneous-class
+  LibSQLStore: class MockLibSQLStore {},
+  // eslint-disable-next-line @typescript-eslint/no-extraneous-class
+  LibSQLVector: class MockLibSQLVector {},
+}));
+
+// Mock @mastra/memory
+mock.module("@mastra/memory", () => ({
+  // eslint-disable-next-line @typescript-eslint/no-extraneous-class
+  Memory: class MockMemory {},
+}));
+
+// Mock @mastra/core/agent
+mock.module("@mastra/core/agent", () => ({
+  Agent: class MockAgent {
+    name: string;
+    private _instructions: string;
+
+    constructor(config: { name: string; instructions: string; [key: string]: unknown }) {
+      this.name = config.name;
+      this._instructions = config.instructions;
+    }
+
+    getInstructions(): string {
+      return this._instructions;
+    }
+  },
+}));
+
+// Mock @mastra/core/tools
+mock.module("@mastra/core/tools", () => ({
+  createTool: (config: { id: string; description: string; [key: string]: unknown }) => ({
+    ...config,
+  }),
+}));
+
+// Mock @ai-sdk/openai
+type ModelFn = (model: string) => { provider: string; model: string };
+type OpenaiMock = ModelFn & { chat: ModelFn; responses: ModelFn };
+const mockOpenai: OpenaiMock = Object.assign(
+  (model: string) => ({ provider: "openai", model }),
+  {
+    chat: (model: string) => ({ provider: "openai.chat", model }),
+    responses: (model: string) => ({ provider: "openai.responses", model }),
+  }
+);
+mock.module("@ai-sdk/openai", () => ({
+  openai: mockOpenai,
+}));
+
 // Mock environment variables for testing
 beforeAll(() => {
   process.env["DISCORD_TOKEN"] = "test-discord-token";
@@ -44,6 +104,28 @@ mock.module("discord.js", () => ({
     Reaction: 2,
     User: 3,
     GuildMember: 4,
+  },
+  PermissionFlagsBits: {
+    ViewChannel: 1n << 10n,
+    SendMessages: 1n << 11n,
+    ManageMessages: 1n << 13n,
+    EmbedLinks: 1n << 14n,
+    AttachFiles: 1n << 15n,
+    ReadMessageHistory: 1n << 16n,
+    MentionEveryone: 1n << 17n,
+    UseExternalEmojis: 1n << 18n,
+    Connect: 1n << 20n,
+    Speak: 1n << 21n,
+    MuteMembers: 1n << 22n,
+    DeafenMembers: 1n << 23n,
+    MoveMembers: 1n << 24n,
+    ManageChannels: 1n << 4n,
+    ManageRoles: 1n << 28n,
+    Administrator: 1n << 3n,
+    KickMembers: 1n << 1n,
+    BanMembers: 1n << 2n,
+    ModerateMembers: 1n << 40n,
+    ManageGuild: 1n << 5n,
   },
   AutoModerationRuleTriggerType: {
     Keyword: 1,
