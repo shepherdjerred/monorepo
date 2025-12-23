@@ -22,6 +22,7 @@ export const mastra = new Mastra({
     classifier: classifierAgent,
   },
   storage: new LibSQLStore({
+    id: "birmel-storage",
     url: config.mastra.telemetryDbPath,
   }),
   ...(config.telemetry.enabled ? { observability: getMastraObservability() } : {}),

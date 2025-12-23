@@ -27,7 +27,7 @@ export const recordMessageActivityTool = createTool({
     message: z.string()
   }),
   execute: async (ctx) => {
-    const { guildId, userId, channelId, messageId, characterCount } = ctx.context;
+    const { guildId, userId, channelId, messageId, characterCount } = ctx;
     return withToolSpan("record-message-activity", guildId, async () => {
       logger.debug("Recording message activity", {
         guildId,
@@ -82,7 +82,7 @@ export const recordReactionActivityTool = createTool({
     message: z.string()
   }),
   execute: async (ctx) => {
-    const { guildId, userId, channelId, messageId, emoji } = ctx.context;
+    const { guildId, userId, channelId, messageId, emoji } = ctx;
     return withToolSpan("record-reaction-activity", guildId, async () => {
       logger.debug("Recording reaction activity", {
         guildId,
@@ -144,7 +144,7 @@ export const getUserActivityTool = createTool({
     }).optional()
   }),
   execute: async (ctx) => {
-    const { guildId, userId, startDate, endDate } = ctx.context;
+    const { guildId, userId, startDate, endDate } = ctx;
     return withToolSpan("get-user-activity", guildId, async () => {
       logger.debug("Getting user activity stats", {
         guildId,
@@ -219,7 +219,7 @@ export const getTopActiveUsersTool = createTool({
     }).optional()
   }),
   execute: async (ctx) => {
-    const { guildId, limit, startDate, endDate, activityType } = ctx.context;
+    const { guildId, limit, startDate, endDate, activityType } = ctx;
     return withToolSpan("get-top-active-users", guildId, async () => {
       logger.debug("Getting top active users", {
         guildId,

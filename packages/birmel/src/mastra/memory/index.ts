@@ -30,9 +30,11 @@ export function createMemory(): Memory {
 
   memoryInstance = new Memory({
     storage: new LibSQLStore({
+      id: "birmel-memory-storage",
       url: config.mastra.memoryDbPath,
     }),
     vector: new LibSQLVector({
+      id: "birmel-memory-vector",
       connectionUrl: config.mastra.memoryDbPath,
     }),
     embedder: "openai/text-embedding-3-small",

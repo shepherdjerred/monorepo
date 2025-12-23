@@ -64,18 +64,18 @@ export const getNewsTool = createTool({
 
       const params = new URLSearchParams({
         apiKey,
-        pageSize: String(ctx.context.count ?? 5),
+        pageSize: String(ctx.count ?? 5),
         language: "en",
       });
 
       let endpoint: string;
-      if (ctx.context.query) {
-        params.set("q", ctx.context.query);
+      if (ctx.query) {
+        params.set("q", ctx.query);
         endpoint = "everything";
       } else {
         params.set("country", "us");
-        if (ctx.context.category) {
-          params.set("category", ctx.context.category);
+        if (ctx.category) {
+          params.set("category", ctx.category);
         }
         endpoint = "top-headlines";
       }
