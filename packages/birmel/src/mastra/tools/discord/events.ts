@@ -27,10 +27,10 @@ export const listScheduledEventsTool = createTool({
       )
       .optional(),
   }),
-  execute: async (ctx) => {
+  execute: async ({ guildId }) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(ctx.context.guildId);
+      const guild = await client.guilds.fetch(guildId);
       const events = await guild.scheduledEvents.fetch();
 
       const eventList = events.map((event) => ({
@@ -79,33 +79,33 @@ export const createScheduledEventTool = createTool({
       })
       .optional(),
   }),
-  execute: async (ctx) => {
+  execute: async ({ guildId, name, description, scheduledStartTime, scheduledEndTime, location, channelId }) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(ctx.context.guildId);
+      const guild = await client.guilds.fetch(guildId);
 
-      const entityType = ctx.context.channelId
+      const entityType = channelId
         ? GuildScheduledEventEntityType.Voice
         : GuildScheduledEventEntityType.External;
 
       const createOptions: Parameters<typeof guild.scheduledEvents.create>[0] = {
-        name: ctx.context.name,
-        scheduledStartTime: new Date(ctx.context.scheduledStartTime),
+        name,
+        scheduledStartTime: new Date(scheduledStartTime),
         privacyLevel: GuildScheduledEventPrivacyLevel.GuildOnly,
         entityType,
       };
 
-      if (ctx.context.description !== undefined) {
-        createOptions.description = ctx.context.description;
+      if (description !== undefined) {
+        createOptions.description = description;
       }
-      if (ctx.context.scheduledEndTime !== undefined) {
-        createOptions.scheduledEndTime = new Date(ctx.context.scheduledEndTime);
+      if (scheduledEndTime !== undefined) {
+        createOptions.scheduledEndTime = new Date(scheduledEndTime);
       }
-      if (ctx.context.channelId !== undefined) {
-        createOptions.channel = ctx.context.channelId;
+      if (channelId !== undefined) {
+        createOptions.channel = channelId;
       }
-      if (ctx.context.location !== undefined && !ctx.context.channelId) {
-        createOptions.entityMetadata = { location: ctx.context.location };
+      if (location !== undefined && !channelId) {
+        createOptions.entityMetadata = { location };
       }
 
       const event = await guild.scheduledEvents.create(createOptions);
@@ -138,11 +138,11 @@ export const deleteScheduledEventTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async (ctx) => {
+  execute: async ({ guildId, eventId }) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(ctx.context.guildId);
-      const event = await guild.scheduledEvents.fetch(ctx.context.eventId);
+      const guild = await client.guilds.fetch(guildId);
+      const event = await guild.scheduledEvents.fetch(eventId);
 
       const eventName = event.name;
       await event.delete();
@@ -177,28 +177,28 @@ export const modifyScheduledEventTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async (ctx) => {
+  execute: async ({ guildId, eventId, name, description, scheduledStartTime, scheduledEndTime, location }) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(ctx.context.guildId);
-      const event = await guild.scheduledEvents.fetch(ctx.context.eventId);
+      const guild = await client.guilds.fetch(guildId);
+      const event = await guild.scheduledEvents.fetch(eventId);
 
       const editOptions: Parameters<typeof event.edit>[0] = {};
-      if (ctx.context.name !== undefined) editOptions.name = ctx.context.name;
-      if (ctx.context.description !== undefined) editOptions.description = ctx.context.description;
-      if (ctx.context.scheduledStartTime !== undefined)
-        editOptions.scheduledStartTime = new Date(ctx.context.scheduledStartTime);
-      if (ctx.context.scheduledEndTime !== undefined)
-        editOptions.scheduledEndTime = new Date(ctx.context.scheduledEndTime);
-      if (ctx.context.location !== undefined)
-        editOptions.entityMetadata = { location: ctx.context.location };
+      if (name !== undefined) editOptions.name = name;
+      if (description !== undefined) editOptions.description = description;
+      if (scheduledStartTime !== undefined)
+        editOptions.scheduledStartTime = new Date(scheduledStartTime);
+      if (scheduledEndTime !== undefined)
+        editOptions.scheduledEndTime = new Date(scheduledEndTime);
+      if (location !== undefined)
+        editOptions.entityMetadata = { location };
 
       const hasChanges =
-        ctx.context.name !== undefined ||
-        ctx.context.description !== undefined ||
-        ctx.context.scheduledStartTime !== undefined ||
-        ctx.context.scheduledEndTime !== undefined ||
-        ctx.context.location !== undefined;
+        name !== undefined ||
+        description !== undefined ||
+        scheduledStartTime !== undefined ||
+        scheduledEndTime !== undefined ||
+        location !== undefined;
 
       if (!hasChanges) {
         return {
@@ -243,13 +243,13 @@ export const getEventUsersTool = createTool({
       )
       .optional(),
   }),
-  execute: async (ctx) => {
+  execute: async ({ guildId, eventId, limit }) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(ctx.context.guildId);
-      const event = await guild.scheduledEvents.fetch(ctx.context.eventId);
+      const guild = await client.guilds.fetch(guildId);
+      const event = await guild.scheduledEvents.fetch(eventId);
 
-      const subscribers = await event.fetchSubscribers({ limit: ctx.context.limit ?? 100 });
+      const subscribers = await event.fetchSubscribers({ limit: limit ?? 100 });
 
       const userList = subscribers.map((sub: { user: { id: string; username: string } }) => ({
         userId: sub.user.id,
