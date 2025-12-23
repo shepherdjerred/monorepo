@@ -51,7 +51,7 @@ beforeAll(async () => {
 
   // Create the ScheduledTask table directly using raw SQL
   // This avoids regenerating the Prisma Client after it's already been imported
-  await prisma.$executeRawUnsafe(`
+  await prisma.$executeRaw`
     CREATE TABLE IF NOT EXISTS "ScheduledTask" (
       "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
       "guildId" TEXT NOT NULL,
@@ -70,15 +70,15 @@ beforeAll(async () => {
       "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
       "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
     )
-  `);
+  `;
 
   // Create indexes
-  await prisma.$executeRawUnsafe(`
+  await prisma.$executeRaw`
     CREATE INDEX IF NOT EXISTS "ScheduledTask_guildId_idx" ON "ScheduledTask"("guildId")
-  `);
-  await prisma.$executeRawUnsafe(`
+  `;
+  await prisma.$executeRaw`
     CREATE INDEX IF NOT EXISTS "ScheduledTask_enabled_scheduledAt_idx" ON "ScheduledTask"("enabled", "scheduledAt")
-  `);
+  `;
 });
 
 describe("Phase 1: Shell Tool", () => {
