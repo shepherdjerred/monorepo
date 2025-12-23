@@ -50,7 +50,7 @@ export const getNewsTool = createTool({
       )
       .optional(),
   }),
-  execute: async (input) => {
+  execute: async (ctx) => {
     try {
       const config = getConfig();
       const apiKey = config.externalApis.newsApiKey;
@@ -64,18 +64,18 @@ export const getNewsTool = createTool({
 
       const params = new URLSearchParams({
         apiKey,
-        pageSize: String(input.count ?? 5),
+        pageSize: String(ctx.context.count ?? 5),
         language: "en",
       });
 
       let endpoint: string;
-      if (input.query) {
-        params.set("q", input.query);
+      if (ctx.context.query) {
+        params.set("q", ctx.context.query);
         endpoint = "everything";
       } else {
         params.set("country", "us");
-        if (input.category) {
-          params.set("category", input.category);
+        if (ctx.context.category) {
+          params.set("category", ctx.context.category);
         }
         endpoint = "top-headlines";
       }
