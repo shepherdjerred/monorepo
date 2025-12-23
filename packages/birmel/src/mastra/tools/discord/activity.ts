@@ -27,7 +27,7 @@ export const recordMessageActivityTool = createTool({
     message: z.string()
   }),
   execute: async (input) => {
-    return withToolSpan("record-message-activity", input.guildId, () => {
+    return withToolSpan("record-message-activity", input.guildId, async () => {
       logger.debug("Recording message activity", {
         guildId: input.guildId,
         userId: input.userId
@@ -44,10 +44,10 @@ export const recordMessageActivityTool = createTool({
         }
         recordMessageActivity(activityInput);
 
-        return {
+        return await Promise.resolve({
           success: true,
           message: "Message activity recorded successfully"
-        };
+        });
       } catch (error) {
         logger.error("Failed to record message activity", error, {
           guildId: input.guildId,
@@ -81,7 +81,7 @@ export const recordReactionActivityTool = createTool({
     message: z.string()
   }),
   execute: async (input) => {
-    return withToolSpan("record-reaction-activity", input.guildId, () => {
+    return withToolSpan("record-reaction-activity", input.guildId, async () => {
       logger.debug("Recording reaction activity", {
         guildId: input.guildId,
         userId: input.userId,
@@ -96,10 +96,10 @@ export const recordReactionActivityTool = createTool({
           emoji: input.emoji
         });
 
-        return {
+        return await Promise.resolve({
           success: true,
           message: "Reaction activity recorded successfully"
-        };
+        });
       } catch (error) {
         logger.error("Failed to record reaction activity", error, {
           guildId: input.guildId,

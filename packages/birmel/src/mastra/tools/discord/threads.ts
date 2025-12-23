@@ -114,27 +114,30 @@ export const createStandaloneThreadTool = createTool({
           };
         }
 
-        const threadOptions: {
-          name: string;
-          autoArchiveDuration: 60 | 1440 | 4320 | 10080;
-          type: ChannelType.PrivateThread | ChannelType.PublicThread;
-          message?: { content: string };
-        } = {
-          name: input.name,
-          autoArchiveDuration: input.autoArchiveDuration
-            ? (parseInt(input.autoArchiveDuration) as 60 | 1440 | 4320 | 10080)
-            : 1440,
-          type:
-            input.type === "private"
-              ? ChannelType.PrivateThread
-              : ChannelType.PublicThread,
-        };
+        const autoArchiveDuration = input.autoArchiveDuration
+          ? parseInt(input.autoArchiveDuration) as 60 | 1440 | 4320 | 10080
+          : 1440;
 
-        if (input.message) {
-          threadOptions.message = { content: input.message };
+        let thread;
+        if (input.type === "private") {
+          thread = await channel.threads.create({
+            name: input.name,
+            autoArchiveDuration,
+            // Discord.js has complex conditional types that conflict with exactOptionalPropertyTypes
+            // @ts-expect-error - ChannelType.PrivateThread inferred as 'never' due to Discord.js type complexity
+            type: ChannelType.PrivateThread,
+            ...(input.message && { message: { content: input.message } }),
+          });
+        } else {
+          thread = await channel.threads.create({
+            name: input.name,
+            autoArchiveDuration,
+            // Discord.js has complex conditional types that conflict with exactOptionalPropertyTypes
+            // @ts-expect-error - ChannelType.PublicThread inferred as 'never' due to Discord.js type complexity
+            type: ChannelType.PublicThread,
+            ...(input.message && { message: { content: input.message } }),
+          });
         }
-
-        const thread = await channel.threads.create(threadOptions);
 
         logger.info("Standalone thread created", {
           threadId: thread.id,
