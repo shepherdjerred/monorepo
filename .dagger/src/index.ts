@@ -68,6 +68,10 @@ export class Monorepo {
     await container.sync();
     outputs.push("✓ Install");
 
+    // Remove cached Prisma Client installed from lockfile to ensure fresh generation
+    container = container.withExec(["rm", "-rf", "packages/birmel/node_modules/@prisma/client"]);
+    await container.sync();
+
     // Generate Prisma Client and set up test database
     // Directly execute the prisma binary from packages/birmel/node_modules to avoid version issues
     container = container
