@@ -29,9 +29,9 @@ export const createPollTool = createTool({
       expiresAt: z.string().describe("ISO timestamp when poll expires")
     }).optional()
   }),
-  execute: async (input) => {
+  execute: async (ctx) => {
     return withToolSpan("create-poll", undefined, async () => {
-      return createPoll(input);
+      return createPoll(ctx.context);
     });
   }
 });
@@ -64,9 +64,9 @@ export const getPollResultsTool = createTool({
       expiresAt: z.string().optional().describe("ISO timestamp when poll expires")
     }).optional()
   }),
-  execute: async (input) => {
+  execute: async (ctx) => {
     return withToolSpan("get-poll-results", undefined, async () => {
-      return getPollResultsHelper(input.channelId, input.messageId);
+      return getPollResultsHelper(ctx.context.channelId, ctx.context.messageId);
     });
   }
 });
@@ -82,9 +82,9 @@ export const endPollTool = createTool({
     success: z.boolean(),
     message: z.string()
   }),
-  execute: async (input) => {
+  execute: async (ctx) => {
     return withToolSpan("end-poll", undefined, async () => {
-      return endPollHelper(input.channelId, input.messageId);
+      return endPollHelper(ctx.context.channelId, ctx.context.messageId);
     });
   }
 });
