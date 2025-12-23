@@ -5,6 +5,15 @@ when_to_use: When user mentions GitHub, pull requests, gh command, or repository
 
 # GitHub CLI Helper Agent
 
+## What's New in 2025
+
+- **Clipboard OAuth**: `gh auth login --clipboard` auto-copies OAuth code
+- **New Commands**: `gh agent-task`, `gh attestation`, `gh ruleset` (v2.50+)
+- **Security**: Build Provenance Attestation support
+- **Customization**: `gh alias set` and `gh config set editor` for workflows
+- **Web Bridge**: `gh browse` connects terminal and GitHub web interface
+- **GitHub Copilot CLI**: Integrated AI assistance (replaces gh-copilot extension)
+
 ## Overview
 
 This agent helps you work with the GitHub CLI (`gh`) for managing pull requests, issues, GitHub Actions workflows, and repository operations.
@@ -26,6 +35,53 @@ The following `gh` commands are auto-approved and safe to use:
 - `gh run view` - View workflow run details
 - `gh workflow list` - List workflows
 - `gh search` - Search GitHub
+- `gh attestation verify` - Verify build provenance
+- `gh browse` - Open repository in browser
+
+### Authentication and Setup
+
+**Login with clipboard (2025)**:
+```bash
+# OAuth code automatically copied to clipboard
+gh auth login --clipboard
+
+# Traditional login
+gh auth login
+
+# Check authentication status
+gh auth status
+```
+
+**Customize your environment**:
+```bash
+# Set default editor
+gh config set editor "code --wait"
+gh config set editor "vim"
+
+# Create aliases for common commands
+gh alias set prs 'pr list --author @me'
+gh alias set issues 'issue list --assignee @me'
+gh alias set co 'pr checkout'
+
+# Use your aliases
+gh prs
+gh co 123
+```
+
+**Browse GitHub from terminal**:
+```bash
+# Open current repo in browser
+gh browse
+
+# Open specific PR
+gh browse 123
+
+# Open issues page
+gh browse -- issues
+
+# Open settings
+gh browse -- settings
+```
 
 ### Common Operations
 
@@ -102,13 +158,107 @@ npm test
 gh pr review 123 --approve
 ```
 
+## Advanced Features (2025)
+
+### Build Provenance and Attestation (v2.50+)
+
+Verify software supply chain security:
+
+```bash
+# Verify attestation for an artifact
+gh attestation verify <artifact-path> --owner <org>
+
+# View attestation details
+gh attestation inspect <artifact-path>
+
+# Attest to a build (in CI/CD)
+gh attestation sign <artifact-path> --repo <org/repo>
+```
+
+**Use cases:**
+- Verify npm packages before installation
+- Validate container images before deployment
+- Audit software supply chain in enterprise
+
+### Repository Rulesets
+
+Manage branch protection and repository rules:
+
+```bash
+# List rulesets
+gh ruleset list
+
+# View ruleset details
+gh ruleset view <ruleset-id>
+
+# Check ruleset applicability
+gh ruleset check <branch-name>
+```
+
+**Benefits:**
+- Consistent rules across multiple repos
+- Reusable security policies
+- Better compliance reporting
+
+### Agent Tasks (Enterprise)
+
+For GitHub Enterprise with agent runners:
+
+```bash
+# Create agent task
+gh agent-task create --name "Deploy" --script deploy.sh
+
+# List agent tasks
+gh agent-task list
+
+# View agent task logs
+gh agent-task view <task-id>
+```
+
+### GitHub Copilot CLI Integration
+
+GitHub Copilot is now integrated directly into gh CLI (replaces deprecated gh-copilot extension):
+
+```bash
+# Get shell command suggestions
+gh copilot suggest "list all files modified in last commit"
+
+# Explain a command
+gh copilot explain "git rebase -i HEAD~3"
+
+# Generate git commands
+gh copilot suggest git "undo last commit but keep changes"
+```
+
+**Setup**:
+```bash
+# Copilot is included in gh CLI by default (v2.46+)
+# Requires GitHub Copilot subscription
+
+# Check Copilot status
+gh copilot --help
+```
+
 ## Best Practices
 
 1. **Use Templates**: Set up PR and issue templates in `.github/` directory
-2. **Descriptive Titles**: Use clear, actionable PR/issue titles
-3. **Link Issues**: Reference related issues in PR descriptions using `#issue-number`
-4. **Check Status**: Always check PR checks before merging
-5. **Clean Branches**: Delete feature branches after merging
+2. **Customize gh CLI**: Set up aliases and editor configuration early
+   ```bash
+   gh alias set prs 'pr list --author @me'
+   gh config set editor "code --wait"
+   ```
+3. **Descriptive Titles**: Use clear, actionable PR/issue titles
+4. **Link Issues**: Reference related issues in PR descriptions using `#issue-number`
+5. **Verify Artifacts**: Use `gh attestation verify` for supply chain security (v2.50+)
+6. **Check Status**: Always check PR checks before merging
+   ```bash
+   gh pr checks --watch  # Wait for completion
+   ```
+7. **Bridge Terminal and Web**: Use `gh browse` to quickly jump to GitHub web interface
+8. **Clean Branches**: Delete feature branches after merging
+   ```bash
+   gh pr merge --squash --delete-branch
+   ```
 
 ## Common Workflows
 

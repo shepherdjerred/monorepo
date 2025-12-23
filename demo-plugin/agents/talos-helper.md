@@ -5,9 +5,24 @@ when_to_use: When user mentions Talos, talosctl, or Talos cluster operations
 
 # Talos Helper Agent
 
+## What's New in 2025
+
+- **OCI Registry Cache**: `talosctl image cache-serve` for local registry over HTTP/HTTPS
+- **System Logs**: Automatic log rotation in `/var/log` with structured logging
+- **Kernel Parameters**: `talosctl get kernelparamstatus` for KSPP sysctl settings
+- **Multi-Endpoint**: Load balancing and automatic failover across control plane endpoints
+- **QEMU Support**: QEMU x86 virtualization on macOS (Apple Silicon)
+- **Enhanced Context Management**: Similar to kubectl, manage multiple clusters easily
+
 ## Overview
 
 This agent helps you manage Talos Linux Kubernetes clusters using `talosctl` for node configuration, cluster bootstrapping, and system maintenance.
+
+**Key Philosophy**: Talos is API-driven infrastructure:
+- **No SSH Access**: All operations through API
+- **No Package Manager**: Immutable OS
+- **No Shell**: Minimal attack surface
+- **YAML Configuration**: Single source of truth
 
 ## CLI Commands
 
@@ -22,6 +37,42 @@ talosctl version
 ```bash
 talosctl config info
 talosctl config contexts
+```
+
+**Context management (like kubectl)**:
+```bash
+# List available contexts
+talosctl config contexts
+
+# Switch context
+talosctl config context production-cluster
+
+# Show current context
+talosctl config info
+
+# Add new context
+talosctl config add staging \
+  --ca ca.crt \
+  --crt talos.crt \
+  --key talos.key \
+  --endpoints 10.0.1.10,10.0.1.11,10.0.1.12
+
+# Merge contexts from another file
+talosctl config merge ./staging-talosconfig
+```
+
+**Multi-endpoint load balancing (2025)**:
+```bash
+# Multiple endpoints provide automatic failover
+talosctl --endpoints 10.0.0.10,10.0.0.11,10.0.0.12 \
+  --nodes 10.0.0.20 get members
+
+# Config with multiple endpoints
+talosctl config add prod \
+  --endpoints 10.0.0.10,10.0.0.11,10.0.0.12 \
+  --nodes 10.0.0.10,10.0.0.11,10.0.0.12
+
+# Client automatically load balances and fails over
 ```
 
 **Node status and health**:
@@ -173,6 +224,66 @@ talosctl --nodes <node-ip> read /etc/resolv.conf
 talosctl --nodes <node-ip> exec -- ping -c 3 8.8.8.8
 ```
 
+### System Logs and Monitoring (2025)
+
+Talos provides structured logging in `/var/log`:
+
+```bash
+# View system logs (automatic rotation)
+talosctl --nodes <node-ip> logs
+
+# Read specific log files
+talosctl --nodes <node-ip> read /var/log/audit/kube/audit.log
+talosctl --nodes <node-ip> read /var/log/containers/
+
+# Follow logs in real-time
+talosctl --nodes <node-ip> logs -f
+
+# Kernel parameters and security settings
+talosctl --nodes <node-ip> get kernelparamstatus
+
+# View all kernel parameters
+talosctl --nodes <node-ip> read /proc/sys/
+```
+
+**KSPP (Kernel Self-Protection Project) sysctls**:
+```bash
+# Check KSPP-compliant kernel parameters
+talosctl --nodes <node-ip> get kernelparamstatus
+
+# Example output shows hardened security settings:
+# - kernel.kptr_restrict
+# - kernel.dmesg_restrict
+# - kernel.unprivileged_bpf_disabled
+```
+
+### OCI Image Cache Server (2025)
+
+Serve a local OCI registry cache over HTTP/HTTPS:
+
+```bash
+# Start local registry cache server
+talosctl image cache-serve --listen :5000
+
+# Use with other nodes
+# Edit machine config to use cache:
+# machine:
+#   registries:
+#     mirrors:
+#       docker.io:
+#         endpoints:
+#           - http://cache-server:5000
+
+# Verify cache is working
+talosctl --nodes <node-ip> read /etc/cri/conf.d/hosts/
+```
+
+**Benefits**:
+- Faster image pulls across cluster
+- Reduced external bandwidth usage
+- Works offline/air-gapped environments
+- Supports HTTPS with TLS certificates
+
 ## Configuration Management
 
 ### Patching Configuration
@@ -205,14 +316,60 @@ talosctl gen config test-cluster https://localhost:6443 \
   --output-types talosconfig -o talosconfig.yaml
 ```
 
-## Best Practices
+## Best Practices (2025)
 
 1. **Backup Secrets**: Always backup `secrets.yaml` file
-2. **Staged Upgrades**: Upgrade one node at a time, start with workers
-3. **Health Checks**: Verify cluster health before and after changes
-4. **Configuration as Code**: Store Talos configs in version control
-5. **Use Patches**: Apply configuration changes via patches, not full rewrites
-6. **Test in Dev**: Test upgrades and changes in development first
+   ```bash
+   # Secrets are cryptographic keys - losing them = losing cluster access
+   cp secrets.yaml ~/backups/talos-secrets-$(date +%Y%m%d).yaml
+   ```
+
+2. **Use Multi-Endpoint Configuration**: Provides automatic failover
+   ```bash
+   talosctl config add prod \
+     --endpoints 10.0.0.10,10.0.0.11,10.0.0.12 \
+     --nodes 10.0.0.10,10.0.0.11,10.0.0.12
+   ```
+
+3. **Staged Upgrades**: Upgrade one node at a time, start with workers
+   ```bash
+   # Workers first, then control plane
+   talosctl --nodes worker-1 upgrade --image ghcr.io/siderolabs/installer:v1.8.0
+   # Wait and verify before continuing
+   ```
+
+4. **Health Checks**: Verify cluster health before and after changes
+   ```bash
+   talosctl health --verbose
+   ```
+
+5. **Configuration as Code**: Store Talos configs in version control (git)
+   ```bash
+   git add talos/
+   git commit -m "Update machine config: add registry mirror"
+   ```
+
+6. **Use Patches**: Apply configuration changes via patches, not full rewrites
+   ```bash
+   talosctl patch machineconfig --patch @registry-mirror.yaml
+   ```
+
+7. **Test in Dev**: Use QEMU for local testing before production
+   ```bash
+   # QEMU x86 support on macOS (Apple Silicon) - 2025 feature
+   talosctl cluster create --provisioner qemu
+   ```
+
+8. **Image Cache**: Use `talosctl image cache-serve` for faster deployments
+   ```bash
+   # Reduces external bandwidth and speeds up scaling
+   talosctl image cache-serve --listen :5000
+   ```
+
+9. **Monitor Kernel Parameters**: Check KSPP compliance regularly
+   ```bash
+   talosctl --nodes <node-ip> get kernelparamstatus
+   ```
 
 ## Common Issues and Solutions
 

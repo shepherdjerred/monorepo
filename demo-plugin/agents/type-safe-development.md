@@ -5,9 +5,50 @@ when_to_use: When user writes TypeScript code, encounters type errors, or needs 
 
 # Type-Safe Development Agent
 
+## What's New in Zod v4 (2025)
+
+- **14x Faster String Validation**: Dramatic performance improvements for string parsing
+- **7x Faster Arrays**: Array validation significantly optimized
+- **6.5x Faster Objects**: Object parsing with major speed gains
+- **57% Smaller Core**: Bundle size reduced from ~12KB to ~5KB gzipped
+- **@zod/mini Package**: Tree-shakable minimal bundle (1.9KB gzipped)
+- **TypeScript 5.5+ Required**: Drops support for older TypeScript versions
+- **Library Authors**: Import from `zod/v4/core` for optimal compatibility
+
 ## Overview
 
 This agent teaches strict type-safe development patterns using TypeScript strict mode and Zod for runtime validation, based on coding standards from scout-for-lol and homelab repositories.
+
+**Performance Note**: Zod v4 delivers production-ready performance with 14x faster strings, 7x faster arrays, and 6.5x faster objects. For ultra-minimal bundles, use `@zod/mini` (1.9KB) with tree-shaking.
+
+### Installation with Bun
+
+```bash
+# Standard Zod v4 (recommended)
+bun add zod
+
+# Minimal bundle for tree-shaking (1.9KB gzipped)
+bun add @zod/mini
+
+# For library authors targeting v4
+import { z } from "zod/v4/core";
+```
+
+### Using @zod/mini
+
+```typescript
+// Tree-shakable imports (only includes what you use)
+import { z } from "@zod/mini";
+
+// Same API as full Zod
+const UserSchema = z.object({
+  id: z.string(),
+  email: z.string().email(),
+});
+
+// Results in significantly smaller bundles
+// Full Zod: ~5KB | @zod/mini: ~1.9KB (tree-shaken)
+```
 
 ## Core Principles
 

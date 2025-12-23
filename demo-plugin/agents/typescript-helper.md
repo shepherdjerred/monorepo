@@ -5,6 +5,15 @@ when_to_use: When user works with .ts or .tsx files, mentions TypeScript, or enc
 
 # TypeScript Helper Agent
 
+## What's New in TypeScript 5.7 & 2025
+
+- **Never-Initialized Variables**: Detects variables that are never assigned in nested scopes
+- **Path Rewriting**: `--rewriteRelativeImportExtensions` auto-converts .ts → .js imports
+- **ES2024 Support**: `Object.groupBy()`, `Map.groupBy()`, `Promise.withResolvers()`
+- **V8 Compile Caching**: `module.enableCompileCache()` = ~2.5x faster startup (Node 22+)
+- **TypeScript 7.0 Preview**: 10x speedup, multi-threaded builds coming soon
+- **Direct Execution**: ts-node, tsx, and Node 23.x `--experimental-strip-types`
+
 ## Overview
 
 This agent helps you work with TypeScript for type-safe development, including type system usage, configuration, error resolution, and tooling integration.
@@ -52,11 +61,69 @@ tsc --noEmit file.ts
 # Using ts-node
 ts-node app.ts
 
-# Using tsx (faster)
+# Using tsx (faster, recommended)
 tsx app.ts
 
-# Using bun
+# Using bun (fastest for most workloads)
 bun run app.ts
+
+# Node.js 23+ with experimental type stripping (no transpilation!)
+node --experimental-strip-types app.ts
+
+# With V8 compile caching for 2.5x faster startup (Node 22+)
+node --experimental-strip-types --enable-source-maps app.ts
+```
+
+### Modern TypeScript 5.7+ Features
+
+**Path rewriting for imports**:
+```typescript
+// tsconfig.json
+{
+  "compilerOptions": {
+    "rewriteRelativeImportExtensions": true
+  }
+}
+
+// You write:
+import { foo } from "./utils.ts";
+
+// TypeScript rewrites to:
+import { foo } from "./utils.js";
+
+// Enables direct .ts imports that work in Node.js ESM
+```
+
+**ES2024 features now available**:
+```typescript
+// Object.groupBy()
+const people = [
+  { name: "Alice", age: 30 },
+  { name: "Bob", age: 25 },
+  { name: "Charlie", age: 30 }
+];
+
+const byAge = Object.groupBy(people, person => person.age);
+// { 25: [{name: "Bob", ...}], 30: [{name: "Alice", ...}, {name: "Charlie", ...}] }
+
+// Map.groupBy()
+const grouped = Map.groupBy(people, person => person.age);
+// Map { 25 => [{...}], 30 => [{...}, {...}] }
+
+// Promise.withResolvers()
+const { promise, resolve, reject } = Promise.withResolvers<number>();
+setTimeout(() => resolve(42), 1000);
+await promise; // 42
+```
+
+**V8 compile caching (Node 22+)**:
+```typescript
+// Enable at app entry point for ~2.5x faster startup
+import { enableCompileCache } from "node:module";
+
+enableCompileCache();
+
+// All subsequent module loads use V8's code cache
 ```
 
 ## Common TypeScript Patterns
