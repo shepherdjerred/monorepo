@@ -26,10 +26,10 @@ export const getGuildInfoTool = createTool({
       })
       .optional(),
   }),
-  execute: async (ctx) => {
+  execute: async (input) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(ctx.guildId);
+      const guild = await client.guilds.fetch(input.guildId);
 
       return {
         success: true,
@@ -71,14 +71,14 @@ export const modifyGuildTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async (ctx) => {
+  execute: async (input) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(ctx.guildId);
+      const guild = await client.guilds.fetch(input.guildId);
 
       const updates: { name?: string; description?: string } = {};
-      if (ctx.name) updates.name = ctx.name;
-      if (ctx.description) updates.description = ctx.description;
+      if (input.name) updates.name = input.name;
+      if (input.description) updates.description = input.description;
 
       if (Object.keys(updates).length === 0) {
         return {
@@ -114,11 +114,11 @@ export const setGuildIconTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async (ctx) => {
+  execute: async (input) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(ctx.guildId);
-      await guild.setIcon(ctx.iconUrl);
+      const guild = await client.guilds.fetch(input.guildId);
+      await guild.setIcon(input.iconUrl);
       return {
         success: true,
         message: "Server icon updated successfully",
@@ -144,11 +144,11 @@ export const setGuildBannerTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async (ctx) => {
+  execute: async (input) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(ctx.guildId);
-      await guild.setBanner(ctx.bannerUrl);
+      const guild = await client.guilds.fetch(input.guildId);
+      await guild.setBanner(input.bannerUrl);
       return {
         success: true,
         message: "Server banner updated successfully",
@@ -185,11 +185,11 @@ export const getAuditLogsTool = createTool({
       )
       .optional(),
   }),
-  execute: async (ctx) => {
+  execute: async (input) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(ctx.guildId);
-      const auditLogs = await guild.fetchAuditLogs({ limit: ctx.limit ?? 10 });
+      const guild = await client.guilds.fetch(input.guildId);
+      const auditLogs = await guild.fetchAuditLogs({ limit: input.limit ?? 10 });
 
       const entries = auditLogs.entries.map((entry) => {
         let targetId: string | null = null;
@@ -236,11 +236,11 @@ export const getGuildPruneCountTool = createTool({
       })
       .optional(),
   }),
-  execute: async (ctx) => {
+  execute: async (input) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(ctx.guildId);
-      const pruneCount = await guild.members.prune({ days: ctx.days, dry: true });
+      const guild = await client.guilds.fetch(input.guildId);
+      const pruneCount = await guild.members.prune({ days: input.days, dry: true });
 
       return {
         success: true,
@@ -276,14 +276,14 @@ export const pruneMembersTool = createTool({
       })
       .optional(),
   }),
-  execute: async (ctx) => {
+  execute: async (input) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(ctx.guildId);
+      const guild = await client.guilds.fetch(input.guildId);
       const pruneOptions: Parameters<typeof guild.members.prune>[0] = {
-        days: ctx.days,
+        days: input.days,
       };
-      if (ctx.reason !== undefined) pruneOptions.reason = ctx.reason;
+      if (input.reason !== undefined) pruneOptions.reason = input.reason;
       const pruned = await guild.members.prune(pruneOptions);
 
       return {
