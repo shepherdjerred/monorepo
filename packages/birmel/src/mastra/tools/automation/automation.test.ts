@@ -19,7 +19,6 @@ import {
 } from "./index.js";
 import { prisma } from "../../../database/index.js";
 import { existsSync, unlinkSync } from "node:fs";
-import { $ } from "bun";
 
 // Set up minimal test environment
 process.env["DISCORD_TOKEN"] = "test-token";
@@ -46,8 +45,40 @@ beforeAll(async () => {
     unlinkSync(dbPath);
   }
 
-  // Push schema to database (creates tables and regenerates client)
-  await $`bunx prisma db push --accept-data-loss`;
+  // Create the data directory if it doesn't exist
+  const { mkdir } = await import("node:fs/promises");
+  await mkdir("./data", { recursive: true });
+
+  // Create the ScheduledTask table directly using raw SQL
+  // This avoids regenerating the Prisma Client after it's already been imported
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "ScheduledTask" (
+      "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+      "guildId" TEXT NOT NULL,
+      "channelId" TEXT,
+      "userId" TEXT NOT NULL,
+      "scheduledAt" DATETIME NOT NULL,
+      "cronPattern" TEXT,
+      "naturalDesc" TEXT,
+      "toolId" TEXT,
+      "toolInput" TEXT,
+      "executedAt" DATETIME,
+      "nextRun" DATETIME,
+      "enabled" BOOLEAN NOT NULL DEFAULT 1,
+      "name" TEXT,
+      "description" TEXT,
+      "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Create indexes
+  await prisma.$executeRawUnsafe(`
+    CREATE INDEX IF NOT EXISTS "ScheduledTask_guildId_idx" ON "ScheduledTask"("guildId")
+  `);
+  await prisma.$executeRawUnsafe(`
+    CREATE INDEX IF NOT EXISTS "ScheduledTask_enabled_scheduledAt_idx" ON "ScheduledTask"("enabled", "scheduledAt")
+  `);
 });
 
 describe("Phase 1: Shell Tool", () => {
