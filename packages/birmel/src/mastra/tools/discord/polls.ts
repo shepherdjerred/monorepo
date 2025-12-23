@@ -29,12 +29,12 @@ export const createPollTool = createTool({
       expiresAt: z.string().describe("ISO timestamp when poll expires")
     }).optional()
   }),
-  execute: async (input) => {
+  execute: async (ctx) => {
     return withToolSpan("create-poll", undefined, async () => {
-      logger.debug("Creating poll", { channelId: input.channelId, question: input.question });
+      logger.debug("Creating poll", { channelId: ctx.context.channelId, question: ctx.context.question });
       try {
         const client = getDiscordClient();
-        const channel = await client.channels.fetch(input.channelId);
+        const channel = await client.channels.fetch(ctx.context.channelId);
 
         if (!channel?.isTextBased() || !("send" in channel)) {
           return {
@@ -43,20 +43,20 @@ export const createPollTool = createTool({
           };
         }
 
-        const duration = input.duration ?? 24;
+        const duration = ctx.context.duration ?? 24;
         const expiresAt = new Date(Date.now() + duration * 60 * 60 * 1000);
 
         const message = await channel.send({
           poll: {
             question: {
-              text: input.question
+              text: ctx.context.question
             },
-            answers: input.answers.map(answer => ({
+            answers: ctx.context.answers.map(answer => ({
               text: answer.text,
               ...(answer.emoji && { emoji: answer.emoji })
             })),
             duration,
-            allowMultiselect: input.allowMultiselect ?? false
+            allowMultiselect: ctx.context.allowMultiselect ?? false
           }
         });
 
@@ -65,10 +65,10 @@ export const createPollTool = createTool({
           void prisma.pollRecord.create({
             data: {
               guildId: message.guildId,
-              channelId: input.channelId,
+              channelId: ctx.context.channelId,
               messageId: message.id,
               pollId: message.poll.question.text ?? "",
-              question: input.question,
+              question: ctx.context.question,
               createdBy: client.user.id,
               expiresAt
             }
@@ -79,23 +79,23 @@ export const createPollTool = createTool({
 
         logger.info("Poll created successfully", {
           messageId: message.id,
-          channelId: input.channelId
+          channelId: ctx.context.channelId
         });
 
         return {
           success: true,
-          message: `Poll created successfully with ${input.answers.length.toString()} options`,
+          message: `Poll created successfully with ${ctx.context.answers.length.toString()} options`,
           data: {
             messageId: message.id,
-            pollId: input.question,
+            pollId: ctx.context.question,
             expiresAt: expiresAt.toISOString()
           }
         };
       } catch (error) {
-        logger.error("Failed to create poll", error, { channelId: input.channelId });
+        logger.error("Failed to create poll", error, { channelId: ctx.context.channelId });
         captureException(error as Error, {
           operation: "tool.create-poll",
-          discord: { channelId: input.channelId }
+          discord: { channelId: ctx.context.channelId }
         });
         return {
           success: false,
@@ -134,12 +134,12 @@ export const getPollResultsTool = createTool({
       expiresAt: z.string().optional().describe("ISO timestamp when poll expires")
     }).optional()
   }),
-  execute: async (input) => {
+  execute: async (ctx) => {
     return withToolSpan("get-poll-results", undefined, async () => {
-      logger.debug("Fetching poll results", { channelId: input.channelId, messageId: input.messageId });
+      logger.debug("Fetching poll results", { channelId: ctx.context.channelId, messageId: ctx.context.messageId });
       try {
         const client = getDiscordClient();
-        const channel = await client.channels.fetch(input.channelId);
+        const channel = await client.channels.fetch(ctx.context.channelId);
 
         if (!channel?.isTextBased()) {
           return {
@@ -148,7 +148,7 @@ export const getPollResultsTool = createTool({
           };
         }
 
-        const message = await channel.messages.fetch(input.messageId);
+        const message = await channel.messages.fetch(ctx.context.messageId);
 
         if (!message.poll) {
           return {
@@ -186,7 +186,7 @@ export const getPollResultsTool = createTool({
           // Note: Discord.js v14 poll API doesn't support fetching individual voters
           // The votes collection is not accessible through the standard API
           // This would require the bot to track votes through poll vote events
-          if (input.fetchVoters && answer.voteCount > 0) {
+          if (ctx.context.fetchVoters && answer.voteCount > 0) {
             logger.warn("Fetching individual poll voters is not supported in Discord.js v14", {
               answerId: answer.id
             });
@@ -196,7 +196,7 @@ export const getPollResultsTool = createTool({
         }
 
         logger.info("Poll results fetched", {
-          messageId: input.messageId,
+          messageId: ctx.context.messageId,
           totalVotes,
           answerCount: answers.length
         });
@@ -214,12 +214,12 @@ export const getPollResultsTool = createTool({
         };
       } catch (error) {
         logger.error("Failed to fetch poll results", error, {
-          channelId: input.channelId,
-          messageId: input.messageId
+          channelId: ctx.context.channelId,
+          messageId: ctx.context.messageId
         });
         captureException(error as Error, {
           operation: "tool.get-poll-results",
-          discord: { channelId: input.channelId, messageId: input.messageId }
+          discord: { channelId: ctx.context.channelId, messageId: ctx.context.messageId }
         });
         return {
           success: false,
@@ -241,12 +241,12 @@ export const endPollTool = createTool({
     success: z.boolean(),
     message: z.string()
   }),
-  execute: async (input) => {
+  execute: async (ctx) => {
     return withToolSpan("end-poll", undefined, async () => {
-      logger.debug("Ending poll", { channelId: input.channelId, messageId: input.messageId });
+      logger.debug("Ending poll", { channelId: ctx.context.channelId, messageId: ctx.context.messageId });
       try {
         const client = getDiscordClient();
-        const channel = await client.channels.fetch(input.channelId);
+        const channel = await client.channels.fetch(ctx.context.channelId);
 
         if (!channel?.isTextBased()) {
           return {
@@ -255,7 +255,7 @@ export const endPollTool = createTool({
           };
         }
 
-        const message = await channel.messages.fetch(input.messageId);
+        const message = await channel.messages.fetch(ctx.context.messageId);
 
         if (!message.poll) {
           return {
@@ -274,8 +274,8 @@ export const endPollTool = createTool({
         await message.poll.end();
 
         logger.info("Poll ended successfully", {
-          messageId: input.messageId,
-          channelId: input.channelId
+          messageId: ctx.context.messageId,
+          channelId: ctx.context.channelId
         });
 
         return {
@@ -284,12 +284,12 @@ export const endPollTool = createTool({
         };
       } catch (error) {
         logger.error("Failed to end poll", error, {
-          channelId: input.channelId,
-          messageId: input.messageId
+          channelId: ctx.context.channelId,
+          messageId: ctx.context.messageId
         });
         captureException(error as Error, {
           operation: "tool.end-poll",
-          discord: { channelId: input.channelId, messageId: input.messageId }
+          discord: { channelId: ctx.context.channelId, messageId: ctx.context.messageId }
         });
         return {
           success: false,
