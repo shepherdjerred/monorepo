@@ -27,7 +27,7 @@ process.env["DISCORD_CLIENT_ID"] = "test-client-id";
 process.env["OPENAI_API_KEY"] = "test-key";
 process.env["DATABASE_PATH"] = ":memory:";
 process.env["DATABASE_URL"] = "file::memory:?cache=shared";
-process.env["OPS_DATABASE_URL"] = "file:./packages/birmel/data/test-ops.db";
+process.env["OPS_DATABASE_URL"] = "file:./data/test-ops.db";
 process.env["SHELL_ENABLED"] = "true";
 process.env["SCHEDULER_ENABLED"] = "true";
 process.env["BROWSER_ENABLED"] = "true";
@@ -41,13 +41,13 @@ const testContext = {
 // Set up test database with schema before running tests
 beforeAll(async () => {
   // Remove test database if it exists
-  const dbPath = "./packages/birmel/data/test-ops.db";
+  const dbPath = "./data/test-ops.db";
   if (existsSync(dbPath)) {
     unlinkSync(dbPath);
   }
 
   // Run migrations to create schema
-  await $`bunx prisma migrate deploy`.cwd("./packages/birmel").quiet();
+  await $`bunx prisma migrate deploy`.quiet();
 });
 
 describe("Phase 1: Shell Tool", () => {
