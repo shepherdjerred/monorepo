@@ -46,8 +46,8 @@ beforeAll(async () => {
     unlinkSync(dbPath);
   }
 
-  // Run migrations to create schema
-  await $`bunx prisma migrate deploy`;
+  // Push schema to database (creates tables and regenerates client)
+  await $`bunx prisma db push --accept-data-loss`;
 });
 
 describe("Phase 1: Shell Tool", () => {
