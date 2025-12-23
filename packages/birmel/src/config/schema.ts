@@ -97,6 +97,14 @@ export const ActivityTrackingConfigSchema = z.object({
     .default([]),
 });
 
+export const ElectionsConfigSchema = z.object({
+  enabled: z.boolean().default(true),
+  startTime: z.string().default("17:00"),
+  endTime: z.string().default("19:00"),
+  timezone: z.string().default("America/Los_Angeles"),
+  channelId: z.string().optional(),
+});
+
 export const ConfigSchema = z.object({
   discord: DiscordConfigSchema,
   openai: OpenAIConfigSchema,
@@ -110,6 +118,7 @@ export const ConfigSchema = z.object({
   persona: PersonaConfigSchema,
   birthdays: BirthdayConfigSchema,
   activityTracking: ActivityTrackingConfigSchema,
+  elections: ElectionsConfigSchema,
 });
 
 export type Config = z.infer<typeof ConfigSchema>;
@@ -125,3 +134,4 @@ export type SentryConfig = z.infer<typeof SentryConfigSchema>;
 export type PersonaConfig = z.infer<typeof PersonaConfigSchema>;
 export type BirthdayConfig = z.infer<typeof BirthdayConfigSchema>;
 export type ActivityTrackingConfig = z.infer<typeof ActivityTrackingConfigSchema>;
+export type ElectionsConfig = z.infer<typeof ElectionsConfigSchema>;

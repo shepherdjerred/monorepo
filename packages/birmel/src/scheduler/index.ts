@@ -12,6 +12,11 @@ import {
 } from "./jobs/announcements.js";
 import { checkAndPostBirthdays } from "./jobs/birthday-checker.js";
 import { aggregateActivityMetrics } from "./jobs/activity-aggregator.js";
+import {
+	checkAndStartElections,
+	checkAndEndElections,
+	processElectionResults,
+} from "./jobs/elections.js";
 
 let schedulerInterval: ReturnType<typeof setInterval> | null = null;
 
@@ -29,6 +34,9 @@ export function startScheduler(): void {
     void runAnnouncementsJob();
     void checkAndPostBirthdays();
     void aggregateActivityMetrics();
+    void checkAndStartElections();
+    void checkAndEndElections();
+    void processElectionResults();
   }, 60 * 1000);
 
   // Also run immediately on startup
@@ -36,6 +44,7 @@ export function startScheduler(): void {
   void runAnnouncementsJob();
   void checkAndPostBirthdays();
   void aggregateActivityMetrics();
+  void checkAndStartElections();
 
   logger.info("Scheduler started");
 }
@@ -59,4 +68,7 @@ export {
   listPendingAnnouncements,
   checkAndPostBirthdays,
   aggregateActivityMetrics,
+  checkAndStartElections,
+  checkAndEndElections,
+  processElectionResults,
 };
