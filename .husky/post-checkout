@@ -1,0 +1,40 @@
+#!/usr/bin/env sh
+
+# post-checkout hook receives three parameters:
+# $1 = ref of previous HEAD
+# $2 = ref of new HEAD
+# $3 = flag indicating whether it was a branch checkout (1) or file checkout (0)
+
+# Only run on branch checkout
+if [ "$3" = "0" ]; then
+  exit 0
+fi
+
+# Only run when creating a new worktree
+# When a worktree is created, the previous HEAD is all zeros
+if [ "$1" != "0000000000000000000000000000000000000000" ]; then
+  exit 0
+fi
+
+echo "🔧 New worktree detected! Running setup..."
+
+# Trust mise configuration
+if command -v mise >/dev/null 2>&1; then
+  echo "📋 Running mise trust..."
+  mise trust
+else
+  echo "⚠️  mise not found, skipping mise trust"
+fi
+
+# Install dependencies
+if command -v bun >/dev/null 2>&1; then
+  echo "📦 Installing dependencies with bun..."
+  bun install
+elif command -v npm >/dev/null 2>&1; then
+  echo "📦 Installing dependencies with npm..."
+  npm install
+else
+  echo "⚠️  No package manager found, skipping dependency installation"
+fi
+
+echo "✅ Worktree setup complete!"
