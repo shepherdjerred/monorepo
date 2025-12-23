@@ -10,6 +10,7 @@ export type TextPart = {
 export type ImagePart = {
   type: "image";
   image: Buffer;
+  mimeType?: string;
 };
 
 export type MessageContent = string | (TextPart | ImagePart)[];
@@ -46,6 +47,7 @@ export async function buildMessageContent(
       content.push({
         type: "image",
         image: imageBuffer,
+        mimeType: attachment.contentType,
       });
 
       logger.debug("Image added to message content", {

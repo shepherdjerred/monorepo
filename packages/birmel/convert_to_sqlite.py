@@ -166,6 +166,16 @@ def create_schema(conn: sqlite3.Connection):
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_reactions_message ON reactions(message_id)")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_mentions_message ON mentions(message_id)")
 
+    # Create FTS5 virtual table for full-text search on messages
+    # Note: This needs to be created during setup, not at runtime when DB is read-only
+    cursor.execute("""
+        CREATE VIRTUAL TABLE IF NOT EXISTS messages_fts USING fts5(
+            content,
+            content='messages',
+            content_rowid='rowid'
+        )
+    """)
+
     conn.commit()
 
 
@@ -487,6 +497,12 @@ def main():
                         process_csv_file(conn, csv_file, server_id, channel_id, channel_name)
 
     conn.commit()
+
+    # Populate the FTS index with existing messages
+    print("\nPopulating FTS search index...")
+    cursor.execute("INSERT INTO messages_fts(messages_fts) VALUES('rebuild')")
+    conn.commit()
+    print("FTS index populated successfully")
 
     # Print summary statistics
     print("\n" + "="*50)
