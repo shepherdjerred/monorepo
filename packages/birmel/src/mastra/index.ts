@@ -21,9 +21,6 @@ export const mastra = new Mastra({
     birmel: birmelAgent,
     classifier: classifierAgent,
   },
-  server: {
-    port: config.mastra.studioPort,
-  },
   storage: new LibSQLStore({
     url: config.mastra.telemetryDbPath,
   }),
