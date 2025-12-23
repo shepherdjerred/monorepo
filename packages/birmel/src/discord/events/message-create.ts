@@ -16,6 +16,7 @@ import {
   extractImageAttachments,
   type ImageAttachment,
 } from "../../utils/image.js";
+import { recordMessageActivity } from "../../database/repositories/activity.js";
 
 const logger = loggers.discord.child("message-create");
 
@@ -165,6 +166,17 @@ export function setupMessageCreateHandler(client: Client): void {
         username: message.author.username,
         messageId: message.id,
       };
+
+      // Record message activity for non-bot messages
+      if (!message.author.bot) {
+        recordMessageActivity({
+          guildId: message.guild.id,
+          userId: message.author.id,
+          channelId: message.channel.id,
+          messageId: message.id,
+          characterCount: message.content.length,
+        });
+      }
 
       await withSpan("discord.messageCreate", discordContext, async (span) => {
         setSentryContext(discordContext);

@@ -10,6 +10,10 @@ export { webhookTools } from "./webhooks.js";
 export { inviteTools } from "./invites.js";
 export { automodTools } from "./automod.js";
 export { voiceTools } from "./voice.js";
+export { pollTools } from "./polls.js";
+export { threadTools } from "./threads.js";
+export { activityTools } from "./activity.js";
+export { schedulingTools } from "./scheduling.js";
 
 import { guildTools } from "./guild.js";
 import { messageTools } from "./messages.js";
@@ -23,6 +27,10 @@ import { webhookTools } from "./webhooks.js";
 import { inviteTools } from "./invites.js";
 import { automodTools } from "./automod.js";
 import { voiceTools } from "./voice.js";
+import { pollTools } from "./polls.js";
+import { threadTools } from "./threads.js";
+import { activityTools } from "./activity.js";
+import { schedulingTools } from "./scheduling.js";
 
 export const allDiscordTools = [
   ...guildTools,
@@ -37,4 +45,8 @@ export const allDiscordTools = [
   ...inviteTools,
   ...automodTools,
   ...voiceTools,
+  ...pollTools,
+  ...threadTools,
+  ...activityTools,
+  ...schedulingTools,
 ];

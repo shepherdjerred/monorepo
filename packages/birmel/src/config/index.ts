@@ -14,6 +14,15 @@ function parseNumber(value: string | undefined, defaultValue: number): number {
   return Number.isNaN(parsed) ? defaultValue : parsed;
 }
 
+function parseJSON<T>(value: string | undefined, defaultValue: T): T {
+  if (value === undefined) return defaultValue;
+  try {
+    return JSON.parse(value) as T;
+  } catch {
+    return defaultValue;
+  }
+}
+
 function loadConfigFromEnv(): Config {
   const rawConfig = {
     discord: {
@@ -89,6 +98,19 @@ function loadConfigFromEnv(): Config {
       ),
       styleExampleCount: parseNumber(process.env["PERSONA_STYLE_COUNT"], 50),
       styleModel: process.env["PERSONA_STYLE_MODEL"] ?? "gpt-4o-mini",
+    },
+    birthdays: {
+      enabled: parseBoolean(process.env["BIRTHDAYS_ENABLED"], true),
+      defaultTimezone: process.env["BIRTHDAYS_DEFAULT_TIMEZONE"] ?? "UTC",
+      birthdayRoleId: process.env["BIRTHDAYS_ROLE_ID"],
+      announcementChannelId: process.env["BIRTHDAYS_ANNOUNCEMENT_CHANNEL_ID"],
+    },
+    activityTracking: {
+      enabled: parseBoolean(process.env["ACTIVITY_TRACKING_ENABLED"], true),
+      roleTiers: parseJSON<Array<{ minimumActivity: number; roleId: string }>>(
+        process.env["ACTIVITY_ROLE_TIERS"],
+        [],
+      ),
     },
   };
 
