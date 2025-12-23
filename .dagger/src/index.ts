@@ -69,11 +69,11 @@ export class Monorepo {
     outputs.push("✓ Install");
 
     // Generate Prisma Client and set up test database
-    // Directly execute the prisma binary from node_modules to avoid version issues
+    // Directly execute the prisma binary from packages/birmel/node_modules to avoid version issues
     container = container
       .withEnvVariable("OPS_DATABASE_URL", "file:./packages/birmel/data/test-ops.db")
-      .withExec(["bun", "node_modules/prisma/build/index.js", "generate", "--schema=./packages/birmel/prisma/schema.prisma"])
-      .withExec(["bun", "node_modules/prisma/build/index.js", "db", "push", "--accept-data-loss", "--schema=./packages/birmel/prisma/schema.prisma"]);
+      .withExec(["bun", "packages/birmel/node_modules/prisma/build/index.js", "generate", "--schema=./packages/birmel/prisma/schema.prisma"])
+      .withExec(["bun", "packages/birmel/node_modules/prisma/build/index.js", "db", "push", "--accept-data-loss", "--schema=./packages/birmel/prisma/schema.prisma"]);
     await container.sync();
     outputs.push("✓ Prisma setup");
 
