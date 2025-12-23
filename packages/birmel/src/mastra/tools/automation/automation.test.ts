@@ -4,7 +4,7 @@
  * Tests Phase 1 (Shell), Phase 2 (Scheduler), and Phase 3 (Browser) tools
  */
 
-import { describe, test, expect } from "bun:test";
+import { describe, test, expect, beforeAll } from "bun:test";
 import {
   executeShellCommandTool,
   scheduleTaskTool,
@@ -18,7 +18,8 @@ import {
   browserCloseTool,
 } from "./index.js";
 import { prisma } from "../../../database/index.js";
-import { existsSync } from "node:fs";
+import { existsSync, unlinkSync } from "node:fs";
+import { $ } from "bun";
 
 // Set up minimal test environment
 process.env["DISCORD_TOKEN"] = "test-token";
@@ -36,6 +37,18 @@ const testContext = {
   runId: "test-run-e2e",
   agentId: "test-agent",
 };
+
+// Set up test database with schema before running tests
+beforeAll(async () => {
+  // Remove test database if it exists
+  const dbPath = "./packages/birmel/data/test-ops.db";
+  if (existsSync(dbPath)) {
+    unlinkSync(dbPath);
+  }
+
+  // Run migrations to create schema
+  await $`bunx prisma migrate deploy`.cwd("./packages/birmel").quiet();
+});
 
 describe("Phase 1: Shell Tool", () => {
   test("executes Python code", async () => {
