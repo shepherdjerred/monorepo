@@ -4,7 +4,6 @@ import { createBirmelAgent } from "./agents/birmel-agent.js";
 import { createClassifierAgent } from "./agents/classifier-agent.js";
 import { getConfig } from "../config/index.js";
 import { logger } from "../utils/logger.js";
-import { getTelemetryConfig } from "./telemetry/index.js";
 
 // Create agents at module load time
 const birmelAgent = createBirmelAgent();
@@ -28,7 +27,6 @@ export const mastra = new Mastra({
     id: "birmel-storage",
     url: config.mastra.telemetryDbPath,
   }),
-  telemetry: getTelemetryConfig(),
 });
 
 /**
