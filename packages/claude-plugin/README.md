@@ -1,12 +1,30 @@
-# Demo Plugin
+# Jerred's Claude Plugin
 
 A comprehensive DevOps, Observability, and Development Workflow plugin providing CLI guidance, coding best practices, and automated workflows for modern development teams.
+
+## Installation
+
+### From Marketplace (Recommended)
+
+```shell
+# Add the marketplace
+/plugin marketplace add shepherdjerred/glern
+
+# Install the plugin
+/plugin install jerred@shepherdjerred
+```
+
+### Local Development
+
+```bash
+claude --plugin-dir ./packages/claude-plugin
+```
 
 ## What's Included
 
 This plugin includes:
 
-- **Slash Command**: `/demo-plugin:hype` - Get encouraging messages for your coding session
+- **Slash Command**: `/jerred:hype` - Get encouraging messages for your coding session
 - **16 Specialized Agents** - Automatically activate to help with specific tools and workflows
 
 ### Agents
@@ -43,26 +61,18 @@ This plugin includes:
 
 ## How to Use
 
-### Install the Plugin
-
-Run Claude Code with this plugin:
-
-```bash
-claude --plugin-dir ./demo-plugin
-```
-
 ### Try the Slash Command
 
-Once Claude Code is running, try:
+Once installed, try:
 
 ```shell
-/demo-plugin:hype
+/jerred:hype
 ```
 
 Or with a topic:
 
 ```shell
-/demo-plugin:hype debugging
+/jerred:hype debugging
 ```
 
 ### Agents Activate Automatically
@@ -133,11 +143,12 @@ You: "I need to start working on a new feature"
 ## Plugin Structure
 
 ```
-demo-plugin/
+packages/claude-plugin/
 ├── .claude-plugin/
 │   └── plugin.json                      # Plugin manifest
 ├── commands/
-│   └── hype.md                          # Slash command
+│   ├── hype.md                          # Encouragement command
+│   └── workspace.md                     # Workspace management
 ├── agents/
 │   # Secrets & Auth
 │   ├── op-helper.md                     # 1Password CLI helper
