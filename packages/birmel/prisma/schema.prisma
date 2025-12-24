@@ -99,6 +99,37 @@ model Birthday {
   @@index([guildId, birthMonth, birthDay])
 }
 
+model GuildOwner {
+  id             Int       @id @default(autoincrement())
+  guildId        String    @unique
+  currentOwner   String
+  nickname       String
+  lastElectionAt DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model ElectionPoll {
+  id             Int       @id @default(autoincrement())
+  guildId        String
+  channelId      String
+  messageId      String?
+  pollType       String
+  status         String
+  scheduledStart DateTime
+  scheduledEnd   DateTime
+  actualStart    DateTime?
+  actualEnd      DateTime?
+  candidates     String
+  winner         String?
+  voteCounts     String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([guildId, status])
+  @@index([scheduledStart])
+}
+
 model ScheduledTask {
   id          Int       @id @default(autoincrement())
   guildId     String
