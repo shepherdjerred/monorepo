@@ -1,5 +1,5 @@
 import { dag, object, func, Secret, Directory, Container } from "@dagger.io/dagger";
-import { updateHomelabVersion } from "@shepherdjerred/dagger-utils";
+import { updateHomelabVersion } from "@shepherdjerred/dagger-utils/containers";
 import {
   checkBirmel,
   buildBirmelImage,
@@ -76,9 +76,11 @@ export class Monorepo {
     // Generate Prisma Client and set up test database
     // Use bun to run prisma commands - this ensures Bun's package resolution is used
     container = container
-      .withEnvVariable("OPS_DATABASE_URL", "file:./packages/birmel/data/test-ops.db")
-      .withExec(["bun", "x", "prisma", "generate", "--schema=./packages/birmel/prisma/schema.prisma"])
-      .withExec(["bun", "x", "prisma", "db", "push", "--accept-data-loss", "--schema=./packages/birmel/prisma/schema.prisma", "--url=file:./packages/birmel/data/test-ops.db"]);
+      .withEnvVariable("DATABASE_URL", "file:./packages/birmel/data/test-ops.db")
+      .withWorkdir("/workspace/packages/birmel")
+      .withExec(["./node_modules/.bin/prisma", "generate"])
+      .withExec(["./node_modules/.bin/prisma", "db", "push", "--accept-data-loss"])
+      .withWorkdir("/workspace");
     await container.sync();
     outputs.push("✓ Prisma setup");
 
