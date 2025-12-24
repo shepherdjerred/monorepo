@@ -26,7 +26,7 @@ export function selectRandomCandidates(min = 3, max = 5): string[] {
 
 export function createElectionAnswers(
 	candidates: string[],
-): Array<{ text: string }> {
+): { text: string }[] {
 	return candidates.map((name) => ({
 		text: name.charAt(0).toUpperCase() + name.slice(1),
 	}));

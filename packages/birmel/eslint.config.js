@@ -38,7 +38,7 @@ export default tseslint.config(
   },
   // Relax rules for test files
   {
-    files: ["tests/**/*.ts"],
+    files: ["tests/**/*.ts", "**/*.test.ts"],
     rules: {
       "@typescript-eslint/no-floating-promises": "off",
       "@typescript-eslint/require-await": "off",
@@ -46,6 +46,12 @@ export default tseslint.config(
       "@typescript-eslint/await-thenable": "off",
       "@typescript-eslint/no-confusing-void-expression": "off",
       "@typescript-eslint/prefer-for-of": "off",
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unsafe-assignment": "off",
+      "@typescript-eslint/no-unsafe-call": "off",
+      "@typescript-eslint/no-unsafe-member-access": "off",
+      "@typescript-eslint/no-unsafe-argument": "off",
+      "@typescript-eslint/no-non-null-assertion": "off",
     },
   },
 );
