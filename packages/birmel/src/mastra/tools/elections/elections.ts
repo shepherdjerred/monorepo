@@ -99,7 +99,7 @@ export const getElectionHistoryTool = createTool({
 						status: z.string(),
 						winner: z.string().optional(),
 						candidates: z.array(z.string()),
-						voteCounts: z.record(z.number()).optional(),
+						voteCounts: z.record(z.string(), z.number()).optional(),
 						scheduledStart: z.string(),
 						scheduledEnd: z.string(),
 						actualEnd: z.string().optional(),
