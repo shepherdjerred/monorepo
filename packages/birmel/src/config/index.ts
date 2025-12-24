@@ -131,6 +131,13 @@ function loadConfigFromEnv(): Config {
         [],
       ),
     },
+    elections: {
+      enabled: parseBoolean(process.env["ELECTIONS_ENABLED"], true),
+      startTime: process.env["ELECTION_START_TIME"] ?? "17:00",
+      endTime: process.env["ELECTION_END_TIME"] ?? "19:00",
+      timezone: process.env["ELECTION_TIMEZONE"] ?? "America/Los_Angeles",
+      channelId: process.env["ELECTION_CHANNEL_ID"],
+    },
   };
 
   return ConfigSchema.parse(rawConfig);
