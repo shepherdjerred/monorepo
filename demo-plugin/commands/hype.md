@@ -1,12 +1,16 @@
 ---
-description: Get hyped up for coding with an encouraging message
+args:
+  topic:
+    description: Optional topic to get hyped about
+    required: false
 ---
 
 # Hype Command
 
-Generate an enthusiastic, encouraging message to pump up the user for their coding session. Be energetic and motivating. If $ARGUMENTS is provided, tailor the message to that specific topic or task.
+{{#if topic}}
+Let's get hyped about {{topic}}! 🚀
 
-Examples:
-- "You're about to crush this code!"
-- "Time to write some legendary functions!"
-- "Let's build something amazing!"
+Here's why {{topic}} is awesome and you're going to crush it!
+{{else}}
+You're doing amazing work! Keep up the great momentum! 🎉
+{{/if}}
