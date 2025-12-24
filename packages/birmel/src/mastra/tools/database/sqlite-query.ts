@@ -35,7 +35,7 @@ export const querySqliteTool = createTool({
 		message: z.string(),
 		data: z
 			.object({
-				rows: z.array(z.record(z.any())),
+				rows: z.array(z.record(z.string(), z.any())),
 				count: z.number(),
 			})
 			.optional(),

@@ -45,7 +45,7 @@ Examples:
     ),
     toolId: z.string().describe("The tool to execute (e.g., 'send-message')"),
     toolInput: z
-      .record(z.unknown())
+      .record(z.string(), z.unknown())
       .describe("Input parameters for the tool as JSON object"),
     name: z.string().optional().describe("Optional name for this scheduled task"),
     description: z
