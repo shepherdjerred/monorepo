@@ -35,7 +35,7 @@ export const getQueueTool = createTool({
     await Promise.resolve();
     try {
       const player = getMusicPlayer();
-      const queue = player.queues.get(ctx.context.guildId);
+      const queue = player.queues.get(ctx.guildId);
 
       if (!queue) {
         return {
@@ -90,7 +90,7 @@ export const shuffleQueueTool = createTool({
     await Promise.resolve();
     try {
       const player = getMusicPlayer();
-      const queue = player.queues.get(ctx.context.guildId);
+      const queue = player.queues.get(ctx.guildId);
 
       if (!queue || queue.tracks.size === 0) {
         return {
@@ -129,7 +129,7 @@ export const clearQueueTool = createTool({
     await Promise.resolve();
     try {
       const player = getMusicPlayer();
-      const queue = player.queues.get(ctx.context.guildId);
+      const queue = player.queues.get(ctx.guildId);
 
       if (!queue) {
         return {
@@ -169,7 +169,7 @@ export const removeFromQueueTool = createTool({
     await Promise.resolve();
     try {
       const player = getMusicPlayer();
-      const queue = player.queues.get(ctx.context.guildId);
+      const queue = player.queues.get(ctx.guildId);
 
       if (!queue) {
         return {
@@ -178,7 +178,7 @@ export const removeFromQueueTool = createTool({
         };
       }
 
-      const index = ctx.context.position - 1;
+      const index = ctx.position - 1;
       if (index < 0 || index >= queue.tracks.size) {
         return {
           success: false,
@@ -225,7 +225,7 @@ export const addToQueueTool = createTool({
     await Promise.resolve();
     try {
       const player = getMusicPlayer();
-      const queue = player.queues.get(ctx.context.guildId);
+      const queue = player.queues.get(ctx.guildId);
 
       if (!queue) {
         return {
@@ -234,7 +234,7 @@ export const addToQueueTool = createTool({
         };
       }
 
-      const result = await player.search(ctx.context.query);
+      const result = await player.search(ctx.query);
 
       if (!result.hasTracks()) {
         return {

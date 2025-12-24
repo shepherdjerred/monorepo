@@ -121,14 +121,14 @@ Examples:
       const page = await getPage();
       resetSessionTimeout();
 
-      await page.goto(ctx.context.url, {
-        waitUntil: ctx.context.waitUntil ?? "load",
+      await page.goto(ctx.url, {
+        waitUntil: ctx.waitUntil ?? "load",
         timeout: 30000,
       });
 
       const title = await page.title();
 
-      logger.info("Navigated to URL", { url: ctx.context.url, title });
+      logger.info("Navigated to URL", { url: ctx.url, title });
 
       return {
         success: true,
@@ -139,7 +139,7 @@ Examples:
         },
       };
     } catch (error) {
-      logger.error("Navigation failed", { url: ctx.context.url, error: String(error) });
+      logger.error("Navigation failed", { url: ctx.url, error: String(error) });
       return {
         success: false,
         message: `Navigation failed: ${String(error)}`,
@@ -182,17 +182,17 @@ Examples:
       resetSessionTimeout();
 
       const timestamp = Date.now();
-      const filename = ctx.context.filename ?? `screenshot-${timestamp}.png`;
+      const filename = ctx.filename ?? `screenshot-${timestamp}.png`;
       const filepath = join(process.cwd(), "data", "screenshots", filename);
 
       const screenshot = await page.screenshot({
-        fullPage: ctx.context.fullPage ?? false,
+        fullPage: ctx.fullPage ?? false,
         type: "png",
       });
 
       await writeFile(filepath, screenshot);
 
-      logger.info("Screenshot captured", { filepath, fullPage: ctx.context.fullPage });
+      logger.info("Screenshot captured", { filepath, fullPage: ctx.fullPage });
 
       return {
         success: true,
@@ -238,18 +238,18 @@ Examples:
       const page = await getPage();
       resetSessionTimeout();
 
-      await page.click(ctx.context.selector, {
-        timeout: ctx.context.timeout ?? 30000,
+      await page.click(ctx.selector, {
+        timeout: ctx.timeout ?? 30000,
       });
 
-      logger.info("Clicked element", { selector: ctx.context.selector });
+      logger.info("Clicked element", { selector: ctx.selector });
 
       return {
         success: true,
-        message: `Clicked: ${ctx.context.selector}`,
+        message: `Clicked: ${ctx.selector}`,
       };
     } catch (error) {
-      logger.error("Click failed", { selector: ctx.context.selector, error: String(error) });
+      logger.error("Click failed", { selector: ctx.selector, error: String(error) });
       return {
         success: false,
         message: `Click failed: ${String(error)}`,
@@ -285,22 +285,22 @@ Examples:
       const page = await getPage();
       resetSessionTimeout();
 
-      await page.fill(ctx.context.selector, ctx.context.text, {
-        timeout: ctx.context.timeout ?? 30000,
+      await page.fill(ctx.selector, ctx.text, {
+        timeout: ctx.timeout ?? 30000,
       });
 
-      if (ctx.context.pressEnter) {
-        await page.press(ctx.context.selector, "Enter");
+      if (ctx.pressEnter) {
+        await page.press(ctx.selector, "Enter");
       }
 
-      logger.info("Typed text", { selector: ctx.context.selector, length: ctx.context.text.length });
+      logger.info("Typed text", { selector: ctx.selector, length: ctx.text.length });
 
       return {
         success: true,
-        message: `Typed into: ${ctx.context.selector}`,
+        message: `Typed into: ${ctx.selector}`,
       };
     } catch (error) {
-      logger.error("Type failed", { selector: ctx.context.selector, error: String(error) });
+      logger.error("Type failed", { selector: ctx.selector, error: String(error) });
       return {
         success: false,
         message: `Type failed: ${String(error)}`,
@@ -342,15 +342,15 @@ Examples:
 
       let text: string;
 
-      if (ctx.context.selector) {
-        const element = await page.waitForSelector(ctx.context.selector, {
-          timeout: ctx.context.timeout ?? 30000,
+      if (ctx.selector) {
+        const element = await page.waitForSelector(ctx.selector, {
+          timeout: ctx.timeout ?? 30000,
         });
 
         if (!element) {
           return {
             success: false,
-            message: `Element not found: ${ctx.context.selector}`,
+            message: `Element not found: ${ctx.selector}`,
           };
         }
 
@@ -360,7 +360,7 @@ Examples:
       }
 
       logger.info("Extracted text", {
-        selector: ctx.context.selector ?? "body",
+        selector: ctx.selector ?? "body",
         length: text.length,
       });
 
@@ -373,7 +373,7 @@ Examples:
       };
     } catch (error) {
       logger.error("Get text failed", {
-        selector: ctx.context.selector,
+        selector: ctx.selector,
         error: String(error),
       });
       return {
