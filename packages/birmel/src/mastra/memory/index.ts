@@ -39,7 +39,7 @@ export function createMemory(): Memory {
     }),
     embedder: "openai/text-embedding-3-small",
     options: {
-      lastMessages: 10,
+      lastMessages: 2,
       semanticRecall: {
         topK: 3,
         messageRange: 2,
