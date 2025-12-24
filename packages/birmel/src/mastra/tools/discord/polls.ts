@@ -1,11 +1,11 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
-import { withToolSpan } from "../../../observability/index.js";
-import {
-	createPoll,
-	getPollResults as getPollResultsHelper,
-	endPoll as endPollHelper,
-} from "../../../discord/polls/helpers.js";
+import { getDiscordClient } from "../../../discord/index.js";
+import { loggers } from "../../../utils/logger.js";
+import { captureException, withToolSpan } from "../../../observability/index.js";
+import { prisma } from "../../../database/index.js";
+
+const logger = loggers.tools.child("discord.polls");
 
 export const createPollTool = createTool({
   id: "create-poll",
@@ -29,18 +29,79 @@ export const createPollTool = createTool({
       expiresAt: z.string().describe("ISO timestamp when poll expires")
     }).optional()
   }),
-  execute: async (input) => {
+  execute: async (ctx) => {
     return withToolSpan("create-poll", undefined, async () => {
-      return createPoll({
-        channelId: input.channelId,
-        question: input.question,
-        answers: input.answers.map(a => ({
-          text: a.text,
-          ...(a.emoji ? { emoji: a.emoji } : {})
-        })),
-        ...(input.duration !== undefined ? { duration: input.duration } : {}),
-        ...(input.allowMultiselect !== undefined ? { allowMultiselect: input.allowMultiselect } : {}),
-      });
+      logger.debug("Creating poll", { channelId: ctx.channelId, question: ctx.question });
+      try {
+        const client = getDiscordClient();
+        const channel = await client.channels.fetch(ctx.channelId);
+
+        if (!channel?.isTextBased() || !("send" in channel)) {
+          return {
+            success: false,
+            message: "Channel must be a text channel to create a poll",
+          };
+        }
+
+        const duration = ctx.duration ?? 24;
+        const expiresAt = new Date(Date.now() + duration * 60 * 60 * 1000);
+
+        const message = await channel.send({
+          poll: {
+            question: {
+              text: ctx.question
+            },
+            answers: ctx.answers.map(answer => ({
+              text: answer.text,
+              ...(answer.emoji && { emoji: answer.emoji })
+            })),
+            duration,
+            allowMultiselect: ctx.allowMultiselect ?? false
+          }
+        });
+
+        // Store poll metadata in database
+        if (message.guildId && message.poll && client.user) {
+          void prisma.pollRecord.create({
+            data: {
+              guildId: message.guildId,
+              channelId: ctx.channelId,
+              messageId: message.id,
+              pollId: message.poll.question.text ?? "",
+              question: ctx.question,
+              createdBy: client.user.id,
+              expiresAt
+            }
+          }).catch((error: unknown) => {
+            logger.error("Failed to store poll record", error);
+          });
+        }
+
+        logger.info("Poll created successfully", {
+          messageId: message.id,
+          channelId: ctx.channelId
+        });
+
+        return {
+          success: true,
+          message: `Poll created successfully with ${ctx.answers.length.toString()} options`,
+          data: {
+            messageId: message.id,
+            pollId: ctx.question,
+            expiresAt: expiresAt.toISOString()
+          }
+        };
+      } catch (error) {
+        logger.error("Failed to create poll", error, { channelId: ctx.channelId });
+        captureException(error as Error, {
+          operation: "tool.create-poll",
+          discord: { channelId: ctx.channelId }
+        });
+        return {
+          success: false,
+          message: `Failed to create poll: ${(error as Error).message}`
+        };
+      }
     });
   }
 });
@@ -73,9 +134,98 @@ export const getPollResultsTool = createTool({
       expiresAt: z.string().optional().describe("ISO timestamp when poll expires")
     }).optional()
   }),
-  execute: async (input) => {
+  execute: async (ctx) => {
     return withToolSpan("get-poll-results", undefined, async () => {
-      return getPollResultsHelper(input.channelId, input.messageId);
+      logger.debug("Fetching poll results", { channelId: ctx.channelId, messageId: ctx.messageId });
+      try {
+        const client = getDiscordClient();
+        const channel = await client.channels.fetch(ctx.channelId);
+
+        if (!channel?.isTextBased()) {
+          return {
+            success: false,
+            message: "Channel must be a text channel"
+          };
+        }
+
+        const message = await channel.messages.fetch(ctx.messageId);
+
+        if (!message.poll) {
+          return {
+            success: false,
+            message: "Message does not contain a poll"
+          };
+        }
+
+        const poll = message.poll;
+        let totalVotes = 0;
+        const answers = [];
+
+        for (const answer of poll.answers.values()) {
+          totalVotes += answer.voteCount;
+
+          const answerData: {
+            id: number;
+            text: string;
+            emoji?: string;
+            voteCount: number;
+            voters?: { userId: string; username: string }[];
+          } = {
+            id: answer.id,
+            text: answer.text ?? "",
+            voteCount: answer.voteCount,
+          };
+
+          if (answer.emoji) {
+            const emojiName = answer.emoji.name ?? answer.emoji.id ?? undefined;
+            if (emojiName) {
+              answerData.emoji = emojiName;
+            }
+          }
+
+          // Note: Discord.js v14 poll API doesn't support fetching individual voters
+          // The votes collection is not accessible through the standard API
+          // This would require the bot to track votes through poll vote events
+          if (ctx.fetchVoters && answer.voteCount > 0) {
+            logger.warn("Fetching individual poll voters is not supported in Discord.js v14", {
+              answerId: answer.id
+            });
+          }
+
+          answers.push(answerData);
+        }
+
+        logger.info("Poll results fetched", {
+          messageId: ctx.messageId,
+          totalVotes,
+          answerCount: answers.length
+        });
+
+        return {
+          success: true,
+          message: `Poll results: ${totalVotes.toString()} total votes across ${answers.length.toString()} answers`,
+          data: {
+            question: poll.question.text ?? "",
+            answers,
+            totalVotes,
+            isFinalized: poll.resultsFinalized,
+            ...(poll.expiresAt && { expiresAt: poll.expiresAt.toISOString() }),
+          },
+        };
+      } catch (error) {
+        logger.error("Failed to fetch poll results", error, {
+          channelId: ctx.channelId,
+          messageId: ctx.messageId
+        });
+        captureException(error as Error, {
+          operation: "tool.get-poll-results",
+          discord: { channelId: ctx.channelId, messageId: ctx.messageId }
+        });
+        return {
+          success: false,
+          message: `Failed to fetch poll results: ${(error as Error).message}`
+        };
+      }
     });
   }
 });
@@ -91,9 +241,61 @@ export const endPollTool = createTool({
     success: z.boolean(),
     message: z.string()
   }),
-  execute: async (input) => {
+  execute: async (ctx) => {
     return withToolSpan("end-poll", undefined, async () => {
-      return endPollHelper(input.channelId, input.messageId);
+      logger.debug("Ending poll", { channelId: ctx.channelId, messageId: ctx.messageId });
+      try {
+        const client = getDiscordClient();
+        const channel = await client.channels.fetch(ctx.channelId);
+
+        if (!channel?.isTextBased()) {
+          return {
+            success: false,
+            message: "Channel must be a text channel"
+          };
+        }
+
+        const message = await channel.messages.fetch(ctx.messageId);
+
+        if (!message.poll) {
+          return {
+            success: false,
+            message: "Message does not contain a poll"
+          };
+        }
+
+        if (message.poll.resultsFinalized) {
+          return {
+            success: false,
+            message: "Poll has already been finalized"
+          };
+        }
+
+        await message.poll.end();
+
+        logger.info("Poll ended successfully", {
+          messageId: ctx.messageId,
+          channelId: ctx.channelId
+        });
+
+        return {
+          success: true,
+          message: "Poll ended successfully and results are now finalized"
+        };
+      } catch (error) {
+        logger.error("Failed to end poll", error, {
+          channelId: ctx.channelId,
+          messageId: ctx.messageId
+        });
+        captureException(error as Error, {
+          operation: "tool.end-poll",
+          discord: { channelId: ctx.channelId, messageId: ctx.messageId }
+        });
+        return {
+          success: false,
+          message: `Failed to end poll: ${(error as Error).message}`
+        };
+      }
     });
   }
 });

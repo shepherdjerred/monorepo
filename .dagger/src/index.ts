@@ -1,4 +1,5 @@
 import { dag, object, func, Secret, Directory, Container } from "@dagger.io/dagger";
+import { updateHomelabVersion } from "@shepherdjerred/dagger-utils/containers";
 import {
   checkBirmel,
   buildBirmelImage,
@@ -68,12 +69,18 @@ export class Monorepo {
     await container.sync();
     outputs.push("✓ Install");
 
+    // Remove generated Prisma Client files to ensure fresh generation with current schema
+    container = container.withExec(["rm", "-rf", "packages/birmel/node_modules/.prisma"]);
+    await container.sync();
+
     // Generate Prisma Client and set up test database
-    // Directly execute the prisma binary from packages/birmel/node_modules to avoid version issues
+    // Use bun to run prisma commands - this ensures Bun's package resolution is used
     container = container
-      .withEnvVariable("OPS_DATABASE_URL", "file:./packages/birmel/data/test-ops.db")
-      .withExec(["bun", "packages/birmel/node_modules/prisma/build/index.js", "generate", "--schema=./packages/birmel/prisma/schema.prisma"])
-      .withExec(["bun", "packages/birmel/node_modules/prisma/build/index.js", "db", "push", "--accept-data-loss", "--schema=./packages/birmel/prisma/schema.prisma"]);
+      .withEnvVariable("DATABASE_URL", "file:./packages/birmel/data/test-ops.db")
+      .withWorkdir("/workspace/packages/birmel")
+      .withExec(["./node_modules/.bin/prisma", "generate"])
+      .withExec(["./node_modules/.bin/prisma", "db", "push", "--accept-data-loss"])
+      .withWorkdir("/workspace");
     await container.sync();
     outputs.push("✓ Prisma setup");
 
@@ -201,7 +208,7 @@ export class Monorepo {
   }
 
   /**
-   * Full Birmel release: CI + build + smoke test + publish
+   * Full Birmel release: CI + build + smoke test + publish + deploy to homelab
    */
   @func()
   async birmelRelease(
@@ -210,6 +217,7 @@ export class Monorepo {
     gitSha: string,
     registryUsername: string,
     registryPassword: Secret,
+    githubToken?: Secret,
   ): Promise<string> {
     const outputs: string[] = [];
 
@@ -221,6 +229,17 @@ export class Monorepo {
 
     // Publish
     outputs.push(await this.birmelPublish(source, version, gitSha, registryUsername, registryPassword));
+
+    // Deploy to homelab
+    if (githubToken) {
+      outputs.push(
+        await updateHomelabVersion({
+          ghToken: githubToken,
+          appName: "birmel",
+          version,
+        }),
+      );
+    }
 
     return outputs.join("\n\n");
   }
