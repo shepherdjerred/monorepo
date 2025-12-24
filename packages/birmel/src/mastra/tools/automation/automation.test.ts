@@ -17,8 +17,8 @@ import {
   browserGetTextTool,
   browserCloseTool,
 } from "./index.js";
-import { prisma } from "../../../database/index.js";
 import { existsSync } from "node:fs";
+import { prisma } from "../../../database/index.js";
 
 const testContext = {
   runId: "test-run-e2e",
@@ -26,14 +26,16 @@ const testContext = {
 };
 
 // Set up test database before running tests
-// Note: The pretest script runs "prisma db push" to create the schema
+// Copy the pristine database to ensure a clean state
 beforeAll(async () => {
-  // Create the data directory if it doesn't exist
-  const { mkdir } = await import("node:fs/promises");
+  const { mkdir, copyFile } = await import("node:fs/promises");
   await mkdir("./data", { recursive: true });
 
-  // Clean up any existing test data
-  await prisma.scheduledTask.deleteMany({});
+  // Copy pristine database to test database
+  await copyFile(
+    "./data/test-ops.pristine.db",
+    "./data/test-ops.db"
+  );
 });
 
 describe("Phase 1: Shell Tool", () => {
