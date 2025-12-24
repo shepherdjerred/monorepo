@@ -9,7 +9,7 @@ export const executeShellCommandTool = createTool({
   id: "execute-shell-command",
   description: `Execute shell commands with Python, Node.js, Bun, or any system command.
 
-**SECURITY WARNING**: This tool executes arbitrary commands in a trusted environment. There are no security restrictions. Only use with trusted input.
+**SECURITY WARNING**: This tool executes arbitrary commands in a trusted environment. There are no security restrictions. Only use with trusted ctx.
 
 Examples:
 - Execute Python: command="python3", args=["-c", "print('Hello')"]
@@ -36,7 +36,7 @@ The tool captures stdout, stderr, exit code, and execution time.`,
       duration: z.number().describe("Execution time in milliseconds"),
     }).optional(),
   }),
-  execute: async (input) => {
+  execute: async (ctx) => {
     const config = getConfig();
 
     if (!config.shell.enabled) {
@@ -47,7 +47,7 @@ The tool captures stdout, stderr, exit code, and execution time.`,
     }
 
     // Determine timeout
-    const timeout = input.timeout ?? config.shell.defaultTimeout;
+    const timeout = ctx.timeout ?? config.shell.defaultTimeout;
     if (timeout > config.shell.maxTimeout) {
       return {
         success: false,
@@ -59,9 +59,9 @@ The tool captures stdout, stderr, exit code, and execution time.`,
     let timedOut = false;
 
     // Build command for logging
-    const fullCommand = [input.command, ...(input.args ?? [])].join(" ");
+    const fullCommand = [ctx.command, ...(ctx.args ?? [])].join(" ");
     logger.info(`Executing shell command: ${fullCommand}`, {
-      cwd: input.cwd,
+      cwd: ctx.cwd,
       timeout,
     });
 
@@ -75,9 +75,9 @@ The tool captures stdout, stderr, exit code, and execution time.`,
 
       // Execute command using Bun.spawn
       const proc = Bun.spawn({
-        cmd: [input.command, ...(input.args ?? [])],
-        ...(input.cwd ? { cwd: input.cwd } : {}),
-        ...(input.env ? { env: input.env } : {}),
+        cmd: [ctx.command, ...(ctx.args ?? [])],
+        ...(ctx.cwd ? { cwd: ctx.cwd } : {}),
+        ...(ctx.env ? { env: ctx.env } : {}),
         stdout: "pipe",
         stderr: "pipe",
         stdin: "ignore",

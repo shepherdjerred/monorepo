@@ -116,19 +116,19 @@ Examples:
       })
       .optional(),
   }),
-  execute: async (input) => {
+  execute: async (ctx) => {
     try {
       const page = await getPage();
       resetSessionTimeout();
 
-      await page.goto(input.url, {
-        waitUntil: input.waitUntil ?? "load",
+      await page.goto(ctx.url, {
+        waitUntil: ctx.waitUntil ?? "load",
         timeout: 30000,
       });
 
       const title = await page.title();
 
-      logger.info("Navigated to URL", { url: input.url, title });
+      logger.info("Navigated to URL", { url: ctx.url, title });
 
       return {
         success: true,
@@ -139,7 +139,7 @@ Examples:
         },
       };
     } catch (error) {
-      logger.error("Navigation failed", { url: input.url, error: String(error) });
+      logger.error("Navigation failed", { url: ctx.url, error: String(error) });
       return {
         success: false,
         message: `Navigation failed: ${String(error)}`,
@@ -176,23 +176,23 @@ Examples:
       })
       .optional(),
   }),
-  execute: async (input) => {
+  execute: async (ctx) => {
     try {
       const page = await getPage();
       resetSessionTimeout();
 
       const timestamp = Date.now();
-      const filename = input.filename ?? `screenshot-${timestamp}.png`;
+      const filename = ctx.filename ?? `screenshot-${timestamp}.png`;
       const filepath = join(process.cwd(), "data", "screenshots", filename);
 
       const screenshot = await page.screenshot({
-        fullPage: input.fullPage ?? false,
+        fullPage: ctx.fullPage ?? false,
         type: "png",
       });
 
       await writeFile(filepath, screenshot);
 
-      logger.info("Screenshot captured", { filepath, fullPage: input.fullPage });
+      logger.info("Screenshot captured", { filepath, fullPage: ctx.fullPage });
 
       return {
         success: true,
@@ -233,23 +233,23 @@ Examples:
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async (input) => {
+  execute: async (ctx) => {
     try {
       const page = await getPage();
       resetSessionTimeout();
 
-      await page.click(input.selector, {
-        timeout: input.timeout ?? 30000,
+      await page.click(ctx.selector, {
+        timeout: ctx.timeout ?? 30000,
       });
 
-      logger.info("Clicked element", { selector: input.selector });
+      logger.info("Clicked element", { selector: ctx.selector });
 
       return {
         success: true,
-        message: `Clicked: ${input.selector}`,
+        message: `Clicked: ${ctx.selector}`,
       };
     } catch (error) {
-      logger.error("Click failed", { selector: input.selector, error: String(error) });
+      logger.error("Click failed", { selector: ctx.selector, error: String(error) });
       return {
         success: false,
         message: `Click failed: ${String(error)}`,
@@ -280,27 +280,27 @@ Examples:
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async (input) => {
+  execute: async (ctx) => {
     try {
       const page = await getPage();
       resetSessionTimeout();
 
-      await page.fill(input.selector, input.text, {
-        timeout: input.timeout ?? 30000,
+      await page.fill(ctx.selector, ctx.text, {
+        timeout: ctx.timeout ?? 30000,
       });
 
-      if (input.pressEnter) {
-        await page.press(input.selector, "Enter");
+      if (ctx.pressEnter) {
+        await page.press(ctx.selector, "Enter");
       }
 
-      logger.info("Typed text", { selector: input.selector, length: input.text.length });
+      logger.info("Typed text", { selector: ctx.selector, length: ctx.text.length });
 
       return {
         success: true,
-        message: `Typed into: ${input.selector}`,
+        message: `Typed into: ${ctx.selector}`,
       };
     } catch (error) {
-      logger.error("Type failed", { selector: input.selector, error: String(error) });
+      logger.error("Type failed", { selector: ctx.selector, error: String(error) });
       return {
         success: false,
         message: `Type failed: ${String(error)}`,
@@ -335,22 +335,22 @@ Examples:
       })
       .optional(),
   }),
-  execute: async (input) => {
+  execute: async (ctx) => {
     try {
       const page = await getPage();
       resetSessionTimeout();
 
       let text: string;
 
-      if (input.selector) {
-        const element = await page.waitForSelector(input.selector, {
-          timeout: input.timeout ?? 30000,
+      if (ctx.selector) {
+        const element = await page.waitForSelector(ctx.selector, {
+          timeout: ctx.timeout ?? 30000,
         });
 
         if (!element) {
           return {
             success: false,
-            message: `Element not found: ${input.selector}`,
+            message: `Element not found: ${ctx.selector}`,
           };
         }
 
@@ -360,7 +360,7 @@ Examples:
       }
 
       logger.info("Extracted text", {
-        selector: input.selector ?? "body",
+        selector: ctx.selector ?? "body",
         length: text.length,
       });
 
@@ -373,7 +373,7 @@ Examples:
       };
     } catch (error) {
       logger.error("Get text failed", {
-        selector: input.selector,
+        selector: ctx.selector,
         error: String(error),
       });
       return {
