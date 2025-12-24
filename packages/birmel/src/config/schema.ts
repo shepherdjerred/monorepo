@@ -72,9 +72,9 @@ export const SentryConfigSchema = z.object({
 export const PersonaConfigSchema = z.object({
   enabled: z.boolean().default(true),
   defaultPersona: z.string().default("virmel"),
-  dbPath: z.string().default("./glitter-boys.db"),
-  decisionExampleCount: z.number().default(20),
-  styleExampleCount: z.number().default(50),
+  dbPath: z.string().default("file:/app/data/glitter-boys.db"),
+  decisionExampleCount: z.number().default(5),
+  styleExampleCount: z.number().default(10),
   styleModel: z.string().default("gpt-4o-mini"),
 });
 
