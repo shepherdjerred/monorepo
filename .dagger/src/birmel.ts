@@ -37,6 +37,7 @@ export function getBirmelPrepared(workspaceSource: Directory): Container {
  */
 export function checkBirmel(workspaceSource: Directory): Container {
   return getBirmelPrepared(workspaceSource)
+    .withExec(["bunx", "prisma", "generate"])
     .withExec(["bun", "run", "typecheck"])
     .withExec(["bun", "run", "lint"])
     .withExec(["bun", "run", "test"]);
