@@ -14,12 +14,11 @@
     "dev": "bun run --watch src/index.ts",
     "build": "true",
     "build:studio": "mastra build -d src/mastra",
-    "test": "bun test",
+    "test": "prisma generate && bun test",
     "typecheck": "prisma generate && tsc --noEmit",
     "lint": "eslint .",
     "studio:dev": "mastra dev -d src/mastra",
-    "prepare": "husky",
-    "postinstall": "prisma generate"
+    "prepare": "husky"
   },
   "dependencies": {
     "@ai-sdk/openai": "^2.0.0",
