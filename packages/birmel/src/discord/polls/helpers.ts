@@ -4,15 +4,15 @@ import { prisma } from "../../database/index.js";
 
 const logger = loggers.discord.child("polls");
 
-export interface CreatePollParams {
+export type CreatePollParams = {
 	channelId: string;
 	question: string;
-	answers: Array<{ text: string; emoji?: string }>;
+	answers: { text: string; emoji?: string }[];
 	duration?: number; // hours
 	allowMultiselect?: boolean;
 }
 
-export interface PollResult {
+export type PollResult = {
 	success: boolean;
 	message: string;
 	data?: {
@@ -22,14 +22,14 @@ export interface PollResult {
 	};
 }
 
-export interface PollAnswer {
+export type PollAnswer = {
 	id: number;
 	text: string;
 	emoji?: string;
 	voteCount: number;
 }
 
-export interface GetPollResultsData {
+export type GetPollResultsData = {
 	question: string;
 	answers: PollAnswer[];
 	totalVotes: number;

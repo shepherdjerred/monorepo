@@ -61,11 +61,12 @@ export const querySqliteTool = createTool({
 				// Add LIMIT if not present
 				let finalQuery = input.query;
 				if (!trimmedQuery.includes("LIMIT")) {
-					finalQuery += ` LIMIT ${input.limit ?? 100}`;
+					finalQuery += ` LIMIT ${String(input.limit)}`;
 				}
 
 				// Execute raw query
 				// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
 				const rows = await prisma.$queryRawUnsafe<any[]>(
 					finalQuery,
 					...(input.params ?? []),
@@ -146,7 +147,7 @@ export const getDatabaseSchemaTool = createTool({
 				query += " ORDER BY name";
 
 				const tables = await prisma.$queryRawUnsafe<
-					Array<{ name: string; sql: string }>
+					{ name: string; sql: string }[]
 				>(query, ...params);
 
 				logger.info("Database schema fetched", { tableCount: tables.length });

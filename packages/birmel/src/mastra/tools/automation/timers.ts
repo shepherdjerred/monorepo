@@ -90,7 +90,7 @@ Examples:
     if (existingTasks >= config.scheduler.maxTasksPerGuild) {
       return {
         success: false,
-        message: `Maximum tasks per guild (${config.scheduler.maxTasksPerGuild}) reached`,
+        message: `Maximum tasks per guild (${String(config.scheduler.maxTasksPerGuild)}) reached`,
       };
     }
 
@@ -109,10 +109,11 @@ Examples:
 
     if (parsed.type === "cron") {
       // Validate cron pattern
-      if (!isValidCron(parsed.value as string)) {
+      const cronValue = parsed.value as string;
+      if (!isValidCron(cronValue)) {
         return {
           success: false,
-          message: `Invalid cron pattern: "${parsed.value}"`,
+          message: `Invalid cron pattern: "${cronValue}"`,
         };
       }
 
@@ -132,7 +133,7 @@ Examples:
       if (recurringCount >= config.scheduler.maxRecurringTasks) {
         return {
           success: false,
-          message: `Maximum recurring tasks (${config.scheduler.maxRecurringTasks}) reached`,
+          message: `Maximum recurring tasks (${String(config.scheduler.maxRecurringTasks)}) reached`,
         };
       }
     } else {
@@ -165,8 +166,8 @@ Examples:
       isRecurring,
     });
 
-    const whenDesc = isRecurring
-      ? `Recurring: ${describeCron(cronPattern!)}`
+    const whenDesc = isRecurring && cronPattern
+      ? `Recurring: ${describeCron(cronPattern)}`
       : formatScheduleTime(scheduledAt);
 
     return {
@@ -242,7 +243,7 @@ Can optionally include already-executed tasks.`,
 
     return {
       success: true,
-      message: `Found ${tasks.length} task${tasks.length !== 1 ? "s" : ""}`,
+      message: `Found ${String(tasks.length)} task${tasks.length !== 1 ? "s" : ""}`,
       data: {
         tasks: tasks.map((task) => ({
           id: task.id,
@@ -413,7 +414,7 @@ The reminder will be sent as a message to the channel where it was created.`,
     if (existingTasks >= config.scheduler.maxTasksPerGuild) {
       return {
         success: false,
-        message: `Maximum tasks per guild (${config.scheduler.maxTasksPerGuild}) reached`,
+        message: `Maximum tasks per guild (${String(config.scheduler.maxTasksPerGuild)}) reached`,
       };
     }
 

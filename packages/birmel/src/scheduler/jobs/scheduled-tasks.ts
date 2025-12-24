@@ -27,8 +27,8 @@ async function executeScheduledTask(task: ScheduledTask): Promise<void> {
 
     // Get the tool
     const tool = allTools[task.toolId];
-    if (!tool || !tool.execute) {
-      logger.error("Tool not found or not executable", {
+    if (!tool) {
+      logger.error("Tool not found", {
         taskId: task.id,
         toolId: task.toolId,
       });
@@ -40,6 +40,7 @@ async function executeScheduledTask(task: ScheduledTask): Promise<void> {
     let toolInput: Record<string, unknown> = {};
     if (task.toolInput) {
       try {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         toolInput = JSON.parse(task.toolInput);
       } catch (error) {
         logger.error("Failed to parse tool input", {
@@ -53,15 +54,16 @@ async function executeScheduledTask(task: ScheduledTask): Promise<void> {
     }
 
     // Execute the tool
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     const result = await (tool as any).execute(toolInput, {
-      runId: `scheduled-task-${task.id}`,
+      runId: `scheduled-task-${String(task.id)}`,
       agentId: "birmel",
     });
 
     logger.info("Scheduled task executed successfully", {
       id: task.id,
       toolId: task.toolId,
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       success: result.success ?? true,
     });
 
