@@ -116,19 +116,19 @@ Examples:
       })
       .optional(),
   }),
-  execute: async (ctx) => {
+  execute: async ({ url, waitUntil }) => {
     try {
       const page = await getPage();
       resetSessionTimeout();
 
-      await page.goto(ctx.context.url, {
-        waitUntil: ctx.context.waitUntil ?? "load",
+      await page.goto(url, {
+        waitUntil: waitUntil ?? "load",
         timeout: 30000,
       });
 
       const title = await page.title();
 
-      logger.info("Navigated to URL", { url: ctx.context.url, title });
+      logger.info("Navigated to URL", { url, title });
 
       return {
         success: true,
@@ -139,7 +139,7 @@ Examples:
         },
       };
     } catch (error) {
-      logger.error("Navigation failed", { url: ctx.context.url, error: String(error) });
+      logger.error("Navigation failed", { url, error: String(error) });
       return {
         success: false,
         message: `Navigation failed: ${String(error)}`,
@@ -176,30 +176,30 @@ Examples:
       })
       .optional(),
   }),
-  execute: async (ctx) => {
+  execute: async ({ filename, fullPage }) => {
     try {
       const page = await getPage();
       resetSessionTimeout();
 
       const timestamp = Date.now();
-      const filename = ctx.context.filename ?? `screenshot-${timestamp}.png`;
-      const filepath = join(process.cwd(), "data", "screenshots", filename);
+      const actualFilename = filename ?? `screenshot-${timestamp}.png`;
+      const filepath = join(process.cwd(), "data", "screenshots", actualFilename);
 
       const screenshot = await page.screenshot({
-        fullPage: ctx.context.fullPage ?? false,
+        fullPage: fullPage ?? false,
         type: "png",
       });
 
       await writeFile(filepath, screenshot);
 
-      logger.info("Screenshot captured", { filepath, fullPage: ctx.context.fullPage });
+      logger.info("Screenshot captured", { filepath, fullPage });
 
       return {
         success: true,
         message: "Screenshot saved",
         data: {
           path: filepath,
-          filename,
+          filename: actualFilename,
         },
       };
     } catch (error) {
@@ -233,23 +233,23 @@ Examples:
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async (ctx) => {
+  execute: async ({ selector, timeout }) => {
     try {
       const page = await getPage();
       resetSessionTimeout();
 
-      await page.click(ctx.context.selector, {
-        timeout: ctx.context.timeout ?? 30000,
+      await page.click(selector, {
+        timeout: timeout ?? 30000,
       });
 
-      logger.info("Clicked element", { selector: ctx.context.selector });
+      logger.info("Clicked element", { selector });
 
       return {
         success: true,
-        message: `Clicked: ${ctx.context.selector}`,
+        message: `Clicked: ${selector}`,
       };
     } catch (error) {
-      logger.error("Click failed", { selector: ctx.context.selector, error: String(error) });
+      logger.error("Click failed", { selector, error: String(error) });
       return {
         success: false,
         message: `Click failed: ${String(error)}`,
@@ -280,27 +280,27 @@ Examples:
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async (ctx) => {
+  execute: async ({ selector, text, pressEnter, timeout }) => {
     try {
       const page = await getPage();
       resetSessionTimeout();
 
-      await page.fill(ctx.context.selector, ctx.context.text, {
-        timeout: ctx.context.timeout ?? 30000,
+      await page.fill(selector, text, {
+        timeout: timeout ?? 30000,
       });
 
-      if (ctx.context.pressEnter) {
-        await page.press(ctx.context.selector, "Enter");
+      if (pressEnter) {
+        await page.press(selector, "Enter");
       }
 
-      logger.info("Typed text", { selector: ctx.context.selector, length: ctx.context.text.length });
+      logger.info("Typed text", { selector, length: text.length });
 
       return {
         success: true,
-        message: `Typed into: ${ctx.context.selector}`,
+        message: `Typed into: ${selector}`,
       };
     } catch (error) {
-      logger.error("Type failed", { selector: ctx.context.selector, error: String(error) });
+      logger.error("Type failed", { selector, error: String(error) });
       return {
         success: false,
         message: `Type failed: ${String(error)}`,
@@ -335,22 +335,22 @@ Examples:
       })
       .optional(),
   }),
-  execute: async (ctx) => {
+  execute: async ({ selector, timeout }) => {
     try {
       const page = await getPage();
       resetSessionTimeout();
 
       let text: string;
 
-      if (ctx.context.selector) {
-        const element = await page.waitForSelector(ctx.context.selector, {
-          timeout: ctx.context.timeout ?? 30000,
+      if (selector) {
+        const element = await page.waitForSelector(selector, {
+          timeout: timeout ?? 30000,
         });
 
         if (!element) {
           return {
             success: false,
-            message: `Element not found: ${ctx.context.selector}`,
+            message: `Element not found: ${selector}`,
           };
         }
 
@@ -360,7 +360,7 @@ Examples:
       }
 
       logger.info("Extracted text", {
-        selector: ctx.context.selector ?? "body",
+        selector: selector ?? "body",
         length: text.length,
       });
 
@@ -373,7 +373,7 @@ Examples:
       };
     } catch (error) {
       logger.error("Get text failed", {
-        selector: ctx.context.selector,
+        selector,
         error: String(error),
       });
       return {

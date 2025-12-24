@@ -36,7 +36,7 @@ The tool captures stdout, stderr, exit code, and execution time.`,
       duration: z.number().describe("Execution time in milliseconds"),
     }).optional(),
   }),
-  execute: async (ctx) => {
+  execute: async ({ command, args, timeout: timeoutParam, cwd, env }) => {
     const config = getConfig();
 
     if (!config.shell.enabled) {
@@ -47,7 +47,7 @@ The tool captures stdout, stderr, exit code, and execution time.`,
     }
 
     // Determine timeout
-    const timeout = ctx.context.timeout ?? config.shell.defaultTimeout;
+    const timeout = timeoutParam ?? config.shell.defaultTimeout;
     if (timeout > config.shell.maxTimeout) {
       return {
         success: false,
@@ -59,9 +59,9 @@ The tool captures stdout, stderr, exit code, and execution time.`,
     let timedOut = false;
 
     // Build command for logging
-    const fullCommand = [ctx.context.command, ...(ctx.context.args ?? [])].join(" ");
+    const fullCommand = [command, ...(args ?? [])].join(" ");
     logger.info(`Executing shell command: ${fullCommand}`, {
-      cwd: ctx.context.cwd,
+      cwd,
       timeout,
     });
 
@@ -75,9 +75,9 @@ The tool captures stdout, stderr, exit code, and execution time.`,
 
       // Execute command using Bun.spawn
       const proc = Bun.spawn({
-        cmd: [ctx.context.command, ...(ctx.context.args ?? [])],
-        ...(ctx.context.cwd ? { cwd: ctx.context.cwd } : {}),
-        ...(ctx.context.env ? { env: ctx.context.env } : {}),
+        cmd: [command, ...(args ?? [])],
+        ...(cwd ? { cwd } : {}),
+        ...(env ? { env } : {}),
         stdout: "pipe",
         stderr: "pipe",
         stdin: "ignore",

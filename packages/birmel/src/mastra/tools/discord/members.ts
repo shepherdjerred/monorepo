@@ -24,11 +24,11 @@ export const getMemberTool = createTool({
       })
       .optional(),
   }),
-  execute: async (ctx) => {
+  execute: async ({ guildId, memberId }) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(ctx.context.guildId);
-      const member = await guild.members.fetch(ctx.context.memberId);
+      const guild = await client.guilds.fetch(guildId);
+      const member = await guild.members.fetch(memberId);
 
       return {
         success: true,
@@ -73,13 +73,13 @@ export const searchMembersTool = createTool({
       )
       .optional(),
   }),
-  execute: async (ctx) => {
+  execute: async ({ guildId, query, limit }) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(ctx.context.guildId);
+      const guild = await client.guilds.fetch(guildId);
       const members = await guild.members.search({
-        query: ctx.context.query,
-        limit: ctx.context.limit ?? 10,
+        query,
+        limit: limit ?? 10,
       });
 
       const memberList = members.map((member) => ({
@@ -115,19 +115,17 @@ export const modifyMemberTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async (ctx) => {
+  execute: async ({ guildId, memberId, nickname }) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(ctx.context.guildId);
-      const member = await guild.members.fetch(ctx.context.memberId);
+      const guild = await client.guilds.fetch(guildId);
+      const member = await guild.members.fetch(memberId);
 
-      await member.setNickname(ctx.context.nickname);
+      await member.setNickname(nickname);
 
       return {
         success: true,
-        message: ctx.context.nickname
-          ? `Set nickname to "${ctx.context.nickname}"`
-          : "Reset nickname",
+        message: nickname ? `Set nickname to "${nickname}"` : "Reset nickname",
       };
     } catch (error) {
       logger.error("Failed to modify member", error);
@@ -152,12 +150,12 @@ export const addRoleToMemberTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async (ctx) => {
+  execute: async ({ guildId, memberId, roleId, reason }) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(ctx.context.guildId);
-      const member = await guild.members.fetch(ctx.context.memberId);
-      const role = await guild.roles.fetch(ctx.context.roleId);
+      const guild = await client.guilds.fetch(guildId);
+      const member = await guild.members.fetch(memberId);
+      const role = await guild.roles.fetch(roleId);
 
       if (!role) {
         return {
@@ -166,7 +164,7 @@ export const addRoleToMemberTool = createTool({
         };
       }
 
-      await member.roles.add(role, ctx.context.reason);
+      await member.roles.add(role, reason);
 
       return {
         success: true,
@@ -195,12 +193,12 @@ export const removeRoleFromMemberTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async (ctx) => {
+  execute: async ({ guildId, memberId, roleId, reason }) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(ctx.context.guildId);
-      const member = await guild.members.fetch(ctx.context.memberId);
-      const role = await guild.roles.fetch(ctx.context.roleId);
+      const guild = await client.guilds.fetch(guildId);
+      const member = await guild.members.fetch(memberId);
+      const role = await guild.roles.fetch(roleId);
 
       if (!role) {
         return {
@@ -209,7 +207,7 @@ export const removeRoleFromMemberTool = createTool({
         };
       }
 
-      await member.roles.remove(role, ctx.context.reason);
+      await member.roles.remove(role, reason);
 
       return {
         success: true,
@@ -246,11 +244,11 @@ export const listMembersTool = createTool({
       )
       .optional(),
   }),
-  execute: async (ctx) => {
+  execute: async ({ guildId, limit }) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(ctx.context.guildId);
-      const members = await guild.members.fetch({ limit: ctx.context.limit ?? 100 });
+      const guild = await client.guilds.fetch(guildId);
+      const members = await guild.members.fetch({ limit: limit ?? 100 });
 
       const memberList = members.map((member) => ({
         id: member.id,

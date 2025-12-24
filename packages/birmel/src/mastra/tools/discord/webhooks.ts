@@ -25,14 +25,14 @@ export const listWebhooksTool = createTool({
       )
       .optional(),
   }),
-  execute: async (ctx) => {
+  execute: async ({ guildId, channelId }) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(ctx.context.guildId);
+      const guild = await client.guilds.fetch(guildId);
 
       let webhooks;
-      if (ctx.context.channelId) {
-        const channel = await client.channels.fetch(ctx.context.channelId);
+      if (channelId) {
+        const channel = await client.channels.fetch(channelId);
         if (!channel?.isTextBased() || !("fetchWebhooks" in channel)) {
           return {
             success: false,
@@ -84,10 +84,10 @@ export const createWebhookTool = createTool({
       })
       .optional(),
   }),
-  execute: async (ctx) => {
+  execute: async ({ channelId, name, reason }) => {
     try {
       const client = getDiscordClient();
-      const channel = await client.channels.fetch(ctx.context.channelId);
+      const channel = await client.channels.fetch(channelId);
 
       if (!channel?.isTextBased() || !("createWebhook" in channel)) {
         return {
@@ -97,8 +97,8 @@ export const createWebhookTool = createTool({
       }
 
       const webhook = await (channel as TextChannel).createWebhook({
-        name: ctx.context.name,
-        ...(ctx.context.reason !== undefined && { reason: ctx.context.reason }),
+        name,
+        ...(reason !== undefined && { reason }),
       });
 
       return {
@@ -130,13 +130,13 @@ export const deleteWebhookTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async (ctx) => {
+  execute: async ({ webhookId, reason }) => {
     try {
       const client = getDiscordClient();
-      const webhook = await client.fetchWebhook(ctx.context.webhookId);
+      const webhook = await client.fetchWebhook(webhookId);
 
       const webhookName = webhook.name;
-      await webhook.delete(ctx.context.reason);
+      await webhook.delete(reason);
 
       return {
         success: true,
@@ -166,21 +166,21 @@ export const modifyWebhookTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async (ctx) => {
+  execute: async ({ webhookId, name, avatarUrl, channelId, reason }) => {
     try {
       const client = getDiscordClient();
-      const webhook = await client.fetchWebhook(ctx.context.webhookId);
+      const webhook = await client.fetchWebhook(webhookId);
 
       const editOptions: Parameters<typeof webhook.edit>[0] = {};
-      if (ctx.context.name !== undefined) editOptions.name = ctx.context.name;
-      if (ctx.context.avatarUrl !== undefined) editOptions.avatar = ctx.context.avatarUrl;
-      if (ctx.context.channelId !== undefined) editOptions.channel = ctx.context.channelId;
-      if (ctx.context.reason !== undefined) editOptions.reason = ctx.context.reason;
+      if (name !== undefined) editOptions.name = name;
+      if (avatarUrl !== undefined) editOptions.avatar = avatarUrl;
+      if (channelId !== undefined) editOptions.channel = channelId;
+      if (reason !== undefined) editOptions.reason = reason;
 
       const hasChanges =
-        ctx.context.name !== undefined ||
-        ctx.context.avatarUrl !== undefined ||
-        ctx.context.channelId !== undefined;
+        name !== undefined ||
+        avatarUrl !== undefined ||
+        channelId !== undefined;
 
       if (!hasChanges) {
         return {
@@ -224,12 +224,12 @@ export const executeWebhookTool = createTool({
       })
       .optional(),
   }),
-  execute: async (ctx) => {
+  execute: async ({ webhookId, webhookToken, content, username, avatarUrl }) => {
     try {
       const client = getDiscordClient();
-      const webhook = await client.fetchWebhook(ctx.context.webhookId, ctx.context.webhookToken);
+      const webhook = await client.fetchWebhook(webhookId, webhookToken);
 
-      if (!ctx.context.content) {
+      if (!content) {
         return {
           success: false,
           message: "Message content is required",
@@ -237,9 +237,9 @@ export const executeWebhookTool = createTool({
       }
 
       const sentMessage = await webhook.send({
-        content: ctx.context.content,
-        ...(ctx.context.username !== undefined && { username: ctx.context.username }),
-        ...(ctx.context.avatarUrl !== undefined && { avatarURL: ctx.context.avatarUrl }),
+        content,
+        ...(username !== undefined && { username }),
+        ...(avatarUrl !== undefined && { avatarURL: avatarUrl }),
       });
 
       return {
