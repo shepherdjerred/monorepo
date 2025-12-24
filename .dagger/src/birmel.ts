@@ -91,7 +91,9 @@ export async function smokeTestBirmelImage(
     .withEnvVariable("DISCORD_CLIENT_ID", "test-client-id")
     .withEnvVariable("ANTHROPIC_API_KEY", "test-anthropic-key")
     .withEnvVariable("OPENAI_API_KEY", "test-openai-key")
-    .withEnvVariable("DATABASE_PATH", "/tmp/test.db")
+    .withEnvVariable("DATABASE_URL", "file:/tmp/test.db")
+    .withEnvVariable("MASTRA_MEMORY_DB_PATH", "file:/tmp/mastra-memory.db")
+    .withEnvVariable("MASTRA_TELEMETRY_DB_PATH", "file:/tmp/mastra-telemetry.db")
     .withEntrypoint([]);
 
   const container = containerWithEnv.withExec([
