@@ -23,12 +23,12 @@ export const getLolUpdatesTool = createTool({
       })
       .optional(),
   }),
-  execute: async (ctx) => {
+  execute: async ({ type }) => {
     try {
       const config = getConfig();
-      const type = ctx.context.type ?? "patch";
+      const actualType = type ?? "patch";
 
-      if (type === "patch") {
+      if (actualType === "patch") {
         // Get latest patch version from Data Dragon
         const response = await fetch(
           "https://ddragon.leagueoflegends.com/api/versions.json",
@@ -54,7 +54,7 @@ export const getLolUpdatesTool = createTool({
         };
       }
 
-      if (type === "status") {
+      if (actualType === "status") {
         // Check Riot API status
         const apiKey = config.externalApis.riotApiKey;
         if (!apiKey) {

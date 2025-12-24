@@ -15,11 +15,11 @@ export const setVolumeTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async (ctx) => {
+  execute: async ({ guildId, volume }) => {
     await Promise.resolve();
     try {
       const player = getMusicPlayer();
-      const queue = player.queues.get(ctx.context.guildId);
+      const queue = player.queues.get(guildId);
 
       if (!queue) {
         return {
@@ -28,11 +28,11 @@ export const setVolumeTool = createTool({
         };
       }
 
-      queue.node.setVolume(ctx.context.volume);
+      queue.node.setVolume(volume);
 
       return {
         success: true,
-        message: `Volume set to ${String(ctx.context.volume)}%`,
+        message: `Volume set to ${String(volume)}%`,
       };
     } catch (error) {
       logger.error("Failed to set volume", error);
@@ -57,11 +57,11 @@ export const setLoopModeTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async (ctx) => {
+  execute: async ({ guildId, mode }) => {
     await Promise.resolve();
     try {
       const player = getMusicPlayer();
-      const queue = player.queues.get(ctx.context.guildId);
+      const queue = player.queues.get(guildId);
 
       if (!queue) {
         return {
@@ -77,11 +77,11 @@ export const setLoopModeTool = createTool({
         autoplay: QueueRepeatMode.AUTOPLAY,
       };
 
-      queue.setRepeatMode(modeMap[ctx.context.mode]);
+      queue.setRepeatMode(modeMap[mode]);
 
       return {
         success: true,
-        message: `Loop mode set to ${ctx.context.mode}`,
+        message: `Loop mode set to ${mode}`,
       };
     } catch (error) {
       logger.error("Failed to set loop mode", error);
@@ -104,10 +104,10 @@ export const seekTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async (ctx) => {
+  execute: async ({ guildId, seconds }) => {
     try {
       const player = getMusicPlayer();
-      const queue = player.queues.get(ctx.context.guildId);
+      const queue = player.queues.get(guildId);
 
       if (!queue?.isPlaying()) {
         return {
@@ -116,7 +116,7 @@ export const seekTool = createTool({
         };
       }
 
-      const success = await queue.node.seek(ctx.context.seconds * 1000);
+      const success = await queue.node.seek(seconds * 1000);
 
       if (!success) {
         return {
@@ -125,8 +125,8 @@ export const seekTool = createTool({
         };
       }
 
-      const minutes = Math.floor(ctx.context.seconds / 60);
-      const secs = ctx.context.seconds % 60;
+      const minutes = Math.floor(seconds / 60);
+      const secs = seconds % 60;
 
       return {
         success: true,

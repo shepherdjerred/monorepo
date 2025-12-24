@@ -25,15 +25,15 @@ export const createThreadFromMessageTool = createTool({
       threadName: z.string()
     }).optional()
   }),
-  execute: async (ctx) => {
+  execute: async ({ channelId, messageId, name, autoArchiveDuration }) => {
     return withToolSpan("create-thread-from-message", undefined, async () => {
       logger.debug("Creating thread from message", {
-        channelId: ctx.context.channelId,
-        messageId: ctx.context.messageId
+        channelId,
+        messageId
       });
       try {
         const client = getDiscordClient();
-        const channel = await client.channels.fetch(ctx.context.channelId);
+        const channel = await client.channels.fetch(channelId);
 
         if (!channel?.isTextBased()) {
           return {
@@ -42,22 +42,22 @@ export const createThreadFromMessageTool = createTool({
           };
         }
 
-        const message = await channel.messages.fetch(ctx.context.messageId);
+        const message = await channel.messages.fetch(messageId);
 
         const thread = await message.startThread({
-          name: ctx.context.name,
-          autoArchiveDuration: ctx.context.autoArchiveDuration ? parseInt(ctx.context.autoArchiveDuration) as 60 | 1440 | 4320 | 10080 : 1440
+          name,
+          autoArchiveDuration: autoArchiveDuration ? parseInt(autoArchiveDuration) as 60 | 1440 | 4320 | 10080 : 1440
         });
 
         logger.info("Thread created from message", {
           threadId: thread.id,
-          messageId: ctx.context.messageId,
-          channelId: ctx.context.channelId
+          messageId,
+          channelId
         });
 
         return {
           success: true,
-          message: `Thread "${ctx.context.name}" created successfully`,
+          message: `Thread "${name}" created successfully`,
           data: {
             threadId: thread.id,
             threadName: thread.name
@@ -65,12 +65,12 @@ export const createThreadFromMessageTool = createTool({
         };
       } catch (error) {
         logger.error("Failed to create thread from message", error, {
-          channelId: ctx.context.channelId,
-          messageId: ctx.context.messageId
+          channelId,
+          messageId
         });
         captureException(error as Error, {
           operation: "tool.create-thread-from-message",
-          discord: { channelId: ctx.context.channelId, messageId: ctx.context.messageId }
+          discord: { channelId, messageId }
         });
         return {
           success: false,
@@ -100,12 +100,12 @@ export const createStandaloneThreadTool = createTool({
       threadName: z.string()
     }).optional()
   }),
-  execute: async (ctx) => {
+  execute: async ({ channelId, name, autoArchiveDuration, message, type }) => {
     return withToolSpan("create-standalone-thread", undefined, async () => {
-      logger.debug("Creating standalone thread", { channelId: ctx.context.channelId, name: ctx.context.name });
+      logger.debug("Creating standalone thread", { channelId, name });
       try {
         const client = getDiscordClient();
-        const channel = await client.channels.fetch(ctx.context.channelId);
+        const channel = await client.channels.fetch(channelId);
 
         if (!channel?.isTextBased() || !("threads" in channel)) {
           return {
@@ -114,50 +114,50 @@ export const createStandaloneThreadTool = createTool({
           };
         }
 
-        const autoArchiveDuration = ctx.context.autoArchiveDuration
-          ? parseInt(ctx.context.autoArchiveDuration) as 60 | 1440 | 4320 | 10080
+        const archiveDuration = autoArchiveDuration
+          ? parseInt(autoArchiveDuration) as 60 | 1440 | 4320 | 10080
           : 1440;
 
         let thread;
-        if (ctx.context.type === "private") {
+        if (type === "private") {
           thread = await channel.threads.create({
-            name: ctx.context.name,
-            autoArchiveDuration,
+            name,
+            autoArchiveDuration: archiveDuration,
             // Discord.js has complex conditional types that conflict with exactOptionalPropertyTypes
             // @ts-expect-error - ChannelType.PrivateThread inferred as 'never' due to Discord.js type complexity
             type: ChannelType.PrivateThread,
-            ...(ctx.context.message && { message: { content: ctx.context.message } }),
+            ...(message && { message: { content: message } }),
           });
         } else {
           thread = await channel.threads.create({
-            name: ctx.context.name,
-            autoArchiveDuration,
+            name,
+            autoArchiveDuration: archiveDuration,
             // Discord.js has complex conditional types that conflict with exactOptionalPropertyTypes
             // @ts-expect-error - ChannelType.PublicThread inferred as 'never' due to Discord.js type complexity
             type: ChannelType.PublicThread,
-            ...(ctx.context.message && { message: { content: ctx.context.message } }),
+            ...(message && { message: { content: message } }),
           });
         }
 
         logger.info("Standalone thread created", {
           threadId: thread.id,
-          channelId: ctx.context.channelId,
-          type: ctx.context.type ?? "public"
+          channelId,
+          type: type ?? "public"
         });
 
         return {
           success: true,
-          message: `Thread "${ctx.context.name}" created successfully`,
+          message: `Thread "${name}" created successfully`,
           data: {
             threadId: thread.id,
             threadName: thread.name
           }
         };
       } catch (error) {
-        logger.error("Failed to create standalone thread", error, { channelId: ctx.context.channelId });
+        logger.error("Failed to create standalone thread", error, { channelId });
         captureException(error as Error, {
           operation: "tool.create-standalone-thread",
-          discord: { channelId: ctx.context.channelId }
+          discord: { channelId }
         });
         return {
           success: false,
@@ -183,12 +183,12 @@ export const modifyThreadTool = createTool({
     success: z.boolean(),
     message: z.string()
   }),
-  execute: async (ctx) => {
+  execute: async ({ threadId, name, archived, locked, autoArchiveDuration }) => {
     return withToolSpan("modify-thread", undefined, async () => {
-      logger.debug("Modifying thread", { threadId: ctx.context.threadId });
+      logger.debug("Modifying thread", { threadId });
       try {
         const client = getDiscordClient();
-        const thread = await client.channels.fetch(ctx.context.threadId);
+        const thread = await client.channels.fetch(threadId);
 
         if (!thread?.isThread()) {
           return {
@@ -204,11 +204,11 @@ export const modifyThreadTool = createTool({
           autoArchiveDuration?: 60 | 1440 | 4320 | 10080;
         } = {};
 
-        if (ctx.context.name !== undefined) updates.name = ctx.context.name;
-        if (ctx.context.archived !== undefined) updates.archived = ctx.context.archived;
-        if (ctx.context.locked !== undefined) updates.locked = ctx.context.locked;
-        if (ctx.context.autoArchiveDuration !== undefined) {
-          updates.autoArchiveDuration = parseInt(ctx.context.autoArchiveDuration) as 60 | 1440 | 4320 | 10080;
+        if (name !== undefined) updates.name = name;
+        if (archived !== undefined) updates.archived = archived;
+        if (locked !== undefined) updates.locked = locked;
+        if (autoArchiveDuration !== undefined) {
+          updates.autoArchiveDuration = parseInt(autoArchiveDuration) as 60 | 1440 | 4320 | 10080;
         }
 
         if (Object.keys(updates).length === 0) {
@@ -221,17 +221,17 @@ export const modifyThreadTool = createTool({
         await thread.edit(updates);
 
         const changes = Object.keys(updates).join(", ");
-        logger.info("Thread modified", { threadId: ctx.context.threadId, changes });
+        logger.info("Thread modified", { threadId, changes });
 
         return {
           success: true,
           message: `Thread updated successfully (modified: ${changes})`
         };
       } catch (error) {
-        logger.error("Failed to modify thread", error, { threadId: ctx.context.threadId });
+        logger.error("Failed to modify thread", error, { threadId });
         captureException(error as Error, {
           operation: "tool.modify-thread",
-          discord: { threadId: ctx.context.threadId }
+          discord: { threadId }
         });
         return {
           success: false,
@@ -253,12 +253,12 @@ export const addThreadMemberTool = createTool({
     success: z.boolean(),
     message: z.string()
   }),
-  execute: async (ctx) => {
+  execute: async ({ threadId, userId }) => {
     return withToolSpan("add-thread-member", undefined, async () => {
-      logger.debug("Adding member to thread", { threadId: ctx.context.threadId, userId: ctx.context.userId });
+      logger.debug("Adding member to thread", { threadId, userId });
       try {
         const client = getDiscordClient();
-        const thread = await client.channels.fetch(ctx.context.threadId);
+        const thread = await client.channels.fetch(threadId);
 
         if (!thread?.isThread()) {
           return {
@@ -267,9 +267,9 @@ export const addThreadMemberTool = createTool({
           };
         }
 
-        await thread.members.add(ctx.context.userId);
+        await thread.members.add(userId);
 
-        logger.info("Member added to thread", { threadId: ctx.context.threadId, userId: ctx.context.userId });
+        logger.info("Member added to thread", { threadId, userId });
 
         return {
           success: true,
@@ -277,12 +277,12 @@ export const addThreadMemberTool = createTool({
         };
       } catch (error) {
         logger.error("Failed to add member to thread", error, {
-          threadId: ctx.context.threadId,
-          userId: ctx.context.userId
+          threadId,
+          userId
         });
         captureException(error as Error, {
           operation: "tool.add-thread-member",
-          discord: { threadId: ctx.context.threadId, userId: ctx.context.userId }
+          discord: { threadId, userId }
         });
         return {
           success: false,
@@ -315,12 +315,12 @@ export const getThreadMessagesTool = createTool({
       }))
     }).optional()
   }),
-  execute: async (ctx) => {
+  execute: async ({ threadId, limit, before }) => {
     return withToolSpan("get-thread-messages", undefined, async () => {
-      logger.debug("Fetching thread messages", { threadId: ctx.context.threadId, limit: ctx.context.limit });
+      logger.debug("Fetching thread messages", { threadId, limit });
       try {
         const client = getDiscordClient();
-        const thread = await client.channels.fetch(ctx.context.threadId);
+        const thread = await client.channels.fetch(threadId);
 
         if (!thread?.isThread()) {
           return {
@@ -330,11 +330,11 @@ export const getThreadMessagesTool = createTool({
         }
 
         const fetchOptions: { limit: number; before?: string } = {
-          limit: ctx.context.limit ?? 20
+          limit: limit ?? 20
         };
 
-        if (ctx.context.before) {
-          fetchOptions.before = ctx.context.before;
+        if (before) {
+          fetchOptions.before = before;
         }
 
         const messages = await thread.messages.fetch(fetchOptions);
@@ -349,7 +349,7 @@ export const getThreadMessagesTool = createTool({
         }));
 
         logger.info("Thread messages fetched", {
-          threadId: ctx.context.threadId,
+          threadId,
           count: formattedMessages.length
         });
 
@@ -361,10 +361,10 @@ export const getThreadMessagesTool = createTool({
           }
         };
       } catch (error) {
-        logger.error("Failed to fetch thread messages", error, { threadId: ctx.context.threadId });
+        logger.error("Failed to fetch thread messages", error, { threadId });
         captureException(error as Error, {
           operation: "tool.get-thread-messages",
-          discord: { threadId: ctx.context.threadId }
+          discord: { threadId }
         });
         return {
           success: false,

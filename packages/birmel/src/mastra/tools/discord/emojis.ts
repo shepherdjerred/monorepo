@@ -23,10 +23,10 @@ export const listEmojisTool = createTool({
       )
       .optional(),
   }),
-  execute: async (ctx) => {
+  execute: async ({ guildId }) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(ctx.context.guildId);
+      const guild = await client.guilds.fetch(guildId);
       const emojis = await guild.emojis.fetch();
 
       const emojiList = emojis.map((emoji) => ({
@@ -68,14 +68,14 @@ export const createEmojiTool = createTool({
       })
       .optional(),
   }),
-  execute: async (ctx) => {
+  execute: async ({ guildId, name, imageUrl }) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(ctx.context.guildId);
+      const guild = await client.guilds.fetch(guildId);
 
       const emoji = await guild.emojis.create({
-        attachment: ctx.context.imageUrl,
-        name: ctx.context.name,
+        attachment: imageUrl,
+        name,
       });
 
       return {
@@ -107,14 +107,14 @@ export const deleteEmojiTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async (ctx) => {
+  execute: async ({ guildId, emojiId, reason }) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(ctx.context.guildId);
-      const emoji = await guild.emojis.fetch(ctx.context.emojiId);
+      const guild = await client.guilds.fetch(guildId);
+      const emoji = await guild.emojis.fetch(emojiId);
 
       const emojiName = emoji.name;
-      await emoji.delete(ctx.context.reason);
+      await emoji.delete(reason);
 
       return {
         success: true,
@@ -143,19 +143,19 @@ export const modifyEmojiTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async (ctx) => {
+  execute: async ({ guildId, emojiId, name, reason }) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(ctx.context.guildId);
-      const emoji = await guild.emojis.fetch(ctx.context.emojiId);
+      const guild = await client.guilds.fetch(guildId);
+      const emoji = await guild.emojis.fetch(emojiId);
 
-      const editOptions: Parameters<typeof emoji.edit>[0] = { name: ctx.context.name };
-      if (ctx.context.reason !== undefined) editOptions.reason = ctx.context.reason;
+      const editOptions: Parameters<typeof emoji.edit>[0] = { name };
+      if (reason !== undefined) editOptions.reason = reason;
       await emoji.edit(editOptions);
 
       return {
         success: true,
-        message: `Renamed emoji to :${ctx.context.name}:`,
+        message: `Renamed emoji to :${name}:`,
       };
     } catch (error) {
       logger.error("Failed to modify emoji", error);
@@ -188,10 +188,10 @@ export const listStickersTool = createTool({
       )
       .optional(),
   }),
-  execute: async (ctx) => {
+  execute: async ({ guildId }) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(ctx.context.guildId);
+      const guild = await client.guilds.fetch(guildId);
       const stickers = await guild.stickers.fetch();
 
       const stickerList = stickers.map((sticker) => ({
@@ -237,18 +237,18 @@ export const createStickerTool = createTool({
       })
       .optional(),
   }),
-  execute: async (ctx) => {
+  execute: async ({ guildId, name, description, tags, imageUrl, reason }) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(ctx.context.guildId);
+      const guild = await client.guilds.fetch(guildId);
 
       const createOptions: Parameters<typeof guild.stickers.create>[0] = {
-        file: ctx.context.imageUrl,
-        name: ctx.context.name,
-        tags: ctx.context.tags,
-        description: ctx.context.description,
+        file: imageUrl,
+        name,
+        tags,
+        description,
       };
-      if (ctx.context.reason !== undefined) createOptions.reason = ctx.context.reason;
+      if (reason !== undefined) createOptions.reason = reason;
       const sticker = await guild.stickers.create(createOptions);
 
       return {
@@ -280,14 +280,14 @@ export const deleteStickerTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async (ctx) => {
+  execute: async ({ guildId, stickerId, reason }) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(ctx.context.guildId);
-      const sticker = await guild.stickers.fetch(ctx.context.stickerId);
+      const guild = await client.guilds.fetch(guildId);
+      const sticker = await guild.stickers.fetch(stickerId);
 
       const stickerName = sticker.name;
-      await sticker.delete(ctx.context.reason);
+      await sticker.delete(reason);
 
       return {
         success: true,
