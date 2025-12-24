@@ -100,7 +100,7 @@ Examples:
 - Load a specific page
 - Follow a link`,
   inputSchema: z.object({
-    url: z.string().url().describe("URL to navigate to"),
+    url: z.url().describe("URL to navigate to"),
     waitUntil: z
       .enum(["load", "domcontentloaded", "networkidle"])
       .optional()
