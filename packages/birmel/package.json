@@ -14,7 +14,7 @@
     "dev": "bun run --watch src/index.ts",
     "build": "true",
     "build:studio": "mastra build -d src/mastra",
-    "test": "OPS_DATABASE_URL=file:./data/test-ops.db bun test",
+    "test": "bunx prisma generate && OPS_DATABASE_URL=file:./data/test-ops.db bun test",
     "typecheck": "prisma generate && tsc --noEmit",
     "lint": "eslint .",
     "studio:dev": "mastra dev -d src/mastra",
