@@ -4,21 +4,5 @@
   "version": "3.0.0",
   "author": {
     "name": "Jerred Shepherd"
-  },
-  "tags": [
-    "devops",
-    "kubernetes",
-    "observability",
-    "ci-cd",
-    "secrets",
-    "gitops",
-    "typescript",
-    "bun",
-    "workflow-automation",
-    "git-worktree",
-    "type-safety",
-    "zod",
-    "cli-tools",
-    "modern-unix"
-  ]
+  }
 }
