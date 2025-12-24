@@ -1,13 +1,5 @@
 import { beforeAll, afterAll, mock } from "bun:test";
 
-// Mock @prisma/client
-mock.module("@prisma/client", () => ({
-  PrismaClient: class MockPrismaClient {
-    $connect = async () => {};
-    $disconnect = async () => {};
-  },
-}));
-
 // Mock @mastra/libsql
 mock.module("@mastra/libsql", () => ({
   // eslint-disable-next-line @typescript-eslint/no-extraneous-class

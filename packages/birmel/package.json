@@ -14,7 +14,7 @@
     "dev": "bun run --watch src/index.ts",
     "build": "true",
     "build:studio": "mastra build -d src/mastra",
-    "test": "bunx prisma generate && bun test",
+    "test": "bunx --env-file=.env.test prisma generate && bun --env-file=.env.test test",
     "typecheck": "prisma generate && tsc --noEmit",
     "lint": "eslint .",
     "studio:dev": "mastra dev -d src/mastra",
