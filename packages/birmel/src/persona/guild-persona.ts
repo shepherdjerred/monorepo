@@ -3,7 +3,5 @@ import { getConfig } from "../config/index.js";
 
 export async function getGuildPersona(guildId: string): Promise<string> {
 	const owner = await getGuildOwner(guildId);
-	return (
-		owner?.currentOwner ?? getConfig().persona.defaultPersona ?? "jerred"
-	);
+	return owner?.currentOwner ?? getConfig().persona.defaultPersona;
 }

@@ -7,7 +7,7 @@ export type ElectionResults = {
 };
 
 export function determineWinner(
-	answers: Array<{ text: string; voteCount: number }>,
+	answers: { text: string; voteCount: number }[],
 ): ElectionResults {
 	const voteCounts: Record<string, number> = {};
 	let totalVotes = 0;

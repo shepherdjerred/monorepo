@@ -20,7 +20,7 @@ async function getBrowser(): Promise<Browser> {
     throw new Error("Browser automation is disabled");
   }
 
-  if (browserInstance && browserInstance.isConnected()) {
+  if (browserInstance?.isConnected()) {
     return browserInstance;
   }
 
@@ -73,12 +73,12 @@ async function closeBrowser(): Promise<void> {
   }
 
   if (currentPage) {
-    await currentPage.close().catch(() => {});
+    await currentPage.close().catch(() => { /* ignore */ });
     currentPage = null;
   }
 
   if (browserInstance) {
-    await browserInstance.close().catch(() => {});
+    await browserInstance.close().catch(() => { /* ignore */ });
     browserInstance = null;
   }
 
@@ -182,7 +182,7 @@ Examples:
       resetSessionTimeout();
 
       const timestamp = Date.now();
-      const filename = ctx.filename ?? `screenshot-${timestamp}.png`;
+      const filename = ctx.filename ?? `screenshot-${String(timestamp)}.png`;
       const filepath = join(process.cwd(), "data", "screenshots", filename);
 
       const screenshot = await page.screenshot({
@@ -346,14 +346,6 @@ Examples:
         const element = await page.waitForSelector(ctx.selector, {
           timeout: ctx.timeout ?? 30000,
         });
-
-        if (!element) {
-          return {
-            success: false,
-            message: `Element not found: ${ctx.selector}`,
-          };
-        }
-
         text = (await element.textContent()) ?? "";
       } else {
         text = await page.textContent("body") ?? "";

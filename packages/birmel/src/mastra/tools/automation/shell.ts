@@ -51,7 +51,7 @@ The tool captures stdout, stderr, exit code, and execution time.`,
     if (timeout > config.shell.maxTimeout) {
       return {
         success: false,
-        message: `Timeout ${timeout}ms exceeds maximum allowed timeout ${config.shell.maxTimeout}ms`,
+        message: `Timeout ${String(timeout)}ms exceeds maximum allowed timeout ${String(config.shell.maxTimeout)}ms`,
       };
     }
 
@@ -109,11 +109,12 @@ The tool captures stdout, stderr, exit code, and execution time.`,
         stdout = stdoutText;
         stderr = stderrText;
       } catch (error) {
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- timedOut is set by async timeout callback
         if (timedOut) {
           const duration = Date.now() - startTime;
           return {
             success: false,
-            message: `Command timed out after ${timeout}ms`,
+            message: `Command timed out after ${String(timeout)}ms`,
             data: {
               stdout,
               stderr,
@@ -141,8 +142,8 @@ The tool captures stdout, stderr, exit code, and execution time.`,
       return {
         success: true,
         message: exitCode === 0
-          ? `Command executed successfully in ${duration}ms`
-          : `Command completed with exit code ${exitCode} in ${duration}ms`,
+          ? `Command executed successfully in ${String(duration)}ms`
+          : `Command completed with exit code ${String(exitCode)} in ${String(duration)}ms`,
         data: {
           stdout,
           stderr,

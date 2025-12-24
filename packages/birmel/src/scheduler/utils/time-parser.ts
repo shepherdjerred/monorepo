@@ -3,7 +3,7 @@ import { loggers } from "../../utils/index.js";
 
 const logger = loggers.scheduler;
 
-export interface ParsedTime {
+export type ParsedTime = {
   date: Date;
   confidence: "high" | "medium" | "low";
   originalText: string;
@@ -44,7 +44,7 @@ export function parseNaturalTime(
 
     // If parsed date is in the past, return null
     if (date < now) {
-      logger.debug(`Parsed time is in the past: "${text}" -> ${date}`, {
+      logger.debug(`Parsed time is in the past: "${text}" -> ${date.toISOString()}`, {
         now,
         date,
       });
@@ -167,9 +167,9 @@ export function formatScheduleTime(date: Date): string {
     const minutes = Math.floor((diff % (60 * 60 * 1000)) / (60 * 1000));
 
     if (hours === 0) {
-      return `in ${minutes} minute${minutes !== 1 ? "s" : ""}`;
+      return `in ${String(minutes)} minute${minutes !== 1 ? "s" : ""}`;
     }
-    return `in ${hours} hour${hours !== 1 ? "s" : ""} and ${minutes} minute${minutes !== 1 ? "s" : ""}`;
+    return `in ${String(hours)} hour${hours !== 1 ? "s" : ""} and ${String(minutes)} minute${minutes !== 1 ? "s" : ""}`;
   }
 
   // Otherwise show date and time

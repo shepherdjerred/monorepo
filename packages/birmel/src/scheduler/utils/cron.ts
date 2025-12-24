@@ -47,7 +47,11 @@ export function describeCron(pattern: string): string {
       return "Invalid cron pattern";
     }
 
-    const [minute, hour, dayOfMonth, month, dayOfWeek] = parts;
+    const minute = parts[0] ?? "";
+    const hour = parts[1] ?? "";
+    const dayOfMonth = parts[2] ?? "";
+    const month = parts[3] ?? "";
+    const dayOfWeek = parts[4] ?? "";
 
     // Simple descriptions for common patterns
     if (pattern === "* * * * *") return "Every minute";
@@ -82,7 +86,7 @@ export function describeCron(pattern: string): string {
     }
 
     return desc;
-  } catch (error) {
+  } catch {
     return "Unable to describe cron pattern";
   }
 }
@@ -101,14 +105,14 @@ export function simpleToCron(
 
   switch (schedule) {
     case "hourly":
-      return `${minute ?? 0} * * * *`;
+      return `${String(minute ?? 0)} * * * *`;
     case "daily":
-      return `${minute ?? 0} ${hour ?? 0} * * *`;
+      return `${String(minute ?? 0)} ${String(hour ?? 0)} * * *`;
     case "weekly":
-      return `${minute ?? 0} ${hour ?? 0} * * 0`; // Sunday
+      return `${String(minute ?? 0)} ${String(hour ?? 0)} * * 0`; // Sunday
     case "monthly":
-      return `${minute ?? 0} ${hour ?? 0} 1 * *`; // 1st of month
+      return `${String(minute ?? 0)} ${String(hour ?? 0)} 1 * *`; // 1st of month
     default:
-      throw new Error(`Unknown schedule type: ${schedule}`);
+      throw new Error(`Unknown schedule type: ${String(schedule as unknown)}`); // exhaustive check
   }
 }
