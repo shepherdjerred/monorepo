@@ -23,7 +23,7 @@ The tool captures stdout, stderr, exit code, and execution time.`,
     args: z.array(z.string()).optional().describe("Command arguments"),
     timeout: z.number().optional().describe("Timeout in milliseconds (default: from config, max: from config)"),
     cwd: z.string().optional().describe("Working directory (defaults to current directory)"),
-    env: z.record(z.string()).optional().describe("Environment variables to set"),
+    env: z.record(z.string(), z.string()).optional().describe("Environment variables to set"),
   }),
   outputSchema: z.object({
     success: z.boolean(),
