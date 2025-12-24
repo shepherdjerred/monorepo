@@ -77,7 +77,7 @@ export class Monorepo {
     container = container
       .withEnvVariable("OPS_DATABASE_URL", "file:./packages/birmel/data/test-ops.db")
       .withExec(["bun", "x", "prisma", "generate", "--schema=./packages/birmel/prisma/schema.prisma"])
-      .withExec(["bun", "x", "prisma", "db", "push", "--accept-data-loss", "--schema=./packages/birmel/prisma/schema.prisma"]);
+      .withExec(["bun", "x", "prisma", "db", "push", "--accept-data-loss", "--schema=./packages/birmel/prisma/schema.prisma", "--url=file:./packages/birmel/data/test-ops.db"]);
     await container.sync();
     outputs.push("✓ Prisma setup");
 
