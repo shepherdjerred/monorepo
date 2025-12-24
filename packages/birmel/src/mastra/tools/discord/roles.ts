@@ -25,10 +25,10 @@ export const listRolesTool = createTool({
       )
       .optional(),
   }),
-  execute: async ({ guildId }) => {
+  execute: async (ctx) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(guildId);
+      const guild = await client.guilds.fetch(ctx.guildId);
       const roles = await guild.roles.fetch();
 
       const roleList = roles
@@ -75,16 +75,16 @@ export const createRoleTool = createTool({
       })
       .optional(),
   }),
-  execute: async ({ guildId, name, color, hoist, mentionable }) => {
+  execute: async (ctx) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(guildId);
+      const guild = await client.guilds.fetch(ctx.guildId);
 
       const role = await guild.roles.create({
-        name,
-        ...(color !== undefined && { color: color as ColorResolvable }),
-        ...(hoist !== undefined && { hoist }),
-        ...(mentionable !== undefined && { mentionable }),
+        name: ctx.name,
+        ...(ctx.color !== undefined && { color: ctx.color as ColorResolvable }),
+        ...(ctx.hoist !== undefined && { hoist: ctx.hoist }),
+        ...(ctx.mentionable !== undefined && { mentionable: ctx.mentionable }),
       });
 
       return {
@@ -116,11 +116,11 @@ export const deleteRoleTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async ({ guildId, roleId, reason }) => {
+  execute: async (ctx) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(guildId);
-      const role = await guild.roles.fetch(roleId);
+      const guild = await client.guilds.fetch(ctx.guildId);
+      const role = await guild.roles.fetch(ctx.roleId);
 
       if (!role) {
         return {
@@ -130,7 +130,7 @@ export const deleteRoleTool = createTool({
       }
 
       const roleName = role.name;
-      await role.delete(reason);
+      await role.delete(ctx.reason);
 
       return {
         success: true,
@@ -161,11 +161,11 @@ export const modifyRoleTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async ({ guildId, roleId, name, color, hoist, mentionable }) => {
+  execute: async (ctx) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(guildId);
-      const role = await guild.roles.fetch(roleId);
+      const guild = await client.guilds.fetch(ctx.guildId);
+      const role = await guild.roles.fetch(ctx.roleId);
 
       if (!role) {
         return {
@@ -175,10 +175,10 @@ export const modifyRoleTool = createTool({
       }
 
       const hasChanges =
-        name !== undefined ||
-        color !== undefined ||
-        hoist !== undefined ||
-        mentionable !== undefined;
+        ctx.name !== undefined ||
+        ctx.color !== undefined ||
+        ctx.hoist !== undefined ||
+        ctx.mentionable !== undefined;
 
       if (!hasChanges) {
         return {
@@ -188,10 +188,10 @@ export const modifyRoleTool = createTool({
       }
 
       await role.edit({
-        ...(name !== undefined && { name }),
-        ...(color !== undefined && { color: color as ColorResolvable }),
-        ...(hoist !== undefined && { hoist }),
-        ...(mentionable !== undefined && { mentionable }),
+        ...(ctx.name !== undefined && { name: ctx.name }),
+        ...(ctx.color !== undefined && { color: ctx.color as ColorResolvable }),
+        ...(ctx.hoist !== undefined && { hoist: ctx.hoist }),
+        ...(ctx.mentionable !== undefined && { mentionable: ctx.mentionable }),
       });
 
       return {
@@ -231,11 +231,11 @@ export const getRoleTool = createTool({
       })
       .optional(),
   }),
-  execute: async ({ guildId, roleId }) => {
+  execute: async (ctx) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(guildId);
-      const role = await guild.roles.fetch(roleId);
+      const guild = await client.guilds.fetch(ctx.guildId);
+      const role = await guild.roles.fetch(ctx.roleId);
 
       if (!role) {
         return {
@@ -286,13 +286,13 @@ export const reorderRolesTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async ({ guildId, positions }) => {
+  execute: async (ctx) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(guildId);
+      const guild = await client.guilds.fetch(ctx.guildId);
 
       await guild.roles.setPositions(
-        positions.map((p: { roleId: string; position: number }) => ({
+        ctx.positions.map((p: { roleId: string; position: number }) => ({
           role: p.roleId,
           position: p.position,
         })),
@@ -300,7 +300,7 @@ export const reorderRolesTool = createTool({
 
       return {
         success: true,
-        message: `Reordered ${String(positions.length)} roles`,
+        message: `Reordered ${String(ctx.positions.length)} roles`,
       };
     } catch (error) {
       logger.error("Failed to reorder roles", error);

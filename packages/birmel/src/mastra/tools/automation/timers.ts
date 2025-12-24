@@ -68,7 +68,7 @@ Examples:
       })
       .optional(),
   }),
-  execute: async ({ when, toolId, toolInput, name, description, guildId, channelId, userId }) => {
+  execute: async (ctx) => {
     const config = getConfig();
 
     if (!config.scheduler.enabled) {
@@ -81,7 +81,7 @@ Examples:
     // Check guild task limit
     const existingTasks = await prisma.scheduledTask.count({
       where: {
-        guildId,
+        guildId: ctx.guildId,
         executedAt: null,
         enabled: true,
       },
@@ -95,11 +95,11 @@ Examples:
     }
 
     // Parse the time
-    const parsed = parseFlexibleTime(when);
+    const parsed = parseFlexibleTime(ctx.when);
     if (!parsed) {
       return {
         success: false,
-        message: `Could not understand time: "${when}". Try "in 5 minutes", "tomorrow at 3pm", or a cron pattern like "0 9 * * *"`,
+        message: `Could not understand time: "${ctx.when}". Try "in 5 minutes", "tomorrow at 3pm", or a cron pattern like "0 9 * * *"`,
       };
     }
 
@@ -123,7 +123,7 @@ Examples:
       // Check recurring task limit
       const recurringCount = await prisma.scheduledTask.count({
         where: {
-          guildId,
+          guildId: ctx.guildId,
           cronPattern: { not: null },
           enabled: true,
         },
@@ -142,16 +142,16 @@ Examples:
     // Create the task
     const task = await prisma.scheduledTask.create({
       data: {
-        guildId,
-        channelId: channelId ?? null,
-        userId,
+        guildId: ctx.guildId,
+        channelId: ctx.channelId ?? null,
+        userId: ctx.userId,
         scheduledAt,
         cronPattern,
-        naturalDesc: when,
-        toolId,
-        toolInput: JSON.stringify(toolInput),
-        name: name ?? null,
-        description: description ?? null,
+        naturalDesc: ctx.when,
+        toolId: ctx.toolId,
+        toolInput: JSON.stringify(ctx.toolInput),
+        name: ctx.name ?? null,
+        description: ctx.description ?? null,
         enabled: true,
         nextRun: isRecurring ? scheduledAt : null,
       },
@@ -159,8 +159,8 @@ Examples:
 
     logger.info("Scheduled task created", {
       taskId: task.id,
-      guildId,
-      toolId,
+      guildId: ctx.guildId,
+      toolId: ctx.toolId,
       scheduledAt: scheduledAt.toISOString(),
       isRecurring,
     });
@@ -220,7 +220,7 @@ Can optionally include already-executed tasks.`,
       })
       .optional(),
   }),
-  execute: async ({ guildId, includeExecuted }) => {
+  execute: async (ctx) => {
     const config = getConfig();
 
     if (!config.scheduler.enabled) {
@@ -231,8 +231,8 @@ Can optionally include already-executed tasks.`,
     }
 
     const where = {
-      guildId,
-      ...(includeExecuted ? {} : { executedAt: null }),
+      guildId: ctx.guildId,
+      ...(ctx.includeExecuted ? {} : { executedAt: null }),
     };
 
     const tasks = await prisma.scheduledTask.findMany({
@@ -279,7 +279,7 @@ Already-executed tasks cannot be cancelled.`,
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async ({ taskId, guildId, userId }) => {
+  execute: async (ctx) => {
     const config = getConfig();
 
     if (!config.scheduler.enabled) {
@@ -292,8 +292,8 @@ Already-executed tasks cannot be cancelled.`,
     // Find the task
     const task = await prisma.scheduledTask.findFirst({
       where: {
-        id: taskId,
-        guildId,
+        id: ctx.taskId,
+        guildId: ctx.guildId,
       },
     });
 
@@ -313,7 +313,7 @@ Already-executed tasks cannot be cancelled.`,
 
     // Check permissions (only creator can cancel for now)
     // TODO: Add guild admin check
-    if (task.userId !== userId) {
+    if (task.userId !== ctx.userId) {
       return {
         success: false,
         message: "Only the task creator can cancel it",
@@ -322,14 +322,14 @@ Already-executed tasks cannot be cancelled.`,
 
     // Disable the task instead of deleting it (for audit trail)
     await prisma.scheduledTask.update({
-      where: { id: taskId },
+      where: { id: ctx.taskId },
       data: { enabled: false },
     });
 
     logger.info("Task cancelled", {
-      taskId,
-      guildId,
-      userId,
+      taskId: ctx.taskId,
+      guildId: ctx.guildId,
+      userId: ctx.userId,
     });
 
     return {
@@ -373,7 +373,7 @@ The reminder will be sent as a message to the channel where it was created.`,
       })
       .optional(),
   }),
-  execute: async ({ when, action, guildId, channelId, userId, message }) => {
+  execute: async (ctx) => {
     const config = getConfig();
 
     if (!config.scheduler.enabled) {
@@ -384,7 +384,7 @@ The reminder will be sent as a message to the channel where it was created.`,
     }
 
     // Check if this looks like a recurring pattern
-    const recurringPattern = detectRecurringPattern(when);
+    const recurringPattern = detectRecurringPattern(ctx.when);
     if (recurringPattern) {
       return {
         success: false,
@@ -393,18 +393,18 @@ The reminder will be sent as a message to the channel where it was created.`,
     }
 
     // Parse natural language time
-    const parsed = parseNaturalTime(when);
+    const parsed = parseNaturalTime(ctx.when);
     if (!parsed) {
       return {
         success: false,
-        message: `Could not understand time: "${when}". Try "in 30 minutes" or "tomorrow at 3pm"`,
+        message: `Could not understand time: "${ctx.when}". Try "in 30 minutes" or "tomorrow at 3pm"`,
       };
     }
 
     // Check guild task limit
     const existingTasks = await prisma.scheduledTask.count({
       where: {
-        guildId,
+        guildId: ctx.guildId,
         executedAt: null,
         enabled: true,
       },
@@ -419,31 +419,31 @@ The reminder will be sent as a message to the channel where it was created.`,
 
     // Create reminder message
     const reminderMessage =
-      message ??
-      `<@${userId}> Reminder: ${action}`;
+      ctx.message ??
+      `<@${ctx.userId}> Reminder: ${ctx.action}`;
 
     // Create the task
     const task = await prisma.scheduledTask.create({
       data: {
-        guildId,
-        channelId,
-        userId,
+        guildId: ctx.guildId,
+        channelId: ctx.channelId,
+        userId: ctx.userId,
         scheduledAt: parsed.date,
-        naturalDesc: when,
+        naturalDesc: ctx.when,
         toolId: "send-message",
         toolInput: JSON.stringify({
-          channelId,
+          channelId: ctx.channelId,
           content: reminderMessage,
         }),
-        name: `Reminder: ${action.substring(0, 50)}`,
-        description: action,
+        name: `Reminder: ${ctx.action.substring(0, 50)}`,
+        description: ctx.action,
         enabled: true,
       },
     });
 
     logger.info("Reminder scheduled", {
       taskId: task.id,
-      guildId,
+      guildId: ctx.guildId,
       scheduledAt: parsed.date.toISOString(),
     });
 
