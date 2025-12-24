@@ -29,15 +29,15 @@ export const scheduleMessageTool = createTool({
       scheduleId: z.number().describe("ID of the scheduled message for future reference")
     }).optional()
   }),
-  execute: async ({ guildId, channelId, message, scheduledAt, repeat, createdBy }) => {
-    return withToolSpan("schedule-message", guildId, async () => {
+  execute: async (ctx) => {
+    return withToolSpan("schedule-message", ctx.guildId, async () => {
       logger.debug("Scheduling message", {
-        guildId,
-        channelId,
-        scheduledAt
+        guildId: ctx.guildId,
+        channelId: ctx.channelId,
+        scheduledAt: ctx.scheduledAt
       });
       try {
-        const scheduledDate = new Date(scheduledAt);
+        const scheduledDate = new Date(ctx.scheduledAt);
 
         if (isNaN(scheduledDate.getTime())) {
           return {
@@ -53,23 +53,23 @@ export const scheduleMessageTool = createTool({
           };
         }
 
-        const repeatPattern = repeat === "none" ? undefined : repeat;
+        const repeat = ctx.repeat === "none" ? undefined : ctx.repeat;
 
         const scheduleId = await scheduleAnnouncement(
-          guildId,
-          channelId,
-          message,
+          ctx.guildId,
+          ctx.channelId,
+          ctx.message,
           scheduledDate,
-          createdBy,
-          repeatPattern
+          ctx.createdBy,
+          repeat
         );
 
-        const repeatText = repeatPattern ? ` (repeating ${repeatPattern})` : "";
+        const repeatText = repeat ? ` (repeating ${repeat})` : "";
         logger.info("Message scheduled", {
           scheduleId,
-          guildId,
-          channelId,
-          scheduledAt
+          guildId: ctx.guildId,
+          channelId: ctx.channelId,
+          scheduledAt: ctx.scheduledAt
         });
 
         return {
@@ -81,12 +81,12 @@ export const scheduleMessageTool = createTool({
         };
       } catch (error) {
         logger.error("Failed to schedule message", error, {
-          guildId,
-          channelId
+          guildId: ctx.guildId,
+          channelId: ctx.channelId
         });
         captureException(error as Error, {
           operation: "tool.schedule-message",
-          discord: { guildId, channelId }
+          discord: { guildId: ctx.guildId, channelId: ctx.channelId }
         });
         return {
           success: false,
@@ -115,11 +115,11 @@ export const listScheduledMessagesTool = createTool({
       }))
     }).optional()
   }),
-  execute: async ({ guildId }) => {
-    return withToolSpan("list-scheduled-messages", guildId, async () => {
-      logger.debug("Listing scheduled messages", { guildId });
+  execute: async (ctx) => {
+    return withToolSpan("list-scheduled-messages", ctx.guildId, async () => {
+      logger.debug("Listing scheduled messages", { guildId: ctx.guildId });
       try {
-        const pending = await listPendingAnnouncements(guildId);
+        const pending = await listPendingAnnouncements(ctx.guildId);
 
         const schedules = pending.map(p => ({
           id: p.id,
@@ -129,7 +129,7 @@ export const listScheduledMessagesTool = createTool({
         }));
 
         logger.info("Scheduled messages listed", {
-          guildId,
+          guildId: ctx.guildId,
           count: schedules.length
         });
 
@@ -142,11 +142,11 @@ export const listScheduledMessagesTool = createTool({
         };
       } catch (error) {
         logger.error("Failed to list scheduled messages", error, {
-          guildId
+          guildId: ctx.guildId
         });
         captureException(error as Error, {
           operation: "tool.list-scheduled-messages",
-          discord: { guildId }
+          discord: { guildId: ctx.guildId }
         });
         return {
           success: false,
@@ -168,14 +168,14 @@ export const cancelScheduledMessageTool = createTool({
     success: z.boolean(),
     message: z.string()
   }),
-  execute: async ({ scheduleId, guildId }) => {
-    return withToolSpan("cancel-scheduled-message", guildId, async () => {
+  execute: async (ctx) => {
+    return withToolSpan("cancel-scheduled-message", ctx.guildId, async () => {
       logger.debug("Cancelling scheduled message", {
-        scheduleId,
-        guildId
+        scheduleId: ctx.scheduleId,
+        guildId: ctx.guildId
       });
       try {
-        const cancelled = await cancelAnnouncement(scheduleId, guildId);
+        const cancelled = await cancelAnnouncement(ctx.scheduleId, ctx.guildId);
 
         if (!cancelled) {
           return {
@@ -185,8 +185,8 @@ export const cancelScheduledMessageTool = createTool({
         }
 
         logger.info("Scheduled message cancelled", {
-          scheduleId,
-          guildId
+          scheduleId: ctx.scheduleId,
+          guildId: ctx.guildId
         });
 
         return {
@@ -195,12 +195,12 @@ export const cancelScheduledMessageTool = createTool({
         };
       } catch (error) {
         logger.error("Failed to cancel scheduled message", error, {
-          scheduleId,
-          guildId
+          scheduleId: ctx.scheduleId,
+          guildId: ctx.guildId
         });
         captureException(error as Error, {
           operation: "tool.cancel-scheduled-message",
-          discord: { guildId, scheduleId: scheduleId.toString() }
+          discord: { guildId: ctx.guildId, scheduleId: ctx.scheduleId.toString() }
         });
         return {
           success: false,

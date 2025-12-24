@@ -4,19 +4,6 @@
  * Tests Phase 1 (Shell), Phase 2 (Scheduler), and Phase 3 (Browser) tools
  */
 
-// Set up minimal test environment BEFORE imports
-// This is critical - Prisma client is created during import, so env vars must be set first
-process.env["DISCORD_TOKEN"] = "test-token";
-process.env["DISCORD_CLIENT_ID"] = "test-client-id";
-process.env["OPENAI_API_KEY"] = "test-key";
-process.env["DATABASE_PATH"] = ":memory:";
-process.env["DATABASE_URL"] = "file::memory:?cache=shared";
-process.env["OPS_DATABASE_URL"] = "file:/Users/jerred/git/monorepo-ci/packages/birmel/data/test-ops.db";
-process.env["SHELL_ENABLED"] = "true";
-process.env["SCHEDULER_ENABLED"] = "true";
-process.env["BROWSER_ENABLED"] = "true";
-process.env["BROWSER_HEADLESS"] = "true";
-
 import { describe, test, expect } from "bun:test";
 import {
   executeShellCommandTool,
@@ -33,11 +20,29 @@ import {
 import { prisma } from "../../../database/index.js";
 import { existsSync } from "node:fs";
 
+// Set up minimal test environment
+process.env["DISCORD_TOKEN"] = "test-token";
+process.env["DISCORD_CLIENT_ID"] = "test-client-id";
+process.env["OPENAI_API_KEY"] = "test-key";
+process.env["DATABASE_PATH"] = ":memory:";
+process.env["DATABASE_URL"] = "file::memory:?cache=shared";
+process.env["OPS_DATABASE_URL"] = "file:./data/test-ops.db";
+process.env["SHELL_ENABLED"] = "true";
+process.env["SCHEDULER_ENABLED"] = "true";
+process.env["BROWSER_ENABLED"] = "true";
+process.env["BROWSER_HEADLESS"] = "true";
+
+const testContext = {
+  runId: "test-run-e2e",
+  agentId: "test-agent",
+};
+
 describe("Phase 1: Shell Tool", () => {
   test("executes Python code", async () => {
     const result = await (executeShellCommandTool as any).execute({
       command: "python3",
       args: ["-c", "print('Hello from Python')"],
+      ...testContext,
     });
 
     expect(result.success).toBe(true);
@@ -49,6 +54,7 @@ describe("Phase 1: Shell Tool", () => {
     const result = await (executeShellCommandTool as any).execute({
       command: "node",
       args: ["-e", "console.log('Hello from Node')"],
+      ...testContext,
     });
 
     expect(result.success).toBe(true);
@@ -60,6 +66,7 @@ describe("Phase 1: Shell Tool", () => {
     const result = await (executeShellCommandTool as any).execute({
       command: "bun",
       args: ["--version"],
+      ...testContext,
     });
 
     expect(result.success).toBe(true);
@@ -72,6 +79,7 @@ describe("Phase 1: Shell Tool", () => {
       command: "sleep",
       args: ["5"],
       timeout: 100,
+      ...testContext,
     });
 
     expect(result.success).toBe(false);
@@ -83,6 +91,7 @@ describe("Phase 1: Shell Tool", () => {
     const result = await (executeShellCommandTool as any).execute({
       command: "ls",
       args: ["/nonexistent-directory-xyz"],
+      ...testContext,
     });
 
     expect(result.success).toBe(true); // Non-zero exit is still success
@@ -108,6 +117,7 @@ describe("Phase 2: Timer/Scheduler Tools", () => {
       guildId: testGuildId,
       userId: testUserId,
       name: "Test scheduled task",
+      ...testContext,
     });
 
     expect(result.success).toBe(true);
@@ -124,6 +134,7 @@ describe("Phase 2: Timer/Scheduler Tools", () => {
       userId: testUserId,
       name: "Daily cron task",
       recurring: true,
+      ...testContext,
     });
 
     expect(result.success).toBe(true);
@@ -136,8 +147,10 @@ describe("Phase 2: Timer/Scheduler Tools", () => {
       when: "in 5 minutes",
       action: "remind",
       guildId: testGuildId,
+      channelId: "test-channel-e2e",
       userId: testUserId,
       message: "Test reminder",
+      ...testContext,
     });
 
     expect(result.success).toBe(true);
@@ -147,6 +160,7 @@ describe("Phase 2: Timer/Scheduler Tools", () => {
   test("lists scheduled tasks", async () => {
     const result = await (listScheduledTasksTool as any).execute({
       guildId: testGuildId,
+      ...testContext,
     });
 
     expect(result.success).toBe(true);
@@ -163,6 +177,7 @@ describe("Phase 2: Timer/Scheduler Tools", () => {
       guildId: testGuildId,
       userId: testUserId,
       name: "Task to cancel",
+      ...testContext,
     });
 
     const taskId = createResult.data?.taskId;
@@ -173,6 +188,7 @@ describe("Phase 2: Timer/Scheduler Tools", () => {
       taskId: taskId!,
       guildId: testGuildId,
       userId: testUserId,
+      ...testContext,
     });
 
     expect(cancelResult.success).toBe(true);
@@ -189,6 +205,7 @@ describe("Phase 3: Browser Tools", () => {
   test("navigates to a URL", async () => {
     const result = await (browserNavigateTool as any).execute({
       url: "https://example.com",
+      ...testContext,
     });
 
     expect(result.success).toBe(true);
@@ -200,11 +217,13 @@ describe("Phase 3: Browser Tools", () => {
     // Navigate first
     await (browserNavigateTool as any).execute({
       url: "https://example.com",
+      ...testContext,
     });
 
     // Get text
     const result = await (browserGetTextTool as any).execute({
       selector: "h1",
+      ...testContext,
     });
 
     expect(result.success).toBe(true);
@@ -215,11 +234,13 @@ describe("Phase 3: Browser Tools", () => {
     // Navigate first
     await (browserNavigateTool as any).execute({
       url: "https://example.com",
+      ...testContext,
     });
 
     // Take screenshot
     const result = await (browserScreenshotTool as any).execute({
       filename: "test-e2e-screenshot.png",
+      ...testContext,
     });
 
     expect(result.success).toBe(true);
@@ -236,6 +257,7 @@ describe("Phase 3: Browser Tools", () => {
     // For now, just verify the tool doesn't error
     await (browserNavigateTool as any).execute({
       url: "https://example.com",
+      ...testContext,
     });
 
     // This will fail to find the selector, but should handle gracefully
@@ -243,6 +265,7 @@ describe("Phase 3: Browser Tools", () => {
       selector: "input[name='q']",
       text: "test search",
       timeout: 1000,
+      ...testContext,
     });
 
     // Expect failure since example.com doesn't have a search input
@@ -250,7 +273,9 @@ describe("Phase 3: Browser Tools", () => {
   });
 
   test("closes browser session", async () => {
-    const result = await (browserCloseTool as any).execute({});
+    const result = await (browserCloseTool as any).execute({
+      ...testContext,
+    });
 
     expect(result.success).toBe(true);
     expect(result.message).toContain("closed");

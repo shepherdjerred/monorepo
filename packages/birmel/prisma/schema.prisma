@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = env("OPS_DATABASE_URL")
+  url      = env("DATABASE_URL")
 }
 
 model DailyPostConfig {
