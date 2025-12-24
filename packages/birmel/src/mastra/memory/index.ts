@@ -39,7 +39,7 @@ export function createMemory(): Memory {
     }),
     embedder: "openai/text-embedding-3-small",
     options: {
-      lastMessages: 20,
+      lastMessages: 8, // Reduced from 20 to prevent token overflow (each message can be large with tool calls)
       semanticRecall: {
         topK: 5,
         messageRange: 2,
