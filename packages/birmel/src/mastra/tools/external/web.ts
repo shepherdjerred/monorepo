@@ -6,7 +6,7 @@ export const fetchUrlTool = createTool({
   id: "fetch-url",
   description: "Fetch and summarize content from a URL",
   inputSchema: z.object({
-    url: z.string().url().describe("The URL to fetch"),
+    url: z.url().describe("The URL to fetch"),
     maxLength: z
       .number()
       .optional()
