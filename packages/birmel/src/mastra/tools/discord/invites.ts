@@ -30,7 +30,7 @@ export const listInvitesTool = createTool({
   execute: async (ctx) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(ctx.context.guildId);
+      const guild = await client.guilds.fetch(ctx.guildId);
       const invites = await guild.invites.fetch();
 
       const inviteList = invites.map((invite) => ({
@@ -90,7 +90,7 @@ export const createInviteTool = createTool({
   execute: async (ctx) => {
     try {
       const client = getDiscordClient();
-      const channel = await client.channels.fetch(ctx.context.channelId);
+      const channel = await client.channels.fetch(ctx.channelId);
 
       if (!channel || !("createInvite" in channel)) {
         return {
@@ -100,10 +100,10 @@ export const createInviteTool = createTool({
       }
 
       const invite = await (channel as TextChannel).createInvite({
-        ...(ctx.context.maxAge !== undefined && { maxAge: ctx.context.maxAge }),
-        ...(ctx.context.maxUses !== undefined && { maxUses: ctx.context.maxUses }),
-        ...(ctx.context.temporary !== undefined && { temporary: ctx.context.temporary }),
-        ...(ctx.context.reason !== undefined && { reason: ctx.context.reason }),
+        ...(ctx.maxAge !== undefined && { maxAge: ctx.maxAge }),
+        ...(ctx.maxUses !== undefined && { maxUses: ctx.maxUses }),
+        ...(ctx.temporary !== undefined && { temporary: ctx.temporary }),
+        ...(ctx.reason !== undefined && { reason: ctx.reason }),
       });
 
       return {
@@ -138,13 +138,13 @@ export const deleteInviteTool = createTool({
   execute: async (ctx) => {
     try {
       const client = getDiscordClient();
-      const invite = await client.fetchInvite(ctx.context.inviteCode);
+      const invite = await client.fetchInvite(ctx.inviteCode);
 
-      await invite.delete(ctx.context.reason);
+      await invite.delete(ctx.reason);
 
       return {
         success: true,
-        message: `Deleted invite ${ctx.context.inviteCode}`,
+        message: `Deleted invite ${ctx.inviteCode}`,
       };
     } catch (error) {
       logger.error("Failed to delete invite", error);
@@ -175,7 +175,7 @@ export const getVanityUrlTool = createTool({
   execute: async (ctx) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(ctx.context.guildId);
+      const guild = await client.guilds.fetch(ctx.guildId);
 
       const vanity = await guild.fetchVanityData();
 

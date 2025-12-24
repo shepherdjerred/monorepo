@@ -19,7 +19,7 @@ export const joinVoiceChannelTool = createTool({
   execute: async (ctx) => {
     try {
       const client = getDiscordClient();
-      const channel = await client.channels.fetch(ctx.context.channelId);
+      const channel = await client.channels.fetch(ctx.channelId);
 
       if (!channel?.isVoiceBased()) {
         return {
@@ -32,7 +32,7 @@ export const joinVoiceChannelTool = createTool({
 
       joinVoiceChannel({
         channelId: voiceChannel.id,
-        guildId: ctx.context.guildId,
+        guildId: ctx.guildId,
         adapterCreator: voiceChannel.guild.voiceAdapterCreator,
       });
 
@@ -63,7 +63,7 @@ export const leaveVoiceChannelTool = createTool({
   execute: async (ctx) => {
     await Promise.resolve();
     try {
-      const connection = getVoiceConnection(ctx.context.guildId);
+      const connection = getVoiceConnection(ctx.guildId);
 
       if (!connection) {
         return {
@@ -104,8 +104,8 @@ export const moveMemberToChannelTool = createTool({
   execute: async (ctx) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(ctx.context.guildId);
-      const member = await guild.members.fetch(ctx.context.memberId);
+      const guild = await client.guilds.fetch(ctx.guildId);
+      const member = await guild.members.fetch(ctx.memberId);
 
       if (!member.voice.channel) {
         return {
@@ -114,7 +114,7 @@ export const moveMemberToChannelTool = createTool({
         };
       }
 
-      await member.voice.setChannel(ctx.context.channelId, ctx.context.reason);
+      await member.voice.setChannel(ctx.channelId, ctx.reason);
 
       return {
         success: true,
@@ -145,8 +145,8 @@ export const disconnectMemberTool = createTool({
   execute: async (ctx) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(ctx.context.guildId);
-      const member = await guild.members.fetch(ctx.context.memberId);
+      const guild = await client.guilds.fetch(ctx.guildId);
+      const member = await guild.members.fetch(ctx.memberId);
 
       if (!member.voice.channel) {
         return {
@@ -155,7 +155,7 @@ export const disconnectMemberTool = createTool({
         };
       }
 
-      await member.voice.disconnect(ctx.context.reason);
+      await member.voice.disconnect(ctx.reason);
 
       return {
         success: true,
@@ -187,14 +187,14 @@ export const serverMuteMemberTool = createTool({
   execute: async (ctx) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(ctx.context.guildId);
-      const member = await guild.members.fetch(ctx.context.memberId);
+      const guild = await client.guilds.fetch(ctx.guildId);
+      const member = await guild.members.fetch(ctx.memberId);
 
-      await member.voice.setMute(ctx.context.mute, ctx.context.reason);
+      await member.voice.setMute(ctx.mute, ctx.reason);
 
       return {
         success: true,
-        message: `${ctx.context.mute ? "Muted" : "Unmuted"} ${member.displayName}`,
+        message: `${ctx.mute ? "Muted" : "Unmuted"} ${member.displayName}`,
       };
     } catch (error) {
       logger.error("Failed to mute/unmute member", error as Error);
@@ -222,14 +222,14 @@ export const serverDeafenMemberTool = createTool({
   execute: async (ctx) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(ctx.context.guildId);
-      const member = await guild.members.fetch(ctx.context.memberId);
+      const guild = await client.guilds.fetch(ctx.guildId);
+      const member = await guild.members.fetch(ctx.memberId);
 
-      await member.voice.setDeaf(ctx.context.deaf, ctx.context.reason);
+      await member.voice.setDeaf(ctx.deaf, ctx.reason);
 
       return {
         success: true,
-        message: `${ctx.context.deaf ? "Deafened" : "Undeafened"} ${member.displayName}`,
+        message: `${ctx.deaf ? "Deafened" : "Undeafened"} ${member.displayName}`,
       };
     } catch (error) {
       logger.error("Failed to deafen/undeafen member", error as Error);
