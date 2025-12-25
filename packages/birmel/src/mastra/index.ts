@@ -1,14 +1,20 @@
 import { Mastra } from "@mastra/core";
 import { LibSQLStore } from "@mastra/libsql";
-import { createBirmelAgent } from "./agents/birmel-agent.js";
-import { createClassifierAgent } from "./agents/classifier-agent.js";
 import { getConfig } from "../config/index.js";
 import { logger } from "../utils/logger.js";
 
-// Create agents at module load time
-const birmelAgent = createBirmelAgent();
-const classifierAgent = createClassifierAgent();
+// Import routing agent and specialized agents
+import { routingAgent } from "./agents/routing-agent.js";
+import {
+  messagingAgent,
+  serverAgent,
+  moderationAgent,
+  musicAgent,
+  automationAgent,
+} from "./agents/specialized/index.js";
+import { createClassifierAgent } from "./agents/classifier-agent.js";
 
+const classifierAgent = createClassifierAgent();
 const config = getConfig();
 
 /**
@@ -17,15 +23,21 @@ const config = getConfig();
  */
 export const mastra = new Mastra({
   agents: {
-    birmel: birmelAgent,
+    // Main routing agent for Agent Networks
+    birmel: routingAgent,
+    // Specialized sub-agents
+    messaging: messagingAgent,
+    server: serverAgent,
+    moderation: moderationAgent,
+    music: musicAgent,
+    automation: automationAgent,
+    // Utility agents
     classifier: classifierAgent,
   },
   storage: new LibSQLStore({
     id: "telemetry",
     url: config.mastra.telemetryDbPath,
   }),
-  // TODO: Fix observability config for 1.x API
-  // ...(config.telemetry.enabled ? { observability: getMastraObservability() } : {}),
 });
 
 /**
@@ -35,8 +47,11 @@ export function getMastra(): Mastra {
   return mastra;
 }
 
-export function getBirmelAgent() {
-  return mastra.getAgent("birmel");
+/**
+ * Get the main routing agent for Agent Networks
+ */
+export function getRoutingAgent() {
+  return routingAgent;
 }
 
 export function getClassifierAgent() {
@@ -58,6 +73,19 @@ export async function startMastraServer(): Promise<void> {
   });
 }
 
+// Export routing agent
+export { routingAgent, createRoutingAgent } from "./agents/routing-agent.js";
+
+// Export specialized agents
+export {
+  messagingAgent,
+  serverAgent,
+  moderationAgent,
+  musicAgent,
+  automationAgent,
+} from "./agents/specialized/index.js";
+
+// Legacy exports (for backwards compatibility)
 export {
   createBirmelAgent,
   createBirmelAgentWithContext,
