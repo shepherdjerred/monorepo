@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getDiscordClient } from "../../../discord/index.js";
 import { loggers } from "../../../utils/logger.js";
 import { withToolSpan, captureException } from "../../../observability/index.js";
+import { getRequestContext } from "../request-context.js";
 import type { TextChannel } from "discord.js";
 import { validateSnowflakes, validateSnowflakeArray } from "./validation.js";
 
@@ -60,6 +61,14 @@ export const manageMessageTool = createTool({
           case "send": {
             if (!ctx.channelId || !ctx.content) {
               return { success: false, message: "channelId and content are required for send" };
+            }
+            // Check if trying to send to the current channel - reject and guide to use text response
+            const requestContext = getRequestContext();
+            if (requestContext && ctx.channelId === requestContext.sourceChannelId) {
+              return {
+                success: false,
+                message: "Cannot send to the current channel using this tool. Your text response is automatically sent as a reply - just write your response directly instead of using manage-message.",
+              };
             }
             const channel = await client.channels.fetch(ctx.channelId);
             if (!channel?.isTextBased()) {
