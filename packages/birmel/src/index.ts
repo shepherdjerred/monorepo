@@ -37,6 +37,7 @@ import { getGuildPersona } from "./persona/guild-persona.js";
 import type { MessageContext } from "./discord/index.js";
 import { buildMessageContent } from "./mastra/utils/message-builder.js";
 import { getRecentChannelMessages } from "./discord/utils/channel-history.js";
+import { runWithRequestContext } from "./mastra/tools/request-context.js";
 
 /**
  * Fetch global working memory for a guild.
@@ -139,21 +140,29 @@ ${globalContext}${conversationHistory}`;
         : messageContent;
 
       // Use Agent Network - routing agent delegates to specialized sub-agents
+      // Wrap with request context so tools can detect the source channel
       let responseText = "";
-      await withAgentSpan("birmel-network", discordContext, async () => {
-        return withTyping(context.message, async () => {
-          const networkStream = await routingAgent.network(messageInput);
+      await runWithRequestContext(
+        {
+          sourceChannelId: context.channelId,
+          guildId: context.guildId,
+          userId: context.userId,
+        },
+        () => withAgentSpan("birmel-network", discordContext, async () => {
+          return withTyping(context.message, async () => {
+            const networkStream = await routingAgent.network(messageInput);
 
-          // Process the network stream to get the final result
-          for await (const chunk of networkStream) {
-            // Extract the final response from network execution events
-            // NetworkStepFinishPayload has result as string directly
-            if (chunk.type === "network-execution-event-step-finish" && chunk.payload.result) {
-              responseText = chunk.payload.result;
+            // Process the network stream to get the final result
+            for await (const chunk of networkStream) {
+              // Extract the final response from network execution events
+              // NetworkStepFinishPayload has result as string directly
+              if (chunk.type === "network-execution-event-step-finish" && chunk.payload.result) {
+                responseText = chunk.payload.result;
+              }
             }
-          }
-        });
-      });
+          });
+        }),
+      );
 
       const genDuration = Date.now() - genStartTime;
       span.setAttribute("generation.duration_ms", genDuration);
@@ -268,18 +277,26 @@ IMPORTANT: This is a voice command. Keep your response concise (under 200 words)
       const genStartTime = Date.now();
 
       // Use Agent Network for voice commands
+      // Wrap with request context so tools can detect the source channel
       let responseText = "";
-      await withAgentSpan("birmel-network", discordContext, async () => {
-        const networkStream = await routingAgent.network(prompt);
+      await runWithRequestContext(
+        {
+          sourceChannelId: channelId,
+          guildId,
+          userId,
+        },
+        () => withAgentSpan("birmel-network", discordContext, async () => {
+          const networkStream = await routingAgent.network(prompt);
 
-        // Process the network stream to get the final result
-        for await (const chunk of networkStream) {
-          // NetworkStepFinishPayload has result as string directly
-          if (chunk.type === "network-execution-event-step-finish" && chunk.payload.result) {
-            responseText = chunk.payload.result;
+          // Process the network stream to get the final result
+          for await (const chunk of networkStream) {
+            // NetworkStepFinishPayload has result as string directly
+            if (chunk.type === "network-execution-event-step-finish" && chunk.payload.result) {
+              responseText = chunk.payload.result;
+            }
           }
-        }
-      });
+        }),
+      );
 
       const genDuration = Date.now() - genStartTime;
       span.setAttribute("generation.duration_ms", genDuration);
