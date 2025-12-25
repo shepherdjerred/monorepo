@@ -20,6 +20,24 @@ import { recordMessageActivity } from "../../database/repositories/activity.js";
 
 const logger = loggers.discord.child("message-create");
 
+// Message deduplication to prevent duplicate responses
+// This handles cases where Discord sends duplicate messageCreate events
+// (e.g., during gateway reconnection or network issues)
+const processedMessages = new Set<string>();
+const PROCESSED_MESSAGE_TTL = 60_000; // 1 minute TTL
+
+function markMessageProcessed(messageId: string): boolean {
+  if (processedMessages.has(messageId)) {
+    return false; // Already processed
+  }
+  processedMessages.add(messageId);
+  // Clean up after TTL to prevent memory leaks
+  setTimeout(() => {
+    processedMessages.delete(messageId);
+  }, PROCESSED_MESSAGE_TTL);
+  return true; // Successfully marked as processing
+}
+
 // Lazy-loaded to avoid circular dependency with tools
 let classifierModule: { getClassifierAgent: typeof GetClassifierAgentFn } | null = null;
 let parserModule: { parseClassificationResult: typeof ParseClassificationResultFn } | null = null;
@@ -186,6 +204,14 @@ export function setupMessageCreateHandler(client: Client): void {
           span.setAttribute("should_respond", respond);
 
           if (!respond) {
+            return;
+          }
+
+          // Deduplicate: prevent responding to the same message twice
+          // This can happen during Discord gateway reconnections or network issues
+          if (!markMessageProcessed(message.id)) {
+            logger.debug("Skipping duplicate message", { messageId: message.id });
+            span.setAttribute("duplicate", true);
             return;
           }
 
