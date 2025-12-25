@@ -19,8 +19,7 @@ import {
 } from "./discord/index.js";
 import { disconnectPrisma } from "./database/index.js";
 import {
-  createBirmelAgent,
-  createBirmelAgentWithContext,
+  routingAgent,
   startMastraServer,
 } from "./mastra/index.js";
 import { getMemory, getGlobalThreadId } from "./mastra/memory/index.js";
@@ -91,13 +90,6 @@ async function handleMessage(context: MessageContext): Promise<void> {
 
     const config = getConfig();
 
-    // STAGE 1: Create specialized agent based on message content
-    // Uses keyword classification to select appropriate tool set (general/admin/music)
-    logger.debug("Creating agent", { requestId, personaEnabled: config.persona.enabled });
-    const agent = config.persona.enabled
-      ? await createBirmelAgentWithContext(context.content, context.guildId)
-      : createBirmelAgent(context.content);
-
     // Fetch global memory (server rules) to inject into prompt
     logger.debug("Fetching global memory", { requestId, guildId: context.guildId });
     const globalMemory = await withSpan(
@@ -133,10 +125,9 @@ Channel ID: ${context.channelId}
 ${globalContext}${conversationHistory}`;
 
     try {
-      // Show typing indicator while generating response
-      // Note: We use Discord message history for context instead of persistent AI conversation threads
-      // This prevents token overflow from accumulated tool calls and responses
-      logger.debug("Generating response", { requestId, hasImages: context.attachments.length > 0, recentMessageCount: recentMessages.length });
+      // Show typing indicator while generating response via Agent Network
+      // The routing agent coordinates specialized sub-agents (messaging, server, moderation, music, automation)
+      logger.debug("Generating response via Agent Network", { requestId, hasImages: context.attachments.length > 0, recentMessageCount: recentMessages.length });
       const genStartTime = Date.now();
 
       // Build multimodal content if images present
@@ -147,30 +138,40 @@ ${globalContext}${conversationHistory}`;
         ? { role: "user" as const, content: messageContent }
         : messageContent;
 
-      const response = await withAgentSpan("birmel", discordContext, async () => {
+      // Use Agent Network - routing agent delegates to specialized sub-agents
+      let responseText = "";
+      await withAgentSpan("birmel-network", discordContext, async () => {
         return withTyping(context.message, async () => {
-          // No threadId/resourceId = stateless agent with fresh context each time
-          return agent.generate(messageInput);
+          const networkStream = await routingAgent.network(messageInput);
+
+          // Process the network stream to get the final result
+          for await (const chunk of networkStream) {
+            // Extract the final response from network execution events
+            // NetworkStepFinishPayload has result as string directly
+            if (chunk.type === "network-execution-event-step-finish" && chunk.payload.result) {
+              responseText = chunk.payload.result;
+            }
+          }
         });
       });
 
       const genDuration = Date.now() - genStartTime;
       span.setAttribute("generation.duration_ms", genDuration);
-      span.setAttribute("response.length", response.text.length);
-      logger.debug("Response generated", {
+      span.setAttribute("response.length", responseText.length);
+      logger.debug("Response generated via Agent Network", {
         requestId,
         durationMs: genDuration,
-        responseLength: response.text.length,
+        responseLength: responseText.length,
       });
 
       // STAGE 2: Stylize response to match persona's voice
-      let finalResponse = response.text;
+      let finalResponse = responseText;
       if (config.persona.enabled) {
         const persona = await getGuildPersona(context.guildId);
         logger.debug("Stylizing response", { requestId, persona });
         const styleStartTime = Date.now();
         finalResponse = await withSpan("persona.stylize", discordContext, async () => {
-          return stylizeResponse(response.text, persona);
+          return stylizeResponse(responseText, persona);
         });
         logger.debug("Response stylized", {
           requestId,
@@ -238,13 +239,6 @@ async function handleVoiceCommand(
 
     const config = getConfig();
 
-    // STAGE 1: Create specialized agent based on voice command content
-    // Voice commands often involve music, so classifier will route appropriately
-    logger.debug("Creating agent for voice", { requestId, personaEnabled: config.persona.enabled });
-    const agent = config.persona.enabled
-      ? await createBirmelAgentWithContext(command, guildId)
-      : createBirmelAgent(command);
-
     // Fetch global memory (server rules) to inject into prompt
     logger.debug("Fetching global memory for voice", { requestId, guildId });
     const globalMemory = await withSpan(
@@ -269,30 +263,39 @@ ${globalContext}
 IMPORTANT: This is a voice command. Keep your response concise (under 200 words) as it will be spoken back via text-to-speech.`;
 
     try {
-      logger.debug("Generating voice response", { requestId });
+      logger.debug("Generating voice response via Agent Network", { requestId });
       const genStartTime = Date.now();
 
-      const response = await withAgentSpan("birmel", discordContext, async () => {
-        // Stateless - no conversation history for voice commands
-        return agent.generate(prompt);
+      // Use Agent Network for voice commands
+      let responseText = "";
+      await withAgentSpan("birmel-network", discordContext, async () => {
+        const networkStream = await routingAgent.network(prompt);
+
+        // Process the network stream to get the final result
+        for await (const chunk of networkStream) {
+          // NetworkStepFinishPayload has result as string directly
+          if (chunk.type === "network-execution-event-step-finish" && chunk.payload.result) {
+            responseText = chunk.payload.result;
+          }
+        }
       });
 
       const genDuration = Date.now() - genStartTime;
       span.setAttribute("generation.duration_ms", genDuration);
-      span.setAttribute("response.length", response.text.length);
-      logger.debug("Voice response generated", {
+      span.setAttribute("response.length", responseText.length);
+      logger.debug("Voice response generated via Agent Network", {
         requestId,
         durationMs: genDuration,
-        responseLength: response.text.length,
+        responseLength: responseText.length,
       });
 
       // STAGE 2: Stylize response to match persona's voice
-      let finalResponse = response.text;
+      let finalResponse = responseText;
       if (config.persona.enabled) {
         const persona = await getGuildPersona(guildId);
         logger.debug("Stylizing voice response", { requestId, persona });
         finalResponse = await withSpan("persona.stylize", discordContext, async () => {
-          return stylizeResponse(response.text, persona);
+          return stylizeResponse(responseText, persona);
         });
       }
 
