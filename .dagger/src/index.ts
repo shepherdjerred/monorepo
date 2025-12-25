@@ -179,12 +179,12 @@ export class Monorepo {
     container = container.withExec(["rm", "-rf", "packages/birmel/node_modules/.prisma"]);
 
     // Generate Prisma Client and set up test database
-    // bunx uses the locally installed prisma from node_modules (version matched)
+    // Use the workspace root prisma binary (installed via root package.json devDeps)
     container = container
       .withEnvVariable("DATABASE_URL", "file:./packages/birmel/data/test-ops.db")
       .withWorkdir("/workspace/packages/birmel")
-      .withExec(["bunx", "prisma", "generate"])
-      .withExec(["bunx", "prisma", "db", "push", "--accept-data-loss"])
+      .withExec(["/workspace/node_modules/.bin/prisma", "generate"])
+      .withExec(["/workspace/node_modules/.bin/prisma", "db", "push", "--accept-data-loss"])
       .withWorkdir("/workspace");
     await container.sync();
     outputs.push("✓ Prisma setup");
