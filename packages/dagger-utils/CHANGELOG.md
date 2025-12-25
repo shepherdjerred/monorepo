@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.0](https://github.com/shepherdjerred/monorepo/compare/dagger-utils-v0.4.0...dagger-utils-v0.5.0) (2025-12-25)
+
+
+### Features
+
+* **dagger-utils:** add reusable updateHomelabVersion function ([2df3465](https://github.com/shepherdjerred/monorepo/commit/2df3465854128fe2d7fe8140f075634f493ef669))
+* **dagger-utils:** add reusable updateHomelabVersion function ([d23a62f](https://github.com/shepherdjerred/monorepo/commit/d23a62fd0ba89687fdacb31b41fcc072ccaa723e))
+
 ## [0.4.0](https://github.com/shepherdjerred/monorepo/compare/dagger-utils-v0.3.0...dagger-utils-v0.4.0) (2025-12-20)
 
 
