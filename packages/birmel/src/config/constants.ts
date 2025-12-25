@@ -13,6 +13,7 @@ export const RATE_LIMITS = {
   messagesPerMinute: 30,
   commandsPerMinute: 10,
   voiceCommandsPerMinute: 5,
+  codeRequestsPerHour: 5,
 } as const;
 
 export const AUDIO = {
@@ -26,4 +27,5 @@ export const TIMEOUTS = {
   whisperApiMs: 60_000,
   ttsApiMs: 30_000,
   agentResponseMs: 120_000,
+  claudeCodeMs: 600_000, // 10 minutes for code generation
 } as const;

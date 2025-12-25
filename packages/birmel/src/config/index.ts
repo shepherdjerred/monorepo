@@ -138,6 +138,14 @@ function loadConfigFromEnv(): Config {
       timezone: process.env["ELECTION_TIMEZONE"] ?? "America/Los_Angeles",
       channelId: process.env["ELECTION_CHANNEL_ID"],
     },
+    claudeCode: {
+      enabled: parseBoolean(process.env["CLAUDE_CODE_ENABLED"], false),
+      repoPath: process.env["CLAUDE_CODE_REPO_PATH"] ?? "/app/birmel",
+      defaultTimeout: parseNumber(process.env["CLAUDE_CODE_DEFAULT_TIMEOUT"], 600000),
+      maxTimeout: parseNumber(process.env["CLAUDE_CODE_MAX_TIMEOUT"], 900000),
+      maxRequestsPerHour: parseNumber(process.env["CLAUDE_CODE_MAX_REQUESTS_PER_HOUR"], 5),
+      branchPrefix: process.env["CLAUDE_CODE_BRANCH_PREFIX"] ?? "claude/discord-request",
+    },
   };
 
   return ConfigSchema.parse(rawConfig);

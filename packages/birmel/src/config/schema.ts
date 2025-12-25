@@ -127,6 +127,15 @@ export const ElectionsConfigSchema = z.object({
   channelId: z.string().optional(),
 });
 
+export const ClaudeCodeConfigSchema = z.object({
+  enabled: z.boolean().default(false),
+  repoPath: z.string().default("/app/birmel"),
+  defaultTimeout: z.number().default(600000), // 10 minutes
+  maxTimeout: z.number().default(900000), // 15 minutes
+  maxRequestsPerHour: z.number().default(5),
+  branchPrefix: z.string().default("claude/discord-request"),
+});
+
 export const ConfigSchema = z.object({
   discord: DiscordConfigSchema,
   openai: OpenAIConfigSchema,
@@ -144,6 +153,7 @@ export const ConfigSchema = z.object({
   birthdays: BirthdayConfigSchema,
   activityTracking: ActivityTrackingConfigSchema,
   elections: ElectionsConfigSchema,
+  claudeCode: ClaudeCodeConfigSchema,
 });
 
 export type Config = z.infer<typeof ConfigSchema>;
@@ -163,3 +173,4 @@ export type BrowserConfig = z.infer<typeof BrowserConfigSchema>;
 export type BirthdayConfig = z.infer<typeof BirthdayConfigSchema>;
 export type ActivityTrackingConfig = z.infer<typeof ActivityTrackingConfigSchema>;
 export type ElectionsConfig = z.infer<typeof ElectionsConfigSchema>;
+export type ClaudeCodeConfig = z.infer<typeof ClaudeCodeConfigSchema>;
