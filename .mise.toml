@@ -11,29 +11,33 @@ run = """
 #!/usr/bin/env bash
 set -e
 
-echo "Setting up development environment..."
+echo "🔧 Setting up development environment..."
 
 # Trust mise configuration
-echo "Trusting mise configuration..."
+echo "📋 Trusting mise configuration..."
 mise trust
 
+# Install mise tools (bun, dagger, etc.)
+echo "🛠️  Installing mise tools..."
+mise install
+
 # Install root dependencies
-echo "Installing root dependencies..."
+echo "📦 Installing root dependencies..."
 bun install
 
 # Install dagger module dependencies
-echo "Installing dagger module dependencies..."
+echo "📦 Installing dagger module dependencies..."
 cd .dagger && bun install && cd ..
 
 # Run dagger develop to generate SDK
-echo "Running dagger develop..."
+echo "🚀 Running dagger develop..."
 dagger develop
 
 # Generate Prisma client for birmel
-echo "Generating Prisma client for birmel..."
+echo "🗄️  Generating Prisma client for birmel..."
 cd packages/birmel && bunx prisma generate && cd ../..
 
-echo "Development environment setup complete!"
+echo "✅ Development environment setup complete!"
 """
 
 [tasks.install]
