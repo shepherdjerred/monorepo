@@ -3,6 +3,8 @@ import { AsyncLocalStorage } from "async_hooks";
 export type RequestContext = {
   /** The channel where the user's message originated */
   sourceChannelId: string;
+  /** The message ID that triggered this request (for reply action) */
+  sourceMessageId: string;
   /** The guild where the request originated */
   guildId: string;
   /** The user who sent the message */

@@ -11,14 +11,14 @@ const logger = loggers.tools.child("discord.messages");
 
 export const manageMessageTool = createTool({
   id: "manage-message",
-  description: "Manage Discord messages: send, send DM, edit, delete, bulk-delete, pin, unpin, add/remove reaction, or get channel messages",
+  description: "Manage Discord messages: send, reply, send DM, edit, delete, bulk-delete, pin, unpin, add/remove reaction, or get channel messages. Use 'reply' to respond to the user's message with Discord's native reply feature.",
   inputSchema: z.object({
-    action: z.enum(["send", "send-dm", "edit", "delete", "bulk-delete", "pin", "unpin", "add-reaction", "remove-reaction", "get"]).describe("The action to perform"),
+    action: z.enum(["send", "reply", "send-dm", "edit", "delete", "bulk-delete", "pin", "unpin", "add-reaction", "remove-reaction", "get"]).describe("The action to perform. Use 'reply' to respond to the user with Discord's native reply feature."),
     channelId: z.string().optional().describe("Channel ID (for send/edit/delete/bulk-delete/pin/unpin/reaction/get)"),
     userId: z.string().optional().describe("User ID (for send-dm or remove-reaction)"),
     messageId: z.string().optional().describe("Message ID (for edit/delete/pin/unpin/reaction)"),
     messageIds: z.array(z.string()).optional().describe("Message IDs (for bulk-delete)"),
-    content: z.string().optional().describe("Message content (for send/send-dm/edit)"),
+    content: z.string().optional().describe("Message content (for send/reply/send-dm/edit)"),
     emoji: z.string().optional().describe("Emoji for reactions"),
     limit: z.number().min(1).max(100).optional().describe("Number of messages to fetch (for get)"),
     before: z.string().optional().describe("Fetch messages before this ID (for get)"),
@@ -62,14 +62,6 @@ export const manageMessageTool = createTool({
             if (!ctx.channelId || !ctx.content) {
               return { success: false, message: "channelId and content are required for send" };
             }
-            // Check if trying to send to the current channel - reject and guide to use text response
-            const requestContext = getRequestContext();
-            if (requestContext && ctx.channelId === requestContext.sourceChannelId) {
-              return {
-                success: false,
-                message: "Cannot send to the current channel using this tool. Your text response is automatically sent as a reply - just write your response directly instead of using manage-message.",
-              };
-            }
             const channel = await client.channels.fetch(ctx.channelId);
             if (!channel?.isTextBased()) {
               return { success: false, message: "Channel is not a text channel" };
@@ -77,6 +69,24 @@ export const manageMessageTool = createTool({
             const sent = await (channel as TextChannel).send(ctx.content);
             logger.info("Message sent", { channelId: ctx.channelId, messageId: sent.id });
             return { success: true, message: "Message sent successfully", data: { messageId: sent.id } };
+          }
+
+          case "reply": {
+            if (!ctx.content) {
+              return { success: false, message: "content is required for reply" };
+            }
+            const requestContext = getRequestContext();
+            if (!requestContext?.sourceMessageId || !requestContext.sourceChannelId) {
+              return { success: false, message: "No message context available to reply to. Use 'send' action instead." };
+            }
+            const channel = await client.channels.fetch(requestContext.sourceChannelId);
+            if (!channel?.isTextBased()) {
+              return { success: false, message: "Channel is not a text channel" };
+            }
+            const originalMessage = await (channel as TextChannel).messages.fetch(requestContext.sourceMessageId);
+            const sent = await originalMessage.reply(ctx.content);
+            logger.info("Reply sent", { channelId: requestContext.sourceChannelId, messageId: sent.id, replyTo: requestContext.sourceMessageId });
+            return { success: true, message: "Reply sent successfully", data: { messageId: sent.id } };
           }
 
           case "send-dm": {
