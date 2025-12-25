@@ -3,6 +3,7 @@ import { z } from "zod";
 import { GuildScheduledEventPrivacyLevel, GuildScheduledEventEntityType } from "discord.js";
 import { getDiscordClient } from "../../../discord/index.js";
 import { logger } from "../../../utils/logger.js";
+import { validateSnowflakes } from "./validation.js";
 
 export const manageScheduledEventTool = createTool({
   id: "manage-scheduled-event",
@@ -49,6 +50,14 @@ export const manageScheduledEventTool = createTool({
   }),
   execute: async (ctx) => {
     try {
+      // Validate all Discord IDs before making API calls
+      const idError = validateSnowflakes([
+        { value: ctx.guildId, fieldName: "guildId" },
+        { value: ctx.eventId, fieldName: "eventId" },
+        { value: ctx.channelId, fieldName: "channelId" },
+      ]);
+      if (idError) return { success: false, message: idError };
+
       const client = getDiscordClient();
       const guild = await client.guilds.fetch(ctx.guildId);
 
@@ -182,7 +191,7 @@ export const manageScheduledEventTool = createTool({
       logger.error("Failed to manage scheduled event", error);
       return {
         success: false,
-        message: "Failed to manage scheduled event",
+        message: `Failed to manage scheduled event: ${(error as Error).message}`,
       };
     }
   },

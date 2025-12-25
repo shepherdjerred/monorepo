@@ -4,6 +4,7 @@ import { getDiscordClient } from "../../../discord/index.js";
 import { loggers } from "../../../utils/logger.js";
 import { captureException, withToolSpan } from "../../../observability/index.js";
 import { prisma } from "../../../database/index.js";
+import { validateSnowflakes } from "./validation.js";
 
 const logger = loggers.tools.child("discord.polls");
 
@@ -49,6 +50,13 @@ export const managePollTool = createTool({
   execute: async (ctx) => {
     return withToolSpan("manage-poll", undefined, async () => {
       try {
+        // Validate all Discord IDs before making API calls
+        const idError = validateSnowflakes([
+          { value: ctx.channelId, fieldName: "channelId" },
+          { value: ctx.messageId, fieldName: "messageId" },
+        ]);
+        if (idError) return { success: false, message: idError };
+
         const client = getDiscordClient();
         const channel = await client.channels.fetch(ctx.channelId);
         if (!channel?.isTextBased() || !("send" in channel)) {
