@@ -3,282 +3,111 @@ import { z } from "zod";
 import { getDiscordClient } from "../../../discord/index.js";
 import { logger } from "../../../utils/logger.js";
 
-export const getMemberTool = createTool({
-  id: "get-member",
-  description: "Get information about a specific member",
+export const manageMemberTool = createTool({
+  id: "manage-member",
+  description: "Manage Discord members: get, search, list, modify nickname, add role, or remove role",
   inputSchema: z.object({
     guildId: z.string().describe("The ID of the guild"),
-    memberId: z.string().describe("The ID of the member"),
+    action: z.enum(["get", "search", "list", "modify", "add-role", "remove-role"]).describe("The action to perform"),
+    memberId: z.string().optional().describe("Member ID (for get/modify/add-role/remove-role)"),
+    query: z.string().optional().describe("Search query (for search)"),
+    limit: z.number().optional().describe("Maximum results (for search/list)"),
+    nickname: z.string().nullable().optional().describe("New nickname (for modify)"),
+    roleId: z.string().optional().describe("Role ID (for add-role/remove-role)"),
+    reason: z.string().optional().describe("Reason for the action"),
   }),
   outputSchema: z.object({
     success: z.boolean(),
     message: z.string(),
-    data: z
-      .object({
+    data: z.union([
+      z.object({
         id: z.string(),
         username: z.string(),
         displayName: z.string(),
         joinedAt: z.string().nullable(),
         roles: z.array(z.string()),
         isOwner: z.boolean(),
-      })
-      .optional(),
+      }),
+      z.array(z.object({
+        id: z.string(),
+        username: z.string(),
+        displayName: z.string(),
+        joinedAt: z.string().nullable().optional(),
+      })),
+    ]).optional(),
   }),
   execute: async (ctx) => {
     try {
       const client = getDiscordClient();
       const guild = await client.guilds.fetch(ctx.guildId);
-      const member = await guild.members.fetch(ctx.memberId);
 
-      return {
-        success: true,
-        message: `Found member ${member.user.username}`,
-        data: {
-          id: member.id,
-          username: member.user.username,
-          displayName: member.displayName,
-          joinedAt: member.joinedAt?.toISOString() ?? null,
-          roles: member.roles.cache.map((r) => r.name),
-          isOwner: guild.ownerId === member.id,
-        },
-      };
-    } catch (error) {
-      logger.error("Failed to get member", error);
-      return {
-        success: false,
-        message: "Failed to get member information",
-      };
-    }
-  },
-});
+      switch (ctx.action) {
+        case "get": {
+          if (!ctx.memberId) return { success: false, message: "memberId is required for get" };
+          const member = await guild.members.fetch(ctx.memberId);
+          return {
+            success: true,
+            message: `Found member ${member.user.username}`,
+            data: {
+              id: member.id,
+              username: member.user.username,
+              displayName: member.displayName,
+              joinedAt: member.joinedAt?.toISOString() ?? null,
+              roles: member.roles.cache.map((r) => r.name),
+              isOwner: guild.ownerId === member.id,
+            },
+          };
+        }
 
-export const searchMembersTool = createTool({
-  id: "search-members",
-  description: "Search for members by username",
-  inputSchema: z.object({
-    guildId: z.string().describe("The ID of the guild"),
-    query: z.string().describe("Search query (username)"),
-    limit: z.number().optional().describe("Maximum number of results (default 10)"),
-  }),
-  outputSchema: z.object({
-    success: z.boolean(),
-    message: z.string(),
-    data: z
-      .array(
-        z.object({
-          id: z.string(),
-          username: z.string(),
-          displayName: z.string(),
-        }),
-      )
-      .optional(),
-  }),
-  execute: async (ctx) => {
-    try {
-      const client = getDiscordClient();
-      const guild = await client.guilds.fetch(ctx.guildId);
-      const members = await guild.members.search({
-        query: ctx.query,
-        limit: ctx.limit ?? 10,
-      });
+        case "search": {
+          if (!ctx.query) return { success: false, message: "query is required for search" };
+          const members = await guild.members.search({ query: ctx.query, limit: ctx.limit ?? 10 });
+          const list = members.map((m) => ({ id: m.id, username: m.user.username, displayName: m.displayName }));
+          return { success: true, message: `Found ${String(list.length)} members`, data: list };
+        }
 
-      const memberList = members.map((member) => ({
-        id: member.id,
-        username: member.user.username,
-        displayName: member.displayName,
-      }));
+        case "list": {
+          const members = await guild.members.fetch({ limit: ctx.limit ?? 100 });
+          const list = members.map((m) => ({
+            id: m.id,
+            username: m.user.username,
+            displayName: m.displayName,
+            joinedAt: m.joinedAt?.toISOString() ?? null,
+          }));
+          return { success: true, message: `Retrieved ${String(list.length)} members`, data: list };
+        }
 
-      return {
-        success: true,
-        message: `Found ${String(memberList.length)} members`,
-        data: memberList,
-      };
-    } catch (error) {
-      logger.error("Failed to search members", error);
-      return {
-        success: false,
-        message: "Failed to search members",
-      };
-    }
-  },
-});
+        case "modify": {
+          if (!ctx.memberId) return { success: false, message: "memberId is required for modify" };
+          if (ctx.nickname === undefined) return { success: false, message: "nickname is required for modify" };
+          const member = await guild.members.fetch(ctx.memberId);
+          await member.setNickname(ctx.nickname);
+          return { success: true, message: ctx.nickname ? `Set nickname to "${ctx.nickname}"` : "Reset nickname" };
+        }
 
-export const modifyMemberTool = createTool({
-  id: "modify-member",
-  description: "Modify a member's nickname",
-  inputSchema: z.object({
-    guildId: z.string().describe("The ID of the guild"),
-    memberId: z.string().describe("The ID of the member"),
-    nickname: z.string().nullable().describe("New nickname (null to reset)"),
-  }),
-  outputSchema: z.object({
-    success: z.boolean(),
-    message: z.string(),
-  }),
-  execute: async (ctx) => {
-    try {
-      const client = getDiscordClient();
-      const guild = await client.guilds.fetch(ctx.guildId);
-      const member = await guild.members.fetch(ctx.memberId);
+        case "add-role": {
+          if (!ctx.memberId || !ctx.roleId) return { success: false, message: "memberId and roleId are required for add-role" };
+          const member = await guild.members.fetch(ctx.memberId);
+          const role = await guild.roles.fetch(ctx.roleId);
+          if (!role) return { success: false, message: "Role not found" };
+          await member.roles.add(role, ctx.reason);
+          return { success: true, message: `Added role @${role.name} to ${member.user.username}` };
+        }
 
-      await member.setNickname(ctx.nickname);
-
-      return {
-        success: true,
-        message: ctx.nickname
-          ? `Set nickname to "${ctx.nickname}"`
-          : "Reset nickname",
-      };
-    } catch (error) {
-      logger.error("Failed to modify member", error);
-      return {
-        success: false,
-        message: "Failed to modify member",
-      };
-    }
-  },
-});
-
-export const addRoleToMemberTool = createTool({
-  id: "add-role-to-member",
-  description: "Add a role to a member",
-  inputSchema: z.object({
-    guildId: z.string().describe("The ID of the guild"),
-    memberId: z.string().describe("The ID of the member"),
-    roleId: z.string().describe("The ID of the role to add"),
-    reason: z.string().optional().describe("Reason for adding the role"),
-  }),
-  outputSchema: z.object({
-    success: z.boolean(),
-    message: z.string(),
-  }),
-  execute: async (ctx) => {
-    try {
-      const client = getDiscordClient();
-      const guild = await client.guilds.fetch(ctx.guildId);
-      const member = await guild.members.fetch(ctx.memberId);
-      const role = await guild.roles.fetch(ctx.roleId);
-
-      if (!role) {
-        return {
-          success: false,
-          message: "Role not found",
-        };
+        case "remove-role": {
+          if (!ctx.memberId || !ctx.roleId) return { success: false, message: "memberId and roleId are required for remove-role" };
+          const member = await guild.members.fetch(ctx.memberId);
+          const role = await guild.roles.fetch(ctx.roleId);
+          if (!role) return { success: false, message: "Role not found" };
+          await member.roles.remove(role, ctx.reason);
+          return { success: true, message: `Removed role @${role.name} from ${member.user.username}` };
+        }
       }
-
-      await member.roles.add(role, ctx.reason);
-
-      return {
-        success: true,
-        message: `Added role @${role.name} to ${member.user.username}`,
-      };
     } catch (error) {
-      logger.error("Failed to add role to member", error);
-      return {
-        success: false,
-        message: "Failed to add role to member",
-      };
+      logger.error("Failed to manage member", error);
+      return { success: false, message: "Failed to manage member" };
     }
   },
 });
 
-export const removeRoleFromMemberTool = createTool({
-  id: "remove-role-from-member",
-  description: "Remove a role from a member",
-  inputSchema: z.object({
-    guildId: z.string().describe("The ID of the guild"),
-    memberId: z.string().describe("The ID of the member"),
-    roleId: z.string().describe("The ID of the role to remove"),
-    reason: z.string().optional().describe("Reason for removing the role"),
-  }),
-  outputSchema: z.object({
-    success: z.boolean(),
-    message: z.string(),
-  }),
-  execute: async (ctx) => {
-    try {
-      const client = getDiscordClient();
-      const guild = await client.guilds.fetch(ctx.guildId);
-      const member = await guild.members.fetch(ctx.memberId);
-      const role = await guild.roles.fetch(ctx.roleId);
-
-      if (!role) {
-        return {
-          success: false,
-          message: "Role not found",
-        };
-      }
-
-      await member.roles.remove(role, ctx.reason);
-
-      return {
-        success: true,
-        message: `Removed role @${role.name} from ${member.user.username}`,
-      };
-    } catch (error) {
-      logger.error("Failed to remove role from member", error);
-      return {
-        success: false,
-        message: "Failed to remove role from member",
-      };
-    }
-  },
-});
-
-export const listMembersTool = createTool({
-  id: "list-members",
-  description: "List members in the server",
-  inputSchema: z.object({
-    guildId: z.string().describe("The ID of the guild"),
-    limit: z.number().optional().describe("Maximum number of members to retrieve (default 100)"),
-  }),
-  outputSchema: z.object({
-    success: z.boolean(),
-    message: z.string(),
-    data: z
-      .array(
-        z.object({
-          id: z.string(),
-          username: z.string(),
-          displayName: z.string(),
-          joinedAt: z.string().nullable(),
-        }),
-      )
-      .optional(),
-  }),
-  execute: async (ctx) => {
-    try {
-      const client = getDiscordClient();
-      const guild = await client.guilds.fetch(ctx.guildId);
-      const members = await guild.members.fetch({ limit: ctx.limit ?? 100 });
-
-      const memberList = members.map((member) => ({
-        id: member.id,
-        username: member.user.username,
-        displayName: member.displayName,
-        joinedAt: member.joinedAt?.toISOString() ?? null,
-      }));
-
-      return {
-        success: true,
-        message: `Retrieved ${String(memberList.length)} members`,
-        data: memberList,
-      };
-    } catch (error) {
-      logger.error("Failed to list members", error);
-      return {
-        success: false,
-        message: "Failed to list members",
-      };
-    }
-  },
-});
-
-export const memberTools = [
-  getMemberTool,
-  searchMembersTool,
-  modifyMemberTool,
-  addRoleToMemberTool,
-  removeRoleFromMemberTool,
-  listMembersTool,
-];
+export const memberTools = [manageMemberTool];

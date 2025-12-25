@@ -4,135 +4,55 @@ import { AutoModerationRuleTriggerType, AutoModerationActionType } from "discord
 import { getDiscordClient } from "../../../discord/index.js";
 import { logger } from "../../../utils/index.js";
 
-export const listAutomodRulesTool = createTool({
-  id: "list-automod-rules",
-  description: "List all auto-moderation rules in a guild",
+export const manageAutomodRuleTool = createTool({
+  id: "manage-automod-rule",
+  description: "Manage auto-moderation rules: list all, get details, create, modify, delete, or toggle enabled state",
   inputSchema: z.object({
     guildId: z.string().describe("The ID of the guild"),
+    action: z.enum(["list", "get", "create", "modify", "delete", "toggle"]).describe("The action to perform"),
+    ruleId: z.string().optional().describe("The ID of the rule (required for get/modify/delete/toggle)"),
+    name: z.string().optional().describe("Name of the rule (required for create, optional for modify)"),
+    triggerType: z
+      .enum(["KEYWORD", "SPAM", "KEYWORD_PRESET", "MENTION_SPAM"])
+      .optional()
+      .describe("Type of trigger (required for create)"),
+    keywords: z.array(z.string()).optional().describe("Keywords to match (for KEYWORD trigger)"),
+    keywordPresets: z
+      .array(z.enum(["PROFANITY", "SEXUAL_CONTENT", "SLURS"]))
+      .optional()
+      .describe("Preset filters (for KEYWORD_PRESET trigger)"),
+    mentionLimit: z.number().optional().describe("Max mentions allowed (for MENTION_SPAM trigger)"),
+    exemptRoles: z.array(z.string()).optional().describe("Role IDs to exempt from this rule"),
+    exemptChannels: z.array(z.string()).optional().describe("Channel IDs to exempt from this rule"),
+    enabled: z.boolean().optional().describe("Whether the rule is enabled (for create/toggle)"),
+    reason: z.string().optional().describe("Reason for the action"),
   }),
   outputSchema: z.object({
     success: z.boolean(),
     message: z.string(),
     data: z
-      .array(
+      .union([
+        z.array(
+          z.object({
+            id: z.string(),
+            name: z.string(),
+            enabled: z.boolean(),
+            triggerType: z.string(),
+          }),
+        ),
         z.object({
           id: z.string(),
           name: z.string(),
           enabled: z.boolean(),
           triggerType: z.string(),
+          exemptRoles: z.array(z.string()),
+          exemptChannels: z.array(z.string()),
         }),
-      )
-      .optional(),
-  }),
-  execute: async (ctx) => {
-    try {
-      const client = getDiscordClient();
-      const guild = await client.guilds.fetch(ctx.guildId);
-      const rules = await guild.autoModerationRules.fetch();
-
-      const ruleList = rules.map((rule) => ({
-        id: rule.id,
-        name: rule.name,
-        enabled: rule.enabled,
-        triggerType: AutoModerationRuleTriggerType[rule.triggerType],
-      }));
-
-      return {
-        success: true,
-        message: `Found ${String(ruleList.length)} auto-moderation rules`,
-        data: ruleList,
-      };
-    } catch (error) {
-      logger.error("Failed to list automod rules", error as Error);
-      return {
-        success: false,
-        message: "Failed to list auto-moderation rules",
-      };
-    }
-  },
-});
-
-export const getAutomodRuleTool = createTool({
-  id: "get-automod-rule",
-  description: "Get details of a specific auto-moderation rule",
-  inputSchema: z.object({
-    guildId: z.string().describe("The ID of the guild"),
-    ruleId: z.string().describe("The ID of the rule"),
-  }),
-  outputSchema: z.object({
-    success: z.boolean(),
-    message: z.string(),
-    data: z
-      .object({
-        id: z.string(),
-        name: z.string(),
-        enabled: z.boolean(),
-        triggerType: z.string(),
-        exemptRoles: z.array(z.string()),
-        exemptChannels: z.array(z.string()),
-      })
-      .optional(),
-  }),
-  execute: async (ctx) => {
-    try {
-      const client = getDiscordClient();
-      const guild = await client.guilds.fetch(ctx.guildId);
-      const rule = await guild.autoModerationRules.fetch(ctx.ruleId);
-
-      return {
-        success: true,
-        message: `Found rule: ${rule.name}`,
-        data: {
-          id: rule.id,
-          name: rule.name,
-          enabled: rule.enabled,
-          triggerType: AutoModerationRuleTriggerType[rule.triggerType],
-          exemptRoles: rule.exemptRoles.map((r) => r.id),
-          exemptChannels: rule.exemptChannels.map((c) => c.id),
-        },
-      };
-    } catch (error) {
-      logger.error("Failed to get automod rule", error as Error);
-      return {
-        success: false,
-        message: "Failed to get auto-moderation rule",
-      };
-    }
-  },
-});
-
-export const createAutomodRuleTool = createTool({
-  id: "create-automod-rule",
-  description: "Create a new auto-moderation rule",
-  inputSchema: z.object({
-    guildId: z.string().describe("The ID of the guild"),
-    name: z.string().describe("Name of the rule"),
-    triggerType: z
-      .enum(["KEYWORD", "SPAM", "KEYWORD_PRESET", "MENTION_SPAM"])
-      .describe("Type of trigger"),
-    keywords: z
-      .array(z.string())
-      .optional()
-      .describe("Keywords to match (for KEYWORD trigger)"),
-    keywordPresets: z
-      .array(z.enum(["PROFANITY", "SEXUAL_CONTENT", "SLURS"]))
-      .optional()
-      .describe("Preset filters (for KEYWORD_PRESET trigger)"),
-    mentionLimit: z
-      .number()
-      .optional()
-      .describe("Max mentions allowed (for MENTION_SPAM trigger)"),
-    enabled: z.boolean().optional().describe("Whether the rule is enabled"),
-    reason: z.string().optional().describe("Reason for creating the rule"),
-  }),
-  outputSchema: z.object({
-    success: z.boolean(),
-    message: z.string(),
-    data: z
-      .object({
-        id: z.string(),
-        name: z.string(),
-      })
+        z.object({
+          id: z.string(),
+          name: z.string(),
+        }),
+      ])
       .optional(),
   }),
   execute: async (ctx) => {
@@ -140,213 +60,181 @@ export const createAutomodRuleTool = createTool({
       const client = getDiscordClient();
       const guild = await client.guilds.fetch(ctx.guildId);
 
-      const triggerTypeMap = {
-        KEYWORD: AutoModerationRuleTriggerType.Keyword,
-        SPAM: AutoModerationRuleTriggerType.Spam,
-        KEYWORD_PRESET: AutoModerationRuleTriggerType.KeywordPreset,
-        MENTION_SPAM: AutoModerationRuleTriggerType.MentionSpam,
-      };
+      switch (ctx.action) {
+        case "list": {
+          const rules = await guild.autoModerationRules.fetch();
+          const ruleList = rules.map((rule) => ({
+            id: rule.id,
+            name: rule.name,
+            enabled: rule.enabled,
+            triggerType: AutoModerationRuleTriggerType[rule.triggerType],
+          }));
+          return {
+            success: true,
+            message: `Found ${String(ruleList.length)} auto-moderation rules`,
+            data: ruleList,
+          };
+        }
 
-      const presetMap = {
-        PROFANITY: 1,
-        SEXUAL_CONTENT: 2,
-        SLURS: 3,
-      } as const;
+        case "get": {
+          if (!ctx.ruleId) {
+            return {
+              success: false,
+              message: "ruleId is required for getting rule details",
+            };
+          }
+          const rule = await guild.autoModerationRules.fetch(ctx.ruleId);
+          return {
+            success: true,
+            message: `Found rule: ${rule.name}`,
+            data: {
+              id: rule.id,
+              name: rule.name,
+              enabled: rule.enabled,
+              triggerType: AutoModerationRuleTriggerType[rule.triggerType],
+              exemptRoles: rule.exemptRoles.map((r) => r.id),
+              exemptChannels: rule.exemptChannels.map((c) => c.id),
+            },
+          };
+        }
 
-      const rule = await guild.autoModerationRules.create({
-        name: ctx.name,
-        eventType: 1, // MESSAGE_SEND
-        triggerType: triggerTypeMap[ctx.triggerType],
-        triggerMetadata: {
-          ...(ctx.keywords && { keywordFilter: ctx.keywords }),
-          ...(ctx.keywordPresets && {
-            presets: ctx.keywordPresets.map((p: "PROFANITY" | "SEXUAL_CONTENT" | "SLURS") => presetMap[p]),
-          }),
-          ...(ctx.mentionLimit !== undefined && {
-            mentionTotalLimit: ctx.mentionLimit,
-          }),
-        },
-        actions: [
-          {
-            type: AutoModerationActionType.BlockMessage,
-          },
-        ],
-        ...(ctx.enabled !== undefined && { enabled: ctx.enabled }),
-        ...(ctx.reason !== undefined && { reason: ctx.reason }),
-      });
+        case "create": {
+          if (!ctx.name || !ctx.triggerType) {
+            return {
+              success: false,
+              message: "name and triggerType are required for creating a rule",
+            };
+          }
+          const triggerTypeMap = {
+            KEYWORD: AutoModerationRuleTriggerType.Keyword,
+            SPAM: AutoModerationRuleTriggerType.Spam,
+            KEYWORD_PRESET: AutoModerationRuleTriggerType.KeywordPreset,
+            MENTION_SPAM: AutoModerationRuleTriggerType.MentionSpam,
+          };
+          const presetMap = {
+            PROFANITY: 1,
+            SEXUAL_CONTENT: 2,
+            SLURS: 3,
+          } as const;
+          const rule = await guild.autoModerationRules.create({
+            name: ctx.name,
+            eventType: 1, // MESSAGE_SEND
+            triggerType: triggerTypeMap[ctx.triggerType],
+            triggerMetadata: {
+              ...(ctx.keywords && { keywordFilter: ctx.keywords }),
+              ...(ctx.keywordPresets && {
+                presets: ctx.keywordPresets.map(
+                  (p: "PROFANITY" | "SEXUAL_CONTENT" | "SLURS") => presetMap[p],
+                ),
+              }),
+              ...(ctx.mentionLimit !== undefined && {
+                mentionTotalLimit: ctx.mentionLimit,
+              }),
+            },
+            actions: [
+              {
+                type: AutoModerationActionType.BlockMessage,
+              },
+            ],
+            ...(ctx.enabled !== undefined && { enabled: ctx.enabled }),
+            ...(ctx.reason !== undefined && { reason: ctx.reason }),
+          });
+          return {
+            success: true,
+            message: `Created auto-moderation rule: ${rule.name}`,
+            data: {
+              id: rule.id,
+              name: rule.name,
+            },
+          };
+        }
 
-      return {
-        success: true,
-        message: `Created auto-moderation rule: ${rule.name}`,
-        data: {
-          id: rule.id,
-          name: rule.name,
-        },
-      };
-    } catch (error) {
-      logger.error("Failed to create automod rule", error as Error);
-      return {
-        success: false,
-        message: "Failed to create auto-moderation rule",
-      };
-    }
-  },
-});
+        case "modify": {
+          if (!ctx.ruleId) {
+            return {
+              success: false,
+              message: "ruleId is required for modifying a rule",
+            };
+          }
+          const rule = await guild.autoModerationRules.fetch(ctx.ruleId);
+          const editOptions: Parameters<typeof rule.edit>[0] = {};
+          if (ctx.name !== undefined) editOptions.name = ctx.name;
+          if (ctx.keywords !== undefined) {
+            editOptions.triggerMetadata = { keywordFilter: ctx.keywords };
+          }
+          if (ctx.mentionLimit !== undefined) {
+            editOptions.triggerMetadata = {
+              ...editOptions.triggerMetadata,
+              mentionTotalLimit: ctx.mentionLimit,
+            };
+          }
+          if (ctx.exemptRoles !== undefined) editOptions.exemptRoles = ctx.exemptRoles;
+          if (ctx.exemptChannels !== undefined) editOptions.exemptChannels = ctx.exemptChannels;
+          if (ctx.reason !== undefined) editOptions.reason = ctx.reason;
+          const hasChanges =
+            ctx.name !== undefined ||
+            ctx.keywords !== undefined ||
+            ctx.mentionLimit !== undefined ||
+            ctx.exemptRoles !== undefined ||
+            ctx.exemptChannels !== undefined;
+          if (!hasChanges) {
+            return {
+              success: false,
+              message: "No changes specified",
+            };
+          }
+          await rule.edit(editOptions);
+          return {
+            success: true,
+            message: `Updated auto-moderation rule: ${rule.name}`,
+          };
+        }
 
-export const deleteAutomodRuleTool = createTool({
-  id: "delete-automod-rule",
-  description: "Delete an auto-moderation rule",
-  inputSchema: z.object({
-    guildId: z.string().describe("The ID of the guild"),
-    ruleId: z.string().describe("The ID of the rule to delete"),
-    reason: z.string().optional().describe("Reason for deleting the rule"),
-  }),
-  outputSchema: z.object({
-    success: z.boolean(),
-    message: z.string(),
-  }),
-  execute: async (ctx) => {
-    try {
-      const client = getDiscordClient();
-      const guild = await client.guilds.fetch(ctx.guildId);
-      const rule = await guild.autoModerationRules.fetch(ctx.ruleId);
+        case "delete": {
+          if (!ctx.ruleId) {
+            return {
+              success: false,
+              message: "ruleId is required for deleting a rule",
+            };
+          }
+          const rule = await guild.autoModerationRules.fetch(ctx.ruleId);
+          const ruleName = rule.name;
+          await rule.delete(ctx.reason);
+          return {
+            success: true,
+            message: `Deleted auto-moderation rule: ${ruleName}`,
+          };
+        }
 
-      await rule.delete(ctx.reason);
-
-      return {
-        success: true,
-        message: `Deleted auto-moderation rule: ${rule.name}`,
-      };
-    } catch (error) {
-      logger.error("Failed to delete automod rule", error as Error);
-      return {
-        success: false,
-        message: "Failed to delete auto-moderation rule",
-      };
-    }
-  },
-});
-
-export const toggleAutomodRuleTool = createTool({
-  id: "toggle-automod-rule",
-  description: "Enable or disable an auto-moderation rule",
-  inputSchema: z.object({
-    guildId: z.string().describe("The ID of the guild"),
-    ruleId: z.string().describe("The ID of the rule"),
-    enabled: z.boolean().describe("Whether to enable or disable the rule"),
-    reason: z.string().optional().describe("Reason for the change"),
-  }),
-  outputSchema: z.object({
-    success: z.boolean(),
-    message: z.string(),
-  }),
-  execute: async (ctx) => {
-    try {
-      const client = getDiscordClient();
-      const guild = await client.guilds.fetch(ctx.guildId);
-      const rule = await guild.autoModerationRules.fetch(ctx.ruleId);
-
-      await rule.setEnabled(ctx.enabled, ctx.reason);
-
-      return {
-        success: true,
-        message: `${ctx.enabled ? "Enabled" : "Disabled"} auto-moderation rule: ${rule.name}`,
-      };
-    } catch (error) {
-      logger.error("Failed to toggle automod rule", error as Error);
-      return {
-        success: false,
-        message: "Failed to toggle auto-moderation rule",
-      };
-    }
-  },
-});
-
-export const modifyAutomodRuleTool = createTool({
-  id: "modify-automod-rule",
-  description: "Modify an auto-moderation rule's settings",
-  inputSchema: z.object({
-    guildId: z.string().describe("The ID of the guild"),
-    ruleId: z.string().describe("The ID of the rule to modify"),
-    name: z.string().optional().describe("New name for the rule"),
-    keywords: z
-      .array(z.string())
-      .optional()
-      .describe("New keywords to match (for KEYWORD trigger)"),
-    mentionLimit: z
-      .number()
-      .optional()
-      .describe("New mention limit (for MENTION_SPAM trigger)"),
-    exemptRoles: z
-      .array(z.string())
-      .optional()
-      .describe("Role IDs to exempt from this rule"),
-    exemptChannels: z
-      .array(z.string())
-      .optional()
-      .describe("Channel IDs to exempt from this rule"),
-    reason: z.string().optional().describe("Reason for modifying the rule"),
-  }),
-  outputSchema: z.object({
-    success: z.boolean(),
-    message: z.string(),
-  }),
-  execute: async (ctx) => {
-    try {
-      const client = getDiscordClient();
-      const guild = await client.guilds.fetch(ctx.guildId);
-      const rule = await guild.autoModerationRules.fetch(ctx.ruleId);
-
-      const editOptions: Parameters<typeof rule.edit>[0] = {};
-      if (ctx.name !== undefined) editOptions.name = ctx.name;
-      if (ctx.keywords !== undefined) {
-        editOptions.triggerMetadata = { keywordFilter: ctx.keywords };
+        case "toggle": {
+          if (!ctx.ruleId) {
+            return {
+              success: false,
+              message: "ruleId is required for toggling a rule",
+            };
+          }
+          if (ctx.enabled === undefined) {
+            return {
+              success: false,
+              message: "enabled is required for toggling a rule",
+            };
+          }
+          const rule = await guild.autoModerationRules.fetch(ctx.ruleId);
+          await rule.setEnabled(ctx.enabled, ctx.reason);
+          return {
+            success: true,
+            message: `${ctx.enabled ? "Enabled" : "Disabled"} auto-moderation rule: ${rule.name}`,
+          };
+        }
       }
-      if (ctx.mentionLimit !== undefined) {
-        editOptions.triggerMetadata = {
-          ...editOptions.triggerMetadata,
-          mentionTotalLimit: ctx.mentionLimit,
-        };
-      }
-      if (ctx.exemptRoles !== undefined) editOptions.exemptRoles = ctx.exemptRoles;
-      if (ctx.exemptChannels !== undefined) editOptions.exemptChannels = ctx.exemptChannels;
-      if (ctx.reason !== undefined) editOptions.reason = ctx.reason;
-
-      const hasChanges =
-        ctx.name !== undefined ||
-        ctx.keywords !== undefined ||
-        ctx.mentionLimit !== undefined ||
-        ctx.exemptRoles !== undefined ||
-        ctx.exemptChannels !== undefined;
-
-      if (!hasChanges) {
-        return {
-          success: false,
-          message: "No changes specified",
-        };
-      }
-
-      await rule.edit(editOptions);
-
-      return {
-        success: true,
-        message: `Updated auto-moderation rule: ${rule.name}`,
-      };
     } catch (error) {
-      logger.error("Failed to modify automod rule", error as Error);
+      logger.error("Failed to manage automod rule", error as Error);
       return {
         success: false,
-        message: "Failed to modify auto-moderation rule",
+        message: "Failed to manage auto-moderation rule",
       };
     }
   },
 });
 
-export const automodTools = [
-  listAutomodRulesTool,
-  getAutomodRuleTool,
-  createAutomodRuleTool,
-  modifyAutomodRuleTool,
-  deleteAutomodRuleTool,
-  toggleAutomodRuleTool,
-];
+export const automodTools = [manageAutomodRuleTool];

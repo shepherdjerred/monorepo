@@ -7,378 +7,220 @@ import { captureException, withToolSpan } from "../../../observability/index.js"
 
 const logger = loggers.tools.child("discord.threads");
 
-export const createThreadFromMessageTool = createTool({
-  id: "create-thread-from-message",
-  description: "Create a discussion thread from an existing message in a channel",
+export const manageThreadTool = createTool({
+  id: "manage-thread",
+  description: "Manage threads: create from message, create standalone, modify settings, add member, or get messages",
   inputSchema: z.object({
-    channelId: z.string().describe("The ID of the channel containing the message"),
-    messageId: z.string().describe("The ID of the message to start the thread from"),
-    name: z.string().min(1).max(100).describe("Thread name (1-100 characters)"),
+    action: z.enum(["create-from-message", "create-standalone", "modify", "add-member", "get-messages"]).describe("The action to perform"),
+    channelId: z.string().optional().describe("The channel ID (for create actions)"),
+    threadId: z.string().optional().describe("The thread ID (for modify/add-member/get-messages)"),
+    messageId: z.string().optional().describe("The message ID to create thread from (for create-from-message)"),
+    userId: z.string().optional().describe("The user ID to add (for add-member)"),
+    name: z.string().min(1).max(100).optional().describe("Thread name (for create/modify)"),
     autoArchiveDuration: z.enum(["60", "1440", "4320", "10080"]).optional()
-      .describe("Auto-archive after minutes of inactivity (60=1h, 1440=1d, 4320=3d, 10080=7d, default: 1440)")
+      .describe("Auto-archive after minutes (60=1h, 1440=1d, 4320=3d, 10080=7d)"),
+    message: z.string().optional().describe("Initial message content (for create-standalone)"),
+    type: z.enum(["public", "private"]).optional().describe("Thread type (for create-standalone)"),
+    archived: z.boolean().optional().describe("Whether to archive (for modify)"),
+    locked: z.boolean().optional().describe("Whether to lock (for modify)"),
+    limit: z.number().min(1).max(100).optional().describe("Number of messages to fetch (for get-messages)"),
+    before: z.string().optional().describe("Fetch messages before this ID (for get-messages pagination)"),
   }),
   outputSchema: z.object({
     success: z.boolean(),
     message: z.string(),
-    data: z.object({
-      threadId: z.string(),
-      threadName: z.string()
-    }).optional()
+    data: z.union([
+      z.object({
+        threadId: z.string(),
+        threadName: z.string(),
+      }),
+      z.object({
+        messages: z.array(z.object({
+          id: z.string(),
+          authorId: z.string(),
+          authorName: z.string(),
+          isBot: z.boolean(),
+          content: z.string(),
+          createdAt: z.string(),
+        })),
+      }),
+    ]).optional(),
   }),
   execute: async (ctx) => {
-    return withToolSpan("create-thread-from-message", undefined, async () => {
-      logger.debug("Creating thread from message", {
-        channelId: ctx.channelId,
-        messageId: ctx.messageId
-      });
+    return withToolSpan("manage-thread", undefined, async () => {
       try {
         const client = getDiscordClient();
-        const channel = await client.channels.fetch(ctx.channelId);
 
-        if (!channel?.isTextBased()) {
-          return {
-            success: false,
-            message: "Channel must be a text channel to create threads"
-          };
-        }
-
-        const message = await channel.messages.fetch(ctx.messageId);
-
-        const thread = await message.startThread({
-          name: ctx.name,
-          autoArchiveDuration: ctx.autoArchiveDuration ? parseInt(ctx.autoArchiveDuration) as 60 | 1440 | 4320 | 10080 : 1440
-        });
-
-        logger.info("Thread created from message", {
-          threadId: thread.id,
-          messageId: ctx.messageId,
-          channelId: ctx.channelId
-        });
-
-        return {
-          success: true,
-          message: `Thread "${ctx.name}" created successfully`,
-          data: {
-            threadId: thread.id,
-            threadName: thread.name
+        switch (ctx.action) {
+          case "create-from-message": {
+            if (!ctx.channelId || !ctx.messageId || !ctx.name) {
+              return {
+                success: false,
+                message: "channelId, messageId, and name are required for create-from-message",
+              };
+            }
+            const channel = await client.channels.fetch(ctx.channelId);
+            if (!channel?.isTextBased()) {
+              return {
+                success: false,
+                message: "Channel must be a text channel to create threads",
+              };
+            }
+            const message = await channel.messages.fetch(ctx.messageId);
+            const thread = await message.startThread({
+              name: ctx.name,
+              autoArchiveDuration: ctx.autoArchiveDuration ? parseInt(ctx.autoArchiveDuration) as 60 | 1440 | 4320 | 10080 : 1440,
+            });
+            logger.info("Thread created from message", { threadId: thread.id });
+            return {
+              success: true,
+              message: `Thread "${ctx.name}" created successfully`,
+              data: { threadId: thread.id, threadName: thread.name },
+            };
           }
-        };
-      } catch (error) {
-        logger.error("Failed to create thread from message", error, {
-          channelId: ctx.channelId,
-          messageId: ctx.messageId
-        });
-        captureException(error as Error, {
-          operation: "tool.create-thread-from-message",
-          discord: { channelId: ctx.channelId, messageId: ctx.messageId }
-        });
-        return {
-          success: false,
-          message: `Failed to create thread: ${(error as Error).message}`
-        };
-      }
-    });
-  }
-});
 
-export const createStandaloneThreadTool = createTool({
-  id: "create-standalone-thread",
-  description: "Create a standalone thread in a channel without a parent message",
-  inputSchema: z.object({
-    channelId: z.string().describe("The ID of the channel to create the thread in"),
-    name: z.string().min(1).max(100).describe("Thread name (1-100 characters)"),
-    autoArchiveDuration: z.enum(["60", "1440", "4320", "10080"]).optional()
-      .describe("Auto-archive after minutes (60=1h, 1440=1d, 4320=3d, 10080=7d, default: 1440)"),
-    message: z.string().optional().describe("Optional initial message content for the thread"),
-    type: z.enum(["public", "private"]).optional().describe("Thread type (default: public, private requires permissions)")
-  }),
-  outputSchema: z.object({
-    success: z.boolean(),
-    message: z.string(),
-    data: z.object({
-      threadId: z.string(),
-      threadName: z.string()
-    }).optional()
-  }),
-  execute: async (ctx) => {
-    return withToolSpan("create-standalone-thread", undefined, async () => {
-      logger.debug("Creating standalone thread", { channelId: ctx.channelId, name: ctx.name });
-      try {
-        const client = getDiscordClient();
-        const channel = await client.channels.fetch(ctx.channelId);
-
-        if (!channel?.isTextBased() || !("threads" in channel)) {
-          return {
-            success: false,
-            message: "Channel must support threads"
-          };
-        }
-
-        const autoArchiveDuration = ctx.autoArchiveDuration
-          ? parseInt(ctx.autoArchiveDuration) as 60 | 1440 | 4320 | 10080
-          : 1440;
-
-        let thread;
-        if (ctx.type === "private") {
-          thread = await channel.threads.create({
-            name: ctx.name,
-            autoArchiveDuration,
-            // Discord.js has complex conditional types that conflict with exactOptionalPropertyTypes
-            // @ts-expect-error - ChannelType.PrivateThread inferred as 'never' due to Discord.js type complexity
-            type: ChannelType.PrivateThread,
-            ...(ctx.message && { message: { content: ctx.message } }),
-          });
-        } else {
-          thread = await channel.threads.create({
-            name: ctx.name,
-            autoArchiveDuration,
-            // Discord.js has complex conditional types that conflict with exactOptionalPropertyTypes
-            // @ts-expect-error - ChannelType.PublicThread inferred as 'never' due to Discord.js type complexity
-            type: ChannelType.PublicThread,
-            ...(ctx.message && { message: { content: ctx.message } }),
-          });
-        }
-
-        logger.info("Standalone thread created", {
-          threadId: thread.id,
-          channelId: ctx.channelId,
-          type: ctx.type ?? "public"
-        });
-
-        return {
-          success: true,
-          message: `Thread "${ctx.name}" created successfully`,
-          data: {
-            threadId: thread.id,
-            threadName: thread.name
+          case "create-standalone": {
+            if (!ctx.channelId || !ctx.name) {
+              return {
+                success: false,
+                message: "channelId and name are required for create-standalone",
+              };
+            }
+            const channel = await client.channels.fetch(ctx.channelId);
+            if (!channel?.isTextBased() || !("threads" in channel)) {
+              return {
+                success: false,
+                message: "Channel must support threads",
+              };
+            }
+            const autoArchiveDuration = ctx.autoArchiveDuration
+              ? parseInt(ctx.autoArchiveDuration) as 60 | 1440 | 4320 | 10080
+              : 1440;
+            const threadType = ctx.type === "private" ? ChannelType.PrivateThread : ChannelType.PublicThread;
+            const thread = await channel.threads.create({
+              name: ctx.name,
+              autoArchiveDuration,
+              // @ts-expect-error - ChannelType enum complexity with Discord.js types
+              type: threadType,
+              ...(ctx.message && { message: { content: ctx.message } }),
+            });
+            logger.info("Standalone thread created", { threadId: thread.id });
+            return {
+              success: true,
+              message: `Thread "${ctx.name}" created successfully`,
+              data: { threadId: thread.id, threadName: thread.name },
+            };
           }
-        };
-      } catch (error) {
-        logger.error("Failed to create standalone thread", error, { channelId: ctx.channelId });
-        captureException(error as Error, {
-          operation: "tool.create-standalone-thread",
-          discord: { channelId: ctx.channelId }
-        });
-        return {
-          success: false,
-          message: `Failed to create thread: ${(error as Error).message}`
-        };
-      }
-    });
-  }
-});
 
-export const modifyThreadTool = createTool({
-  id: "modify-thread",
-  description: "Modify thread settings including name, archived state, locked state, and auto-archive duration",
-  inputSchema: z.object({
-    threadId: z.string().describe("The ID of the thread to modify"),
-    name: z.string().min(1).max(100).optional().describe("New thread name"),
-    archived: z.boolean().optional().describe("Whether the thread should be archived (closes thread but keeps visible)"),
-    locked: z.boolean().optional().describe("Whether the thread should be locked (prevents new messages)"),
-    autoArchiveDuration: z.enum(["60", "1440", "4320", "10080"]).optional()
-      .describe("New auto-archive duration in minutes")
-  }),
-  outputSchema: z.object({
-    success: z.boolean(),
-    message: z.string()
-  }),
-  execute: async (ctx) => {
-    return withToolSpan("modify-thread", undefined, async () => {
-      logger.debug("Modifying thread", { threadId: ctx.threadId });
-      try {
-        const client = getDiscordClient();
-        const thread = await client.channels.fetch(ctx.threadId);
-
-        if (!thread?.isThread()) {
-          return {
-            success: false,
-            message: "Channel is not a thread"
-          };
-        }
-
-        const updates: {
-          name?: string;
-          archived?: boolean;
-          locked?: boolean;
-          autoArchiveDuration?: 60 | 1440 | 4320 | 10080;
-        } = {};
-
-        if (ctx.name !== undefined) updates.name = ctx.name;
-        if (ctx.archived !== undefined) updates.archived = ctx.archived;
-        if (ctx.locked !== undefined) updates.locked = ctx.locked;
-        if (ctx.autoArchiveDuration !== undefined) {
-          updates.autoArchiveDuration = parseInt(ctx.autoArchiveDuration) as 60 | 1440 | 4320 | 10080;
-        }
-
-        if (Object.keys(updates).length === 0) {
-          return {
-            success: false,
-            message: "At least one field must be provided to modify"
-          };
-        }
-
-        await thread.edit(updates);
-
-        const changes = Object.keys(updates).join(", ");
-        logger.info("Thread modified", { threadId: ctx.threadId, changes });
-
-        return {
-          success: true,
-          message: `Thread updated successfully (modified: ${changes})`
-        };
-      } catch (error) {
-        logger.error("Failed to modify thread", error, { threadId: ctx.threadId });
-        captureException(error as Error, {
-          operation: "tool.modify-thread",
-          discord: { threadId: ctx.threadId }
-        });
-        return {
-          success: false,
-          message: `Failed to modify thread: ${(error as Error).message}`
-        };
-      }
-    });
-  }
-});
-
-export const addThreadMemberTool = createTool({
-  id: "add-thread-member",
-  description: "Add a user to a thread, allowing them to see and participate in it",
-  inputSchema: z.object({
-    threadId: z.string().describe("The ID of the thread"),
-    userId: z.string().describe("The ID of the user to add to the thread")
-  }),
-  outputSchema: z.object({
-    success: z.boolean(),
-    message: z.string()
-  }),
-  execute: async (ctx) => {
-    return withToolSpan("add-thread-member", undefined, async () => {
-      logger.debug("Adding member to thread", { threadId: ctx.threadId, userId: ctx.userId });
-      try {
-        const client = getDiscordClient();
-        const thread = await client.channels.fetch(ctx.threadId);
-
-        if (!thread?.isThread()) {
-          return {
-            success: false,
-            message: "Channel is not a thread"
-          };
-        }
-
-        await thread.members.add(ctx.userId);
-
-        logger.info("Member added to thread", { threadId: ctx.threadId, userId: ctx.userId });
-
-        return {
-          success: true,
-          message: "User added to thread successfully"
-        };
-      } catch (error) {
-        logger.error("Failed to add member to thread", error, {
-          threadId: ctx.threadId,
-          userId: ctx.userId
-        });
-        captureException(error as Error, {
-          operation: "tool.add-thread-member",
-          discord: { threadId: ctx.threadId, userId: ctx.userId }
-        });
-        return {
-          success: false,
-          message: `Failed to add user to thread: ${(error as Error).message}`
-        };
-      }
-    });
-  }
-});
-
-export const getThreadMessagesTool = createTool({
-  id: "get-thread-messages",
-  description: "Fetch messages from a thread channel with pagination support",
-  inputSchema: z.object({
-    threadId: z.string().describe("The ID of the thread to fetch messages from"),
-    limit: z.number().min(1).max(100).optional().describe("Number of messages to fetch (default: 20, max: 100)"),
-    before: z.string().optional().describe("Fetch messages before this message ID (for pagination)")
-  }),
-  outputSchema: z.object({
-    success: z.boolean(),
-    message: z.string(),
-    data: z.object({
-      messages: z.array(z.object({
-        id: z.string(),
-        authorId: z.string(),
-        authorName: z.string(),
-        isBot: z.boolean(),
-        content: z.string(),
-        createdAt: z.string().describe("ISO timestamp")
-      }))
-    }).optional()
-  }),
-  execute: async (ctx) => {
-    return withToolSpan("get-thread-messages", undefined, async () => {
-      logger.debug("Fetching thread messages", { threadId: ctx.threadId, limit: ctx.limit });
-      try {
-        const client = getDiscordClient();
-        const thread = await client.channels.fetch(ctx.threadId);
-
-        if (!thread?.isThread()) {
-          return {
-            success: false,
-            message: "Channel is not a thread"
-          };
-        }
-
-        const fetchOptions: { limit: number; before?: string } = {
-          limit: ctx.limit ?? 20
-        };
-
-        if (ctx.before) {
-          fetchOptions.before = ctx.before;
-        }
-
-        const messages = await thread.messages.fetch(fetchOptions);
-
-        const formattedMessages = Array.from(messages.values()).map(msg => ({
-          id: msg.id,
-          authorId: msg.author.id,
-          authorName: msg.author.username,
-          isBot: msg.author.bot,
-          content: msg.content,
-          createdAt: msg.createdAt.toISOString()
-        }));
-
-        logger.info("Thread messages fetched", {
-          threadId: ctx.threadId,
-          count: formattedMessages.length
-        });
-
-        return {
-          success: true,
-          message: `Retrieved ${formattedMessages.length.toString()} messages from thread`,
-          data: {
-            messages: formattedMessages
+          case "modify": {
+            if (!ctx.threadId) {
+              return {
+                success: false,
+                message: "threadId is required for modify",
+              };
+            }
+            const thread = await client.channels.fetch(ctx.threadId);
+            if (!thread?.isThread()) {
+              return {
+                success: false,
+                message: "Channel is not a thread",
+              };
+            }
+            const updates: {
+              name?: string;
+              archived?: boolean;
+              locked?: boolean;
+              autoArchiveDuration?: 60 | 1440 | 4320 | 10080;
+            } = {};
+            if (ctx.name !== undefined) updates.name = ctx.name;
+            if (ctx.archived !== undefined) updates.archived = ctx.archived;
+            if (ctx.locked !== undefined) updates.locked = ctx.locked;
+            if (ctx.autoArchiveDuration !== undefined) {
+              updates.autoArchiveDuration = parseInt(ctx.autoArchiveDuration) as 60 | 1440 | 4320 | 10080;
+            }
+            if (Object.keys(updates).length === 0) {
+              return {
+                success: false,
+                message: "At least one field must be provided to modify",
+              };
+            }
+            await thread.edit(updates);
+            logger.info("Thread modified", { threadId: ctx.threadId });
+            return {
+              success: true,
+              message: `Thread updated successfully (modified: ${Object.keys(updates).join(", ")})`,
+            };
           }
-        };
+
+          case "add-member": {
+            if (!ctx.threadId || !ctx.userId) {
+              return {
+                success: false,
+                message: "threadId and userId are required for add-member",
+              };
+            }
+            const thread = await client.channels.fetch(ctx.threadId);
+            if (!thread?.isThread()) {
+              return {
+                success: false,
+                message: "Channel is not a thread",
+              };
+            }
+            await thread.members.add(ctx.userId);
+            logger.info("Member added to thread", { threadId: ctx.threadId, userId: ctx.userId });
+            return {
+              success: true,
+              message: "User added to thread successfully",
+            };
+          }
+
+          case "get-messages": {
+            if (!ctx.threadId) {
+              return {
+                success: false,
+                message: "threadId is required for get-messages",
+              };
+            }
+            const thread = await client.channels.fetch(ctx.threadId);
+            if (!thread?.isThread()) {
+              return {
+                success: false,
+                message: "Channel is not a thread",
+              };
+            }
+            const fetchOptions: { limit: number; before?: string } = {
+              limit: ctx.limit ?? 20,
+            };
+            if (ctx.before) {
+              fetchOptions.before = ctx.before;
+            }
+            const messages = await thread.messages.fetch(fetchOptions);
+            const formattedMessages = Array.from(messages.values()).map(msg => ({
+              id: msg.id,
+              authorId: msg.author.id,
+              authorName: msg.author.username,
+              isBot: msg.author.bot,
+              content: msg.content,
+              createdAt: msg.createdAt.toISOString(),
+            }));
+            logger.info("Thread messages fetched", { threadId: ctx.threadId, count: formattedMessages.length });
+            return {
+              success: true,
+              message: `Retrieved ${formattedMessages.length.toString()} messages from thread`,
+              data: { messages: formattedMessages },
+            };
+          }
+        }
       } catch (error) {
-        logger.error("Failed to fetch thread messages", error, { threadId: ctx.threadId });
-        captureException(error as Error, {
-          operation: "tool.get-thread-messages",
-          discord: { threadId: ctx.threadId }
-        });
+        logger.error("Failed to manage thread", error);
+        captureException(error as Error, { operation: "tool.manage-thread" });
         return {
           success: false,
-          message: `Failed to fetch thread messages: ${(error as Error).message}`
+          message: `Failed to manage thread: ${(error as Error).message}`,
         };
       }
     });
-  }
+  },
 });
 
-export const threadTools = [
-  createThreadFromMessageTool,
-  createStandaloneThreadTool,
-  modifyThreadTool,
-  addThreadMemberTool,
-  getThreadMessagesTool
-];
+export const threadTools = [manageThreadTool];

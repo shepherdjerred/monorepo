@@ -12,28 +12,12 @@ describe("discord tools", () => {
       expect(messageTools.length).toBeGreaterThan(0);
     });
 
-    test("sendMessageTool has correct id", async () => {
-      const { sendMessageTool } = await import(
+    test("manageMessageTool has correct id", async () => {
+      const { manageMessageTool } = await import(
         "../../../src/mastra/tools/discord/messages.js"
       );
 
-      expect(sendMessageTool.id).toBe("send-message");
-    });
-
-    test("deleteMessageTool has correct id", async () => {
-      const { deleteMessageTool } = await import(
-        "../../../src/mastra/tools/discord/messages.js"
-      );
-
-      expect(deleteMessageTool.id).toBe("delete-message");
-    });
-
-    test("pinMessageTool has correct id", async () => {
-      const { pinMessageTool } = await import(
-        "../../../src/mastra/tools/discord/messages.js"
-      );
-
-      expect(pinMessageTool.id).toBe("pin-message");
+      expect(manageMessageTool.id).toBe("manage-message");
     });
   });
 
@@ -47,12 +31,12 @@ describe("discord tools", () => {
       expect(guildTools.length).toBeGreaterThan(0);
     });
 
-    test("getGuildInfoTool has correct id", async () => {
-      const { getGuildInfoTool } = await import(
+    test("manageGuildTool has correct id", async () => {
+      const { manageGuildTool } = await import(
         "../../../src/mastra/tools/discord/guild.js"
       );
 
-      expect(getGuildInfoTool.id).toBe("get-guild-info");
+      expect(manageGuildTool.id).toBe("manage-guild");
     });
   });
 
@@ -66,20 +50,12 @@ describe("discord tools", () => {
       expect(channelTools.length).toBeGreaterThan(0);
     });
 
-    test("listChannelsTool has correct id", async () => {
-      const { listChannelsTool } = await import(
+    test("manageChannelTool has correct id", async () => {
+      const { manageChannelTool } = await import(
         "../../../src/mastra/tools/discord/channels.js"
       );
 
-      expect(listChannelsTool.id).toBe("list-channels");
-    });
-
-    test("createChannelTool has correct id", async () => {
-      const { createChannelTool } = await import(
-        "../../../src/mastra/tools/discord/channels.js"
-      );
-
-      expect(createChannelTool.id).toBe("create-channel");
+      expect(manageChannelTool.id).toBe("manage-channel");
     });
   });
 
@@ -93,12 +69,12 @@ describe("discord tools", () => {
       expect(roleTools.length).toBeGreaterThan(0);
     });
 
-    test("listRolesTool has correct id", async () => {
-      const { listRolesTool } = await import(
+    test("manageRoleTool has correct id", async () => {
+      const { manageRoleTool } = await import(
         "../../../src/mastra/tools/discord/roles.js"
       );
 
-      expect(listRolesTool.id).toBe("list-roles");
+      expect(manageRoleTool.id).toBe("manage-role");
     });
   });
 
@@ -112,12 +88,12 @@ describe("discord tools", () => {
       expect(memberTools.length).toBeGreaterThan(0);
     });
 
-    test("getMemberTool has correct id", async () => {
-      const { getMemberTool } = await import(
+    test("manageMemberTool has correct id", async () => {
+      const { manageMemberTool } = await import(
         "../../../src/mastra/tools/discord/members.js"
       );
 
-      expect(getMemberTool.id).toBe("get-member");
+      expect(manageMemberTool.id).toBe("manage-member");
     });
   });
 
@@ -131,20 +107,12 @@ describe("discord tools", () => {
       expect(moderationTools.length).toBeGreaterThan(0);
     });
 
-    test("kickMemberTool has correct id", async () => {
-      const { kickMemberTool } = await import(
+    test("moderateMemberTool has correct id", async () => {
+      const { moderateMemberTool } = await import(
         "../../../src/mastra/tools/discord/moderation.js"
       );
 
-      expect(kickMemberTool.id).toBe("kick-member");
-    });
-
-    test("banMemberTool has correct id", async () => {
-      const { banMemberTool } = await import(
-        "../../../src/mastra/tools/discord/moderation.js"
-      );
-
-      expect(banMemberTool.id).toBe("ban-member");
+      expect(moderateMemberTool.id).toBe("moderate-member");
     });
   });
 
@@ -158,12 +126,20 @@ describe("discord tools", () => {
       expect(voiceTools.length).toBeGreaterThan(0);
     });
 
-    test("joinVoiceChannelTool has correct id", async () => {
-      const { joinVoiceChannelTool } = await import(
+    test("manageBotVoiceTool has correct id", async () => {
+      const { manageBotVoiceTool } = await import(
         "../../../src/mastra/tools/discord/voice.js"
       );
 
-      expect(joinVoiceChannelTool.id).toBe("join-voice-channel");
+      expect(manageBotVoiceTool.id).toBe("manage-bot-voice");
+    });
+
+    test("manageVoiceMemberTool has correct id", async () => {
+      const { manageVoiceMemberTool } = await import(
+        "../../../src/mastra/tools/discord/voice.js"
+      );
+
+      expect(manageVoiceMemberTool.id).toBe("manage-voice-member");
     });
   });
 
@@ -188,7 +164,7 @@ describe("discord tools", () => {
       );
 
       expect(Array.isArray(allDiscordTools)).toBe(true);
-      expect(allDiscordTools.length).toBeGreaterThan(20);
+      expect(allDiscordTools.length).toBeGreaterThan(10);
     });
   });
 
