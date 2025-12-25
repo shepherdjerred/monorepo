@@ -78,6 +78,11 @@ const DIRECT_TRIGGER = /\bbirmel\b/i;
 // Confidence threshold for contextual classification
 const CLASSIFICATION_CONFIDENCE_THRESHOLD = 0.7;
 
+// Allowed user IDs - only respond to messages from these users
+const ALLOWED_USER_IDS = new Set([
+  "171455587517857796", // Colin
+]);
+
 /**
  * Determine if the bot should respond to a message.
  * Uses direct triggers first, then falls back to AI classification.
@@ -88,6 +93,15 @@ async function shouldRespond(
 ): Promise<boolean> {
   // Ignore messages from bots
   if (message.author.bot) return false;
+
+  // Only respond to messages from allowed users
+  if (!ALLOWED_USER_IDS.has(message.author.id)) {
+    logger.debug("Ignoring message from non-allowed user", {
+      userId: message.author.id,
+      username: message.author.username,
+    });
+    return false;
+  }
 
   // Direct trigger: bot is @mentioned
   if (message.mentions.has(clientId)) {
