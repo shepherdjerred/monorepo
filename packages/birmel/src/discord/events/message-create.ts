@@ -80,7 +80,17 @@ const CLASSIFICATION_CONFIDENCE_THRESHOLD = 0.7;
 
 // Allowed user IDs - only respond to messages from these users
 const ALLOWED_USER_IDS = new Set([
+  "186665676134547461", // Aaron
+  "202595851678384137", // Brian
+  "410595870380392458", // Irfan
+  "200067001035653131", // Ryan
+  "263577791105073152", // Danny
+  "208425244128444418", // Virmel
+  "251485022429642752", // Long
+  "160509172704739328", // Jerred
   "171455587517857796", // Colin
+  "331238905619677185", // Caitlyn
+  "121887985896521732", // Richard
 ]);
 
 /**
