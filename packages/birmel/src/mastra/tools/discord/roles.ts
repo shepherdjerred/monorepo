@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { ColorResolvable } from "discord.js";
 import { getDiscordClient } from "../../../discord/index.js";
 import { logger } from "../../../utils/logger.js";
+import { validateSnowflakes } from "./validation.js";
 
 export const manageRoleTool = createTool({
   id: "manage-role",
@@ -58,6 +59,21 @@ export const manageRoleTool = createTool({
   }),
   execute: async (ctx) => {
     try {
+      // Validate all Discord IDs before making API calls
+      const idError = validateSnowflakes([
+        { value: ctx.guildId, fieldName: "guildId" },
+        { value: ctx.roleId, fieldName: "roleId" },
+      ]);
+      if (idError) return { success: false, message: idError };
+
+      // Validate role IDs in positions array
+      if (ctx.positions) {
+        for (const pos of ctx.positions) {
+          const posError = validateSnowflakes([{ value: pos.roleId, fieldName: "positions.roleId" }]);
+          if (posError) return { success: false, message: posError };
+        }
+      }
+
       const client = getDiscordClient();
       const guild = await client.guilds.fetch(ctx.guildId);
 

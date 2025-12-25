@@ -4,6 +4,7 @@ import { ChannelType, PermissionFlagsBits, type GuildChannelEditOptions } from "
 import { getDiscordClient } from "../../../discord/index.js";
 import { loggers } from "../../../utils/logger.js";
 import { withToolSpan, captureException } from "../../../observability/index.js";
+import { validateSnowflakes } from "./validation.js";
 
 const logger = loggers.tools.child("discord.channels");
 
@@ -46,6 +47,23 @@ export const manageChannelTool = createTool({
   execute: async (ctx) => {
     return withToolSpan("manage-channel", ctx.guildId, async () => {
       try {
+        // Validate all Discord IDs before making API calls
+        const idError = validateSnowflakes([
+          { value: ctx.guildId, fieldName: "guildId" },
+          { value: ctx.channelId, fieldName: "channelId" },
+          { value: ctx.parentId ?? undefined, fieldName: "parentId" },
+          { value: ctx.targetId, fieldName: "targetId" },
+        ]);
+        if (idError) return { success: false, message: idError };
+
+        // Validate channel IDs in positions array
+        if (ctx.positions) {
+          for (const pos of ctx.positions) {
+            const posError = validateSnowflakes([{ value: pos.channelId, fieldName: "positions.channelId" }]);
+            if (posError) return { success: false, message: posError };
+          }
+        }
+
         const client = getDiscordClient();
 
         switch (ctx.action) {

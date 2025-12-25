@@ -2,6 +2,7 @@ import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 import { getDiscordClient } from "../../../discord/index.js";
 import { logger } from "../../../utils/logger.js";
+import { validateSnowflakes } from "./validation.js";
 
 export const manageMemberTool = createTool({
   id: "manage-member",
@@ -38,6 +39,14 @@ export const manageMemberTool = createTool({
   }),
   execute: async (ctx) => {
     try {
+      // Validate all Discord IDs before making API calls
+      const idError = validateSnowflakes([
+        { value: ctx.guildId, fieldName: "guildId" },
+        { value: ctx.memberId, fieldName: "memberId" },
+        { value: ctx.roleId, fieldName: "roleId" },
+      ]);
+      if (idError) return { success: false, message: idError };
+
       const client = getDiscordClient();
       const guild = await client.guilds.fetch(ctx.guildId);
 
@@ -80,10 +89,6 @@ export const manageMemberTool = createTool({
         case "modify": {
           if (!ctx.memberId) return { success: false, message: "memberId is required for modify" };
           if (ctx.nickname === undefined) return { success: false, message: "nickname is required for modify" };
-          // Reject invalid member ID formats
-          if (ctx.memberId === "@me" || !/^\d+$/.test(ctx.memberId)) {
-            return { success: false, message: "Invalid memberId. Use the numeric Discord user ID from the message context (e.g., '123456789012345678'), not '@me'." };
-          }
           // Prevent the bot from modifying its own nickname
           if (ctx.memberId === client.user?.id) {
             return { success: false, message: "Cannot modify bot's own nickname. Nickname changes happen via election only." };
