@@ -243,8 +243,10 @@ export function setupMessageCreateHandler(client: Client): void {
             discord: discordContext,
           });
           try {
+            const errorMessage =
+              error instanceof Error ? error.message : String(error);
             await message.reply(
-              "Sorry, I encountered an error processing your request.",
+              `Sorry, I encountered an error processing your request.\n\`\`\`\n${errorMessage}\n\`\`\``,
             );
           } catch {
             // Ignore reply errors
