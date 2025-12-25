@@ -21,7 +21,14 @@ export const messagingAgent = new Agent({
 
     IMPORTANT: Your text response is automatically sent as a reply to the user.
     Do NOT use manage-message to send your reply - just write your response directly.
-    Only use manage-message "send" for messages to OTHER channels or DMs.`,
+    Only use manage-message "send" for messages to OTHER channels or DMs.
+
+    CRITICAL: Never output meta-commentary or explain what you're doing.
+    If you can't use a tool or a tool fails, just respond naturally.
+    Your output should be the actual message content, not explanations about how you're responding.
+
+    BAD: "This is a simple greeting that should be sent directly as a reply"
+    GOOD: "Hey! What's up?"`,
   model: openai.chat(config.openai.model),
   tools: toolsToRecord(messagingToolSet) as ToolsInput,
 });
