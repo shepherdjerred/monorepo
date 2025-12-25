@@ -80,6 +80,10 @@ export const manageMemberTool = createTool({
         case "modify": {
           if (!ctx.memberId) return { success: false, message: "memberId is required for modify" };
           if (ctx.nickname === undefined) return { success: false, message: "nickname is required for modify" };
+          // Reject invalid member ID formats
+          if (ctx.memberId === "@me" || !/^\d+$/.test(ctx.memberId)) {
+            return { success: false, message: "Invalid memberId. Use the numeric Discord user ID from the message context (e.g., '123456789012345678'), not '@me'." };
+          }
           // Prevent the bot from modifying its own nickname
           if (ctx.memberId === client.user?.id) {
             return { success: false, message: "Cannot modify bot's own nickname. Nickname changes happen via election only." };
