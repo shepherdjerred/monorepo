@@ -18,23 +18,6 @@ fi
 
 echo "🔧 New worktree detected! Running setup..."
 
-# Trust mise configuration
-if command -v mise >/dev/null 2>&1; then
-  echo "📋 Running mise trust..."
-  mise trust
-else
-  echo "⚠️  mise not found, skipping mise trust"
-fi
-
-# Install dependencies
-if command -v bun >/dev/null 2>&1; then
-  echo "📦 Installing dependencies with bun..."
-  bun install
-elif command -v npm >/dev/null 2>&1; then
-  echo "📦 Installing dependencies with npm..."
-  npm install
-else
-  echo "⚠️  No package manager found, skipping dependency installation"
-fi
+mise run dev
 
 echo "✅ Worktree setup complete!"
