@@ -115,7 +115,7 @@ async function handleMessage(context: MessageContext): Promise<void> {
     }
 
     // Fetch recent Discord messages for conversational context
-    const recentMessages = await getRecentChannelMessages(context.message, 8);
+    const recentMessages = await getRecentChannelMessages(context.message, 20);
     const conversationHistory = recentMessages.length > 0
       ? `\n## Recent Conversation\n${recentMessages.map(msg => `${msg.authorName}${msg.isBot ? " [BOT]" : ""}: ${msg.content}`).join("\n")}\n`
       : "";
