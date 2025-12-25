@@ -2,8 +2,11 @@
 # Use all available CPU cores for builds
 jobs = -1
 
+# Use lld linker on Linux for faster linking
 [target.x86_64-unknown-linux-gnu]
 rustflags = ["-C", "link-arg=-fuse-ld=lld"]
 
-[target.aarch64-apple-darwin]
+[target.aarch64-unknown-linux-gnu]
 rustflags = ["-C", "link-arg=-fuse-ld=lld"]
+
+# On macOS, use the default linker (ld64)

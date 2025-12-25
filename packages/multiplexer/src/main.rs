@@ -1,7 +1,7 @@
 use clap::{Parser, Subcommand};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-use multiplexer::{api, core, tui};
+use multiplexer::{api, core, tui, utils};
 
 #[derive(Parser)]
 #[command(name = "mux")]
@@ -77,12 +77,31 @@ enum Commands {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    // Initialize tracing
+    // Ensure log directory exists
+    let log_path = utils::paths::log_path();
+    if let Some(log_dir) = log_path.parent() {
+        std::fs::create_dir_all(log_dir)?;
+    }
+
+    // Set up file appender
+    let file_appender = tracing_appender::rolling::daily(
+        log_path.parent().unwrap(),
+        log_path.file_name().unwrap(),
+    );
+
+    // Initialize tracing with both console and file output
+    let env_filter = tracing_subscriber::EnvFilter::new(
+        std::env::var("RUST_LOG").unwrap_or_else(|_| "multiplexer=info".into()),
+    );
+
     tracing_subscriber::registry()
-        .with(tracing_subscriber::EnvFilter::new(
-            std::env::var("RUST_LOG").unwrap_or_else(|_| "multiplexer=info".into()),
-        ))
-        .with(tracing_subscriber::fmt::layer())
+        .with(env_filter)
+        .with(tracing_subscriber::fmt::layer().with_writer(std::io::stdout))
+        .with(
+            tracing_subscriber::fmt::layer()
+                .with_writer(file_appender)
+                .with_ansi(false),
+        )
         .init();
 
     let cli = Cli::parse();
@@ -106,10 +125,10 @@ async fn main() -> anyhow::Result<()> {
             let backend_type = match backend.to_lowercase().as_str() {
                 "zellij" => core::session::BackendType::Zellij,
                 "docker" => core::session::BackendType::Docker,
-                _ => anyhow::bail!("Unknown backend: {}. Use 'zellij' or 'docker'", backend),
+                _ => anyhow::bail!("Unknown backend: {backend}. Use 'zellij' or 'docker'"),
             };
 
-            let client = api::client::Client::connect().await?;
+            let mut client = api::client::Client::connect().await?;
             let session = client
                 .create_session(api::protocol::CreateSessionRequest {
                     name,
@@ -121,10 +140,10 @@ async fn main() -> anyhow::Result<()> {
                 })
                 .await?;
 
-            println!("Created session: {}", session.name);
+            println!("Created session: {}", &session.name);
         }
         Commands::List { archived } => {
-            let client = api::client::Client::connect().await?;
+            let mut client = api::client::Client::connect().await?;
             let sessions = client.list_sessions().await?;
 
             for session in sessions {
@@ -137,21 +156,21 @@ async fn main() -> anyhow::Result<()> {
             }
         }
         Commands::Attach { session } => {
-            let client = api::client::Client::connect().await?;
+            let mut client = api::client::Client::connect().await?;
             let attach_cmd = client.attach_session(&session).await?;
 
             // Execute the attach command, replacing our process
             let err = exec::execvp(&attach_cmd[0], &attach_cmd);
-            anyhow::bail!("Failed to exec: {:?}", err);
+            anyhow::bail!("Failed to exec: {err:?}");
         }
         Commands::Archive { session } => {
-            let client = api::client::Client::connect().await?;
+            let mut client = api::client::Client::connect().await?;
             client.archive_session(&session).await?;
-            println!("Archived session: {}", session);
+            println!("Archived session: {session}");
         }
         Commands::Delete { session, force } => {
             if !force {
-                println!("Are you sure you want to delete session '{}'? (y/N)", session);
+                println!("Are you sure you want to delete session '{session}'? (y/N)");
                 let mut input = String::new();
                 std::io::stdin().read_line(&mut input)?;
                 if input.trim().to_lowercase() != "y" {
@@ -160,12 +179,12 @@ async fn main() -> anyhow::Result<()> {
                 }
             }
 
-            let client = api::client::Client::connect().await?;
+            let mut client = api::client::Client::connect().await?;
             client.delete_session(&session).await?;
-            println!("Deleted session: {}", session);
+            println!("Deleted session: {session}");
         }
         Commands::Reconcile => {
-            let client = api::client::Client::connect().await?;
+            let mut client = api::client::Client::connect().await?;
             let report = client.reconcile().await?;
 
             if report.missing_worktrees.is_empty() && report.missing_backends.is_empty() {
