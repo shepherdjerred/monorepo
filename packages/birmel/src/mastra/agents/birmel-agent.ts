@@ -12,9 +12,10 @@ import { getGuildPersona } from "../../persona/guild-persona.js";
 import {
   type AgentType,
   getToolSet,
+  getAgentDescription,
   toolsToRecord,
 } from "../tools/tool-sets.js";
-import { classifyMessage, getAgentDescription } from "./message-classifier.js";
+import { classifyMessage, detectMultiAgentNeed } from "./message-classifier.js";
 import { logger } from "../../utils/index.js";
 
 /**
@@ -28,9 +29,20 @@ export function createBirmelAgent(
   const config = getConfig();
 
   // Determine agent type from message content or use provided type
-  const type = agentType ?? (messageContent ? classifyMessage(messageContent) : "general");
+  const type = agentType ?? (messageContent ? classifyMessage(messageContent) : "messaging");
   const tools = getToolSet(type);
   const toolsRecord = toolsToRecord(tools);
+
+  // Log if multiple agents might be needed
+  if (messageContent) {
+    const neededAgents = detectMultiAgentNeed(messageContent);
+    if (neededAgents.length > 1) {
+      logger.debug("Message may span multiple agent domains", {
+        selectedAgent: type,
+        allDetected: neededAgents,
+      });
+    }
+  }
 
   logger.debug("Creating specialized agent", {
     agentType: type,
@@ -43,10 +55,6 @@ export function createBirmelAgent(
     name: "Birmel",
     instructions: SYSTEM_PROMPT,
     // Use openai.chat() to force Chat Completions API instead of Responses API.
-    // The default openai() uses Responses API which has a bug with reasoning
-    // items in conversation history causing:
-    // "Item of type 'reasoning' was provided without its required following item"
-    // See: https://github.com/vercel/ai/issues/7099
     model: openai.chat(config.openai.model),
     tools: toolsRecord as ToolsInput,
     memory: createMemory(),
@@ -68,6 +76,16 @@ export async function createBirmelAgentWithContext(
   const tools = getToolSet(type);
   const toolsRecord = toolsToRecord(tools);
 
+  // Log if multiple agents might be needed
+  const neededAgents = detectMultiAgentNeed(userQuery);
+  if (neededAgents.length > 1) {
+    logger.debug("Message may span multiple agent domains", {
+      selectedAgent: type,
+      allDetected: neededAgents,
+      guildId,
+    });
+  }
+
   logger.debug("Creating specialized agent with context", {
     agentType: type,
     toolCount: tools.length,
@@ -86,7 +104,6 @@ export async function createBirmelAgentWithContext(
   if (decisionContext) {
     const decisionPrompt = formatDecisionPrompt(decisionContext);
     if (decisionPrompt) {
-      // Insert decision guidance after the personality section
       const insertPoint = SYSTEM_PROMPT.indexOf("## Ethical Guidelines");
       if (insertPoint !== -1) {
         enhancedPrompt =
@@ -95,7 +112,6 @@ export async function createBirmelAgentWithContext(
           "\n" +
           SYSTEM_PROMPT.slice(insertPoint);
       } else {
-        // Fallback: append to end
         enhancedPrompt = SYSTEM_PROMPT + "\n" + decisionPrompt;
       }
     }
@@ -105,17 +121,13 @@ export async function createBirmelAgentWithContext(
     id: `birmel-${type}-with-context`,
     name: "Birmel",
     instructions: enhancedPrompt,
-    // Use openai.chat() to force Chat Completions API instead of Responses API.
-    // The default openai() uses Responses API which has a bug with reasoning
-    // items in conversation history causing:
-    // "Item of type 'reasoning' was provided without its required following item"
-    // See: https://github.com/vercel/ai/issues/7099
     model: openai.chat(config.openai.model),
     tools: toolsRecord as ToolsInput,
     memory: createMemory(),
   });
 }
 
-// Re-export types and utilities for convenience
-export { classifyMessage, getAgentDescription } from "./message-classifier.js";
+// Re-export types and utilities
+export { classifyMessage, detectMultiAgentNeed } from "./message-classifier.js";
+export { getAgentDescription } from "../tools/tool-sets.js";
 export type { AgentType } from "../tools/tool-sets.js";

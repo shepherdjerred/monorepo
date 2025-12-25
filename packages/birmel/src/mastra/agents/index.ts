@@ -2,6 +2,7 @@ export {
   createBirmelAgent,
   createBirmelAgentWithContext,
   classifyMessage,
+  detectMultiAgentNeed,
   getAgentDescription,
   type AgentType,
 } from "./birmel-agent.js";

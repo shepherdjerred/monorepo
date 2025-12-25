@@ -1,7 +1,6 @@
 /**
  * Specialized tool sets for different agent types.
- * This allows us to stay under the 128 tool limit per API call
- * while still having all functionality available.
+ * Split into 5 focused agents to stay well under the 128 tool limit.
  */
 
 import { guildTools } from "./discord/guild.js";
@@ -29,67 +28,93 @@ import { electionTools } from "./elections/elections.js";
 import { birthdayTools } from "./birthdays/index.js";
 
 /**
- * General Discord Agent - for everyday interactions (~63 tools)
- * Handles: messaging, channels, members, polls, threads, scheduling, memory, elections, birthdays
+ * Messaging Agent - handles messages, threads, polls, and scheduling
  */
-export const generalToolSet = [
-  ...guildTools,
+export const messagingToolSet = [
   ...messageTools,
-  ...channelTools,
-  ...memberTools,
-  ...pollTools,
   ...threadTools,
+  ...pollTools,
   ...activityTools,
   ...schedulingTools,
   ...memoryTools,
-  ...sqliteTools,
-  ...electionTools,
-  ...birthdayTools,
 ];
 
 /**
- * Admin/Moderation Agent - for server administration (~59 tools)
- * Handles: moderation, roles, automod, webhooks, invites, events, emojis
+ * Server Agent - handles guild info, channels, and members
  */
-export const adminToolSet = [
+export const serverToolSet = [
+  ...guildTools,
+  ...channelTools,
+  ...memberTools,
+  ...sqliteTools,
+];
+
+/**
+ * Moderation Agent - handles moderation, roles, automod, webhooks
+ */
+export const moderationToolSet = [
   ...moderationTools,
   ...roleTools,
   ...automodTools,
   ...webhookTools,
   ...inviteTools,
-  ...eventTools,
   ...emojiTools,
-  ...guildTools, // For getting guild info
-  ...channelTools, // For context
-  ...memberTools, // For context
 ];
 
 /**
- * Music/Automation Agent - for entertainment and automation (~52 tools)
- * Handles: music playback, voice, automation tasks, external APIs
+ * Music Agent - handles music playback and voice
  */
-export const musicAutomationToolSet = [
+export const musicToolSet = [
   ...allMusicTools,
   ...voiceTools,
-  ...allAutomationTools,
-  ...allExternalTools,
-  ...messageTools, // To respond in channels
-  ...channelTools, // To find channels
 ];
 
-export type AgentType = "general" | "admin" | "music";
+/**
+ * Automation Agent - handles automation, external APIs, events, elections, birthdays
+ */
+export const automationToolSet = [
+  ...allAutomationTools,
+  ...allExternalTools,
+  ...eventTools,
+  ...electionTools,
+  ...birthdayTools,
+];
+
+export type AgentType = "messaging" | "server" | "moderation" | "music" | "automation";
 
 /**
  * Get the appropriate tool set for an agent type
  */
 export function getToolSet(agentType: AgentType) {
   switch (agentType) {
-    case "general":
-      return generalToolSet;
-    case "admin":
-      return adminToolSet;
+    case "messaging":
+      return messagingToolSet;
+    case "server":
+      return serverToolSet;
+    case "moderation":
+      return moderationToolSet;
     case "music":
-      return musicAutomationToolSet;
+      return musicToolSet;
+    case "automation":
+      return automationToolSet;
+  }
+}
+
+/**
+ * Get description for each agent type (used by Agent Networks for routing)
+ */
+export function getAgentDescription(agentType: AgentType): string {
+  switch (agentType) {
+    case "messaging":
+      return "Send, edit, delete, pin messages. Create polls and threads. Schedule messages. Track activity. Store memories.";
+    case "server":
+      return "Get server/guild information. List, create, modify channels. Search and manage members. Query database.";
+    case "moderation":
+      return "Kick, ban, timeout, warn members. Manage roles and permissions. Configure automod rules. Manage webhooks and invites. Add emojis/stickers.";
+    case "music":
+      return "Play, pause, skip, stop music. Manage queue. Control volume and loop mode. Join/leave voice channels.";
+    case "automation":
+      return "Set reminders and timers. Run shell commands. Browser automation. Fetch weather/news. Manage elections and birthdays. Schedule events.";
   }
 }
 
@@ -104,6 +129,8 @@ export function toolsToRecord(tools: { id: string }[]) {
 }
 
 // Log tool counts on module load (for debugging)
-console.log(`[tool-sets] General: ${String(generalToolSet.length)} tools`);
-console.log(`[tool-sets] Admin: ${String(adminToolSet.length)} tools`);
-console.log(`[tool-sets] Music/Automation: ${String(musicAutomationToolSet.length)} tools`);
+console.log(`[tool-sets] Messaging: ${String(messagingToolSet.length)} tools`);
+console.log(`[tool-sets] Server: ${String(serverToolSet.length)} tools`);
+console.log(`[tool-sets] Moderation: ${String(moderationToolSet.length)} tools`);
+console.log(`[tool-sets] Music: ${String(musicToolSet.length)} tools`);
+console.log(`[tool-sets] Automation: ${String(automationToolSet.length)} tools`);
