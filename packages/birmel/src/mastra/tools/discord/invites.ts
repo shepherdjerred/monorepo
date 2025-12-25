@@ -4,208 +4,158 @@ import type { TextChannel } from "discord.js";
 import { getDiscordClient } from "../../../discord/index.js";
 import { logger } from "../../../utils/logger.js";
 
-export const listInvitesTool = createTool({
-  id: "list-invites",
-  description: "List all invites for the server",
+export const manageInviteTool = createTool({
+  id: "manage-invite",
+  description: "Manage server invites: list all, create new, delete existing, or get vanity URL",
   inputSchema: z.object({
-    guildId: z.string().describe("The ID of the guild"),
+    action: z.enum(["list", "create", "delete", "get-vanity"]).describe("The action to perform"),
+    guildId: z.string().optional().describe("The ID of the guild (required for list/get-vanity)"),
+    channelId: z.string().optional().describe("The ID of the channel (required for create)"),
+    inviteCode: z.string().optional().describe("The invite code (required for delete)"),
+    maxAge: z.number().optional().describe("Invite expiry in seconds, 0 for never (for create)"),
+    maxUses: z.number().optional().describe("Maximum uses, 0 for unlimited (for create)"),
+    temporary: z.boolean().optional().describe("Whether membership is temporary (for create)"),
+    reason: z.string().optional().describe("Reason for creating/deleting"),
   }),
   outputSchema: z.object({
     success: z.boolean(),
     message: z.string(),
     data: z
-      .array(
+      .union([
+        z.array(
+          z.object({
+            code: z.string(),
+            url: z.string(),
+            channelId: z.string().nullable(),
+            inviterId: z.string().nullable(),
+            uses: z.number().nullable(),
+            maxUses: z.number().nullable(),
+            expiresAt: z.string().nullable(),
+          }),
+        ),
         z.object({
           code: z.string(),
           url: z.string(),
-          channelId: z.string().nullable(),
-          inviterId: z.string().nullable(),
-          uses: z.number().nullable(),
-          maxUses: z.number().nullable(),
-          expiresAt: z.string().nullable(),
         }),
-      )
+        z.object({
+          code: z.string().nullable(),
+          uses: z.number(),
+        }),
+      ])
       .optional(),
   }),
   execute: async (ctx) => {
     try {
       const client = getDiscordClient();
-      const guild = await client.guilds.fetch(ctx.guildId);
-      const invites = await guild.invites.fetch();
 
-      const inviteList = invites.map((invite) => ({
-        code: invite.code,
-        url: invite.url,
-        channelId: invite.channelId,
-        inviterId: invite.inviterId,
-        uses: invite.uses,
-        maxUses: invite.maxUses,
-        expiresAt: invite.expiresAt?.toISOString() ?? null,
-      }));
+      switch (ctx.action) {
+        case "list": {
+          if (!ctx.guildId) {
+            return {
+              success: false,
+              message: "guildId is required for listing invites",
+            };
+          }
+          const guild = await client.guilds.fetch(ctx.guildId);
+          const invites = await guild.invites.fetch();
+          const inviteList = invites.map((invite) => ({
+            code: invite.code,
+            url: invite.url,
+            channelId: invite.channelId,
+            inviterId: invite.inviterId,
+            uses: invite.uses,
+            maxUses: invite.maxUses,
+            expiresAt: invite.expiresAt?.toISOString() ?? null,
+          }));
+          return {
+            success: true,
+            message: `Found ${String(inviteList.length)} invites`,
+            data: inviteList,
+          };
+        }
 
-      return {
-        success: true,
-        message: `Found ${String(inviteList.length)} invites`,
-        data: inviteList,
-      };
-    } catch (error) {
-      logger.error("Failed to list invites", error);
-      return {
-        success: false,
-        message: "Failed to list invites",
-      };
-    }
-  },
-});
+        case "create": {
+          if (!ctx.channelId) {
+            return {
+              success: false,
+              message: "channelId is required for creating an invite",
+            };
+          }
+          const channel = await client.channels.fetch(ctx.channelId);
+          if (!channel || !("createInvite" in channel)) {
+            return {
+              success: false,
+              message: "Cannot create invite for this channel type",
+            };
+          }
+          const invite = await (channel as TextChannel).createInvite({
+            ...(ctx.maxAge !== undefined && { maxAge: ctx.maxAge }),
+            ...(ctx.maxUses !== undefined && { maxUses: ctx.maxUses }),
+            ...(ctx.temporary !== undefined && { temporary: ctx.temporary }),
+            ...(ctx.reason !== undefined && { reason: ctx.reason }),
+          });
+          return {
+            success: true,
+            message: `Created invite: ${invite.url}`,
+            data: {
+              code: invite.code,
+              url: invite.url,
+            },
+          };
+        }
 
-export const createInviteTool = createTool({
-  id: "create-invite",
-  description: "Create a new invite link for a channel",
-  inputSchema: z.object({
-    channelId: z.string().describe("The ID of the channel"),
-    maxAge: z
-      .number()
-      .optional()
-      .describe("Invite expiry in seconds (0 for never)"),
-    maxUses: z
-      .number()
-      .optional()
-      .describe("Maximum number of uses (0 for unlimited)"),
-    temporary: z
-      .boolean()
-      .optional()
-      .describe("Whether membership is temporary"),
-    reason: z.string().optional().describe("Reason for creating the invite"),
-  }),
-  outputSchema: z.object({
-    success: z.boolean(),
-    message: z.string(),
-    data: z
-      .object({
-        code: z.string(),
-        url: z.string(),
-      })
-      .optional(),
-  }),
-  execute: async (ctx) => {
-    try {
-      const client = getDiscordClient();
-      const channel = await client.channels.fetch(ctx.channelId);
+        case "delete": {
+          if (!ctx.inviteCode) {
+            return {
+              success: false,
+              message: "inviteCode is required for deleting an invite",
+            };
+          }
+          const invite = await client.fetchInvite(ctx.inviteCode);
+          await invite.delete(ctx.reason);
+          return {
+            success: true,
+            message: `Deleted invite ${ctx.inviteCode}`,
+          };
+        }
 
-      if (!channel || !("createInvite" in channel)) {
-        return {
-          success: false,
-          message: "Cannot create invite for this channel type",
-        };
+        case "get-vanity": {
+          if (!ctx.guildId) {
+            return {
+              success: false,
+              message: "guildId is required for getting vanity URL",
+            };
+          }
+          const guild = await client.guilds.fetch(ctx.guildId);
+          const vanity = await guild.fetchVanityData();
+          if (!vanity.code) {
+            return {
+              success: true,
+              message: "Server does not have a vanity URL",
+              data: {
+                code: null,
+                uses: 0,
+              },
+            };
+          }
+          return {
+            success: true,
+            message: `Vanity URL: discord.gg/${vanity.code}`,
+            data: {
+              code: vanity.code,
+              uses: vanity.uses,
+            },
+          };
+        }
       }
-
-      const invite = await (channel as TextChannel).createInvite({
-        ...(ctx.maxAge !== undefined && { maxAge: ctx.maxAge }),
-        ...(ctx.maxUses !== undefined && { maxUses: ctx.maxUses }),
-        ...(ctx.temporary !== undefined && { temporary: ctx.temporary }),
-        ...(ctx.reason !== undefined && { reason: ctx.reason }),
-      });
-
-      return {
-        success: true,
-        message: `Created invite: ${invite.url}`,
-        data: {
-          code: invite.code,
-          url: invite.url,
-        },
-      };
     } catch (error) {
-      logger.error("Failed to create invite", error);
+      logger.error("Failed to manage invite", error);
       return {
         success: false,
-        message: "Failed to create invite",
+        message: "Failed to manage invite",
       };
     }
   },
 });
 
-export const deleteInviteTool = createTool({
-  id: "delete-invite",
-  description: "Delete/revoke an invite",
-  inputSchema: z.object({
-    inviteCode: z.string().describe("The invite code to delete"),
-    reason: z.string().optional().describe("Reason for deleting"),
-  }),
-  outputSchema: z.object({
-    success: z.boolean(),
-    message: z.string(),
-  }),
-  execute: async (ctx) => {
-    try {
-      const client = getDiscordClient();
-      const invite = await client.fetchInvite(ctx.inviteCode);
-
-      await invite.delete(ctx.reason);
-
-      return {
-        success: true,
-        message: `Deleted invite ${ctx.inviteCode}`,
-      };
-    } catch (error) {
-      logger.error("Failed to delete invite", error);
-      return {
-        success: false,
-        message: "Failed to delete invite",
-      };
-    }
-  },
-});
-
-export const getVanityUrlTool = createTool({
-  id: "get-vanity-url",
-  description: "Get the vanity URL for the server (if available)",
-  inputSchema: z.object({
-    guildId: z.string().describe("The ID of the guild"),
-  }),
-  outputSchema: z.object({
-    success: z.boolean(),
-    message: z.string(),
-    data: z
-      .object({
-        code: z.string().nullable(),
-        uses: z.number(),
-      })
-      .optional(),
-  }),
-  execute: async (ctx) => {
-    try {
-      const client = getDiscordClient();
-      const guild = await client.guilds.fetch(ctx.guildId);
-
-      const vanity = await guild.fetchVanityData();
-
-      if (!vanity.code) {
-        return {
-          success: true,
-          message: "Server does not have a vanity URL",
-          data: {
-            code: null,
-            uses: 0,
-          },
-        };
-      }
-
-      return {
-        success: true,
-        message: `Vanity URL: discord.gg/${vanity.code}`,
-        data: {
-          code: vanity.code,
-          uses: vanity.uses,
-        },
-      };
-    } catch (error) {
-      logger.error("Failed to get vanity URL", error);
-      return {
-        success: false,
-        message: "Failed to get vanity URL. Server may not have the required boost level.",
-      };
-    }
-  },
-});
-
-export const inviteTools = [listInvitesTool, createInviteTool, deleteInviteTool, getVanityUrlTool];
+export const inviteTools = [manageInviteTool];
