@@ -29,7 +29,7 @@ export const recordActivityTool = createTool({
     message: z.string(),
   }),
   execute: async (ctx) => {
-    return withToolSpan("record-activity", ctx.guildId, async () => {
+    return withToolSpan("record-activity", ctx.guildId, () => {
       logger.debug("Recording activity", { guildId: ctx.guildId, userId: ctx.userId, type: ctx.type });
       try {
         switch (ctx.type) {

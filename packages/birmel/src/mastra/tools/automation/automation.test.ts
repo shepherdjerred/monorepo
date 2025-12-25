@@ -7,15 +7,8 @@
 import { describe, test, expect } from "bun:test";
 import {
   executeShellCommandTool,
-  scheduleTaskTool,
-  listScheduledTasksTool,
-  cancelScheduledTaskTool,
-  scheduleReminderTool,
-  browserNavigateTool,
-  browserScreenshotTool,
-  browserTypeTool,
-  browserGetTextTool,
-  browserCloseTool,
+  manageTaskTool,
+  browserAutomationTool,
 } from "./index.js";
 import { prisma } from "../../../database/index.js";
 import { existsSync } from "node:fs";
@@ -110,7 +103,8 @@ describe("Phase 2: Timer/Scheduler Tools", () => {
   test("schedules a one-time task with ISO date", async () => {
     const futureDate = new Date(Date.now() + 60000).toISOString();
 
-    const result = await (scheduleTaskTool as any).execute({
+    const result = await (manageTaskTool as any).execute({
+      action: "schedule",
       when: futureDate,
       toolId: "execute-shell-command",
       toolInput: { command: "echo", args: ["scheduled test"] },
@@ -126,14 +120,14 @@ describe("Phase 2: Timer/Scheduler Tools", () => {
   });
 
   test("schedules a task with cron pattern", async () => {
-    const result = await (scheduleTaskTool as any).execute({
+    const result = await (manageTaskTool as any).execute({
+      action: "schedule",
       when: "0 9 * * *", // Daily at 9am
       toolId: "execute-shell-command",
       toolInput: { command: "echo", args: ["daily task"] },
       guildId: testGuildId,
       userId: testUserId,
       name: "Daily cron task",
-      recurring: true,
       ...testContext,
     });
 
@@ -143,13 +137,13 @@ describe("Phase 2: Timer/Scheduler Tools", () => {
   });
 
   test("schedules a reminder with natural language", async () => {
-    const result = await (scheduleReminderTool as any).execute({
-      when: "in 5 minutes",
+    const result = await (manageTaskTool as any).execute({
       action: "remind",
+      when: "in 5 minutes",
       guildId: testGuildId,
       channelId: "test-channel-e2e",
       userId: testUserId,
-      message: "Test reminder",
+      reminderAction: "Test reminder",
       ...testContext,
     });
 
@@ -158,7 +152,8 @@ describe("Phase 2: Timer/Scheduler Tools", () => {
   });
 
   test("lists scheduled tasks", async () => {
-    const result = await (listScheduledTasksTool as any).execute({
+    const result = await (manageTaskTool as any).execute({
+      action: "list",
       guildId: testGuildId,
       ...testContext,
     });
@@ -170,7 +165,8 @@ describe("Phase 2: Timer/Scheduler Tools", () => {
 
   test("cancels a scheduled task", async () => {
     // First create a task
-    const createResult = await (scheduleTaskTool as any).execute({
+    const createResult = await (manageTaskTool as any).execute({
+      action: "schedule",
       when: "in 1 hour",
       toolId: "execute-shell-command",
       toolInput: { command: "echo", args: ["to be cancelled"] },
@@ -184,7 +180,8 @@ describe("Phase 2: Timer/Scheduler Tools", () => {
     expect(taskId).toBeTruthy();
 
     // Then cancel it
-    const cancelResult = await (cancelScheduledTaskTool as any).execute({
+    const cancelResult = await (manageTaskTool as any).execute({
+      action: "cancel",
       taskId: taskId!,
       guildId: testGuildId,
       userId: testUserId,
@@ -203,7 +200,8 @@ describe("Phase 2: Timer/Scheduler Tools", () => {
 
 describe("Phase 3: Browser Tools", () => {
   test("navigates to a URL", async () => {
-    const result = await (browserNavigateTool as any).execute({
+    const result = await (browserAutomationTool as any).execute({
+      action: "navigate",
       url: "https://example.com",
       ...testContext,
     });
@@ -215,13 +213,15 @@ describe("Phase 3: Browser Tools", () => {
 
   test("gets text content from page", async () => {
     // Navigate first
-    await (browserNavigateTool as any).execute({
+    await (browserAutomationTool as any).execute({
+      action: "navigate",
       url: "https://example.com",
       ...testContext,
     });
 
     // Get text
-    const result = await (browserGetTextTool as any).execute({
+    const result = await (browserAutomationTool as any).execute({
+      action: "get-text",
       selector: "h1",
       ...testContext,
     });
@@ -232,13 +232,15 @@ describe("Phase 3: Browser Tools", () => {
 
   test("captures screenshot", async () => {
     // Navigate first
-    await (browserNavigateTool as any).execute({
+    await (browserAutomationTool as any).execute({
+      action: "navigate",
       url: "https://example.com",
       ...testContext,
     });
 
     // Take screenshot
-    const result = await (browserScreenshotTool as any).execute({
+    const result = await (browserAutomationTool as any).execute({
+      action: "screenshot",
       filename: "test-e2e-screenshot.png",
       ...testContext,
     });
@@ -255,13 +257,15 @@ describe("Phase 3: Browser Tools", () => {
   test("types into input field", async () => {
     // This test would need a page with an input field
     // For now, just verify the tool doesn't error
-    await (browserNavigateTool as any).execute({
+    await (browserAutomationTool as any).execute({
+      action: "navigate",
       url: "https://example.com",
       ...testContext,
     });
 
     // This will fail to find the selector, but should handle gracefully
-    const result = await (browserTypeTool as any).execute({
+    const result = await (browserAutomationTool as any).execute({
+      action: "type",
       selector: "input[name='q']",
       text: "test search",
       timeout: 1000,
@@ -273,7 +277,8 @@ describe("Phase 3: Browser Tools", () => {
   });
 
   test("closes browser session", async () => {
-    const result = await (browserCloseTool as any).execute({
+    const result = await (browserAutomationTool as any).execute({
+      action: "close",
       ...testContext,
     });
 

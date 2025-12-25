@@ -51,7 +51,7 @@ export const managePollTool = createTool({
       try {
         const client = getDiscordClient();
         const channel = await client.channels.fetch(ctx.channelId);
-        if (!channel?.isTextBased()) {
+        if (!channel?.isTextBased() || !("send" in channel)) {
           return { success: false, message: "Channel must be a text channel" };
         }
 
@@ -81,7 +81,7 @@ export const managePollTool = createTool({
                   createdBy: client.user.id,
                   expiresAt,
                 },
-              }).catch((e: unknown) => logger.error("Failed to store poll", e));
+              }).catch((e: unknown) => { logger.error("Failed to store poll", e); });
             }
             logger.info("Poll created", { messageId: message.id });
             return {

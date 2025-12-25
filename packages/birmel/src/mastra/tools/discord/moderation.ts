@@ -74,14 +74,16 @@ export const moderateMemberTool = createTool({
 
         case "prune": {
           if (!ctx.days) return { success: false, message: "days is required for prune" };
-          const pruned = await guild.members.prune({ days: ctx.days, reason: ctx.reason });
-          return { success: true, message: `Pruned ${String(pruned ?? 0)} members`, data: { pruneCount: pruned ?? 0 } };
+          const pruneOpts: { days: number; reason?: string } = { days: ctx.days };
+          if (ctx.reason) pruneOpts.reason = ctx.reason;
+          const pruned = await guild.members.prune(pruneOpts);
+          return { success: true, message: `Pruned ${String(pruned)} members`, data: { pruneCount: pruned } };
         }
 
         case "prune-count": {
           if (!ctx.days) return { success: false, message: "days is required for prune-count" };
           const count = await guild.members.prune({ days: ctx.days, dry: true });
-          return { success: true, message: `${String(count ?? 0)} members would be pruned`, data: { pruneCount: count ?? 0 } };
+          return { success: true, message: `${String(count)} members would be pruned`, data: { pruneCount: count } };
         }
       }
     } catch (error) {
