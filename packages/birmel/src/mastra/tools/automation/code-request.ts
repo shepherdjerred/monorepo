@@ -1,5 +1,8 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { getConfig } from "../../../config/index.js";
 import { loggers, checkRateLimit, getRateLimitResetTime } from "../../../utils/index.js";
 
@@ -69,16 +72,28 @@ function generateBranchName(prefix: string): string {
   return `${prefix}-${timestamp}-${shortHash}`;
 }
 
+/**
+ * Cleans up a temporary directory, ignoring errors.
+ */
+async function cleanupTempDir(tempDir: string): Promise<void> {
+  try {
+    await rm(tempDir, { recursive: true, force: true });
+  } catch {
+    // Ignore cleanup errors
+  }
+}
+
 export const codeRequestTool = createTool({
   id: "request-code-change",
   description: `Request a code change to birmel by running Claude Code CLI.
 
 This tool allows users to request code changes to the birmel codebase. It will:
-1. Create a new git branch
-2. Run Claude Code in one-shot mode with the request
-3. Commit any changes made
-4. Push the branch and create a pull request
-5. Return the PR URL
+1. Clone the repository to a temporary directory
+2. Create a new git branch
+3. Run Claude Code in one-shot mode with the request
+4. Commit any changes made
+5. Push the branch and create a pull request
+6. Return the PR URL
 
 **Rate Limited**: Limited to a few requests per hour per user.
 **Long Running**: This operation can take several minutes.
@@ -132,42 +147,51 @@ Examples:
       };
     }
 
-    const repoPath = config.claudeCode.repoPath;
+    const repoUrl = config.claudeCode.repoUrl;
     const subPath = config.claudeCode.subPath;
     const branchName = generateBranchName(config.claudeCode.branchPrefix);
+
+    // Create a temporary directory for the clone
+    let tempDir: string;
+    try {
+      tempDir = await mkdtemp(join(tmpdir(), "birmel-code-request-"));
+    } catch (error) {
+      return {
+        success: false,
+        message: `Failed to create temporary directory: ${String(error)}`,
+      };
+    }
 
     logger.info("Starting code request", {
       userId: ctx.userId,
       username: ctx.username,
       request: ctx.request.substring(0, 100),
       branchName,
-      repoPath,
+      repoUrl,
       subPath,
+      tempDir,
     });
 
     try {
-      // Step 1: Ensure we're on main/master and pull latest
-      logger.info("Fetching latest from origin...");
-      const fetchResult = await execCommand("git", ["fetch", "origin"], { cwd: repoPath, timeout: 60000 });
-      if (fetchResult.exitCode !== 0) {
-        logger.warn("Git fetch warning", { stderr: fetchResult.stderr });
-      }
-
-      // Get the default branch name
-      const defaultBranchResult = await execCommand(
+      // Step 1: Clone the repository
+      logger.info("Cloning repository...", { repoUrl, tempDir });
+      const cloneResult = await execCommand(
         "git",
-        ["symbolic-ref", "refs/remotes/origin/HEAD", "--short"],
-        { cwd: repoPath, timeout: 10000 },
+        ["clone", "--depth", "1", repoUrl, tempDir],
+        { timeout: 120000 },
       );
-      const defaultBranch = defaultBranchResult.stdout.trim().replace("origin/", "") || "main";
 
-      // Checkout and pull the default branch
-      await execCommand("git", ["checkout", defaultBranch], { cwd: repoPath, timeout: 30000 });
-      await execCommand("git", ["pull", "origin", defaultBranch], { cwd: repoPath, timeout: 60000 });
+      if (cloneResult.exitCode !== 0) {
+        throw new Error(`Failed to clone repository: ${cloneResult.stderr}`);
+      }
 
       // Step 2: Create a new branch
       logger.info("Creating new branch", { branchName });
-      const branchResult = await execCommand("git", ["checkout", "-b", branchName], { cwd: repoPath, timeout: 10000 });
+      const branchResult = await execCommand(
+        "git",
+        ["checkout", "-b", branchName],
+        { cwd: tempDir, timeout: 10000 },
+      );
       if (branchResult.exitCode !== 0) {
         throw new Error(`Failed to create branch: ${branchResult.stderr}`);
       }
@@ -197,7 +221,7 @@ Important guidelines:
           claudePrompt,
         ],
         {
-          cwd: repoPath,
+          cwd: tempDir,
           timeout: config.claudeCode.defaultTimeout,
           env: {
             // Ensure Claude has necessary environment
@@ -208,10 +232,7 @@ Important guidelines:
       );
 
       if (claudeResult.timedOut) {
-        // Clean up: go back to default branch
-        await execCommand("git", ["checkout", defaultBranch], { cwd: repoPath, timeout: 10000 });
-        await execCommand("git", ["branch", "-D", branchName], { cwd: repoPath, timeout: 10000 });
-
+        await cleanupTempDir(tempDir);
         return {
           success: false,
           message: `Claude Code timed out after ${String(config.claudeCode.defaultTimeout / 1000)} seconds. The request may be too complex.`,
@@ -226,14 +247,11 @@ Important guidelines:
       logger.info("Claude Code completed", { exitCode: claudeResult.exitCode });
 
       // Step 4: Check if there are any changes
-      const statusResult = await execCommand("git", ["status", "--porcelain"], { cwd: repoPath, timeout: 10000 });
+      const statusResult = await execCommand("git", ["status", "--porcelain"], { cwd: tempDir, timeout: 10000 });
       const hasChanges = statusResult.stdout.trim().length > 0;
 
       if (!hasChanges) {
-        // No changes made, clean up
-        await execCommand("git", ["checkout", defaultBranch], { cwd: repoPath, timeout: 10000 });
-        await execCommand("git", ["branch", "-D", branchName], { cwd: repoPath, timeout: 10000 });
-
+        await cleanupTempDir(tempDir);
         return {
           success: false,
           message: "Claude Code did not make any changes to the codebase. The request may already be implemented or may not be actionable.",
@@ -246,7 +264,7 @@ Important guidelines:
 
       // Step 5: Commit the changes
       logger.info("Committing changes...");
-      await execCommand("git", ["add", "-A"], { cwd: repoPath, timeout: 10000 });
+      await execCommand("git", ["add", "-A"], { cwd: tempDir, timeout: 10000 });
 
       const commitMessage = `feat: ${ctx.request.substring(0, 50)}${ctx.request.length > 50 ? "..." : ""}
 
@@ -259,7 +277,7 @@ Generated by Claude Code via Discord request.`;
       const commitResult = await execCommand(
         "git",
         ["commit", "-m", commitMessage],
-        { cwd: repoPath, timeout: 30000 },
+        { cwd: tempDir, timeout: 30000 },
       );
 
       if (commitResult.exitCode !== 0) {
@@ -267,7 +285,7 @@ Generated by Claude Code via Discord request.`;
       }
 
       // Get the commit hash
-      const hashResult = await execCommand("git", ["rev-parse", "HEAD"], { cwd: repoPath, timeout: 10000 });
+      const hashResult = await execCommand("git", ["rev-parse", "HEAD"], { cwd: tempDir, timeout: 10000 });
       const commitHash = hashResult.stdout.trim().substring(0, 8);
 
       // Step 6: Push the branch
@@ -275,7 +293,7 @@ Generated by Claude Code via Discord request.`;
       const pushResult = await execCommand(
         "git",
         ["push", "-u", "origin", branchName],
-        { cwd: repoPath, timeout: 60000 },
+        { cwd: tempDir, timeout: 60000 },
       );
 
       if (pushResult.exitCode !== 0) {
@@ -311,11 +329,13 @@ ${claudeOutput.substring(0, 2000)}${claudeOutput.length > 2000 ? "\n...(truncate
           "create",
           "--title", prTitle,
           "--body", prBody,
-          "--base", defaultBranch,
           "--head", branchName,
         ],
-        { cwd: repoPath, timeout: 60000 },
+        { cwd: tempDir, timeout: 60000 },
       );
+
+      // Clean up temp directory before returning
+      await cleanupTempDir(tempDir);
 
       if (prResult.exitCode !== 0) {
         // PR creation failed, but we still have the branch and commit
@@ -334,9 +354,6 @@ ${claudeOutput.substring(0, 2000)}${claudeOutput.length > 2000 ? "\n...(truncate
 
       // Extract PR URL from output
       const prUrl = prResult.stdout.trim();
-
-      // Go back to default branch
-      await execCommand("git", ["checkout", defaultBranch], { cwd: repoPath, timeout: 10000 });
 
       const duration = Date.now() - startTime;
       logger.info("Code request completed successfully", {
@@ -365,19 +382,8 @@ ${claudeOutput.substring(0, 2000)}${claudeOutput.length > 2000 ? "\n...(truncate
         duration,
       });
 
-      // Attempt cleanup
-      try {
-        const defaultBranchResult = await execCommand(
-          "git",
-          ["symbolic-ref", "refs/remotes/origin/HEAD", "--short"],
-          { cwd: repoPath, timeout: 10000 },
-        );
-        const defaultBranch = defaultBranchResult.stdout.trim().replace("origin/", "") || "main";
-        await execCommand("git", ["checkout", defaultBranch], { cwd: repoPath, timeout: 10000 });
-        await execCommand("git", ["branch", "-D", branchName], { cwd: repoPath, timeout: 10000 });
-      } catch {
-        // Ignore cleanup errors
-      }
+      // Clean up temp directory
+      await cleanupTempDir(tempDir);
 
       return {
         success: false,

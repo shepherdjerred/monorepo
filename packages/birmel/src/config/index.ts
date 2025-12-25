@@ -140,7 +140,7 @@ function loadConfigFromEnv(): Config {
     },
     claudeCode: {
       enabled: parseBoolean(process.env["CLAUDE_CODE_ENABLED"], false),
-      repoPath: process.env["CLAUDE_CODE_REPO_PATH"] ?? "/app/monorepo",
+      repoUrl: process.env["CLAUDE_CODE_REPO_URL"] ?? "https://github.com/shepherdjerred/monorepo.git",
       subPath: process.env["CLAUDE_CODE_SUB_PATH"] ?? "packages/birmel",
       defaultTimeout: parseNumber(process.env["CLAUDE_CODE_DEFAULT_TIMEOUT"], 600000),
       maxTimeout: parseNumber(process.env["CLAUDE_CODE_MAX_TIMEOUT"], 900000),
