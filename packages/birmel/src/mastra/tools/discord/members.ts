@@ -5,14 +5,13 @@ import { logger } from "../../../utils/logger.js";
 
 export const manageMemberTool = createTool({
   id: "manage-member",
-  description: "Manage Discord members: get, search, list, modify nickname, add role, or remove role",
+  description: "Manage Discord members: get, search, list, add role, or remove role",
   inputSchema: z.object({
     guildId: z.string().describe("The ID of the guild"),
-    action: z.enum(["get", "search", "list", "modify", "add-role", "remove-role"]).describe("The action to perform"),
-    memberId: z.string().optional().describe("Member ID (for get/modify/add-role/remove-role)"),
+    action: z.enum(["get", "search", "list", "add-role", "remove-role"]).describe("The action to perform"),
+    memberId: z.string().optional().describe("Member ID (for get/add-role/remove-role)"),
     query: z.string().optional().describe("Search query (for search)"),
     limit: z.number().optional().describe("Maximum results (for search/list)"),
-    nickname: z.string().nullable().optional().describe("New nickname (for modify)"),
     roleId: z.string().optional().describe("Role ID (for add-role/remove-role)"),
     reason: z.string().optional().describe("Reason for the action"),
   }),
@@ -75,14 +74,6 @@ export const manageMemberTool = createTool({
             joinedAt: m.joinedAt?.toISOString() ?? null,
           }));
           return { success: true, message: `Retrieved ${String(list.length)} members`, data: list };
-        }
-
-        case "modify": {
-          if (!ctx.memberId) return { success: false, message: "memberId is required for modify" };
-          if (ctx.nickname === undefined) return { success: false, message: "nickname is required for modify" };
-          const member = await guild.members.fetch(ctx.memberId);
-          await member.setNickname(ctx.nickname);
-          return { success: true, message: ctx.nickname ? `Set nickname to "${ctx.nickname}"` : "Reset nickname" };
         }
 
         case "add-role": {
