@@ -81,11 +81,12 @@ describe("rate-limiter", () => {
     test("returns reset time for active limit", () => {
       const before = Date.now();
       checkRateLimit("test-key", 5, 1000);
+      const after = Date.now();
       const resetTime = getRateLimitResetTime("test-key");
 
       expect(resetTime).not.toBeNull();
-      expect(resetTime).toBeGreaterThan(before);
-      expect(resetTime).toBeLessThanOrEqual(before + 1000);
+      expect(resetTime).toBeGreaterThanOrEqual(before + 1000);
+      expect(resetTime).toBeLessThanOrEqual(after + 1000);
     });
   });
 
