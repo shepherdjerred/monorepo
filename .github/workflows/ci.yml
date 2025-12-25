@@ -85,9 +85,8 @@ jobs:
           )
 
           if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]]; then
-            BIRMEL_VERSION=$(jq -r .version packages/birmel/package.json)
             ARGS+=(
-              --birmel-version="$BIRMEL_VERSION"
+              --birmel-version="1.0.${{ github.run_number }}"
               --birmel-git-sha="${{ github.sha }}"
               --birmel-registry-username="${{ github.actor }}"
               --birmel-registry-password=env:GITHUB_TOKEN
