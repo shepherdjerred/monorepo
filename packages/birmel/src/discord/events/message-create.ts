@@ -78,6 +78,23 @@ const DIRECT_TRIGGER = /\bbirmel\b/i;
 // Confidence threshold for contextual classification
 const CLASSIFICATION_CONFIDENCE_THRESHOLD = 0.7;
 
+// Allowed user IDs - only respond to messages from these users
+const ALLOWED_USER_IDS = new Set([
+  "186665676134547461", // Aaron
+  "202595851678384137", // Brian
+  "410595870380392458", // Irfan
+  "200067001035653131", // Ryan
+  "263577791105073152", // Danny
+  "208425244128444418", // Virmel
+  "251485022429642752", // Long
+  "160509172704739328", // Jerred
+  "171455587517857796", // Colin
+  "331238905619677185", // Caitlyn
+  "121887985896521732", // Richard
+  "528096854831792159", // Hirza
+  "208404668026454016", // Edward
+]);
+
 /**
  * Determine if the bot should respond to a message.
  * Uses direct triggers first, then falls back to AI classification.
@@ -88,6 +105,15 @@ async function shouldRespond(
 ): Promise<boolean> {
   // Ignore messages from bots
   if (message.author.bot) return false;
+
+  // Only respond to messages from allowed users
+  if (!ALLOWED_USER_IDS.has(message.author.id)) {
+    logger.debug("Ignoring message from non-allowed user", {
+      userId: message.author.id,
+      username: message.author.username,
+    });
+    return false;
+  }
 
   // Direct trigger: bot is @mentioned
   if (message.mentions.has(clientId)) {
