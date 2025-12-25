@@ -29,7 +29,7 @@ export const recordActivityTool = createTool({
     message: z.string(),
   }),
   execute: async (ctx) => {
-    return withToolSpan("record-activity", ctx.guildId, () => {
+    return withToolSpan("record-activity", ctx.guildId, async () => {
       logger.debug("Recording activity", { guildId: ctx.guildId, userId: ctx.userId, type: ctx.type });
       try {
         switch (ctx.type) {
@@ -44,6 +44,7 @@ export const recordActivityTool = createTool({
               activityInput.characterCount = ctx.characterCount;
             }
             recordMessageActivity(activityInput);
+            await Promise.resolve();
             return {
               success: true,
               message: "Message activity recorded successfully",
@@ -64,6 +65,7 @@ export const recordActivityTool = createTool({
               messageId: ctx.messageId,
               emoji: ctx.emoji,
             });
+            await Promise.resolve();
             return {
               success: true,
               message: "Reaction activity recorded successfully",
