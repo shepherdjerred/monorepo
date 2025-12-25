@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { TextChannel } from "discord.js";
 import { getDiscordClient } from "../../../discord/index.js";
 import { logger } from "../../../utils/logger.js";
+import { validateSnowflakes } from "./validation.js";
 
 export const manageWebhookTool = createTool({
   id: "manage-webhook",
@@ -44,6 +45,14 @@ export const manageWebhookTool = createTool({
   }),
   execute: async (ctx) => {
     try {
+      // Validate all Discord IDs before making API calls
+      const idError = validateSnowflakes([
+        { value: ctx.guildId, fieldName: "guildId" },
+        { value: ctx.channelId, fieldName: "channelId" },
+        { value: ctx.webhookId, fieldName: "webhookId" },
+      ]);
+      if (idError) return { success: false, message: idError };
+
       const client = getDiscordClient();
 
       switch (ctx.action) {
@@ -185,7 +194,7 @@ export const manageWebhookTool = createTool({
       logger.error("Failed to manage webhook", error);
       return {
         success: false,
-        message: "Failed to manage webhook",
+        message: `Failed to manage webhook: ${(error as Error).message}`,
       };
     }
   },

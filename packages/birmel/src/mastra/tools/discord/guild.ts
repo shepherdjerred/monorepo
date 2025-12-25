@@ -2,6 +2,7 @@ import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 import { getDiscordClient } from "../../../discord/index.js";
 import { logger } from "../../../utils/logger.js";
+import { validateSnowflakes } from "./validation.js";
 
 export const manageGuildTool = createTool({
   id: "manage-guild",
@@ -46,6 +47,12 @@ export const manageGuildTool = createTool({
   }),
   execute: async (ctx) => {
     try {
+      // Validate all Discord IDs before making API calls
+      const idError = validateSnowflakes([
+        { value: ctx.guildId, fieldName: "guildId" },
+      ]);
+      if (idError) return { success: false, message: idError };
+
       const client = getDiscordClient();
       const guild = await client.guilds.fetch(ctx.guildId);
 
@@ -128,7 +135,7 @@ export const manageGuildTool = createTool({
       }
     } catch (error) {
       logger.error("Failed to manage guild", error);
-      return { success: false, message: "Failed to manage guild" };
+      return { success: false, message: `Failed to manage guild: ${(error as Error).message}` };
     }
   },
 });

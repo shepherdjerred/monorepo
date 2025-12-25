@@ -3,6 +3,7 @@ import { z } from "zod";
 import { AutoModerationRuleTriggerType, AutoModerationActionType } from "discord.js";
 import { getDiscordClient } from "../../../discord/index.js";
 import { logger } from "../../../utils/index.js";
+import { validateSnowflakes, validateSnowflakeArray } from "./validation.js";
 
 export const manageAutomodRuleTool = createTool({
   id: "manage-automod-rule",
@@ -57,6 +58,19 @@ export const manageAutomodRuleTool = createTool({
   }),
   execute: async (ctx) => {
     try {
+      // Validate all Discord IDs before making API calls
+      const idError = validateSnowflakes([
+        { value: ctx.guildId, fieldName: "guildId" },
+        { value: ctx.ruleId, fieldName: "ruleId" },
+      ]);
+      if (idError) return { success: false, message: idError };
+
+      const rolesError = validateSnowflakeArray(ctx.exemptRoles, "exemptRoles");
+      if (rolesError) return { success: false, message: rolesError };
+
+      const channelsError = validateSnowflakeArray(ctx.exemptChannels, "exemptChannels");
+      if (channelsError) return { success: false, message: channelsError };
+
       const client = getDiscordClient();
       const guild = await client.guilds.fetch(ctx.guildId);
 
@@ -231,7 +245,7 @@ export const manageAutomodRuleTool = createTool({
       logger.error("Failed to manage automod rule", error as Error);
       return {
         success: false,
-        message: "Failed to manage auto-moderation rule",
+        message: `Failed to manage auto-moderation rule: ${(error as Error).message}`,
       };
     }
   },

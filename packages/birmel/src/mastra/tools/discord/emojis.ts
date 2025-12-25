@@ -2,6 +2,7 @@ import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 import { getDiscordClient } from "../../../discord/index.js";
 import { logger } from "../../../utils/logger.js";
+import { validateSnowflakes } from "./validation.js";
 
 export const manageEmojiTool = createTool({
   id: "manage-emoji",
@@ -35,6 +36,13 @@ export const manageEmojiTool = createTool({
   }),
   execute: async (ctx) => {
     try {
+      // Validate all Discord IDs before making API calls
+      const idError = validateSnowflakes([
+        { value: ctx.guildId, fieldName: "guildId" },
+        { value: ctx.emojiId, fieldName: "emojiId" },
+      ]);
+      if (idError) return { success: false, message: idError };
+
       const client = getDiscordClient();
       const guild = await client.guilds.fetch(ctx.guildId);
 
@@ -115,7 +123,7 @@ export const manageEmojiTool = createTool({
       logger.error("Failed to manage emoji", error);
       return {
         success: false,
-        message: "Failed to manage emoji",
+        message: `Failed to manage emoji: ${(error as Error).message}`,
       };
     }
   },
@@ -156,6 +164,13 @@ export const manageStickerTool = createTool({
   }),
   execute: async (ctx) => {
     try {
+      // Validate all Discord IDs before making API calls
+      const idError = validateSnowflakes([
+        { value: ctx.guildId, fieldName: "guildId" },
+        { value: ctx.stickerId, fieldName: "stickerId" },
+      ]);
+      if (idError) return { success: false, message: idError };
+
       const client = getDiscordClient();
       const guild = await client.guilds.fetch(ctx.guildId);
 
@@ -218,7 +233,7 @@ export const manageStickerTool = createTool({
       logger.error("Failed to manage sticker", error);
       return {
         success: false,
-        message: "Failed to manage sticker",
+        message: `Failed to manage sticker: ${(error as Error).message}`,
       };
     }
   },

@@ -7,6 +7,7 @@ import {
   cancelAnnouncement,
   listPendingAnnouncements
 } from "../../../scheduler/jobs/announcements.js";
+import { validateSnowflakes } from "./validation.js";
 
 const logger = loggers.tools.child("discord.scheduling");
 
@@ -44,6 +45,14 @@ export const manageScheduledMessageTool = createTool({
   execute: async (ctx) => {
     return withToolSpan("manage-scheduled-message", ctx.guildId, async () => {
       try {
+        // Validate all Discord IDs before making API calls
+        const idError = validateSnowflakes([
+          { value: ctx.guildId, fieldName: "guildId" },
+          { value: ctx.channelId, fieldName: "channelId" },
+          { value: ctx.createdBy, fieldName: "createdBy" },
+        ]);
+        if (idError) return { success: false, message: idError };
+
         switch (ctx.action) {
           case "schedule": {
             if (!ctx.channelId || !ctx.message || !ctx.scheduledAt || !ctx.createdBy) {

@@ -4,6 +4,7 @@ import { getDiscordClient } from "../../../discord/index.js";
 import { loggers } from "../../../utils/logger.js";
 import { withToolSpan, captureException } from "../../../observability/index.js";
 import type { TextChannel } from "discord.js";
+import { validateSnowflakes, validateSnowflakeArray } from "./validation.js";
 
 const logger = loggers.tools.child("discord.messages");
 
@@ -41,6 +42,18 @@ export const manageMessageTool = createTool({
   execute: async (ctx) => {
     return withToolSpan("manage-message", undefined, async () => {
       try {
+        // Validate all Discord IDs before making API calls
+        const idError = validateSnowflakes([
+          { value: ctx.channelId, fieldName: "channelId" },
+          { value: ctx.userId, fieldName: "userId" },
+          { value: ctx.messageId, fieldName: "messageId" },
+          { value: ctx.before, fieldName: "before" },
+        ]);
+        if (idError) return { success: false, message: idError };
+
+        const arrayError = validateSnowflakeArray(ctx.messageIds, "messageIds");
+        if (arrayError) return { success: false, message: arrayError };
+
         const client = getDiscordClient();
 
         switch (ctx.action) {

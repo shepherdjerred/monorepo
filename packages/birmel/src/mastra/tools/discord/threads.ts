@@ -4,6 +4,7 @@ import { ChannelType } from "discord.js";
 import { getDiscordClient } from "../../../discord/index.js";
 import { loggers } from "../../../utils/logger.js";
 import { captureException, withToolSpan } from "../../../observability/index.js";
+import { validateSnowflakes } from "./validation.js";
 
 const logger = loggers.tools.child("discord.threads");
 
@@ -49,6 +50,16 @@ export const manageThreadTool = createTool({
   execute: async (ctx) => {
     return withToolSpan("manage-thread", undefined, async () => {
       try {
+        // Validate all Discord IDs before making API calls
+        const idError = validateSnowflakes([
+          { value: ctx.channelId, fieldName: "channelId" },
+          { value: ctx.threadId, fieldName: "threadId" },
+          { value: ctx.messageId, fieldName: "messageId" },
+          { value: ctx.userId, fieldName: "userId" },
+          { value: ctx.before, fieldName: "before" },
+        ]);
+        if (idError) return { success: false, message: idError };
+
         const client = getDiscordClient();
 
         switch (ctx.action) {

@@ -4,6 +4,7 @@ import { joinVoiceChannel, getVoiceConnection } from "@discordjs/voice";
 import type { VoiceChannel } from "discord.js";
 import { getDiscordClient } from "../../../discord/index.js";
 import { logger } from "../../../utils/index.js";
+import { validateSnowflakes } from "./validation.js";
 
 export const manageBotVoiceTool = createTool({
   id: "manage-bot-voice",
@@ -19,6 +20,13 @@ export const manageBotVoiceTool = createTool({
   }),
   execute: async (ctx) => {
     try {
+      // Validate all Discord IDs before making API calls
+      const idError = validateSnowflakes([
+        { value: ctx.guildId, fieldName: "guildId" },
+        { value: ctx.channelId, fieldName: "channelId" },
+      ]);
+      if (idError) return { success: false, message: idError };
+
       switch (ctx.action) {
         case "join": {
           if (!ctx.channelId) {
@@ -73,7 +81,7 @@ export const manageBotVoiceTool = createTool({
       logger.error("Failed to manage bot voice", error as Error);
       return {
         success: false,
-        message: "Failed to manage bot voice connection",
+        message: `Failed to manage bot voice connection: ${(error as Error).message}`,
       };
     }
   },
@@ -97,6 +105,14 @@ export const manageVoiceMemberTool = createTool({
   }),
   execute: async (ctx) => {
     try {
+      // Validate all Discord IDs before making API calls
+      const idError = validateSnowflakes([
+        { value: ctx.guildId, fieldName: "guildId" },
+        { value: ctx.memberId, fieldName: "memberId" },
+        { value: ctx.channelId, fieldName: "channelId" },
+      ]);
+      if (idError) return { success: false, message: idError };
+
       const client = getDiscordClient();
       const guild = await client.guilds.fetch(ctx.guildId);
       const member = await guild.members.fetch(ctx.memberId);
@@ -168,7 +184,7 @@ export const manageVoiceMemberTool = createTool({
       logger.error("Failed to manage voice member", error as Error);
       return {
         success: false,
-        message: "Failed to manage voice member",
+        message: `Failed to manage voice member: ${(error as Error).message}`,
       };
     }
   },

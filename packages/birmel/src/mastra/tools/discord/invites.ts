@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { TextChannel } from "discord.js";
 import { getDiscordClient } from "../../../discord/index.js";
 import { logger } from "../../../utils/logger.js";
+import { validateSnowflakes } from "./validation.js";
 
 export const manageInviteTool = createTool({
   id: "manage-invite",
@@ -46,6 +47,13 @@ export const manageInviteTool = createTool({
   }),
   execute: async (ctx) => {
     try {
+      // Validate all Discord IDs before making API calls
+      const idError = validateSnowflakes([
+        { value: ctx.guildId, fieldName: "guildId" },
+        { value: ctx.channelId, fieldName: "channelId" },
+      ]);
+      if (idError) return { success: false, message: idError };
+
       const client = getDiscordClient();
 
       switch (ctx.action) {
@@ -152,7 +160,7 @@ export const manageInviteTool = createTool({
       logger.error("Failed to manage invite", error);
       return {
         success: false,
-        message: "Failed to manage invite",
+        message: `Failed to manage invite: ${(error as Error).message}`,
       };
     }
   },
