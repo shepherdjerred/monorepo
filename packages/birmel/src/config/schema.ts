@@ -129,7 +129,8 @@ export const ElectionsConfigSchema = z.object({
 
 export const ClaudeCodeConfigSchema = z.object({
   enabled: z.boolean().default(false),
-  repoPath: z.string().default("/app/birmel"),
+  repoPath: z.string().default("/app/monorepo"),
+  subPath: z.string().default("packages/birmel"),
   defaultTimeout: z.number().default(600000), // 10 minutes
   maxTimeout: z.number().default(900000), // 15 minutes
   maxRequestsPerHour: z.number().default(5),

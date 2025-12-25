@@ -133,6 +133,7 @@ Examples:
     }
 
     const repoPath = config.claudeCode.repoPath;
+    const subPath = config.claudeCode.subPath;
     const branchName = generateBranchName(config.claudeCode.branchPrefix);
 
     logger.info("Starting code request", {
@@ -141,6 +142,7 @@ Examples:
       request: ctx.request.substring(0, 100),
       branchName,
       repoPath,
+      subPath,
     });
 
     try {
@@ -173,6 +175,9 @@ Examples:
       // Step 3: Run Claude Code CLI in one-shot mode
       logger.info("Running Claude Code...");
       const claudePrompt = `You are making changes to the birmel Discord bot codebase.
+
+This is a monorepo. The birmel package is located at: ${subPath}
+Focus your changes on the birmel package unless the request specifically requires changes elsewhere.
 
 Request from Discord user ${ctx.username}:
 ${ctx.request}
