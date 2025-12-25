@@ -26,6 +26,11 @@ RULES FOR WHEN NOT TO RESPOND (shouldRespond: false):
 3. The bot already responded and no new question was asked
 4. Someone is just chatting with other users
 5. The message is a reaction or short acknowledgment
+6. The user is explaining the bot's behavior to another user (meta-discussion ABOUT the bot, not a request TO it)
+   - e.g., "yeah I need to add you to the whitelist" → explaining to another human
+   - e.g., "it doesn't respond to everyone" → talking about the bot in third person
+7. The message contains "you" or "your" directed at another human who recently spoke
+   - Look at conversation flow: if another user just asked something and "you" makes sense as addressing them, don't respond
 
 Be conservative - when in doubt, don't respond (shouldRespond: false, lower confidence).
 
