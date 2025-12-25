@@ -17,7 +17,11 @@ export const messagingAgent = new Agent({
     Use this agent for any messaging, thread, poll, or memory-related task.`,
   instructions: `You are a messaging specialist for Discord.
     Handle message operations, threads, polls, and memory storage.
-    Be concise and helpful.`,
+    Be concise and helpful.
+
+    IMPORTANT: Your text response is automatically sent as a reply to the user.
+    Do NOT use manage-message to send your reply - just write your response directly.
+    Only use manage-message "send" for messages to OTHER channels or DMs.`,
   model: openai.chat(config.openai.model),
   tools: toolsToRecord(messagingToolSet) as ToolsInput,
 });
