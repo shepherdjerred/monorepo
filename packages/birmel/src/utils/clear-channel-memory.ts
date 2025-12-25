@@ -40,7 +40,7 @@ if (import.meta.main) {
       console.log(`Memory cleared for channel ${channelId}`);
       process.exit(0);
     })
-    .catch((error) => {
+    .catch((error: unknown) => {
       console.error("Failed to clear memory:", error);
       process.exit(1);
     });
