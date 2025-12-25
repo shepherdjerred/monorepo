@@ -17,6 +17,8 @@ import {
   type ImageAttachment,
 } from "../../utils/image.js";
 import { recordMessageActivity } from "../../database/repositories/activity.js";
+import { getOrCreateGuildOwner } from "../../database/repositories/guild-owner.js";
+import { generateWakeWord } from "../../voice/command-handler.js";
 
 const logger = loggers.discord.child("message-create");
 
@@ -72,9 +74,6 @@ export function setMessageHandler(handler: MessageHandler): void {
   messageHandler = handler;
 }
 
-// Direct trigger pattern - explicit mention of the bot
-const DIRECT_TRIGGER = /\bbirmel\b/i;
-
 // Confidence threshold for contextual classification
 const CLASSIFICATION_CONFIDENCE_THRESHOLD = 0.7;
 
@@ -101,7 +100,8 @@ const ALLOWED_USER_IDS = new Set([
  */
 async function shouldRespond(
   message: Message,
-  clientId: string
+  clientId: string,
+  guildId: string
 ): Promise<boolean> {
   // Ignore messages from bots
   if (message.author.bot) return false;
@@ -121,9 +121,14 @@ async function shouldRespond(
     return true;
   }
 
-  // Direct trigger: "birmel" keyword in message
-  if (DIRECT_TRIGGER.test(message.content)) {
-    logger.debug("Responding: birmel keyword");
+  // Direct trigger: dynamic wake word based on current guild owner
+  // e.g., if owner is "aaron", wake word is "baron"; if "virmel", it's "birmel"
+  const guildOwner = await getOrCreateGuildOwner(guildId);
+  const wakeWord = generateWakeWord(guildOwner.currentOwner);
+  const wakeWordPattern = new RegExp(`\\b${wakeWord}\\b`, "i");
+
+  if (wakeWordPattern.test(message.content)) {
+    logger.debug("Responding: dynamic wake word", { wakeWord, owner: guildOwner.currentOwner });
     return true;
   }
 
@@ -226,7 +231,7 @@ export function setupMessageCreateHandler(client: Client): void {
         setSentryContext(discordContext);
 
         try {
-          const respond = await shouldRespond(message, clientUserId);
+          const respond = await shouldRespond(message, clientUserId, guildId);
           span.setAttribute("should_respond", respond);
 
           if (!respond) {
