@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: Dockerfile.api
+    ports:
+      - "8000:8000"
+    environment:
+      - NODE_ENV=development
+      - PORT=8000
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
+      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}
+      - JWT_SECRET=${JWT_SECRET}
+      - DATABASE_URL=file:/app/data/dev.db
+      - FRONTEND_URL=http://localhost:5173
+    volumes:
+      # Mount Docker socket to manage sandbox containers
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Persist database
+      - api_data:/app/data
+      # Development: mount source for hot reload
+      - ../src:/app/src:ro
+    networks:
+      - claude-web
+    depends_on:
+      - sandbox-builder
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    volumes:
+      - ../frontend/src:/app/src:ro
+    networks:
+      - claude-web
+
+  # Build sandbox image on startup
+  sandbox-builder:
+    image: docker:24-dind
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - .:/build:ro
+    command: >
+      sh -c "
+        docker build -t claude-web-sandbox:latest -f /build/Dockerfile.sandbox /build
+      "
+    networks:
+      - claude-web
+
+networks:
+  claude-web:
+    driver: bridge
+
+volumes:
+  api_data:

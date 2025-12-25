@@ -1,0 +1,48 @@
+# Claude Web Sandbox Container
+# This container runs Claude Code CLI with the Agent SDK for sandboxed AI development
+
+FROM node:22-bookworm
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    ripgrep \
+    jq \
+    sudo \
+    openssh-client \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Claude Code CLI globally
+RUN npm install -g @anthropic-ai/claude-code
+
+# Create non-root agent user with sudo access (for installing project deps)
+RUN useradd -m -s /bin/bash agent && \
+    echo "agent ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+# Set up workspace directory with correct ownership
+RUN mkdir -p /workspace && chown agent:agent /workspace
+WORKDIR /workspace
+
+# Configure git to allow any directory (for mounted/cloned repos)
+RUN git config --system --add safe.directory '*'
+
+# Switch to agent user
+USER agent
+
+# Set environment variables
+ENV HOME=/home/agent
+ENV PATH="/home/agent/.npm-global/bin:$PATH"
+
+# Create npm global directory for agent user
+RUN mkdir -p /home/agent/.npm-global && \
+    npm config set prefix '/home/agent/.npm-global'
+
+# Copy agent bridge
+COPY --chown=agent:agent agent-bridge /agent-bridge
+
+# Install agent bridge dependencies
+RUN cd /agent-bridge && npm install
+
+# Entry point
+ENTRYPOINT ["node", "/agent-bridge/index.js"]

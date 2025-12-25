@@ -1,0 +1,36 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String    @id @default(cuid())
+  githubId    String    @unique
+  username    String
+  email       String?
+  avatarUrl   String?
+  accessToken String    // Encrypted GitHub OAuth token
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  sessions    Session[]
+}
+
+model Session {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  repoUrl     String
+  baseBranch  String   @default("main") // Target branch for PRs (e.g., main)
+  branch      String   // Working branch (auto-generated, e.g., claude/abc123)
+  containerId String?
+  status      String   @default("pending") // pending, starting, running, stopped, error
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+}
