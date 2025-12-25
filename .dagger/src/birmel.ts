@@ -2,65 +2,143 @@ import type { Directory, Container, Secret } from "@dagger.io/dagger";
 import { dag } from "@dagger.io/dagger";
 
 const BUN_VERSION = "1.3.4";
+const PLAYWRIGHT_VERSION = "1.57.0";
 
 /**
- * Get a Bun container with caching, ffmpeg for voice support, and Playwright browsers
+ * Get a base Bun container with system dependencies and caching.
+ * LAYER ORDERING: System deps and caches are set up BEFORE any source files.
  */
-function getBunContainerWithVoice(): Container {
-  return dag
-    .container()
-    .from(`oven/bun:${BUN_VERSION}-debian`)
-    .withExec(["apt-get", "update"])
-    .withExec(["apt-get", "install", "-y", "ffmpeg", "python3", "make", "g++", "libtool-bin"])
-    .withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-cache"))
-    // Install Playwright Chromium and dependencies for browser automation
-    .withExec(["bunx", "playwright", "install", "--with-deps", "chromium"]);
+function getBaseVoiceContainer(): Container {
+  return (
+    dag
+      .container()
+      .from(`oven/bun:${BUN_VERSION}-debian`)
+      // Cache APT packages (version in key for invalidation on upgrade)
+      .withMountedCache("/var/cache/apt", dag.cacheVolume(`apt-cache-bun-${BUN_VERSION}-debian`))
+      .withMountedCache("/var/lib/apt", dag.cacheVolume(`apt-lib-bun-${BUN_VERSION}-debian`))
+      .withExec(["apt-get", "update"])
+      .withExec(["apt-get", "install", "-y", "ffmpeg", "python3", "make", "g++", "libtool-bin"])
+      // Cache Bun packages
+      .withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-cache"))
+      // Cache Playwright browsers (version in key for invalidation)
+      .withMountedCache("/root/.cache/ms-playwright", dag.cacheVolume(`playwright-browsers-${PLAYWRIGHT_VERSION}`))
+      // Install Playwright Chromium and dependencies for browser automation
+      .withExec(["bunx", "playwright", "install", "--with-deps", "chromium"])
+      // Cache ESLint (incremental linting)
+      .withMountedCache("/workspace/.eslintcache", dag.cacheVolume("eslint-cache"))
+      // Cache TypeScript incremental build
+      .withMountedCache("/workspace/.tsbuildinfo", dag.cacheVolume("tsbuildinfo-cache"))
+  );
 }
 
 /**
- * Get a prepared container with all dependencies installed
+ * Install workspace dependencies with optimal layer ordering.
+ * PHASE 1: Copy only dependency files (package.json, bun.lock)
+ * PHASE 2: Run bun install (cached if lockfile unchanged)
+ * PHASE 3: Copy source files (changes frequently)
+ *
+ * @param workspaceSource The full workspace source directory
+ * @param useMounts If true, use mounted directories (for CI checks). If false, copy files (for image publishing).
+ * @returns Container with deps installed
+ */
+function installWorkspaceDeps(workspaceSource: Directory, useMounts: boolean): Container {
+  let container = getBaseVoiceContainer().withWorkdir("/workspace");
+
+  // PHASE 1: Dependency files only (cached if lockfile unchanged)
+  if (useMounts) {
+    container = container
+      .withMountedFile("/workspace/package.json", workspaceSource.file("package.json"))
+      .withMountedFile("/workspace/bun.lock", workspaceSource.file("bun.lock"))
+      // Each workspace's package.json (bun needs these for workspace resolution)
+      .withMountedFile("/workspace/packages/birmel/package.json", workspaceSource.file("packages/birmel/package.json"))
+      .withMountedFile(
+        "/workspace/packages/dagger-utils/package.json",
+        workspaceSource.file("packages/dagger-utils/package.json"),
+      )
+      .withMountedFile(
+        "/workspace/packages/eslint-config/package.json",
+        workspaceSource.file("packages/eslint-config/package.json"),
+      )
+      .withMountedFile(
+        "/workspace/packages/a2ui-poc/package.json",
+        workspaceSource.file("packages/a2ui-poc/package.json"),
+      );
+  } else {
+    container = container
+      .withFile("/workspace/package.json", workspaceSource.file("package.json"))
+      .withFile("/workspace/bun.lock", workspaceSource.file("bun.lock"))
+      .withFile("/workspace/packages/birmel/package.json", workspaceSource.file("packages/birmel/package.json"))
+      .withFile(
+        "/workspace/packages/dagger-utils/package.json",
+        workspaceSource.file("packages/dagger-utils/package.json"),
+      )
+      .withFile(
+        "/workspace/packages/eslint-config/package.json",
+        workspaceSource.file("packages/eslint-config/package.json"),
+      )
+      .withFile("/workspace/packages/a2ui-poc/package.json", workspaceSource.file("packages/a2ui-poc/package.json"));
+  }
+
+  // PHASE 2: Install dependencies (cached if lockfile + package.jsons unchanged)
+  container = container.withExec(["bun", "install", "--frozen-lockfile"]);
+
+  // PHASE 3: Config files and source code (changes frequently, added AFTER install)
+  if (useMounts) {
+    container = container
+      .withMountedFile("/workspace/tsconfig.base.json", workspaceSource.file("tsconfig.base.json"))
+      .withMountedDirectory("/workspace/packages/birmel", workspaceSource.directory("packages/birmel"))
+      .withMountedDirectory("/workspace/packages/dagger-utils", workspaceSource.directory("packages/dagger-utils"))
+      .withMountedDirectory("/workspace/packages/eslint-config", workspaceSource.directory("packages/eslint-config"))
+      .withMountedDirectory("/workspace/packages/a2ui-poc", workspaceSource.directory("packages/a2ui-poc"));
+  } else {
+    container = container
+      .withFile("/workspace/tsconfig.base.json", workspaceSource.file("tsconfig.base.json"))
+      .withDirectory("/workspace/packages/birmel", workspaceSource.directory("packages/birmel"))
+      .withDirectory("/workspace/packages/dagger-utils", workspaceSource.directory("packages/dagger-utils"))
+      .withDirectory("/workspace/packages/eslint-config", workspaceSource.directory("packages/eslint-config"))
+      .withDirectory("/workspace/packages/a2ui-poc", workspaceSource.directory("packages/a2ui-poc"));
+  }
+
+  return container;
+}
+
+/**
+ * Get a prepared container with all dependencies installed (using mounts for CI)
  * @param workspaceSource The full workspace source directory
  * @returns Container ready for birmel operations
  */
 export function getBirmelPrepared(workspaceSource: Directory): Container {
-  return getBunContainerWithVoice()
-    .withWorkdir("/workspace")
-    .withMountedDirectory("/workspace", workspaceSource)
-    .withExec(["bun", "install", "--frozen-lockfile"])
-    .withWorkdir("/workspace/packages/birmel");
+  return installWorkspaceDeps(workspaceSource, true).withWorkdir("/workspace/packages/birmel");
 }
 
 /**
- * Run type checking, linting, and tests for birmel
+ * Run type checking, linting, and tests for birmel in PARALLEL
  * @param workspaceSource The full workspace source directory
- * @returns The container after running checks
+ * @returns Result message
  */
-export function checkBirmel(workspaceSource: Directory): Container {
-  return getBirmelPrepared(workspaceSource)
-    .withExec(["bunx", "prisma", "generate"])
-    .withExec(["bun", "run", "typecheck"])
-    .withExec(["bun", "run", "lint"])
-    .withExec(["bun", "run", "test"]);
+export async function checkBirmel(workspaceSource: Directory): Promise<string> {
+  const prepared = getBirmelPrepared(workspaceSource).withExec(["bunx", "prisma", "generate"]);
+
+  // Run typecheck, lint, and test in PARALLEL
+  await Promise.all([
+    prepared.withExec(["bun", "run", "typecheck"]).sync(),
+    prepared.withExec(["bun", "run", "lint"]).sync(),
+    prepared.withExec(["bun", "run", "test"]).sync(),
+  ]);
+
+  return "✓ Birmel CI passed (typecheck, lint, test)";
 }
 
 /**
  * Build the birmel Docker image for production
+ * Uses withDirectory (not mounts) so files are included in the published image.
  * @param workspaceSource The full workspace source directory
  * @param version The version tag
  * @param gitSha The git SHA
  * @returns The built container with files copied (not mounted)
  */
-export function buildBirmelImage(
-  workspaceSource: Directory,
-  version: string,
-  gitSha: string,
-): Container {
-  // Use withDirectory to copy files into the image (not withMountedDirectory)
-  // Mounted directories are temporary and not included in published images
-  return getBunContainerWithVoice()
-    .withWorkdir("/workspace")
-    .withDirectory("/workspace", workspaceSource)
-    .withExec(["bun", "install", "--frozen-lockfile"])
+export function buildBirmelImage(workspaceSource: Directory, version: string, gitSha: string): Container {
+  return installWorkspaceDeps(workspaceSource, false)
     .withWorkdir("/workspace/packages/birmel")
     .withExec(["bunx", "prisma", "generate"])
     .withEnvVariable("VERSION", version)
@@ -72,19 +150,11 @@ export function buildBirmelImage(
 }
 
 /**
- * Smoke test the birmel Docker image
- * @param workspaceSource The full workspace source directory
- * @param version The version tag
- * @param gitSha The git SHA
+ * Smoke test a pre-built birmel Docker image (avoids rebuilding)
+ * @param image The pre-built container image
  * @returns Test result with logs
  */
-export async function smokeTestBirmelImage(
-  workspaceSource: Directory,
-  version: string,
-  gitSha: string,
-): Promise<string> {
-  const image = buildBirmelImage(workspaceSource, version, gitSha);
-
+export async function smokeTestBirmelImageWithContainer(image: Container): Promise<string> {
   // Run with env vars that will cause expected startup failure (missing tokens)
   const containerWithEnv = image
     .withEnvVariable("DISCORD_TOKEN", "test-token")
@@ -96,11 +166,7 @@ export async function smokeTestBirmelImage(
     .withEnvVariable("MASTRA_TELEMETRY_DB_PATH", "file:/tmp/mastra-telemetry.db")
     .withEntrypoint([]);
 
-  const container = containerWithEnv.withExec([
-    "sh",
-    "-c",
-    "timeout 30s bun run start 2>&1 || true",
-  ]);
+  const container = containerWithEnv.withExec(["sh", "-c", "timeout 30s bun run start 2>&1 || true"]);
 
   let output = "";
 
@@ -115,24 +181,31 @@ export async function smokeTestBirmelImage(
   }
 
   // Check for expected patterns indicating the bot tried to start
-  const expectedPatterns = [
-    "Logging in",
-    "Discord",
-    "TokenInvalid",
-    "Invalid token",
-    "401",
-    "Unauthorized",
-  ];
+  const expectedPatterns = ["Logging in", "Discord", "TokenInvalid", "Invalid token", "401", "Unauthorized"];
 
-  const hasExpectedPattern = expectedPatterns.some((pattern) =>
-    output.toLowerCase().includes(pattern.toLowerCase()),
-  );
+  const hasExpectedPattern = expectedPatterns.some((pattern) => output.toLowerCase().includes(pattern.toLowerCase()));
 
   if (hasExpectedPattern) {
     return `✅ Smoke test passed: Container started and failed as expected due to invalid credentials.\n\nOutput snippet: ${output.slice(0, 500)}`;
   }
 
   return `⚠️ Smoke test unclear: Container ran but output was unexpected.\nOutput:\n${output}`;
+}
+
+/**
+ * Smoke test the birmel Docker image (builds then tests)
+ * @param workspaceSource The full workspace source directory
+ * @param version The version tag
+ * @param gitSha The git SHA
+ * @returns Test result with logs
+ */
+export async function smokeTestBirmelImage(
+  workspaceSource: Directory,
+  version: string,
+  gitSha: string,
+): Promise<string> {
+  const image = buildBirmelImage(workspaceSource, version, gitSha);
+  return smokeTestBirmelImageWithContainer(image);
 }
 
 type PublishBirmelImageOptions = {
@@ -149,10 +222,12 @@ type PublishBirmelImageWithContainerOptions = {
   image: Container;
   version: string;
   gitSha: string;
-  registryAuth?: {
-    username: string;
-    password: Secret;
-  };
+  registryAuth?:
+    | {
+        username: string;
+        password: Secret;
+      }
+    | undefined;
 };
 
 /**
