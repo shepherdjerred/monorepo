@@ -28,7 +28,7 @@ export function validateSnowflake(value: string | undefined, fieldName: string):
  * Returns the first error found, or null if all are valid.
  */
 export function validateSnowflakes(
-  values: Array<{ value: string | undefined; fieldName: string }>
+  values: { value: string | undefined; fieldName: string }[]
 ): string | null {
   for (const { value, fieldName } of values) {
     const error = validateSnowflake(value, fieldName);
@@ -45,7 +45,7 @@ export function validateSnowflakeArray(values: string[] | undefined, fieldName: 
   if (!values) return null;
 
   for (let i = 0; i < values.length; i++) {
-    const error = validateSnowflake(values[i], `${fieldName}[${i}]`);
+    const error = validateSnowflake(values[i], `${fieldName}[${String(i)}]`);
     if (error) return error;
   }
 
