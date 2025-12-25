@@ -2,13 +2,36 @@ import { describe, test, expect } from "bun:test";
 import {
   containsWakeWord,
   extractCommand,
-  createVoiceCommand,
   expandCommandShortcut,
+  generateWakeWord,
 } from "../../src/voice/command-handler.js";
 
 describe("command-handler", () => {
+  describe("generateWakeWord", () => {
+    test("generates wake word by replacing first letter with 'b'", () => {
+      expect(generateWakeWord("virmel")).toBe("birmel");
+      expect(generateWakeWord("aaron")).toBe("baron");
+      expect(generateWakeWord("jerred")).toBe("berred");
+      expect(generateWakeWord("danny")).toBe("banny");
+      expect(generateWakeWord("irfan")).toBe("brfan");
+    });
+
+    test("handles names starting with 'b'", () => {
+      expect(generateWakeWord("brian")).toBe("brian");
+    });
+
+    test("handles uppercase names", () => {
+      expect(generateWakeWord("Virmel")).toBe("birmel");
+      expect(generateWakeWord("AARON")).toBe("baron");
+    });
+
+    test("returns fallback for empty input", () => {
+      expect(generateWakeWord("")).toBe("birmel");
+    });
+  });
+
   describe("containsWakeWord", () => {
-    test("detects 'hey birmel'", () => {
+    test("detects 'hey birmel' with default wake word", () => {
       expect(containsWakeWord("hey birmel")).toBe(true);
       expect(containsWakeWord("Hey Birmel")).toBe(true);
       expect(containsWakeWord("HEY BIRMEL")).toBe(true);
@@ -43,6 +66,22 @@ describe("command-handler", () => {
     test("handles whitespace", () => {
       expect(containsWakeWord("  hey birmel  ")).toBe(true);
       expect(containsWakeWord("\they birmel\n")).toBe(true);
+    });
+
+    test("detects custom wake word 'baron' for aaron", () => {
+      expect(containsWakeWord("hey baron", "baron")).toBe(true);
+      expect(containsWakeWord("baron play music", "baron")).toBe(true);
+      expect(containsWakeWord("ok baron skip", "baron")).toBe(true);
+    });
+
+    test("detects custom wake word 'berred' for jerred", () => {
+      expect(containsWakeWord("hey berred", "berred")).toBe(true);
+      expect(containsWakeWord("berred play music", "berred")).toBe(true);
+    });
+
+    test("rejects wrong wake word when custom is specified", () => {
+      expect(containsWakeWord("hey birmel", "baron")).toBe(false);
+      expect(containsWakeWord("hey baron", "birmel")).toBe(false);
     });
   });
 
@@ -79,48 +118,24 @@ describe("command-handler", () => {
     test("handles case insensitivity", () => {
       expect(extractCommand("HEY BIRMEL PLAY MUSIC")).toBe("play music");
     });
-  });
 
-  describe("createVoiceCommand", () => {
-    test("creates command with valid input", () => {
-      const result = createVoiceCommand(
-        "user-123",
-        "guild-456",
-        "channel-789",
-        "hey birmel play some music"
-      );
-
-      expect(result).not.toBeNull();
-      expect(result?.userId).toBe("user-123");
-      expect(result?.guildId).toBe("guild-456");
-      expect(result?.channelId).toBe("channel-789");
-      expect(result?.rawText).toBe("hey birmel play some music");
-      expect(result?.command).toBe("play some music");
-      expect(result?.timestamp).toBeGreaterThan(0);
+    test("extracts command with custom wake word 'baron'", () => {
+      expect(extractCommand("hey baron play some music", "baron")).toBe("play some music");
+      expect(extractCommand("baron skip this song", "baron")).toBe("skip this song");
     });
 
-    test("returns null without wake word", () => {
-      const result = createVoiceCommand(
-        "user-123",
-        "guild-456",
-        "channel-789",
-        "play some music"
-      );
-
-      expect(result).toBeNull();
+    test("extracts command with custom wake word 'berred'", () => {
+      expect(extractCommand("hey berred play music", "berred")).toBe("play music");
     });
 
-    test("returns null with wake word but no command", () => {
-      const result = createVoiceCommand(
-        "user-123",
-        "guild-456",
-        "channel-789",
-        "hey birmel"
-      );
-
-      expect(result).toBeNull();
+    test("returns null with wrong wake word", () => {
+      expect(extractCommand("hey birmel play music", "baron")).toBeNull();
+      expect(extractCommand("hey baron play music", "birmel")).toBeNull();
     });
   });
+
+  // Note: createVoiceCommand is async and requires database access,
+  // so it's tested in integration tests rather than unit tests
 
   describe("expandCommandShortcut", () => {
     test("expands 'play something'", () => {

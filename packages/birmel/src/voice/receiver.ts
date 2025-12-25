@@ -149,7 +149,7 @@ async function processUserSpeech(userId: string, guildId: string): Promise<void>
       const connection = getVoiceConnection(guildId);
       const channelId = connection?.joinConfig.channelId ?? "";
 
-      const voiceCommand = createVoiceCommand(
+      const voiceCommand = await createVoiceCommand(
         userId,
         guildId,
         channelId,
