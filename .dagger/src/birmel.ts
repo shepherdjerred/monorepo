@@ -3,6 +3,8 @@ import { dag } from "@dagger.io/dagger";
 
 const BUN_VERSION = "1.3.4";
 const PLAYWRIGHT_VERSION = "1.57.0";
+// Bump this to invalidate Dagger caches when deps change
+const CACHE_VERSION = "v2";
 
 /**
  * Get a base Bun container with system dependencies and caching.
@@ -18,8 +20,8 @@ function getBaseVoiceContainer(): Container {
       .withMountedCache("/var/lib/apt", dag.cacheVolume(`apt-lib-bun-${BUN_VERSION}-debian`))
       .withExec(["apt-get", "update"])
       .withExec(["apt-get", "install", "-y", "ffmpeg", "python3", "make", "g++", "libtool-bin"])
-      // Cache Bun packages
-      .withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-cache"))
+      // Cache Bun packages (version in key for cache invalidation)
+      .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(`bun-cache-${CACHE_VERSION}`))
       // Cache Playwright browsers (version in key for invalidation)
       .withMountedCache("/root/.cache/ms-playwright", dag.cacheVolume(`playwright-browsers-${PLAYWRIGHT_VERSION}`))
       // Install Playwright Chromium and dependencies for browser automation
