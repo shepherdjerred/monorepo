@@ -29,6 +29,7 @@ jobs:
           export-env: true
         env:
           NPM_TOKEN: op://bic45kuflnwsnxnd67dzcnxjze/5p65mbzr237yyzt2sfnfao3a5a/NPM_TOKEN
+          GH_TOKEN: op://bic45kuflnwsnxnd67dzcnxjze/5p65mbzr237yyzt2sfnfao3a5a/GH_TOKEN
 
       - name: Extract kubectl version
         id: kubectl-version
@@ -80,14 +81,13 @@ jobs:
         run: |
           ARGS=(
             --source=.
-            --github-token=env:GITHUB_TOKEN
+            --github-token=env:GH_TOKEN
             --npm-token=env:NPM_TOKEN
           )
 
           if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]]; then
-            BIRMEL_VERSION=$(jq -r .version packages/birmel/package.json)
             ARGS+=(
-              --birmel-version="$BIRMEL_VERSION"
+              --birmel-version="1.0.${{ github.run_number }}"
               --birmel-git-sha="${{ github.sha }}"
               --birmel-registry-username="${{ github.actor }}"
               --birmel-registry-password=env:GITHUB_TOKEN

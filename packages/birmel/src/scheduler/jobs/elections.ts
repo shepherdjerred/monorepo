@@ -18,6 +18,7 @@ import {
 	generateNickname,
 } from "../../elections/winner.js";
 import { updateBotNickname } from "../../elections/bot-nickname.js";
+import { updateBotProfile } from "../../elections/bot-profile.js";
 import { loggers } from "../../utils/index.js";
 import { prisma } from "../../database/index.js";
 import { getConfig } from "../../config/index.js";
@@ -260,6 +261,7 @@ export async function processElectionResults(): Promise<void> {
 
 				await setGuildOwner(election.guildId, winner, nickname);
 				await updateBotNickname(election.guildId, nickname);
+				await updateBotProfile(winner);
 
 				await updateElectionStatus(election.id, "completed", {
 					actualEnd: new Date(),

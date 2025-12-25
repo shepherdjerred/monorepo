@@ -200,8 +200,9 @@ ${globalContext}${conversationHistory}`;
         discord: discordContext,
         extra: { requestId },
       });
+      const errorMessage = error instanceof Error ? error.message : String(error);
       await context.message.reply(
-        "Sorry, I encountered an error processing your request."
+        `Sorry, I encountered an error processing your request.\n\`\`\`\n${errorMessage}\n\`\`\``
       );
     } finally {
       clearSentryContext();
@@ -320,7 +321,8 @@ IMPORTANT: This is a voice command. Keep your response concise (under 200 words)
         discord: discordContext,
         extra: { requestId },
       });
-      return "Sorry, I encountered an error processing your voice command.";
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      return `Sorry, I encountered an error processing your voice command.\n\`\`\`\n${errorMessage}\n\`\`\``;
     } finally {
       clearSentryContext();
     }

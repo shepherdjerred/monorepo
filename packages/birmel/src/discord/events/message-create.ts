@@ -20,6 +20,24 @@ import { recordMessageActivity } from "../../database/repositories/activity.js";
 
 const logger = loggers.discord.child("message-create");
 
+// Message deduplication to prevent duplicate responses
+// This handles cases where Discord sends duplicate messageCreate events
+// (e.g., during gateway reconnection or network issues)
+const processedMessages = new Set<string>();
+const PROCESSED_MESSAGE_TTL = 60_000; // 1 minute TTL
+
+function markMessageProcessed(messageId: string): boolean {
+  if (processedMessages.has(messageId)) {
+    return false; // Already processed
+  }
+  processedMessages.add(messageId);
+  // Clean up after TTL to prevent memory leaks
+  setTimeout(() => {
+    processedMessages.delete(messageId);
+  }, PROCESSED_MESSAGE_TTL);
+  return true; // Successfully marked as processing
+}
+
 // Lazy-loaded to avoid circular dependency with tools
 let classifierModule: { getClassifierAgent: typeof GetClassifierAgentFn } | null = null;
 let parserModule: { parseClassificationResult: typeof ParseClassificationResultFn } | null = null;
@@ -60,6 +78,23 @@ const DIRECT_TRIGGER = /\bbirmel\b/i;
 // Confidence threshold for contextual classification
 const CLASSIFICATION_CONFIDENCE_THRESHOLD = 0.7;
 
+// Allowed user IDs - only respond to messages from these users
+const ALLOWED_USER_IDS = new Set([
+  "186665676134547461", // Aaron
+  "202595851678384137", // Brian
+  "410595870380392458", // Irfan
+  "200067001035653131", // Ryan
+  "263577791105073152", // Danny
+  "208425244128444418", // Virmel
+  "251485022429642752", // Long
+  "160509172704739328", // Jerred
+  "171455587517857796", // Colin
+  "331238905619677185", // Caitlyn
+  "121887985896521732", // Richard
+  "528096854831792159", // Hirza
+  "208404668026454016", // Edward
+]);
+
 /**
  * Determine if the bot should respond to a message.
  * Uses direct triggers first, then falls back to AI classification.
@@ -70,6 +105,15 @@ async function shouldRespond(
 ): Promise<boolean> {
   // Ignore messages from bots
   if (message.author.bot) return false;
+
+  // Only respond to messages from allowed users
+  if (!ALLOWED_USER_IDS.has(message.author.id)) {
+    logger.debug("Ignoring message from non-allowed user", {
+      userId: message.author.id,
+      username: message.author.username,
+    });
+    return false;
+  }
 
   // Direct trigger: bot is @mentioned
   if (message.mentions.has(clientId)) {
@@ -189,6 +233,14 @@ export function setupMessageCreateHandler(client: Client): void {
             return;
           }
 
+          // Deduplicate: prevent responding to the same message twice
+          // This can happen during Discord gateway reconnections or network issues
+          if (!markMessageProcessed(message.id)) {
+            logger.debug("Skipping duplicate message", { messageId: message.id });
+            span.setAttribute("duplicate", true);
+            return;
+          }
+
           logger.debug("Processing message", {
             guildId,
             channelId: message.channel.id,
@@ -217,8 +269,10 @@ export function setupMessageCreateHandler(client: Client): void {
             discord: discordContext,
           });
           try {
+            const errorMessage =
+              error instanceof Error ? error.message : String(error);
             await message.reply(
-              "Sorry, I encountered an error processing your request.",
+              `Sorry, I encountered an error processing your request.\n\`\`\`\n${errorMessage}\n\`\`\``,
             );
           } catch {
             // Ignore reply errors

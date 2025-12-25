@@ -1,23 +1,45 @@
 import { logger } from "../utils/index.js";
+import { getOrCreateGuildOwner } from "../database/repositories/guild-owner.js";
 
-// Wake word patterns for triggering the bot
-const WAKE_PATTERNS = [
-  /\bhey\s+birmel\b/i,
-  /\bbirmel\b/i,
-  /\bhi\s+birmel\b/i,
-  /\bok\s+birmel\b/i,
-];
-
-export function containsWakeWord(text: string): boolean {
-  const normalized = text.toLowerCase().trim();
-  return WAKE_PATTERNS.some((pattern) => pattern.test(normalized));
+/**
+ * Generate a wake word from the owner's name by replacing the first letter with 'b'.
+ * Examples: virmel -> birmel, aaron -> baron, jerred -> berred
+ */
+export function generateWakeWord(ownerName: string): string {
+  if (!ownerName || ownerName.length === 0) {
+    return "birmel"; // fallback
+  }
+  return "b" + ownerName.slice(1).toLowerCase();
 }
 
-export function extractCommand(text: string): string | null {
+/**
+ * Create wake word regex patterns for a given wake word.
+ */
+function createWakePatterns(wakeWord: string): RegExp[] {
+  const escaped = wakeWord.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return [
+    new RegExp(`\\bhey\\s+${escaped}\\b`, "i"),
+    new RegExp(`\\b${escaped}\\b`, "i"),
+    new RegExp(`\\bhi\\s+${escaped}\\b`, "i"),
+    new RegExp(`\\bok\\s+${escaped}\\b`, "i"),
+  ];
+}
+
+// Default wake patterns (used when no guild context available)
+const DEFAULT_WAKE_PATTERNS = createWakePatterns("birmel");
+
+export function containsWakeWord(text: string, wakeWord?: string): boolean {
   const normalized = text.toLowerCase().trim();
+  const patterns = wakeWord ? createWakePatterns(wakeWord) : DEFAULT_WAKE_PATTERNS;
+  return patterns.some((pattern) => pattern.test(normalized));
+}
+
+export function extractCommand(text: string, wakeWord?: string): string | null {
+  const normalized = text.toLowerCase().trim();
+  const patterns = wakeWord ? createWakePatterns(wakeWord) : DEFAULT_WAKE_PATTERNS;
 
   // Find which pattern matches
-  for (const pattern of WAKE_PATTERNS) {
+  for (const pattern of patterns) {
     const match = pattern.exec(normalized);
     if (match) {
       // Get everything after the wake word
@@ -55,20 +77,26 @@ export type VoiceCommand = {
   timestamp: number;
 };
 
-export function createVoiceCommand(
+export async function createVoiceCommand(
   userId: string,
   guildId: string,
   channelId: string,
   transcribedText: string,
-): VoiceCommand | null {
-  if (!containsWakeWord(transcribedText)) {
-    logger.debug("No wake word detected", { text: transcribedText });
+): Promise<VoiceCommand | null> {
+  // Look up the current guild owner to determine the wake word
+  const guildOwner = await getOrCreateGuildOwner(guildId);
+  const wakeWord = generateWakeWord(guildOwner.currentOwner);
+
+  logger.debug("Using dynamic wake word", { guildId, owner: guildOwner.currentOwner, wakeWord });
+
+  if (!containsWakeWord(transcribedText, wakeWord)) {
+    logger.debug("No wake word detected", { text: transcribedText, wakeWord });
     return null;
   }
 
-  const command = extractCommand(transcribedText);
+  const command = extractCommand(transcribedText, wakeWord);
   if (!command) {
-    logger.debug("Wake word detected but no command", { text: transcribedText });
+    logger.debug("Wake word detected but no command", { text: transcribedText, wakeWord });
     return null;
   }
 

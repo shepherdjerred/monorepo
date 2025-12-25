@@ -151,7 +151,8 @@ export class Monorepo {
         birmelVersion,
         birmelGitSha,
         birmelRegistryUsername,
-        birmelRegistryPassword
+        birmelRegistryPassword,
+        githubToken
       );
       outputs.push(birmelResult);
     }
