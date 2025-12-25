@@ -23,11 +23,7 @@ import {
   createBirmelAgentWithContext,
   startMastraServer,
 } from "./mastra/index.js";
-import {
-  getMemory,
-  getMemoryIds,
-  type MemoryContext,
-} from "./mastra/memory/index.js";
+import { getMemory, getGlobalThreadId } from "./mastra/memory/index.js";
 import { initializeMusicPlayer, destroyMusicPlayer } from "./music/index.js";
 import { startScheduler, stopScheduler } from "./scheduler/index.js";
 import {
@@ -41,6 +37,7 @@ import { stylizeResponse, closePersonaDb } from "./persona/index.js";
 import { getGuildPersona } from "./persona/guild-persona.js";
 import type { MessageContext } from "./discord/index.js";
 import { buildMessageContent } from "./mastra/utils/message-builder.js";
+import { getRecentChannelMessages } from "./discord/utils/channel-history.js";
 
 /**
  * Fetch global working memory for a guild.
@@ -49,11 +46,11 @@ import { buildMessageContent } from "./mastra/utils/message-builder.js";
 async function getGlobalMemoryContext(guildId: string): Promise<string | null> {
   try {
     const memory = getMemory();
-    const memoryIds = getMemoryIds({ guildId, channelId: "", userId: "" });
+    const threadId = getGlobalThreadId(guildId);
 
     // Try to get the thread to access working memory
     const thread = await memory.getThreadById({
-      threadId: memoryIds.global.threadId,
+      threadId,
     });
 
     if (thread?.metadata?.["workingMemory"]) {
@@ -100,14 +97,6 @@ async function handleMessage(context: MessageContext): Promise<void> {
       ? await createBirmelAgentWithContext(context.content, context.guildId)
       : getBirmelAgent();
 
-    // Get memory IDs for three-tier system
-    const memoryCtx: MemoryContext = {
-      guildId: context.guildId,
-      channelId: context.channelId,
-      userId: context.userId,
-    };
-    const memoryIds = getMemoryIds(memoryCtx);
-
     // Fetch global memory (server rules) to inject into prompt
     logger.debug("Fetching global memory", { requestId, guildId: context.guildId });
     const globalMemory = await withSpan(
@@ -125,6 +114,12 @@ async function handleMessage(context: MessageContext): Promise<void> {
       logger.debug("Global memory found", { requestId, memoryLength: globalMemory.length });
     }
 
+    // Fetch recent Discord messages for conversational context
+    const recentMessages = await getRecentChannelMessages(context.message, 8);
+    const conversationHistory = recentMessages.length > 0
+      ? `\n## Recent Conversation\n${recentMessages.map(msg => `${msg.authorName}${msg.isBot ? " [BOT]" : ""}: ${msg.content}`).join("\n")}\n`
+      : "";
+
     // Build prompt with context
     const prompt = `User ${context.username} (ID: ${context.userId}) in channel ${context.channelId} says:
 
@@ -134,12 +129,13 @@ ${context.attachments.length > 0 ? `[User attached ${String(context.attachments.
 
 Guild ID: ${context.guildId}
 Channel ID: ${context.channelId}
-${globalContext}`;
+${globalContext}${conversationHistory}`;
 
     try {
       // Show typing indicator while generating response
-      // Use CHANNEL thread so all users share conversation context
-      logger.debug("Generating response", { requestId, threadId: memoryIds.channel.threadId, hasImages: context.attachments.length > 0 });
+      // Note: We use Discord message history for context instead of persistent AI conversation threads
+      // This prevents token overflow from accumulated tool calls and responses
+      logger.debug("Generating response", { requestId, hasImages: context.attachments.length > 0, recentMessageCount: recentMessages.length });
       const genStartTime = Date.now();
 
       // Build multimodal content if images present
@@ -152,10 +148,8 @@ ${globalContext}`;
 
       const response = await withAgentSpan("birmel", discordContext, async () => {
         return withTyping(context.message, async () => {
-          return agent.generate(messageInput, {
-            threadId: memoryIds.channel.threadId,
-            resourceId: memoryIds.channel.resourceId,
-          });
+          // No threadId/resourceId = stateless agent with fresh context each time
+          return agent.generate(messageInput);
         });
       });
 
@@ -249,9 +243,6 @@ async function handleVoiceCommand(
       ? await createBirmelAgentWithContext(command, guildId)
       : getBirmelAgent();
 
-    // Get memory IDs for three-tier system
-    const memoryIds = getMemoryIds({ guildId, channelId, userId });
-
     // Fetch global memory (server rules) to inject into prompt
     logger.debug("Fetching global memory for voice", { requestId, guildId });
     const globalMemory = await withSpan(
@@ -276,14 +267,12 @@ ${globalContext}
 IMPORTANT: This is a voice command. Keep your response concise (under 200 words) as it will be spoken back via text-to-speech.`;
 
     try {
-      logger.debug("Generating voice response", { requestId, threadId: memoryIds.channel.threadId });
+      logger.debug("Generating voice response", { requestId });
       const genStartTime = Date.now();
 
       const response = await withAgentSpan("birmel", discordContext, async () => {
-        return agent.generate(prompt, {
-          threadId: memoryIds.channel.threadId,
-          resourceId: memoryIds.channel.resourceId,
-        });
+        // Stateless - no conversation history for voice commands
+        return agent.generate(prompt);
       });
 
       const genDuration = Date.now() - genStartTime;

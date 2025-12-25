@@ -15,7 +15,7 @@ export async function clearChannelMemory(channelId: string): Promise<void> {
     const memory = getMemory();
 
     // Delete the thread which will remove all messages
-    await memory.deleteThread({ threadId });
+    await memory.deleteThread(threadId);
 
     logger.info(`Successfully cleared memory for channel ${channelId}`);
   } catch (error) {
