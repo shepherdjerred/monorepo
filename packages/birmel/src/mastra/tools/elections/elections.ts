@@ -361,6 +361,7 @@ export const getCandidatesTool = createTool({
 
 			try {
 				const candidates = getAllCandidates();
+				await Promise.resolve();
 
 				logger.info("Candidates fetched", { count: candidates.length });
 

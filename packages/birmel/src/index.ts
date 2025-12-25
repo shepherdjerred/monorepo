@@ -19,7 +19,7 @@ import {
 } from "./discord/index.js";
 import { disconnectPrisma } from "./database/index.js";
 import {
-  getBirmelAgent,
+  createBirmelAgent,
   createBirmelAgentWithContext,
   startMastraServer,
 } from "./mastra/index.js";
@@ -91,11 +91,12 @@ async function handleMessage(context: MessageContext): Promise<void> {
 
     const config = getConfig();
 
-    // STAGE 1: Create agent with decision context (persona's similar messages)
+    // STAGE 1: Create specialized agent based on message content
+    // Uses keyword classification to select appropriate tool set (general/admin/music)
     logger.debug("Creating agent", { requestId, personaEnabled: config.persona.enabled });
     const agent = config.persona.enabled
       ? await createBirmelAgentWithContext(context.content, context.guildId)
-      : getBirmelAgent();
+      : createBirmelAgent(context.content);
 
     // Fetch global memory (server rules) to inject into prompt
     logger.debug("Fetching global memory", { requestId, guildId: context.guildId });
@@ -237,11 +238,12 @@ async function handleVoiceCommand(
 
     const config = getConfig();
 
-    // STAGE 1: Create agent with decision context (persona's similar messages)
+    // STAGE 1: Create specialized agent based on voice command content
+    // Voice commands often involve music, so classifier will route appropriately
     logger.debug("Creating agent for voice", { requestId, personaEnabled: config.persona.enabled });
     const agent = config.persona.enabled
       ? await createBirmelAgentWithContext(command, guildId)
-      : getBirmelAgent();
+      : createBirmelAgent(command);
 
     // Fetch global memory (server rules) to inject into prompt
     logger.debug("Fetching global memory for voice", { requestId, guildId });

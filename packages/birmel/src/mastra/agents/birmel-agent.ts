@@ -3,19 +3,43 @@ import type { ToolsInput } from "@mastra/core/agent";
 import { openai } from "@ai-sdk/openai";
 import { SYSTEM_PROMPT } from "./system-prompt.js";
 import { getConfig } from "../../config/index.js";
-import { allTools } from "../tools/index.js";
 import { createMemory } from "../memory/index.js";
 import {
   buildDecisionContext,
   formatDecisionPrompt,
 } from "../../persona/index.js";
 import { getGuildPersona } from "../../persona/guild-persona.js";
+import {
+  type AgentType,
+  getToolSet,
+  toolsToRecord,
+} from "../tools/tool-sets.js";
+import { classifyMessage, getAgentDescription } from "./message-classifier.js";
+import { logger } from "../../utils/index.js";
 
-export function createBirmelAgent(): Agent {
+/**
+ * Create a specialized Birmel agent with tools appropriate for the message content.
+ * Uses keyword classification to select the right tool set.
+ */
+export function createBirmelAgent(
+  messageContent?: string,
+  agentType?: AgentType,
+): Agent {
   const config = getConfig();
 
+  // Determine agent type from message content or use provided type
+  const type = agentType ?? (messageContent ? classifyMessage(messageContent) : "general");
+  const tools = getToolSet(type);
+  const toolsRecord = toolsToRecord(tools);
+
+  logger.debug("Creating specialized agent", {
+    agentType: type,
+    toolCount: tools.length,
+    description: getAgentDescription(type),
+  });
+
   return new Agent({
-    id: "birmel",
+    id: `birmel-${type}`,
     name: "Birmel",
     instructions: SYSTEM_PROMPT,
     // Use openai.chat() to force Chat Completions API instead of Responses API.
@@ -24,16 +48,32 @@ export function createBirmelAgent(): Agent {
     // "Item of type 'reasoning' was provided without its required following item"
     // See: https://github.com/vercel/ai/issues/7099
     model: openai.chat(config.openai.model),
-    tools: allTools as ToolsInput,
+    tools: toolsRecord as ToolsInput,
     memory: createMemory(),
   });
 }
 
+/**
+ * Create a Birmel agent with persona context and specialized tools.
+ */
 export async function createBirmelAgentWithContext(
   userQuery: string,
   guildId: string,
+  agentType?: AgentType,
 ): Promise<Agent> {
   const config = getConfig();
+
+  // Determine agent type from message content or use provided type
+  const type = agentType ?? classifyMessage(userQuery);
+  const tools = getToolSet(type);
+  const toolsRecord = toolsToRecord(tools);
+
+  logger.debug("Creating specialized agent with context", {
+    agentType: type,
+    toolCount: tools.length,
+    description: getAgentDescription(type),
+    guildId,
+  });
 
   // Get guild-specific persona
   const persona = await getGuildPersona(guildId);
@@ -62,7 +102,7 @@ export async function createBirmelAgentWithContext(
   }
 
   return new Agent({
-    id: "birmel-with-context",
+    id: `birmel-${type}-with-context`,
     name: "Birmel",
     instructions: enhancedPrompt,
     // Use openai.chat() to force Chat Completions API instead of Responses API.
@@ -71,7 +111,11 @@ export async function createBirmelAgentWithContext(
     // "Item of type 'reasoning' was provided without its required following item"
     // See: https://github.com/vercel/ai/issues/7099
     model: openai.chat(config.openai.model),
-    tools: allTools as ToolsInput,
+    tools: toolsRecord as ToolsInput,
     memory: createMemory(),
   });
 }
+
+// Re-export types and utilities for convenience
+export { classifyMessage, getAgentDescription } from "./message-classifier.js";
+export type { AgentType } from "../tools/tool-sets.js";

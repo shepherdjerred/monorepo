@@ -1,4 +1,10 @@
-export { createBirmelAgent } from "./birmel-agent.js";
+export {
+  createBirmelAgent,
+  createBirmelAgentWithContext,
+  classifyMessage,
+  getAgentDescription,
+  type AgentType,
+} from "./birmel-agent.js";
 export {
   createClassifierAgent,
   parseClassificationResult,
