@@ -12,6 +12,8 @@ const REPO_URL = "shepherdjerred/monorepo";
 
 // Inline the bun version from dagger-utils/versions.ts
 const BUN_VERSION = "1.3.4";
+// Pin release-please version for reproducible builds
+const RELEASE_PLEASE_VERSION = "17.1.3";
 
 /**
  * Get a Bun container with caching enabled and Playwright browsers for tests
@@ -38,8 +40,36 @@ function getReleasePleaseContainer(): Container {
     .from(`oven/bun:${BUN_VERSION}-debian`)
     .withExec(["apt-get", "update"])
     .withExec(["apt-get", "install", "-y", "git"])
-    .withExec(["bun", "install", "-g", "release-please@latest"])
+    .withExec(["bun", "install", "-g", `release-please@${RELEASE_PLEASE_VERSION}`])
     .withWorkdir("/workspace");
+}
+
+/**
+ * Run a release-please command and capture both stdout and stderr
+ */
+async function runReleasePleaseCommand(
+  container: Container,
+  command: string
+): Promise<{ output: string; success: boolean }> {
+  const result = await container
+    .withExec([
+      "sh",
+      "-c",
+      // Capture both stdout and stderr, and exit code
+      `${command} 2>&1; echo "EXIT_CODE:$?"`,
+    ])
+    .stdout();
+
+  const lines = result.trim().split("\n");
+  const lastLine = lines[lines.length - 1] ?? "";
+  const exitCodeMatch = lastLine.match(/EXIT_CODE:(\d+)/);
+  const exitCode = exitCodeMatch ? parseInt(exitCodeMatch[1] ?? "1", 10) : 1;
+  const output = lines.slice(0, -1).join("\n");
+
+  return {
+    output: output || "(no output)",
+    success: exitCode === 0,
+  };
 }
 
 @object()
@@ -100,46 +130,61 @@ export class Monorepo {
     if (githubToken && npmToken) {
       outputs.push("\n--- Release Workflow ---");
 
-      // Create/update release PRs
+      // Create/update release PRs using non-deprecated release-pr command
       const prContainer = getReleasePleaseContainer()
-        .withSecretVariable("GITHUB_TOKEN", githubToken)
-        .withExec([
-          "sh",
-          "-c",
-          `git clone https://x-access-token:$GITHUB_TOKEN@github.com/${REPO_URL}.git . && release-please manifest-pr --token=\$GITHUB_TOKEN --repo-url=${REPO_URL} --target-branch=main`,
-        ]);
+        .withSecretVariable("GITHUB_TOKEN", githubToken);
 
-      const prOutput = await prContainer.stdout();
-      outputs.push(`Release PR: ${prOutput || "(no changes)"}`);
+      const prResult = await runReleasePleaseCommand(
+        prContainer,
+        `git clone https://x-access-token:$GITHUB_TOKEN@github.com/${REPO_URL}.git . && release-please release-pr --token=\$GITHUB_TOKEN --repo-url=${REPO_URL} --target-branch=main`
+      );
 
-      // Create GitHub releases
+      outputs.push(`Release PR (success=${prResult.success}):`);
+      outputs.push(prResult.output);
+
+      // Create GitHub releases using non-deprecated github-release command
       const releaseContainer = getReleasePleaseContainer()
-        .withSecretVariable("GITHUB_TOKEN", githubToken)
-        .withExec([
-          "sh",
-          "-c",
-          `git clone https://x-access-token:$GITHUB_TOKEN@github.com/${REPO_URL}.git . && release-please manifest-release --token=\$GITHUB_TOKEN --repo-url=${REPO_URL}`,
-        ]);
+        .withSecretVariable("GITHUB_TOKEN", githubToken);
 
-      const releaseOutput = await releaseContainer.stdout();
-      outputs.push(`GitHub Release: ${releaseOutput || "(no releases)"}`);
+      const releaseResult = await runReleasePleaseCommand(
+        releaseContainer,
+        `git clone https://x-access-token:$GITHUB_TOKEN@github.com/${REPO_URL}.git . && release-please github-release --token=\$GITHUB_TOKEN --repo-url=${REPO_URL} --target-branch=main`
+      );
+
+      outputs.push(`GitHub Release (success=${releaseResult.success}):`);
+      outputs.push(releaseResult.output);
 
       // Check if any releases were created and publish
-      if (releaseOutput.includes("github.com") && releaseOutput.includes("releases")) {
+      // Look for release URLs or "Created release" messages in the output
+      const releaseCreated = releaseResult.success && (
+        releaseResult.output.includes("github.com") ||
+        releaseResult.output.includes("Created release") ||
+        releaseResult.output.includes("created release")
+      );
+
+      if (releaseCreated) {
         outputs.push("\n--- Publishing ---");
 
         for (const pkg of PACKAGES) {
-          await container
-            .withWorkdir(`/workspace/packages/${pkg}`)
-            .withSecretVariable("NPM_TOKEN", npmToken)
-            .withExec(["sh", "-c", 'echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc'])
-            .withExec(["bun", "publish", "--access", "public", "--tag", "latest", "--registry", "https://registry.npmjs.org"])
-            .stdout();
+          try {
+            await container
+              .withWorkdir(`/workspace/packages/${pkg}`)
+              .withSecretVariable("NPM_TOKEN", npmToken)
+              .withExec(["sh", "-c", 'echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc'])
+              .withExec(["bun", "publish", "--access", "public", "--tag", "latest", "--registry", "https://registry.npmjs.org"])
+              .stdout();
 
-          outputs.push(`✓ Published @shepherdjerred/${pkg}`);
+            outputs.push(`✓ Published @shepherdjerred/${pkg}`);
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            outputs.push(`✗ Failed to publish @shepherdjerred/${pkg}: ${errorMessage}`);
+          }
         }
       } else {
         outputs.push("No releases created - skipping publish");
+        if (!releaseResult.success) {
+          outputs.push("(release-please command failed - check output above for details)");
+        }
       }
     }
 
