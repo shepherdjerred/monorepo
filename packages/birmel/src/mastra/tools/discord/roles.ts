@@ -228,7 +228,7 @@ export const manageRoleTool = createTool({
       logger.error("Failed to manage role", error);
       return {
         success: false,
-        message: "Failed to manage role",
+        message: `Failed to manage role: ${(error as Error).message}`,
       };
     }
   },

@@ -96,7 +96,7 @@ export const moderateMemberTool = createTool({
       }
     } catch (error) {
       logger.error("Failed to moderate member", error);
-      return { success: false, message: "Failed to moderate member" };
+      return { success: false, message: `Failed to moderate member: ${(error as Error).message}` };
     }
   },
 });

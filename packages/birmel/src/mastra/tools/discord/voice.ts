@@ -81,7 +81,7 @@ export const manageBotVoiceTool = createTool({
       logger.error("Failed to manage bot voice", error as Error);
       return {
         success: false,
-        message: "Failed to manage bot voice connection",
+        message: `Failed to manage bot voice connection: ${(error as Error).message}`,
       };
     }
   },
@@ -184,7 +184,7 @@ export const manageVoiceMemberTool = createTool({
       logger.error("Failed to manage voice member", error as Error);
       return {
         success: false,
-        message: "Failed to manage voice member",
+        message: `Failed to manage voice member: ${(error as Error).message}`,
       };
     }
   },

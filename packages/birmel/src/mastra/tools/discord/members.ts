@@ -118,7 +118,7 @@ export const manageMemberTool = createTool({
       }
     } catch (error) {
       logger.error("Failed to manage member", error);
-      return { success: false, message: "Failed to manage member" };
+      return { success: false, message: `Failed to manage member: ${(error as Error).message}` };
     }
   },
 });
