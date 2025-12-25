@@ -68,7 +68,7 @@ export const setBirthdayTool = createTool({
 					birthMonth: input.birthMonth,
 					birthDay: input.birthDay,
 					...(input.birthYear !== undefined && { birthYear: input.birthYear }),
-					...(input.timezone !== undefined && { timezone: input.timezone }),
+					timezone: input.timezone,
 				});
 
 				logger.info("Birthday set", {
