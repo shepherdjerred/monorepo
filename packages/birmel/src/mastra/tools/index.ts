@@ -5,6 +5,7 @@ export { memoryTools } from "./memory/index.js";
 export { sqliteTools } from "./database/sqlite-query.js";
 export { electionTools } from "./elections/elections.js";
 export { allAutomationTools } from "./automation/index.js";
+export { birthdayTools } from "./birthdays/index.js";
 export type { ToolResult, ToolContext } from "./types.js";
 
 import { allDiscordTools } from "./discord/index.js";
@@ -14,6 +15,7 @@ import { memoryTools } from "./memory/index.js";
 import { sqliteTools } from "./database/sqlite-query.js";
 import { electionTools } from "./elections/elections.js";
 import { allAutomationTools } from "./automation/index.js";
+import { birthdayTools } from "./birthdays/index.js";
 
 // Create a properly typed tools record for Mastra Agent
 const discordToolsRecord = Object.fromEntries(
@@ -44,6 +46,10 @@ const automationToolsRecord = Object.fromEntries(
   allAutomationTools.map((tool) => [tool.id, tool]),
 ) as Record<string, (typeof allAutomationTools)[number]>;
 
+const birthdayToolsRecord = Object.fromEntries(
+  birthdayTools.map((tool) => [tool.id, tool]),
+) as Record<string, (typeof birthdayTools)[number]>;
+
 export const allTools = {
   ...discordToolsRecord,
   ...musicToolsRecord,
@@ -52,4 +58,5 @@ export const allTools = {
   ...sqliteToolsRecord,
   ...electionToolsRecord,
   ...automationToolsRecord,
+  ...birthdayToolsRecord,
 };
