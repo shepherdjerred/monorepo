@@ -179,8 +179,10 @@ ${globalContext}${conversationHistory}`;
         });
       }
 
-      // Send response back to Discord
-      await context.message.reply(finalResponse);
+      // Send response back to Discord (only if non-empty)
+      if (finalResponse.trim()) {
+        await context.message.reply(finalResponse);
+      }
 
       const totalDuration = Date.now() - startTime;
       span.setAttribute("total.duration_ms", totalDuration);
