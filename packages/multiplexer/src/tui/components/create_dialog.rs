@@ -3,7 +3,7 @@ use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, Paragraph, Wrap},
+    widgets::{Block, Borders, Clear, Paragraph, Wrap},
 };
 
 use crate::tui::app::{App, CreateDialogFocus};
@@ -16,6 +16,12 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         .border_style(Style::default().fg(Color::Green));
 
     frame.render_widget(block, area);
+
+    // If loading, show loading message
+    if let Some(loading_msg) = &app.loading_message {
+        render_loading(frame, loading_msg, area);
+        return;
+    }
 
     // Inner area (with padding)
     let inner = Layout::default()
@@ -89,6 +95,18 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         dialog.button_create_focused,
         inner[6],
     );
+
+    // Render directory picker overlay if active
+    if app.create_dialog.directory_picker.is_active {
+        use super::directory_picker;
+
+        // Create centered modal within the create dialog
+        let picker_area = centered_rect_in_area(80, 70, area);
+
+        // Clear the area and render picker
+        frame.render_widget(Clear, picker_area);
+        directory_picker::render(frame, &app.create_dialog.directory_picker, picker_area);
+    }
 }
 
 fn render_text_field(frame: &mut Frame, label: &str, value: &str, focused: bool, area: Rect) {
@@ -228,4 +246,51 @@ fn render_buttons(frame: &mut Frame, focused: bool, create_focused: bool, area: 
 
     let paragraph = Paragraph::new(line);
     frame.render_widget(paragraph, area);
+}
+
+fn render_loading(frame: &mut Frame, message: &str, area: Rect) {
+    let inner = Layout::default()
+        .direction(Direction::Vertical)
+        .margin(1)
+        .constraints([
+            Constraint::Min(0),
+            Constraint::Length(3),
+            Constraint::Min(0),
+        ])
+        .split(area);
+
+    let text = vec![
+        Line::from(""),
+        Line::from(Span::styled(
+            message,
+            Style::default()
+                .fg(Color::Yellow)
+                .add_modifier(Modifier::BOLD),
+        )),
+        Line::from(""),
+    ];
+
+    let paragraph = Paragraph::new(text).wrap(Wrap { trim: true });
+    frame.render_widget(paragraph, inner[1]);
+}
+
+/// Helper to create centered rect within a given area
+fn centered_rect_in_area(percent_x: u16, percent_y: u16, area: Rect) -> Rect {
+    let popup_layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Percentage((100 - percent_y) / 2),
+            Constraint::Percentage(percent_y),
+            Constraint::Percentage((100 - percent_y) / 2),
+        ])
+        .split(area);
+
+    Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Percentage((100 - percent_x) / 2),
+            Constraint::Percentage(percent_x),
+            Constraint::Percentage((100 - percent_x) / 2),
+        ])
+        .split(popup_layout[1])[1]
 }
