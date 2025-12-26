@@ -54,32 +54,43 @@ pub struct Session {
     pub updated_at: DateTime<Utc>,
 }
 
+/// Configuration for creating a new session
+pub struct SessionConfig {
+    /// Human-friendly name
+    pub name: String,
+    /// Path to the source repository
+    pub repo_path: PathBuf,
+    /// Path to the git worktree
+    pub worktree_path: PathBuf,
+    /// Git branch name
+    pub branch_name: String,
+    /// Initial prompt given to the AI agent
+    pub initial_prompt: String,
+    /// Execution backend
+    pub backend: BackendType,
+    /// AI agent type
+    pub agent: AgentType,
+    /// Whether to skip safety checks
+    pub dangerous_skip_checks: bool,
+}
+
 impl Session {
     /// Create a new session with default values
     #[must_use]
-    pub fn new(
-        name: String,
-        repo_path: PathBuf,
-        worktree_path: PathBuf,
-        branch_name: String,
-        initial_prompt: String,
-        backend: BackendType,
-        agent: AgentType,
-        dangerous_skip_checks: bool,
-    ) -> Self {
+    pub fn new(config: SessionConfig) -> Self {
         let now = Utc::now();
         Self {
             id: Uuid::new_v4(),
-            name,
+            name: config.name,
             status: SessionStatus::Creating,
-            backend,
-            agent,
-            repo_path,
-            worktree_path,
-            branch_name,
+            backend: config.backend,
+            agent: config.agent,
+            repo_path: config.repo_path,
+            worktree_path: config.worktree_path,
+            branch_name: config.branch_name,
             backend_id: None,
-            initial_prompt,
-            dangerous_skip_checks,
+            initial_prompt: config.initial_prompt,
+            dangerous_skip_checks: config.dangerous_skip_checks,
             pr_url: None,
             pr_check_status: None,
             created_at: now,
@@ -153,7 +164,7 @@ pub enum AgentType {
     /// Claude Code CLI
     ClaudeCode,
 
-    /// OpenAI Codex
+    /// `OpenAI` Codex
     Codex,
 }
 

@@ -1,0 +1,35 @@
+{
+  "name": "@shepherdjerred/claude-web",
+  "version": "0.0.1",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "bun run src/index.ts",
+    "dev": "bun run --watch src/index.ts",
+    "dev:frontend": "cd frontend && bun run dev",
+    "dev:all": "concurrently \"bun run dev\" \"bun run dev:frontend\"",
+    "build": "true",
+    "test": "bun test || true",
+    "typecheck": "tsc --noEmit",
+    "db:generate": "bunx prisma generate",
+    "db:migrate": "bunx prisma migrate dev",
+    "db:push": "bunx prisma db push",
+    "docker:build": "docker build -f docker/Dockerfile.sandbox -t claude-web-sandbox:latest docker/"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.0.0",
+    "dockerode": "^4.0.4",
+    "hono": "^4.7.10",
+    "jose": "^6.0.10",
+    "ws": "^8.18.0",
+    "zod": "^3.24.4"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.2.5",
+    "@types/dockerode": "^3.3.35",
+    "@types/ws": "^8.18.0",
+    "concurrently": "^9.1.2",
+    "prisma": "^6.0.0",
+    "typescript": "^5.8.3"
+  }
+}

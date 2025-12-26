@@ -1,8 +1,9 @@
+use std::path::PathBuf;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use uuid::Uuid;
 
-use crate::backends::{Backend, DockerBackend, GitBackend, ZellijBackend};
+use crate::backends::{DockerBackend, ExecutionBackend, GitBackend, GitOperations, ZellijBackend};
 use crate::store::Store;
 
 use super::events::{Event, EventType};
@@ -24,24 +25,54 @@ pub struct ReconcileReport {
 /// Manages session lifecycle and state
 pub struct SessionManager {
     store: Arc<dyn Store>,
-    git: GitBackend,
-    zellij: ZellijBackend,
-    docker: DockerBackend,
+    git: Arc<dyn GitOperations>,
+    zellij: Arc<dyn ExecutionBackend>,
+    docker: Arc<dyn ExecutionBackend>,
     sessions: RwLock<Vec<Session>>,
 }
 
 impl SessionManager {
-    /// Create a new session manager
-    pub async fn new(store: Arc<dyn Store>) -> anyhow::Result<Self> {
+    /// Create a new session manager with dependency injection
+    ///
+    /// This constructor allows injecting custom implementations of the backends,
+    /// which is useful for testing.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the store cannot be read.
+    pub async fn new(
+        store: Arc<dyn Store>,
+        git: Arc<dyn GitOperations>,
+        zellij: Arc<dyn ExecutionBackend>,
+        docker: Arc<dyn ExecutionBackend>,
+    ) -> anyhow::Result<Self> {
         let sessions = store.list_sessions().await?;
 
         Ok(Self {
             store,
-            git: GitBackend::new(),
-            zellij: ZellijBackend::new(),
-            docker: DockerBackend::new(),
+            git,
+            zellij,
+            docker,
             sessions: RwLock::new(sessions),
         })
+    }
+
+    /// Create a new session manager with default backends
+    ///
+    /// This is a convenience constructor for production use that creates
+    /// real Git, Zellij, and Docker backends.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the store cannot be read.
+    pub async fn with_defaults(store: Arc<dyn Store>) -> anyhow::Result<Self> {
+        Self::new(
+            store,
+            Arc::new(GitBackend::new()),
+            Arc::new(ZellijBackend::new()),
+            Arc::new(DockerBackend::new()),
+        )
+        .await
     }
 
     /// List all sessions
@@ -63,6 +94,11 @@ impl SessionManager {
     }
 
     /// Create a new session
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the session cannot be created, the worktree cannot
+    /// be set up, or the backend fails to start.
     pub async fn create_session(
         &self,
         name: String,
@@ -77,16 +113,16 @@ impl SessionManager {
         let worktree_path = crate::utils::paths::worktree_path(&full_name);
 
         // Create session object
-        let mut session = Session::new(
-            full_name.clone(),
-            repo_path.clone().into(),
-            worktree_path.clone(),
-            full_name.clone(),
-            initial_prompt.clone(),
+        let mut session = Session::new(super::session::SessionConfig {
+            name: full_name.clone(),
+            repo_path: repo_path.clone().into(),
+            worktree_path: worktree_path.clone(),
+            branch_name: full_name.clone(),
+            initial_prompt: initial_prompt.clone(),
             backend,
             agent,
             dangerous_skip_checks,
-        );
+        });
 
         // Record creation event
         let event = Event::new(
@@ -101,20 +137,21 @@ impl SessionManager {
         self.store.record_event(&event).await?;
 
         // Create git worktree
+        let repo_path_buf = PathBuf::from(&repo_path);
         self.git
-            .create_worktree(&repo_path.into(), &worktree_path, &full_name)
+            .create_worktree(&repo_path_buf, &worktree_path, &full_name)
             .await?;
 
         // Create backend resource
         let backend_id = match backend {
             BackendType::Zellij => {
                 self.zellij
-                    .create_session(&full_name, &worktree_path, &initial_prompt)
+                    .create(&full_name, &worktree_path, &initial_prompt)
                     .await?
             }
             BackendType::Docker => {
                 self.docker
-                    .create_container(&full_name, &worktree_path, &initial_prompt)
+                    .create(&full_name, &worktree_path, &initial_prompt)
                     .await?
             }
         };
@@ -146,11 +183,15 @@ impl SessionManager {
     }
 
     /// Get the command to attach to a session
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the session is not found or has no backend ID.
     pub async fn get_attach_command(&self, id_or_name: &str) -> anyhow::Result<Vec<String>> {
         let session = self
             .get_session(id_or_name)
             .await
-            .ok_or_else(|| anyhow::anyhow!("Session not found: {}", id_or_name))?;
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {id_or_name}"))?;
 
         let backend_id = session
             .backend_id
@@ -164,23 +205,30 @@ impl SessionManager {
     }
 
     /// Archive a session
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the session is not found or the store update fails.
     pub async fn archive_session(&self, id_or_name: &str) -> anyhow::Result<()> {
         let mut sessions = self.sessions.write().await;
 
         let session = sessions
             .iter_mut()
             .find(|s| s.name == id_or_name || s.id.to_string() == id_or_name)
-            .ok_or_else(|| anyhow::anyhow!("Session not found: {}", id_or_name))?;
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {id_or_name}"))?;
 
         let old_status = session.status;
+        let session_id = session.id;
         session.set_status(SessionStatus::Archived);
+        let session_clone = session.clone();
+        drop(sessions);
 
         // Record event
-        let event = Event::new(session.id, EventType::SessionArchived);
+        let event = Event::new(session_id, EventType::SessionArchived);
         self.store.record_event(&event).await?;
 
         let event = Event::new(
-            session.id,
+            session_id,
             EventType::StatusChanged {
                 old_status,
                 new_status: SessionStatus::Archived,
@@ -189,26 +237,30 @@ impl SessionManager {
         self.store.record_event(&event).await?;
 
         // Update in store
-        self.store.save_session(session).await?;
+        self.store.save_session(&session_clone).await?;
 
         Ok(())
     }
 
     /// Delete a session and its resources
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the session is not found or the store delete fails.
     pub async fn delete_session(&self, id_or_name: &str) -> anyhow::Result<()> {
         let session = self
             .get_session(id_or_name)
             .await
-            .ok_or_else(|| anyhow::anyhow!("Session not found: {}", id_or_name))?;
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {id_or_name}"))?;
 
         // Delete backend resources
         if let Some(ref backend_id) = session.backend_id {
             match session.backend {
                 BackendType::Zellij => {
-                    let _ = self.zellij.delete_session(backend_id).await;
+                    let _ = self.zellij.delete(backend_id).await;
                 }
                 BackendType::Docker => {
-                    let _ = self.docker.delete_container(backend_id).await;
+                    let _ = self.docker.delete(backend_id).await;
                 }
             }
         }
@@ -230,11 +282,15 @@ impl SessionManager {
     }
 
     /// Reconcile expected state with reality
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if backend existence checks fail.
     pub async fn reconcile(&self) -> anyhow::Result<ReconcileReport> {
-        let sessions = self.sessions.read().await;
+        let sessions_snapshot = self.sessions.read().await.clone();
         let mut report = ReconcileReport::default();
 
-        for session in sessions.iter() {
+        for session in &sessions_snapshot {
             // Check if worktree exists
             if !session.worktree_path.exists() {
                 report.missing_worktrees.push(session.id);
@@ -243,8 +299,8 @@ impl SessionManager {
             // Check if backend resource exists
             if let Some(ref backend_id) = session.backend_id {
                 let exists = match session.backend {
-                    BackendType::Zellij => self.zellij.session_exists(backend_id).await?,
-                    BackendType::Docker => self.docker.container_exists(backend_id).await?,
+                    BackendType::Zellij => self.zellij.exists(backend_id).await?,
+                    BackendType::Docker => self.docker.exists(backend_id).await?,
                 };
 
                 if !exists {
