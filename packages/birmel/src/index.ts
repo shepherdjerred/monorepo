@@ -89,8 +89,6 @@ async function handleMessage(context: MessageContext): Promise<void> {
       contentLength: context.content.length,
     });
 
-    const config = getConfig();
-
     // Fetch global memory (server rules) to inject into prompt
     logger.debug("Fetching global memory", { requestId, guildId: context.guildId });
     const globalMemory = await withSpan(
@@ -140,11 +138,12 @@ ${globalContext}${conversationHistory}`;
         : messageContent;
 
       // Use Agent Network - routing agent delegates to specialized sub-agents
-      // Wrap with request context so tools can detect the source channel
+      // Wrap with request context so tools can access source message for replies
       let responseText = "";
       await runWithRequestContext(
         {
           sourceChannelId: context.channelId,
+          sourceMessageId: context.message.id,
           guildId: context.guildId,
           userId: context.userId,
         },
@@ -167,31 +166,15 @@ ${globalContext}${conversationHistory}`;
       const genDuration = Date.now() - genStartTime;
       span.setAttribute("generation.duration_ms", genDuration);
       span.setAttribute("response.length", responseText.length);
-      logger.debug("Response generated via Agent Network", {
+
+      // Agent is responsible for sending messages via tools
+      // Log the final response text for debugging (not sent automatically)
+      logger.info("Agent network completed", {
         requestId,
         durationMs: genDuration,
-        responseLength: responseText.length,
+        responseTextLength: responseText.length,
+        responseTextPreview: responseText.slice(0, 200),
       });
-
-      // STAGE 2: Stylize response to match persona's voice
-      let finalResponse = responseText;
-      if (config.persona.enabled) {
-        const persona = await getGuildPersona(context.guildId);
-        logger.debug("Stylizing response", { requestId, persona });
-        const styleStartTime = Date.now();
-        finalResponse = await withSpan("persona.stylize", discordContext, async () => {
-          return stylizeResponse(responseText, persona);
-        });
-        logger.debug("Response stylized", {
-          requestId,
-          durationMs: Date.now() - styleStartTime,
-        });
-      }
-
-      // Send response back to Discord (only if non-empty)
-      if (finalResponse.trim()) {
-        await context.message.reply(finalResponse);
-      }
 
       const totalDuration = Date.now() - startTime;
       span.setAttribute("total.duration_ms", totalDuration);
@@ -279,11 +262,12 @@ IMPORTANT: This is a voice command. Keep your response concise (under 200 words)
       const genStartTime = Date.now();
 
       // Use Agent Network for voice commands
-      // Wrap with request context so tools can detect the source channel
+      // Wrap with request context (no sourceMessageId for voice - can't reply)
       let responseText = "";
       await runWithRequestContext(
         {
           sourceChannelId: channelId,
+          sourceMessageId: "", // Voice commands can't use reply action
           guildId,
           userId,
         },

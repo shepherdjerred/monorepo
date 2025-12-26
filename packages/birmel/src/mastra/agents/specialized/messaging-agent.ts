@@ -19,16 +19,10 @@ export const messagingAgent = new Agent({
     Handle message operations, threads, polls, and memory storage.
     Be concise and helpful.
 
-    IMPORTANT: Your text response is automatically sent as a reply to the user.
-    Do NOT use manage-message to send your reply - just write your response directly.
-    Only use manage-message "send" for messages to OTHER channels or DMs.
-
-    CRITICAL: Never output meta-commentary or explain what you're doing.
-    If you can't use a tool or a tool fails, just respond naturally.
-    Your output should be the actual message content, not explanations about how you're responding.
-
-    BAD: "This is a simple greeting that should be sent directly as a reply"
-    GOOD: "Hey! What's up?"`,
+    IMPORTANT: You MUST use manage-message to send messages. Your text output is NOT automatically sent.
+    Use action="reply" to respond to the user (uses Discord's native reply feature).
+    Use action="send" to send messages to other channels.
+    After sending, do NOT output a receipt - just end silently.`,
   model: openai.chat(config.openai.model),
   tools: toolsToRecord(messagingToolSet) as ToolsInput,
 });
