@@ -60,10 +60,6 @@ function installWorkspaceDeps(workspaceSource: Directory, useMounts: boolean): C
       .withMountedFile(
         "/workspace/packages/eslint-config/package.json",
         workspaceSource.file("packages/eslint-config/package.json"),
-      )
-      .withMountedFile(
-        "/workspace/packages/a2ui-poc/package.json",
-        workspaceSource.file("packages/a2ui-poc/package.json"),
       );
   } else {
     container = container
@@ -77,8 +73,7 @@ function installWorkspaceDeps(workspaceSource: Directory, useMounts: boolean): C
       .withFile(
         "/workspace/packages/eslint-config/package.json",
         workspaceSource.file("packages/eslint-config/package.json"),
-      )
-      .withFile("/workspace/packages/a2ui-poc/package.json", workspaceSource.file("packages/a2ui-poc/package.json"));
+      );
   }
 
   // PHASE 2: Install dependencies (cached if lockfile + package.jsons unchanged)
@@ -93,15 +88,13 @@ function installWorkspaceDeps(workspaceSource: Directory, useMounts: boolean): C
       .withMountedFile("/workspace/tsconfig.base.json", workspaceSource.file("tsconfig.base.json"))
       .withMountedDirectory("/workspace/packages/birmel", workspaceSource.directory("packages/birmel"))
       .withMountedDirectory("/workspace/packages/dagger-utils", workspaceSource.directory("packages/dagger-utils"))
-      .withMountedDirectory("/workspace/packages/eslint-config", workspaceSource.directory("packages/eslint-config"))
-      .withMountedDirectory("/workspace/packages/a2ui-poc", workspaceSource.directory("packages/a2ui-poc"));
+      .withMountedDirectory("/workspace/packages/eslint-config", workspaceSource.directory("packages/eslint-config"));
   } else {
     container = container
       .withFile("/workspace/tsconfig.base.json", workspaceSource.file("tsconfig.base.json"))
       .withDirectory("/workspace/packages/birmel", workspaceSource.directory("packages/birmel"))
       .withDirectory("/workspace/packages/dagger-utils", workspaceSource.directory("packages/dagger-utils"))
-      .withDirectory("/workspace/packages/eslint-config", workspaceSource.directory("packages/eslint-config"))
-      .withDirectory("/workspace/packages/a2ui-poc", workspaceSource.directory("packages/a2ui-poc"));
+      .withDirectory("/workspace/packages/eslint-config", workspaceSource.directory("packages/eslint-config"));
   }
 
   // PHASE 4: Re-run bun install to recreate workspace node_modules symlinks

@@ -67,8 +67,7 @@ function installWorkspaceDeps(source: Directory): Container {
     // Each workspace's package.json (bun needs these for workspace resolution)
     .withMountedFile("/workspace/packages/birmel/package.json", source.file("packages/birmel/package.json"))
     .withMountedFile("/workspace/packages/dagger-utils/package.json", source.file("packages/dagger-utils/package.json"))
-    .withMountedFile("/workspace/packages/eslint-config/package.json", source.file("packages/eslint-config/package.json"))
-    .withMountedFile("/workspace/packages/a2ui-poc/package.json", source.file("packages/a2ui-poc/package.json"));
+    .withMountedFile("/workspace/packages/eslint-config/package.json", source.file("packages/eslint-config/package.json"));
 
   // PHASE 2: Install dependencies (cached if lockfile + package.jsons unchanged)
   // Add cache version as env var to force reinstall when deps change
@@ -81,8 +80,7 @@ function installWorkspaceDeps(source: Directory): Container {
     .withMountedFile("/workspace/tsconfig.base.json", source.file("tsconfig.base.json"))
     .withMountedDirectory("/workspace/packages/birmel", source.directory("packages/birmel"))
     .withMountedDirectory("/workspace/packages/dagger-utils", source.directory("packages/dagger-utils"))
-    .withMountedDirectory("/workspace/packages/eslint-config", source.directory("packages/eslint-config"))
-    .withMountedDirectory("/workspace/packages/a2ui-poc", source.directory("packages/a2ui-poc"));
+    .withMountedDirectory("/workspace/packages/eslint-config", source.directory("packages/eslint-config"));
 
   // PHASE 4: Re-run bun install to recreate workspace node_modules symlinks
   // (Source mounts in Phase 3 replace the symlinks that Phase 2 created)
