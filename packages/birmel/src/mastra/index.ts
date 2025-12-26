@@ -14,6 +14,10 @@ import {
   automationAgent,
 } from "./agents/specialized/index.js";
 import { createClassifierAgent } from "./agents/classifier-agent.js";
+import { stylizationAgent } from "./agents/stylization-agent.js";
+
+// Import workflows
+import { responseWorkflow } from "./workflows/index.js";
 
 const classifierAgent = createClassifierAgent();
 const config = getConfig();
@@ -34,6 +38,10 @@ export const mastra = new Mastra({
     automation: automationAgent,
     // Utility agents
     classifier: classifierAgent,
+    stylizer: stylizationAgent,
+  },
+  workflows: {
+    response: responseWorkflow,
   },
   storage: new LibSQLStore({
     id: "telemetry",
@@ -58,6 +66,10 @@ export function getRoutingAgent() {
 
 export function getClassifierAgent() {
   return mastra.getAgent("classifier");
+}
+
+export function getResponseWorkflow() {
+  return mastra.getWorkflow("response");
 }
 
 export async function startMastraServer(): Promise<void> {
@@ -94,3 +106,13 @@ export {
 } from "./agents/birmel-agent.js";
 export { createClassifierAgent } from "./agents/classifier-agent.js";
 export { SYSTEM_PROMPT } from "./agents/system-prompt.js";
+
+// Stylization agent
+export { stylizationAgent, createStylizationAgent } from "./agents/stylization-agent.js";
+
+// Workflows
+export {
+  responseWorkflow,
+  type ResponseWorkflowInput,
+  type ResponseWorkflowOutput,
+} from "./workflows/index.js";
