@@ -2,14 +2,13 @@
 import {
   initializeObservability,
   shutdownObservability,
-  withSpan,
-  withAgentSpan,
   setSentryContext,
   clearSentryContext,
   captureException,
 } from "./observability/index.js";
 initializeObservability();
 
+import { getOrCreateSpan, SpanType } from "@mastra/core/observability";
 import { getConfig } from "./config/index.js";
 import {
   getDiscordClient,
@@ -19,6 +18,7 @@ import {
 } from "./discord/index.js";
 import { disconnectPrisma } from "./database/index.js";
 import {
+  mastra,
   routingAgent,
   startMastraServer,
 } from "./mastra/index.js";
@@ -75,11 +75,22 @@ async function handleMessage(context: MessageContext): Promise<void> {
   // Set Sentry context for this request
   setSentryContext(discordContext);
 
-  await withSpan("message.handle", discordContext, async (span) => {
-    const startTime = Date.now();
-    const requestId = `msg-${context.message.id.slice(-8)}`;
-    span.setAttribute("request.id", requestId);
+  const startTime = Date.now();
+  const requestId = `msg-${context.message.id.slice(-8)}`;
 
+  // Create a Mastra span for the entire message handling
+  const messageSpan = getOrCreateSpan({
+    type: SpanType.GENERIC,
+    name: "discord.message.handle",
+    mastra,
+    metadata: {
+      ...discordContext,
+      requestId,
+    },
+    input: { content: context.content.slice(0, 500) },
+  });
+
+  try {
     logger.info("Handling message", {
       requestId,
       guildId: context.guildId,
@@ -91,13 +102,7 @@ async function handleMessage(context: MessageContext): Promise<void> {
 
     // Fetch global memory (server rules) to inject into prompt
     logger.debug("Fetching global memory", { requestId, guildId: context.guildId });
-    const globalMemory = await withSpan(
-      "memory.fetchGlobal",
-      discordContext,
-      async () => {
-        return getGlobalMemoryContext(context.guildId);
-      },
-    );
+    const globalMemory = await getGlobalMemoryContext(context.guildId);
     const globalContext = globalMemory
       ? `\n## Server Rules & Memory\n${globalMemory}\n`
       : "";
@@ -123,85 +128,94 @@ Guild ID: ${context.guildId}
 Channel ID: ${context.channelId}
 ${globalContext}${conversationHistory}`;
 
-    try {
-      // Show typing indicator while generating response via Agent Network
-      // The routing agent coordinates specialized sub-agents (messaging, server, moderation, music, automation)
-      logger.debug("Generating response via Agent Network", { requestId, hasImages: context.attachments.length > 0, recentMessageCount: recentMessages.length });
-      const genStartTime = Date.now();
+    // Show typing indicator while generating response via Agent Network
+    // The routing agent coordinates specialized sub-agents (messaging, server, moderation, music, automation)
+    logger.debug("Generating response via Agent Network", { requestId, hasImages: context.attachments.length > 0, recentMessageCount: recentMessages.length });
+    const genStartTime = Date.now();
 
-      // Build multimodal content if images present
-      const messageContent = await buildMessageContent(context, prompt);
+    // Build multimodal content if images present
+    const messageContent = await buildMessageContent(context, prompt);
 
-      // Wrap multimodal content in a message object with role
-      const messageInput = Array.isArray(messageContent)
-        ? { role: "user" as const, content: messageContent }
-        : messageContent;
+    // Wrap multimodal content in a message object with role
+    const messageInput = Array.isArray(messageContent)
+      ? { role: "user" as const, content: messageContent }
+      : messageContent;
 
-      // Use Agent Network - routing agent delegates to specialized sub-agents
-      // Wrap with request context so tools can access source message for replies
-      let responseText = "";
-      await runWithRequestContext(
-        {
-          sourceChannelId: context.channelId,
-          sourceMessageId: context.message.id,
-          guildId: context.guildId,
-          userId: context.userId,
-        },
-        () => withAgentSpan("birmel-network", discordContext, async () => {
-          return withTyping(context.message, async () => {
-            const networkStream = await routingAgent.network(messageInput);
-
-            // Process the network stream to get the final result
-            for await (const chunk of networkStream) {
-              // Extract the final response from network execution events
-              // NetworkStepFinishPayload has result as string directly
-              if (chunk.type === "network-execution-event-step-finish" && chunk.payload.result) {
-                responseText = chunk.payload.result;
-              }
-            }
+    // Use Agent Network - routing agent delegates to specialized sub-agents
+    // Wrap with request context so tools can access source message for replies
+    let responseText = "";
+    await runWithRequestContext(
+      {
+        sourceChannelId: context.channelId,
+        sourceMessageId: context.message.id,
+        guildId: context.guildId,
+        userId: context.userId,
+      },
+      async () => {
+        return withTyping(context.message, async () => {
+          // Pass tracingContext to network so spans are linked
+          const networkStream = await routingAgent.network(messageInput, {
+            ...(messageSpan ? { tracingContext: { currentSpan: messageSpan } } : {}),
+            runId: requestId,
           });
-        }),
-      );
 
-      const genDuration = Date.now() - genStartTime;
-      span.setAttribute("generation.duration_ms", genDuration);
-      span.setAttribute("response.length", responseText.length);
+          // Process the network stream to get the final result
+          for await (const chunk of networkStream) {
+            // Extract the final response from network execution events
+            // NetworkStepFinishPayload has result as string directly
+            if (chunk.type === "network-execution-event-step-finish" && chunk.payload.result) {
+              responseText = chunk.payload.result;
+            }
+          }
+        });
+      },
+    );
 
-      // Agent is responsible for sending messages via tools
-      // Log the final response text for debugging (not sent automatically)
-      logger.info("Agent network completed", {
-        requestId,
-        durationMs: genDuration,
-        responseTextLength: responseText.length,
-        responseTextPreview: responseText.slice(0, 200),
-      });
+    const genDuration = Date.now() - genStartTime;
 
-      const totalDuration = Date.now() - startTime;
-      span.setAttribute("total.duration_ms", totalDuration);
-      logger.info("Message handled successfully", {
-        requestId,
-        totalDurationMs: totalDuration,
-        generationDurationMs: genDuration,
-      });
-    } catch (error) {
-      const totalDuration = Date.now() - startTime;
-      logger.error("Agent generation failed", error, {
-        requestId,
-        totalDurationMs: totalDuration,
-      });
-      captureException(error as Error, {
-        operation: "handleMessage",
-        discord: discordContext,
-        extra: { requestId },
-      });
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      await context.message.reply(
-        `Sorry, I encountered an error processing your request.\n\`\`\`\n${errorMessage}\n\`\`\``
-      );
-    } finally {
-      clearSentryContext();
-    }
-  });
+    // Agent is responsible for sending messages via tools
+    // Log the final response text for debugging (not sent automatically)
+    logger.info("Agent network completed", {
+      requestId,
+      durationMs: genDuration,
+      responseTextLength: responseText.length,
+      responseTextPreview: responseText.slice(0, 200),
+    });
+
+    const totalDuration = Date.now() - startTime;
+    logger.info("Message handled successfully", {
+      requestId,
+      totalDurationMs: totalDuration,
+      generationDurationMs: genDuration,
+    });
+
+    messageSpan?.end({
+      output: { responseLength: responseText.length, durationMs: totalDuration },
+    });
+  } catch (error) {
+    const totalDuration = Date.now() - startTime;
+    logger.error("Agent generation failed", error, {
+      requestId,
+      totalDurationMs: totalDuration,
+    });
+    captureException(error as Error, {
+      operation: "handleMessage",
+      discord: discordContext,
+      extra: { requestId },
+    });
+
+    messageSpan?.error({
+      error: error instanceof Error ? error : new Error(String(error)),
+      endSpan: true,
+    });
+
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    await context.message.reply(
+      `Sorry, I encountered an error processing your request.\n\`\`\`\n${errorMessage}\n\`\`\``
+    );
+  } finally {
+    clearSentryContext();
+  }
 }
 
 async function handleVoiceCommand(
@@ -218,11 +232,22 @@ async function handleVoiceCommand(
 
   setSentryContext(discordContext);
 
-  return withSpan("voice.command", discordContext, async (span) => {
-    const startTime = Date.now();
-    const requestId = `voice-${Date.now().toString(36)}`;
-    span.setAttribute("request.id", requestId);
+  const startTime = Date.now();
+  const requestId = `voice-${Date.now().toString(36)}`;
 
+  // Create a Mastra span for the voice command handling
+  const voiceSpan = getOrCreateSpan({
+    type: SpanType.GENERIC,
+    name: "discord.voice.command",
+    mastra,
+    metadata: {
+      ...discordContext,
+      requestId,
+    },
+    input: { command: command.slice(0, 200) },
+  });
+
+  try {
     logger.info("Handling voice command", {
       requestId,
       guildId,
@@ -236,13 +261,7 @@ async function handleVoiceCommand(
 
     // Fetch global memory (server rules) to inject into prompt
     logger.debug("Fetching global memory for voice", { requestId, guildId });
-    const globalMemory = await withSpan(
-      "memory.fetchGlobal",
-      discordContext,
-      async () => {
-        return getGlobalMemoryContext(guildId);
-      },
-    );
+    const globalMemory = await getGlobalMemoryContext(guildId);
     const globalContext = globalMemory
       ? `\n## Server Rules & Memory\n${globalMemory}\n`
       : "";
@@ -257,79 +276,86 @@ Channel ID: ${channelId}
 ${globalContext}
 IMPORTANT: This is a voice command. Keep your response concise (under 200 words) as it will be spoken back via text-to-speech.`;
 
-    try {
-      logger.debug("Generating voice response via Agent Network", { requestId });
-      const genStartTime = Date.now();
+    logger.debug("Generating voice response via Agent Network", { requestId });
+    const genStartTime = Date.now();
 
-      // Use Agent Network for voice commands
-      // Wrap with request context (no sourceMessageId for voice - can't reply)
-      let responseText = "";
-      await runWithRequestContext(
-        {
-          sourceChannelId: channelId,
-          sourceMessageId: "", // Voice commands can't use reply action
-          guildId,
-          userId,
-        },
-        () => withAgentSpan("birmel-network", discordContext, async () => {
-          const networkStream = await routingAgent.network(prompt);
-
-          // Process the network stream to get the final result
-          for await (const chunk of networkStream) {
-            // NetworkStepFinishPayload has result as string directly
-            if (chunk.type === "network-execution-event-step-finish" && chunk.payload.result) {
-              responseText = chunk.payload.result;
-            }
-          }
-        }),
-      );
-
-      const genDuration = Date.now() - genStartTime;
-      span.setAttribute("generation.duration_ms", genDuration);
-      span.setAttribute("response.length", responseText.length);
-      logger.debug("Voice response generated via Agent Network", {
-        requestId,
-        durationMs: genDuration,
-        responseLength: responseText.length,
-      });
-
-      // STAGE 2: Stylize response to match persona's voice
-      let finalResponse = responseText;
-      if (config.persona.enabled) {
-        const persona = await getGuildPersona(guildId);
-        logger.debug("Stylizing voice response", { requestId, persona });
-        finalResponse = await withSpan("persona.stylize", discordContext, async () => {
-          return stylizeResponse(responseText, persona);
+    // Use Agent Network for voice commands
+    // Wrap with request context (no sourceMessageId for voice - can't reply)
+    let responseText = "";
+    await runWithRequestContext(
+      {
+        sourceChannelId: channelId,
+        sourceMessageId: "", // Voice commands can't use reply action
+        guildId,
+        userId,
+      },
+      async () => {
+        // Pass tracingContext to network so spans are linked
+        const networkStream = await routingAgent.network(prompt, {
+          ...(voiceSpan ? { tracingContext: { currentSpan: voiceSpan } } : {}),
+          runId: requestId,
         });
-      }
 
-      const totalDuration = Date.now() - startTime;
-      span.setAttribute("total.duration_ms", totalDuration);
-      logger.info("Voice command handled successfully", {
-        requestId,
-        totalDurationMs: totalDuration,
-        generationDurationMs: genDuration,
-        responseLength: finalResponse.length,
-      });
+        // Process the network stream to get the final result
+        for await (const chunk of networkStream) {
+          // NetworkStepFinishPayload has result as string directly
+          if (chunk.type === "network-execution-event-step-finish" && chunk.payload.result) {
+            responseText = chunk.payload.result;
+          }
+        }
+      },
+    );
 
-      return finalResponse;
-    } catch (error) {
-      const totalDuration = Date.now() - startTime;
-      logger.error("Voice command agent generation failed", error, {
-        requestId,
-        totalDurationMs: totalDuration,
-      });
-      captureException(error as Error, {
-        operation: "handleVoiceCommand",
-        discord: discordContext,
-        extra: { requestId },
-      });
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      return `Sorry, I encountered an error processing your voice command.\n\`\`\`\n${errorMessage}\n\`\`\``;
-    } finally {
-      clearSentryContext();
+    const genDuration = Date.now() - genStartTime;
+    logger.debug("Voice response generated via Agent Network", {
+      requestId,
+      durationMs: genDuration,
+      responseLength: responseText.length,
+    });
+
+    // STAGE 2: Stylize response to match persona's voice
+    let finalResponse = responseText;
+    if (config.persona.enabled) {
+      const persona = await getGuildPersona(guildId);
+      logger.debug("Stylizing voice response", { requestId, persona });
+      finalResponse = await stylizeResponse(responseText, persona);
     }
-  });
+
+    const totalDuration = Date.now() - startTime;
+    logger.info("Voice command handled successfully", {
+      requestId,
+      totalDurationMs: totalDuration,
+      generationDurationMs: genDuration,
+      responseLength: finalResponse.length,
+    });
+
+    voiceSpan?.end({
+      output: { responseLength: finalResponse.length, durationMs: totalDuration },
+    });
+
+    return finalResponse;
+  } catch (error) {
+    const totalDuration = Date.now() - startTime;
+    logger.error("Voice command agent generation failed", error, {
+      requestId,
+      totalDurationMs: totalDuration,
+    });
+    captureException(error as Error, {
+      operation: "handleVoiceCommand",
+      discord: discordContext,
+      extra: { requestId },
+    });
+
+    voiceSpan?.error({
+      error: error instanceof Error ? error : new Error(String(error)),
+      endSpan: true,
+    });
+
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    return `Sorry, I encountered an error processing your voice command.\n\`\`\`\n${errorMessage}\n\`\`\``;
+  } finally {
+    clearSentryContext();
+  }
 }
 
 async function shutdown(): Promise<void> {
