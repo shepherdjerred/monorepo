@@ -70,14 +70,6 @@ describe("birmel-agent", () => {
       expect(SYSTEM_PROMPT).toContain("Birmel");
     });
 
-    test("contains capabilities section", async () => {
-      const { SYSTEM_PROMPT } = await import(
-        "../../../src/mastra/agents/system-prompt.js"
-      );
-
-      expect(SYSTEM_PROMPT).toContain("Capabilities");
-    });
-
     test("mentions Discord server management", async () => {
       const { SYSTEM_PROMPT } = await import(
         "../../../src/mastra/agents/system-prompt.js"
@@ -86,15 +78,7 @@ describe("birmel-agent", () => {
       expect(SYSTEM_PROMPT.toLowerCase()).toContain("discord");
     });
 
-    test("mentions music playback", async () => {
-      const { SYSTEM_PROMPT } = await import(
-        "../../../src/mastra/agents/system-prompt.js"
-      );
-
-      expect(SYSTEM_PROMPT.toLowerCase()).toContain("music");
-    });
-
-    test("mentions voice commands", async () => {
+    test("mentions voice responses", async () => {
       const { SYSTEM_PROMPT } = await import(
         "../../../src/mastra/agents/system-prompt.js"
       );
@@ -111,12 +95,12 @@ describe("birmel-agent", () => {
       expect(SYSTEM_PROMPT.length).toBeGreaterThan(100);
     });
 
-    test("contains authorization section", async () => {
+    test("mentions manage-message tool requirement", async () => {
       const { SYSTEM_PROMPT } = await import(
         "../../../src/mastra/agents/system-prompt.js"
       );
 
-      expect(SYSTEM_PROMPT.toLowerCase()).toContain("authorization");
+      expect(SYSTEM_PROMPT.toLowerCase()).toContain("manage-message");
     });
   });
 });

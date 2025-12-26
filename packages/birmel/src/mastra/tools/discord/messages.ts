@@ -6,14 +6,13 @@ import { withToolSpan, captureException } from "../../../observability/index.js"
 import { getRequestContext, hasReplySent, markReplySent } from "../request-context.js";
 import type { TextChannel } from "discord.js";
 import { validateSnowflakes, validateSnowflakeArray } from "./validation.js";
-import { stylizeResponse } from "../../../persona/index.js";
-import { getGuildPersona } from "../../../persona/guild-persona.js";
+import { prepareMessageWorkflow } from "../../workflows/index.js";
 import { getConfig } from "../../../config/index.js";
 
 const logger = loggers.tools.child("discord.messages");
 
 /**
- * Apply style transformation to message content if persona is enabled.
+ * Apply style transformation to message content using the prepare-message workflow.
  * Uses the guild's current persona to stylize the response.
  */
 async function stylizeContent(content: string, guildId: string | undefined): Promise<string> {
@@ -23,11 +22,28 @@ async function stylizeContent(content: string, guildId: string | undefined): Pro
   }
 
   try {
-    const persona = await getGuildPersona(guildId);
-    logger.debug("Stylizing message content", { persona, contentLength: content.length });
-    return await stylizeResponse(content, persona);
+    const run = await prepareMessageWorkflow.createRun();
+    const result = await run.start({
+      inputData: {
+        content,
+        guildId,
+      },
+    });
+
+    if (result.status === "success") {
+      logger.debug("Message styled via workflow", {
+        persona: result.result.persona,
+        wasStyled: result.result.wasStyled,
+        originalLength: content.length,
+        styledLength: result.result.content.length,
+      });
+      return result.result.content;
+    }
+
+    logger.warn("Workflow did not return success, using original content", { status: result.status });
+    return content;
   } catch (error) {
-    logger.error("Failed to stylize content, using original", { error });
+    logger.error("Failed to stylize content via workflow, using original", { error });
     return content;
   }
 }
