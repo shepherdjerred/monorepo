@@ -82,7 +82,10 @@ function installWorkspaceDeps(workspaceSource: Directory, useMounts: boolean): C
   }
 
   // PHASE 2: Install dependencies (cached if lockfile + package.jsons unchanged)
-  container = container.withExec(["bun", "install", "--frozen-lockfile"]);
+  // Add cache version as env var to force reinstall when deps change
+  container = container
+    .withEnvVariable("CACHE_VERSION", CACHE_VERSION)
+    .withExec(["bun", "install", "--frozen-lockfile"]);
 
   // PHASE 3: Config files and source code (changes frequently, added AFTER install)
   if (useMounts) {
