@@ -15,7 +15,7 @@ const PLAYWRIGHT_VERSION = "1.57.0";
 // Pin release-please version for reproducible builds
 const RELEASE_PLEASE_VERSION = "17.1.3";
 // Bump this to invalidate Dagger caches when deps change
-const CACHE_VERSION = "v2";
+const CACHE_VERSION = "v3";
 
 // Rust version for multiplexer
 const RUST_VERSION = "1.85";
