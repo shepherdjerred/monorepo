@@ -9,6 +9,8 @@ export type RequestContext = {
   guildId: string;
   /** The user who sent the message */
   userId: string;
+  /** Whether a reply has already been sent for this request (prevents spam) */
+  replySent?: boolean;
 };
 
 const requestContextStorage = new AsyncLocalStorage<RequestContext>();
@@ -30,4 +32,23 @@ export function runWithRequestContext<T>(
  */
 export function getRequestContext(): RequestContext | undefined {
   return requestContextStorage.getStore();
+}
+
+/**
+ * Mark that a reply has been sent for the current request.
+ * This prevents multiple replies to the same message.
+ */
+export function markReplySent(): void {
+  const context = requestContextStorage.getStore();
+  if (context) {
+    context.replySent = true;
+  }
+}
+
+/**
+ * Check if a reply has already been sent for the current request.
+ */
+export function hasReplySent(): boolean {
+  const context = requestContextStorage.getStore();
+  return context?.replySent === true;
 }
