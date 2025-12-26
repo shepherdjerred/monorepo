@@ -58,18 +58,26 @@ export function buildStyleContext(persona: string): StyleContext | null {
     return null;
   }
 
+  // Try to load the style card first - it can work without example messages
+  const styleCard = loadStyleCard(persona);
+
+  // Try to get example messages if persona user exists in database
+  let exampleMessages: PersonaMessage[] = [];
   const personaUser = getPersonaByUsername(persona);
-  if (!personaUser) {
-    logger.warn("Persona not found for style context", { persona });
-    return null;
+  if (personaUser) {
+    exampleMessages = getRandomMessages(
+      personaUser.id,
+      config.persona.styleExampleCount,
+    );
+  } else {
+    logger.debug("Persona user not found in database", { persona });
   }
 
-  const exampleMessages = getRandomMessages(
-    personaUser.id,
-    config.persona.styleExampleCount,
-  );
-
-  const styleCard = loadStyleCard(persona);
+  // Return null only if we have neither a style card nor example messages
+  if (!styleCard && exampleMessages.length === 0) {
+    logger.warn("No style context available for persona", { persona });
+    return null;
+  }
 
   logger.debug("Built style context", {
     persona,
