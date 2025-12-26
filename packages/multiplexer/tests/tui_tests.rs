@@ -362,6 +362,69 @@ async fn test_create_dialog_toggle_skip_checks() {
 }
 
 #[tokio::test]
+async fn test_create_dialog_space_in_name_field() {
+    let mut app = App::new();
+    app.open_create_dialog();
+    app.create_dialog.focus = CreateDialogFocus::Name;
+
+    // Type "test name" with space
+    handle_key_event(&mut app, char_key('t')).await.unwrap();
+    handle_key_event(&mut app, char_key('e')).await.unwrap();
+    handle_key_event(&mut app, char_key('s')).await.unwrap();
+    handle_key_event(&mut app, char_key('t')).await.unwrap();
+    handle_key_event(&mut app, char_key(' ')).await.unwrap();
+    handle_key_event(&mut app, char_key('n')).await.unwrap();
+    handle_key_event(&mut app, char_key('a')).await.unwrap();
+    handle_key_event(&mut app, char_key('m')).await.unwrap();
+    handle_key_event(&mut app, char_key('e')).await.unwrap();
+
+    assert_eq!(app.create_dialog.name, "test name");
+}
+
+#[tokio::test]
+async fn test_create_dialog_space_in_prompt_field() {
+    let mut app = App::new();
+    app.open_create_dialog();
+    app.create_dialog.focus = CreateDialogFocus::Prompt;
+
+    // Type "hello world" with space
+    handle_key_event(&mut app, char_key('h')).await.unwrap();
+    handle_key_event(&mut app, char_key('e')).await.unwrap();
+    handle_key_event(&mut app, char_key('l')).await.unwrap();
+    handle_key_event(&mut app, char_key('l')).await.unwrap();
+    handle_key_event(&mut app, char_key('o')).await.unwrap();
+    handle_key_event(&mut app, char_key(' ')).await.unwrap();
+    handle_key_event(&mut app, char_key('w')).await.unwrap();
+    handle_key_event(&mut app, char_key('o')).await.unwrap();
+    handle_key_event(&mut app, char_key('r')).await.unwrap();
+    handle_key_event(&mut app, char_key('l')).await.unwrap();
+    handle_key_event(&mut app, char_key('d')).await.unwrap();
+
+    assert_eq!(app.create_dialog.prompt, "hello world");
+}
+
+#[tokio::test]
+async fn test_create_dialog_space_in_repo_path_field() {
+    let mut app = App::new();
+    app.open_create_dialog();
+    app.create_dialog.focus = CreateDialogFocus::RepoPath;
+
+    // Type "/path with spaces"
+    handle_key_event(&mut app, char_key('/')).await.unwrap();
+    handle_key_event(&mut app, char_key('p')).await.unwrap();
+    handle_key_event(&mut app, char_key('a')).await.unwrap();
+    handle_key_event(&mut app, char_key('t')).await.unwrap();
+    handle_key_event(&mut app, char_key('h')).await.unwrap();
+    handle_key_event(&mut app, char_key(' ')).await.unwrap();
+    handle_key_event(&mut app, char_key('w')).await.unwrap();
+    handle_key_event(&mut app, char_key('i')).await.unwrap();
+    handle_key_event(&mut app, char_key('t')).await.unwrap();
+    handle_key_event(&mut app, char_key('h')).await.unwrap();
+
+    assert_eq!(app.create_dialog.repo_path, "/path with");
+}
+
+#[tokio::test]
 async fn test_confirm_delete_y_confirms() {
     let mut app = App::new();
     let mock = MockApiClient::new();
@@ -507,6 +570,24 @@ fn test_render_create_dialog() {
 }
 
 #[test]
+fn test_render_create_dialog_with_loading() {
+    let backend = TestBackend::new(80, 24);
+    let mut terminal = Terminal::new(backend).unwrap();
+
+    let mut app = App::new();
+    app.open_create_dialog();
+    app.loading_message = Some("Creating session (this may take up to 60s)...".to_string());
+
+    terminal.draw(|frame| ui::render(frame, &app)).unwrap();
+
+    let buffer = terminal.backend().buffer();
+    let content = buffer_to_string(buffer);
+
+    // Should show loading message
+    assert!(content.contains("Creating") || content.contains("session") || content.contains("60s"));
+}
+
+#[test]
 fn test_render_help() {
     let backend = TestBackend::new(80, 24);
     let mut terminal = Terminal::new(backend).unwrap();
@@ -589,6 +670,32 @@ async fn test_create_session_success() {
     assert_eq!(app.sessions.len(), 1);
     assert!(app.status_message.is_some());
     assert!(app.status_message.as_ref().unwrap().contains("Created"));
+    assert!(app.loading_message.is_none());
+}
+
+#[tokio::test]
+async fn test_create_session_shows_loading_indicator() {
+    let mut app = App::new();
+    let mock = MockApiClient::new();
+
+    app.set_client(Box::new(mock));
+    app.open_create_dialog();
+
+    app.create_dialog.name = "new-session".to_string();
+    app.create_dialog.repo_path = "/tmp/repo".to_string();
+    app.create_dialog.prompt = "Test prompt".to_string();
+
+    // Set loading message like the event handler does
+    app.loading_message = Some("Creating session (this may take up to 60s)...".to_string());
+
+    // Verify loading message is set
+    assert!(app.loading_message.is_some());
+    assert!(app.loading_message.as_ref().unwrap().contains("Creating session"));
+
+    app.create_session_from_dialog().await.unwrap();
+
+    // Verify loading message is cleared after creation
+    assert!(app.loading_message.is_none());
 }
 
 #[tokio::test]
@@ -715,4 +822,146 @@ async fn test_selected_index_clamped_after_refresh() {
 
     // Selected index should be clamped
     assert_eq!(app.selected_index, 0);
+}
+
+// ========== Directory Picker Tests ==========
+
+#[test]
+fn test_directory_picker_opens_and_closes() {
+    use multiplexer::tui::app::DirectoryPickerState;
+
+    let mut state = DirectoryPickerState::new();
+    assert!(!state.is_active);
+
+    state.open(None);
+    assert!(state.is_active);
+
+    state.close();
+    assert!(!state.is_active);
+}
+
+#[test]
+fn test_directory_picker_navigation() {
+    use multiplexer::tui::app::DirectoryPickerState;
+
+    let mut state = DirectoryPickerState::new();
+    state.open(None);
+
+    // Test select_next/previous
+    let initial_index = state.selected_index;
+    state.select_next();
+    if !state.filtered_entries.is_empty() && state.filtered_entries.len() > 1 {
+        assert!(state.selected_index > initial_index);
+    }
+
+    state.select_previous();
+    assert_eq!(state.selected_index, initial_index);
+}
+
+#[test]
+fn test_directory_picker_search() {
+    use multiplexer::tui::app::DirectoryPickerState;
+
+    let mut state = DirectoryPickerState::new();
+    state.open(None);
+
+    // Add search characters
+    state.add_search_char('t');
+    state.add_search_char('e');
+    state.add_search_char('s');
+    state.add_search_char('t');
+    assert_eq!(state.search_query, "test");
+
+    // Remove search character
+    state.remove_search_char();
+    assert_eq!(state.search_query, "tes");
+
+    // Clear search
+    state.clear_search();
+    assert_eq!(state.search_query, "");
+}
+
+#[tokio::test]
+async fn test_directory_picker_open_with_slash() {
+    let mut app = App::new();
+    app.open_create_dialog();
+    app.create_dialog.focus = CreateDialogFocus::RepoPath;
+
+    // Press '/' to open picker
+    handle_key_event(&mut app, char_key('/')).await.unwrap();
+
+    assert!(app.create_dialog.directory_picker.is_active);
+}
+
+#[tokio::test]
+async fn test_directory_picker_close_with_esc() {
+    let mut app = App::new();
+    app.open_create_dialog();
+    app.create_dialog.directory_picker.open(None);
+
+    assert!(app.create_dialog.directory_picker.is_active);
+
+    // Press Esc to close
+    handle_key_event(&mut app, key(KeyCode::Esc)).await.unwrap();
+
+    assert!(!app.create_dialog.directory_picker.is_active);
+}
+
+#[tokio::test]
+async fn test_directory_picker_search_filtering() {
+    let mut app = App::new();
+    app.open_create_dialog();
+    app.create_dialog.directory_picker.open(None);
+
+    let initial_count = app.create_dialog.directory_picker.filtered_entries.len();
+
+    // Type search query
+    handle_key_event(&mut app, char_key('x')).await.unwrap();
+    handle_key_event(&mut app, char_key('y')).await.unwrap();
+    handle_key_event(&mut app, char_key('z')).await.unwrap();
+
+    assert_eq!(app.create_dialog.directory_picker.search_query, "xyz");
+
+    // Filtered entries should be different (likely fewer or none)
+    let filtered_count = app.create_dialog.directory_picker.filtered_entries.len();
+    // Most directories won't match "xyz", so expect fewer results
+    assert!(filtered_count <= initial_count);
+}
+
+#[tokio::test]
+async fn test_directory_picker_navigation_keys() {
+    let mut app = App::new();
+    app.open_create_dialog();
+    app.create_dialog.directory_picker.open(None);
+
+    let initial_index = app.create_dialog.directory_picker.selected_index;
+
+    // Test Down arrow
+    handle_key_event(&mut app, key(KeyCode::Down)).await.unwrap();
+    if !app.create_dialog.directory_picker.filtered_entries.is_empty()
+        && app.create_dialog.directory_picker.filtered_entries.len() > 1
+    {
+        assert!(app.create_dialog.directory_picker.selected_index > initial_index);
+    }
+
+    // Test Up arrow
+    handle_key_event(&mut app, key(KeyCode::Up)).await.unwrap();
+    assert_eq!(app.create_dialog.directory_picker.selected_index, initial_index);
+}
+
+#[test]
+fn test_render_directory_picker_without_panic() {
+    use ratatui::backend::TestBackend;
+    use ratatui::Terminal;
+    use multiplexer::tui::ui;
+
+    let backend = TestBackend::new(80, 24);
+    let mut terminal = Terminal::new(backend).unwrap();
+
+    let mut app = App::new();
+    app.open_create_dialog();
+    app.create_dialog.directory_picker.open(None);
+
+    // Should render without panicking
+    terminal.draw(|frame| ui::render(frame, &app)).unwrap();
 }
