@@ -30,7 +30,7 @@ async function stylizeContent(content: string, guildId: string | undefined): Pro
       },
     });
 
-    if (result.status === "success" && result.result) {
+    if (result.status === "success") {
       logger.debug("Message styled via workflow", {
         persona: result.result.persona,
         wasStyled: result.result.wasStyled,
