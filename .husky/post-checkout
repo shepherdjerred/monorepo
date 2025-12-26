@@ -1,23 +1,36 @@
-#!/usr/bin/env sh
+#!/bin/sh
+# post-checkout hook - runs after git checkout and git worktree add
+# $1: ref of previous HEAD
+# $2: ref of new HEAD
+# $3: flag - 1 for branch checkout, 0 for file checkout
 
-# post-checkout hook receives three parameters:
-# $1 = ref of previous HEAD
-# $2 = ref of new HEAD
-# $3 = flag indicating whether it was a branch checkout (1) or file checkout (0)
-
-# Only run on branch checkout
+# Only run on branch checkout (not file checkout)
 if [ "$3" = "0" ]; then
   exit 0
 fi
 
-# Only run when creating a new worktree
-# When a worktree is created, the previous HEAD is all zeros
-if [ "$1" != "0000000000000000000000000000000000000000" ]; then
+# Marker file to track if this worktree has been initialized
+GIT_DIR=$(git rev-parse --git-dir)
+MARKER_FILE="$GIT_DIR/worktree-initialized"
+
+# Check if this worktree has already been initialized
+if [ -f "$MARKER_FILE" ]; then
   exit 0
 fi
 
-echo "🔧 New worktree detected! Running setup..."
+echo "🔧 Setting up new worktree..."
 
-mise run dev
+# Run mise trust and dev setup
+if command -v mise > /dev/null 2>&1; then
+  echo "✓ Running mise trust..."
+  mise trust
+  echo "✓ Running mise dev (installing dagger, deps, etc.)..."
+  mise run dev
+else
+  echo "⚠️ mise not found, skipping dev setup"
+fi
+
+# Create marker file to prevent running again
+touch "$MARKER_FILE"
 
 echo "✅ Worktree setup complete!"
