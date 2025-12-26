@@ -2,6 +2,7 @@ import { Mastra } from "@mastra/core";
 import { LibSQLStore } from "@mastra/libsql";
 import { getConfig } from "../config/index.js";
 import { logger } from "../utils/logger.js";
+import { getMastraObservability } from "./telemetry/index.js";
 
 // Import routing agent and specialized agents
 import { routingAgent } from "./agents/routing-agent.js";
@@ -38,6 +39,7 @@ export const mastra = new Mastra({
     id: "telemetry",
     url: config.mastra.telemetryDbPath,
   }),
+  observability: getMastraObservability(),
 });
 
 /**
