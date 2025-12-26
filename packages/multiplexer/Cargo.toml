@@ -41,6 +41,7 @@ anyhow = "1"
 # Logging
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing-appender = "0.2"
 
 # Utilities
 rand = "0.8"
@@ -59,6 +60,5 @@ unsafe_code = "forbid"
 all = { level = "warn", priority = -1 }
 pedantic = { level = "warn", priority = -1 }
 nursery = { level = "warn", priority = -1 }
-# Allow some pedantic lints that are too noisy
+# Allow only truly noisy lints that don't affect code quality
 module_name_repetitions = "allow"
-must_use_candidate = "allow"

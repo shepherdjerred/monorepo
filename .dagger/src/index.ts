@@ -15,6 +15,9 @@ const BUN_VERSION = "1.3.4";
 // Pin release-please version for reproducible builds
 const RELEASE_PLEASE_VERSION = "17.1.3";
 
+// Rust version for multiplexer
+const RUST_VERSION = "1.85";
+
 /**
  * Get a Bun container with caching enabled and Playwright browsers for tests
  */
@@ -29,6 +32,21 @@ function getBunContainerWithCache(source: Directory): Container {
     .withMountedDirectory("/workspace", source)
     // Install Playwright browsers for browser automation tests
     .withExec(["bunx", "playwright", "install", "--with-deps", "chromium"]);
+}
+
+/**
+ * Get a Rust container with caching enabled for multiplexer builds
+ */
+function getRustContainer(source: Directory): Container {
+  return dag
+    .container()
+    .from(`rust:${RUST_VERSION}-bookworm`)
+    .withWorkdir("/workspace")
+    .withMountedCache("/usr/local/cargo/registry", dag.cacheVolume("cargo-registry"))
+    .withMountedCache("/usr/local/cargo/git", dag.cacheVolume("cargo-git"))
+    .withMountedCache("/workspace/target", dag.cacheVolume("multiplexer-target"))
+    .withMountedDirectory("/workspace", source.directory("packages/multiplexer"))
+    .withExec(["rustup", "component", "add", "rustfmt", "clippy"]);
 }
 
 /**
@@ -288,5 +306,39 @@ export class Monorepo {
     }
 
     return outputs.join("\n\n");
+  }
+
+  /**
+   * Run Multiplexer CI: fmt check, clippy, test, build
+   */
+  @func()
+  async multiplexerCi(source: Directory): Promise<string> {
+    const outputs: string[] = [];
+
+    let container = getRustContainer(source);
+
+    // Format check
+    container = container.withExec(["cargo", "fmt", "--check"]);
+    await container.sync();
+    outputs.push("✓ Format check passed");
+
+    // Clippy with all warnings as errors
+    container = container.withExec([
+      "cargo", "clippy", "--all-targets", "--all-features", "--", "-D", "warnings"
+    ]);
+    await container.sync();
+    outputs.push("✓ Clippy passed");
+
+    // Tests
+    container = container.withExec(["cargo", "test"]);
+    await container.sync();
+    outputs.push("✓ Tests passed");
+
+    // Release build
+    container = container.withExec(["cargo", "build", "--release"]);
+    await container.sync();
+    outputs.push("✓ Release build succeeded");
+
+    return outputs.join("\n");
   }
 }

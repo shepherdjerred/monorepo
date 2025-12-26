@@ -77,15 +77,16 @@ impl Event {
 }
 
 /// Replay events to reconstruct session state
+#[must_use]
 pub fn replay_events(events: &[Event]) -> Option<Session> {
     if events.is_empty() {
         return None;
     }
 
     // Find the creation event
-    let creation_event = events.iter().find(|e| {
-        matches!(e.event_type, EventType::SessionCreated { .. })
-    })?;
+    let creation_event = events
+        .iter()
+        .find(|e| matches!(e.event_type, EventType::SessionCreated { .. }))?;
 
     let EventType::SessionCreated {
         name,
@@ -98,17 +99,17 @@ pub fn replay_events(events: &[Event]) -> Option<Session> {
     };
 
     // Create base session from creation event
-    let worktree_path = crate::utils::paths::worktree_path(&name);
-    let mut session = Session::new(
-        name.clone(),
-        repo_path.clone().into(),
+    let worktree_path = crate::utils::paths::worktree_path(name);
+    let mut session = Session::new(super::session::SessionConfig {
+        name: name.clone(),
+        repo_path: repo_path.clone().into(),
         worktree_path,
-        name.clone(),
-        initial_prompt.clone(),
-        *backend,
-        super::session::AgentType::ClaudeCode,
-        false,
-    );
+        branch_name: name.clone(),
+        initial_prompt: initial_prompt.clone(),
+        backend: *backend,
+        agent: super::session::AgentType::ClaudeCode,
+        dangerous_skip_checks: false,
+    });
 
     // Apply all subsequent events
     for event in events {

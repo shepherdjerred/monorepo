@@ -13,7 +13,11 @@ pub struct SqliteStore {
 }
 
 impl SqliteStore {
-    /// Create a new SQLite store at the given path
+    /// Create a new `SQLite` store at the given path
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the database cannot be created or migrations fail.
     pub async fn new(db_path: &Path) -> anyhow::Result<Self> {
         // Ensure parent directory exists
         if let Some(parent) = db_path.parent() {
@@ -93,7 +97,7 @@ impl Store for SqliteStore {
             .fetch_all(&self.pool)
             .await?;
 
-        rows.into_iter().map(|r| r.try_into()).collect()
+        rows.into_iter().map(TryInto::try_into).collect()
     }
 
     async fn get_session(&self, id: Uuid) -> anyhow::Result<Option<Session>> {
@@ -130,7 +134,11 @@ impl Store for SqliteStore {
         .bind(&session.initial_prompt)
         .bind(session.dangerous_skip_checks)
         .bind(&session.pr_url)
-        .bind(session.pr_check_status.map(|s| serde_json::to_string(&s).ok()).flatten())
+        .bind(
+            session
+                .pr_check_status
+                .and_then(|s| serde_json::to_string(&s).ok()),
+        )
         .bind(session.created_at.to_rfc3339())
         .bind(session.updated_at.to_rfc3339())
         .execute(&self.pool)
@@ -175,7 +183,7 @@ impl Store for SqliteStore {
         .fetch_all(&self.pool)
         .await?;
 
-        rows.into_iter().map(|r| r.try_into()).collect()
+        rows.into_iter().map(TryInto::try_into).collect()
     }
 
     async fn get_all_events(&self) -> anyhow::Result<Vec<Event>> {
@@ -183,12 +191,12 @@ impl Store for SqliteStore {
             .fetch_all(&self.pool)
             .await?;
 
-        rows.into_iter().map(|r| r.try_into()).collect()
+        rows.into_iter().map(TryInto::try_into).collect()
     }
 }
 
 /// Helper to get event type name for storage
-fn event_type_name(event_type: &crate::core::events::EventType) -> &'static str {
+const fn event_type_name(event_type: &crate::core::events::EventType) -> &'static str {
     use crate::core::events::EventType;
     match event_type {
         EventType::SessionCreated { .. } => "SessionCreated",
@@ -226,7 +234,7 @@ impl TryFrom<SessionRow> for Session {
     type Error = anyhow::Error;
 
     fn try_from(row: SessionRow) -> Result<Self, Self::Error> {
-        Ok(Session {
+        Ok(Self {
             id: Uuid::parse_str(&row.id)?,
             name: row.name,
             status: serde_json::from_str(&row.status)?,
@@ -239,7 +247,8 @@ impl TryFrom<SessionRow> for Session {
             initial_prompt: row.initial_prompt,
             dangerous_skip_checks: row.dangerous_skip_checks,
             pr_url: row.pr_url,
-            pr_check_status: row.pr_check_status
+            pr_check_status: row
+                .pr_check_status
                 .map(|s| serde_json::from_str(&s))
                 .transpose()?,
             created_at: chrono::DateTime::parse_from_rfc3339(&row.created_at)?.into(),
@@ -263,7 +272,7 @@ impl TryFrom<EventRow> for Event {
     type Error = anyhow::Error;
 
     fn try_from(row: EventRow) -> Result<Self, Self::Error> {
-        Ok(Event {
+        Ok(Self {
             id: row.id,
             session_id: Uuid::parse_str(&row.session_id)?,
             event_type: serde_json::from_str(&row.payload)?,
