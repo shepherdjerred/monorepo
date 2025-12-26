@@ -187,6 +187,12 @@ async fn handle_directory_picker_key(app: &mut App, key: KeyEvent) -> anyhow::Re
             picker.select_next();
         }
 
+        // Select current directory (Ctrl+Enter)
+        KeyCode::Enter if key.modifiers.contains(KeyModifiers::CONTROL) => {
+            app.create_dialog.repo_path = picker.current_dir.to_string_lossy().to_string();
+            picker.close();
+        }
+
         // Enter directory or select
         KeyCode::Enter => {
             if let Some(entry) = picker.selected_entry() {
@@ -200,12 +206,6 @@ async fn handle_directory_picker_key(app: &mut App, key: KeyEvent) -> anyhow::Re
                     picker.refresh_entries();
                 }
             }
-        }
-
-        // Select current directory (Ctrl+Enter)
-        KeyCode::Enter if key.modifiers.contains(KeyModifiers::CONTROL) => {
-            app.create_dialog.repo_path = picker.current_dir.to_string_lossy().to_string();
-            picker.close();
         }
 
         // Go to parent directory
