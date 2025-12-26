@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "command -v mise >/dev/null 2>&1 || curl -fsSL https://mise.run | sh; mise trust && mise run dev"
+            "command": "[ \"$CLAUDE_CODE_REMOTE\" != \"true\" ] && exit 0; command -v mise >/dev/null 2>&1 || curl -fsSL https://mise.run | sh; mise trust && mise run dev"
           }
         ]
       }
