@@ -4,7 +4,8 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./mastra": "./src/mastra/index.ts"
   },
   "files": [
     "src"
@@ -16,6 +17,7 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@mastra/core": "1.0.0-beta.15",
     "discord.js": "^14.25.1",
     "zod": "^4.2.1"
   },
