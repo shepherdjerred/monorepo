@@ -1,11 +1,9 @@
 {
   "lockfileVersion": 1,
-  "configVersion": 1,
   "workspaces": {
     "": {
       "name": "monorepo-dagger",
       "dependencies": {
-        "@dagger.io/dagger": "^0.19.6",
         "@shepherdjerred/dagger-utils": "^0.4.0",
         "typescript": "^5.8.0",
       },
