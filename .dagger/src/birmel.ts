@@ -104,6 +104,10 @@ function installWorkspaceDeps(workspaceSource: Directory, useMounts: boolean): C
       .withDirectory("/workspace/packages/a2ui-poc", workspaceSource.directory("packages/a2ui-poc"));
   }
 
+  // PHASE 4: Re-run bun install to recreate workspace node_modules symlinks
+  // (Source mounts/copies in Phase 3 replace the symlinks that Phase 2 created)
+  container = container.withExec(["bun", "install", "--frozen-lockfile"]);
+
   return container;
 }
 

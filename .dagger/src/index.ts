@@ -84,6 +84,10 @@ function installWorkspaceDeps(source: Directory): Container {
     .withMountedDirectory("/workspace/packages/eslint-config", source.directory("packages/eslint-config"))
     .withMountedDirectory("/workspace/packages/a2ui-poc", source.directory("packages/a2ui-poc"));
 
+  // PHASE 4: Re-run bun install to recreate workspace node_modules symlinks
+  // (Source mounts in Phase 3 replace the symlinks that Phase 2 created)
+  container = container.withExec(["bun", "install", "--frozen-lockfile"]);
+
   return container;
 }
 
