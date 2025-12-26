@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "mise trust --yes && mise run dev"
+            "command": "command -v mise >/dev/null 2>&1 || curl -fsSL https://mise.run | sh; mise trust && mise run dev"
           }
         ]
       }
