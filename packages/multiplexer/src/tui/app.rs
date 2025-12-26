@@ -1,5 +1,6 @@
 use crate::api::{ApiClient, Client};
 use crate::core::Session;
+use nucleo_matcher::Utf32String;
 use std::path::PathBuf;
 
 /// The current view/mode of the application
@@ -152,18 +153,22 @@ impl DirectoryPickerState {
             self.filtered_entries = self.all_entries.clone();
         } else {
             // Score and filter entries
-            let mut scored: Vec<(DirEntry, u32)> = self
+            // Convert search query to Utf32String once
+            let needle = Utf32String::from(self.search_query.as_str());
+
+            let mut scored: Vec<(DirEntry, u16)> = self
                 .all_entries
                 .iter()
                 .filter_map(|entry| {
                     // Never filter out parent directory
                     if entry.is_parent {
-                        return Some((entry.clone(), u32::MAX));
+                        return Some((entry.clone(), u16::MAX));
                     }
 
-                    // Use nucleo-matcher for fuzzy matching
+                    // Convert entry name to Utf32String and use nucleo-matcher for fuzzy matching
+                    let haystack = Utf32String::from(entry.name.as_str());
                     self.matcher
-                        .fuzzy_match(entry.name.as_str(), self.search_query.as_str())
+                        .fuzzy_match(haystack.slice(..), needle.slice(..))
                         .map(|score| (entry.clone(), score))
                 })
                 .collect();
