@@ -70,6 +70,11 @@ async fn handle_session_list_key(app: &mut App, key: KeyEvent) -> anyhow::Result
 }
 
 async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
+    // If directory picker is active, handle its events first
+    if app.create_dialog.directory_picker.is_active {
+        return handle_directory_picker_key(app, key).await;
+    }
+
     match key.code {
         KeyCode::Esc => {
             app.close_create_dialog();
@@ -99,7 +104,9 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
         KeyCode::Enter => {
             if app.create_dialog.focus == CreateDialogFocus::Buttons {
                 if app.create_dialog.button_create_focused {
+                    app.loading_message = Some("Creating session (this may take up to 60s)...".to_string());
                     if let Err(e) = app.create_session_from_dialog().await {
+                        app.loading_message = None;
                         app.status_message = Some(format!("Create failed: {e}"));
                     }
                 } else {
@@ -126,8 +133,20 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
             CreateDialogFocus::SkipChecks => {
                 app.create_dialog.skip_checks = !app.create_dialog.skip_checks;
             }
+            CreateDialogFocus::Name => app.create_dialog.name.push(' '),
+            CreateDialogFocus::Prompt => app.create_dialog.prompt.push(' '),
+            CreateDialogFocus::RepoPath => app.create_dialog.repo_path.push(' '),
             _ => {}
         },
+        KeyCode::Char('/') if app.create_dialog.focus == CreateDialogFocus::RepoPath => {
+            // Open directory picker
+            let initial_path = if app.create_dialog.repo_path.is_empty() {
+                None
+            } else {
+                Some(crate::utils::expand_tilde(&app.create_dialog.repo_path))
+            };
+            app.create_dialog.directory_picker.open(initial_path);
+        }
         KeyCode::Char(c) => match app.create_dialog.focus {
             CreateDialogFocus::Name => app.create_dialog.name.push(c),
             CreateDialogFocus::Prompt => app.create_dialog.prompt.push(c),
@@ -148,6 +167,67 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
         },
         _ => {}
     }
+    Ok(())
+}
+
+async fn handle_directory_picker_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
+    let picker = &mut app.create_dialog.directory_picker;
+
+    match key.code {
+        // Close picker
+        KeyCode::Esc => {
+            picker.close();
+        }
+
+        // Navigation
+        KeyCode::Up | KeyCode::Char('k') => {
+            picker.select_previous();
+        }
+        KeyCode::Down | KeyCode::Char('j') => {
+            picker.select_next();
+        }
+
+        // Enter directory or select
+        KeyCode::Enter => {
+            if let Some(entry) = picker.selected_entry() {
+                let entry_path = entry.path.clone();
+                let is_parent = entry.is_parent;
+
+                if is_parent || entry_path.is_dir() {
+                    // Navigate into directory
+                    picker.current_dir = entry_path;
+                    picker.search_query.clear();
+                    picker.refresh_entries();
+                }
+            }
+        }
+
+        // Select current directory (Ctrl+Enter)
+        KeyCode::Enter if key.modifiers.contains(KeyModifiers::CONTROL) => {
+            app.create_dialog.repo_path = picker.current_dir.to_string_lossy().to_string();
+            picker.close();
+        }
+
+        // Go to parent directory
+        KeyCode::Backspace if picker.search_query.is_empty() => {
+            picker.navigate_to_parent();
+        }
+
+        // Backspace removes search char
+        KeyCode::Backspace => {
+            picker.remove_search_char();
+            picker.apply_filter();
+        }
+
+        // Type to search
+        KeyCode::Char(c) => {
+            picker.add_search_char(c);
+            picker.apply_filter();
+        }
+
+        _ => {}
+    }
+
     Ok(())
 }
 
