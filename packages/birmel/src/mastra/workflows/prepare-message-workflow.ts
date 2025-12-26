@@ -60,8 +60,8 @@ const transformStep = createStep({
 		// Build style context
 		const styleContext = buildStyleContext(persona);
 
-		// If no style context available, return original content
-		if (!styleContext || styleContext.exampleMessages.length === 0) {
+		// If no style context available (no style card and no example messages), return original content
+		if (!styleContext || (!styleContext.styleCard && styleContext.exampleMessages.length === 0)) {
 			logger.debug("No style context available, returning original content");
 			return {
 				content: inputData.content,

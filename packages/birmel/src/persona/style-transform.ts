@@ -161,7 +161,7 @@ export async function stylizeResponse(
   }
 
   const styleContext = buildStyleContext(persona);
-  if (!styleContext || styleContext.exampleMessages.length === 0) {
+  if (!styleContext || (!styleContext.styleCard && styleContext.exampleMessages.length === 0)) {
     logger.debug("No style context available, returning original response");
     return response;
   }
