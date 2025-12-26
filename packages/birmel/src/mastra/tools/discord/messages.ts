@@ -25,7 +25,7 @@ async function stylizeContent(content: string, guildId: string | undefined): Pro
   try {
     const persona = await getGuildPersona(guildId);
     logger.debug("Stylizing message content", { persona, contentLength: content.length });
-    return stylizeResponse(content, persona);
+    return await stylizeResponse(content, persona);
   } catch (error) {
     logger.error("Failed to stylize content, using original", { error });
     return content;
