@@ -81,16 +81,17 @@ jobs:
         run: |
           ARGS=(
             --source=.
+            --branch="${{ github.ref_name }}"
             --github-token=env:GH_TOKEN
             --npm-token=env:NPM_TOKEN
           )
 
-          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]]; then
+          if [[ "${{ github.ref_name }}" == "main" ]]; then
             ARGS+=(
-              --birmel-version="1.0.${{ github.run_number }}"
-              --birmel-git-sha="${{ github.sha }}"
-              --birmel-registry-username="${{ github.actor }}"
-              --birmel-registry-password=env:GITHUB_TOKEN
+              --version="1.0.${{ github.run_number }}"
+              --git-sha="${{ github.sha }}"
+              --registry-username="${{ github.actor }}"
+              --registry-password=env:GITHUB_TOKEN
             )
           fi
 
