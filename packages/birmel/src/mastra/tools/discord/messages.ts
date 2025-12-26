@@ -3,7 +3,7 @@ import { z } from "zod";
 import { getDiscordClient } from "../../../discord/index.js";
 import { loggers } from "../../../utils/logger.js";
 import { withToolSpan, captureException } from "../../../observability/index.js";
-import { getRequestContext } from "../request-context.js";
+import { getRequestContext, hasReplySent, markReplySent } from "../request-context.js";
 import type { TextChannel } from "discord.js";
 import { validateSnowflakes, validateSnowflakeArray } from "./validation.js";
 
@@ -75,6 +75,11 @@ export const manageMessageTool = createTool({
             if (!ctx.content) {
               return { success: false, message: "content is required for reply" };
             }
+            // Prevent duplicate replies to the same message
+            if (hasReplySent()) {
+              logger.warn("Reply already sent for this request, ignoring duplicate", { content: ctx.content.slice(0, 50) });
+              return { success: true, message: "Reply already sent (duplicate prevented)" };
+            }
             const requestContext = getRequestContext();
             if (!requestContext?.sourceMessageId || !requestContext.sourceChannelId) {
               return { success: false, message: "No message context available to reply to. Use 'send' action instead." };
@@ -85,6 +90,7 @@ export const manageMessageTool = createTool({
             }
             const originalMessage = await (channel as TextChannel).messages.fetch(requestContext.sourceMessageId);
             const sent = await originalMessage.reply(ctx.content);
+            markReplySent();
             logger.info("Reply sent", { channelId: requestContext.sourceChannelId, messageId: sent.id, replyTo: requestContext.sourceMessageId });
             return { success: true, message: "Reply sent successfully", data: { messageId: sent.id } };
           }
