@@ -1,5 +1,5 @@
 export {
-	responseWorkflow,
-	type ResponseWorkflowInput,
-	type ResponseWorkflowOutput,
-} from "./response-workflow.js";
+	prepareMessageWorkflow,
+	type PrepareMessageInput,
+	type PrepareMessageOutput,
+} from "./prepare-message-workflow.js";

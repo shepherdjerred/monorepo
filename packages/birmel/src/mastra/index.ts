@@ -17,7 +17,7 @@ import { createClassifierAgent } from "./agents/classifier-agent.js";
 import { stylizationAgent } from "./agents/stylization-agent.js";
 
 // Import workflows
-import { responseWorkflow } from "./workflows/index.js";
+import { prepareMessageWorkflow } from "./workflows/index.js";
 
 const classifierAgent = createClassifierAgent();
 const config = getConfig();
@@ -41,7 +41,7 @@ export const mastra = new Mastra({
     stylizer: stylizationAgent,
   },
   workflows: {
-    response: responseWorkflow,
+    prepareMessage: prepareMessageWorkflow,
   },
   storage: new LibSQLStore({
     id: "telemetry",
@@ -68,8 +68,8 @@ export function getClassifierAgent() {
   return mastra.getAgent("classifier");
 }
 
-export function getResponseWorkflow() {
-  return mastra.getWorkflow("response");
+export function getPrepareMessageWorkflow() {
+  return mastra.getWorkflow("prepareMessage");
 }
 
 export async function startMastraServer(): Promise<void> {
@@ -112,7 +112,7 @@ export { stylizationAgent, createStylizationAgent } from "./agents/stylization-a
 
 // Workflows
 export {
-  responseWorkflow,
-  type ResponseWorkflowInput,
-  type ResponseWorkflowOutput,
+  prepareMessageWorkflow,
+  type PrepareMessageInput,
+  type PrepareMessageOutput,
 } from "./workflows/index.js";
