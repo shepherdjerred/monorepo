@@ -6,8 +6,31 @@ import { withToolSpan, captureException } from "../../../observability/index.js"
 import { getRequestContext, hasReplySent, markReplySent } from "../request-context.js";
 import type { TextChannel } from "discord.js";
 import { validateSnowflakes, validateSnowflakeArray } from "./validation.js";
+import { stylizeResponse } from "../../../persona/index.js";
+import { getGuildPersona } from "../../../persona/guild-persona.js";
+import { getConfig } from "../../../config/index.js";
 
 const logger = loggers.tools.child("discord.messages");
+
+/**
+ * Apply style transformation to message content if persona is enabled.
+ * Uses the guild's current persona to stylize the response.
+ */
+async function stylizeContent(content: string, guildId: string | undefined): Promise<string> {
+  const config = getConfig();
+  if (!config.persona.enabled || !guildId) {
+    return content;
+  }
+
+  try {
+    const persona = await getGuildPersona(guildId);
+    logger.debug("Stylizing message content", { persona, contentLength: content.length });
+    return await stylizeResponse(content, persona);
+  } catch (error) {
+    logger.error("Failed to stylize content, using original", { error });
+    return content;
+  }
+}
 
 export const manageMessageTool = createTool({
   id: "manage-message",
@@ -66,7 +89,9 @@ export const manageMessageTool = createTool({
             if (!channel?.isTextBased()) {
               return { success: false, message: "Channel is not a text channel" };
             }
-            const sent = await (channel as TextChannel).send(ctx.content);
+            const requestContext = getRequestContext();
+            const styledContent = await stylizeContent(ctx.content, requestContext?.guildId);
+            const sent = await (channel as TextChannel).send(styledContent);
             logger.info("Message sent", { channelId: ctx.channelId, messageId: sent.id });
             return { success: true, message: "Message sent successfully", data: { messageId: sent.id } };
           }
@@ -89,7 +114,8 @@ export const manageMessageTool = createTool({
               return { success: false, message: "Channel is not a text channel" };
             }
             const originalMessage = await (channel as TextChannel).messages.fetch(requestContext.sourceMessageId);
-            const sent = await originalMessage.reply(ctx.content);
+            const styledContent = await stylizeContent(ctx.content, requestContext.guildId);
+            const sent = await originalMessage.reply(styledContent);
             markReplySent();
             logger.info("Reply sent", { channelId: requestContext.sourceChannelId, messageId: sent.id, replyTo: requestContext.sourceMessageId });
             return { success: true, message: "Reply sent successfully", data: { messageId: sent.id } };
@@ -101,7 +127,9 @@ export const manageMessageTool = createTool({
             }
             const user = await client.users.fetch(ctx.userId);
             const dmChannel = await user.createDM();
-            const sent = await dmChannel.send(ctx.content);
+            const requestContext = getRequestContext();
+            const styledContent = await stylizeContent(ctx.content, requestContext?.guildId);
+            const sent = await dmChannel.send(styledContent);
             logger.info("DM sent", { userId: ctx.userId, messageId: sent.id });
             return { success: true, message: "Direct message sent successfully", data: { messageId: sent.id } };
           }
