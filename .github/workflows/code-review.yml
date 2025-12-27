@@ -1,0 +1,143 @@
+name: Claude Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, ready_for_review, reopened]
+  pull_request_review_comment:
+    types: [created]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+  id-token: write
+
+jobs:
+  # Automatic review on new/updated PRs
+  claude-code-review:
+    # Only run for PRs from shepherdjerred on PR events (not comments)
+    if: |
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.user.login == 'shepherdjerred'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          track_progress: true
+          claude_args: "--max-turns 30 --model claude-sonnet-4-5-20250929"
+          prompt: |
+            You are performing a thorough code review on this pull request. Your review should be comprehensive, architectural, and actionable.
+
+            ## Review Scope
+
+            1. **PR Content Analysis**
+               - Review all changed files in this PR
+               - Understand the purpose and intent of the changes
+               - Identify what problem is being solved or feature being added
+
+            2. **Architectural Fit**
+               - Analyze how these changes fit into the overall codebase architecture
+               - Check if the changes follow existing patterns in the repository
+               - Identify any architectural concerns or inconsistencies
+               - Consider the monorepo structure (packages/, .dagger/, archive/, practice/)
+
+            3. **Code Quality**
+               - Check for bugs, logic errors, or edge cases
+               - Review error handling and edge case coverage
+               - Assess code readability and maintainability
+               - Look for potential performance issues
+               - Check for security vulnerabilities (injection, XSS, OWASP Top 10)
+
+            4. **Repository Standards Compliance**
+               - Verify Bun is used instead of npm/yarn/pnpm
+               - Check TypeScript strict mode compliance
+               - Verify ESLint rules are followed (prefer-bun-apis, no-type-assertions, zod-schema-naming, prefer-date-fns)
+               - Ensure no parent directory imports (../)
+               - Ensure no re-exports - use direct imports
+               - Check that Zod is used for runtime validation where appropriate
+
+            5. **Commit Quality**
+               - Evaluate commit messages for clarity and helpfulness
+               - Check if commits are atomic and well-organized
+               - Suggest improvements if commit messages don't explain "why"
+
+            6. **Testing**
+               - Check if changes include appropriate tests
+               - Verify test patterns (*.test.ts, *.integration.test.ts) are followed
+               - Ensure Prisma clients are disconnected in tests (if applicable)
+
+            ## Review Output
+
+            Provide your review in two parts:
+
+            ### Part 1: Inline Comments
+            Use the inline comment tool to add specific suggestions directly on the code where issues exist. Include:
+            - Concrete code suggestions with before/after examples
+            - Specific line references for issues
+            - Clear explanations of why something should change
+
+            ### Part 2: Summary Comment
+            Post a summary PR comment that includes:
+            - Overall assessment (approve, request changes, or comment)
+            - Key findings organized by category
+            - Architecture observations
+            - Commit message feedback (if any issues)
+            - List of specific patterns that don't match the repo conventions
+
+            Be direct, specific, and actionable. Avoid vague suggestions. If code is good, say so briefly and move on. Focus on substantive issues rather than stylistic nitpicks that linting should catch.
+
+  # Interactive responses to @claude mentions in comments
+  claude-interactive:
+    # Only run for comments from shepherdjerred that mention @claude
+    if: |
+      (github.event_name == 'issue_comment' || github.event_name == 'pull_request_review_comment') &&
+      github.event.comment.user.login == 'shepherdjerred' &&
+      contains(github.event.comment.body, '@claude')
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          trigger_phrase: "@claude"
+          track_progress: true
+          claude_args: "--max-turns 30 --model claude-sonnet-4-5-20250929"
+          prompt: |
+            You are an expert code reviewer and software architect assisting with this repository.
+
+            ## Context
+            This is a Bun monorepo with packages in packages/:
+            - birmel: AI-powered Discord bot (Mastra + Claude AI)
+            - eslint-config: Shared ESLint configuration with custom rules
+            - dagger-utils: Utilities for Dagger CI/CD pipelines
+            - a2ui-poc: POC app with Bun backend and React/Vite frontend
+            - claude-plugin: Claude Code plugin with specialized agents
+
+            ## Repository Standards
+            - Use Bun (never npm/yarn/pnpm)
+            - Strict TypeScript with verbatimModuleSyntax, noUncheckedIndexedAccess, exactOptionalPropertyTypes
+            - Zod for runtime validation
+            - No parent directory imports (../)
+            - No re-exports - use direct imports
+            - ESLint v9 flat config with custom rules (prefer-bun-apis, no-type-assertions, zod-schema-naming, prefer-date-fns)
+
+            ## Your Role
+            Respond to the question or request in the comment. Be thorough and helpful:
+            - If asked about architecture, explain how things fit together
+            - If asked to review specific code, provide detailed inline suggestions
+            - If asked to explain, be clear and use code examples
+            - If asked to fix something, provide concrete code changes
+
+            Always ground your responses in the actual codebase. Read relevant files to understand context before responding.
