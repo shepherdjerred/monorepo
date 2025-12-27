@@ -5,7 +5,6 @@ import {
   MastraConfigSchema,
   TelemetryConfigSchema,
   DailyPostsConfigSchema,
-  VoiceConfigSchema,
   ExternalApisSchema,
   LoggingConfigSchema,
   ConfigSchema,
@@ -53,10 +52,6 @@ describe("OpenAIConfigSchema", () => {
       expect(result.data.model).toBe("gpt-5-mini");
       expect(result.data.classifierModel).toBe("gpt-5-nano");
       expect(result.data.maxTokens).toBe(4096);
-      expect(result.data.whisperModel).toBe("whisper-1");
-      expect(result.data.ttsModel).toBe("tts-1");
-      expect(result.data.ttsVoice).toBe("nova");
-      expect(result.data.ttsSpeed).toBe(1.0);
     }
   });
 
@@ -71,41 +66,6 @@ describe("OpenAIConfigSchema", () => {
       expect(result.data.model).toBe("gpt-4o");
       expect(result.data.classifierModel).toBe("gpt-4o-mini");
     }
-  });
-
-  test("validates all voice options", () => {
-    const voices = ["alloy", "echo", "fable", "onyx", "nova", "shimmer"] as const;
-    for (const voice of voices) {
-      const result = OpenAIConfigSchema.safeParse({
-        apiKey: "test-key",
-        ttsVoice: voice,
-      });
-      expect(result.success).toBe(true);
-    }
-  });
-
-  test("rejects invalid voice", () => {
-    const result = OpenAIConfigSchema.safeParse({
-      apiKey: "test-key",
-      ttsVoice: "invalid-voice",
-    });
-    expect(result.success).toBe(false);
-  });
-
-  test("rejects ttsSpeed below minimum", () => {
-    const result = OpenAIConfigSchema.safeParse({
-      apiKey: "test-key",
-      ttsSpeed: 0.1,
-    });
-    expect(result.success).toBe(false);
-  });
-
-  test("rejects ttsSpeed above maximum", () => {
-    const result = OpenAIConfigSchema.safeParse({
-      apiKey: "test-key",
-      ttsSpeed: 5.0,
-    });
-    expect(result.success).toBe(false);
   });
 
   test("rejects missing apiKey", () => {
@@ -204,32 +164,6 @@ describe("DailyPostsConfigSchema", () => {
   });
 });
 
-describe("VoiceConfigSchema", () => {
-  test("uses defaults", () => {
-    const result = VoiceConfigSchema.safeParse({});
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.enabled).toBe(true);
-      expect(result.data.silenceThresholdMs).toBe(1500);
-      expect(result.data.maxRecordingMs).toBe(30000);
-    }
-  });
-
-  test("allows custom values", () => {
-    const result = VoiceConfigSchema.safeParse({
-      enabled: false,
-      silenceThresholdMs: 2000,
-      maxRecordingMs: 60000,
-    });
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.enabled).toBe(false);
-      expect(result.data.silenceThresholdMs).toBe(2000);
-      expect(result.data.maxRecordingMs).toBe(60000);
-    }
-  });
-});
-
 describe("ExternalApisSchema", () => {
   test("allows empty config", () => {
     const result = ExternalApisSchema.safeParse({});
@@ -287,7 +221,6 @@ describe("ConfigSchema (full)", () => {
       mastra: {},
       telemetry: {},
       dailyPosts: {},
-      voice: {},
       externalApis: {},
       logging: {},
       sentry: {},

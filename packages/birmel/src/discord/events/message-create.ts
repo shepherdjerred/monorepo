@@ -18,7 +18,7 @@ import {
 } from "../../utils/image.js";
 import { recordMessageActivity } from "../../database/repositories/activity.js";
 import { getOrCreateGuildOwner } from "../../database/repositories/guild-owner.js";
-import { generateWakeWord } from "../../voice/command-handler.js";
+import { generateWakeWord } from "../../config/constants.js";
 
 const logger = loggers.discord.child("message-create");
 
