@@ -25,15 +25,8 @@ import {
 import { getMemory, getGlobalThreadId } from "./mastra/memory/index.js";
 import { initializeMusicPlayer, destroyMusicPlayer } from "./music/index.js";
 import { startScheduler, stopScheduler } from "./scheduler/index.js";
-import {
-  setVoiceCommandHandler,
-  startCleanupTask,
-  stopCleanupTask,
-} from "./voice/index.js";
 import { withTyping } from "./discord/utils/typing.js";
 import { logger } from "./utils/index.js";
-import { stylizeResponse, closePersonaDb } from "./persona/index.js";
-import { getGuildPersona } from "./persona/guild-persona.js";
 import type { MessageContext } from "./discord/index.js";
 import { buildMessageContent } from "./mastra/utils/message-builder.js";
 import { getRecentChannelMessages } from "./discord/utils/channel-history.js";
@@ -218,155 +211,13 @@ ${globalContext}${conversationHistory}`;
   }
 }
 
-async function handleVoiceCommand(
-  command: string,
-  userId: string,
-  guildId: string,
-  channelId: string,
-): Promise<string> {
-  const discordContext = {
-    guildId,
-    channelId,
-    userId,
-  };
-
-  setSentryContext(discordContext);
-
-  const startTime = Date.now();
-  const requestId = `voice-${Date.now().toString(36)}`;
-
-  // Create a Mastra span for the voice command handling
-  const voiceSpan = getOrCreateSpan({
-    type: SpanType.GENERIC,
-    name: "discord.voice.command",
-    mastra,
-    metadata: {
-      ...discordContext,
-      requestId,
-    },
-    input: { command: command.slice(0, 200) },
-  });
-
-  try {
-    logger.info("Handling voice command", {
-      requestId,
-      guildId,
-      channelId,
-      userId,
-      commandLength: command.length,
-      commandPreview: command.slice(0, 50),
-    });
-
-    const config = getConfig();
-
-    // Fetch global memory (server rules) to inject into prompt
-    logger.debug("Fetching global memory for voice", { requestId, guildId });
-    const globalMemory = await getGlobalMemoryContext(guildId);
-    const globalContext = globalMemory
-      ? `\n## Server Rules & Memory\n${globalMemory}\n`
-      : "";
-
-    // Build prompt with voice context
-    const prompt = `[VOICE COMMAND] User ID ${userId} in voice channel ${channelId} says:
-
-${command}
-
-Guild ID: ${guildId}
-Channel ID: ${channelId}
-${globalContext}
-IMPORTANT: This is a voice command. Keep your response concise (under 200 words) as it will be spoken back via text-to-speech.`;
-
-    logger.debug("Generating voice response via Agent Network", { requestId });
-    const genStartTime = Date.now();
-
-    // Use Agent Network for voice commands
-    // Wrap with request context (no sourceMessageId for voice - can't reply)
-    let responseText = "";
-    await runWithRequestContext(
-      {
-        sourceChannelId: channelId,
-        sourceMessageId: "", // Voice commands can't use reply action
-        guildId,
-        userId,
-      },
-      async () => {
-        // Pass tracingContext to network so spans are linked
-        const networkStream = await routingAgent.network(prompt, {
-          ...(voiceSpan ? { tracingContext: { currentSpan: voiceSpan } } : {}),
-          runId: requestId,
-        });
-
-        // Process the network stream to get the final result
-        for await (const chunk of networkStream) {
-          // NetworkStepFinishPayload has result as string directly
-          if (chunk.type === "network-execution-event-step-finish" && chunk.payload.result) {
-            responseText = chunk.payload.result;
-          }
-        }
-      },
-    );
-
-    const genDuration = Date.now() - genStartTime;
-    logger.debug("Voice response generated via Agent Network", {
-      requestId,
-      durationMs: genDuration,
-      responseLength: responseText.length,
-    });
-
-    // STAGE 2: Stylize response to match persona's voice
-    let finalResponse = responseText;
-    if (config.persona.enabled) {
-      const persona = await getGuildPersona(guildId);
-      logger.debug("Stylizing voice response", { requestId, persona });
-      finalResponse = await stylizeResponse(responseText, persona);
-    }
-
-    const totalDuration = Date.now() - startTime;
-    logger.info("Voice command handled successfully", {
-      requestId,
-      totalDurationMs: totalDuration,
-      generationDurationMs: genDuration,
-      responseLength: finalResponse.length,
-    });
-
-    voiceSpan?.end({
-      output: { responseLength: finalResponse.length, durationMs: totalDuration },
-    });
-
-    return finalResponse;
-  } catch (error) {
-    const totalDuration = Date.now() - startTime;
-    logger.error("Voice command agent generation failed", error, {
-      requestId,
-      totalDurationMs: totalDuration,
-    });
-    captureException(error as Error, {
-      operation: "handleVoiceCommand",
-      discord: discordContext,
-      extra: { requestId },
-    });
-
-    voiceSpan?.error({
-      error: error instanceof Error ? error : new Error(String(error)),
-      endSpan: true,
-    });
-
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    return `Sorry, I encountered an error processing your voice command.\n\`\`\`\n${errorMessage}\n\`\`\``;
-  } finally {
-    clearSentryContext();
-  }
-}
-
 async function shutdown(): Promise<void> {
   logger.info("Shutting down Birmel...");
 
-  stopCleanupTask();
   stopScheduler();
   await destroyMusicPlayer();
   await destroyDiscordClient();
   await disconnectPrisma();
-  closePersonaDb();
 
   // Shutdown observability last to capture any final events
   await shutdownObservability();
@@ -383,7 +234,6 @@ async function main(): Promise<void> {
   logger.info("Configuration loaded", {
     model: config.openai.model,
     classifierModel: config.openai.classifierModel,
-    voiceEnabled: config.voice.enabled,
     dailyPostsEnabled: config.dailyPosts.enabled,
     studioEnabled: config.mastra.studioEnabled,
     personaEnabled: config.persona.enabled,
@@ -403,13 +253,6 @@ async function main(): Promise<void> {
   // Initialize music player
   await initializeMusicPlayer();
   logger.info("Music player initialized");
-
-  // Set up voice command handler
-  if (config.voice.enabled) {
-    setVoiceCommandHandler(handleVoiceCommand);
-    startCleanupTask();
-    logger.info("Voice command handler initialized");
-  }
 
   // Start scheduler after Discord is ready
   startScheduler();

@@ -10,12 +10,6 @@ export const OpenAIConfigSchema = z.object({
   model: z.string().default("gpt-5-mini"),
   classifierModel: z.string().default("gpt-5-nano"),
   maxTokens: z.number().default(4096),
-  whisperModel: z.string().default("whisper-1"),
-  ttsModel: z.string().default("tts-1"),
-  ttsVoice: z
-    .enum(["alloy", "echo", "fable", "onyx", "nova", "shimmer"])
-    .default("nova"),
-  ttsSpeed: z.number().min(0.25).max(4.0).default(1.0),
 });
 
 export const MastraConfigSchema = z.object({
@@ -43,12 +37,6 @@ export const DailyPostsConfigSchema = z.object({
   timezone: z.string().default("America/Los_Angeles"),
 });
 
-export const VoiceConfigSchema = z.object({
-  enabled: z.boolean().default(true),
-  silenceThresholdMs: z.number().default(1500),
-  maxRecordingMs: z.number().default(30000),
-});
-
 export const ExternalApisSchema = z.object({
   newsApiKey: z.string().optional(),
   riotApiKey: z.string().optional(),
@@ -72,9 +60,6 @@ export const SentryConfigSchema = z.object({
 export const PersonaConfigSchema = z.object({
   enabled: z.boolean().default(true),
   defaultPersona: z.string().default("virmel"),
-  dbPath: z.string().default("file:/app/data/glitter-boys.db"),
-  decisionExampleCount: z.number().default(5),
-  styleExampleCount: z.number().default(10),
   styleModel: z.string().default("gpt-4o-mini"),
 });
 
@@ -133,7 +118,6 @@ export const ConfigSchema = z.object({
   mastra: MastraConfigSchema,
   telemetry: TelemetryConfigSchema,
   dailyPosts: DailyPostsConfigSchema,
-  voice: VoiceConfigSchema,
   externalApis: ExternalApisSchema,
   logging: LoggingConfigSchema,
   sentry: SentryConfigSchema,
@@ -152,7 +136,6 @@ export type OpenAIConfig = z.infer<typeof OpenAIConfigSchema>;
 export type MastraConfig = z.infer<typeof MastraConfigSchema>;
 export type TelemetryConfig = z.infer<typeof TelemetryConfigSchema>;
 export type DailyPostsConfig = z.infer<typeof DailyPostsConfigSchema>;
-export type VoiceConfig = z.infer<typeof VoiceConfigSchema>;
 export type ExternalApisConfig = z.infer<typeof ExternalApisSchema>;
 export type LoggingConfig = z.infer<typeof LoggingConfigSchema>;
 export type SentryConfig = z.infer<typeof SentryConfigSchema>;

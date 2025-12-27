@@ -4,11 +4,7 @@ import { openai } from "@ai-sdk/openai";
 import { SYSTEM_PROMPT } from "./system-prompt.js";
 import { getConfig } from "../../config/index.js";
 import { createMemory } from "../memory/index.js";
-import {
-  buildDecisionContext,
-  formatDecisionPrompt,
-} from "../../persona/index.js";
-import { getGuildPersona } from "../../persona/guild-persona.js";
+import { getGuildPersona } from "../../persona/index.js";
 import {
   type AgentType,
   getToolSet,
@@ -93,34 +89,14 @@ export async function createBirmelAgentWithContext(
     guildId,
   });
 
-  // Get guild-specific persona
+  // Get guild-specific persona (used for logging/context)
   const persona = await getGuildPersona(guildId);
-
-  // Build decision context from persona's similar messages
-  const decisionContext = buildDecisionContext(persona, userQuery);
-
-  // Create enhanced system prompt with decision guidance
-  let enhancedPrompt = SYSTEM_PROMPT;
-  if (decisionContext) {
-    const decisionPrompt = formatDecisionPrompt(decisionContext);
-    if (decisionPrompt) {
-      const insertPoint = SYSTEM_PROMPT.indexOf("## Ethical Guidelines");
-      if (insertPoint !== -1) {
-        enhancedPrompt =
-          SYSTEM_PROMPT.slice(0, insertPoint) +
-          decisionPrompt +
-          "\n" +
-          SYSTEM_PROMPT.slice(insertPoint);
-      } else {
-        enhancedPrompt = SYSTEM_PROMPT + "\n" + decisionPrompt;
-      }
-    }
-  }
+  logger.debug("Using persona for guild", { guildId, persona });
 
   return new Agent({
     id: `birmel-${type}-with-context`,
     name: "Birmel",
-    instructions: enhancedPrompt,
+    instructions: SYSTEM_PROMPT,
     model: openai.chat(config.openai.model),
     tools: toolsRecord as ToolsInput,
     memory: createMemory(),
