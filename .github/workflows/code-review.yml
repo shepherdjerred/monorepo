@@ -1,0 +1,90 @@
+name: Claude Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, ready_for_review, reopened]
+  pull_request_review_comment:
+    types: [created]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+  id-token: write
+
+jobs:
+  # Automatic review on new/updated PRs
+  claude-code-review:
+    # Only run for PRs from shepherdjerred on PR events (not comments)
+    if: |
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.user.login == 'shepherdjerred'
+    runs-on: [monorepo-runner-set]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: 1password/load-secrets-action/configure@v2
+        with:
+          connect-host: http://onepassword-connect.1password.svc.cluster.local:8080
+          connect-token: ${{ secrets.OP_CONNECT_TOKEN }}
+
+      - uses: 1password/load-secrets-action@v2
+        with:
+          export-env: true
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: op://bic45kuflnwsnxnd67dzcnxjze/5p65mbzr237yyzt2sfnfao3a5a/CLAUDE_CODE_OAUTH_TOKEN
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ env.CLAUDE_CODE_OAUTH_TOKEN }}
+          track_progress: true
+          claude_args: "--max-turns 30 --model claude-sonnet-4-5-20250929"
+          prompt: |
+            Review this PR focusing on things linters and typecheckers can't catch:
+
+            - **Architectural fit**: Does this change fit the codebase patterns? Is it in the right place?
+            - **Logic errors**: Are there bugs, race conditions, or edge cases that could cause problems?
+            - **Security**: Any vulnerabilities that static analysis would miss?
+            - **Design**: Is this the right approach? Are there simpler alternatives?
+            - **Commit messages**: Are they clear and explain "why"?
+
+            Read the CLAUDE.md file and explore related code to understand context. Use inline comments for specific suggestions. Be direct and concise - if something is fine, don't comment on it.
+
+  # Interactive responses to @claude mentions in comments
+  claude-interactive:
+    # Only run for comments from shepherdjerred that mention @claude
+    if: |
+      (github.event_name == 'issue_comment' || github.event_name == 'pull_request_review_comment') &&
+      github.event.comment.user.login == 'shepherdjerred' &&
+      contains(github.event.comment.body, '@claude')
+    runs-on: [monorepo-runner-set]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: 1password/load-secrets-action/configure@v2
+        with:
+          connect-host: http://onepassword-connect.1password.svc.cluster.local:8080
+          connect-token: ${{ secrets.OP_CONNECT_TOKEN }}
+
+      - uses: 1password/load-secrets-action@v2
+        with:
+          export-env: true
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: op://bic45kuflnwsnxnd67dzcnxjze/5p65mbzr237yyzt2sfnfao3a5a/CLAUDE_CODE_OAUTH_TOKEN
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ env.CLAUDE_CODE_OAUTH_TOKEN }}
+          trigger_phrase: "@claude"
+          track_progress: true
+          claude_args: "--max-turns 30 --model claude-sonnet-4-5-20250929"
+          prompt: |
+            Respond to the question or request. Read CLAUDE.md and relevant code for context. Be direct and concise.
