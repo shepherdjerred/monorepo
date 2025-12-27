@@ -116,33 +116,6 @@ describe("discord tools", () => {
     });
   });
 
-  describe("voiceTools", () => {
-    test("exports all voice tools", async () => {
-      const { voiceTools } = await import(
-        "../../../src/mastra/tools/discord/voice.js"
-      );
-
-      expect(Array.isArray(voiceTools)).toBe(true);
-      expect(voiceTools.length).toBeGreaterThan(0);
-    });
-
-    test("manageBotVoiceTool has correct id", async () => {
-      const { manageBotVoiceTool } = await import(
-        "../../../src/mastra/tools/discord/voice.js"
-      );
-
-      expect(manageBotVoiceTool.id).toBe("manage-bot-voice");
-    });
-
-    test("manageVoiceMemberTool has correct id", async () => {
-      const { manageVoiceMemberTool } = await import(
-        "../../../src/mastra/tools/discord/voice.js"
-      );
-
-      expect(manageVoiceMemberTool.id).toBe("manage-voice-member");
-    });
-  });
-
   describe("allDiscordTools aggregation", () => {
     test("all discord tools are exported from index", async () => {
       const discordTools = await import(
@@ -155,7 +128,6 @@ describe("discord tools", () => {
       expect(discordTools.roleTools).toBeDefined();
       expect(discordTools.memberTools).toBeDefined();
       expect(discordTools.moderationTools).toBeDefined();
-      expect(discordTools.voiceTools).toBeDefined();
     });
 
     test("allDiscordTools combines all tool arrays", async () => {

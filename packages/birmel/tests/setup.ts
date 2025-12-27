@@ -156,66 +156,6 @@ mock.module("discord.js", () => ({
   },
 }));
 
-// Mock @discordjs/voice
-mock.module("@discordjs/voice", () => ({
-  joinVoiceChannel: () => ({
-    subscribe: () => {},
-    destroy: () => {},
-    on: () => {},
-    once: () => {},
-    receiver: { speaking: { on: () => {} } },
-    joinConfig: { channelId: "test-channel" },
-  }),
-  getVoiceConnection: () => null,
-  VoiceConnectionStatus: {
-    Ready: "ready",
-    Disconnected: "disconnected",
-  },
-  entersState: async () => ({}),
-  createAudioPlayer: () => ({
-    play: () => {},
-    stop: () => {},
-    pause: () => {},
-    unpause: () => {},
-    on: () => {},
-    once: () => {},
-  }),
-  createAudioResource: () => ({}),
-  AudioPlayerStatus: {
-    Idle: "idle",
-    Playing: "playing",
-    Paused: "paused",
-  },
-  StreamType: {
-    Arbitrary: 0,
-    Raw: 1,
-    OggOpus: 2,
-    WebmOpus: 3,
-    Opus: 4,
-  },
-}));
-
-// Mock OpenAI
-mock.module("openai", () => ({
-  default: class MockOpenAI {
-    audio = {
-      transcriptions: {
-        create: async () => ({ text: "test transcription" }),
-      },
-      speech: {
-        create: async () => ({
-          arrayBuffer: async () => new ArrayBuffer(1024),
-        }),
-      },
-    };
-  },
-  toFile: async (buffer: Buffer, filename: string, options?: { type?: string }) => ({
-    name: filename,
-    buffer,
-    type: options?.type ?? "application/octet-stream",
-  }),
-}));
-
 // Mock discord-player
 mock.module("discord-player", () => ({
   Player: class MockPlayer {

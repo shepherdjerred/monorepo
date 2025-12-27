@@ -34,10 +34,6 @@ function loadConfigFromEnv(): Config {
       model: process.env["OPENAI_MODEL"] ?? "gpt-5-mini",
       classifierModel: process.env["OPENAI_CLASSIFIER_MODEL"] ?? "gpt-5-nano",
       maxTokens: parseNumber(process.env["OPENAI_MAX_TOKENS"], 4096),
-      whisperModel: process.env["WHISPER_MODEL"] ?? "whisper-1",
-      ttsModel: process.env["TTS_MODEL"] ?? "tts-1",
-      ttsVoice: process.env["TTS_VOICE"] ?? "nova",
-      ttsSpeed: parseNumber(process.env["TTS_SPEED"], 1.0),
     },
     mastra: {
       memoryDbPath:
@@ -61,17 +57,6 @@ function loadConfigFromEnv(): Config {
       enabled: parseBoolean(process.env["DAILY_POSTS_ENABLED"], true),
       time: process.env["DAILY_POST_TIME"] ?? "09:00",
       timezone: process.env["DAILY_POST_TIMEZONE"] ?? "America/Los_Angeles",
-    },
-    voice: {
-      enabled: parseBoolean(process.env["VOICE_ENABLED"], true),
-      silenceThresholdMs: parseNumber(
-        process.env["VOICE_SILENCE_THRESHOLD_MS"],
-        1500,
-      ),
-      maxRecordingMs: parseNumber(
-        process.env["VOICE_MAX_RECORDING_MS"],
-        30000,
-      ),
     },
     externalApis: {
       newsApiKey: process.env["NEWS_API_KEY"],
