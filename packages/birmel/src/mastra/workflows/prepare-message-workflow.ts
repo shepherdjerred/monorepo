@@ -1,7 +1,7 @@
 import { createStep, createWorkflow } from "@mastra/core/workflows";
 import { z } from "zod";
-import { buildStyleContext, type StyleContext } from "../../persona/style-transform.js";
-import { getGuildPersona } from "../../persona/guild-persona.js";
+import { buildStyleContext, type StyleContext } from "../../persona/index.js";
+import { getGuildPersona } from "../../persona/index.js";
 import { getConfig } from "../../config/index.js";
 import { stylizationAgent } from "../agents/stylization-agent.js";
 import { logger } from "../../utils/index.js";
@@ -57,11 +57,11 @@ const transformStep = createStep({
 			contentLength: inputData.content.length,
 		});
 
-		// Build style context
+		// Build style context from style card
 		const styleContext = buildStyleContext(persona);
 
-		// If no style context available, return original content
-		if (!styleContext || styleContext.exampleMessages.length === 0) {
+		// If no style context available (no style card), return original content
+		if (!styleContext) {
 			logger.debug("No style context available, returning original content");
 			return {
 				content: inputData.content,
@@ -100,18 +100,17 @@ function formatStylizationPrompt(
 	context: StyleContext,
 	originalMessage: string,
 ): string {
-	const { styleCard, exampleMessages, persona } = context;
+	const { styleCard, persona } = context;
 
-	if (styleCard) {
-		const voice = styleCard.voice.slice(0, 4).join("\n- ");
-		const styleMarkers = styleCard.style_markers.slice(0, 4).join("\n- ");
-		const howToMimic = styleCard.how_to_mimic.slice(0, 6).join("\n- ");
-		const sampleMessages = styleCard.sample_messages
-			.slice(0, 8)
-			.map((m) => `"${m}"`)
-			.join("\n");
+	const voice = styleCard.voice.slice(0, 4).join("\n- ");
+	const styleMarkers = styleCard.style_markers.slice(0, 4).join("\n- ");
+	const howToMimic = styleCard.how_to_mimic.slice(0, 6).join("\n- ");
+	const sampleMessages = styleCard.sample_messages
+		.slice(0, 8)
+		.map((m) => `"${m}"`)
+		.join("\n");
 
-		return `Rewrite the following message to match ${persona}'s writing style. Keep the EXACT same meaning and content, but change the tone, vocabulary, and sentence structure.
+	return `Rewrite the following message to match ${persona}'s writing style. Keep the EXACT same meaning and content, but change the tone, vocabulary, and sentence structure.
 
 ## ${persona}'s Style Profile
 
@@ -139,29 +138,6 @@ ${originalMessage}
 - Match their typical message length, punctuation, and casing
 - Keep all factual content from the original
 - Output ONLY the restyled message with no quotes or explanation`;
-	}
-
-	// Fallback to example messages only
-	const exampleList = exampleMessages
-		.map((m) => `- "${m.content}"`)
-		.join("\n");
-
-	return `Rewrite the following message to match this person's writing style. Keep the EXACT same meaning and content, but change the tone, vocabulary, and sentence structure.
-
-Target style (examples from ${persona}):
-${exampleList}
-
-Key style notes:
-- Use similar slang, abbreviations, and expressions as shown in the examples
-- Match their typical message length and punctuation style
-- Keep their personality quirks and humor
-- DO NOT copy messages verbatim, just absorb the style
-- Preserve all factual content and meaning from the original
-
-Original message to restyle:
-${originalMessage}
-
-Rewrite in ${persona}'s voice. Output ONLY the restyled message with NO quotes around it and NO explanation:`;
 }
 
 /**

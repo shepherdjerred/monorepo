@@ -5,11 +5,6 @@ import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 import { getConfig } from "../config/index.js";
 import { logger } from "../utils/index.js";
-import {
-  getPersonaByUsername,
-  getRandomMessages,
-  type PersonaMessage,
-} from "./database.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -26,8 +21,7 @@ export type StyleCard = {
 
 export type StyleContext = {
   persona: string;
-  exampleMessages: PersonaMessage[];
-  styleCard: StyleCard | null;
+  styleCard: StyleCard;
 };
 
 function loadStyleCard(persona: string): StyleCard | null {
@@ -58,28 +52,20 @@ export function buildStyleContext(persona: string): StyleContext | null {
     return null;
   }
 
-  const personaUser = getPersonaByUsername(persona);
-  if (!personaUser) {
-    logger.warn("Persona not found for style context", { persona });
+  const styleCard = loadStyleCard(persona);
+
+  if (!styleCard) {
+    logger.warn("No style card available for persona", { persona });
     return null;
   }
 
-  const exampleMessages = getRandomMessages(
-    personaUser.id,
-    config.persona.styleExampleCount,
-  );
-
-  const styleCard = loadStyleCard(persona);
-
   logger.debug("Built style context", {
     persona,
-    exampleCount: exampleMessages.length,
-    hasStyleCard: !!styleCard,
+    hasStyleCard: true,
   });
 
   return {
     persona,
-    exampleMessages,
     styleCard,
   };
 }
@@ -88,18 +74,17 @@ function formatStylePrompt(
   context: StyleContext,
   originalMessage: string,
 ): string {
-  const { styleCard, exampleMessages, persona } = context;
+  const { styleCard, persona } = context;
 
-  if (styleCard) {
-    const voice = styleCard.voice.slice(0, 4).join("\n- ");
-    const styleMarkers = styleCard.style_markers.slice(0, 4).join("\n- ");
-    const howToMimic = styleCard.how_to_mimic.slice(0, 6).join("\n- ");
-    const sampleMessages = styleCard.sample_messages
-      .slice(0, 8)
-      .map((m) => `"${m}"`)
-      .join("\n");
+  const voice = styleCard.voice.slice(0, 4).join("\n- ");
+  const styleMarkers = styleCard.style_markers.slice(0, 4).join("\n- ");
+  const howToMimic = styleCard.how_to_mimic.slice(0, 6).join("\n- ");
+  const sampleMessages = styleCard.sample_messages
+    .slice(0, 8)
+    .map((m) => `"${m}"`)
+    .join("\n");
 
-    return `You are a style transformer. Rewrite the following message to match ${persona}'s writing style. Keep the EXACT same meaning and content, but change the tone, vocabulary, and sentence structure.
+  return `You are a style transformer. Rewrite the following message to match ${persona}'s writing style. Keep the EXACT same meaning and content, but change the tone, vocabulary, and sentence structure.
 
 ## ${persona}'s Style Profile
 
@@ -127,27 +112,6 @@ ${originalMessage}
 - Match their typical message length, punctuation, and casing
 - Keep all factual content from the original
 - Output ONLY the restyled message with no quotes or explanation`;
-  }
-
-  // Fallback to example messages only
-  const exampleList = exampleMessages.map((m) => `- "${m.content}"`).join("\n");
-
-  return `You are a style transformer. Rewrite the following message to match this person's writing style. Keep the EXACT same meaning and content, but change the tone, vocabulary, and sentence structure.
-
-Target style (examples from ${persona}):
-${exampleList}
-
-Key style notes:
-- Use similar slang, abbreviations, and expressions as shown in the examples
-- Match their typical message length and punctuation style
-- Keep their personality quirks and humor
-- DO NOT copy messages verbatim, just absorb the style
-- Preserve all factual content and meaning from the original
-
-Original message to restyle:
-${originalMessage}
-
-Rewrite in ${persona}'s voice. Output ONLY the restyled message with NO quotes around it and NO explanation:`;
 }
 
 export async function stylizeResponse(
@@ -161,7 +125,7 @@ export async function stylizeResponse(
   }
 
   const styleContext = buildStyleContext(persona);
-  if (!styleContext || styleContext.exampleMessages.length === 0) {
+  if (!styleContext) {
     logger.debug("No style context available, returning original response");
     return response;
   }

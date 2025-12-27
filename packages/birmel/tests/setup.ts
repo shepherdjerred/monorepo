@@ -195,27 +195,6 @@ mock.module("@discordjs/voice", () => ({
   },
 }));
 
-// Mock OpenAI
-mock.module("openai", () => ({
-  default: class MockOpenAI {
-    audio = {
-      transcriptions: {
-        create: async () => ({ text: "test transcription" }),
-      },
-      speech: {
-        create: async () => ({
-          arrayBuffer: async () => new ArrayBuffer(1024),
-        }),
-      },
-    };
-  },
-  toFile: async (buffer: Buffer, filename: string, options?: { type?: string }) => ({
-    name: filename,
-    buffer,
-    type: options?.type ?? "application/octet-stream",
-  }),
-}));
-
 // Mock discord-player
 mock.module("discord-player", () => ({
   Player: class MockPlayer {

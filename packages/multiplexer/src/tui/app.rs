@@ -1,5 +1,7 @@
 use crate::api::{ApiClient, Client};
 use crate::core::Session;
+use nucleo_matcher::Utf32String;
+use std::path::PathBuf;
 
 /// The current view/mode of the application
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -23,8 +25,40 @@ pub enum CreateDialogFocus {
     Buttons,
 }
 
+/// A directory entry for the picker
+#[derive(Debug, Clone)]
+pub struct DirEntry {
+    /// Entry name (directory name only, not full path)
+    pub name: String,
+    /// Full path to the entry
+    pub path: PathBuf,
+    /// Whether this is the parent directory (..)
+    pub is_parent: bool,
+}
+
+/// Directory picker state
+#[derive(Debug, Clone)]
+pub struct DirectoryPickerState {
+    /// Current directory being browsed
+    pub current_dir: PathBuf,
+    /// All directory entries in current directory
+    pub all_entries: Vec<DirEntry>,
+    /// Filtered entries based on search query
+    pub filtered_entries: Vec<DirEntry>,
+    /// Current search query
+    pub search_query: String,
+    /// Selected index in filtered list
+    pub selected_index: usize,
+    /// Whether picker is currently active
+    pub is_active: bool,
+    /// Error message if directory read failed
+    pub error: Option<String>,
+    /// Fuzzy matcher instance
+    matcher: nucleo_matcher::Matcher,
+}
+
 /// Create dialog state
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct CreateDialogState {
     pub name: String,
     pub prompt: String,
@@ -33,14 +67,183 @@ pub struct CreateDialogState {
     pub skip_checks: bool,
     pub focus: CreateDialogFocus,
     pub button_create_focused: bool, // true = Create, false = Cancel
+    pub directory_picker: DirectoryPickerState,
+}
+
+impl DirectoryPickerState {
+    /// Create a new directory picker state
+    #[must_use]
+    pub fn new() -> Self {
+        Self {
+            current_dir: std::env::current_dir().unwrap_or_default(),
+            all_entries: Vec::new(),
+            filtered_entries: Vec::new(),
+            search_query: String::new(),
+            selected_index: 0,
+            is_active: false,
+            error: None,
+            matcher: nucleo_matcher::Matcher::new(nucleo_matcher::Config::DEFAULT),
+        }
+    }
+
+    /// Open the directory picker with an optional initial path
+    pub fn open(&mut self, initial_path: Option<PathBuf>) {
+        self.is_active = true;
+
+        if let Some(path) = initial_path {
+            if path.exists() && path.is_dir() {
+                self.current_dir = path;
+            }
+        } else {
+            // Default to current working directory
+            self.current_dir = std::env::current_dir().unwrap_or_default();
+        }
+
+        self.search_query.clear();
+        self.selected_index = 0;
+        self.error = None;
+        self.refresh_entries();
+    }
+
+    /// Close the directory picker
+    pub fn close(&mut self) {
+        self.is_active = false;
+        self.search_query.clear();
+        self.error = None;
+    }
+
+    /// Refresh directory entries from current directory
+    pub fn refresh_entries(&mut self) {
+        self.error = None;
+        self.all_entries.clear();
+
+        // Add parent directory entry if not at root
+        if let Some(parent) = self.current_dir.parent() {
+            self.all_entries.push(DirEntry {
+                name: "..".to_string(),
+                path: parent.to_path_buf(),
+                is_parent: true,
+            });
+        }
+
+        // Read directories
+        match crate::utils::read_directories(&self.current_dir) {
+            Ok(dirs) => {
+                for dir in dirs {
+                    if let Some(name) = dir.file_name() {
+                        self.all_entries.push(DirEntry {
+                            name: name.to_string_lossy().to_string(),
+                            path: dir,
+                            is_parent: false,
+                        });
+                    }
+                }
+            }
+            Err(e) => {
+                self.error = Some(format!("Cannot read directory: {e}"));
+            }
+        }
+
+        self.apply_filter();
+    }
+
+    /// Apply fuzzy filter to entries based on search query
+    pub fn apply_filter(&mut self) {
+        if self.search_query.is_empty() {
+            self.filtered_entries = self.all_entries.clone();
+        } else {
+            // Score and filter entries
+            // Convert search query to Utf32String once
+            let needle = Utf32String::from(self.search_query.as_str());
+
+            let mut scored: Vec<(DirEntry, u16)> = self
+                .all_entries
+                .iter()
+                .filter_map(|entry| {
+                    // Never filter out parent directory
+                    if entry.is_parent {
+                        return Some((entry.clone(), u16::MAX));
+                    }
+
+                    // Convert entry name to Utf32String and use nucleo-matcher for fuzzy matching
+                    let haystack = Utf32String::from(entry.name.as_str());
+                    self.matcher
+                        .fuzzy_match(haystack.slice(..), needle.slice(..))
+                        .map(|score| (entry.clone(), score))
+                })
+                .collect();
+
+            // Sort by score (descending)
+            scored.sort_by(|a, b| b.1.cmp(&a.1));
+
+            self.filtered_entries = scored.into_iter().map(|(entry, _)| entry).collect();
+        }
+
+        // Clamp selected index
+        if !self.filtered_entries.is_empty() && self.selected_index >= self.filtered_entries.len()
+        {
+            self.selected_index = self.filtered_entries.len() - 1;
+        }
+    }
+
+    /// Navigate to the next entry in the list
+    pub fn select_next(&mut self) {
+        if !self.filtered_entries.is_empty() && self.selected_index < self.filtered_entries.len() - 1
+        {
+            self.selected_index += 1;
+        }
+    }
+
+    /// Navigate to the previous entry in the list
+    pub fn select_previous(&mut self) {
+        if self.selected_index > 0 {
+            self.selected_index -= 1;
+        }
+    }
+
+    /// Add a character to the search query
+    pub fn add_search_char(&mut self, c: char) {
+        self.search_query.push(c);
+    }
+
+    /// Remove the last character from the search query
+    pub fn remove_search_char(&mut self) {
+        self.search_query.pop();
+    }
+
+    /// Clear the search query
+    pub fn clear_search(&mut self) {
+        self.search_query.clear();
+    }
+
+    /// Navigate to parent directory
+    pub fn navigate_to_parent(&mut self) {
+        if let Some(parent) = self.current_dir.parent() {
+            self.current_dir = parent.to_path_buf();
+            self.search_query.clear();
+            self.refresh_entries();
+        }
+    }
+
+    /// Get the currently selected entry
+    #[must_use]
+    pub fn selected_entry(&self) -> Option<&DirEntry> {
+        self.filtered_entries.get(self.selected_index)
+    }
 }
 
 impl CreateDialogState {
     #[must_use]
     pub fn new() -> Self {
         Self {
+            name: String::new(),
+            prompt: String::new(),
+            repo_path: String::new(),
             backend_zellij: true, // Default to Zellij
-            ..Default::default()
+            skip_checks: false,
+            focus: CreateDialogFocus::default(),
+            button_create_focused: false,
+            directory_picker: DirectoryPickerState::new(),
         }
     }
 
@@ -77,6 +280,9 @@ pub struct App {
 
     /// Error message if client connection failed
     pub connection_error: Option<String>,
+
+    /// Loading message to display during long operations
+    pub loading_message: Option<String>,
 }
 
 impl App {
@@ -93,6 +299,7 @@ impl App {
             should_quit: false,
             client: None,
             connection_error: None,
+            loading_message: None,
         }
     }
 
@@ -262,6 +469,7 @@ impl App {
 
         if let Some(client) = &mut self.client {
             let session = client.create_session(request).await?;
+            self.loading_message = None;
             self.status_message = Some(format!("Created session {}", session.name));
             self.refresh_sessions().await?;
         }
