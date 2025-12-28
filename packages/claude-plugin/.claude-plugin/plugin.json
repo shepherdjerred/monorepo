@@ -1,7 +1,7 @@
 {
   "name": "jerred",
-  "description": "Comprehensive DevOps, Observability, and Development Workflow plugin with coding best practices, automated PR workflows, and modern CLI tool guidance",
-  "version": "3.0.0",
+  "description": "Comprehensive DevOps, Observability, and Development Workflow plugin with coding best practices, automated PR workflows, and CLI-based integrations for GitHub, Grafana, PagerDuty, and Sentry",
+  "version": "3.1.0",
   "author": {
     "name": "Jerred Shepherd"
   }
