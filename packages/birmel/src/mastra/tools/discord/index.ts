@@ -9,7 +9,6 @@ export { eventTools } from "./events.js";
 export { webhookTools } from "./webhooks.js";
 export { inviteTools } from "./invites.js";
 export { automodTools } from "./automod.js";
-export { voiceTools } from "./voice.js";
 export { pollTools } from "./polls.js";
 export { threadTools } from "./threads.js";
 export { activityTools } from "./activity.js";
@@ -26,7 +25,6 @@ import { eventTools } from "./events.js";
 import { webhookTools } from "./webhooks.js";
 import { inviteTools } from "./invites.js";
 import { automodTools } from "./automod.js";
-import { voiceTools } from "./voice.js";
 import { pollTools } from "./polls.js";
 import { threadTools } from "./threads.js";
 import { activityTools } from "./activity.js";
@@ -44,7 +42,6 @@ export const allDiscordTools = [
   ...webhookTools,
   ...inviteTools,
   ...automodTools,
-  ...voiceTools,
   ...pollTools,
   ...threadTools,
   ...activityTools,

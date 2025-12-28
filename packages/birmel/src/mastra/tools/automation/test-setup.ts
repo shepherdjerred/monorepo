@@ -5,6 +5,7 @@
  */
 import { mkdirSync } from "node:fs";
 import { join, dirname } from "node:path";
+import { spawnSync } from "node:child_process";
 
 // Set up minimal test environment
 // Only set defaults if not already set (allows CI to override)
@@ -37,3 +38,10 @@ if (dbUrl.startsWith("file:")) {
   const dbPath = dbUrl.replace("file:", "");
   mkdirSync(dirname(dbPath), { recursive: true });
 }
+
+// Push database schema (creates tables if they don't exist)
+// Uses spawnSync with explicit args to avoid shell injection
+spawnSync("bunx", ["prisma", "db", "push", "--skip-generate", "--accept-data-loss"], {
+  stdio: "pipe",
+  env: { ...process.env, DATABASE_URL: process.env["OPS_DATABASE_URL"] },
+});

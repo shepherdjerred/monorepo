@@ -3,7 +3,6 @@ import { setupReadyHandler } from "./ready.js";
 import { setupMessageCreateHandler } from "./message-create.js";
 import { setupGuildCreateHandler } from "./guild-create.js";
 import { setupGuildDeleteHandler } from "./guild-delete.js";
-import { setupVoiceStateUpdateHandler } from "./voice-state-update.js";
 import { handleReactionAdd } from "./reaction-add.js";
 
 export function registerEventHandlers(client: Client): void {
@@ -11,7 +10,6 @@ export function registerEventHandlers(client: Client): void {
   setupMessageCreateHandler(client);
   setupGuildCreateHandler(client);
   setupGuildDeleteHandler(client);
-  setupVoiceStateUpdateHandler(client);
   handleReactionAdd(client);
 }
 
