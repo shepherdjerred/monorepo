@@ -53,14 +53,14 @@ export const manageMessageTool = createTool({
   description: "Manage Discord messages: send, reply, send DM, edit, delete, bulk-delete, pin, unpin, add/remove reaction, or get channel messages. Use 'reply' to respond to the user's message with Discord's native reply feature.",
   inputSchema: z.object({
     action: z.enum(["send", "reply", "send-dm", "edit", "delete", "bulk-delete", "pin", "unpin", "add-reaction", "remove-reaction", "get"]).describe("The action to perform. Use 'reply' to respond to the user with Discord's native reply feature."),
-    channelId: z.string().optional().describe("Channel ID (for send/edit/delete/bulk-delete/pin/unpin/reaction/get)"),
-    userId: z.string().optional().describe("User ID (for send-dm or remove-reaction)"),
-    messageId: z.string().optional().describe("Message ID (for edit/delete/pin/unpin/reaction)"),
-    messageIds: z.array(z.string()).optional().describe("Message IDs (for bulk-delete)"),
-    content: z.string().optional().describe("Message content (for send/reply/send-dm/edit)"),
-    emoji: z.string().optional().describe("Emoji for reactions"),
-    limit: z.number().min(1).max(100).optional().describe("Number of messages to fetch (for get)"),
-    before: z.string().optional().describe("Fetch messages before this ID (for get)"),
+    channelId: z.string().nullish().describe("Channel ID (for send/edit/delete/bulk-delete/pin/unpin/reaction/get)"),
+    userId: z.string().nullish().describe("User ID (for send-dm or remove-reaction)"),
+    messageId: z.string().nullish().describe("Message ID (for edit/delete/pin/unpin/reaction)"),
+    messageIds: z.array(z.string()).nullish().describe("Message IDs (for bulk-delete)"),
+    content: z.string().nullish().describe("Message content (for send/reply/send-dm/edit)"),
+    emoji: z.string().nullish().describe("Emoji for reactions"),
+    limit: z.number().nullish().describe("Number of messages to fetch (for get, 1-100, default 20)"),
+    before: z.string().nullish().describe("Fetch messages before this ID (for get)"),
   }),
   outputSchema: z.object({
     success: z.boolean(),
@@ -263,8 +263,10 @@ export const manageMessageTool = createTool({
             if (!channel?.isTextBased()) {
               return { success: false, message: "Channel is not a text channel" };
             }
+            // Clamp limit to valid range (1-100), default to 20
+            const limit = Math.min(100, Math.max(1, ctx.limit ?? 20));
             const messages = await (channel as TextChannel).messages.fetch({
-              limit: ctx.limit ?? 20,
+              limit,
               ...(ctx.before && { before: ctx.before }),
             });
             const formatted = messages.map((msg) => ({
