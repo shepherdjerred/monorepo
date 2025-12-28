@@ -3,8 +3,8 @@ import { z } from "zod";
 import { chromium, type Browser, type Page } from "playwright";
 import { getConfig } from "../../../config/index.js";
 import { loggers } from "../../../utils/index.js";
-import { writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { writeFile, mkdir } from "node:fs/promises";
+import { join, dirname } from "node:path";
 
 const logger = loggers.automation;
 
@@ -131,6 +131,8 @@ export const browserAutomationTool = createTool({
           // Use BIRMEL_SCREENSHOTS_DIR env var if set, otherwise default to cwd/data/screenshots
           const screenshotsDir = process.env["BIRMEL_SCREENSHOTS_DIR"] ?? join(process.cwd(), "data", "screenshots");
           const filepath = join(screenshotsDir, filename);
+          // Ensure the screenshots directory exists
+          await mkdir(dirname(filepath), { recursive: true });
           const screenshot = await page.screenshot({ fullPage: ctx.fullPage ?? false, type: "png" });
           await writeFile(filepath, screenshot);
           logger.info("Screenshot captured", { filepath, fullPage: ctx.fullPage });
