@@ -128,7 +128,9 @@ export const browserAutomationTool = createTool({
           resetSessionTimeout();
           const timestamp = Date.now();
           const filename = ctx.filename ?? `screenshot-${String(timestamp)}.png`;
-          const filepath = join(process.cwd(), "data", "screenshots", filename);
+          // Use BIRMEL_SCREENSHOTS_DIR env var if set, otherwise default to cwd/data/screenshots
+          const screenshotsDir = process.env["BIRMEL_SCREENSHOTS_DIR"] ?? join(process.cwd(), "data", "screenshots");
+          const filepath = join(screenshotsDir, filename);
           const screenshot = await page.screenshot({ fullPage: ctx.fullPage ?? false, type: "png" });
           await writeFile(filepath, screenshot);
           logger.info("Screenshot captured", { filepath, fullPage: ctx.fullPage });

@@ -2,6 +2,9 @@
  * End-to-end tests for all automation tools
  *
  * Tests Phase 1 (Shell), Phase 2 (Scheduler), and Phase 3 (Browser) tools
+ *
+ * Note: Environment setup (env vars, directories, prisma db push) is handled
+ * by the preload script in test-setup.ts, configured in bunfig.toml.
  */
 
 import { describe, test, expect } from "bun:test";
@@ -12,18 +15,6 @@ import {
 } from "./index.js";
 import { prisma } from "../../../database/index.js";
 import { existsSync } from "node:fs";
-
-// Set up minimal test environment
-process.env["DISCORD_TOKEN"] = "test-token";
-process.env["DISCORD_CLIENT_ID"] = "test-client-id";
-process.env["OPENAI_API_KEY"] = "test-key";
-process.env["DATABASE_PATH"] = ":memory:";
-process.env["DATABASE_URL"] = "file::memory:?cache=shared";
-process.env["OPS_DATABASE_URL"] = "file:./data/test-ops.db";
-process.env["SHELL_ENABLED"] = "true";
-process.env["SCHEDULER_ENABLED"] = "true";
-process.env["BROWSER_ENABLED"] = "true";
-process.env["BROWSER_HEADLESS"] = "true";
 
 const testContext = {
   runId: "test-run-e2e",
