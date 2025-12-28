@@ -14,7 +14,6 @@ import { eventTools } from "./discord/events.js";
 import { webhookTools } from "./discord/webhooks.js";
 import { inviteTools } from "./discord/invites.js";
 import { automodTools } from "./discord/automod.js";
-import { voiceTools } from "./discord/voice.js";
 import { pollTools } from "./discord/polls.js";
 import { threadTools } from "./discord/threads.js";
 import { activityTools } from "./discord/activity.js";
@@ -62,11 +61,10 @@ export const moderationToolSet = [
 ];
 
 /**
- * Music Agent - handles music playback and voice
+ * Music Agent - handles music playback
  */
 export const musicToolSet = [
   ...allMusicTools,
-  ...voiceTools,
 ];
 
 /**
@@ -112,7 +110,7 @@ export function getAgentDescription(agentType: AgentType): string {
     case "moderation":
       return "Kick, ban, timeout, warn members. Manage roles and permissions. Configure automod rules. Manage webhooks and invites. Add emojis/stickers.";
     case "music":
-      return "Play, pause, skip, stop music. Manage queue. Control volume and loop mode. Join/leave voice channels.";
+      return "Play, pause, skip, stop music. Manage queue. Control volume and loop mode.";
     case "automation":
       return "Set reminders and timers. Run shell commands. Browser automation. Fetch weather/news. Manage elections and birthdays. Schedule events.";
   }
