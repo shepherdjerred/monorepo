@@ -121,13 +121,18 @@ export function getBirmelPrepared(workspaceSource: Directory): Container {
 export async function checkBirmel(workspaceSource: Directory): Promise<string> {
   // Set up test database and directories for automation tests
   // OPS_DATABASE_URL takes priority over DATABASE_URL in the app (see database/index.ts)
-  // Use absolute path inside workspace to ensure persistence across container execs
-  const testDbPath = "file:/workspace/packages/birmel/data/test.db";
+  // IMPORTANT: Use paths OUTSIDE the mounted workspace (/workspace/packages/birmel is a mount)
+  // Mounted directories can have write restrictions in CI environments
+  const testDataDir = "/app/birmel-test";
+  const testDbPath = `file:${testDataDir}/test.db`;
+  const screenshotsDir = `${testDataDir}/screenshots`;
+
   const prepared = getBirmelPrepared(workspaceSource)
     .withEnvVariable("DATABASE_URL", testDbPath)
     .withEnvVariable("OPS_DATABASE_URL", testDbPath)
-    // Create data and screenshots directories for automation tests
-    .withExec(["mkdir", "-p", "/workspace/packages/birmel/data/screenshots"])
+    .withEnvVariable("BIRMEL_SCREENSHOTS_DIR", screenshotsDir)
+    // Create test data directories OUTSIDE the mounted workspace
+    .withExec(["mkdir", "-p", screenshotsDir])
     .withExec(["bunx", "prisma", "generate"])
     .withExec(["bunx", "prisma", "db", "push", "--accept-data-loss"]);
 
