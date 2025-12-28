@@ -187,9 +187,13 @@ export class Monorepo {
 
     // Generate Prisma Client and set up test database
     // Use the workspace root prisma binary (installed via root package.json devDeps)
+    // data/ and data/screenshots/ directories exist in source (with .gitkeep files)
+    // Use OPS_DATABASE_URL (which database/index.ts prefers) and absolute path to avoid issues
+    // with relative paths during test runs from different working directories
     container = container
-      .withEnvVariable("DATABASE_URL", "file:./packages/birmel/data/test-ops.db")
       .withWorkdir("/workspace/packages/birmel")
+      .withEnvVariable("DATABASE_URL", "file:/workspace/packages/birmel/data/test-ops.db")
+      .withEnvVariable("OPS_DATABASE_URL", "file:/workspace/packages/birmel/data/test-ops.db")
       .withExec(["/workspace/node_modules/.bin/prisma", "generate"])
       .withExec(["/workspace/node_modules/.bin/prisma", "db", "push", "--accept-data-loss"])
       .withWorkdir("/workspace");

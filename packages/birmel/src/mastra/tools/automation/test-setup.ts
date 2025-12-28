@@ -5,13 +5,14 @@
  */
 
 // Set up minimal test environment
-process.env["DISCORD_TOKEN"] = "test-token";
-process.env["DISCORD_CLIENT_ID"] = "test-client-id";
-process.env["OPENAI_API_KEY"] = "test-key";
-process.env["DATABASE_PATH"] = ":memory:";
-process.env["DATABASE_URL"] = "file::memory:?cache=shared";
-process.env["OPS_DATABASE_URL"] = "file:./data/test-ops.db";
-process.env["SHELL_ENABLED"] = "true";
-process.env["SCHEDULER_ENABLED"] = "true";
-process.env["BROWSER_ENABLED"] = "true";
-process.env["BROWSER_HEADLESS"] = "true";
+// Only set env vars if not already set (allows CI to provide different values)
+process.env["DISCORD_TOKEN"] ??= "test-token";
+process.env["DISCORD_CLIENT_ID"] ??= "test-client-id";
+process.env["OPENAI_API_KEY"] ??= "test-key";
+process.env["DATABASE_PATH"] ??= ":memory:";
+process.env["DATABASE_URL"] ??= "file::memory:?cache=shared";
+process.env["OPS_DATABASE_URL"] ??= "file:./data/test-ops.db";
+process.env["SHELL_ENABLED"] ??= "true";
+process.env["SCHEDULER_ENABLED"] ??= "true";
+process.env["BROWSER_ENABLED"] ??= "true";
+process.env["BROWSER_HEADLESS"] ??= "true";
