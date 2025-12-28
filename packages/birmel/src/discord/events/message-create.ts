@@ -18,18 +18,9 @@ import {
 } from "../../utils/image.js";
 import { recordMessageActivity } from "../../database/repositories/activity.js";
 import { getOrCreateGuildOwner } from "../../database/repositories/guild-owner.js";
+import { generateWakeWord } from "../../config/constants.js";
 
 const logger = loggers.discord.child("message-create");
-
-/**
- * Generate a wake word from an owner name.
- * Replaces the first letter with 'b'.
- * e.g., "aaron" → "baron", "virmel" → "birmel"
- */
-function generateWakeWord(ownerName: string): string {
-  if (ownerName.length === 0) return "birmel";
-  return "b" + ownerName.slice(1).toLowerCase();
-}
 
 // Message deduplication to prevent duplicate responses
 // This handles cases where Discord sends duplicate messageCreate events
