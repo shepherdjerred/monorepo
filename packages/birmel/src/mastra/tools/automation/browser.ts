@@ -3,8 +3,8 @@ import { z } from "zod";
 import { chromium, type Browser, type Page } from "playwright";
 import { getConfig } from "../../../config/index.js";
 import { loggers } from "../../../utils/index.js";
-import { writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { writeFile, mkdir } from "node:fs/promises";
+import { join, dirname } from "node:path";
 
 const logger = loggers.automation;
 
@@ -129,6 +129,8 @@ export const browserAutomationTool = createTool({
           const timestamp = Date.now();
           const filename = ctx.filename ?? `screenshot-${String(timestamp)}.png`;
           const filepath = join(process.cwd(), "data", "screenshots", filename);
+          // Ensure the screenshots directory exists
+          await mkdir(dirname(filepath), { recursive: true });
           const screenshot = await page.screenshot({ fullPage: ctx.fullPage ?? false, type: "png" });
           await writeFile(filepath, screenshot);
           logger.info("Screenshot captured", { filepath, fullPage: ctx.fullPage });

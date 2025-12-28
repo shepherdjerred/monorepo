@@ -187,9 +187,11 @@ export class Monorepo {
 
     // Generate Prisma Client and set up test database
     // Use the workspace root prisma binary (installed via root package.json devDeps)
+    // DATABASE_URL is relative to the birmel package directory where prisma runs
     container = container
-      .withEnvVariable("DATABASE_URL", "file:./packages/birmel/data/test-ops.db")
       .withWorkdir("/workspace/packages/birmel")
+      .withExec(["mkdir", "-p", "data", "data/screenshots"])
+      .withEnvVariable("DATABASE_URL", "file:./data/test-ops.db")
       .withExec(["/workspace/node_modules/.bin/prisma", "generate"])
       .withExec(["/workspace/node_modules/.bin/prisma", "db", "push", "--accept-data-loss"])
       .withWorkdir("/workspace");
