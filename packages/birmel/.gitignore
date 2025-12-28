@@ -1,0 +1,5 @@
+# Test data - keep directories but ignore contents
+data/*
+!data/.gitkeep
+data/screenshots/*
+!data/screenshots/.gitkeep
