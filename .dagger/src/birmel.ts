@@ -4,7 +4,7 @@ import { dag } from "@dagger.io/dagger";
 const BUN_VERSION = "1.3.4";
 const PLAYWRIGHT_VERSION = "1.57.0";
 // Bump this to invalidate Dagger caches when deps change
-const CACHE_VERSION = "v4";
+const CACHE_VERSION = "v5";
 
 /**
  * Get a base Bun container with system dependencies and caching.
