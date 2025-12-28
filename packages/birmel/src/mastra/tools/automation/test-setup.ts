@@ -3,16 +3,37 @@
  * This must be loaded before the test file to ensure Prisma Client
  * is initialized with the correct database URL
  */
+import { mkdirSync } from "node:fs";
+import { join, dirname } from "node:path";
 
 // Set up minimal test environment
-// Only set env vars if not already set (allows CI to provide different values)
+// Only set defaults if not already set (allows CI to override)
 process.env["DISCORD_TOKEN"] ??= "test-token";
 process.env["DISCORD_CLIENT_ID"] ??= "test-client-id";
 process.env["OPENAI_API_KEY"] ??= "test-key";
-process.env["DATABASE_PATH"] ??= ":memory:";
-process.env["DATABASE_URL"] ??= "file::memory:?cache=shared";
-process.env["OPS_DATABASE_URL"] ??= "file:./data/test-ops.db";
 process.env["SHELL_ENABLED"] ??= "true";
 process.env["SCHEDULER_ENABLED"] ??= "true";
 process.env["BROWSER_ENABLED"] ??= "true";
 process.env["BROWSER_HEADLESS"] ??= "true";
+
+// If no database URL is set (local dev), use a local file database
+if (!process.env["DATABASE_URL"] && !process.env["OPS_DATABASE_URL"]) {
+  const dataDir = join(process.cwd(), "data");
+  mkdirSync(dataDir, { recursive: true });
+  const testDbPath = join(dataDir, "test-automation.db");
+  process.env["DATABASE_PATH"] = testDbPath;
+  process.env["DATABASE_URL"] = `file:${testDbPath}`;
+  process.env["OPS_DATABASE_URL"] = `file:${testDbPath}`;
+}
+
+// Create screenshots directory
+const screenshotsDir = process.env["BIRMEL_SCREENSHOTS_DIR"] ?? join(process.cwd(), "data", "screenshots");
+mkdirSync(screenshotsDir, { recursive: true });
+process.env["BIRMEL_SCREENSHOTS_DIR"] ??= screenshotsDir;
+
+// Ensure database directory exists if it's a file-based database
+const dbUrl = process.env["OPS_DATABASE_URL"] ?? process.env["DATABASE_URL"] ?? "";
+if (dbUrl.startsWith("file:")) {
+  const dbPath = dbUrl.replace("file:", "");
+  mkdirSync(dirname(dbPath), { recursive: true });
+}

@@ -3,8 +3,6 @@ import { dag } from "@dagger.io/dagger";
 
 const BUN_VERSION = "1.3.4";
 const PLAYWRIGHT_VERSION = "1.57.0";
-// Bump this to invalidate Dagger caches when deps change
-const CACHE_VERSION = "v3";
 
 /**
  * Get a base Bun container with system dependencies and caching.
@@ -20,8 +18,8 @@ function getBaseVoiceContainer(): Container {
       .withMountedCache("/var/lib/apt", dag.cacheVolume(`apt-lib-bun-${BUN_VERSION}-debian`))
       .withExec(["apt-get", "update"])
       .withExec(["apt-get", "install", "-y", "ffmpeg", "python3", "make", "g++", "libtool-bin"])
-      // Cache Bun packages (version in key for cache invalidation)
-      .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(`bun-cache-${CACHE_VERSION}`))
+      // Cache Bun packages
+      .withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-cache"))
       // Cache Playwright browsers (version in key for invalidation)
       .withMountedCache("/root/.cache/ms-playwright", dag.cacheVolume(`playwright-browsers-${PLAYWRIGHT_VERSION}`))
       // Install Playwright Chromium and dependencies for browser automation
@@ -77,10 +75,7 @@ function installWorkspaceDeps(workspaceSource: Directory, useMounts: boolean): C
   }
 
   // PHASE 2: Install dependencies (cached if lockfile + package.jsons unchanged)
-  // Add cache version as env var to force reinstall when deps change
-  container = container
-    .withEnvVariable("CACHE_VERSION", CACHE_VERSION)
-    .withExec(["bun", "install", "--frozen-lockfile"]);
+  container = container.withExec(["bun", "install", "--frozen-lockfile"]);
 
   // PHASE 3: Config files and source code (changes frequently, added AFTER install)
   if (useMounts) {
@@ -119,7 +114,22 @@ export function getBirmelPrepared(workspaceSource: Directory): Container {
  * @returns Result message
  */
 export async function checkBirmel(workspaceSource: Directory): Promise<string> {
-  const prepared = getBirmelPrepared(workspaceSource).withExec(["bunx", "prisma", "generate"]);
+  // Set up test database and directories for automation tests
+  // OPS_DATABASE_URL takes priority over DATABASE_URL in the app (see database/index.ts)
+  // IMPORTANT: Use paths OUTSIDE the mounted workspace (/workspace/packages/birmel is a mount)
+  // Mounted directories can have write restrictions in CI environments
+  const testDataDir = "/app/birmel-test";
+  const testDbPath = `file:${testDataDir}/test.db`;
+  const screenshotsDir = `${testDataDir}/screenshots`;
+
+  const prepared = getBirmelPrepared(workspaceSource)
+    .withEnvVariable("DATABASE_URL", testDbPath)
+    .withEnvVariable("OPS_DATABASE_URL", testDbPath)
+    .withEnvVariable("BIRMEL_SCREENSHOTS_DIR", screenshotsDir)
+    // Create test data directories OUTSIDE the mounted workspace
+    .withExec(["mkdir", "-p", screenshotsDir])
+    .withExec(["bunx", "prisma", "generate"])
+    .withExec(["bunx", "prisma", "db", "push", "--accept-data-loss"]);
 
   // Run typecheck, lint, and test in PARALLEL
   await Promise.all([

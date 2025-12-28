@@ -14,9 +14,6 @@ const BUN_VERSION = "1.3.4";
 const PLAYWRIGHT_VERSION = "1.57.0";
 // Pin release-please version for reproducible builds
 const RELEASE_PLEASE_VERSION = "17.1.3";
-// Bump this to invalidate Dagger caches when deps change
-const CACHE_VERSION = "v3";
-
 // Rust version for multiplexer
 const RUST_VERSION = "1.85";
 
@@ -35,8 +32,8 @@ function getBaseContainer(): Container {
       .withMountedCache("/var/lib/apt", dag.cacheVolume(`apt-lib-bun-${BUN_VERSION}-debian`))
       .withExec(["apt-get", "update"])
       .withExec(["apt-get", "install", "-y", "python3"])
-      // Cache Bun packages (version in key for cache invalidation)
-      .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(`bun-cache-${CACHE_VERSION}`))
+      // Cache Bun packages
+      .withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-cache"))
       // Cache Playwright browsers (version in key for invalidation)
       .withMountedCache("/root/.cache/ms-playwright", dag.cacheVolume(`playwright-browsers-${PLAYWRIGHT_VERSION}`))
       // Install Playwright Chromium and dependencies for browser automation
@@ -70,10 +67,7 @@ function installWorkspaceDeps(source: Directory): Container {
     .withMountedFile("/workspace/packages/eslint-config/package.json", source.file("packages/eslint-config/package.json"));
 
   // PHASE 2: Install dependencies (cached if lockfile + package.jsons unchanged)
-  // Add cache version as env var to force reinstall when deps change
-  container = container
-    .withEnvVariable("CACHE_VERSION", CACHE_VERSION)
-    .withExec(["bun", "install", "--frozen-lockfile"]);
+  container = container.withExec(["bun", "install", "--frozen-lockfile"]);
 
   // PHASE 3: Config files and source code (changes frequently, added AFTER install)
   container = container
