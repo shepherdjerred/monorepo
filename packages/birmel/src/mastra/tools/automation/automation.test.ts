@@ -11,7 +11,8 @@ import {
   browserAutomationTool,
 } from "./index.js";
 import { prisma } from "../../../database/index.js";
-import { existsSync } from "node:fs";
+import { existsSync, mkdirSync } from "node:fs";
+import { join } from "node:path";
 
 // Set up minimal test environment (only set if not already set by CI)
 process.env["DISCORD_TOKEN"] ??= "test-token";
@@ -24,6 +25,10 @@ process.env["SHELL_ENABLED"] ??= "true";
 process.env["SCHEDULER_ENABLED"] ??= "true";
 process.env["BROWSER_ENABLED"] ??= "true";
 process.env["BROWSER_HEADLESS"] ??= "true";
+
+// Create directories needed by tests (in case CI didn't create them)
+const screenshotsDir = process.env["BIRMEL_SCREENSHOTS_DIR"] ?? join(process.cwd(), "data", "screenshots");
+mkdirSync(screenshotsDir, { recursive: true });
 
 const testContext = {
   runId: "test-run-e2e",
