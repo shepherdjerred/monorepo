@@ -76,12 +76,6 @@ function loadConfigFromEnv(): Config {
     persona: {
       enabled: parseBoolean(process.env["PERSONA_ENABLED"], true),
       defaultPersona: process.env["PERSONA_DEFAULT"] ?? "virmel",
-      dbPath: process.env["PERSONA_DB_PATH"] ?? "./glitter-boys.db",
-      decisionExampleCount: parseNumber(
-        process.env["PERSONA_DECISION_COUNT"],
-        20,
-      ),
-      styleExampleCount: parseNumber(process.env["PERSONA_STYLE_COUNT"], 50),
       styleModel: process.env["PERSONA_STYLE_MODEL"] ?? "gpt-4o-mini",
     },
     shell: {

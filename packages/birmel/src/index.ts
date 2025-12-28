@@ -27,7 +27,6 @@ import { initializeMusicPlayer, destroyMusicPlayer } from "./music/index.js";
 import { startScheduler, stopScheduler } from "./scheduler/index.js";
 import { withTyping } from "./discord/utils/typing.js";
 import { logger } from "./utils/index.js";
-import { closePersonaDb } from "./persona/index.js";
 import type { MessageContext } from "./discord/index.js";
 import { buildMessageContent } from "./mastra/utils/message-builder.js";
 import { getRecentChannelMessages } from "./discord/utils/channel-history.js";
@@ -219,7 +218,6 @@ async function shutdown(): Promise<void> {
   await destroyMusicPlayer();
   await destroyDiscordClient();
   await disconnectPrisma();
-  closePersonaDb();
 
   // Shutdown observability last to capture any final events
   await shutdownObservability();

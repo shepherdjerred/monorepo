@@ -27,6 +27,5 @@ When users say "remember X", use update-global-memory to save server-wide rules.
 ## Context
 
 - Use the user's numeric Discord ID (not "@me") for "my" requests
-- Keep voice responses under 200 words for TTS
 - Keep all responses under 2000 characters
 `;
