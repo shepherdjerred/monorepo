@@ -119,9 +119,15 @@ export function getBirmelPrepared(workspaceSource: Directory): Container {
  * @returns Result message
  */
 export async function checkBirmel(workspaceSource: Directory): Promise<string> {
-  // Set up test database for automation tests that need Prisma
+  // Set up test database and directories for automation tests
+  // OPS_DATABASE_URL takes priority over DATABASE_URL in the app (see database/index.ts)
+  // We use the same path for both so prisma db push creates the DB the app will use
+  const testDbPath = "file:/tmp/birmel-test.db";
   const prepared = getBirmelPrepared(workspaceSource)
-    .withEnvVariable("DATABASE_URL", "file:/tmp/birmel-test.db")
+    .withEnvVariable("DATABASE_URL", testDbPath)
+    .withEnvVariable("OPS_DATABASE_URL", testDbPath)
+    // Create screenshots directory for browser automation tests
+    .withExec(["mkdir", "-p", "data/screenshots"])
     .withExec(["bunx", "prisma", "generate"])
     .withExec(["bunx", "prisma", "db", "push", "--accept-data-loss"]);
 
