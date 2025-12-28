@@ -119,7 +119,11 @@ export function getBirmelPrepared(workspaceSource: Directory): Container {
  * @returns Result message
  */
 export async function checkBirmel(workspaceSource: Directory): Promise<string> {
-  const prepared = getBirmelPrepared(workspaceSource).withExec(["bunx", "prisma", "generate"]);
+  // Set up test database for automation tests that need Prisma
+  const prepared = getBirmelPrepared(workspaceSource)
+    .withEnvVariable("DATABASE_URL", "file:/tmp/birmel-test.db")
+    .withExec(["bunx", "prisma", "generate"])
+    .withExec(["bunx", "prisma", "db", "push", "--accept-data-loss"]);
 
   // Run typecheck, lint, and test in PARALLEL
   await Promise.all([
