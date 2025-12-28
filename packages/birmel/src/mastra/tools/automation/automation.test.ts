@@ -27,8 +27,13 @@ process.env["BROWSER_ENABLED"] ??= "true";
 process.env["BROWSER_HEADLESS"] ??= "true";
 
 // Create directories needed by tests (in case CI didn't create them)
+// Screenshots directory
 const screenshotsDir = process.env["BIRMEL_SCREENSHOTS_DIR"] ?? join(process.cwd(), "data", "screenshots");
 mkdirSync(screenshotsDir, { recursive: true });
+
+// Database directory (for the test database file)
+const dataDir = join(process.cwd(), "data");
+mkdirSync(dataDir, { recursive: true });
 
 const testContext = {
   runId: "test-run-e2e",
