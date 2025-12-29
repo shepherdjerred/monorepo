@@ -85,7 +85,7 @@ impl GitOperations for MockGitBackend {
         Ok(())
     }
 
-    async fn delete_worktree(&self, worktree_path: &Path) -> anyhow::Result<()> {
+    async fn delete_worktree(&self, _repo_path: &Path, worktree_path: &Path) -> anyhow::Result<()> {
         if self.should_fail() {
             let msg = self.error_message.read().await.clone();
             anyhow::bail!("{}", msg);
@@ -264,14 +264,15 @@ mod tests {
     #[tokio::test]
     async fn test_mock_git_delete_worktree() {
         let git = MockGitBackend::new();
+        let repo = Path::new("/repo");
         let worktree = PathBuf::from("/tmp/test-worktree");
 
-        git.create_worktree(Path::new("/repo"), &worktree, "branch")
+        git.create_worktree(repo, &worktree, "branch")
             .await
             .unwrap();
         assert!(git.worktree_exists(&worktree));
 
-        git.delete_worktree(&worktree).await.unwrap();
+        git.delete_worktree(repo, &worktree).await.unwrap();
         assert!(!git.worktree_exists(&worktree));
     }
 

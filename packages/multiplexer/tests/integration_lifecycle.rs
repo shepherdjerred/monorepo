@@ -153,7 +153,7 @@ async fn test_worktree_and_container_together() {
             // Cleanup
             println!("Step 3: Cleaning up...");
             docker.delete(&name).await.expect("delete failed");
-            git.delete_worktree(&worktree_path)
+            git.delete_worktree(repo_dir.path(), &worktree_path)
                 .await
                 .expect("worktree delete failed");
             println!("  Cleanup complete");
@@ -162,7 +162,7 @@ async fn test_worktree_and_container_together() {
         }
         Err(e) => {
             // Cleanup worktree even if container failed
-            let _ = git.delete_worktree(&worktree_path).await;
+            let _ = git.delete_worktree(repo_dir.path(), &worktree_path).await;
             eprintln!("Container creation failed: {e}");
         }
     }

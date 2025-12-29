@@ -78,7 +78,7 @@ async fn test_worktree_cleanup_detection() {
     assert!(detected_exists, "Should detect existing worktree");
 
     // Delete worktree to simulate a crash that left the database stale
-    git.delete_worktree(&worktree_path).await.unwrap();
+    git.delete_worktree(temp_repo.path(), &worktree_path).await.unwrap();
 
     // Now reconciliation should detect it's missing
     let detected_after_delete = git.worktree_exists(&worktree_path);
@@ -150,7 +150,7 @@ async fn test_reconcile_stale_session() {
     assert!(worktree_path.exists());
 
     // Simulate a crash: delete the worktree but leave session in DB
-    git.delete_worktree(&worktree_path).await.expect("Failed to delete worktree");
+    git.delete_worktree(temp_repo.path(), &worktree_path).await.expect("Failed to delete worktree");
 
     // Session is still in DB
     let session_in_db = store.get_session(session.id).await.expect("Failed to get session");
@@ -199,5 +199,5 @@ async fn test_reconcile_healthy_session() {
     assert!(worktree_exists, "Healthy session should have existing worktree");
 
     // Cleanup
-    git.delete_worktree(&worktree_path).await.unwrap();
+    git.delete_worktree(temp_repo.path(), &worktree_path).await.unwrap();
 }

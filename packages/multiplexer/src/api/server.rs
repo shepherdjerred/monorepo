@@ -1,3 +1,4 @@
+use std::io::ErrorKind;
 use std::sync::Arc;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::{UnixListener, UnixStream};
@@ -67,7 +68,14 @@ async fn handle_connection(stream: UnixStream, manager: Arc<SessionManager>) -> 
 
     loop {
         line.clear();
-        let bytes_read = reader.read_line(&mut line).await?;
+        let bytes_read = match reader.read_line(&mut line).await {
+            Ok(n) => n,
+            Err(e) if e.kind() == ErrorKind::BrokenPipe => {
+                tracing::debug!("Client disconnected (broken pipe on read)");
+                break;
+            }
+            Err(e) => return Err(e.into()),
+        };
 
         if bytes_read == 0 {
             // Client disconnected
@@ -84,8 +92,9 @@ async fn handle_connection(stream: UnixStream, manager: Arc<SessionManager>) -> 
                     message: e.to_string(),
                 };
                 let json = serde_json::to_string(&response)?;
-                writer.write_all(json.as_bytes()).await?;
-                writer.write_all(b"\n").await?;
+                if write_response(&mut writer, &json).await.is_err() {
+                    break;
+                }
                 continue;
             }
         };
@@ -101,9 +110,34 @@ async fn handle_connection(stream: UnixStream, manager: Arc<SessionManager>) -> 
 
         // Send the response
         let json = serde_json::to_string(&response)?;
-        writer.write_all(json.as_bytes()).await?;
-        writer.write_all(b"\n").await?;
+        if write_response(&mut writer, &json).await.is_err() {
+            break;
+        }
     }
 
+    Ok(())
+}
+
+/// Write a response to the client, handling broken pipe gracefully
+async fn write_response(
+    writer: &mut tokio::net::unix::OwnedWriteHalf,
+    json: &str,
+) -> Result<(), ()> {
+    if let Err(e) = writer.write_all(json.as_bytes()).await {
+        if e.kind() == ErrorKind::BrokenPipe {
+            tracing::debug!("Client disconnected (broken pipe on write)");
+        } else {
+            tracing::warn!(error = %e, "Failed to write response");
+        }
+        return Err(());
+    }
+    if let Err(e) = writer.write_all(b"\n").await {
+        if e.kind() == ErrorKind::BrokenPipe {
+            tracing::debug!("Client disconnected (broken pipe on newline)");
+        } else {
+            tracing::warn!(error = %e, "Failed to write newline");
+        }
+        return Err(());
+    }
     Ok(())
 }

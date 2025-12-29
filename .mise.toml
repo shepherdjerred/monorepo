@@ -4,6 +4,7 @@
 [tools]
 bun = "latest"
 dagger = "latest"
+rust = "latest"
 
 [tasks.dev]
 description = "Set up the development environment for all packages"

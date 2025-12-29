@@ -17,7 +17,9 @@ pub trait GitOperations: Send + Sync {
     /// Delete a git worktree
     ///
     /// Removes the worktree directory and cleans up git's worktree tracking.
-    async fn delete_worktree(&self, worktree_path: &Path) -> anyhow::Result<()>;
+    /// The `repo_path` parameter is the path to the main git repository,
+    /// needed to run `git worktree remove` from the correct location.
+    async fn delete_worktree(&self, repo_path: &Path, worktree_path: &Path) -> anyhow::Result<()>;
 
     /// Check if a worktree exists at the given path
     fn worktree_exists(&self, worktree_path: &Path) -> bool;

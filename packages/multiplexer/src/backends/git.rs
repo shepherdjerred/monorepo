@@ -73,9 +73,10 @@ impl GitOperations for GitBackend {
     /// # Errors
     ///
     /// Returns an error if the directory removal fails.
-    async fn delete_worktree(&self, worktree_path: &Path) -> anyhow::Result<()> {
-        // Remove the worktree using git
+    async fn delete_worktree(&self, repo_path: &Path, worktree_path: &Path) -> anyhow::Result<()> {
+        // Remove the worktree using git (must run from within a git repo)
         let output = Command::new("git")
+            .current_dir(repo_path)
             .args(["worktree", "remove", "--force"])
             .arg(worktree_path)
             .output()
