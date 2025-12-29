@@ -10,8 +10,8 @@ use std::time::Duration;
 
 use crossterm::{
     event::{
-        Event, KeyCode, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags,
-        PushKeyboardEnhancementFlags,
+        DisableBracketedPaste, EnableBracketedPaste, Event, KeyCode, KeyboardEnhancementFlags,
+        PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags,
     },
     execute,
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
@@ -33,6 +33,7 @@ pub async fn run() -> anyhow::Result<()> {
     execute!(
         stdout,
         EnterAlternateScreen,
+        EnableBracketedPaste,
         PushKeyboardEnhancementFlags(
             KeyboardEnhancementFlags::DISAMBIGUATE_ESCAPE_CODES
                 | KeyboardEnhancementFlags::REPORT_ALL_KEYS_AS_ESCAPE_CODES
@@ -56,6 +57,7 @@ pub async fn run() -> anyhow::Result<()> {
     execute!(
         terminal.backend_mut(),
         PopKeyboardEnhancementFlags,
+        DisableBracketedPaste,
         LeaveAlternateScreen
     )?;
     terminal.show_cursor()?;
@@ -75,7 +77,18 @@ async fn run_main_loop(
         terminal.draw(|frame| ui::render(frame, app))?;
 
         // Poll for events with timeout
-        if let Some(Event::Key(key)) = events::poll_event(Duration::from_millis(100))? {
+        if let Some(event) = events::poll_event(Duration::from_millis(100))? {
+            // Handle paste events
+            if let Event::Paste(pasted_text) = &event {
+                events::handle_paste_event(app, pasted_text);
+                continue;
+            }
+
+            // Handle key events
+            let Event::Key(key) = event else {
+                continue;
+            };
+
             // Handle Enter in session list to attach
             if app.mode == AppMode::SessionList && key.code == KeyCode::Enter {
                 if let Ok(Some(command)) = app.get_attach_command().await {

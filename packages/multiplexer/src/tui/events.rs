@@ -9,6 +9,39 @@ use crate::core::{AgentType, BackendType};
 
 use super::app::{App, AppMode, CreateDialogFocus, CreateProgress};
 
+/// Handle a paste event (when text is pasted from clipboard)
+pub fn handle_paste_event(app: &mut App, text: &str) {
+    // Only handle paste events in CreateDialog mode
+    if app.mode != AppMode::CreateDialog {
+        return;
+    }
+
+    // Don't handle paste if directory picker is active
+    if app.create_dialog.directory_picker.is_active {
+        return;
+    }
+
+    match app.create_dialog.focus {
+        CreateDialogFocus::Name => {
+            // For name field, replace all line endings with spaces
+            app.create_dialog.name.push_str(
+                &text
+                    .replace("\r\n", " ")
+                    .replace('\r', " ")
+                    .replace('\n', " "),
+            );
+        }
+        CreateDialogFocus::Prompt => {
+            // For prompt field, normalize line endings to \n
+            app.create_dialog
+                .prompt
+                .push_str(&text.replace("\r\n", "\n").replace('\r', "\n"));
+        }
+        // RepoPath doesn't accept typed/pasted input
+        _ => {}
+    }
+}
+
 /// Poll for events with a timeout
 ///
 /// # Errors
@@ -106,8 +139,8 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                 CreateDialogFocus::Buttons => CreateDialogFocus::SkipChecks,
             };
         }
-        KeyCode::Enter => {
-            if app.create_dialog.focus == CreateDialogFocus::Buttons {
+        KeyCode::Enter => match app.create_dialog.focus {
+            CreateDialogFocus::Buttons => {
                 if app.create_dialog.button_create_focused {
                     // Prevent multiple concurrent creates
                     if app.create_task.is_some() {
@@ -138,36 +171,48 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                         let mut client = match Client::connect().await {
                             Ok(c) => c,
                             Err(e) => {
-                                let _ = tx.send(CreateProgress::Error {
-                                    message: format!("Failed to connect to multiplexer daemon: {e}"),
-                                }).await;
+                                let _ = tx
+                                    .send(CreateProgress::Error {
+                                        message: format!(
+                                            "Failed to connect to multiplexer daemon: {e}"
+                                        ),
+                                    })
+                                    .await;
                                 return;
                             }
                         };
 
                         // Create progress callback
                         let tx_clone = tx.clone();
-                        let on_progress = Box::new(move |step: crate::api::protocol::ProgressStep| {
-                            let tx = tx_clone.clone();
-                            // Use try_send since we're in a sync callback
-                            let _ = tx.try_send(CreateProgress::Step {
-                                step: step.step,
-                                total: step.total,
-                                message: step.message.clone(),
+                        let on_progress =
+                            Box::new(move |step: crate::api::protocol::ProgressStep| {
+                                let tx = tx_clone.clone();
+                                // Use try_send since we're in a sync callback
+                                let _ = tx.try_send(CreateProgress::Step {
+                                    step: step.step,
+                                    total: step.total,
+                                    message: step.message.clone(),
+                                });
                             });
-                        });
 
                         // Create session with progress
-                        match client.create_session_with_progress(request, Some(on_progress)).await {
+                        match client
+                            .create_session_with_progress(request, Some(on_progress))
+                            .await
+                        {
                             Ok(session) => {
-                                let _ = tx.send(CreateProgress::Done {
-                                    session_name: session.name,
-                                }).await;
+                                let _ = tx
+                                    .send(CreateProgress::Done {
+                                        session_name: session.name,
+                                    })
+                                    .await;
                             }
                             Err(e) => {
-                                let _ = tx.send(CreateProgress::Error {
-                                    message: e.to_string(),
-                                }).await;
+                                let _ = tx
+                                    .send(CreateProgress::Error {
+                                        message: e.to_string(),
+                                    })
+                                    .await;
                             }
                         }
                     });
@@ -178,10 +223,42 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                     app.close_create_dialog();
                 }
             }
+            CreateDialogFocus::RepoPath => {
+                // Open directory picker when Enter is pressed on RepoPath
+                let initial_path = if app.create_dialog.repo_path.is_empty() {
+                    None
+                } else {
+                    Some(crate::utils::expand_tilde(&app.create_dialog.repo_path))
+                };
+                app.create_dialog.directory_picker.open(initial_path);
+            }
+            _ => {}
+        },
+        KeyCode::Up => {
+            // Navigate to previous field
+            app.create_dialog.focus = match app.create_dialog.focus {
+                CreateDialogFocus::Name => CreateDialogFocus::Buttons,
+                CreateDialogFocus::Prompt => CreateDialogFocus::Name,
+                CreateDialogFocus::RepoPath => CreateDialogFocus::Prompt,
+                CreateDialogFocus::Backend => CreateDialogFocus::RepoPath,
+                CreateDialogFocus::SkipChecks => CreateDialogFocus::Backend,
+                CreateDialogFocus::Buttons => CreateDialogFocus::SkipChecks,
+            };
+        }
+        KeyCode::Down => {
+            // Navigate to next field
+            app.create_dialog.focus = match app.create_dialog.focus {
+                CreateDialogFocus::Name => CreateDialogFocus::Prompt,
+                CreateDialogFocus::Prompt => CreateDialogFocus::RepoPath,
+                CreateDialogFocus::RepoPath => CreateDialogFocus::Backend,
+                CreateDialogFocus::Backend => CreateDialogFocus::SkipChecks,
+                CreateDialogFocus::SkipChecks => CreateDialogFocus::Buttons,
+                CreateDialogFocus::Buttons => CreateDialogFocus::Name,
+            };
         }
         KeyCode::Left | KeyCode::Right => match app.create_dialog.focus {
             CreateDialogFocus::Backend => {
-                app.create_dialog.backend_zellij = !app.create_dialog.backend_zellij;
+                app.create_dialog.toggle_backend();
             }
             CreateDialogFocus::SkipChecks => {
                 app.create_dialog.skip_checks = !app.create_dialog.skip_checks;
@@ -193,29 +270,28 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
         },
         KeyCode::Char(' ') => match app.create_dialog.focus {
             CreateDialogFocus::Backend => {
-                app.create_dialog.backend_zellij = !app.create_dialog.backend_zellij;
+                app.create_dialog.toggle_backend();
             }
             CreateDialogFocus::SkipChecks => {
                 app.create_dialog.skip_checks = !app.create_dialog.skip_checks;
             }
             CreateDialogFocus::Name => app.create_dialog.name.push(' '),
             CreateDialogFocus::Prompt => app.create_dialog.prompt.push(' '),
-            CreateDialogFocus::RepoPath => app.create_dialog.repo_path.push(' '),
+            CreateDialogFocus::RepoPath => {
+                // Open directory picker when space is pressed on RepoPath
+                let initial_path = if app.create_dialog.repo_path.is_empty() {
+                    None
+                } else {
+                    Some(crate::utils::expand_tilde(&app.create_dialog.repo_path))
+                };
+                app.create_dialog.directory_picker.open(initial_path);
+            }
             _ => {}
         },
-        KeyCode::Char('/') if app.create_dialog.focus == CreateDialogFocus::RepoPath => {
-            // Open directory picker
-            let initial_path = if app.create_dialog.repo_path.is_empty() {
-                None
-            } else {
-                Some(crate::utils::expand_tilde(&app.create_dialog.repo_path))
-            };
-            app.create_dialog.directory_picker.open(initial_path);
-        }
         KeyCode::Char(c) => match app.create_dialog.focus {
             CreateDialogFocus::Name => app.create_dialog.name.push(c),
             CreateDialogFocus::Prompt => app.create_dialog.prompt.push(c),
-            CreateDialogFocus::RepoPath => app.create_dialog.repo_path.push(c),
+            // RepoPath no longer accepts typed input - use directory picker instead
             _ => {}
         },
         KeyCode::Backspace => match app.create_dialog.focus {
@@ -226,7 +302,8 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                 app.create_dialog.prompt.pop();
             }
             CreateDialogFocus::RepoPath => {
-                app.create_dialog.repo_path.pop();
+                // Clear the repo path on backspace
+                app.create_dialog.repo_path.clear();
             }
             _ => {}
         },
@@ -252,11 +329,22 @@ async fn handle_directory_picker_key(app: &mut App, key: KeyEvent) -> anyhow::Re
             picker.select_next();
         }
 
-        // Select current directory (Tab or Ctrl+Enter)
+        // Tab selects the highlighted directory and closes the picker
         KeyCode::Tab => {
-            app.create_dialog.repo_path = picker.current_dir.to_string_lossy().to_string();
-            picker.close();
+            if let Some(entry) = picker.selected_entry() {
+                let entry_path = entry.path.clone();
+                if entry.is_parent {
+                    // Select parent directory
+                    app.create_dialog.repo_path = entry_path.to_string_lossy().to_string();
+                } else if entry_path.is_dir() {
+                    // Select the highlighted directory
+                    app.create_dialog.repo_path = entry_path.to_string_lossy().to_string();
+                }
+                picker.close();
+            }
         }
+
+        // Select current directory (Ctrl+Enter)
         KeyCode::Enter if key.modifiers.contains(KeyModifiers::CONTROL) => {
             app.create_dialog.repo_path = picker.current_dir.to_string_lossy().to_string();
             picker.close();
