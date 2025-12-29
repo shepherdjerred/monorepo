@@ -132,9 +132,13 @@ impl ProxyManager {
         // Start Talos gateway if configured
         if self.talos_gateway.is_configured() {
             let talos_addr = self.talos_gateway.addr();
-            // Note: We can't easily move TalosGateway into a task without Clone
-            // For now, run it inline or restructure
-            tracing::info!("Talos gateway would start on {}", talos_addr);
+            let gateway = self.talos_gateway.clone();
+            self.talos_task = Some(tokio::spawn(async move {
+                if let Err(e) = gateway.run().await {
+                    tracing::error!("Talos gateway error: {}", e);
+                }
+            }));
+            tracing::info!("Talos mTLS gateway started on {}", talos_addr);
         }
 
         tracing::info!("Proxy services started");
@@ -204,7 +208,12 @@ impl ProxyManager {
 
 impl Drop for ProxyManager {
     fn drop(&mut self) {
-        // Best-effort cleanup
+        // Best-effort cleanup.
+        //
+        // WARNING: k8s_proxy.stop() performs blocking I/O (child.wait()).
+        // In async contexts, call stop() explicitly before dropping to avoid
+        // blocking the tokio runtime. This Drop is for safety in non-async
+        // contexts or when stop() wasn't called.
         let _ = self.k8s_proxy.stop();
         if let Some(task) = self.http_task.take() {
             task.abort();

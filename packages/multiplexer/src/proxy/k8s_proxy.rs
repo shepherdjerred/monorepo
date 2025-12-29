@@ -73,6 +73,11 @@ impl KubernetesProxy {
     }
 
     /// Stop the kubectl proxy subprocess.
+    ///
+    /// **Note:** This method performs blocking I/O (`child.wait()`). In async contexts,
+    /// call this method explicitly before dropping the `KubernetesProxy` to avoid
+    /// blocking the tokio runtime. The `Drop` implementation calls this as best-effort
+    /// cleanup but may cause runtime warnings if called during async shutdown.
     pub fn stop(&mut self) -> anyhow::Result<()> {
         if let Some(mut child) = self.process.take() {
             tracing::info!("Stopping kubectl proxy");

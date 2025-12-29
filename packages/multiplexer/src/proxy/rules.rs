@@ -18,9 +18,19 @@ pub struct Rule {
 
 impl Rule {
     /// Check if this rule matches the given host.
+    ///
+    /// Wildcard patterns like `*.example.com` match subdomains (e.g., `api.example.com`)
+    /// but NOT the apex domain itself (`example.com`). This is intentional - the pattern
+    /// `*.example.com` becomes `.example.com` suffix match, so `example.com` won't match
+    /// because it doesn't contain a leading dot.
+    ///
+    /// If you need to match both apex and subdomains, add two rules:
+    /// - `*.example.com` for subdomains
+    /// - `example.com` for the apex
     pub fn matches(&self, host: &str) -> bool {
         if self.host_pattern.starts_with('*') {
-            // Wildcard prefix match (e.g., "*.docker.io")
+            // Wildcard prefix match (e.g., "*.docker.io" -> ".docker.io" suffix)
+            // Note: This intentionally does NOT match the apex domain.
             let suffix = &self.host_pattern[1..];
             host.ends_with(suffix)
         } else {
@@ -135,5 +145,23 @@ mod tests {
         assert!(rule.is_some());
         let rule = rule.unwrap();
         assert_eq!(rule.credential_key, "sentry");
+    }
+
+    #[test]
+    fn test_wildcard_matches_subdomains_not_apex() {
+        let rule = Rule {
+            host_pattern: "*.docker.io",
+            header_name: "Authorization",
+            format: "Bearer {}",
+            credential_key: "docker",
+        };
+
+        // Subdomains should match
+        assert!(rule.matches("registry-1.docker.io"));
+        assert!(rule.matches("auth.docker.io"));
+        assert!(rule.matches("foo.bar.docker.io"));
+
+        // Apex domain should NOT match (intentional behavior)
+        assert!(!rule.matches("docker.io"));
     }
 }

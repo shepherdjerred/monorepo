@@ -66,6 +66,7 @@ prost = "0.13"
 
 # Config files
 toml = "0.8"
+serde_yaml = "0.9"
 
 # Time handling (for certificate generation)
 time = "0.3"
