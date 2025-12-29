@@ -508,10 +508,19 @@ impl App {
         };
 
         if let Some(client) = &mut self.client {
-            let session = client.create_session(request).await?;
+            let (session, warnings) = client.create_session(request).await?;
             self.loading_message = None;
             self.progress_step = None;
-            self.status_message = Some(format!("Created session {}", session.name));
+
+            // Build status message, including any warnings
+            let mut status = format!("Created session {}", session.name);
+            if let Some(warns) = warnings {
+                for warn in warns {
+                    status.push_str(&format!(" (Warning: {})", warn));
+                }
+            }
+            self.status_message = Some(status);
+
             self.refresh_sessions().await?;
         }
 
