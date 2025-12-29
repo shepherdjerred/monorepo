@@ -9,26 +9,68 @@ const SUFFIX_LENGTH: usize = 4;
 /// Sanitize a string to be valid as a git branch name.
 ///
 /// Git branch names cannot contain:
-/// - Spaces, ~, ^, :, ?, *, [, \, @{
+/// - Spaces, ~, ^, :, ?, *, [, \, @, {, }
 /// - Two consecutive dots (..)
 /// - Leading or trailing dots, slashes, or hyphens
+/// - The suffix `.lock` (reserved by git)
+///
+/// Also enforces a maximum length to prevent DoS via extremely long names.
 ///
 /// See `git check-ref-format` for full rules.
 #[must_use]
 pub fn sanitize_branch_name(name: &str) -> String {
+    // Limit length to prevent DoS (git has a ~4096 byte limit for refs)
+    const MAX_LENGTH: usize = 200;
+    let name = if name.len() > MAX_LENGTH {
+        &name[..MAX_LENGTH]
+    } else {
+        name
+    };
+
     let sanitized: String = name
         .chars()
         .map(|c| match c {
-            ' ' | '~' | '^' | ':' | '?' | '*' | '[' | '\\' | '@' => '-',
+            ' ' | '~' | '^' | ':' | '?' | '*' | '[' | '\\' | '@' | '{' | '}' => '-',
             c if c.is_ascii_alphanumeric() || c == '-' || c == '_' || c == '/' || c == '.' => c,
             _ => '-',
         })
         .collect();
 
-    // Replace consecutive dots with a single hyphen
-    let sanitized = sanitized.replace("..", "-");
+    // Collapse runs of 2+ dots to a single hyphen
+    let mut result = String::new();
+    let mut dot_count = 0;
+    for c in sanitized.chars() {
+        if c == '.' {
+            dot_count += 1;
+        } else {
+            if dot_count == 1 {
+                result.push('.');
+            } else if dot_count > 1 {
+                result.push('-');
+            }
+            dot_count = 0;
+            result.push(c);
+        }
+    }
+    // Handle trailing dots
+    if dot_count == 1 {
+        result.push('.');
+    } else if dot_count > 1 {
+        result.push('-');
+    }
+    let sanitized = result;
 
     // Remove leading/trailing special characters
+    let mut sanitized = sanitized
+        .trim_matches(|c| c == '-' || c == '.' || c == '/')
+        .to_string();
+
+    // Remove .lock suffix (reserved by git)
+    while sanitized.ends_with(".lock") {
+        sanitized = sanitized.trim_end_matches(".lock").to_string();
+    }
+
+    // Final trim in case .lock removal left trailing special chars
     sanitized
         .trim_matches(|c| c == '-' || c == '.' || c == '/')
         .to_string()
@@ -103,8 +145,30 @@ mod tests {
     #[test]
     fn test_sanitize_consecutive_dots() {
         assert_eq!(sanitize_branch_name("test..branch"), "test-branch");
-        // test...branch -> test + ".." + ".branch" -> test + "-" + ".branch" = test-.branch
-        assert_eq!(sanitize_branch_name("test...branch"), "test-.branch");
+        // Now iteratively replaces all consecutive dots
+        assert_eq!(sanitize_branch_name("test...branch"), "test-branch");
+        assert_eq!(sanitize_branch_name("test....branch"), "test-branch");
+    }
+
+    #[test]
+    fn test_sanitize_lock_suffix() {
+        assert_eq!(sanitize_branch_name("branch.lock"), "branch");
+        assert_eq!(sanitize_branch_name("branch.lock.lock"), "branch");
+        assert_eq!(sanitize_branch_name("my-branch.lock"), "my-branch");
+    }
+
+    #[test]
+    fn test_sanitize_curly_braces() {
+        // Trailing special chars are trimmed
+        assert_eq!(sanitize_branch_name("test@{branch}"), "test--branch");
+        assert_eq!(sanitize_branch_name("ref@{1}"), "ref--1");
+    }
+
+    #[test]
+    fn test_sanitize_max_length() {
+        let long_name = "a".repeat(300);
+        let sanitized = sanitize_branch_name(&long_name);
+        assert!(sanitized.len() <= 200);
     }
 
     #[test]

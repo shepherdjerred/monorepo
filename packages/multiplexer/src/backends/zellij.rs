@@ -146,26 +146,13 @@ impl ExecutionBackend for ZellijBackend {
             .await?;
 
         if !output.status.success() {
-            let stderr = String::from_utf8_lossy(&output.stderr);
-            let stdout = String::from_utf8_lossy(&output.stdout);
-            let exit_code = output.status.code();
-
-            // Log detailed info for debugging
-            if stderr.is_empty() && stdout.is_empty() {
-                tracing::warn!(
-                    session = name,
-                    exit_code = ?exit_code,
-                    "Failed to kill Zellij session (no output)"
-                );
-            } else {
-                tracing::warn!(
-                    session = name,
-                    exit_code = ?exit_code,
-                    stderr = %stderr.trim(),
-                    stdout = %stdout.trim(),
-                    "Failed to kill Zellij session"
-                );
-            }
+            tracing::warn!(
+                session = name,
+                exit_code = ?output.status.code(),
+                stderr = %String::from_utf8_lossy(&output.stderr).trim(),
+                stdout = %String::from_utf8_lossy(&output.stdout).trim(),
+                "Failed to kill Zellij session"
+            );
         }
 
         tracing::info!(session = name, "Deleted Zellij session");
