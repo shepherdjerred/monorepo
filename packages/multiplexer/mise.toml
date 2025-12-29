@@ -1,0 +1,39 @@
+[tools]
+rust = "latest"
+
+[tasks.build]
+description = "Build the project"
+run = "cargo build"
+
+[tasks.release]
+description = "Build in release mode"
+run = "cargo build --release"
+
+[tasks.test]
+description = "Run tests"
+run = "cargo test"
+
+[tasks.check]
+description = "Run cargo check"
+run = "cargo check"
+
+[tasks.clippy]
+description = "Run clippy linter"
+run = "cargo clippy"
+
+[tasks.fmt]
+description = "Format code"
+run = "cargo fmt"
+
+[tasks.fmt-check]
+description = "Check formatting"
+run = "cargo fmt --check"
+
+[tasks.clean]
+description = "Clean build artifacts"
+run = "cargo clean"
+
+[tasks.install]
+description = "Install mux binary to ~/.cargo/bin"
+run = "cargo install --path ."
+
