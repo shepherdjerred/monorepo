@@ -125,7 +125,10 @@ async fn run_main_loop(
                     app.loading_message = None;
                     app.progress_step = None;
                     app.progress_rx = None;
-                    app.create_task = None;
+                    // Abort the task handle to ensure cleanup
+                    if let Some(task) = app.create_task.take() {
+                        task.abort();
+                    }
                     app.status_message = Some(format!("Created session {session_name}"));
                     app.close_create_dialog();
                     let _ = app.refresh_sessions().await;
@@ -134,7 +137,10 @@ async fn run_main_loop(
                     app.loading_message = None;
                     app.progress_step = None;
                     app.progress_rx = None;
-                    app.create_task = None;
+                    // Abort the task handle to ensure cleanup
+                    if let Some(task) = app.create_task.take() {
+                        task.abort();
+                    }
                     app.status_message = Some(format!("Create failed: {message}"));
                 }
             }

@@ -111,7 +111,10 @@ impl Client {
 
         let session_id = loop {
             line.clear();
-            reader.read_line(&mut line).await?;
+            let bytes_read = reader.read_line(&mut line).await?;
+            if bytes_read == 0 {
+                anyhow::bail!("Connection closed unexpectedly during session creation");
+            }
 
             let response: Response = serde_json::from_str(line.trim())?;
 

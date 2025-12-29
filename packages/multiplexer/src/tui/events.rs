@@ -139,7 +139,7 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                             Ok(c) => c,
                             Err(e) => {
                                 let _ = tx.send(CreateProgress::Error {
-                                    message: format!("Failed to connect: {e}"),
+                                    message: format!("Failed to connect to multiplexer daemon: {e}"),
                                 }).await;
                                 return;
                             }
