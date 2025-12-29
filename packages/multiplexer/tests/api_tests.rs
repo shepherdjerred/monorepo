@@ -54,6 +54,7 @@ fn test_get_session_request_serialization() {
 fn test_response_serialization() {
     let response = Response::Created {
         id: "session-123".to_string(),
+        warnings: None,
     };
 
     let json = serde_json::to_string(&response).unwrap();
@@ -62,7 +63,31 @@ fn test_response_serialization() {
 
     let parsed: Response = serde_json::from_str(&json).unwrap();
     match parsed {
-        Response::Created { id } => assert_eq!(id, "session-123"),
+        Response::Created { id, warnings } => {
+            assert_eq!(id, "session-123");
+            assert!(warnings.is_none());
+        }
+        _ => panic!("Expected Created"),
+    }
+}
+
+#[test]
+fn test_response_created_with_warnings() {
+    let response = Response::Created {
+        id: "session-456".to_string(),
+        warnings: Some(vec!["Post-checkout hook failed".to_string()]),
+    };
+
+    let json = serde_json::to_string(&response).unwrap();
+    assert!(json.contains("session-456"));
+    assert!(json.contains("Post-checkout hook failed"));
+
+    let parsed: Response = serde_json::from_str(&json).unwrap();
+    match parsed {
+        Response::Created { id, warnings } => {
+            assert_eq!(id, "session-456");
+            assert_eq!(warnings.unwrap().len(), 1);
+        }
         _ => panic!("Expected Created"),
     }
 }

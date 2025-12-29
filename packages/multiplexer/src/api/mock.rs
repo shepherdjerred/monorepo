@@ -137,7 +137,10 @@ impl ApiClient for MockApiClient {
         anyhow::bail!("Session not found: {id}")
     }
 
-    async fn create_session(&mut self, request: CreateSessionRequest) -> anyhow::Result<Session> {
+    async fn create_session(
+        &mut self,
+        request: CreateSessionRequest,
+    ) -> anyhow::Result<(Session, Option<Vec<String>>)> {
         if self.should_fail() {
             let msg = self.error_message.read().await.clone();
             anyhow::bail!("{}", msg);
@@ -165,7 +168,7 @@ impl ApiClient for MockApiClient {
 
         self.sessions.write().await.insert(session.id, session.clone());
 
-        Ok(session)
+        Ok((session, None))
     }
 
     async fn delete_session(&mut self, id: &str) -> anyhow::Result<()> {
@@ -287,9 +290,10 @@ mod tests {
             dangerous_skip_checks: false,
         };
 
-        let session = client.create_session(request).await.unwrap();
+        let (session, warnings) = client.create_session(request).await.unwrap();
         assert!(session.name.starts_with("test-session-"));
         assert_eq!(session.status, SessionStatus::Running);
+        assert!(warnings.is_none());
 
         let sessions = client.list_sessions().await.unwrap();
         assert_eq!(sessions.len(), 1);

@@ -25,15 +25,21 @@ impl Default for GitBackend {
 impl GitOperations for GitBackend {
     /// Create a new git worktree
     ///
+    /// # Returns
+    ///
+    /// - `Ok(None)` if the worktree was created successfully
+    /// - `Ok(Some(warning))` if the worktree was created but post-checkout hook failed
+    /// - `Err(_)` if the worktree creation failed
+    ///
     /// # Errors
     ///
-    /// Returns an error if the git command fails or the directory cannot be created.
+    /// Returns an error if the git command fails and the worktree does not exist.
     async fn create_worktree(
         &self,
         repo_path: &Path,
         worktree_path: &Path,
         branch_name: &str,
-    ) -> anyhow::Result<()> {
+    ) -> anyhow::Result<Option<String>> {
         // Ensure the worktree parent directory exists
         if let Some(parent) = worktree_path.parent() {
             tokio::fs::create_dir_all(parent).await?;
@@ -49,6 +55,30 @@ impl GitOperations for GitBackend {
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
+
+            // Check if worktree was actually created despite non-zero exit code
+            // (e.g., post-checkout hook failed but worktree itself is fine)
+            // Verify .git file exists to confirm it's a proper worktree, not just a directory
+            let git_file = worktree_path.join(".git");
+            if git_file.exists() && git_file.is_file() {
+                tracing::warn!(
+                    repo = %repo_path.display(),
+                    worktree = %worktree_path.display(),
+                    branch = branch_name,
+                    stderr = %stderr,
+                    "Worktree created but post-checkout hook failed"
+                );
+
+                // Build warning message, handling empty stderr
+                let warning_msg = if stderr.trim().is_empty() {
+                    "Post-checkout hook failed (no error output)".to_string()
+                } else {
+                    format!("Post-checkout hook failed: {stderr}")
+                };
+                return Ok(Some(warning_msg));
+            }
+
+            // Worktree doesn't exist or is invalid - real failure
             tracing::error!(
                 repo = %repo_path.display(),
                 worktree = %worktree_path.display(),
@@ -65,7 +95,7 @@ impl GitOperations for GitBackend {
             "Created git worktree"
         );
 
-        Ok(())
+        Ok(None)
     }
 
     /// Delete a git worktree

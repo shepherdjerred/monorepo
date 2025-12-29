@@ -99,6 +99,9 @@ impl SessionManager {
     ///
     /// Returns an error if the session cannot be created, the worktree cannot
     /// be set up, or the backend fails to start.
+    ///
+    /// Returns the created session and optionally a list of warnings (e.g., if
+    /// the post-checkout hook failed but the worktree was created successfully).
     pub async fn create_session(
         &self,
         name: String,
@@ -107,7 +110,7 @@ impl SessionManager {
         backend: BackendType,
         agent: super::session::AgentType,
         dangerous_skip_checks: bool,
-    ) -> anyhow::Result<Session> {
+    ) -> anyhow::Result<(Session, Option<Vec<String>>)> {
         // Generate unique session name with retry logic
         const MAX_ATTEMPTS: usize = 3;
         let full_name = {
@@ -152,7 +155,8 @@ impl SessionManager {
 
         // Create git worktree
         let repo_path_buf = PathBuf::from(&repo_path);
-        self.git
+        let worktree_warning = self
+            .git
             .create_worktree(&repo_path_buf, &worktree_path, &full_name)
             .await?;
 
@@ -193,7 +197,10 @@ impl SessionManager {
         // Add to in-memory list
         self.sessions.write().await.push(session.clone());
 
-        Ok(session)
+        // Collect warnings
+        let warnings = worktree_warning.map(|w| vec![w]);
+
+        Ok((session, warnings))
     }
 
     /// Get the command to attach to a session

@@ -20,8 +20,12 @@ pub trait ApiClient: Send + Sync {
     async fn get_session(&mut self, id: &str) -> anyhow::Result<Session>;
 
     /// Create a new session.
-    async fn create_session(&mut self, request: CreateSessionRequest)
-        -> anyhow::Result<Session>;
+    ///
+    /// Returns the created session and optionally a list of warnings.
+    async fn create_session(
+        &mut self,
+        request: CreateSessionRequest,
+    ) -> anyhow::Result<(Session, Option<Vec<String>>)>;
 
     /// Delete a session.
     async fn delete_session(&mut self, id: &str) -> anyhow::Result<()>;

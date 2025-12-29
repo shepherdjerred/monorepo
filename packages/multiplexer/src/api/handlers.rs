@@ -37,14 +37,16 @@ pub async fn handle_request(request: Request, manager: &SessionManager) -> Respo
                 )
                 .await
             {
-                Ok(session) => {
+                Ok((session, warnings)) => {
                     tracing::info!(
                         id = %session.id,
                         name = %session.name,
+                        warnings = ?warnings,
                         "Session created"
                     );
                     Response::Created {
                         id: session.id.to_string(),
+                        warnings,
                     }
                 }
                 Err(e) => {
@@ -176,7 +178,7 @@ pub async fn handle_create_session_with_progress(
         )
         .await
     {
-        Ok(session) => {
+        Ok((session, warnings)) => {
             // Step 2 was completed (we send it for completeness even though it's done)
             send_response(
                 writer,
@@ -191,12 +193,14 @@ pub async fn handle_create_session_with_progress(
             tracing::info!(
                 id = %session.id,
                 name = %session.name,
+                warnings = ?warnings,
                 "Session created"
             );
             send_response(
                 writer,
                 &Response::Created {
                     id: session.id.to_string(),
+                    warnings,
                 },
             )
             .await?;

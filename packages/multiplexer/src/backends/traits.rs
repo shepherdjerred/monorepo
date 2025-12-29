@@ -7,12 +7,15 @@ pub trait GitOperations: Send + Sync {
     /// Create a new git worktree
     ///
     /// Creates a new branch and checks it out to the specified worktree path.
+    ///
+    /// Returns `Ok(None)` on success, or `Ok(Some(warning))` if the worktree was
+    /// created but the post-checkout hook failed.
     async fn create_worktree(
         &self,
         repo_path: &Path,
         worktree_path: &Path,
         branch_name: &str,
-    ) -> anyhow::Result<()>;
+    ) -> anyhow::Result<Option<String>>;
 
     /// Delete a git worktree
     ///

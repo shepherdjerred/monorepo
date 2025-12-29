@@ -47,7 +47,7 @@ async fn create_test_manager() -> (SessionManager, TempDir, Arc<MockGitBackend>,
 async fn test_create_session_zellij_success() {
     let (manager, _temp_dir, git, zellij, _docker) = create_test_manager().await;
 
-    let session = manager
+    let (session, _warnings) = manager
         .create_session(
             "test-session".to_string(),
             "/tmp/fake-repo".to_string(),
@@ -86,7 +86,7 @@ async fn test_create_session_zellij_success() {
 async fn test_create_session_docker_success() {
     let (manager, _temp_dir, git, _zellij, docker) = create_test_manager().await;
 
-    let session = manager
+    let (session, _warnings) = manager
         .create_session(
             "docker-test".to_string(),
             "/tmp/fake-repo".to_string(),
@@ -176,7 +176,7 @@ async fn test_create_session_backend_fails() {
 async fn test_get_session_by_name() {
     let (manager, _temp_dir, _git, _zellij, _docker) = create_test_manager().await;
 
-    let created = manager
+    let (created, _) = manager
         .create_session(
             "named-session".to_string(),
             "/tmp/repo".to_string(),
@@ -198,7 +198,7 @@ async fn test_get_session_by_name() {
 async fn test_get_session_by_uuid() {
     let (manager, _temp_dir, _git, _zellij, _docker) = create_test_manager().await;
 
-    let created = manager
+    let (created, _) = manager
         .create_session(
             "uuid-test".to_string(),
             "/tmp/repo".to_string(),
@@ -230,7 +230,7 @@ async fn test_get_session_not_found() {
 async fn test_delete_session_success() {
     let (manager, _temp_dir, git, zellij, _docker) = create_test_manager().await;
 
-    let session = manager
+    let (session, _) = manager
         .create_session(
             "to-delete".to_string(),
             "/tmp/repo".to_string(),
@@ -275,7 +275,7 @@ async fn test_delete_session_not_found() {
 async fn test_archive_session_success() {
     let (manager, _temp_dir, _git, _zellij, _docker) = create_test_manager().await;
 
-    let session = manager
+    let (session, _) = manager
         .create_session(
             "to-archive".to_string(),
             "/tmp/repo".to_string(),
@@ -312,7 +312,7 @@ async fn test_archive_session_not_found() {
 async fn test_get_attach_command_zellij() {
     let (manager, _temp_dir, _git, _zellij, _docker) = create_test_manager().await;
 
-    let session = manager
+    let (session, _) = manager
         .create_session(
             "attach-test".to_string(),
             "/tmp/repo".to_string(),
@@ -335,7 +335,7 @@ async fn test_get_attach_command_zellij() {
 async fn test_get_attach_command_docker() {
     let (manager, _temp_dir, _git, _zellij, _docker) = create_test_manager().await;
 
-    let session = manager
+    let (session, _) = manager
         .create_session(
             "docker-attach".to_string(),
             "/tmp/repo".to_string(),
@@ -368,7 +368,7 @@ async fn test_get_attach_command_session_not_found() {
 async fn test_reconcile_healthy_session() {
     let (manager, _temp_dir, _git, zellij, _docker) = create_test_manager().await;
 
-    let session = manager
+    let (session, _) = manager
         .create_session(
             "healthy".to_string(),
             "/tmp/repo".to_string(),
@@ -393,7 +393,7 @@ async fn test_reconcile_healthy_session() {
 async fn test_reconcile_missing_backend() {
     let (manager, _temp_dir, _git, zellij, _docker) = create_test_manager().await;
 
-    let session = manager
+    let (session, _) = manager
         .create_session(
             "missing-backend".to_string(),
             "/tmp/repo".to_string(),
@@ -430,7 +430,7 @@ async fn test_list_sessions_multiple() {
     let (manager, _temp_dir, _git, _zellij, _docker) = create_test_manager().await;
 
     // Create multiple sessions
-    manager
+    let _ = manager
         .create_session(
             "session-1".to_string(),
             "/tmp/repo".to_string(),
@@ -442,7 +442,7 @@ async fn test_list_sessions_multiple() {
         .await
         .unwrap();
 
-    manager
+    let _ = manager
         .create_session(
             "session-2".to_string(),
             "/tmp/repo".to_string(),
@@ -454,7 +454,7 @@ async fn test_list_sessions_multiple() {
         .await
         .unwrap();
 
-    manager
+    let _ = manager
         .create_session(
             "session-3".to_string(),
             "/tmp/repo".to_string(),
@@ -477,7 +477,7 @@ async fn test_session_lifecycle() {
     let (manager, _temp_dir, _git, _zellij, _docker) = create_test_manager().await;
 
     // Create session - should be Running
-    let session = manager
+    let (session, _) = manager
         .create_session(
             "lifecycle".to_string(),
             "/tmp/repo".to_string(),

@@ -200,7 +200,7 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                             .create_session_with_progress(request, Some(on_progress))
                             .await
                         {
-                            Ok(session) => {
+                            Ok((session, _warnings)) => {
                                 let _ = tx
                                     .send(CreateProgress::Done {
                                         session_name: session.name,
