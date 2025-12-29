@@ -7,7 +7,7 @@ when_to_use: When user works with Zod, validates data, creates schemas, handles 
 
 ## What's New in Zod 4 (2025)
 
-- **Performance**: `z.array()` 7.4x faster, `z.object()` 6.5x faster than v3
+- **Performance**: `z.array()` 7.4x faster, `z.object()` 6.5x faster (compared to Zod v3)
 - **Zod Mini**: Tree-shakable functional API variant
 - **Metadata API**: Attach custom metadata to schemas
 - **JSON Schema**: Built-in JSON Schema generation

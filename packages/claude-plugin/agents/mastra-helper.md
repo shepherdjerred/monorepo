@@ -8,7 +8,7 @@ when_to_use: When user works with Mastra, AI agents, LLM orchestration, or menti
 ## What's New in Mastra v1 (2025)
 
 - **Stable API**: v1 beta signals production-readiness with no breaking changes planned
-- **600+ model support**: OpenAI, Anthropic, Gemini, Llama, and more through unified interface
+- **Multi-model support**: OpenAI, Anthropic, Gemini, Llama, and more through AI SDK integration
 - **Human-in-the-loop**: Suspend/resume with persistent state across sessions
 - **MCP integration**: Model Context Protocol for universal tool sharing
 - **Built-in evals**: Automated testing with model-graded and rule-based scoring

@@ -7,7 +7,7 @@ when_to_use: When user works with Discord bots, discord.js, slash commands, Disc
 
 ## What's New in Discord.js v14 (2024-2025)
 
-- **Node.js 22.12+** required (was 16.11+ in early v14)
+- **Node.js 18.17+** required (v14.14+), 22+ recommended
 - **PascalCase enums**: `ButtonStyle.Primary` instead of `'PRIMARY'`
 - **Renamed builders**: `EmbedBuilder` (was `MessageEmbed`), `AttachmentBuilder` (was `MessageAttachment`)
 - **Display components**: New layout and content elements beyond embeds

@@ -36,14 +36,22 @@ Prisma consists of three main components:
 
 ## Schema Definition
 
-### Generator Configuration (Prisma 7+)
+### Generator Configuration
 
+**Prisma 5.x/6.x (current stable):**
 ```prisma
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
+}
+```
+
+**Prisma 7+ (new format with runtime options):**
+```prisma
+generator client {
+  provider = "prisma-client"   // replaces "prisma-client-js"
   output   = "./generated/client"
-  runtime  = "bun"           // nodejs, deno, bun, workerd
-  moduleFormat = "esm"       // esm or cjs
+  runtime  = "bun"             // nodejs, deno, bun, workerd
+  moduleFormat = "esm"         // esm or cjs
 }
 
 datasource db {
