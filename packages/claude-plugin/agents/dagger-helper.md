@@ -320,18 +320,20 @@ const stepResults = collectResults(results);
 ```typescript
 import { publishToGhcr, publishToNpm } from "@shepherdjerred/dagger-utils";
 
+// Publish to GitHub Container Registry
 await publishToGhcr({
   container,
-  imageName: "ghcr.io/org/app",
-  tag: version,
+  imageRef: "ghcr.io/org/app:1.0.0",  // Full ref with tag
   username,
   password,
 });
 
+// Publish to NPM
 await publishToNpm({
   container,
-  packagePath: "/workspace/packages/my-lib",
-  npmToken,
+  token: npmToken,
+  packageDir: "/workspace/packages/my-lib",
+  access: "public",
 });
 ```
 
@@ -340,8 +342,18 @@ await publishToNpm({
 ```typescript
 import { releasePr, githubRelease } from "@shepherdjerred/dagger-utils";
 
-const prResult = await releasePr({ container, token: githubToken });
-const releaseResult = await githubRelease({ container, token: githubToken });
+// Create or update release PR based on conventional commits
+const prResult = await releasePr({
+  ghToken: githubToken,
+  repoUrl: "owner/repo",
+  releaseType: "node",
+});
+
+// Create GitHub release after PR is merged
+const releaseResult = await githubRelease({
+  ghToken: githubToken,
+  repoUrl: "owner/repo",
+});
 ```
 
 ### Homelab Deployment
@@ -437,14 +449,13 @@ async birmelPublish(
   source: Directory,
   version: string,
   gitSha: string,
-  registryUsername: Secret,
+  registryUsername: string,
   registryPassword: Secret,
 ): Promise<string> {
   const image = this.birmelBuild(source, version, gitSha);
   return await publishToGhcr({
     container: image,
-    imageName: "ghcr.io/shepherdjerred/birmel",
-    tag: version,
+    imageRef: `ghcr.io/shepherdjerred/birmel:${version}`,
     username: registryUsername,
     password: registryPassword,
   });
