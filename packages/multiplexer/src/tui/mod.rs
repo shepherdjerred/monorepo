@@ -9,13 +9,16 @@ use std::io::{self, stdout};
 use std::time::Duration;
 
 use crossterm::{
-    event::{Event, KeyCode},
+    event::{
+        Event, KeyCode, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags,
+        PushKeyboardEnhancementFlags,
+    },
     execute,
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
 use ratatui::{Terminal, backend::CrosstermBackend};
 
-use crate::tui::app::AppMode;
+use crate::tui::app::{AppMode, CreateProgress};
 
 /// Run the TUI application
 ///
@@ -27,7 +30,14 @@ pub async fn run() -> anyhow::Result<()> {
     // Setup terminal
     enable_raw_mode()?;
     let mut stdout = stdout();
-    execute!(stdout, EnterAlternateScreen)?;
+    execute!(
+        stdout,
+        EnterAlternateScreen,
+        PushKeyboardEnhancementFlags(
+            KeyboardEnhancementFlags::DISAMBIGUATE_ESCAPE_CODES
+                | KeyboardEnhancementFlags::REPORT_ALL_KEYS_AS_ESCAPE_CODES
+        )
+    )?;
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
@@ -43,7 +53,11 @@ pub async fn run() -> anyhow::Result<()> {
 
     // Restore terminal
     disable_raw_mode()?;
-    execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
+    execute!(
+        terminal.backend_mut(),
+        PopKeyboardEnhancementFlags,
+        LeaveAlternateScreen
+    )?;
     terminal.show_cursor()?;
 
     result
@@ -54,6 +68,9 @@ async fn run_main_loop(
     app: &mut App,
 ) -> anyhow::Result<()> {
     loop {
+        // Increment spinner tick for animation
+        app.tick();
+
         // Draw UI
         terminal.draw(|frame| ui::render(frame, app))?;
 
@@ -88,7 +105,46 @@ async fn run_main_loop(
 
             events::handle_key_event(app, key).await?;
         }
-        // Other events like Resize are handled automatically on next render
+
+        // Poll for progress updates from background tasks (non-blocking)
+        // Collect updates first to avoid borrow issues
+        let mut updates = Vec::new();
+        if let Some(ref mut rx) = app.progress_rx {
+            while let Ok(progress) = rx.try_recv() {
+                updates.push(progress);
+            }
+        }
+
+        // Process collected updates
+        for progress in updates {
+            match progress {
+                CreateProgress::Step { step, total, message } => {
+                    app.progress_step = Some((step, total, message));
+                }
+                CreateProgress::Done { session_name } => {
+                    app.loading_message = None;
+                    app.progress_step = None;
+                    app.progress_rx = None;
+                    // Abort the task handle to ensure cleanup
+                    if let Some(task) = app.create_task.take() {
+                        task.abort();
+                    }
+                    app.status_message = Some(format!("Created session {session_name}"));
+                    app.close_create_dialog();
+                    let _ = app.refresh_sessions().await;
+                }
+                CreateProgress::Error { message } => {
+                    app.loading_message = None;
+                    app.progress_step = None;
+                    app.progress_rx = None;
+                    // Abort the task handle to ensure cleanup
+                    if let Some(task) = app.create_task.take() {
+                        task.abort();
+                    }
+                    app.status_message = Some(format!("Create failed: {message}"));
+                }
+            }
+        }
 
         if app.should_quit {
             break;

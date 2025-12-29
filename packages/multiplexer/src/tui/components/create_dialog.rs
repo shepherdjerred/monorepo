@@ -17,9 +17,9 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
 
     frame.render_widget(block, area);
 
-    // If loading, show loading message
+    // If loading, show loading message with spinner and progress
     if let Some(loading_msg) = &app.loading_message {
-        render_loading(frame, loading_msg, area);
+        render_loading(frame, loading_msg, app.progress_step.as_ref(), app.spinner_tick, area);
         return;
     }
 
@@ -248,25 +248,53 @@ fn render_buttons(frame: &mut Frame, focused: bool, create_focused: bool, area: 
     frame.render_widget(paragraph, area);
 }
 
-fn render_loading(frame: &mut Frame, message: &str, area: Rect) {
+/// Spinner frames for loading animation
+const SPINNER_FRAMES: &[&str] = &["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
+
+fn render_loading(
+    frame: &mut Frame,
+    message: &str,
+    progress: Option<&(u32, u32, String)>,
+    tick: u64,
+    area: Rect,
+) {
     let inner = Layout::default()
         .direction(Direction::Vertical)
         .margin(1)
         .constraints([
             Constraint::Min(0),
-            Constraint::Length(3),
+            Constraint::Length(4), // Extra line for progress
             Constraint::Min(0),
         ])
         .split(area);
 
+    // Get current spinner frame
+    let spinner_idx = (tick / 2) as usize % SPINNER_FRAMES.len();
+    let spinner = SPINNER_FRAMES[spinner_idx];
+
+    // Build display message
+    let display_msg = if let Some((step, total, step_msg)) = progress {
+        format!("Step {step}/{total}: {step_msg}")
+    } else {
+        message.to_string()
+    };
+
     let text = vec![
         Line::from(""),
-        Line::from(Span::styled(
-            message,
-            Style::default()
-                .fg(Color::Yellow)
-                .add_modifier(Modifier::BOLD),
-        )),
+        Line::from(vec![
+            Span::styled(
+                format!("{spinner} "),
+                Style::default()
+                    .fg(Color::Cyan)
+                    .add_modifier(Modifier::BOLD),
+            ),
+            Span::styled(
+                &display_msg,
+                Style::default()
+                    .fg(Color::Yellow)
+                    .add_modifier(Modifier::BOLD),
+            ),
+        ]),
         Line::from(""),
     ];
 
