@@ -1,5 +1,3 @@
-use std::time::Duration;
-
 use async_trait::async_trait;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::UnixStream;
@@ -29,22 +27,19 @@ impl Client {
     pub async fn connect() -> anyhow::Result<Self> {
         let socket_path = paths::socket_path();
 
-        // First attempt to connect
-        match UnixStream::connect(&socket_path).await {
-            Ok(stream) => return Ok(Self { stream }),
-            Err(_) => {
-                // Daemon not running, try to spawn it
-                daemon::ensure_daemon_running().await?;
-
-                // Wait for daemon to be ready to accept connections
-                daemon::wait_for_daemon(Duration::from_secs(5)).await?;
-            }
+        // First attempt to connect to existing daemon
+        if let Ok(stream) = UnixStream::connect(&socket_path).await {
+            return Ok(Self { stream });
         }
 
-        // Retry connection after spawning daemon
+        // Daemon not running - spawn it and wait for it to be ready
+        // This handles race conditions via file locking
+        daemon::ensure_daemon_running().await?;
+
+        // Connect after daemon is ready
         let stream = UnixStream::connect(&socket_path).await.map_err(|e| {
             anyhow::anyhow!(
-                "Failed to connect to daemon at {} after spawning. Error: {e}",
+                "Failed to connect to daemon at {} after ensuring it's running. Error: {e}",
                 socket_path.display(),
             )
         })?;
