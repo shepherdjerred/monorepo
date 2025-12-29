@@ -1,8 +1,13 @@
 use std::time::Duration;
 
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyModifiers};
+use tokio::sync::mpsc;
 
-use super::app::{App, AppMode, CreateDialogFocus};
+use crate::api::protocol::CreateSessionRequest;
+use crate::api::Client;
+use crate::core::{AgentType, BackendType};
+
+use super::app::{App, AppMode, CreateDialogFocus, CreateProgress};
 
 /// Poll for events with a timeout
 ///
@@ -104,11 +109,71 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
         KeyCode::Enter => {
             if app.create_dialog.focus == CreateDialogFocus::Buttons {
                 if app.create_dialog.button_create_focused {
-                    app.loading_message = Some("Creating session (this may take up to 60s)...".to_string());
-                    if let Err(e) = app.create_session_from_dialog().await {
-                        app.loading_message = None;
-                        app.status_message = Some(format!("Create failed: {e}"));
+                    // Prevent multiple concurrent creates
+                    if app.create_task.is_some() {
+                        return Ok(());
                     }
+
+                    // Create channel for progress updates
+                    let (tx, rx) = mpsc::channel(16);
+                    app.progress_rx = Some(rx);
+
+                    // Capture data for the background task
+                    let request = CreateSessionRequest {
+                        name: app.create_dialog.name.clone(),
+                        repo_path: app.create_dialog.repo_path.clone(),
+                        initial_prompt: app.create_dialog.prompt.clone(),
+                        backend: if app.create_dialog.backend_zellij {
+                            BackendType::Zellij
+                        } else {
+                            BackendType::Docker
+                        },
+                        agent: AgentType::ClaudeCode,
+                        dangerous_skip_checks: app.create_dialog.skip_checks,
+                    };
+
+                    // Spawn background task
+                    let task = tokio::spawn(async move {
+                        // Connect to daemon
+                        let mut client = match Client::connect().await {
+                            Ok(c) => c,
+                            Err(e) => {
+                                let _ = tx.send(CreateProgress::Error {
+                                    message: format!("Failed to connect to multiplexer daemon: {e}"),
+                                }).await;
+                                return;
+                            }
+                        };
+
+                        // Create progress callback
+                        let tx_clone = tx.clone();
+                        let on_progress = Box::new(move |step: crate::api::protocol::ProgressStep| {
+                            let tx = tx_clone.clone();
+                            // Use try_send since we're in a sync callback
+                            let _ = tx.try_send(CreateProgress::Step {
+                                step: step.step,
+                                total: step.total,
+                                message: step.message.clone(),
+                            });
+                        });
+
+                        // Create session with progress
+                        match client.create_session_with_progress(request, Some(on_progress)).await {
+                            Ok(session) => {
+                                let _ = tx.send(CreateProgress::Done {
+                                    session_name: session.name,
+                                }).await;
+                            }
+                            Err(e) => {
+                                let _ = tx.send(CreateProgress::Error {
+                                    message: e.to_string(),
+                                }).await;
+                            }
+                        }
+                    });
+
+                    app.create_task = Some(task);
+                    app.loading_message = Some("Creating session...".to_string());
                 } else {
                     app.close_create_dialog();
                 }
@@ -187,7 +252,11 @@ async fn handle_directory_picker_key(app: &mut App, key: KeyEvent) -> anyhow::Re
             picker.select_next();
         }
 
-        // Select current directory (Ctrl+Enter)
+        // Select current directory (Tab or Ctrl+Enter)
+        KeyCode::Tab => {
+            app.create_dialog.repo_path = picker.current_dir.to_string_lossy().to_string();
+            picker.close();
+        }
         KeyCode::Enter if key.modifiers.contains(KeyModifiers::CONTROL) => {
             app.create_dialog.repo_path = picker.current_dir.to_string_lossy().to_string();
             picker.close();

@@ -5,9 +5,12 @@ use tokio::net::UnixStream;
 use crate::core::Session;
 use crate::utils::paths;
 
-use super::protocol::{CreateSessionRequest, Request, Response};
+use super::protocol::{CreateSessionRequest, ProgressStep, Request, Response};
 use super::traits::ApiClient;
 use super::types::ReconcileReportDto;
+
+/// Callback type for progress updates
+pub type ProgressCallback = Box<dyn Fn(ProgressStep) + Send + Sync>;
 
 /// Client for communicating with the multiplexer daemon
 pub struct Client {
@@ -86,7 +89,58 @@ impl Client {
         }
     }
 
-    /// Create a new session
+    /// Create a new session with optional progress callback
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if session creation fails or the request fails.
+    pub async fn create_session_with_progress(
+        &mut self,
+        request: CreateSessionRequest,
+        on_progress: Option<ProgressCallback>,
+    ) -> anyhow::Result<Session> {
+        // Send the request
+        let json = serde_json::to_string(&Request::CreateSession(request))?;
+        let (reader, mut writer) = self.stream.split();
+        writer.write_all(json.as_bytes()).await?;
+        writer.write_all(b"\n").await?;
+
+        // Read responses until we get a final one (Created or Error)
+        let mut reader = BufReader::new(reader);
+        let mut line = String::new();
+
+        let session_id = loop {
+            line.clear();
+            let bytes_read = reader.read_line(&mut line).await?;
+            if bytes_read == 0 {
+                anyhow::bail!("Connection closed unexpectedly during session creation");
+            }
+
+            let response: Response = serde_json::from_str(line.trim())?;
+
+            match response {
+                Response::Progress(step) => {
+                    if let Some(ref callback) = on_progress {
+                        callback(step);
+                    }
+                }
+                Response::Created { id } => {
+                    break id;
+                }
+                Response::Error { code, message } => {
+                    anyhow::bail!("[{code}] {message}");
+                }
+                _ => anyhow::bail!("Unexpected response"),
+            }
+        };
+
+        // Reconnect and fetch the session
+        let socket_path = paths::socket_path();
+        self.stream = UnixStream::connect(&socket_path).await?;
+        self.get_session(&session_id).await
+    }
+
+    /// Create a new session (no progress callback)
     ///
     /// # Errors
     ///
@@ -95,15 +149,7 @@ impl Client {
         &mut self,
         request: CreateSessionRequest,
     ) -> anyhow::Result<Session> {
-        let response = self.send_request(Request::CreateSession(request)).await?;
-
-        match response {
-            Response::Created { id } => self.get_session(&id).await,
-            Response::Error { code, message } => {
-                anyhow::bail!("[{code}] {message}")
-            }
-            _ => anyhow::bail!("Unexpected response"),
-        }
+        self.create_session_with_progress(request, None).await
     }
 
     /// Delete a session

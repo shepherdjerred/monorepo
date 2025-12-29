@@ -58,6 +58,18 @@ pub struct CreateSessionRequest {
     pub dangerous_skip_checks: bool,
 }
 
+/// Progress step during session creation
+#[typeshare]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ProgressStep {
+    /// Current step number (1-indexed)
+    pub step: u32,
+    /// Total number of steps
+    pub total: u32,
+    /// Description of current step
+    pub message: String,
+}
+
 /// Response types for the API
 #[typeshare]
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -68,6 +80,9 @@ pub enum Response {
 
     /// A single session
     Session(Session),
+
+    /// Progress update during long operation
+    Progress(ProgressStep),
 
     /// Session created successfully
     Created { id: String },

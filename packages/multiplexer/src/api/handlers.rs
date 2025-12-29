@@ -1,6 +1,9 @@
+use tokio::io::AsyncWriteExt;
+use tokio::net::unix::OwnedWriteHalf;
+
 use crate::core::SessionManager;
 
-use super::protocol::{Request, Response};
+use super::protocol::{CreateSessionRequest, ProgressStep, Request, Response};
 use super::types::ReconcileReportDto;
 
 /// Handle an API request
@@ -125,4 +128,96 @@ pub async fn handle_request(request: Request, manager: &SessionManager) -> Respo
             Response::Subscribed
         }
     }
+}
+
+/// Send a response line to the client
+async fn send_response(
+    writer: &mut OwnedWriteHalf,
+    response: &Response,
+) -> anyhow::Result<()> {
+    let json = serde_json::to_string(response)?;
+    writer.write_all(json.as_bytes()).await?;
+    writer.write_all(b"\n").await?;
+    writer.flush().await?;
+    Ok(())
+}
+
+/// Handle CreateSession with progress streaming
+pub async fn handle_create_session_with_progress(
+    req: CreateSessionRequest,
+    manager: &SessionManager,
+    writer: &mut OwnedWriteHalf,
+) -> anyhow::Result<()> {
+    let backend_name = match req.backend {
+        crate::core::BackendType::Zellij => "Zellij session",
+        crate::core::BackendType::Docker => "Docker container",
+    };
+
+    // Step 1: Creating git worktree
+    send_response(
+        writer,
+        &Response::Progress(ProgressStep {
+            step: 1,
+            total: 2,
+            message: "Creating git worktree...".to_string(),
+        }),
+    )
+    .await?;
+
+    // Actually create the session (this does both steps internally)
+    match manager
+        .create_session(
+            req.name.clone(),
+            req.repo_path.clone(),
+            req.initial_prompt,
+            req.backend,
+            req.agent,
+            req.dangerous_skip_checks,
+        )
+        .await
+    {
+        Ok(session) => {
+            // Step 2 was completed (we send it for completeness even though it's done)
+            send_response(
+                writer,
+                &Response::Progress(ProgressStep {
+                    step: 2,
+                    total: 2,
+                    message: format!("Creating {backend_name}..."),
+                }),
+            )
+            .await?;
+
+            tracing::info!(
+                id = %session.id,
+                name = %session.name,
+                "Session created"
+            );
+            send_response(
+                writer,
+                &Response::Created {
+                    id: session.id.to_string(),
+                },
+            )
+            .await?;
+        }
+        Err(e) => {
+            tracing::error!(
+                name = %req.name,
+                repo_path = %req.repo_path,
+                error = %e,
+                "Failed to create session"
+            );
+            send_response(
+                writer,
+                &Response::Error {
+                    code: "CREATE_ERROR".to_string(),
+                    message: e.to_string(),
+                },
+            )
+            .await?;
+        }
+    }
+
+    Ok(())
 }
