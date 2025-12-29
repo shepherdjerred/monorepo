@@ -18,6 +18,7 @@ use crossterm::{
 };
 use ratatui::{Terminal, backend::CrosstermBackend};
 
+use crate::core::BackendType;
 use crate::tui::app::{AppMode, CreateProgress};
 
 /// Run the TUI application
@@ -91,10 +92,22 @@ async fn run_main_loop(
 
             // Handle Enter in session list to attach
             if app.mode == AppMode::SessionList && key.code == KeyCode::Enter {
+                // Get backend type before borrowing for attach command
+                let backend_type = app.selected_session().map(|s| s.backend);
+
                 if let Ok(Some(command)) = app.get_attach_command().await {
                     // Suspend TUI and run attach command
                     disable_raw_mode()?;
                     execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
+
+                    // Show detach hint before attaching
+                    if let Some(backend) = backend_type {
+                        let detach_hint = match backend {
+                            BackendType::Zellij => "Ctrl+O, d",
+                            BackendType::Docker => "Ctrl+P, Ctrl+Q",
+                        };
+                        println!("Attaching... Detach with {detach_hint}");
+                    }
 
                     // Execute attach command
                     let status = std::process::Command::new(&command[0])

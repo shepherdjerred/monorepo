@@ -139,6 +139,13 @@ fn render_help(frame: &mut Frame, area: Rect) {
                 ("Esc", "Cancel"),
             ],
         ),
+        (
+            "While Attached",
+            vec![
+                ("Ctrl+O, d", "Detach (Zellij)"),
+                ("Ctrl+P, Ctrl+Q", "Detach (Docker)"),
+            ],
+        ),
     ];
 
     let mut items = Vec::new();
