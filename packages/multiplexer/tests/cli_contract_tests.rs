@@ -17,6 +17,7 @@ fn test_docker_run_arg_order() {
         "test prompt",
         1000,
         "/home/user",
+        None,
     );
 
     // First arg must be "run"
@@ -63,6 +64,7 @@ fn test_docker_env_vars() {
         "test prompt",
         1000,
         "/home/user",
+        None,
     );
 
     // Find all -e flags and their values
@@ -164,6 +166,7 @@ fn test_volume_mount_format() {
         "test prompt",
         1000,
         "/home/testuser",
+        None,
     );
 
     // Find all -v flags and their values
@@ -210,6 +213,7 @@ fn test_workspace_mount_destination() {
         "test prompt",
         1000,
         "/home/user",
+        None,
     );
 
     // Find workspace volume mount
@@ -240,6 +244,7 @@ fn test_claude_config_mount_destination() {
         "test prompt",
         1000,
         "/home/testuser",
+        None,
     );
 
     // Find .claude volume mount
@@ -278,6 +283,7 @@ fn test_final_command_format() {
         prompt,
         1000,
         "/home/user",
+        None,
     );
 
     let final_cmd = args.last().unwrap();

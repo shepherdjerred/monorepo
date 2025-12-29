@@ -51,6 +51,26 @@ async-trait = "0.1"
 nucleo-matcher = "0.3"
 fs2 = "0.4"
 
+# HTTP Proxy with TLS interception
+hudsucker = { version = "0.24", default-features = false, features = ["rcgen-ca", "rustls-client"] }
+
+# TLS
+rustls = "0.23"
+tokio-rustls = "0.26"
+rcgen = { version = "0.14", features = ["pem", "x509-parser"] }
+rustls-pemfile = "2"
+
+# gRPC (for Talos gateway)
+tonic = "0.12"
+prost = "0.13"
+
+# Config files
+toml = "0.8"
+serde_yaml = "0.9"
+
+# Time handling (for certificate generation)
+time = "0.3"
+
 [dev-dependencies]
 cargo-husky = { version = "1", features = ["precommit-hook", "run-cargo-fmt", "run-cargo-clippy"] }
 tempfile = "3"

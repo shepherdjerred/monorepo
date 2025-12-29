@@ -2,6 +2,7 @@ pub mod agents;
 pub mod api;
 pub mod backends;
 pub mod core;
+pub mod proxy;
 pub mod store;
 pub mod tui;
 pub mod utils;

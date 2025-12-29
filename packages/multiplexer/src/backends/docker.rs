@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use tokio::process::Command;
 
 use super::traits::ExecutionBackend;
@@ -7,14 +7,58 @@ use super::traits::ExecutionBackend;
 /// Docker container image to use
 const DOCKER_IMAGE: &str = "ghcr.io/shepherdjerred/dotfiles";
 
+/// Proxy configuration for Docker containers.
+#[derive(Debug, Clone, Default)]
+pub struct DockerProxyConfig {
+    /// Enable proxy support.
+    pub enabled: bool,
+    /// HTTP proxy port.
+    pub http_proxy_port: u16,
+    /// Path to the mux config directory (contains CA cert, kubeconfig, talosconfig).
+    pub mux_dir: PathBuf,
+}
+
+impl DockerProxyConfig {
+    /// Create a new proxy configuration.
+    #[must_use]
+    pub fn new(http_proxy_port: u16, mux_dir: PathBuf) -> Self {
+        Self {
+            enabled: true,
+            http_proxy_port,
+            mux_dir,
+        }
+    }
+
+    /// Create a disabled proxy configuration.
+    #[must_use]
+    pub fn disabled() -> Self {
+        Self::default()
+    }
+}
+
 /// Docker container backend
-pub struct DockerBackend;
+pub struct DockerBackend {
+    /// Proxy configuration.
+    proxy_config: DockerProxyConfig,
+}
 
 impl DockerBackend {
-    /// Create a new Docker backend
+    /// Create a new Docker backend without proxy support.
     #[must_use]
     pub const fn new() -> Self {
-        Self
+        Self {
+            proxy_config: DockerProxyConfig {
+                enabled: false,
+                http_proxy_port: 0,
+                mux_dir: PathBuf::new(),
+            },
+        }
+    }
+
+    /// Create a new Docker backend with proxy support.
+    #[must_use]
+    pub fn with_proxy(proxy_config: DockerProxyConfig) -> Self {
+        Self { proxy_config }
     }
 
     /// Check if a container is running
@@ -46,12 +90,13 @@ impl DockerBackend {
         initial_prompt: &str,
         uid: u32,
         home_dir: &str,
+        proxy_config: Option<&DockerProxyConfig>,
     ) -> Vec<String> {
         let container_name = format!("mux-{name}");
         let claude_config = format!("{home_dir}/.claude");
         let escaped_prompt = initial_prompt.replace('\'', "'\\''");
 
-        vec![
+        let mut args = vec![
             "run".to_string(),
             "-dit".to_string(),
             "--name".to_string(),
@@ -68,11 +113,71 @@ impl DockerBackend {
             "TERM=xterm-256color".to_string(),
             "-e".to_string(),
             "HOME=/workspace".to_string(),
+        ];
+
+        // Add proxy configuration if enabled
+        if let Some(proxy) = proxy_config {
+            if proxy.enabled {
+                let port = proxy.http_proxy_port;
+                let mux_dir = &proxy.mux_dir;
+
+                // On Linux, host.docker.internal doesn't resolve by default
+                // This flag makes it work (ignored on Docker Desktop for Mac/Windows)
+                #[cfg(target_os = "linux")]
+                args.extend([
+                    "--add-host".to_string(),
+                    "host.docker.internal:host-gateway".to_string(),
+                ]);
+
+                // Proxy environment variables
+                args.extend([
+                    "-e".to_string(),
+                    format!("HTTP_PROXY=http://host.docker.internal:{port}"),
+                    "-e".to_string(),
+                    format!("HTTPS_PROXY=http://host.docker.internal:{port}"),
+                    "-e".to_string(),
+                    "NO_PROXY=localhost,127.0.0.1".to_string(),
+                ]);
+
+                // SSL/TLS environment variables for CA trust
+                args.extend([
+                    "-e".to_string(),
+                    "NODE_EXTRA_CA_CERTS=/etc/mux/proxy-ca.pem".to_string(),
+                    "-e".to_string(),
+                    "SSL_CERT_FILE=/etc/mux/proxy-ca.pem".to_string(),
+                    "-e".to_string(),
+                    "REQUESTS_CA_BUNDLE=/etc/mux/proxy-ca.pem".to_string(),
+                ]);
+
+                // Kubernetes/Talos config paths
+                args.extend([
+                    "-e".to_string(),
+                    "KUBECONFIG=/etc/mux/kube/config".to_string(),
+                    "-e".to_string(),
+                    "TALOSCONFIG=/etc/mux/talos/config".to_string(),
+                ]);
+
+                // Volume mounts for proxy configs (read-only)
+                args.extend([
+                    "-v".to_string(),
+                    format!("{}:/etc/mux/proxy-ca.pem:ro", mux_dir.join("proxy-ca.pem").display()),
+                    "-v".to_string(),
+                    format!("{}:/etc/mux/kube:ro", mux_dir.join("kube").display()),
+                    "-v".to_string(),
+                    format!("{}:/etc/mux/talos:ro", mux_dir.join("talos").display()),
+                ]);
+            }
+        }
+
+        // Add image and command
+        args.extend([
             DOCKER_IMAGE.to_string(),
             "bash".to_string(),
             "-c".to_string(),
             format!("claude --dangerously-skip-permissions '{escaped_prompt}'"),
-        ]
+        ]);
+
+        args
     }
 
     /// Build the attach command arguments (exposed for testing)
@@ -113,7 +218,13 @@ impl ExecutionBackend for DockerBackend {
         let uid = std::process::id();
         let home_dir = std::env::var("HOME").unwrap_or_else(|_| "/tmp".to_string());
 
-        let args = Self::build_create_args(name, workdir, initial_prompt, uid, &home_dir);
+        let proxy_config = if self.proxy_config.enabled {
+            Some(&self.proxy_config)
+        } else {
+            None
+        };
+
+        let args = Self::build_create_args(name, workdir, initial_prompt, uid, &home_dir, proxy_config);
         let output = Command::new("docker")
             .args(&args)
             .output()
@@ -252,6 +363,7 @@ mod tests {
             "test prompt",
             1000,
             "/home/user",
+            None,
         );
 
         // Must have -dit for interactive TTY sessions
@@ -276,6 +388,7 @@ mod tests {
             "test prompt",
             uid,
             "/home/user",
+            None,
         );
 
         // Find --user flag and verify it's followed by the UID
@@ -298,6 +411,7 @@ mod tests {
             "test prompt",
             1000,
             "/home/user",
+            None,
         );
 
         // Look for volume mount containing .claude
@@ -317,6 +431,7 @@ mod tests {
             "test prompt",
             1000,
             "/home/user",
+            None,
         );
 
         // Find the .claude volume mount
@@ -378,6 +493,7 @@ mod tests {
             prompt_with_quotes,
             1000,
             "/home/user",
+            None,
         );
 
         // Find the command argument (last one containing the prompt)
@@ -399,6 +515,7 @@ mod tests {
             "test prompt",
             1000,
             "/home/user",
+            None,
         );
 
         // Find --name flag and verify the container name
@@ -411,5 +528,71 @@ mod tests {
             "Container name should start with 'mux-': {container_name}"
         );
         assert_eq!(container_name, "mux-my-session");
+    }
+
+    /// Test that proxy config adds expected environment variables
+    #[test]
+    fn test_proxy_config_adds_env_vars() {
+        let proxy_config = DockerProxyConfig::new(18080, PathBuf::from("/home/user/.mux"));
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            &PathBuf::from("/workspace"),
+            "test prompt",
+            1000,
+            "/home/user",
+            Some(&proxy_config),
+        );
+
+        // Should have HTTPS_PROXY
+        let has_https_proxy = args.iter().any(|a| a.contains("HTTPS_PROXY"));
+        assert!(has_https_proxy, "Expected HTTPS_PROXY env var, got: {args:?}");
+
+        // Should have SSL_CERT_FILE
+        let has_ssl_cert = args.iter().any(|a| a.contains("SSL_CERT_FILE"));
+        assert!(has_ssl_cert, "Expected SSL_CERT_FILE env var, got: {args:?}");
+
+        // Should have KUBECONFIG
+        let has_kubeconfig = args.iter().any(|a| a.contains("KUBECONFIG"));
+        assert!(has_kubeconfig, "Expected KUBECONFIG env var, got: {args:?}");
+    }
+
+    /// Test that proxy config adds volume mounts for configs
+    #[test]
+    fn test_proxy_config_adds_volume_mounts() {
+        let proxy_config = DockerProxyConfig::new(18080, PathBuf::from("/home/user/.mux"));
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            &PathBuf::from("/workspace"),
+            "test prompt",
+            1000,
+            "/home/user",
+            Some(&proxy_config),
+        );
+
+        // Should have proxy-ca.pem mount
+        let has_ca_mount = args.iter().any(|a| a.contains("proxy-ca.pem"));
+        assert!(has_ca_mount, "Expected proxy-ca.pem mount, got: {args:?}");
+
+        // Should have kube config mount
+        let has_kube_mount = args.iter().any(|a| a.contains("/etc/mux/kube:ro"));
+        assert!(has_kube_mount, "Expected kube config mount, got: {args:?}");
+    }
+
+    /// Test that disabled proxy config doesn't add env vars
+    #[test]
+    fn test_disabled_proxy_config() {
+        let proxy_config = DockerProxyConfig::disabled();
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            &PathBuf::from("/workspace"),
+            "test prompt",
+            1000,
+            "/home/user",
+            Some(&proxy_config),
+        );
+
+        // Should NOT have HTTPS_PROXY
+        let has_https_proxy = args.iter().any(|a| a.contains("HTTPS_PROXY"));
+        assert!(!has_https_proxy, "Disabled proxy should not add HTTPS_PROXY");
     }
 }

@@ -75,6 +75,26 @@ impl SessionManager {
         .await
     }
 
+    /// Create a new session manager with a custom Docker backend
+    ///
+    /// This is useful for providing a DockerBackend configured with proxy support.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the store cannot be read.
+    pub async fn with_docker_backend(
+        store: Arc<dyn Store>,
+        docker: DockerBackend,
+    ) -> anyhow::Result<Self> {
+        Self::new(
+            store,
+            Arc::new(GitBackend::new()),
+            Arc::new(ZellijBackend::new()),
+            Arc::new(docker),
+        )
+        .await
+    }
+
     /// List all sessions
     pub async fn list_sessions(&self) -> Vec<Session> {
         self.sessions.read().await.clone()

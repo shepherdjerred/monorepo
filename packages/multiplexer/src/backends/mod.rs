@@ -4,7 +4,7 @@ pub mod mock;
 pub mod traits;
 pub mod zellij;
 
-pub use docker::DockerBackend;
+pub use docker::{DockerBackend, DockerProxyConfig};
 pub use git::GitBackend;
 pub use mock::{MockExecutionBackend, MockGitBackend};
 pub use traits::{ExecutionBackend, GitOperations};
