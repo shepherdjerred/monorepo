@@ -52,7 +52,7 @@ async fn test_git_worktree_create_and_delete() {
     );
 
     // Delete worktree
-    git.delete_worktree(&worktree_path)
+    git.delete_worktree(temp_repo.path(), &worktree_path)
         .await
         .expect("Failed to delete worktree");
 
@@ -91,7 +91,7 @@ async fn test_git_worktree_with_modifications() {
     assert!(new_file.exists(), "New file should exist in worktree");
 
     // Delete worktree (should handle uncommitted changes)
-    git.delete_worktree(&worktree_path)
+    git.delete_worktree(temp_repo.path(), &worktree_path)
         .await
         .expect("Failed to delete worktree with modifications");
 
@@ -140,9 +140,9 @@ async fn test_multiple_worktrees() {
     assert_eq!(git.get_branch(&worktree3).await.unwrap(), "branch-3");
 
     // Delete all
-    git.delete_worktree(&worktree1).await.unwrap();
-    git.delete_worktree(&worktree2).await.unwrap();
-    git.delete_worktree(&worktree3).await.unwrap();
+    git.delete_worktree(temp_repo.path(), &worktree1).await.unwrap();
+    git.delete_worktree(temp_repo.path(), &worktree2).await.unwrap();
+    git.delete_worktree(temp_repo.path(), &worktree3).await.unwrap();
 
     assert!(!worktree1.exists());
     assert!(!worktree2.exists());
@@ -181,7 +181,7 @@ async fn test_worktree_exists_check() {
         "Created worktree should exist"
     );
 
-    git.delete_worktree(&worktree_path).await.unwrap();
+    git.delete_worktree(temp_repo.path(), &worktree_path).await.unwrap();
 
     assert!(
         !git.worktree_exists(&worktree_path),
@@ -196,12 +196,16 @@ async fn test_worktree_delete_nonexistent() {
         return;
     }
 
+    // Create a temp git repository (needed for git worktree command)
+    let temp_repo = TempDir::new().expect("Failed to create temp repo dir");
+    common::init_git_repo(temp_repo.path());
+
     let git = GitBackend::new();
 
     // Deleting a non-existent worktree should not panic
     // (it logs a warning but doesn't fail)
     let nonexistent = std::path::Path::new("/tmp/nonexistent-worktree-path-xyz");
-    let result = git.delete_worktree(nonexistent).await;
+    let result = git.delete_worktree(temp_repo.path(), nonexistent).await;
 
     // Should not error (it handles missing worktrees gracefully)
     assert!(result.is_ok(), "Deleting non-existent worktree should not fail");

@@ -6,16 +6,52 @@ const CHARSET: &[u8] = b"abcdefghijklmnopqrstuvwxyz0123456789";
 /// Length of the random suffix
 const SUFFIX_LENGTH: usize = 4;
 
+/// Sanitize a string to be valid as a git branch name.
+///
+/// Git branch names cannot contain:
+/// - Spaces, ~, ^, :, ?, *, [, \, @{
+/// - Two consecutive dots (..)
+/// - Leading or trailing dots, slashes, or hyphens
+///
+/// See `git check-ref-format` for full rules.
+#[must_use]
+pub fn sanitize_branch_name(name: &str) -> String {
+    let sanitized: String = name
+        .chars()
+        .map(|c| match c {
+            ' ' | '~' | '^' | ':' | '?' | '*' | '[' | '\\' | '@' => '-',
+            c if c.is_ascii_alphanumeric() || c == '-' || c == '_' || c == '/' || c == '.' => c,
+            _ => '-',
+        })
+        .collect();
+
+    // Replace consecutive dots with a single hyphen
+    let sanitized = sanitized.replace("..", "-");
+
+    // Remove leading/trailing special characters
+    sanitized
+        .trim_matches(|c| c == '-' || c == '.' || c == '/')
+        .to_string()
+}
+
 /// Generate a session name with a random suffix
+///
+/// The base name is sanitized to be a valid git branch name before
+/// the suffix is appended.
 ///
 /// # Example
 /// ```
 /// use multiplexer::utils::generate_session_name;
 /// let name = generate_session_name("fix-bug");
 /// // Returns something like "fix-bug-a3x9"
+///
+/// // Names with spaces are sanitized:
+/// let name = generate_session_name("my feature");
+/// // Returns something like "my-feature-b2k7"
 /// ```
 #[must_use]
 pub fn generate_session_name(base_name: &str) -> String {
+    let sanitized = sanitize_branch_name(base_name);
     let mut rng = rand::thread_rng();
     let suffix: String = (0..SUFFIX_LENGTH)
         .map(|_| {
@@ -24,7 +60,7 @@ pub fn generate_session_name(base_name: &str) -> String {
         })
         .collect();
 
-    format!("{base_name}-{suffix}")
+    format!("{sanitized}-{suffix}")
 }
 
 #[cfg(test)]
@@ -44,5 +80,54 @@ mod tests {
         let name2 = generate_session_name("test");
         // Should be different (with very high probability)
         assert_ne!(name1, name2);
+    }
+
+    #[test]
+    fn test_sanitize_spaces() {
+        assert_eq!(sanitize_branch_name("my feature"), "my-feature");
+        assert_eq!(sanitize_branch_name("mux automatic daemon"), "mux-automatic-daemon");
+    }
+
+    #[test]
+    fn test_sanitize_special_chars() {
+        assert_eq!(sanitize_branch_name("test~branch"), "test-branch");
+        assert_eq!(sanitize_branch_name("test^branch"), "test-branch");
+        assert_eq!(sanitize_branch_name("test:branch"), "test-branch");
+        assert_eq!(sanitize_branch_name("test?branch"), "test-branch");
+        assert_eq!(sanitize_branch_name("test*branch"), "test-branch");
+        assert_eq!(sanitize_branch_name("test[branch"), "test-branch");
+        assert_eq!(sanitize_branch_name("test\\branch"), "test-branch");
+        assert_eq!(sanitize_branch_name("test@branch"), "test-branch");
+    }
+
+    #[test]
+    fn test_sanitize_consecutive_dots() {
+        assert_eq!(sanitize_branch_name("test..branch"), "test-branch");
+        // test...branch -> test + ".." + ".branch" -> test + "-" + ".branch" = test-.branch
+        assert_eq!(sanitize_branch_name("test...branch"), "test-.branch");
+    }
+
+    #[test]
+    fn test_sanitize_leading_trailing() {
+        assert_eq!(sanitize_branch_name("-test-"), "test");
+        assert_eq!(sanitize_branch_name(".test."), "test");
+        assert_eq!(sanitize_branch_name("/test/"), "test");
+        assert_eq!(sanitize_branch_name("---test---"), "test");
+    }
+
+    #[test]
+    fn test_sanitize_preserves_valid() {
+        assert_eq!(sanitize_branch_name("valid-name"), "valid-name");
+        assert_eq!(sanitize_branch_name("valid_name"), "valid_name");
+        assert_eq!(sanitize_branch_name("feature/branch"), "feature/branch");
+        assert_eq!(sanitize_branch_name("v1.2.3"), "v1.2.3");
+    }
+
+    #[test]
+    fn test_generate_session_name_with_spaces() {
+        let name = generate_session_name("mux automatic daemon");
+        assert!(name.starts_with("mux-automatic-daemon-"));
+        // Verify no spaces in generated name
+        assert!(!name.contains(' '));
     }
 }

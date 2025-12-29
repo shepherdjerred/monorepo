@@ -266,7 +266,7 @@ impl SessionManager {
         }
 
         // Delete git worktree
-        let _ = self.git.delete_worktree(&session.worktree_path).await;
+        let _ = self.git.delete_worktree(&session.repo_path, &session.worktree_path).await;
 
         // Record deletion event
         let event = Event::new(session.id, EventType::SessionDeleted { reason: None });
