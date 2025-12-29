@@ -3,6 +3,7 @@ use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::{UnixListener, UnixStream};
 use tokio::sync::Mutex;
 
+use crate::backends::{DockerBackend, DockerProxyConfig};
 use crate::core::SessionManager;
 use crate::proxy::{ProxyConfig, ProxyManager};
 use crate::store::SqliteStore;
@@ -55,8 +56,19 @@ pub async fn run_daemon_with_options(enable_proxy: bool) -> anyhow::Result<()> {
         None
     };
 
-    // Initialize the session manager
-    let manager = Arc::new(SessionManager::with_defaults(store).await?);
+    // Initialize the session manager with proxy support if available
+    let manager = if let Some(ref pm) = proxy_manager {
+        let pm_guard = pm.lock().await;
+        let docker_proxy_config = DockerProxyConfig::new(
+            pm_guard.http_proxy_port(),
+            pm_guard.mux_dir().clone(),
+        );
+        drop(pm_guard);
+        let docker_backend = DockerBackend::with_proxy(docker_proxy_config);
+        Arc::new(SessionManager::with_docker_backend(store, docker_backend).await?)
+    } else {
+        Arc::new(SessionManager::with_defaults(store).await?)
+    };
 
     // Create the socket path
     let socket_path = paths::socket_path();

@@ -122,7 +122,7 @@ impl HttpHandler for AuthInjector {
                 }
             }
 
-            // Log to audit (best effort)
+            // Log to audit
             let entry = AuditEntry {
                 timestamp: Utc::now(),
                 service: host,
@@ -132,7 +132,9 @@ impl HttpHandler for AuthInjector {
                 response_code: None, // Will be filled in handle_response if needed
                 duration_ms: start.elapsed().as_millis() as u64,
             };
-            let _ = audit_logger.log(&entry);
+            if let Err(e) = audit_logger.log(&entry) {
+                tracing::warn!("Failed to write audit log entry: {}", e);
+            }
 
             RequestOrResponse::Request(req)
         }

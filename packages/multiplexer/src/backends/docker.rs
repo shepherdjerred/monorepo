@@ -121,6 +121,14 @@ impl DockerBackend {
                 let port = proxy.http_proxy_port;
                 let mux_dir = &proxy.mux_dir;
 
+                // On Linux, host.docker.internal doesn't resolve by default
+                // This flag makes it work (ignored on Docker Desktop for Mac/Windows)
+                #[cfg(target_os = "linux")]
+                args.extend([
+                    "--add-host".to_string(),
+                    "host.docker.internal:host-gateway".to_string(),
+                ]);
+
                 // Proxy environment variables
                 args.extend([
                     "-e".to_string(),
