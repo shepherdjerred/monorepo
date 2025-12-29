@@ -58,8 +58,8 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         inner[1],
     );
 
-    // Repo path field
-    render_text_field(
+    // Repo path field (clickable to open directory picker)
+    render_repo_path_field(
         frame,
         "Repository",
         &dialog.repo_path,
@@ -128,6 +128,44 @@ fn render_text_field(frame: &mut Frame, label: &str, value: &str, focused: bool,
     };
 
     let paragraph = Paragraph::new(display_value).block(block);
+    frame.render_widget(paragraph, area);
+}
+
+fn render_repo_path_field(
+    frame: &mut Frame,
+    label: &str,
+    value: &str,
+    focused: bool,
+    area: Rect,
+) {
+    let style = if focused {
+        Style::default().fg(Color::Yellow)
+    } else {
+        Style::default()
+    };
+
+    let block = Block::default()
+        .title(format!(" {label} "))
+        .borders(Borders::ALL)
+        .border_style(style);
+
+    let display_value = if value.is_empty() {
+        if focused {
+            "(Press Enter to browse)".to_string()
+        } else {
+            "(no directory)".to_string()
+        }
+    } else {
+        value.to_string()
+    };
+
+    let value_style = if value.is_empty() {
+        Style::default().fg(Color::DarkGray)
+    } else {
+        Style::default()
+    };
+
+    let paragraph = Paragraph::new(Span::styled(display_value, value_style)).block(block);
     frame.render_widget(paragraph, area);
 }
 

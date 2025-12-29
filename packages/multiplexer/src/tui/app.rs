@@ -263,6 +263,17 @@ impl CreateDialogState {
     pub fn reset(&mut self) {
         *self = Self::new();
     }
+
+    /// Toggle between Zellij and Docker backends, auto-adjusting skip_checks
+    pub fn toggle_backend(&mut self) {
+        let was_zellij = self.backend_zellij;
+        self.backend_zellij = !was_zellij;
+
+        // Auto-toggle skip_checks based on backend:
+        // Docker benefits from skipping checks (isolated environment)
+        // Zellij runs locally so checks are more important
+        self.skip_checks = !self.backend_zellij;
+    }
 }
 
 /// Main application state
