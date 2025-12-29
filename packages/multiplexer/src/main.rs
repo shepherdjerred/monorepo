@@ -129,7 +129,7 @@ async fn main() -> anyhow::Result<()> {
             };
 
             let mut client = api::client::Client::connect().await?;
-            let session = client
+            let (session, warnings) = client
                 .create_session(api::protocol::CreateSessionRequest {
                     name,
                     repo_path: repo,
@@ -141,6 +141,12 @@ async fn main() -> anyhow::Result<()> {
                 .await?;
 
             println!("Created session: {}", &session.name);
+
+            if let Some(warnings) = warnings {
+                for warning in warnings {
+                    eprintln!("Warning: {warning}");
+                }
+            }
         }
         Commands::List { archived } => {
             let mut client = api::client::Client::connect().await?;

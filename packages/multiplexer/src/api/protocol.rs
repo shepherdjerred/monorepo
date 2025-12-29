@@ -85,7 +85,10 @@ pub enum Response {
     Progress(ProgressStep),
 
     /// Session created successfully
-    Created { id: String },
+    Created {
+        id: String,
+        warnings: Option<Vec<String>>,
+    },
 
     /// Session deleted successfully
     Deleted,

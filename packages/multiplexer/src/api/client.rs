@@ -108,11 +108,13 @@ impl Client {
     /// # Errors
     ///
     /// Returns an error if session creation fails or the request fails.
+    ///
+    /// Returns the created session and optionally a list of warnings.
     pub async fn create_session_with_progress(
         &mut self,
         request: CreateSessionRequest,
         on_progress: Option<ProgressCallback>,
-    ) -> anyhow::Result<Session> {
+    ) -> anyhow::Result<(Session, Option<Vec<String>>)> {
         // Send the request
         let json = serde_json::to_string(&Request::CreateSession(request))?;
         let (reader, mut writer) = self.stream.split();
@@ -123,7 +125,7 @@ impl Client {
         let mut reader = BufReader::new(reader);
         let mut line = String::new();
 
-        let session_id = loop {
+        let (session_id, warnings) = loop {
             line.clear();
             let bytes_read = reader.read_line(&mut line).await?;
             if bytes_read == 0 {
@@ -138,8 +140,8 @@ impl Client {
                         callback(step);
                     }
                 }
-                Response::Created { id } => {
-                    break id;
+                Response::Created { id, warnings } => {
+                    break (id, warnings);
                 }
                 Response::Error { code, message } => {
                     anyhow::bail!("[{code}] {message}");
@@ -151,7 +153,8 @@ impl Client {
         // Reconnect and fetch the session
         let socket_path = paths::socket_path();
         self.stream = UnixStream::connect(&socket_path).await?;
-        self.get_session(&session_id).await
+        let session = self.get_session(&session_id).await?;
+        Ok((session, warnings))
     }
 
     /// Create a new session (no progress callback)
@@ -159,10 +162,12 @@ impl Client {
     /// # Errors
     ///
     /// Returns an error if session creation fails or the request fails.
+    ///
+    /// Returns the created session and optionally a list of warnings.
     pub async fn create_session(
         &mut self,
         request: CreateSessionRequest,
-    ) -> anyhow::Result<Session> {
+    ) -> anyhow::Result<(Session, Option<Vec<String>>)> {
         self.create_session_with_progress(request, None).await
     }
 
@@ -254,7 +259,7 @@ impl ApiClient for Client {
     async fn create_session(
         &mut self,
         request: CreateSessionRequest,
-    ) -> anyhow::Result<Session> {
+    ) -> anyhow::Result<(Session, Option<Vec<String>>)> {
         Client::create_session(self, request).await
     }
 

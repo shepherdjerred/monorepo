@@ -70,7 +70,7 @@ impl GitOperations for MockGitBackend {
         _repo_path: &Path,
         worktree_path: &Path,
         _branch_name: &str,
-    ) -> anyhow::Result<()> {
+    ) -> anyhow::Result<Option<String>> {
         if self.should_fail() {
             let msg = self.error_message.read().await.clone();
             anyhow::bail!("{}", msg);
@@ -82,7 +82,7 @@ impl GitOperations for MockGitBackend {
         }
 
         self.worktrees.write().await.insert(worktree_path.to_path_buf());
-        Ok(())
+        Ok(None)
     }
 
     async fn delete_worktree(&self, _repo_path: &Path, worktree_path: &Path) -> anyhow::Result<()> {
