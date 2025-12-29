@@ -25,7 +25,7 @@ claude --plugin-dir ./packages/claude-plugin
 This plugin includes:
 
 - **Slash Command**: `/jerred:hype` - Get encouraging messages for your coding session
-- **16 Specialized Agents** - Automatically activate to help with specific tools and workflows
+- **19 Specialized Agents** - Automatically activate to help with specific tools and workflows
 
 ### Agents
 
@@ -36,6 +36,10 @@ This plugin includes:
 #### Kubernetes Ecosystem
 - **Kubernetes Helper** (`kubectl-helper`) - Cluster troubleshooting, resource management, and debugging with `kubectl`
 - **Talos Helper** (`talos-helper`) - Talos Linux cluster administration with `talosctl`
+- **Helm Helper** (`helm-helper`) - Helm chart management, OCI registries, templating, and releases
+
+#### Container Tools
+- **Docker Helper** (`docker-helper`) - Docker CLI operations, BuildKit, Compose, Scout security, and multi-platform builds
 
 #### CI/CD & GitOps
 - **Dagger Helper** (`dagger-helper`) - CI/CD pipeline development with Dagger SDK
@@ -54,6 +58,9 @@ This plugin includes:
 - **Type-Safe Development** (`type-safe-development`) - Zod-first validation patterns and strict TypeScript
 - **Bun Runtime Best Practices** (`bun-runtime-best-practices`) - Modern Bun APIs over Node.js equivalents
 - **Modern CLI Tools** (`modern-cli-tools`) - Modern Unix command alternatives (fd, rg, exa, bat, etc.)
+
+#### Terminal & Productivity
+- **Zellij Helper** (`zellij-helper`) - Zellij terminal multiplexer with sessions, layouts, panes, and plugins
 
 #### Workflow Automation
 - **PR Workflow Automation** (`pr-workflow-automation`) - Automated PR creation with CI monitoring and retry logic
@@ -86,6 +93,10 @@ Agents automatically activate when you work with their respective tools:
 **Kubernetes Ecosystem**
 - **Kubernetes** - Activates when you: work with K8s, mention `kubectl`, pods, deployments, errors
 - **Talos** - Activates when you mention: Talos, `talosctl`, cluster operations
+- **Helm** - Activates when you mention: Helm, charts, releases, `helm` commands, values files
+
+**Container Tools**
+- **Docker** - Activates when you mention: Docker, containers, images, Dockerfile, `docker` commands, compose
 
 **CI/CD & GitOps**
 - **Dagger** - Activates when you: work with Dagger, mention CI/CD pipelines, `dagger` commands
@@ -104,6 +115,9 @@ Agents automatically activate when you work with their respective tools:
 - **Type-Safe Development** - Activates when you: write TypeScript code, encounter type errors, need runtime validation, or mention Zod
 - **Bun Runtime** - Activates when you: use file I/O, environment variables, spawn processes, or mention Node.js APIs
 - **Modern CLI Tools** - Activates when: Claude is about to use legacy tools (find, grep, ls, cat) OR you mention fd, rg, eza, bat
+
+**Terminal & Productivity**
+- **Zellij** - Activates when you mention: Zellij, terminal multiplexer, sessions, panes, layouts, `zellij` commands
 
 **Workflow Automation**
 - **PR Workflow** - Activates when you: create PRs, need CI monitoring, mention GitHub Actions workflows
@@ -156,6 +170,9 @@ packages/claude-plugin/
 │   # Kubernetes Ecosystem
 │   ├── kubectl-helper.md                # Kubernetes helper
 │   ├── talos-helper.md                  # Talos Linux helper
+│   ├── helm-helper.md                   # Helm chart management
+│   # Container Tools
+│   ├── docker-helper.md                 # Docker CLI and Compose
 │   # CI/CD & GitOps
 │   ├── dagger-helper.md                 # Dagger CI/CD helper
 │   ├── argocd-helper.md                 # ArgoCD GitOps helper
@@ -170,6 +187,8 @@ packages/claude-plugin/
 │   ├── type-safe-development.md         # Zod-first validation patterns
 │   ├── bun-runtime-best-practices.md    # Bun APIs over Node.js
 │   ├── modern-cli-tools.md              # Modern Unix alternatives
+│   # Terminal & Productivity
+│   ├── zellij-helper.md                 # Zellij terminal multiplexer
 │   # Workflow Automation
 │   ├── pr-workflow-automation.md        # Automated PR with CI monitoring
 │   └── worktree-workflow.md             # Git worktree development
@@ -198,6 +217,21 @@ brew install dagger/tap/dagger  # macOS
 **kubectl**
 ```bash
 brew install kubectl  # macOS
+```
+
+**Helm**
+```bash
+brew install helm  # macOS
+```
+
+**Docker**
+```bash
+brew install --cask docker  # macOS (Docker Desktop)
+```
+
+**Zellij**
+```bash
+brew install zellij  # macOS
 ```
 
 **Talos CLI**
