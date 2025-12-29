@@ -25,7 +25,7 @@ claude --plugin-dir ./packages/claude-plugin
 This plugin includes:
 
 - **Slash Command**: `/jerred:hype` - Get encouraging messages for your coding session
-- **19 Specialized Agents** - Automatically activate to help with specific tools and workflows
+- **29 Specialized Agents** - Automatically activate to help with specific tools and workflows
 
 ### Agents
 
@@ -65,6 +65,18 @@ This plugin includes:
 #### Workflow Automation
 - **PR Workflow Automation** (`pr-workflow-automation`) - Automated PR creation with CI monitoring and retry logic
 - **Worktree Workflow** (`worktree-workflow`) - Git worktree-based development for isolated changes
+
+#### Development Frameworks & Tools
+- **Prisma Helper** (`prisma-helper`) - Prisma ORM schema design, migrations, queries, and transactions
+- **Mastra Helper** (`mastra-helper`) - Mastra AI agent framework with tools, workflows, and MCP integration
+- **Discord Bot Helper** (`discord-bot-helper`) - Discord.js v14 slash commands, events, and components
+- **ESLint Rule Development** (`eslint-rule-dev`) - Custom ESLint rules with AST traversal and RuleTester
+- **Bun Workspaces** (`bun-workspaces`) - Bun monorepo management with workspaces and filtering
+- **Hono Helper** (`hono-helper`) - Hono web framework routing, middleware, and Zod validation
+- **Vite + React Helper** (`vite-react-helper`) - Vite build config with modern React patterns
+- **Zod Patterns** (`zod-patterns`) - Zod v4 schemas, transforms, refinements, and error handling
+- **Bun Test Patterns** (`bun-test-patterns`) - Bun test runner with mocking, snapshots, and coverage
+- **OpenTelemetry** (`otel-observability`) - OpenTelemetry tracing, metrics, and context propagation
 
 ## How to Use
 
@@ -123,6 +135,18 @@ Agents automatically activate when you work with their respective tools:
 - **PR Workflow** - Activates when you: create PRs, need CI monitoring, mention GitHub Actions workflows
 - **Worktree Workflow** - Activates when you: start new work, switch contexts, need parallel development, or mention Git worktrees
 
+**Development Frameworks & Tools**
+- **Prisma** - Activates when you: work with Prisma schemas, migrations, or database queries
+- **Mastra** - Activates when you: build AI agents, use Mastra tools/workflows, or MCP integration
+- **Discord Bot** - Activates when you: build Discord bots, use discord.js, slash commands, or events
+- **ESLint Rules** - Activates when you: write custom ESLint rules, AST traversal, or RuleTester
+- **Bun Workspaces** - Activates when you: configure Bun monorepos, workspace filtering, or catalogs
+- **Hono** - Activates when you: build APIs with Hono, routing, middleware, or Zod validators
+- **Vite + React** - Activates when you: configure Vite, React hooks, state management, or builds
+- **Zod Patterns** - Activates when you: design Zod schemas, transforms, refinements, or error handling
+- **Bun Test** - Activates when you: write Bun tests, mocking, snapshots, or coverage
+- **OpenTelemetry** - Activates when you: add tracing, metrics, spans, or observability
+
 ### Example Usage
 
 ```
@@ -152,6 +176,27 @@ You: "Create a PR and wait for CI to pass"
 
 You: "I need to start working on a new feature"
 → Worktree Workflow agent guides you through git worktree setup
+
+You: "How do I add a relation in Prisma?"
+→ Prisma Helper activates with schema and query patterns
+
+You: "Help me create a Discord bot with slash commands"
+→ Discord Bot Helper activates with discord.js v14 patterns
+
+You: "I need to write a custom ESLint rule"
+→ ESLint Rule Development agent guides AST traversal and testing
+
+You: "How do I set up Bun workspaces?"
+→ Bun Workspaces agent shows monorepo configuration
+
+You: "Create an API with Hono and Zod validation"
+→ Hono Helper activates with routing and middleware patterns
+
+You: "How do I mock in Bun tests?"
+→ Bun Test Patterns agent shows mocking and spy patterns
+
+You: "Add OpenTelemetry tracing to my app"
+→ OpenTelemetry agent guides instrumentation setup
 ```
 
 ## Plugin Structure
@@ -191,7 +236,18 @@ packages/claude-plugin/
 │   ├── zellij-helper.md                 # Zellij terminal multiplexer
 │   # Workflow Automation
 │   ├── pr-workflow-automation.md        # Automated PR with CI monitoring
-│   └── worktree-workflow.md             # Git worktree development
+│   ├── worktree-workflow.md             # Git worktree development
+│   # Development Frameworks & Tools
+│   ├── prisma-helper.md                 # Prisma ORM helper
+│   ├── mastra-helper.md                 # Mastra AI framework helper
+│   ├── discord-bot-helper.md            # Discord.js bot helper
+│   ├── eslint-rule-dev.md               # ESLint rule development
+│   ├── bun-workspaces.md                # Bun monorepo workspaces
+│   ├── hono-helper.md                   # Hono web framework helper
+│   ├── vite-react-helper.md             # Vite + React helper
+│   ├── zod-patterns.md                  # Zod schema patterns
+│   ├── bun-test-patterns.md             # Bun test runner patterns
+│   └── otel-observability.md            # OpenTelemetry observability
 └── README.md                            # This file
 ```
 
