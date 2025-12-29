@@ -110,6 +110,10 @@ async fn handle_connection(
 }
 
 /// Handle HTTPS CONNECT tunnel.
+///
+/// NOTE: TLS interception is not yet implemented. HTTPS requests pass through
+/// as opaque tunnels without auth header injection. Only plain HTTP requests
+/// get auth injection. This is a known limitation.
 async fn handle_connect(
     req: Request<hyper::body::Incoming>,
     _ca: Arc<ProxyCa>,
@@ -118,15 +122,20 @@ async fn handle_connect(
 ) -> Result<Response<BoxBody<Bytes, hyper::Error>>, hyper::Error> {
     let host = req.uri().authority().map(|a| a.host().to_string());
 
-    if let Some(host) = host {
-        tracing::debug!("CONNECT tunnel to {}", host);
+    if let Some(ref host) = host {
+        // Check if this host matches a rule - warn that we can't inject auth
+        if let Some(rule) = find_matching_rule(host) {
+            tracing::warn!(
+                "HTTPS request to {} matches rule '{}' but TLS interception not implemented - auth NOT injected",
+                host, rule.credential_key
+            );
+        }
 
-        // Spawn a task to handle the tunnel
-        tokio::spawn(async move {
-            // This is where we'd do TLS interception
-            // For now, just establish a direct tunnel
-            // TODO: Full TLS interception with cert generation
-        });
+        tracing::debug!("CONNECT tunnel to {} (passthrough mode)", host);
+
+        // TODO: Full TLS interception with cert generation
+        // For now, just establish a direct tunnel without auth injection
+        // This is a known limitation - HTTPS requests are not modified
 
         // Return 200 Connection Established
         Ok(Response::builder()
@@ -167,6 +176,11 @@ async fn handle_http(
                 .insert(rule.header_name, header_value.parse().unwrap());
             auth_injected = true;
             tracing::debug!("Injected {} header for {}", rule.header_name, host);
+        } else {
+            tracing::warn!(
+                "Rule matched for {} but credential '{}' is missing - request will proceed without auth",
+                host, rule.credential_key
+            );
         }
     }
 

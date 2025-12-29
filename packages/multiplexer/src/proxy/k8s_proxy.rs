@@ -21,7 +21,7 @@ impl KubernetesProxy {
     }
 
     /// Start the kubectl proxy subprocess.
-    pub fn start(&mut self) -> anyhow::Result<()> {
+    pub async fn start(&mut self) -> anyhow::Result<()> {
         if self.is_running() {
             tracing::debug!("kubectl proxy already running");
             return Ok(());
@@ -52,11 +52,19 @@ impl KubernetesProxy {
 
         self.process = Some(child);
 
-        // Give it a moment to start
-        std::thread::sleep(Duration::from_millis(500));
+        // Wait for proxy to be ready with retries
+        for attempt in 1..=10 {
+            tokio::time::sleep(Duration::from_millis(100)).await;
+            if self.health_check().await {
+                tracing::info!("kubectl proxy started successfully on port {}", self.port);
+                return Ok(());
+            }
+            tracing::debug!("kubectl proxy not ready yet (attempt {})", attempt);
+        }
 
+        // Final check - process might have died
         if self.is_running() {
-            tracing::info!("kubectl proxy started successfully on port {}", self.port);
+            tracing::info!("kubectl proxy started on port {} (health check unavailable)", self.port);
         } else {
             tracing::error!("kubectl proxy failed to start");
         }
@@ -101,10 +109,10 @@ impl KubernetesProxy {
     }
 
     /// Restart the proxy if it's not running.
-    pub fn restart_if_dead(&mut self) -> anyhow::Result<()> {
+    pub async fn restart_if_dead(&mut self) -> anyhow::Result<()> {
         if !self.is_running() {
             tracing::warn!("kubectl proxy died, restarting...");
-            self.start()?;
+            self.start().await?;
         }
         Ok(())
     }

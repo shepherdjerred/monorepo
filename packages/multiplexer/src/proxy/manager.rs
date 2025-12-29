@@ -103,20 +103,40 @@ impl ProxyManager {
     /// Start all proxy services.
     pub async fn start(&mut self) -> anyhow::Result<()> {
         tracing::info!("Starting proxy services...");
+        tracing::warn!(
+            "NOTE: TLS interception is not yet implemented. HTTPS requests will pass through \
+             without auth header injection. Only plain HTTP requests get auth injection."
+        );
 
         // Generate container configs
         self.generate_configs()?;
 
         // Start HTTP auth proxy
         let http_proxy = Arc::clone(&self.http_proxy);
+        let http_port = self.config.http_proxy_port;
         self.http_task = Some(tokio::spawn(async move {
             if let Err(e) = http_proxy.run().await {
                 tracing::error!("HTTP auth proxy error: {}", e);
             }
         }));
 
+        // Wait for HTTP proxy to be ready
+        for attempt in 1..=10 {
+            tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+            if tokio::net::TcpStream::connect(format!("127.0.0.1:{}", http_port))
+                .await
+                .is_ok()
+            {
+                tracing::debug!("HTTP proxy ready on port {}", http_port);
+                break;
+            }
+            if attempt == 10 {
+                tracing::warn!("HTTP proxy may not be ready (could not verify binding)");
+            }
+        }
+
         // Start Kubernetes proxy
-        self.k8s_proxy.start()?;
+        self.k8s_proxy.start().await?;
 
         // Start Talos gateway if configured
         if self.talos_gateway.is_configured() {

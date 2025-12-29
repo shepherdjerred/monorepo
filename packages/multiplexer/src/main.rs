@@ -14,7 +14,11 @@ struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     /// Start the multiplexer daemon
-    Daemon,
+    Daemon {
+        /// Disable proxy services
+        #[arg(long, default_value = "false")]
+        no_proxy: bool,
+    },
 
     /// Launch the terminal UI
     Tui,
@@ -107,9 +111,9 @@ async fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Daemon => {
+        Commands::Daemon { no_proxy } => {
             tracing::info!("Starting multiplexer daemon");
-            api::server::run_daemon().await?;
+            api::server::run_daemon_with_options(!no_proxy).await?;
         }
         Commands::Tui => {
             tracing::info!("Launching TUI");
