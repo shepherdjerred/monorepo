@@ -6,6 +6,7 @@ use ratatui::{
     widgets::{Block, Borders, Clear, List, ListItem, Paragraph, Wrap},
 };
 
+use crate::core::BackendType;
 use super::app::{App, AppMode};
 use super::components::{create_dialog, session_list, status_bar};
 
@@ -40,7 +41,7 @@ pub fn render(frame: &mut Frame, app: &App) {
         AppMode::Help => {
             let dialog_area = centered_rect(60, 60, frame.area());
             frame.render_widget(Clear, dialog_area);
-            render_help(frame, dialog_area);
+            render_help(frame, app, dialog_area);
         }
         AppMode::SessionList => {}
     }
@@ -107,11 +108,26 @@ fn render_confirm_delete(frame: &mut Frame, app: &App, area: Rect) {
     frame.render_widget(paragraph, area);
 }
 
-fn render_help(frame: &mut Frame, area: Rect) {
+fn render_help(frame: &mut Frame, app: &App, area: Rect) {
     let block = Block::default()
         .title(" Help ")
         .borders(Borders::ALL)
         .border_style(Style::default().fg(Color::Cyan));
+
+    // Build "While Attached" section based on selected session's backend
+    let detach_hint = app.selected_session().map_or_else(
+        || {
+            // No session selected - show both options
+            vec![
+                ("Ctrl+O, d", "Detach (Zellij)"),
+                ("Ctrl+P, Ctrl+Q", "Detach (Docker)"),
+            ]
+        },
+        |session| match session.backend {
+            BackendType::Zellij => vec![("Ctrl+O, d", "Detach from session")],
+            BackendType::Docker => vec![("Ctrl+P, Ctrl+Q", "Detach from session")],
+        },
+    );
 
     let help_items = vec![
         (
@@ -139,13 +155,7 @@ fn render_help(frame: &mut Frame, area: Rect) {
                 ("Esc", "Cancel"),
             ],
         ),
-        (
-            "While Attached",
-            vec![
-                ("Ctrl+O, d", "Detach (Zellij)"),
-                ("Ctrl+P, Ctrl+Q", "Detach (Docker)"),
-            ],
-        ),
+        ("While Attached", detach_hint),
     ];
 
     let mut items = Vec::new();
