@@ -67,11 +67,18 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
                 .as_ref()
                 .map_or_else(|| session.branch_name.clone(), |_| "PR".to_string());
 
+            let repo_name = session
+                .repo_path
+                .file_name()
+                .and_then(|n| n.to_str())
+                .unwrap_or("unknown");
+
             let line = Line::from(vec![
                 Span::styled(
                     format!("{:24}", session.name),
                     Style::default().add_modifier(Modifier::BOLD),
                 ),
+                Span::raw(format!("{repo_name:20}")),
                 Span::styled(format!("{status_text:12}"), status_style),
                 Span::raw(format!("{backend_text:8}")),
                 Span::raw(format!("{pr_text:12}")),
