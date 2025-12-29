@@ -1,5 +1,6 @@
 use std::fs::{File, OpenOptions};
 use std::io::Write;
+use std::os::unix::process::CommandExt;
 use std::process::{Child, Command, Stdio};
 use std::time::Duration;
 
@@ -36,11 +37,24 @@ pub fn is_daemon_running() -> bool {
     UnixStream::connect(&socket_path).is_ok()
 }
 
+/// RAII guard for the spawn lock that cleans up the lock file on drop
+struct SpawnLockGuard {
+    _file: File,
+    path: std::path::PathBuf,
+}
+
+impl Drop for SpawnLockGuard {
+    fn drop(&mut self) {
+        // Clean up the lock file when the guard is dropped
+        let _ = std::fs::remove_file(&self.path);
+    }
+}
+
 /// Acquire an exclusive lock for daemon spawning
 ///
-/// Returns a file handle that holds the lock. The lock is released
-/// when the file handle is dropped.
-fn acquire_spawn_lock() -> anyhow::Result<File> {
+/// Returns a guard that holds the lock. The lock is released and the
+/// lock file is cleaned up when the guard is dropped.
+fn acquire_spawn_lock() -> anyhow::Result<SpawnLockGuard> {
     let lock_path = lock_file_path();
 
     // Ensure parent directory exists
@@ -65,14 +79,18 @@ fn acquire_spawn_lock() -> anyhow::Result<File> {
     let mut file = file;
     writeln!(file, "{}", std::process::id())?;
 
-    Ok(file)
+    Ok(SpawnLockGuard {
+        _file: file,
+        path: lock_path,
+    })
 }
 
 /// Spawn the daemon as a detached background process
 ///
 /// This function spawns a new `mux daemon` process that continues running
 /// after the parent process exits. The daemon process is fully detached
-/// from the parent's process group.
+/// by creating a new process group, which prevents signals (like SIGTERM
+/// or Ctrl+C) from the parent from propagating to the daemon.
 ///
 /// Returns the child process handle for health checking.
 ///
@@ -87,6 +105,8 @@ fn spawn_daemon_process() -> anyhow::Result<Child> {
         .stdin(Stdio::null())
         .stdout(Stdio::null())
         .stderr(Stdio::null())
+        // Create a new process group so signals don't propagate from parent
+        .process_group(0)
         .spawn()?;
 
     Ok(child)
