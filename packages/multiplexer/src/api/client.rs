@@ -3,7 +3,7 @@ use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::UnixStream;
 
 use crate::core::Session;
-use crate::utils::paths;
+use crate::utils::{daemon, paths};
 
 use super::protocol::{CreateSessionRequest, ProgressStep, Request, Response};
 use super::traits::ApiClient;
@@ -18,17 +18,31 @@ pub struct Client {
 }
 
 impl Client {
-    /// Connect to the multiplexer daemon
+    /// Connect to the multiplexer daemon, auto-spawning it if not running
+    ///
+    /// This method will automatically spawn the daemon as a detached background
+    /// process if it's not already running. The daemon will continue running
+    /// even after this client (and its parent process) exits.
     ///
     /// # Errors
     ///
-    /// Returns an error if the daemon socket cannot be connected to.
+    /// Returns an error if the daemon cannot be spawned or connected to.
     pub async fn connect() -> anyhow::Result<Self> {
         let socket_path = paths::socket_path();
 
+        // First attempt to connect to existing daemon
+        if let Ok(stream) = UnixStream::connect(&socket_path).await {
+            return Ok(Self { stream });
+        }
+
+        // Daemon not running - spawn it and wait for it to be ready
+        // This handles race conditions via file locking
+        daemon::ensure_daemon_running().await?;
+
+        // Connect after daemon is ready
         let stream = UnixStream::connect(&socket_path).await.map_err(|e| {
             anyhow::anyhow!(
-                "Failed to connect to daemon at {}. Is the daemon running? Error: {e}",
+                "Failed to connect to daemon at {} after ensuring it's running. Error: {e}",
                 socket_path.display(),
             )
         })?;
