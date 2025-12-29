@@ -107,6 +107,8 @@ async fn run_main_loop(
                             BackendType::Docker => "Ctrl+P, Ctrl+Q",
                         };
                         println!("Attaching... Detach with {detach_hint}");
+                    } else {
+                        println!("Attaching...");
                     }
 
                     // Execute attach command
