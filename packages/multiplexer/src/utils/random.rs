@@ -71,9 +71,16 @@ pub fn sanitize_branch_name(name: &str) -> String {
     }
 
     // Final trim in case .lock removal left trailing special chars
-    sanitized
+    let result = sanitized
         .trim_matches(|c| c == '-' || c == '.' || c == '/')
-        .to_string()
+        .to_string();
+
+    // Handle empty result (e.g., input was all special chars like "..." or "@@@")
+    if result.is_empty() {
+        "session".to_string()
+    } else {
+        result
+    }
 }
 
 /// Generate a session name with a random suffix
@@ -185,6 +192,15 @@ mod tests {
         assert_eq!(sanitize_branch_name("valid_name"), "valid_name");
         assert_eq!(sanitize_branch_name("feature/branch"), "feature/branch");
         assert_eq!(sanitize_branch_name("v1.2.3"), "v1.2.3");
+    }
+
+    #[test]
+    fn test_sanitize_empty_result() {
+        // Input that becomes empty after sanitization should return "session"
+        assert_eq!(sanitize_branch_name("..."), "session");
+        assert_eq!(sanitize_branch_name("@@@"), "session");
+        assert_eq!(sanitize_branch_name(""), "session");
+        assert_eq!(sanitize_branch_name("---"), "session");
     }
 
     #[test]

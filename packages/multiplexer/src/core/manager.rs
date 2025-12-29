@@ -108,8 +108,22 @@ impl SessionManager {
         agent: super::session::AgentType,
         dangerous_skip_checks: bool,
     ) -> anyhow::Result<Session> {
-        // Generate full name with random suffix
-        let full_name = crate::utils::random::generate_session_name(&name);
+        // Generate unique session name with retry logic
+        const MAX_ATTEMPTS: usize = 3;
+        let full_name = {
+            let mut attempts = 0;
+            loop {
+                let candidate = crate::utils::random::generate_session_name(&name);
+                let sessions = self.sessions.read().await;
+                if !sessions.iter().any(|s| s.name == candidate) {
+                    break candidate;
+                }
+                attempts += 1;
+                if attempts >= MAX_ATTEMPTS {
+                    anyhow::bail!("Failed to generate unique session name after {MAX_ATTEMPTS} attempts");
+                }
+            }
+        };
         let worktree_path = crate::utils::paths::worktree_path(&full_name);
 
         // Create session object
