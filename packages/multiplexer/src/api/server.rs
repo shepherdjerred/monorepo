@@ -6,7 +6,7 @@ use crate::core::SessionManager;
 use crate::store::SqliteStore;
 use crate::utils::paths;
 
-use super::handlers::handle_request;
+use super::handlers::{handle_create_session_with_progress, handle_request};
 use super::protocol::{Request, Response};
 
 /// Run the multiplexer daemon
@@ -90,7 +90,13 @@ async fn handle_connection(stream: UnixStream, manager: Arc<SessionManager>) -> 
             }
         };
 
-        // Handle the request
+        // Handle CreateSession specially to support progress streaming
+        if let Request::CreateSession(req) = request {
+            handle_create_session_with_progress(req, &manager, &mut writer).await?;
+            continue;
+        }
+
+        // Handle other requests
         let response = handle_request(request, &manager).await;
 
         // Send the response

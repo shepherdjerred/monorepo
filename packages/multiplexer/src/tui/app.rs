@@ -2,6 +2,19 @@ use crate::api::{ApiClient, Client};
 use crate::core::Session;
 use nucleo_matcher::Utf32String;
 use std::path::PathBuf;
+use tokio::sync::mpsc;
+use tokio::task::JoinHandle;
+
+/// Progress update from background session creation task
+#[derive(Debug, Clone)]
+pub enum CreateProgress {
+    /// Progress step update
+    Step { step: u32, total: u32, message: String },
+    /// Session creation completed successfully
+    Done { session_name: String },
+    /// Session creation failed
+    Error { message: String },
+}
 
 /// The current view/mode of the application
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -283,6 +296,18 @@ pub struct App {
 
     /// Loading message to display during long operations
     pub loading_message: Option<String>,
+
+    /// Current progress step during session creation
+    pub progress_step: Option<(u32, u32, String)>, // (step, total, message)
+
+    /// Channel receiver for progress updates from background tasks
+    pub progress_rx: Option<mpsc::Receiver<CreateProgress>>,
+
+    /// Handle to the background create task (for potential cancellation)
+    pub create_task: Option<JoinHandle<()>>,
+
+    /// Tick counter for spinner animation
+    pub spinner_tick: u64,
 }
 
 impl App {
@@ -300,6 +325,10 @@ impl App {
             client: None,
             connection_error: None,
             loading_message: None,
+            progress_step: None,
+            progress_rx: None,
+            create_task: None,
+            spinner_tick: 0,
         }
     }
 
@@ -470,6 +499,7 @@ impl App {
         if let Some(client) = &mut self.client {
             let session = client.create_session(request).await?;
             self.loading_message = None;
+            self.progress_step = None;
             self.status_message = Some(format!("Created session {}", session.name));
             self.refresh_sessions().await?;
         }
@@ -509,6 +539,11 @@ impl App {
     /// Request quit
     pub const fn quit(&mut self) {
         self.should_quit = true;
+    }
+
+    /// Increment spinner tick for animation
+    pub fn tick(&mut self) {
+        self.spinner_tick = self.spinner_tick.wrapping_add(1);
     }
 }
 
