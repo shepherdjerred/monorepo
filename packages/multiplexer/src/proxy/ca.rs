@@ -1,22 +1,17 @@
 //! Proxy CA certificate generation and management.
 
 use std::path::PathBuf;
-use std::sync::Arc;
 
-use rcgen::{
-    BasicConstraints, Certificate, CertificateParams, DistinguishedName, DnType, IsCa, KeyPair,
-    KeyUsagePurpose, SanType,
-};
-use rustls::pki_types::{CertificateDer, PrivateKeyDer, PrivatePkcs8KeyDer};
+use hudsucker::certificate_authority::RcgenAuthority;
+use rcgen::{BasicConstraints, CertificateParams, DistinguishedName, DnType, IsCa, Issuer, KeyPair, KeyUsagePurpose};
+use rustls::crypto::aws_lc_rs::default_provider;
 
 /// Proxy CA for generating certificates for HTTPS interception.
 pub struct ProxyCa {
-    /// CA certificate.
-    ca_cert: Certificate,
-    /// CA key pair.
-    ca_key: KeyPair,
-    /// Path where CA cert is stored.
+    /// Path where CA cert PEM is stored.
     cert_path: PathBuf,
+    /// Path where CA key PEM is stored.
+    key_path: PathBuf,
 }
 
 impl ProxyCa {
@@ -29,7 +24,8 @@ impl ProxyCa {
         let key_path = mux_dir.join("proxy-ca-key.pem");
 
         if cert_path.exists() && key_path.exists() {
-            Self::load(&cert_path, &key_path)
+            tracing::info!("Loaded proxy CA certificate from {:?}", cert_path);
+            Ok(Self { cert_path, key_path })
         } else {
             Self::generate(mux_dir)
         }
@@ -79,95 +75,31 @@ impl ProxyCa {
 
         tracing::info!("Generated new proxy CA certificate at {:?}", cert_path);
 
-        Ok(Self {
-            ca_cert,
-            ca_key: key_pair,
-            cert_path,
-        })
+        Ok(Self { cert_path, key_path })
     }
 
-    /// Load an existing CA certificate.
-    fn load(cert_path: &PathBuf, key_path: &PathBuf) -> anyhow::Result<Self> {
-        let key_pem = std::fs::read_to_string(key_path)?;
+    /// Create a hudsucker RcgenAuthority from this CA.
+    pub fn to_rcgen_authority(&self) -> anyhow::Result<RcgenAuthority> {
+        // Read PEM files
+        let cert_pem = std::fs::read_to_string(&self.cert_path)?;
+        let key_pem = std::fs::read_to_string(&self.key_path)?;
+
+        // Parse key pair from PEM
         let key_pair = KeyPair::from_pem(&key_pem)?;
 
-        // Recreate CA params (we can't parse from PEM, so regenerate with same key)
-        let mut params = CertificateParams::default();
-        let mut dn = DistinguishedName::new();
-        dn.push(DnType::CommonName, "Mux Proxy CA");
-        dn.push(DnType::OrganizationName, "Mux");
-        params.distinguished_name = dn;
-        params.is_ca = IsCa::Ca(BasicConstraints::Unconstrained);
-        params.key_usages = vec![
-            KeyUsagePurpose::KeyCertSign,
-            KeyUsagePurpose::CrlSign,
-            KeyUsagePurpose::DigitalSignature,
-        ];
-        params.not_before = time::OffsetDateTime::now_utc();
-        params.not_after = params.not_before + time::Duration::days(3650);
+        // Create Issuer from CA cert PEM
+        let issuer = Issuer::from_ca_cert_pem(&cert_pem, key_pair)?;
 
-        let ca_cert = params.self_signed(&key_pair)?;
+        // Create RcgenAuthority with certificate cache
+        let provider = default_provider();
+        let authority = RcgenAuthority::new(issuer, 1000, provider);
 
-        tracing::info!("Loaded proxy CA certificate from {:?}", cert_path);
-
-        Ok(Self {
-            ca_cert,
-            ca_key: key_pair,
-            cert_path: cert_path.clone(),
-        })
-    }
-
-    /// Generate a certificate for a specific hostname.
-    pub fn generate_cert_for_host(&self, hostname: &str) -> anyhow::Result<(Vec<u8>, Vec<u8>)> {
-        let mut params = CertificateParams::default();
-
-        // Set distinguished name
-        let mut dn = DistinguishedName::new();
-        dn.push(DnType::CommonName, hostname);
-        params.distinguished_name = dn;
-
-        // Add SAN
-        params.subject_alt_names = vec![SanType::DnsName(hostname.try_into()?)];
-
-        // Key usage for server cert
-        params.key_usages = vec![
-            KeyUsagePurpose::DigitalSignature,
-            KeyUsagePurpose::KeyEncipherment,
-        ];
-
-        // Valid for 1 day (ephemeral)
-        params.not_before = time::OffsetDateTime::now_utc();
-        params.not_after = params.not_before + time::Duration::days(1);
-
-        // Generate key and sign with CA
-        let key_pair = KeyPair::generate()?;
-        let cert = params.signed_by(&key_pair, &self.ca_cert, &self.ca_key)?;
-
-        Ok((cert.der().to_vec(), key_pair.serialize_der()))
-    }
-
-    /// Get the CA certificate in DER format for rustls.
-    pub fn ca_cert_der(&self) -> CertificateDer<'static> {
-        CertificateDer::from(self.ca_cert.der().to_vec())
+        Ok(authority)
     }
 
     /// Get the path to the CA certificate PEM file.
     pub fn cert_path(&self) -> &PathBuf {
         &self.cert_path
-    }
-
-    /// Create a rustls server config for a given hostname.
-    pub fn make_server_config(&self, hostname: &str) -> anyhow::Result<Arc<rustls::ServerConfig>> {
-        let (cert_der, key_der) = self.generate_cert_for_host(hostname)?;
-
-        let cert = CertificateDer::from(cert_der);
-        let key = PrivateKeyDer::Pkcs8(PrivatePkcs8KeyDer::from(key_der));
-
-        let config = rustls::ServerConfig::builder()
-            .with_no_client_auth()
-            .with_single_cert(vec![cert], key)?;
-
-        Ok(Arc::new(config))
     }
 }
 
@@ -187,10 +119,8 @@ mod tests {
         assert!(mux_dir.join("proxy-ca.pem").exists());
         assert!(mux_dir.join("proxy-ca-key.pem").exists());
 
-        // Verify we can generate host certs
-        let (cert, key) = ca.generate_cert_for_host("api.github.com").unwrap();
-        assert!(!cert.is_empty());
-        assert!(!key.is_empty());
+        // Verify we can create an authority
+        let _authority = ca.to_rcgen_authority().unwrap();
     }
 
     #[test]
@@ -204,8 +134,7 @@ mod tests {
         // Reload CA
         let ca2 = ProxyCa::load_or_generate(&mux_dir).unwrap();
 
-        // Should be able to generate certs
-        let (cert, _) = ca2.generate_cert_for_host("example.com").unwrap();
-        assert!(!cert.is_empty());
+        // Should be able to create authority
+        let _authority = ca2.to_rcgen_authority().unwrap();
     }
 }

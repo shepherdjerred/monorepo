@@ -3,7 +3,6 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use tokio::sync::oneshot;
 use tokio::task::JoinHandle;
 
 use super::audit::AuditLogger;
@@ -21,9 +20,7 @@ pub struct ProxyManager {
     /// Credentials.
     credentials: Arc<Credentials>,
     /// Proxy CA.
-    ca: Arc<ProxyCa>,
-    /// HTTP auth proxy.
-    http_proxy: Arc<HttpAuthProxy>,
+    ca: ProxyCa,
     /// Kubernetes proxy.
     k8s_proxy: KubernetesProxy,
     /// Talos gateway.
@@ -36,8 +33,6 @@ pub struct ProxyManager {
     http_task: Option<JoinHandle<()>>,
     /// Talos gateway task handle.
     talos_task: Option<JoinHandle<()>>,
-    /// Shutdown sender.
-    shutdown_tx: Option<oneshot::Sender<()>>,
 }
 
 impl ProxyManager {
@@ -48,7 +43,7 @@ impl ProxyManager {
         std::fs::create_dir_all(&mux_dir)?;
 
         // Load or generate CA
-        let ca = Arc::new(ProxyCa::load_or_generate(&mux_dir)?);
+        let ca = ProxyCa::load_or_generate(&mux_dir)?;
 
         // Load credentials
         let credentials = Arc::new(Credentials::load(&config.secrets_dir));
@@ -59,14 +54,6 @@ impl ProxyManager {
         } else {
             Arc::new(AuditLogger::noop())
         };
-
-        // Create HTTP auth proxy
-        let http_proxy = Arc::new(HttpAuthProxy::new(
-            config.http_proxy_port,
-            Arc::clone(&ca),
-            Arc::clone(&credentials),
-            Arc::clone(&audit_logger),
-        ));
 
         // Create Kubernetes proxy
         let k8s_proxy = KubernetesProxy::new(config.k8s_proxy_port);
@@ -79,14 +66,12 @@ impl ProxyManager {
             config,
             credentials,
             ca,
-            http_proxy,
             k8s_proxy,
             talos_gateway,
             audit_logger,
             mux_dir,
             http_task: None,
             talos_task: None,
-            shutdown_tx: None,
         })
     }
 
@@ -102,17 +87,23 @@ impl ProxyManager {
 
     /// Start all proxy services.
     pub async fn start(&mut self) -> anyhow::Result<()> {
-        tracing::info!("Starting proxy services...");
-        tracing::warn!(
-            "NOTE: TLS interception is not yet implemented. HTTPS requests will pass through \
-             without auth header injection. Only plain HTTP requests get auth injection."
-        );
+        tracing::info!("Starting proxy services with TLS interception...");
 
         // Generate container configs
         self.generate_configs()?;
 
+        // Create RcgenAuthority from CA
+        let authority = self.ca.to_rcgen_authority()?;
+
+        // Create HTTP auth proxy
+        let http_proxy = HttpAuthProxy::new(
+            self.config.http_proxy_port,
+            authority,
+            Arc::clone(&self.credentials),
+            Arc::clone(&self.audit_logger),
+        );
+
         // Start HTTP auth proxy
-        let http_proxy = Arc::clone(&self.http_proxy);
         let http_port = self.config.http_proxy_port;
         self.http_task = Some(tokio::spawn(async move {
             if let Err(e) = http_proxy.run().await {
@@ -230,7 +221,7 @@ mod tests {
 
     #[test]
     fn test_manager_creation() {
-        let config = ProxyConfig::default();
+        let _config = ProxyConfig::default();
         // This will fail in test environment without home dir etc
         // Just verify it compiles
     }
