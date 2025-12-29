@@ -49,7 +49,27 @@ dirs = "5"
 exec = "0.3"
 async-trait = "0.1"
 nucleo-matcher = "0.3"
-fs2 = "0.4"
+
+# HTTP Proxy
+hyper = { version = "1", features = ["full"] }
+hyper-util = { version = "0.1", features = ["full"] }
+http-body-util = "0.1"
+
+# TLS
+rustls = "0.23"
+tokio-rustls = "0.26"
+rcgen = "0.13"
+rustls-pemfile = "2"
+
+# gRPC (for Talos gateway)
+tonic = "0.12"
+prost = "0.13"
+
+# Config files
+toml = "0.8"
+
+# Time handling (for certificate generation)
+time = "0.3"
 
 [dev-dependencies]
 cargo-husky = { version = "1", features = ["precommit-hook", "run-cargo-fmt", "run-cargo-clippy"] }
