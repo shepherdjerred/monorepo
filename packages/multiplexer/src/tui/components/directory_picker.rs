@@ -145,7 +145,9 @@ fn render_help(frame: &mut Frame, area: Rect) {
         Span::styled("Enter", Style::default().fg(Color::Cyan)),
         Span::raw(": open  "),
         Span::styled("Tab", Style::default().fg(Color::Cyan)),
-        Span::raw(": select  "),
+        Span::raw(": select highlighted  "),
+        Span::styled("Ctrl+Enter", Style::default().fg(Color::Cyan)),
+        Span::raw(": select current  "),
         Span::styled("Esc", Style::default().fg(Color::Cyan)),
         Span::raw(": close"),
     ]);
