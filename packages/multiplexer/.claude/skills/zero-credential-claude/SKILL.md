@@ -48,26 +48,28 @@ A `claude.json` file is mounted to skip onboarding:
 The HTTP proxy intercepts requests to `api.anthropic.com` and:
 
 1. Removes any existing auth headers (placeholder credentials)
-2. Detects token type (OAuth vs API key)
-3. Injects the correct header format
+2. Injects OAuth token with Bearer auth
 
 ```rust
-// src/proxy/http_proxy.rs
-if token.starts_with("sk-ant-oat01-") {
-    // OAuth token - use Authorization: Bearer
-    ("authorization", format!("Bearer {}", token))
-} else {
-    // API key - use x-api-key
-    ("x-api-key", token.to_string())
-}
+// src/proxy/http_proxy.rs - Anthropic uses Bearer auth for OAuth
+req.headers_mut().remove("authorization");
+("authorization", format!("Bearer {}", token))
 ```
 
-### 4. Non-Interactive Execution
+### 4. Interactive Execution
 
-Containers run Claude Code with flags that prevent interactive prompts:
+Containers run Claude Code interactively with an initial prompt:
 
 ```bash
-claude --dangerously-skip-permissions --print --verbose 'prompt here'
+claude --dangerously-skip-permissions 'initial prompt here'
+```
+
+After the session is created, attach to interact with Claude:
+
+```bash
+mux session attach <session-name>
+# Or directly with docker:
+docker attach mux-<session-name>
 ```
 
 ## Testing Claude in Containers

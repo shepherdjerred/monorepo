@@ -107,23 +107,10 @@ impl HttpHandler for AuthInjector {
             let mut auth_injected = false;
             if let Some(rule) = find_matching_rule(&host) {
                 if let Some(token) = credentials.get(rule.credential_key) {
-                    // Special handling for Anthropic OAuth tokens vs API keys
                     let (header_name, header_value) = if rule.credential_key == "anthropic" {
-                        // For Anthropic, remove any existing auth headers first
-                        // The container may have placeholder credentials that need replacing
+                        // Remove placeholder auth header before injecting real OAuth token
                         req.headers_mut().remove("authorization");
-                        req.headers_mut().remove("x-api-key");
-
-                        if token.starts_with("sk-ant-oat01-") {
-                            // OAuth token - use Authorization: Bearer
-                            ("authorization", format!("Bearer {}", token))
-                        } else {
-                            // API key - use x-api-key (fallback for non-OAuth tokens)
-                            tracing::debug!(
-                                "Using x-api-key header for Anthropic (token doesn't match OAuth prefix)"
-                            );
-                            ("x-api-key", token.to_string())
-                        }
+                        ("authorization", format!("Bearer {}", token))
                     } else {
                         (rule.header_name, rule.format_header(token))
                     };
@@ -179,30 +166,4 @@ mod tests {
         let _cloned = injector.clone();
     }
 
-    /// Test that Anthropic token type detection works correctly.
-    /// OAuth tokens (sk-ant-oat01-*) should use Bearer auth,
-    /// while regular API keys should use x-api-key.
-    #[test]
-    fn test_anthropic_token_type_detection() {
-        // OAuth token prefix detection
-        let oauth_token = "sk-ant-oat01-abc123";
-        assert!(
-            oauth_token.starts_with("sk-ant-oat01-"),
-            "OAuth token should match prefix"
-        );
-
-        // Regular API key should NOT match OAuth prefix
-        let api_key = "sk-ant-api03-xyz789";
-        assert!(
-            !api_key.starts_with("sk-ant-oat01-"),
-            "API key should not match OAuth prefix"
-        );
-
-        // Another common API key format
-        let old_api_key = "sk-ant-abcd1234";
-        assert!(
-            !old_api_key.starts_with("sk-ant-oat01-"),
-            "Old API key format should not match OAuth prefix"
-        );
-    }
 }

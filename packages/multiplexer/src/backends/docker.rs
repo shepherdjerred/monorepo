@@ -274,12 +274,12 @@ impl DockerBackend {
         }
 
         // Add image and command
-        // Use --print for non-interactive mode (outputs response directly without UI)
+        // Run Claude interactively - user attaches to container to interact
         args.extend([
             DOCKER_IMAGE.to_string(),
             "bash".to_string(),
             "-c".to_string(),
-            format!("claude --dangerously-skip-permissions --print --verbose '{escaped_prompt}'"),
+            format!("claude --dangerously-skip-permissions '{escaped_prompt}'"),
         ]);
 
         Ok(args)
