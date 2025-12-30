@@ -505,6 +505,7 @@ impl App {
             },
             agent: AgentType::ClaudeCode,
             dangerous_skip_checks: self.create_dialog.skip_checks,
+            print_mode: false, // TUI always uses interactive mode
         };
 
         if let Some(client) = &mut self.client {
