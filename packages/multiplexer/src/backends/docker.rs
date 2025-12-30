@@ -121,9 +121,27 @@ impl DockerBackend {
                 let port = proxy.http_proxy_port;
                 let mux_dir = &proxy.mux_dir;
 
-                // On Linux, host.docker.internal doesn't resolve by default
-                // This flag makes it work (ignored on Docker Desktop for Mac/Windows)
-                #[cfg(target_os = "linux")]
+                // Validate required files exist before attempting to mount them
+                let ca_cert_path = mux_dir.join("proxy-ca.pem");
+                let kube_config_path = mux_dir.join("kube/config");
+                let talos_config_path = mux_dir.join("talos/config");
+
+                if !ca_cert_path.exists() {
+                    tracing::error!("Proxy CA certificate not found at {:?}", ca_cert_path);
+                    tracing::error!("Ensure the multiplexer daemon is running and initialized");
+                }
+
+                if !kube_config_path.exists() {
+                    tracing::warn!("Kubeconfig not found at {:?}", kube_config_path);
+                }
+
+                if !talos_config_path.exists() {
+                    tracing::warn!("Talosconfig not found at {:?}", talos_config_path);
+                }
+
+                // Add host.docker.internal resolution
+                // Required for Linux and macOS with OrbStack
+                // Harmless on Docker Desktop (flag is ignored if host already exists)
                 args.extend([
                     "--add-host".to_string(),
                     "host.docker.internal:host-gateway".to_string(),
@@ -137,6 +155,14 @@ impl DockerBackend {
                     format!("HTTPS_PROXY=http://host.docker.internal:{port}"),
                     "-e".to_string(),
                     "NO_PROXY=localhost,127.0.0.1".to_string(),
+                ]);
+
+                // Set dummy tokens so CLI tools will make requests (proxy replaces with real tokens)
+                args.extend([
+                    "-e".to_string(),
+                    "GH_TOKEN=mux-proxy".to_string(),
+                    "-e".to_string(),
+                    "GITHUB_TOKEN=mux-proxy".to_string(),
                 ]);
 
                 // SSL/TLS environment variables for CA trust
@@ -594,5 +620,32 @@ mod tests {
         // Should NOT have HTTPS_PROXY
         let has_https_proxy = args.iter().any(|a| a.contains("HTTPS_PROXY"));
         assert!(!has_https_proxy, "Disabled proxy should not add HTTPS_PROXY");
+    }
+
+    /// Test that --add-host is always added for host.docker.internal resolution
+    /// This is required for Linux and macOS with OrbStack
+    #[test]
+    fn test_host_docker_internal_always_added() {
+        let proxy_config = DockerProxyConfig::new(18080, PathBuf::from("/tmp/mux"));
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            &PathBuf::from("/workspace"),
+            "test prompt",
+            1000,
+            "/home/user",
+            Some(&proxy_config),
+        );
+
+        // Should have --add-host flag
+        assert!(
+            args.iter().any(|arg| arg == "--add-host"),
+            "Expected --add-host flag, got: {args:?}"
+        );
+
+        // Should have host.docker.internal:host-gateway
+        assert!(
+            args.iter().any(|arg| arg == "host.docker.internal:host-gateway"),
+            "Expected host.docker.internal:host-gateway, got: {args:?}"
+        );
     }
 }

@@ -63,6 +63,7 @@ pub struct Credentials {
     pub anthropic_api_key: Option<String>,
     pub pagerduty_token: Option<String>,
     pub sentry_auth_token: Option<String>,
+    pub grafana_api_key: Option<String>,
     pub npm_token: Option<String>,
     pub docker_token: Option<String>,
     pub k8s_token: Option<String>,
@@ -75,8 +76,12 @@ impl Credentials {
         Self {
             github_token: std::env::var("GITHUB_TOKEN").ok(),
             anthropic_api_key: std::env::var("ANTHROPIC_API_KEY").ok(),
-            pagerduty_token: std::env::var("PAGERDUTY_TOKEN").ok(),
+            // Support both PAGERDUTY_TOKEN and PAGERDUTY_API_KEY for compatibility
+            pagerduty_token: std::env::var("PAGERDUTY_TOKEN")
+                .or_else(|_| std::env::var("PAGERDUTY_API_KEY"))
+                .ok(),
             sentry_auth_token: std::env::var("SENTRY_AUTH_TOKEN").ok(),
+            grafana_api_key: std::env::var("GRAFANA_API_KEY").ok(),
             npm_token: std::env::var("NPM_TOKEN").ok(),
             docker_token: std::env::var("DOCKER_TOKEN").ok(),
             k8s_token: std::env::var("K8S_TOKEN").ok(),
@@ -96,6 +101,7 @@ impl Credentials {
             anthropic_api_key: read_secret("anthropic_api_key"),
             pagerduty_token: read_secret("pagerduty_token"),
             sentry_auth_token: read_secret("sentry_auth_token"),
+            grafana_api_key: read_secret("grafana_api_key"),
             npm_token: read_secret("npm_token"),
             docker_token: read_secret("docker_token"),
             k8s_token: read_secret("k8s_token"),
@@ -108,16 +114,43 @@ impl Credentials {
         let from_env = Self::load_from_env();
         let from_files = Self::load_from_files(secrets_dir);
 
-        Self {
+        let credentials = Self {
             github_token: from_env.github_token.or(from_files.github_token),
             anthropic_api_key: from_env.anthropic_api_key.or(from_files.anthropic_api_key),
             pagerduty_token: from_env.pagerduty_token.or(from_files.pagerduty_token),
             sentry_auth_token: from_env.sentry_auth_token.or(from_files.sentry_auth_token),
+            grafana_api_key: from_env.grafana_api_key.or(from_files.grafana_api_key),
             npm_token: from_env.npm_token.or(from_files.npm_token),
             docker_token: from_env.docker_token.or(from_files.docker_token),
             k8s_token: from_env.k8s_token.or(from_files.k8s_token),
             talos_token: from_env.talos_token.or(from_files.talos_token),
+        };
+
+        // Log which credentials were loaded
+        tracing::info!("Loaded credentials:");
+        if credentials.github_token.is_some() {
+            tracing::info!("  ✓ GitHub token");
         }
+        if credentials.anthropic_api_key.is_some() {
+            tracing::info!("  ✓ Anthropic API key");
+        }
+        if credentials.pagerduty_token.is_some() {
+            tracing::info!("  ✓ PagerDuty token");
+        }
+        if credentials.sentry_auth_token.is_some() {
+            tracing::info!("  ✓ Sentry auth token");
+        }
+        if credentials.grafana_api_key.is_some() {
+            tracing::info!("  ✓ Grafana API key");
+        }
+        if credentials.npm_token.is_some() {
+            tracing::info!("  ✓ npm token");
+        }
+        if credentials.docker_token.is_some() {
+            tracing::info!("  ✓ Docker token");
+        }
+
+        credentials
     }
 
     /// Get a credential by service name.
@@ -127,6 +160,7 @@ impl Credentials {
             "anthropic" => self.anthropic_api_key.as_deref(),
             "pagerduty" => self.pagerduty_token.as_deref(),
             "sentry" => self.sentry_auth_token.as_deref(),
+            "grafana" => self.grafana_api_key.as_deref(),
             "npm" => self.npm_token.as_deref(),
             "docker" => self.docker_token.as_deref(),
             "k8s" => self.k8s_token.as_deref(),
