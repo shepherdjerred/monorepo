@@ -75,6 +75,15 @@ time = "0.3"
 cargo-husky = { version = "1", features = ["precommit-hook", "run-cargo-fmt", "run-cargo-clippy"] }
 tempfile = "3"
 
+# HTTP server/client for integration tests
+axum = "0.7"
+hyper = { version = "1", features = ["full"] }
+hyper-util = { version = "0.1", features = ["tokio", "server"] }
+http-body-util = "0.1"
+tower = "0.5"
+reqwest = { version = "0.12", features = ["json", "blocking"] }
+tokio-test = "0.4"
+
 [lints.rust]
 unsafe_code = "forbid"
 

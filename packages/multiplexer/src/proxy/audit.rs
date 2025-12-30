@@ -9,7 +9,7 @@ use chrono::{DateTime, Utc};
 use serde::Serialize;
 
 /// An audit log entry for a proxied request.
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, serde::Deserialize)]
 pub struct AuditEntry {
     /// Timestamp of the request.
     pub timestamp: DateTime<Utc>,

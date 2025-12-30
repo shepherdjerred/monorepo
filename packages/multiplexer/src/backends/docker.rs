@@ -163,6 +163,8 @@ impl DockerBackend {
                     "GH_TOKEN=mux-proxy".to_string(),
                     "-e".to_string(),
                     "GITHUB_TOKEN=mux-proxy".to_string(),
+                    "-e".to_string(),
+                    "CLAUDE_CODE_OAUTH_TOKEN=mux-proxy".to_string(),
                 ]);
 
                 // SSL/TLS environment variables for CA trust

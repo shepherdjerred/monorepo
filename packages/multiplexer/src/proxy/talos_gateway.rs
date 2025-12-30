@@ -125,9 +125,38 @@ impl TalosGateway {
                 .collect::<Result<Vec<_>, _>>()?;
 
         let client_key_decoded = base64_decode(client_key_pem)?;
-        let client_key: PrivateKeyDer<'static> =
-            rustls_pemfile::private_key(&mut client_key_decoded.as_slice())?
-                .ok_or_else(|| anyhow::anyhow!("no private key found"))?;
+
+        // Parse private key - handle all PEM formats including Ed25519
+        let client_key: PrivateKeyDer<'static> = {
+            // Check if this is an Ed25519 key in OpenSSL format
+            let pem_str = String::from_utf8_lossy(&client_key_decoded);
+            if pem_str.contains("-----BEGIN ED25519 PRIVATE KEY-----") {
+                // Manually parse Ed25519 key and convert to PKCS#8
+                parse_ed25519_key(&client_key_decoded)?
+            } else {
+                // Try standard rustls_pemfile parsing for other formats
+                use rustls_pemfile::Item;
+
+                let mut cursor = client_key_decoded.as_slice();
+                let items = rustls_pemfile::read_all(&mut cursor)
+                    .collect::<Result<Vec<_>, _>>()?;
+
+                // Find the first private key item
+                items
+                    .into_iter()
+                    .find_map(|item| match item {
+                        Item::Pkcs8Key(key) => Some(PrivateKeyDer::Pkcs8(key)),
+                        Item::Pkcs1Key(key) => Some(PrivateKeyDer::Pkcs1(key)),
+                        Item::Sec1Key(key) => Some(PrivateKeyDer::Sec1(key)),
+                        _ => None,
+                    })
+                    .ok_or_else(|| {
+                        anyhow::anyhow!(
+                            "No private key found in PEM. Parsed items but none were private keys."
+                        )
+                    })?
+            }
+        };
 
         // Build TLS config with client auth
         let config = rustls::ClientConfig::builder()
@@ -179,6 +208,91 @@ impl TalosGateway {
     pub fn is_configured(&self) -> bool {
         self.config.is_some()
     }
+}
+
+/// Parse Ed25519 private key in OpenSSL format and convert to PKCS#8.
+fn parse_ed25519_key(pem_bytes: &[u8]) -> anyhow::Result<PrivateKeyDer<'static>> {
+    use rustls::pki_types::PrivatePkcs8KeyDer;
+
+    // Find PEM boundaries
+    let pem_str = String::from_utf8_lossy(pem_bytes);
+    let begin_marker = "-----BEGIN ED25519 PRIVATE KEY-----";
+    let end_marker = "-----END ED25519 PRIVATE KEY-----";
+
+    let start = pem_str
+        .find(begin_marker)
+        .ok_or_else(|| anyhow::anyhow!("Ed25519 PEM begin marker not found"))?
+        + begin_marker.len();
+
+    let end = pem_str
+        .find(end_marker)
+        .ok_or_else(|| anyhow::anyhow!("Ed25519 PEM end marker not found"))?;
+
+    // Extract base64 content
+    let b64_content = &pem_str[start..end];
+    let cleaned: String = b64_content.chars().filter(|c| !c.is_whitespace()).collect();
+
+    // Decode base64
+    let der_bytes = decode_base64(&cleaned)?;
+
+    // The OpenSSL Ed25519 format is already in a PKCS#8-compatible structure,
+    // we just need to wrap it in the appropriate type
+    Ok(PrivateKeyDer::Pkcs8(PrivatePkcs8KeyDer::from(
+        der_bytes,
+    )))
+}
+
+/// Simple base64 decoder helper for parse_ed25519_key.
+fn decode_base64(s: &str) -> anyhow::Result<Vec<u8>> {
+    const DECODE_TABLE: [i8; 256] = {
+        let mut table = [-1i8; 256];
+        let alphabet = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+        let mut i = 0;
+        while i < 64 {
+            table[alphabet[i] as usize] = i as i8;
+            i += 1;
+        }
+        table
+    };
+
+    let bytes = s.as_bytes();
+    let mut output = Vec::new();
+    let mut i = 0;
+
+    while i < bytes.len() {
+        let mut chunk = [0u8; 4];
+        let mut valid = 0;
+
+        for j in 0..4 {
+            if i + j >= bytes.len() {
+                break;
+            }
+            let b = bytes[i + j];
+            if b == b'=' {
+                break;
+            }
+            let val = DECODE_TABLE[b as usize];
+            if val < 0 {
+                anyhow::bail!("invalid base64 character");
+            }
+            chunk[j] = val as u8;
+            valid += 1;
+        }
+
+        if valid >= 2 {
+            output.push((chunk[0] << 2) | (chunk[1] >> 4));
+        }
+        if valid >= 3 {
+            output.push((chunk[1] << 4) | (chunk[2] >> 2));
+        }
+        if valid >= 4 {
+            output.push((chunk[2] << 6) | chunk[3]);
+        }
+
+        i += 4;
+    }
+
+    Ok(output)
 }
 
 /// Decode base64 string to bytes.
