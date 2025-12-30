@@ -83,7 +83,10 @@ impl DockerBackend {
     /// Build the docker run command arguments (exposed for testing)
     ///
     /// Returns all arguments that would be passed to `docker run`.
-    #[must_use]
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the proxy CA certificate is required but missing.
     pub fn build_create_args(
         name: &str,
         workdir: &Path,
@@ -92,7 +95,7 @@ impl DockerBackend {
         home_dir: &str,
         proxy_config: Option<&DockerProxyConfig>,
         dangerous_skip_checks: bool,
-    ) -> Vec<String> {
+    ) -> anyhow::Result<Vec<String>> {
         let container_name = format!("mux-{name}");
         let claude_config = format!("{home_dir}/.claude");
         let escaped_prompt = initial_prompt.replace('\'', "'\\''");
@@ -129,7 +132,7 @@ impl DockerBackend {
 
                 // CA certificate is required - fail fast if missing
                 if !ca_cert_path.exists() {
-                    panic!(
+                    anyhow::bail!(
                         "Proxy CA certificate not found at {:?}. \
                         Ensure the multiplexer daemon is running and initialized.",
                         ca_cert_path
@@ -266,7 +269,7 @@ impl DockerBackend {
             format!("claude --dangerously-skip-permissions '{escaped_prompt}'"),
         ]);
 
-        args
+        Ok(args)
     }
 
     /// Build the attach command arguments (exposed for testing)
@@ -298,7 +301,6 @@ impl ExecutionBackend for DockerBackend {
         name: &str,
         workdir: &Path,
         initial_prompt: &str,
-        dangerous_skip_checks: bool,
     ) -> anyhow::Result<String> {
         // Create a container name from the session name
         let container_name = format!("mux-{name}");
@@ -314,7 +316,7 @@ impl ExecutionBackend for DockerBackend {
             None
         };
 
-        let args = Self::build_create_args(name, workdir, initial_prompt, uid, &home_dir, proxy_config, dangerous_skip_checks);
+        let args = Self::build_create_args(name, workdir, initial_prompt, uid, &home_dir, proxy_config, false)?;
         let output = Command::new("docker")
             .args(&args)
             .output()
@@ -423,7 +425,7 @@ impl DockerBackend {
         workdir: &Path,
         initial_prompt: &str,
     ) -> anyhow::Result<String> {
-        self.create(name, workdir, initial_prompt, false).await
+        self.create(name, workdir, initial_prompt).await
     }
 
     /// Check if a Docker container exists (legacy name)
@@ -455,7 +457,7 @@ mod tests {
             "/home/user",
             None,
             false,
-        );
+        ).expect("Failed to build args");
 
         // Must have -dit for interactive TTY sessions
         assert!(
@@ -481,7 +483,7 @@ mod tests {
             "/home/user",
             None,
             false,
-        );
+        ).expect("Failed to build args");
 
         // Find --user flag and verify it's followed by the UID
         let user_idx = args.iter().position(|a| a == "--user");
@@ -504,7 +506,8 @@ mod tests {
             1000,
             "/home/user",
             None,
-        );
+            false,
+        ).expect("Failed to build args");
 
         // Look for volume mount containing .claude
         let has_claude_mount = args.iter().any(|a| a.contains(".claude"));
@@ -524,7 +527,8 @@ mod tests {
             1000,
             "/home/user",
             None,
-        );
+            false,
+        ).expect("Failed to build args");
 
         // Find the .claude volume mount
         let claude_mount = args.iter().find(|a| a.contains(".claude"));
@@ -586,7 +590,8 @@ mod tests {
             1000,
             "/home/user",
             None,
-        );
+            false,
+        ).expect("Failed to build args");
 
         // Find the command argument (last one containing the prompt)
         let cmd_arg = args.last().unwrap();
@@ -608,7 +613,8 @@ mod tests {
             1000,
             "/home/user",
             None,
-        );
+            false,
+        ).expect("Failed to build args");
 
         // Find --name flag and verify the container name
         let name_idx = args.iter().position(|a| a == "--name");
@@ -625,7 +631,20 @@ mod tests {
     /// Test that proxy config adds expected environment variables
     #[test]
     fn test_proxy_config_adds_env_vars() {
-        let proxy_config = DockerProxyConfig::new(18080, PathBuf::from("/home/user/.mux"));
+        use tempfile::tempdir;
+        let mux_dir = tempdir().expect("Failed to create temp dir");
+        let ca_cert_path = mux_dir.path().join("proxy-ca.pem");
+        std::fs::write(&ca_cert_path, "dummy cert").expect("Failed to write cert");
+
+        // Create kube and talos directories so they get mounted
+        let kube_dir = mux_dir.path().join("kube");
+        let talos_dir = mux_dir.path().join("talos");
+        std::fs::create_dir(&kube_dir).expect("Failed to create kube dir");
+        std::fs::create_dir(&talos_dir).expect("Failed to create talos dir");
+        std::fs::write(kube_dir.join("config"), "dummy").expect("Failed to write kube config");
+        std::fs::write(talos_dir.join("config"), "dummy").expect("Failed to write talos config");
+
+        let proxy_config = DockerProxyConfig::new(18080, mux_dir.path().to_path_buf());
         let args = DockerBackend::build_create_args(
             "test-session",
             &PathBuf::from("/workspace"),
@@ -633,7 +652,8 @@ mod tests {
             1000,
             "/home/user",
             Some(&proxy_config),
-        );
+            false,
+        ).expect("Failed to build args");
 
         // Should have HTTPS_PROXY
         let has_https_proxy = args.iter().any(|a| a.contains("HTTPS_PROXY"));
@@ -651,7 +671,17 @@ mod tests {
     /// Test that proxy config adds volume mounts for configs
     #[test]
     fn test_proxy_config_adds_volume_mounts() {
-        let proxy_config = DockerProxyConfig::new(18080, PathBuf::from("/home/user/.mux"));
+        use tempfile::tempdir;
+        let mux_dir = tempdir().expect("Failed to create temp dir");
+        let ca_cert_path = mux_dir.path().join("proxy-ca.pem");
+        std::fs::write(&ca_cert_path, "dummy cert").expect("Failed to write cert");
+
+        // Create kube directory so it gets mounted
+        let kube_dir = mux_dir.path().join("kube");
+        std::fs::create_dir(&kube_dir).expect("Failed to create kube dir");
+        std::fs::write(kube_dir.join("config"), "dummy").expect("Failed to write kube config");
+
+        let proxy_config = DockerProxyConfig::new(18080, mux_dir.path().to_path_buf());
         let args = DockerBackend::build_create_args(
             "test-session",
             &PathBuf::from("/workspace"),
@@ -659,7 +689,8 @@ mod tests {
             1000,
             "/home/user",
             Some(&proxy_config),
-        );
+            false,
+        ).expect("Failed to build args");
 
         // Should have proxy-ca.pem mount
         let has_ca_mount = args.iter().any(|a| a.contains("proxy-ca.pem"));
@@ -681,7 +712,8 @@ mod tests {
             1000,
             "/home/user",
             Some(&proxy_config),
-        );
+            false,
+        ).expect("Failed to build args");
 
         // Should NOT have HTTPS_PROXY
         let has_https_proxy = args.iter().any(|a| a.contains("HTTPS_PROXY"));
@@ -692,7 +724,12 @@ mod tests {
     /// This is required for Linux and macOS with OrbStack
     #[test]
     fn test_host_docker_internal_always_added() {
-        let proxy_config = DockerProxyConfig::new(18080, PathBuf::from("/tmp/mux"));
+        use tempfile::tempdir;
+        let mux_dir = tempdir().expect("Failed to create temp dir");
+        let ca_cert_path = mux_dir.path().join("proxy-ca.pem");
+        std::fs::write(&ca_cert_path, "dummy cert").expect("Failed to write cert");
+
+        let proxy_config = DockerProxyConfig::new(18080, mux_dir.path().to_path_buf());
         let args = DockerBackend::build_create_args(
             "test-session",
             &PathBuf::from("/workspace"),
@@ -700,7 +737,8 @@ mod tests {
             1000,
             "/home/user",
             Some(&proxy_config),
-        );
+            false,
+        ).expect("Failed to build args");
 
         // Should have --add-host flag
         assert!(
