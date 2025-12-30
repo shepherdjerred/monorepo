@@ -109,12 +109,17 @@ impl HttpHandler for AuthInjector {
                 if let Some(token) = credentials.get(rule.credential_key) {
                     // Special handling for Anthropic OAuth tokens vs API keys
                     let (header_name, header_value) = if rule.credential_key == "anthropic" {
+                        // For Anthropic, remove any existing auth headers first
+                        // The container may have placeholder credentials that need replacing
+                        req.headers_mut().remove("authorization");
+                        req.headers_mut().remove("x-api-key");
+
                         if token.starts_with("sk-ant-oat01-") {
                             // OAuth token - use Authorization: Bearer
                             ("authorization", format!("Bearer {}", token))
                         } else {
                             // API key - use x-api-key
-                            (rule.header_name, rule.format_header(token))
+                            ("x-api-key", token.to_string())
                         }
                     } else {
                         (rule.header_name, rule.format_header(token))

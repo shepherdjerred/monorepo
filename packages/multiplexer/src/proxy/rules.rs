@@ -54,11 +54,18 @@ pub static RULES: &[Rule] = &[
         format: "Bearer {}",
         credential_key: "github",
     },
-    // Anthropic API (uses x-api-key, NOT Bearer)
+    // Anthropic API (uses Bearer auth for OAuth tokens)
     Rule {
         host_pattern: "api.anthropic.com",
-        header_name: "x-api-key",
-        format: "{}",
+        header_name: "Authorization",
+        format: "Bearer {}",
+        credential_key: "anthropic",
+    },
+    // Anthropic Console (OAuth validation - uses Bearer)
+    Rule {
+        host_pattern: "console.anthropic.com",
+        header_name: "Authorization",
+        format: "Bearer {}",
         credential_key: "anthropic",
     },
     // PagerDuty API (uses "Token token=" format)
@@ -124,12 +131,12 @@ mod tests {
     }
 
     #[test]
-    fn test_anthropic_uses_x_api_key() {
+    fn test_anthropic_uses_bearer_auth() {
         let rule = find_matching_rule("api.anthropic.com");
         assert!(rule.is_some());
         let rule = rule.unwrap();
-        assert_eq!(rule.header_name, "x-api-key");
-        assert_eq!(rule.format_header("sk-ant-test"), "sk-ant-test");
+        assert_eq!(rule.header_name, "Authorization");
+        assert_eq!(rule.format_header("sk-ant-oat01-test"), "Bearer sk-ant-oat01-test");
     }
 
     #[test]
