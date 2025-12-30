@@ -48,12 +48,17 @@ current-context: default
 
 /// Generate talosconfig for containers.
 ///
-/// This talosconfig points to the Talos mTLS gateway running on the host,
-/// so containers don't need any Talos credentials.
+/// This talosconfig points to the Talos TLS gateway running on the host.
+/// IMPORTANT: This config intentionally omits ca, crt, and key fields for zero-credential access.
+/// The gateway terminates TLS using the proxy's CA, then establishes mTLS to real Talos
+/// with the host's credentials. Container never needs private keys.
 fn generate_talosconfig(mux_dir: &PathBuf, port: u16) -> anyhow::Result<()> {
     let talos_dir = mux_dir.join("talos");
     std::fs::create_dir_all(&talos_dir)?;
 
+    // Generate minimal talosconfig with NO certificates (zero-credential access)
+    // talosctl will use TLS to connect to the gateway at host.docker.internal:port
+    // Gateway terminates TLS and re-establishes mTLS to real Talos with host's cert
     let config = format!(
         r#"context: mux-proxied
 contexts:

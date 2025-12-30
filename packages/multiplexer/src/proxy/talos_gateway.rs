@@ -1,4 +1,4 @@
-//! Talos mTLS gateway - terminates mTLS and proxies gRPC to Talos nodes.
+//! Talos mTLS gateway - terminates TLS from containers and proxies gRPC to Talos nodes with mTLS.
 
 use std::net::SocketAddr;
 use std::sync::Arc;
@@ -6,13 +6,24 @@ use std::sync::Arc;
 use rustls::pki_types::{CertificateDer, PrivateKeyDer};
 use serde::Deserialize;
 use tokio::net::TcpListener;
-use tokio_rustls::TlsConnector;
+use tokio_rustls::{TlsAcceptor, TlsConnector};
 
-/// Talos gateway that terminates mTLS for container access.
+use super::ca::ProxyCa;
+
+/// Talos gateway that terminates TLS from containers and establishes mTLS to Talos nodes.
+///
+/// Architecture:
+/// 1. Container connects with TLS using proxy's CA
+/// 2. Gateway terminates TLS, sees plaintext HTTP/2 (gRPC)
+/// 3. Gateway establishes new mTLS connection to real Talos with host's cert (O=os:admin)
+/// 4. Talos validates cert, extracts Organization field, grants access
+/// 5. Container never needs Talos private key (zero-credential access)
 #[derive(Clone)]
 pub struct TalosGateway {
     /// Listen address.
     addr: SocketAddr,
+    /// Proxy CA for accepting TLS from containers.
+    proxy_ca: Arc<ProxyCa>,
     /// Talos config (loaded from ~/.talos/config).
     config: Option<TalosConfig>,
 }
@@ -43,9 +54,10 @@ pub struct TalosContext {
 
 impl TalosGateway {
     /// Create a new Talos gateway.
-    pub fn new(port: u16) -> Self {
+    pub fn new(port: u16, proxy_ca: Arc<ProxyCa>) -> Self {
         Self {
             addr: SocketAddr::from(([127, 0, 0, 1], port)),
+            proxy_ca,
             config: None,
         }
     }
@@ -176,7 +188,17 @@ impl TalosGateway {
         let listener = TcpListener::bind(self.addr).await?;
         tracing::info!("Talos mTLS gateway listening on {}", self.addr);
 
-        // Pre-build TLS connector (validates config)
+        // Build TLS acceptor for accepting connections from containers
+        let server_config = match self.proxy_ca.build_server_config() {
+            Ok(config) => Arc::new(config),
+            Err(e) => {
+                tracing::error!("Failed to build TLS server config: {}", e);
+                return Err(e);
+            }
+        };
+        let tls_acceptor = TlsAcceptor::from(server_config);
+
+        // Pre-build TLS connector for mTLS to Talos (validates config)
         let tls_connector = match self.build_tls_connector() {
             Ok(c) => Arc::new(c),
             Err(e) => {
@@ -188,10 +210,11 @@ impl TalosGateway {
         loop {
             let (stream, client_addr) = listener.accept().await?;
             let gateway = self.clone();
+            let acceptor = tls_acceptor.clone();
             let connector = Arc::clone(&tls_connector);
 
             tokio::spawn(async move {
-                if let Err(e) = handle_talos_connection(stream, client_addr, gateway, connector).await
+                if let Err(e) = handle_talos_connection(stream, client_addr, gateway, acceptor, connector).await
                 {
                     tracing::error!("Talos connection error from {}: {}", client_addr, e);
                 }
@@ -326,11 +349,18 @@ fn base64_decode(s: &str) -> anyhow::Result<Vec<u8>> {
     }
 }
 
-/// Handle a Talos gRPC connection with mTLS.
+/// Handle a Talos gRPC connection with TLS termination.
+///
+/// Flow:
+/// 1. Accept TLS from container (using proxy's CA)
+/// 2. Terminate TLS to see plaintext HTTP/2
+/// 3. Establish mTLS to real Talos (using host's cert with O=os:admin)
+/// 4. Bidirectionally forward HTTP/2 frames
 async fn handle_talos_connection(
-    mut client_stream: tokio::net::TcpStream,
+    client_stream: tokio::net::TcpStream,
     client_addr: SocketAddr,
     gateway: TalosGateway,
+    tls_acceptor: TlsAcceptor,
     tls_connector: Arc<TlsConnector>,
 ) -> anyhow::Result<()> {
     let context = gateway
@@ -355,22 +385,39 @@ async fn handle_talos_connection(
     };
 
     tracing::debug!(
-        "Proxying Talos connection from {} to {}:{}",
+        "Proxying Talos connection from {} to {}:{} (with TLS termination)",
         client_addr,
         host,
         port
     );
 
-    // Connect to Talos node
+    // Step 1: Accept TLS from container
+    let client_tls_stream = match tls_acceptor.accept(client_stream).await {
+        Ok(stream) => stream,
+        Err(e) => {
+            tracing::warn!("Failed to accept TLS from {}: {}", client_addr, e);
+            return Err(e.into());
+        }
+    };
+
+    tracing::debug!("TLS accepted from {}, establishing mTLS to Talos", client_addr);
+
+    // Step 2: Connect to Talos node with mTLS
     let upstream_tcp = tokio::net::TcpStream::connect(format!("{}:{}", host, port)).await?;
 
-    // Establish TLS with mTLS client auth
+    // Establish TLS with mTLS client auth (using host's cert with O=os:admin)
     let server_name = rustls::pki_types::ServerName::try_from(host.clone())?;
-    let upstream = tls_connector.connect(server_name, upstream_tcp).await?;
+    let upstream_tls_stream = tls_connector.connect(server_name, upstream_tcp).await?;
 
-    // Bidirectional copy
-    let (mut client_read, mut client_write) = client_stream.split();
-    let (mut upstream_read, mut upstream_write) = tokio::io::split(upstream);
+    tracing::debug!(
+        "mTLS established to Talos at {}:{}, forwarding traffic",
+        host,
+        port
+    );
+
+    // Step 3: Bidirectional copy (plaintext HTTP/2 from container ↔ mTLS to Talos)
+    let (mut client_read, mut client_write) = tokio::io::split(client_tls_stream);
+    let (mut upstream_read, mut upstream_write) = tokio::io::split(upstream_tls_stream);
 
     let client_to_upstream = tokio::io::copy(&mut client_read, &mut upstream_write);
     let upstream_to_client = tokio::io::copy(&mut upstream_read, &mut client_write);
@@ -388,6 +435,8 @@ async fn handle_talos_connection(
         }
     };
 
+    tracing::debug!("Connection from {} completed", client_addr);
+
     Ok(())
 }
 
@@ -397,14 +446,22 @@ mod tests {
 
     #[test]
     fn test_gateway_creation() {
-        let gateway = TalosGateway::new(18082);
+        use tempfile::tempdir;
+        let dir = tempdir().unwrap();
+        let proxy_ca = Arc::new(ProxyCa::load_or_generate(&dir.path().to_path_buf()).unwrap());
+
+        let gateway = TalosGateway::new(18082, proxy_ca);
         assert_eq!(gateway.addr().port(), 18082);
         assert!(!gateway.is_configured());
     }
 
     #[test]
     fn test_gateway_is_clone() {
-        let gateway = TalosGateway::new(18082);
+        use tempfile::tempdir;
+        let dir = tempdir().unwrap();
+        let proxy_ca = Arc::new(ProxyCa::load_or_generate(&dir.path().to_path_buf()).unwrap());
+
+        let gateway = TalosGateway::new(18082, proxy_ca);
         let _cloned = gateway.clone();
     }
 

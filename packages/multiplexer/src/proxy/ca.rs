@@ -7,6 +7,7 @@ use rcgen::{BasicConstraints, CertificateParams, DistinguishedName, DnType, IsCa
 use rustls::crypto::aws_lc_rs::default_provider;
 
 /// Proxy CA for generating certificates for HTTPS interception.
+#[derive(Clone)]
 pub struct ProxyCa {
     /// Path where CA cert PEM is stored.
     cert_path: PathBuf,
@@ -100,6 +101,61 @@ impl ProxyCa {
     /// Get the path to the CA certificate PEM file.
     pub fn cert_path(&self) -> &PathBuf {
         &self.cert_path
+    }
+
+    /// Build a rustls ServerConfig for accepting TLS connections with dynamic certificate generation.
+    ///
+    /// This generates a server certificate on-the-fly for accepting TLS connections.
+    /// Used by the Talos gateway to terminate TLS from containers.
+    pub fn build_server_config(&self) -> anyhow::Result<rustls::ServerConfig> {
+        use rustls::pki_types::{CertificateDer, PrivateKeyDer, PrivatePkcs8KeyDer};
+
+        // Read CA cert and key
+        let ca_cert_pem = std::fs::read_to_string(&self.cert_path)?;
+        let ca_key_pem = std::fs::read_to_string(&self.key_path)?;
+
+        // Parse CA key pair for signing
+        let ca_key_pair = KeyPair::from_pem(&ca_key_pem)?;
+
+        // Create Issuer from CA cert
+        let issuer = Issuer::from_ca_cert_pem(&ca_cert_pem, ca_key_pair)?;
+
+        // Generate server certificate signed by our CA
+        // This certificate will be presented to clients connecting to the gateway
+        let mut server_params = CertificateParams::default();
+        let mut dn = DistinguishedName::new();
+        dn.push(DnType::CommonName, "Mux Talos Gateway");
+        server_params.distinguished_name = dn;
+
+        // Add localhost and common IPs as subject alternative names
+        server_params.subject_alt_names = vec![
+            rcgen::SanType::DnsName("localhost".to_string().try_into().unwrap()),
+            rcgen::SanType::IpAddress(std::net::IpAddr::V4(std::net::Ipv4Addr::new(127, 0, 0, 1))),
+            rcgen::SanType::DnsName("host.docker.internal".to_string().try_into().unwrap()),
+        ];
+
+        // Valid for 1 year
+        server_params.not_before = time::OffsetDateTime::now_utc();
+        server_params.not_after = server_params.not_before + time::Duration::days(365);
+
+        // Generate server key pair
+        let server_key_pair = KeyPair::generate()?;
+
+        // Sign server cert with CA using Issuer
+        let server_cert = server_params.signed_by(&server_key_pair, &issuer)?;
+
+        // Convert to rustls types
+        let server_cert_der = CertificateDer::from(server_cert.der().to_vec());
+        let server_key_der = PrivateKeyDer::Pkcs8(PrivatePkcs8KeyDer::from(
+            server_key_pair.serialize_der(),
+        ));
+
+        // Build ServerConfig
+        let config = rustls::ServerConfig::builder()
+            .with_no_client_auth()
+            .with_single_cert(vec![server_cert_der], server_key_der)?;
+
+        Ok(config)
     }
 }
 
