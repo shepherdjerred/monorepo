@@ -96,6 +96,13 @@ pub static RULES: &[Rule] = &[
         format: "Bearer {}",
         credential_key: "docker",
     },
+    // Grafana (Tailscale)
+    Rule {
+        host_pattern: "*.ts.net",
+        header_name: "Authorization",
+        format: "Bearer {}",
+        credential_key: "grafana",
+    },
 ];
 
 /// Find the matching rule for a given host.
