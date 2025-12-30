@@ -674,3 +674,67 @@ async fn test_audit_logging_multiple_services() {
         "GitHub request not in audit log"
     );
 }
+
+// === Auth Injection Verification Tests ===
+
+/// Verify that auth is actually injected by the proxy, not just that requests succeed.
+/// This test proves the proxy is doing its job by comparing requests with/without the proxy.
+#[tokio::test]
+#[ignore]
+async fn test_auth_injection_proof() {
+    // Requires GitHub token
+    if std::env::var("GITHUB_TOKEN").is_err() {
+        eprintln!("Skipping: GITHUB_TOKEN not set");
+        return;
+    }
+
+    // Step 1: Make request WITHOUT proxy - should fail with 401
+    let client_no_proxy = reqwest::Client::builder()
+        .danger_accept_invalid_certs(true)
+        .build()
+        .expect("Failed to create client");
+
+    let response_without_proxy = client_no_proxy
+        .get("https://api.github.com/user")
+        .header("User-Agent", "multiplexer-integration-test")
+        .send()
+        .await
+        .expect("Request failed");
+
+    assert_eq!(
+        response_without_proxy.status(),
+        401,
+        "Request without proxy should fail with 401 Unauthorized, got {}",
+        response_without_proxy.status()
+    );
+
+    // Step 2: Make same request WITH proxy - should succeed
+    let (proxy, _temp_dir, proxy_port, _audit_path) = setup_proxy_with_env_credentials()
+        .await
+        .expect("Failed to setup proxy");
+
+    tokio::spawn(async move {
+        proxy.run().await.ok();
+    });
+
+    tokio::time::sleep(tokio::time::Duration::from_millis(200)).await;
+
+    let ca_cert_path = _temp_dir.path().join("proxy-ca.pem");
+    let client_with_proxy = create_proxy_client(proxy_port, &ca_cert_path)
+        .expect("Failed to create client");
+
+    let response_with_proxy = client_with_proxy
+        .get("https://api.github.com/user")
+        .header("User-Agent", "multiplexer-integration-test")
+        .send()
+        .await
+        .expect("Request through proxy failed");
+
+    assert!(
+        response_with_proxy.status().is_success(),
+        "Request with proxy should succeed, got {}",
+        response_with_proxy.status()
+    );
+
+    println!("✓ Verified auth injection: without proxy = 401, with proxy = {}", response_with_proxy.status());
+}
