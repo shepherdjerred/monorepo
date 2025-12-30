@@ -25,7 +25,7 @@ The daemon loads the real OAuth token from `CLAUDE_CODE_OAUTH_TOKEN` environment
 
 ```rust
 // src/proxy/config.rs
-anthropic_api_key: std::env::var("CLAUDE_CODE_OAUTH_TOKEN").ok(),
+anthropic_oauth_token: std::env::var("CLAUDE_CODE_OAUTH_TOKEN").ok(),
 ```
 
 ### 2. Container Setup
@@ -56,9 +56,13 @@ req.headers_mut().remove("authorization");
 ("authorization", format!("Bearer {}", token))
 ```
 
-### 4. Interactive Execution
+### 4. Execution Modes
 
-Containers run Claude Code interactively with an initial prompt:
+The Docker backend supports two execution modes:
+
+#### Interactive Mode (default)
+
+Containers run Claude Code interactively, allowing you to attach and have a conversation:
 
 ```bash
 claude --dangerously-skip-permissions 'initial prompt here'
@@ -71,6 +75,27 @@ mux session attach <session-name>
 # Or directly with docker:
 docker attach mux-<session-name>
 ```
+
+#### Non-Interactive (Print) Mode
+
+For CI/CD pipelines or scripted usage, use print mode. The container outputs the response and exits:
+
+```bash
+claude --dangerously-skip-permissions --print --verbose 'prompt here'
+```
+
+To enable print mode programmatically:
+
+```rust
+// src/backends/docker.rs
+let backend = DockerBackend::with_proxy(proxy_config)
+    .with_print_mode(true);
+```
+
+Print mode is useful for:
+- CI/CD pipelines where interactive input isn't possible
+- Automated testing
+- One-shot queries that don't need follow-up
 
 ## Testing Claude in Containers
 

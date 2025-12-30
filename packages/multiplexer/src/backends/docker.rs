@@ -40,6 +40,8 @@ impl DockerProxyConfig {
 pub struct DockerBackend {
     /// Proxy configuration.
     proxy_config: DockerProxyConfig,
+    /// Run in print mode (non-interactive, outputs response and exits).
+    print_mode: bool,
 }
 
 impl DockerBackend {
@@ -52,13 +54,24 @@ impl DockerBackend {
                 http_proxy_port: 0,
                 mux_dir: PathBuf::new(),
             },
+            print_mode: false,
         }
     }
 
     /// Create a new Docker backend with proxy support.
     #[must_use]
     pub fn with_proxy(proxy_config: DockerProxyConfig) -> Self {
-        Self { proxy_config }
+        Self {
+            proxy_config,
+            print_mode: false,
+        }
+    }
+
+    /// Set print mode (non-interactive, outputs response and exits).
+    #[must_use]
+    pub const fn with_print_mode(mut self, print_mode: bool) -> Self {
+        self.print_mode = print_mode;
+        self
     }
 
     /// Check if a container is running
@@ -84,6 +97,12 @@ impl DockerBackend {
     ///
     /// Returns all arguments that would be passed to `docker run`.
     ///
+    /// # Arguments
+    ///
+    /// * `print_mode` - If true, run in non-interactive mode with `--print --verbose` flags.
+    ///                  The container will output the response and exit.
+    ///                  If false, run interactively for `docker attach`.
+    ///
     /// # Errors
     ///
     /// Returns an error if the proxy CA certificate is required but missing.
@@ -93,6 +112,7 @@ impl DockerBackend {
         initial_prompt: &str,
         uid: u32,
         proxy_config: Option<&DockerProxyConfig>,
+        print_mode: bool,
     ) -> anyhow::Result<Vec<String>> {
         let container_name = format!("mux-{name}");
         let escaped_prompt = initial_prompt.replace('\'', "'\\''");
@@ -274,12 +294,19 @@ impl DockerBackend {
         }
 
         // Add image and command
-        // Run Claude interactively - user attaches to container to interact
+        let claude_cmd = if print_mode {
+            // Non-interactive mode: output response and exit
+            format!("claude --dangerously-skip-permissions --print --verbose '{escaped_prompt}'")
+        } else {
+            // Interactive mode: user attaches to container to interact
+            format!("claude --dangerously-skip-permissions '{escaped_prompt}'")
+        };
+
         args.extend([
             DOCKER_IMAGE.to_string(),
             "bash".to_string(),
             "-c".to_string(),
-            format!("claude --dangerously-skip-permissions '{escaped_prompt}'"),
+            claude_cmd,
         ]);
 
         Ok(args)
@@ -328,7 +355,14 @@ impl ExecutionBackend for DockerBackend {
             None
         };
 
-        let args = Self::build_create_args(name, workdir, initial_prompt, uid, proxy_config)?;
+        let args = Self::build_create_args(
+            name,
+            workdir,
+            initial_prompt,
+            uid,
+            proxy_config,
+            self.print_mode,
+        )?;
         let output = Command::new("docker")
             .args(&args)
             .output()
@@ -466,8 +500,8 @@ mod tests {
             &PathBuf::from("/workspace"),
             "test prompt",
             1000,
-            
             None,
+            false, // interactive mode
         ).expect("Failed to build args");
 
         // Must have -dit for interactive TTY sessions
@@ -491,8 +525,8 @@ mod tests {
             &PathBuf::from("/workspace"),
             "test prompt",
             uid,
-            
             None,
+            false,
         ).expect("Failed to build args");
 
         // Find --user flag and verify it's followed by the UID
@@ -553,8 +587,8 @@ mod tests {
             &PathBuf::from("/workspace"),
             prompt_with_quotes,
             1000,
-            
             None,
+            false,
         ).expect("Failed to build args");
 
         // Find the command argument (last one containing the prompt)
@@ -575,8 +609,8 @@ mod tests {
             &PathBuf::from("/workspace"),
             "test prompt",
             1000,
-            
             None,
+            false,
         ).expect("Failed to build args");
 
         // Find --name flag and verify the container name
@@ -613,8 +647,8 @@ mod tests {
             &PathBuf::from("/workspace"),
             "test prompt",
             1000,
-            
             Some(&proxy_config),
+            false,
         ).expect("Failed to build args");
 
         // Should have HTTPS_PROXY
@@ -649,8 +683,8 @@ mod tests {
             &PathBuf::from("/workspace"),
             "test prompt",
             1000,
-            
             Some(&proxy_config),
+            false,
         ).expect("Failed to build args");
 
         // Should have proxy-ca.pem mount
@@ -671,8 +705,8 @@ mod tests {
             &PathBuf::from("/workspace"),
             "test prompt",
             1000,
-            
             Some(&proxy_config),
+            false,
         ).expect("Failed to build args");
 
         // Should NOT have HTTPS_PROXY
@@ -695,8 +729,8 @@ mod tests {
             &PathBuf::from("/workspace"),
             "test prompt",
             1000,
-            
             Some(&proxy_config),
+            false,
         ).expect("Failed to build args");
 
         // Should have --add-host flag
@@ -709,6 +743,48 @@ mod tests {
         assert!(
             args.iter().any(|arg| arg == "host.docker.internal:host-gateway"),
             "Expected host.docker.internal:host-gateway, got: {args:?}"
+        );
+    }
+
+    /// Test that print mode adds --print --verbose flags
+    #[test]
+    fn test_print_mode_adds_flags() {
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            &PathBuf::from("/workspace"),
+            "test prompt",
+            1000,
+            None,
+            true, // print mode enabled
+        ).expect("Failed to build args");
+
+        let cmd_arg = args.last().unwrap();
+        assert!(
+            cmd_arg.contains("--print"),
+            "Print mode should include --print flag: {cmd_arg}"
+        );
+        assert!(
+            cmd_arg.contains("--verbose"),
+            "Print mode should include --verbose flag: {cmd_arg}"
+        );
+    }
+
+    /// Test that interactive mode (non-print) does NOT have --print flag
+    #[test]
+    fn test_interactive_mode_no_print_flag() {
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            &PathBuf::from("/workspace"),
+            "test prompt",
+            1000,
+            None,
+            false, // interactive mode
+        ).expect("Failed to build args");
+
+        let cmd_arg = args.last().unwrap();
+        assert!(
+            !cmd_arg.contains("--print"),
+            "Interactive mode should NOT include --print flag: {cmd_arg}"
         );
     }
 }
