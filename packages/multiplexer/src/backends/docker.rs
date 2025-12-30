@@ -91,6 +91,7 @@ impl DockerBackend {
         uid: u32,
         home_dir: &str,
         proxy_config: Option<&DockerProxyConfig>,
+        dangerous_skip_checks: bool,
     ) -> Vec<String> {
         let container_name = format!("mux-{name}");
         let claude_config = format!("{home_dir}/.claude");
@@ -123,20 +124,28 @@ impl DockerBackend {
 
                 // Validate required files exist before attempting to mount them
                 let ca_cert_path = mux_dir.join("proxy-ca.pem");
-                let kube_config_path = mux_dir.join("kube/config");
-                let talos_config_path = mux_dir.join("talos/config");
+                let kube_config_dir = mux_dir.join("kube");
+                let talos_config_dir = mux_dir.join("talos");
 
+                // CA certificate is required - fail fast if missing
                 if !ca_cert_path.exists() {
-                    tracing::error!("Proxy CA certificate not found at {:?}", ca_cert_path);
-                    tracing::error!("Ensure the multiplexer daemon is running and initialized");
+                    panic!(
+                        "Proxy CA certificate not found at {:?}. \
+                        Ensure the multiplexer daemon is running and initialized.",
+                        ca_cert_path
+                    );
                 }
 
-                if !kube_config_path.exists() {
-                    tracing::warn!("Kubeconfig not found at {:?}", kube_config_path);
+                // Check optional configs
+                let has_kube_config = kube_config_dir.exists();
+                let has_talos_config = talos_config_dir.exists();
+
+                if !has_kube_config {
+                    tracing::debug!("Kubeconfig not found at {:?}, skipping mount", kube_config_dir);
                 }
 
-                if !talos_config_path.exists() {
-                    tracing::warn!("Talosconfig not found at {:?}", talos_config_path);
+                if !has_talos_config {
+                    tracing::debug!("Talosconfig not found at {:?}, skipping mount", talos_config_dir);
                 }
 
                 // Add host.docker.internal resolution
@@ -154,7 +163,7 @@ impl DockerBackend {
                     "-e".to_string(),
                     format!("HTTPS_PROXY=http://host.docker.internal:{port}"),
                     "-e".to_string(),
-                    "NO_PROXY=localhost,127.0.0.1".to_string(),
+                    "NO_PROXY=localhost,127.0.0.1,host.docker.internal".to_string(),
                 ]);
 
                 // Set dummy tokens so CLI tools will make requests (proxy replaces with real tokens)
@@ -163,8 +172,8 @@ impl DockerBackend {
                     "GH_TOKEN=mux-proxy".to_string(),
                     "-e".to_string(),
                     "GITHUB_TOKEN=mux-proxy".to_string(),
-                    "-e".to_string(),
-                    "CLAUDE_CODE_OAUTH_TOKEN=mux-proxy".to_string(),
+                    // NOTE: Don't set ANTHROPIC_API_KEY - Claude Code will use OAuth from ~/.claude
+                    // and the proxy will inject the real API key when intercepting requests
                 ]);
 
                 // SSL/TLS environment variables for CA trust
@@ -177,23 +186,75 @@ impl DockerBackend {
                     "REQUESTS_CA_BUNDLE=/etc/mux/proxy-ca.pem".to_string(),
                 ]);
 
-                // Kubernetes/Talos config paths
+                // Volume mounts for proxy configs (read-only)
+                // CA certificate is always mounted (required)
                 args.extend([
-                    "-e".to_string(),
-                    "KUBECONFIG=/etc/mux/kube/config".to_string(),
-                    "-e".to_string(),
-                    "TALOSCONFIG=/etc/mux/talos/config".to_string(),
+                    "-v".to_string(),
+                    format!("{}:/etc/mux/proxy-ca.pem:ro", ca_cert_path.display()),
                 ]);
 
-                // Volume mounts for proxy configs (read-only)
-                args.extend([
-                    "-v".to_string(),
-                    format!("{}:/etc/mux/proxy-ca.pem:ro", mux_dir.join("proxy-ca.pem").display()),
-                    "-v".to_string(),
-                    format!("{}:/etc/mux/kube:ro", mux_dir.join("kube").display()),
-                    "-v".to_string(),
-                    format!("{}:/etc/mux/talos:ro", mux_dir.join("talos").display()),
-                ]);
+                // Mount and configure Kubernetes if available
+                if has_kube_config {
+                    args.extend([
+                        "-v".to_string(),
+                        format!("{}:/etc/mux/kube:ro", kube_config_dir.display()),
+                        "-e".to_string(),
+                        "KUBECONFIG=/etc/mux/kube/config".to_string(),
+                    ]);
+                }
+
+                // Mount and configure Talos if available
+                if has_talos_config {
+                    args.extend([
+                        "-v".to_string(),
+                        format!("{}:/etc/mux/talos:ro", talos_config_dir.display()),
+                        "-e".to_string(),
+                        "TALOSCONFIG=/etc/mux/talos/config".to_string(),
+                    ]);
+                }
+            }
+        }
+
+        // Configure bypass permissions mode if enabled
+        if dangerous_skip_checks {
+            // Create managed settings file to suppress the bypass permissions warning
+            let managed_settings_dir = if let Some(proxy) = proxy_config {
+                proxy.mux_dir.clone()
+            } else {
+                // Use ~/.mux as fallback
+                PathBuf::from(home_dir).join(".mux")
+            };
+
+            let managed_settings_path = managed_settings_dir.join("managed-settings.json");
+
+            // Create the directory if it doesn't exist
+            if let Err(e) = std::fs::create_dir_all(&managed_settings_dir) {
+                tracing::warn!(
+                    "Failed to create managed settings directory at {:?}: {}",
+                    managed_settings_dir,
+                    e
+                );
+            } else {
+                // Write managed settings file
+                let managed_settings = r#"{
+  "permissions": {
+    "defaultMode": "bypassPermissions"
+  }
+}"#;
+
+                if let Err(e) = std::fs::write(&managed_settings_path, managed_settings) {
+                    tracing::warn!(
+                        "Failed to write managed settings file at {:?}: {}",
+                        managed_settings_path,
+                        e
+                    );
+                } else {
+                    // Mount the managed settings file into the container
+                    args.extend([
+                        "-v".to_string(),
+                        format!("{}:/etc/claude-code/managed-settings.json:ro", managed_settings_path.display()),
+                    ]);
+                }
             }
         }
 
@@ -237,6 +298,7 @@ impl ExecutionBackend for DockerBackend {
         name: &str,
         workdir: &Path,
         initial_prompt: &str,
+        dangerous_skip_checks: bool,
     ) -> anyhow::Result<String> {
         // Create a container name from the session name
         let container_name = format!("mux-{name}");
@@ -252,7 +314,7 @@ impl ExecutionBackend for DockerBackend {
             None
         };
 
-        let args = Self::build_create_args(name, workdir, initial_prompt, uid, &home_dir, proxy_config);
+        let args = Self::build_create_args(name, workdir, initial_prompt, uid, &home_dir, proxy_config, dangerous_skip_checks);
         let output = Command::new("docker")
             .args(&args)
             .output()
@@ -361,7 +423,7 @@ impl DockerBackend {
         workdir: &Path,
         initial_prompt: &str,
     ) -> anyhow::Result<String> {
-        self.create(name, workdir, initial_prompt).await
+        self.create(name, workdir, initial_prompt, false).await
     }
 
     /// Check if a Docker container exists (legacy name)
@@ -392,6 +454,7 @@ mod tests {
             1000,
             "/home/user",
             None,
+            false,
         );
 
         // Must have -dit for interactive TTY sessions
@@ -417,6 +480,7 @@ mod tests {
             uid,
             "/home/user",
             None,
+            false,
         );
 
         // Find --user flag and verify it's followed by the UID
