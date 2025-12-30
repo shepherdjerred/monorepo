@@ -1,0 +1,161 @@
+---
+name: zero-credential-claude
+description: Explains how Claude Code works in containers with zero credentials via the mux proxy. Use when testing Claude in containers, debugging authentication issues, or understanding the zero-trust proxy architecture.
+---
+
+# Zero-Credential Claude Code in Containers
+
+## Overview
+
+The multiplexer enables Claude Code to run in Docker containers with **zero real credentials**. The host proxy intercepts HTTPS requests and injects authentication, so containers never see actual API keys or tokens.
+
+## Architecture
+
+```
+Container (placeholder creds) → HTTPS Proxy (TLS intercept) → api.anthropic.com
+                                       ↓
+                              Inject: Authorization: Bearer {real_oauth_token}
+```
+
+## How It Works
+
+### 1. OAuth Token Loading
+
+The daemon loads the real OAuth token from `CLAUDE_CODE_OAUTH_TOKEN` environment variable on the host:
+
+```rust
+// src/proxy/config.rs
+anthropic_api_key: std::env::var("CLAUDE_CODE_OAUTH_TOKEN").ok(),
+```
+
+### 2. Container Setup
+
+Containers receive placeholder credentials that make Claude Code think it's authenticated:
+
+```rust
+// src/backends/docker.rs
+"-e", "CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-mux-proxy-placeholder"
+```
+
+A `claude.json` file is mounted to skip onboarding:
+
+```json
+{"hasCompletedOnboarding": true}
+```
+
+### 3. Proxy Credential Injection
+
+The HTTP proxy intercepts requests to `api.anthropic.com` and:
+
+1. Removes any existing auth headers (placeholder credentials)
+2. Detects token type (OAuth vs API key)
+3. Injects the correct header format
+
+```rust
+// src/proxy/http_proxy.rs
+if token.starts_with("sk-ant-oat01-") {
+    // OAuth token - use Authorization: Bearer
+    ("authorization", format!("Bearer {}", token))
+} else {
+    // API key - use x-api-key
+    ("x-api-key", token.to_string())
+}
+```
+
+### 4. Non-Interactive Execution
+
+Containers run Claude Code with flags that prevent interactive prompts:
+
+```bash
+claude --dangerously-skip-permissions --print --verbose 'prompt here'
+```
+
+## Testing Claude in Containers
+
+### Prerequisites
+
+1. Set your OAuth token on the host:
+   ```bash
+   export CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-your-real-token
+   ```
+
+2. Start the mux daemon:
+   ```bash
+   cargo run --bin mux daemon
+   ```
+
+### Create a Test Session
+
+```bash
+cargo run --bin mux session create --name test-session --prompt "Say hello"
+```
+
+### Manual Container Test
+
+To manually test without creating a full session:
+
+```bash
+# Start the daemon first
+cargo run --bin mux daemon &
+
+# Run a container with the proxy setup
+docker run -it --rm \
+  -e CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-mux-proxy-placeholder \
+  -e HTTPS_PROXY=http://host.docker.internal:18080 \
+  -e HTTP_PROXY=http://host.docker.internal:18080 \
+  -v ~/.mux/proxy-ca.pem:/etc/ssl/certs/mux-proxy-ca.pem:ro \
+  -v ~/.mux/claude.json:/root/.claude.json \
+  your-claude-image \
+  claude --print "Hello, Claude!"
+```
+
+### Verify Proxy is Injecting Credentials
+
+Check the audit log at `~/.mux/audit.jsonl`:
+
+```bash
+tail -f ~/.mux/audit.jsonl | jq
+```
+
+Look for entries with `"auth_injected": true` for `api.anthropic.com` requests.
+
+### Debug Container Issues
+
+1. **Check daemon logs** for proxy activity
+2. **Verify CA cert** is trusted in container: `curl -v https://api.anthropic.com`
+3. **Check environment** in container: `env | grep -E '(PROXY|CLAUDE)'`
+
+## Common Issues
+
+### "OAuth authentication is currently not supported"
+
+The proxy is using `x-api-key` header instead of `Authorization: Bearer`. Ensure:
+- Token starts with `sk-ant-oat01-`
+- Proxy rules are updated to use Bearer auth
+
+### Onboarding Prompt Appears
+
+The `claude.json` file is missing or not mounted. Verify:
+```bash
+cat ~/.mux/claude.json
+# Should contain: {"hasCompletedOnboarding": true}
+```
+
+### "Do you want to use this API key?" Prompt
+
+Using `ANTHROPIC_API_KEY` instead of `CLAUDE_CODE_OAUTH_TOKEN`. The latter triggers OAuth flow detection and skips this prompt.
+
+### Read-Only Filesystem Error
+
+The `claude.json` mount must NOT be read-only (`:ro`). Claude Code writes to this file.
+
+## Key Files
+
+| File | Purpose |
+|------|---------|
+| `src/proxy/rules.rs` | Defines which hosts get auth injection |
+| `src/proxy/http_proxy.rs` | TLS interception and header injection |
+| `src/proxy/config.rs` | Credential loading from environment |
+| `src/backends/docker.rs` | Container creation with proxy setup |
+| `~/.mux/proxy-ca.pem` | CA certificate for TLS interception |
+| `~/.mux/audit.jsonl` | Audit log of proxied requests |
