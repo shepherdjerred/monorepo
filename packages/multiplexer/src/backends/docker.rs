@@ -83,7 +83,10 @@ impl DockerBackend {
     /// Build the docker run command arguments (exposed for testing)
     ///
     /// Returns all arguments that would be passed to `docker run`.
-    #[must_use]
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the proxy CA certificate is required but missing.
     pub fn build_create_args(
         name: &str,
         workdir: &Path,
@@ -91,7 +94,8 @@ impl DockerBackend {
         uid: u32,
         home_dir: &str,
         proxy_config: Option<&DockerProxyConfig>,
-    ) -> Vec<String> {
+        dangerous_skip_checks: bool,
+    ) -> anyhow::Result<Vec<String>> {
         let container_name = format!("mux-{name}");
         let claude_config = format!("{home_dir}/.claude");
         let escaped_prompt = initial_prompt.replace('\'', "'\\''");
@@ -121,9 +125,35 @@ impl DockerBackend {
                 let port = proxy.http_proxy_port;
                 let mux_dir = &proxy.mux_dir;
 
-                // On Linux, host.docker.internal doesn't resolve by default
-                // This flag makes it work (ignored on Docker Desktop for Mac/Windows)
-                #[cfg(target_os = "linux")]
+                // Validate required files exist before attempting to mount them
+                let ca_cert_path = mux_dir.join("proxy-ca.pem");
+                let kube_config_dir = mux_dir.join("kube");
+                let talos_config_dir = mux_dir.join("talos");
+
+                // CA certificate is required - fail fast if missing
+                if !ca_cert_path.exists() {
+                    anyhow::bail!(
+                        "Proxy CA certificate not found at {:?}. \
+                        Ensure the multiplexer daemon is running and initialized.",
+                        ca_cert_path
+                    );
+                }
+
+                // Check optional configs
+                let has_kube_config = kube_config_dir.exists();
+                let has_talos_config = talos_config_dir.exists();
+
+                if !has_kube_config {
+                    tracing::debug!("Kubeconfig not found at {:?}, skipping mount", kube_config_dir);
+                }
+
+                if !has_talos_config {
+                    tracing::debug!("Talosconfig not found at {:?}, skipping mount", talos_config_dir);
+                }
+
+                // Add host.docker.internal resolution
+                // Required for Linux and macOS with OrbStack
+                // Harmless on Docker Desktop (flag is ignored if host already exists)
                 args.extend([
                     "--add-host".to_string(),
                     "host.docker.internal:host-gateway".to_string(),
@@ -136,7 +166,17 @@ impl DockerBackend {
                     "-e".to_string(),
                     format!("HTTPS_PROXY=http://host.docker.internal:{port}"),
                     "-e".to_string(),
-                    "NO_PROXY=localhost,127.0.0.1".to_string(),
+                    "NO_PROXY=localhost,127.0.0.1,host.docker.internal".to_string(),
+                ]);
+
+                // Set dummy tokens so CLI tools will make requests (proxy replaces with real tokens)
+                args.extend([
+                    "-e".to_string(),
+                    "GH_TOKEN=mux-proxy".to_string(),
+                    "-e".to_string(),
+                    "GITHUB_TOKEN=mux-proxy".to_string(),
+                    // NOTE: Don't set ANTHROPIC_API_KEY - Claude Code will use OAuth from ~/.claude
+                    // and the proxy will inject the real API key when intercepting requests
                 ]);
 
                 // SSL/TLS environment variables for CA trust
@@ -149,23 +189,75 @@ impl DockerBackend {
                     "REQUESTS_CA_BUNDLE=/etc/mux/proxy-ca.pem".to_string(),
                 ]);
 
-                // Kubernetes/Talos config paths
+                // Volume mounts for proxy configs (read-only)
+                // CA certificate is always mounted (required)
                 args.extend([
-                    "-e".to_string(),
-                    "KUBECONFIG=/etc/mux/kube/config".to_string(),
-                    "-e".to_string(),
-                    "TALOSCONFIG=/etc/mux/talos/config".to_string(),
+                    "-v".to_string(),
+                    format!("{}:/etc/mux/proxy-ca.pem:ro", ca_cert_path.display()),
                 ]);
 
-                // Volume mounts for proxy configs (read-only)
-                args.extend([
-                    "-v".to_string(),
-                    format!("{}:/etc/mux/proxy-ca.pem:ro", mux_dir.join("proxy-ca.pem").display()),
-                    "-v".to_string(),
-                    format!("{}:/etc/mux/kube:ro", mux_dir.join("kube").display()),
-                    "-v".to_string(),
-                    format!("{}:/etc/mux/talos:ro", mux_dir.join("talos").display()),
-                ]);
+                // Mount and configure Kubernetes if available
+                if has_kube_config {
+                    args.extend([
+                        "-v".to_string(),
+                        format!("{}:/etc/mux/kube:ro", kube_config_dir.display()),
+                        "-e".to_string(),
+                        "KUBECONFIG=/etc/mux/kube/config".to_string(),
+                    ]);
+                }
+
+                // Mount and configure Talos if available
+                if has_talos_config {
+                    args.extend([
+                        "-v".to_string(),
+                        format!("{}:/etc/mux/talos:ro", talos_config_dir.display()),
+                        "-e".to_string(),
+                        "TALOSCONFIG=/etc/mux/talos/config".to_string(),
+                    ]);
+                }
+            }
+        }
+
+        // Configure bypass permissions mode if enabled
+        if dangerous_skip_checks {
+            // Create managed settings file to suppress the bypass permissions warning
+            let managed_settings_dir = if let Some(proxy) = proxy_config {
+                proxy.mux_dir.clone()
+            } else {
+                // Use ~/.mux as fallback
+                PathBuf::from(home_dir).join(".mux")
+            };
+
+            let managed_settings_path = managed_settings_dir.join("managed-settings.json");
+
+            // Create the directory if it doesn't exist
+            if let Err(e) = std::fs::create_dir_all(&managed_settings_dir) {
+                tracing::warn!(
+                    "Failed to create managed settings directory at {:?}: {}",
+                    managed_settings_dir,
+                    e
+                );
+            } else {
+                // Write managed settings file
+                let managed_settings = r#"{
+  "permissions": {
+    "defaultMode": "bypassPermissions"
+  }
+}"#;
+
+                if let Err(e) = std::fs::write(&managed_settings_path, managed_settings) {
+                    tracing::warn!(
+                        "Failed to write managed settings file at {:?}: {}",
+                        managed_settings_path,
+                        e
+                    );
+                } else {
+                    // Mount the managed settings file into the container
+                    args.extend([
+                        "-v".to_string(),
+                        format!("{}:/etc/claude-code/managed-settings.json:ro", managed_settings_path.display()),
+                    ]);
+                }
             }
         }
 
@@ -177,7 +269,7 @@ impl DockerBackend {
             format!("claude --dangerously-skip-permissions '{escaped_prompt}'"),
         ]);
 
-        args
+        Ok(args)
     }
 
     /// Build the attach command arguments (exposed for testing)
@@ -224,7 +316,7 @@ impl ExecutionBackend for DockerBackend {
             None
         };
 
-        let args = Self::build_create_args(name, workdir, initial_prompt, uid, &home_dir, proxy_config);
+        let args = Self::build_create_args(name, workdir, initial_prompt, uid, &home_dir, proxy_config, false)?;
         let output = Command::new("docker")
             .args(&args)
             .output()
@@ -364,7 +456,8 @@ mod tests {
             1000,
             "/home/user",
             None,
-        );
+            false,
+        ).expect("Failed to build args");
 
         // Must have -dit for interactive TTY sessions
         assert!(
@@ -389,7 +482,8 @@ mod tests {
             uid,
             "/home/user",
             None,
-        );
+            false,
+        ).expect("Failed to build args");
 
         // Find --user flag and verify it's followed by the UID
         let user_idx = args.iter().position(|a| a == "--user");
@@ -412,7 +506,8 @@ mod tests {
             1000,
             "/home/user",
             None,
-        );
+            false,
+        ).expect("Failed to build args");
 
         // Look for volume mount containing .claude
         let has_claude_mount = args.iter().any(|a| a.contains(".claude"));
@@ -432,7 +527,8 @@ mod tests {
             1000,
             "/home/user",
             None,
-        );
+            false,
+        ).expect("Failed to build args");
 
         // Find the .claude volume mount
         let claude_mount = args.iter().find(|a| a.contains(".claude"));
@@ -494,7 +590,8 @@ mod tests {
             1000,
             "/home/user",
             None,
-        );
+            false,
+        ).expect("Failed to build args");
 
         // Find the command argument (last one containing the prompt)
         let cmd_arg = args.last().unwrap();
@@ -516,7 +613,8 @@ mod tests {
             1000,
             "/home/user",
             None,
-        );
+            false,
+        ).expect("Failed to build args");
 
         // Find --name flag and verify the container name
         let name_idx = args.iter().position(|a| a == "--name");
@@ -533,7 +631,20 @@ mod tests {
     /// Test that proxy config adds expected environment variables
     #[test]
     fn test_proxy_config_adds_env_vars() {
-        let proxy_config = DockerProxyConfig::new(18080, PathBuf::from("/home/user/.mux"));
+        use tempfile::tempdir;
+        let mux_dir = tempdir().expect("Failed to create temp dir");
+        let ca_cert_path = mux_dir.path().join("proxy-ca.pem");
+        std::fs::write(&ca_cert_path, "dummy cert").expect("Failed to write cert");
+
+        // Create kube and talos directories so they get mounted
+        let kube_dir = mux_dir.path().join("kube");
+        let talos_dir = mux_dir.path().join("talos");
+        std::fs::create_dir(&kube_dir).expect("Failed to create kube dir");
+        std::fs::create_dir(&talos_dir).expect("Failed to create talos dir");
+        std::fs::write(kube_dir.join("config"), "dummy").expect("Failed to write kube config");
+        std::fs::write(talos_dir.join("config"), "dummy").expect("Failed to write talos config");
+
+        let proxy_config = DockerProxyConfig::new(18080, mux_dir.path().to_path_buf());
         let args = DockerBackend::build_create_args(
             "test-session",
             &PathBuf::from("/workspace"),
@@ -541,7 +652,8 @@ mod tests {
             1000,
             "/home/user",
             Some(&proxy_config),
-        );
+            false,
+        ).expect("Failed to build args");
 
         // Should have HTTPS_PROXY
         let has_https_proxy = args.iter().any(|a| a.contains("HTTPS_PROXY"));
@@ -559,7 +671,17 @@ mod tests {
     /// Test that proxy config adds volume mounts for configs
     #[test]
     fn test_proxy_config_adds_volume_mounts() {
-        let proxy_config = DockerProxyConfig::new(18080, PathBuf::from("/home/user/.mux"));
+        use tempfile::tempdir;
+        let mux_dir = tempdir().expect("Failed to create temp dir");
+        let ca_cert_path = mux_dir.path().join("proxy-ca.pem");
+        std::fs::write(&ca_cert_path, "dummy cert").expect("Failed to write cert");
+
+        // Create kube directory so it gets mounted
+        let kube_dir = mux_dir.path().join("kube");
+        std::fs::create_dir(&kube_dir).expect("Failed to create kube dir");
+        std::fs::write(kube_dir.join("config"), "dummy").expect("Failed to write kube config");
+
+        let proxy_config = DockerProxyConfig::new(18080, mux_dir.path().to_path_buf());
         let args = DockerBackend::build_create_args(
             "test-session",
             &PathBuf::from("/workspace"),
@@ -567,7 +689,8 @@ mod tests {
             1000,
             "/home/user",
             Some(&proxy_config),
-        );
+            false,
+        ).expect("Failed to build args");
 
         // Should have proxy-ca.pem mount
         let has_ca_mount = args.iter().any(|a| a.contains("proxy-ca.pem"));
@@ -589,10 +712,44 @@ mod tests {
             1000,
             "/home/user",
             Some(&proxy_config),
-        );
+            false,
+        ).expect("Failed to build args");
 
         // Should NOT have HTTPS_PROXY
         let has_https_proxy = args.iter().any(|a| a.contains("HTTPS_PROXY"));
         assert!(!has_https_proxy, "Disabled proxy should not add HTTPS_PROXY");
+    }
+
+    /// Test that --add-host is always added for host.docker.internal resolution
+    /// This is required for Linux and macOS with OrbStack
+    #[test]
+    fn test_host_docker_internal_always_added() {
+        use tempfile::tempdir;
+        let mux_dir = tempdir().expect("Failed to create temp dir");
+        let ca_cert_path = mux_dir.path().join("proxy-ca.pem");
+        std::fs::write(&ca_cert_path, "dummy cert").expect("Failed to write cert");
+
+        let proxy_config = DockerProxyConfig::new(18080, mux_dir.path().to_path_buf());
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            &PathBuf::from("/workspace"),
+            "test prompt",
+            1000,
+            "/home/user",
+            Some(&proxy_config),
+            false,
+        ).expect("Failed to build args");
+
+        // Should have --add-host flag
+        assert!(
+            args.iter().any(|arg| arg == "--add-host"),
+            "Expected --add-host flag, got: {args:?}"
+        );
+
+        // Should have host.docker.internal:host-gateway
+        assert!(
+            args.iter().any(|arg| arg == "host.docker.internal:host-gateway"),
+            "Expected host.docker.internal:host-gateway, got: {args:?}"
+        );
     }
 }

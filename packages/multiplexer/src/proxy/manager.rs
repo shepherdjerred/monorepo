@@ -59,7 +59,7 @@ impl ProxyManager {
         let k8s_proxy = KubernetesProxy::new(config.k8s_proxy_port);
 
         // Create Talos gateway
-        let mut talos_gateway = TalosGateway::new(config.talos_gateway_port);
+        let mut talos_gateway = TalosGateway::new(config.talos_gateway_port, Arc::new(ca.clone()));
         let _ = talos_gateway.load_config(); // Ignore errors, just won't have Talos support
 
         Ok(Self {

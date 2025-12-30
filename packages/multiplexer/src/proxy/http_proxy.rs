@@ -107,11 +107,23 @@ impl HttpHandler for AuthInjector {
             let mut auth_injected = false;
             if let Some(rule) = find_matching_rule(&host) {
                 if let Some(token) = credentials.get(rule.credential_key) {
-                    let header_value = rule.format_header(token);
+                    // Special handling for Anthropic OAuth tokens vs API keys
+                    let (header_name, header_value) = if rule.credential_key == "anthropic" {
+                        if token.starts_with("sk-ant-oat01-") {
+                            // OAuth token - use Authorization: Bearer
+                            ("authorization", format!("Bearer {}", token))
+                        } else {
+                            // API key - use x-api-key
+                            (rule.header_name, rule.format_header(token))
+                        }
+                    } else {
+                        (rule.header_name, rule.format_header(token))
+                    };
+
                     if let Ok(value) = header_value.parse() {
-                        req.headers_mut().insert(rule.header_name, value);
+                        req.headers_mut().insert(header_name, value);
                         auth_injected = true;
-                        tracing::debug!("Injected {} header for {}", rule.header_name, host);
+                        tracing::debug!("Injected {} header for {}", header_name, host);
                     }
                 } else {
                     tracing::warn!(

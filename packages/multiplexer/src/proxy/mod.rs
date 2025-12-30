@@ -13,7 +13,7 @@ mod manager;
 mod rules;
 mod talos_gateway;
 
-pub use audit::AuditLogger;
+pub use audit::{AuditEntry, AuditLogger};
 pub use ca::ProxyCa;
 pub use config::{Credentials, ProxyConfig};
 pub use container_config::generate_container_configs;
