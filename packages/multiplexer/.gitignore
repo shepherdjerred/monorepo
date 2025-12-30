@@ -5,3 +5,11 @@ target/
 claude.json
 managed-settings.json
 
+# Claude Code internal files (except skills)
+.claude.json
+.claude.json.backup
+.claude/debug/
+.claude/projects/
+.claude/statsig/
+.claude/todos/
+
