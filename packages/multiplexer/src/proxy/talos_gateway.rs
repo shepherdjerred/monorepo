@@ -228,22 +228,39 @@ fn parse_ed25519_key(pem_bytes: &[u8]) -> anyhow::Result<PrivateKeyDer<'static>>
         .find(end_marker)
         .ok_or_else(|| anyhow::anyhow!("Ed25519 PEM end marker not found"))?;
 
-    // Extract base64 content
+    // Extract base64 content and decode
     let b64_content = &pem_str[start..end];
-    let cleaned: String = b64_content.chars().filter(|c| !c.is_whitespace()).collect();
+    let der_bytes = decode_base64_raw(b64_content)?;
 
-    // Decode base64
-    let der_bytes = decode_base64(&cleaned)?;
+    // Validate DER structure is PKCS#8 format
+    // Expected structure for Ed25519:
+    //   SEQUENCE {
+    //     version INTEGER (0)
+    //     algorithm SEQUENCE { OID 1.3.101.112 (Ed25519) }
+    //     privateKey OCTET STRING (containing the key material)
+    //   }
+    if der_bytes.len() < 16 {
+        anyhow::bail!("Ed25519 key too short to be valid PKCS#8");
+    }
+    if der_bytes[0] != 0x30 {
+        anyhow::bail!("Ed25519 key does not start with SEQUENCE tag (expected 0x30, got 0x{:02x})", der_bytes[0]);
+    }
+    // Check for Ed25519 OID (1.3.101.112 = 0x2B 0x65 0x70)
+    let has_ed25519_oid = der_bytes.windows(3).any(|w| w == [0x2B, 0x65, 0x70]);
+    if !has_ed25519_oid {
+        anyhow::bail!("Ed25519 key missing Ed25519 OID (1.3.101.112)");
+    }
 
-    // The OpenSSL Ed25519 format is already in a PKCS#8-compatible structure,
-    // we just need to wrap it in the appropriate type
+    // The OpenSSL Ed25519 format (-----BEGIN ED25519 PRIVATE KEY-----) uses
+    // the same DER encoding as PKCS#8, just with a different PEM label.
+    // RFC 8410 specifies PKCS#8 for Ed25519, and OpenSSL's format is compatible.
     Ok(PrivateKeyDer::Pkcs8(PrivatePkcs8KeyDer::from(
         der_bytes,
     )))
 }
 
-/// Simple base64 decoder helper for parse_ed25519_key.
-fn decode_base64(s: &str) -> anyhow::Result<Vec<u8>> {
+/// Simple base64 decoder (without PEM detection).
+fn decode_base64_raw(s: &str) -> anyhow::Result<Vec<u8>> {
     const DECODE_TABLE: [i8; 256] = {
         let mut table = [-1i8; 256];
         let alphabet = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -255,7 +272,8 @@ fn decode_base64(s: &str) -> anyhow::Result<Vec<u8>> {
         table
     };
 
-    let bytes = s.as_bytes();
+    let cleaned: String = s.chars().filter(|c| !c.is_whitespace()).collect();
+    let bytes = cleaned.as_bytes();
     let mut output = Vec::new();
     let mut i = 0;
 
@@ -273,7 +291,7 @@ fn decode_base64(s: &str) -> anyhow::Result<Vec<u8>> {
             }
             let val = DECODE_TABLE[b as usize];
             if val < 0 {
-                anyhow::bail!("invalid base64 character");
+                anyhow::bail!("invalid base64 character at position {}", i + j);
             }
             chunk[j] = val as u8;
             valid += 1;
@@ -295,7 +313,7 @@ fn decode_base64(s: &str) -> anyhow::Result<Vec<u8>> {
     Ok(output)
 }
 
-/// Decode base64 string to bytes.
+/// Decode base64 string to bytes (with PEM format detection).
 fn base64_decode(s: &str) -> anyhow::Result<Vec<u8>> {
     // Talos config may have the cert as raw PEM or base64-encoded PEM
     // Try to detect which one it is
@@ -303,58 +321,8 @@ fn base64_decode(s: &str) -> anyhow::Result<Vec<u8>> {
         // Already PEM format
         Ok(s.as_bytes().to_vec())
     } else {
-        // Base64 encoded - use standard base64 decoding
-        // Simple base64 decoder (no external crate needed)
-        let cleaned: String = s.chars().filter(|c| !c.is_whitespace()).collect();
-        let mut output = Vec::new();
-
-        const DECODE_TABLE: [i8; 256] = {
-            let mut table = [-1i8; 256];
-            let alphabet = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-            let mut i = 0;
-            while i < 64 {
-                table[alphabet[i] as usize] = i as i8;
-                i += 1;
-            }
-            table
-        };
-
-        let bytes = cleaned.as_bytes();
-        let mut i = 0;
-        while i < bytes.len() {
-            let mut chunk = [0u8; 4];
-            let mut valid = 0;
-
-            for j in 0..4 {
-                if i + j >= bytes.len() {
-                    break;
-                }
-                let b = bytes[i + j];
-                if b == b'=' {
-                    break;
-                }
-                let val = DECODE_TABLE[b as usize];
-                if val < 0 {
-                    anyhow::bail!("invalid base64 character");
-                }
-                chunk[j] = val as u8;
-                valid += 1;
-            }
-
-            if valid >= 2 {
-                output.push((chunk[0] << 2) | (chunk[1] >> 4));
-            }
-            if valid >= 3 {
-                output.push((chunk[1] << 4) | (chunk[2] >> 2));
-            }
-            if valid >= 4 {
-                output.push((chunk[2] << 6) | chunk[3]);
-            }
-
-            i += 4;
-        }
-
-        Ok(output)
+        // Base64 encoded - decode it
+        decode_base64_raw(s)
     }
 }
 
@@ -378,7 +346,9 @@ async fn handle_talos_connection(
     // Parse endpoint (format: "hostname:port" or just "hostname")
     let (host, port) = if let Some(colon_idx) = endpoint.rfind(':') {
         let host = &endpoint[..colon_idx];
-        let port: u16 = endpoint[colon_idx + 1..].parse().unwrap_or(50000);
+        let port: u16 = endpoint[colon_idx + 1..]
+            .parse()
+            .map_err(|e| anyhow::anyhow!("invalid port in endpoint '{}': {}", endpoint, e))?;
         (host.to_string(), port)
     } else {
         (endpoint.clone(), 50000)
