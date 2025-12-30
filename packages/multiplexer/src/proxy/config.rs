@@ -75,7 +75,7 @@ impl Credentials {
     pub fn load_from_env() -> Self {
         Self {
             github_token: std::env::var("GITHUB_TOKEN").ok(),
-            anthropic_api_key: std::env::var("ANTHROPIC_API_KEY").ok(),
+            anthropic_api_key: std::env::var("CLAUDE_CODE_OAUTH_TOKEN").ok(),
             // Support both PAGERDUTY_TOKEN and PAGERDUTY_API_KEY for compatibility
             pagerduty_token: std::env::var("PAGERDUTY_TOKEN")
                 .or_else(|_| std::env::var("PAGERDUTY_API_KEY"))

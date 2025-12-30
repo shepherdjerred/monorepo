@@ -92,12 +92,9 @@ impl DockerBackend {
         workdir: &Path,
         initial_prompt: &str,
         uid: u32,
-        home_dir: &str,
         proxy_config: Option<&DockerProxyConfig>,
-        dangerous_skip_checks: bool,
     ) -> anyhow::Result<Vec<String>> {
         let container_name = format!("mux-{name}");
-        let claude_config = format!("{home_dir}/.claude");
         let escaped_prompt = initial_prompt.replace('\'', "'\\''");
 
         let mut args = vec![
@@ -109,8 +106,6 @@ impl DockerBackend {
             uid.to_string(),
             "-v".to_string(),
             format!("{}:/workspace", workdir.display()),
-            "-v".to_string(),
-            format!("{claude_config}:/workspace/.claude"),
             "-w".to_string(),
             "/workspace".to_string(),
             "-e".to_string(),
@@ -175,8 +170,10 @@ impl DockerBackend {
                     "GH_TOKEN=mux-proxy".to_string(),
                     "-e".to_string(),
                     "GITHUB_TOKEN=mux-proxy".to_string(),
-                    // NOTE: Don't set ANTHROPIC_API_KEY - Claude Code will use OAuth from ~/.claude
-                    // and the proxy will inject the real API key when intercepting requests
+                    // Set placeholder OAuth token - Claude Code uses this for auth
+                    // The proxy will intercept API requests and inject the real OAuth token
+                    "-e".to_string(),
+                    "CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-mux-proxy-placeholder".to_string(),
                 ]);
 
                 // SSL/TLS environment variables for CA trust
@@ -218,33 +215,29 @@ impl DockerBackend {
             }
         }
 
-        // Configure bypass permissions mode if enabled
-        if dangerous_skip_checks {
-            // Create managed settings file to suppress the bypass permissions warning
-            let managed_settings_dir = if let Some(proxy) = proxy_config {
-                proxy.mux_dir.clone()
-            } else {
-                // Use ~/.mux as fallback
-                PathBuf::from(home_dir).join(".mux")
-            };
+        // NOTE: We intentionally do NOT create a fake .credentials.json file.
+        // The ANTHROPIC_API_KEY env var is sufficient and avoids validation issues.
+        // When a credentials file exists, Claude Code validates it against the API,
+        // which would fail with our fake tokens. The env var path skips this validation.
 
-            let managed_settings_path = managed_settings_dir.join("managed-settings.json");
-
+        // Create config files to suppress onboarding and permission warnings
+        // Always do this when proxy is enabled since we always use --dangerously-skip-permissions
+        if let Some(proxy) = proxy_config {
             // Create the directory if it doesn't exist
-            if let Err(e) = std::fs::create_dir_all(&managed_settings_dir) {
+            if let Err(e) = std::fs::create_dir_all(&proxy.mux_dir) {
                 tracing::warn!(
-                    "Failed to create managed settings directory at {:?}: {}",
-                    managed_settings_dir,
+                    "Failed to create mux directory at {:?}: {}",
+                    proxy.mux_dir,
                     e
                 );
             } else {
-                // Write managed settings file
+                // Write managed settings file to suppress permission warning
+                let managed_settings_path = proxy.mux_dir.join("managed-settings.json");
                 let managed_settings = r#"{
   "permissions": {
     "defaultMode": "bypassPermissions"
   }
 }"#;
-
                 if let Err(e) = std::fs::write(&managed_settings_path, managed_settings) {
                     tracing::warn!(
                         "Failed to write managed settings file at {:?}: {}",
@@ -252,21 +245,41 @@ impl DockerBackend {
                         e
                     );
                 } else {
-                    // Mount the managed settings file into the container
                     args.extend([
                         "-v".to_string(),
                         format!("{}:/etc/claude-code/managed-settings.json:ro", managed_settings_path.display()),
+                    ]);
+                }
+
+                // Write claude.json to skip onboarding
+                // This tells Claude Code we've already completed the setup wizard
+                // Note: Claude Code writes to this file, so we can't mount it read-only
+                let claude_json_path = proxy.mux_dir.join("claude.json");
+                let claude_json = r#"{"hasCompletedOnboarding": true}"#;
+                if let Err(e) = std::fs::write(&claude_json_path, claude_json) {
+                    tracing::warn!(
+                        "Failed to write claude.json file at {:?}: {}",
+                        claude_json_path,
+                        e
+                    );
+                } else {
+                    // Mount to /workspace/.claude.json since HOME=/workspace in container
+                    // Note: NOT read-only because Claude Code writes to it
+                    args.extend([
+                        "-v".to_string(),
+                        format!("{}:/workspace/.claude.json", claude_json_path.display()),
                     ]);
                 }
             }
         }
 
         // Add image and command
+        // Use --print for non-interactive mode (outputs response directly without UI)
         args.extend([
             DOCKER_IMAGE.to_string(),
             "bash".to_string(),
             "-c".to_string(),
-            format!("claude --dangerously-skip-permissions '{escaped_prompt}'"),
+            format!("claude --dangerously-skip-permissions --print --verbose '{escaped_prompt}'"),
         ]);
 
         Ok(args)
@@ -308,7 +321,6 @@ impl ExecutionBackend for DockerBackend {
         // Create the container with the worktree mounted
         // Run as current user to avoid root privileges (claude refuses --dangerously-skip-permissions as root)
         let uid = std::process::id();
-        let home_dir = std::env::var("HOME").unwrap_or_else(|_| "/tmp".to_string());
 
         let proxy_config = if self.proxy_config.enabled {
             Some(&self.proxy_config)
@@ -316,7 +328,7 @@ impl ExecutionBackend for DockerBackend {
             None
         };
 
-        let args = Self::build_create_args(name, workdir, initial_prompt, uid, &home_dir, proxy_config, false)?;
+        let args = Self::build_create_args(name, workdir, initial_prompt, uid, proxy_config)?;
         let output = Command::new("docker")
             .args(&args)
             .output()
@@ -454,9 +466,8 @@ mod tests {
             &PathBuf::from("/workspace"),
             "test prompt",
             1000,
-            "/home/user",
+            
             None,
-            false,
         ).expect("Failed to build args");
 
         // Must have -dit for interactive TTY sessions
@@ -480,9 +491,8 @@ mod tests {
             &PathBuf::from("/workspace"),
             "test prompt",
             uid,
-            "/home/user",
+            
             None,
-            false,
         ).expect("Failed to build args");
 
         // Find --user flag and verify it's followed by the UID
@@ -493,51 +503,6 @@ mod tests {
         assert_eq!(
             uid_arg, "1000",
             "Expected UID 1000 after --user, got: {uid_arg}"
-        );
-    }
-
-    /// Test that .claude config directory is mounted
-    #[test]
-    fn test_claude_config_mounted() {
-        let args = DockerBackend::build_create_args(
-            "test-session",
-            &PathBuf::from("/workspace"),
-            "test prompt",
-            1000,
-            "/home/user",
-            None,
-            false,
-        ).expect("Failed to build args");
-
-        // Look for volume mount containing .claude
-        let has_claude_mount = args.iter().any(|a| a.contains(".claude"));
-        assert!(
-            has_claude_mount,
-            "Expected .claude volume mount, got: {args:?}"
-        );
-    }
-
-    /// Test that .claude mount is writable (no :ro suffix)
-    #[test]
-    fn test_claude_config_writable() {
-        let args = DockerBackend::build_create_args(
-            "test-session",
-            &PathBuf::from("/workspace"),
-            "test prompt",
-            1000,
-            "/home/user",
-            None,
-            false,
-        ).expect("Failed to build args");
-
-        // Find the .claude volume mount
-        let claude_mount = args.iter().find(|a| a.contains(".claude"));
-        assert!(claude_mount.is_some(), "Expected .claude mount");
-
-        let mount = claude_mount.unwrap();
-        assert!(
-            !mount.ends_with(":ro"),
-            "Claude config must be writable, not read-only: {mount}"
         );
     }
 
@@ -588,9 +553,8 @@ mod tests {
             &PathBuf::from("/workspace"),
             prompt_with_quotes,
             1000,
-            "/home/user",
+            
             None,
-            false,
         ).expect("Failed to build args");
 
         // Find the command argument (last one containing the prompt)
@@ -611,9 +575,8 @@ mod tests {
             &PathBuf::from("/workspace"),
             "test prompt",
             1000,
-            "/home/user",
+            
             None,
-            false,
         ).expect("Failed to build args");
 
         // Find --name flag and verify the container name
@@ -650,9 +613,8 @@ mod tests {
             &PathBuf::from("/workspace"),
             "test prompt",
             1000,
-            "/home/user",
+            
             Some(&proxy_config),
-            false,
         ).expect("Failed to build args");
 
         // Should have HTTPS_PROXY
@@ -687,9 +649,8 @@ mod tests {
             &PathBuf::from("/workspace"),
             "test prompt",
             1000,
-            "/home/user",
+            
             Some(&proxy_config),
-            false,
         ).expect("Failed to build args");
 
         // Should have proxy-ca.pem mount
@@ -710,9 +671,8 @@ mod tests {
             &PathBuf::from("/workspace"),
             "test prompt",
             1000,
-            "/home/user",
+            
             Some(&proxy_config),
-            false,
         ).expect("Failed to build args");
 
         // Should NOT have HTTPS_PROXY
@@ -735,9 +695,8 @@ mod tests {
             &PathBuf::from("/workspace"),
             "test prompt",
             1000,
-            "/home/user",
+            
             Some(&proxy_config),
-            false,
         ).expect("Failed to build args");
 
         // Should have --add-host flag

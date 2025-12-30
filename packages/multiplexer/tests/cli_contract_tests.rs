@@ -16,9 +16,8 @@ fn test_docker_run_arg_order() {
         &PathBuf::from("/workspace"),
         "test prompt",
         1000,
-        "/home/user",
         None,
-    );
+    ).expect("Failed to build args");
 
     // First arg must be "run"
     assert_eq!(args[0], "run", "First arg must be 'run'");
@@ -63,9 +62,8 @@ fn test_docker_env_vars() {
         &PathBuf::from("/workspace"),
         "test prompt",
         1000,
-        "/home/user",
         None,
-    );
+    ).expect("Failed to build args");
 
     // Find all -e flags and their values
     let env_vars: Vec<&str> = args
@@ -165,9 +163,8 @@ fn test_volume_mount_format() {
         &PathBuf::from("/my/workspace"),
         "test prompt",
         1000,
-        "/home/testuser",
         None,
-    );
+    ).expect("Failed to build args");
 
     // Find all -v flags and their values
     let volume_mounts: Vec<&str> = args
@@ -177,9 +174,10 @@ fn test_volume_mount_format() {
         .map(|(i, _)| args[i + 1].as_str())
         .collect();
 
+    // Should have at least 1 volume mount (workspace)
     assert!(
-        volume_mounts.len() >= 2,
-        "Expected at least 2 volume mounts: {volume_mounts:?}"
+        !volume_mounts.is_empty(),
+        "Expected at least 1 volume mount: {volume_mounts:?}"
     );
 
     for mount in &volume_mounts {
@@ -212,9 +210,8 @@ fn test_workspace_mount_destination() {
         &PathBuf::from("/my/source/dir"),
         "test prompt",
         1000,
-        "/home/user",
         None,
-    );
+    ).expect("Failed to build args");
 
     // Find workspace volume mount
     let volume_mounts: Vec<&str> = args
@@ -235,44 +232,6 @@ fn test_workspace_mount_destination() {
     );
 }
 
-/// Validate claude config mount destination
-#[test]
-fn test_claude_config_mount_destination() {
-    let args = DockerBackend::build_create_args(
-        "test-session",
-        &PathBuf::from("/workspace"),
-        "test prompt",
-        1000,
-        "/home/testuser",
-        None,
-    );
-
-    // Find .claude volume mount
-    let volume_mounts: Vec<&str> = args
-        .iter()
-        .enumerate()
-        .filter(|(_, a)| *a == "-v")
-        .map(|(i, _)| args[i + 1].as_str())
-        .collect();
-
-    let claude_mount = volume_mounts
-        .iter()
-        .find(|m| m.contains(".claude"))
-        .expect("Expected .claude mount");
-
-    // Source should be from home dir
-    assert!(
-        claude_mount.starts_with("/home/testuser/.claude"),
-        ".claude source should be from home dir: {claude_mount}"
-    );
-
-    // Destination should be in /workspace
-    assert!(
-        claude_mount.contains(":/workspace/.claude"),
-        ".claude should mount to /workspace/.claude: {claude_mount}"
-    );
-}
-
 /// Validate that the final command contains claude with the prompt
 #[test]
 fn test_final_command_format() {
@@ -282,9 +241,8 @@ fn test_final_command_format() {
         &PathBuf::from("/workspace"),
         prompt,
         1000,
-        "/home/user",
         None,
-    );
+    ).expect("Failed to build args");
 
     let final_cmd = args.last().unwrap();
 
