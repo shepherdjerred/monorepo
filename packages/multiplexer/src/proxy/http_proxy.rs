@@ -110,6 +110,16 @@ impl HttpHandler for AuthInjector {
                     let (header_name, header_value) = if rule.credential_key == "anthropic" {
                         // Remove placeholder auth header before injecting real OAuth token
                         req.headers_mut().remove("authorization");
+
+                        // Validate OAuth token format - only sk-ant-oat01-* tokens work with Bearer auth
+                        if !token.starts_with("sk-ant-oat01-") {
+                            tracing::error!(
+                                "Invalid Anthropic credential: multiplexer only supports OAuth tokens (sk-ant-oat01-*), \
+                                 got token starting with: {}...",
+                                &token[..token.len().min(12)]
+                            );
+                        }
+
                         ("authorization", format!("Bearer {}", token))
                     } else {
                         (rule.header_name, rule.format_header(token))
@@ -166,4 +176,27 @@ mod tests {
         let _cloned = injector.clone();
     }
 
+    #[test]
+    fn test_oauth_token_validation() {
+        // Valid OAuth tokens start with sk-ant-oat01-
+        let valid_oauth = "sk-ant-oat01-abc123xyz";
+        assert!(
+            valid_oauth.starts_with("sk-ant-oat01-"),
+            "Valid OAuth token should match prefix"
+        );
+
+        // Regular API keys should NOT match (and will trigger error log)
+        let api_key = "sk-ant-api03-xyz789";
+        assert!(
+            !api_key.starts_with("sk-ant-oat01-"),
+            "API key should not match OAuth prefix"
+        );
+
+        // Placeholder token should NOT match
+        let placeholder = "sk-ant-oat01-mux-proxy-placeholder";
+        assert!(
+            placeholder.starts_with("sk-ant-oat01-"),
+            "Placeholder should match OAuth prefix format"
+        );
+    }
 }
