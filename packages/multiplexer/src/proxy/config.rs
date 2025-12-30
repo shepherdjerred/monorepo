@@ -75,6 +75,9 @@ impl Credentials {
     pub fn load_from_env() -> Self {
         Self {
             github_token: std::env::var("GITHUB_TOKEN").ok(),
+            // Named anthropic_api_key for backward compatibility, but loads from
+            // CLAUDE_CODE_OAUTH_TOKEN and can hold either OAuth tokens or API keys.
+            // The proxy detects the token type at runtime and uses the appropriate header.
             anthropic_api_key: std::env::var("CLAUDE_CODE_OAUTH_TOKEN").ok(),
             // Support both PAGERDUTY_TOKEN and PAGERDUTY_API_KEY for compatibility
             pagerduty_token: std::env::var("PAGERDUTY_TOKEN")

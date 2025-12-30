@@ -54,7 +54,11 @@ pub static RULES: &[Rule] = &[
         format: "Bearer {}",
         credential_key: "github",
     },
-    // Anthropic API (uses Bearer auth for OAuth tokens)
+    // Anthropic API
+    // NOTE: This rule's header_name and format are OVERRIDDEN at runtime in http_proxy.rs
+    // for Anthropic specifically. The proxy detects OAuth tokens (sk-ant-oat01-*) and uses
+    // Authorization: Bearer, while regular API keys use x-api-key header instead.
+    // This rule exists primarily for host matching and credential_key lookup.
     Rule {
         host_pattern: "api.anthropic.com",
         header_name: "Authorization",
