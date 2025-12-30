@@ -96,9 +96,9 @@ pub static RULES: &[Rule] = &[
         format: "Bearer {}",
         credential_key: "docker",
     },
-    // Grafana (Tailscale)
+    // Grafana (specific instance only - don't use wildcard!)
     Rule {
-        host_pattern: "*.ts.net",
+        host_pattern: "grafana.tailnet-1a49.ts.net",
         header_name: "Authorization",
         format: "Bearer {}",
         credential_key: "grafana",

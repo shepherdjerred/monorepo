@@ -122,3 +122,42 @@ macro_rules! skip_if_no_claude_config {
         }
     };
 }
+
+/// Check if GitHub credentials are available
+#[must_use]
+pub fn github_credentials_available() -> bool {
+    std::env::var("GITHUB_TOKEN").is_ok()
+}
+
+/// Check if Anthropic credentials are available
+#[must_use]
+pub fn anthropic_credentials_available() -> bool {
+    std::env::var("ANTHROPIC_API_KEY").is_ok()
+}
+
+/// Check if PagerDuty credentials are available
+#[must_use]
+pub fn pagerduty_credentials_available() -> bool {
+    std::env::var("PAGERDUTY_TOKEN").is_ok() || std::env::var("PAGERDUTY_API_KEY").is_ok()
+}
+
+/// Check if any proxy-testable credentials are available
+#[must_use]
+pub fn any_credentials_available() -> bool {
+    github_credentials_available()
+        || anthropic_credentials_available()
+        || pagerduty_credentials_available()
+        || std::env::var("SENTRY_AUTH_TOKEN").is_ok()
+        || std::env::var("GRAFANA_API_KEY").is_ok()
+}
+
+/// Skip the test if required credentials are not available
+#[macro_export]
+macro_rules! skip_if_no_credentials {
+    () => {
+        if !common::any_credentials_available() {
+            eprintln!("Skipping test: No API credentials available");
+            return;
+        }
+    };
+}
