@@ -59,8 +59,18 @@ fn render_main_content(frame: &mut Frame, app: &App, area: Rect) {
 
 /// Render the attached terminal view.
 fn render_attached_terminal(frame: &mut Frame, app: &App, area: Rect) {
-    // For now, just show a placeholder since we can't access the terminal buffer synchronously
-    // The actual rendering will be integrated in Phase 8 when we have access to the buffer
+    use super::attached::render_terminal;
+
+    if let Some(pty_session) = app.attached_pty_session() {
+        let buffer = pty_session.terminal_buffer();
+        if let Ok(buf) = buffer.try_lock() {
+            // Render the terminal content
+            render_terminal(frame, &buf, area);
+            return;
+        }
+    }
+
+    // Fallback if we can't access the buffer
     let block = Block::default()
         .title(" Attached - Press Ctrl+] to detach ")
         .borders(Borders::ALL)
@@ -70,11 +80,9 @@ fn render_attached_terminal(frame: &mut Frame, app: &App, area: Rect) {
         vec![
             Line::from(""),
             Line::from(Span::styled(
-                "Terminal session active",
-                Style::default().fg(Color::Green),
+                "Loading terminal...",
+                Style::default().fg(Color::Yellow),
             )),
-            Line::from(""),
-            Line::from("Press Ctrl+] to detach (double-tap sends literal Ctrl+])"),
         ]
     } else {
         vec![
@@ -150,17 +158,24 @@ fn render_help(frame: &mut Frame, app: &App, area: Rect) {
         .border_style(Style::default().fg(Color::Cyan));
 
     // Build "While Attached" section based on selected session's backend
-    let detach_hint = app.selected_session().map_or_else(
+    let attached_hints = app.selected_session().map_or_else(
         || {
-            // No session selected - show both options
+            // No session selected - show Docker PTY options
             vec![
-                ("Ctrl+O, d", "Detach (Zellij)"),
-                ("Ctrl+P, Ctrl+Q", "Detach (Docker)"),
+                ("Ctrl+]", "Detach (single tap)"),
+                ("Ctrl+] x2", "Send literal Ctrl+]"),
+                ("Ctrl+←/→", "Switch session"),
+                ("Shift+PgUp/Dn", "Scroll history"),
             ]
         },
         |session| match session.backend {
             BackendType::Zellij => vec![("Ctrl+O, d", "Detach from session")],
-            BackendType::Docker => vec![("Ctrl+P, Ctrl+Q", "Detach from session")],
+            BackendType::Docker => vec![
+                ("Ctrl+]", "Detach (single tap)"),
+                ("Ctrl+] x2", "Send literal Ctrl+]"),
+                ("Ctrl+←/→", "Switch session"),
+                ("Shift+PgUp/Dn", "Scroll history"),
+            ],
         },
     );
 
@@ -190,7 +205,7 @@ fn render_help(frame: &mut Frame, app: &App, area: Rect) {
                 ("Esc", "Cancel"),
             ],
         ),
-        ("While Attached", detach_hint),
+        ("While Attached", attached_hints),
     ];
 
     let mut items = Vec::new();
