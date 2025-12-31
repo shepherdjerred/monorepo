@@ -8,7 +8,7 @@ use super::traits::ExecutionBackend;
 ///
 /// # Errors
 ///
-/// Returns an error if the .git file cannot be read
+/// Returns an error if the .git file cannot be read or paths cannot be resolved
 fn detect_git_worktree(path: &Path) -> anyhow::Result<Option<PathBuf>> {
     let git_file = path.join(".git");
 
@@ -22,17 +22,49 @@ fn detect_git_worktree(path: &Path) -> anyhow::Result<Option<PathBuf>> {
     let gitdir_line = contents
         .lines()
         .find(|line| line.starts_with("gitdir: "))
-        .ok_or_else(|| anyhow::anyhow!("Invalid .git file format"))?;
+        .ok_or_else(|| anyhow::anyhow!("Invalid .git file format: missing 'gitdir:' line"))?;
 
-    // Extract the path after "gitdir: "
-    let gitdir = gitdir_line.strip_prefix("gitdir: ").unwrap();
-    let gitdir_path = PathBuf::from(gitdir);
+    // Extract the path after "gitdir: " and trim whitespace
+    let gitdir = gitdir_line.strip_prefix("gitdir: ").unwrap().trim();
+
+    // Handle both absolute and relative paths
+    // Git can use relative paths like "../.git/worktrees/name"
+    let gitdir_path = if Path::new(gitdir).is_absolute() {
+        PathBuf::from(gitdir)
+    } else {
+        // Resolve relative path from the worktree directory
+        path.join(gitdir)
+    };
+
+    // Canonicalize to resolve symlinks and get absolute path
+    // This also protects against path traversal attacks
+    let canonical_gitdir = gitdir_path.canonicalize()
+        .map_err(|e| anyhow::anyhow!("Failed to canonicalize gitdir path {}: {}", gitdir_path.display(), e))?;
 
     // The gitdir points to something like /path/to/repo/.git/worktrees/name
     // We need to get the parent .git directory: /path/to/repo/.git
-    if let Some(worktrees) = gitdir_path.parent() {
+    if let Some(worktrees) = canonical_gitdir.parent() {
         if let Some(git_parent) = worktrees.parent() {
-            return Ok(Some(git_parent.to_path_buf()));
+            let parent_git = git_parent.to_path_buf();
+
+            // Validate that the parent .git directory actually exists
+            if !parent_git.exists() {
+                anyhow::bail!(
+                    "Parent .git directory does not exist: {}. \
+                    The worktree may be corrupted or the parent repository may have been moved/deleted.",
+                    parent_git.display()
+                );
+            }
+
+            // Validate that it's actually a git directory
+            if !parent_git.join("HEAD").exists() {
+                anyhow::bail!(
+                    "Parent directory exists but doesn't appear to be a valid git repository: {}",
+                    parent_git.display()
+                );
+            }
+
+            return Ok(Some(parent_git));
         }
     }
 
@@ -157,20 +189,46 @@ impl DockerBackend {
         ];
 
         // Detect if workdir is a git worktree and mount parent .git directory
-        if let Ok(Some(parent_git_dir)) = detect_git_worktree(workdir) {
-            tracing::info!(
-                workdir = %workdir.display(),
-                parent_git = %parent_git_dir.display(),
-                "Detected git worktree, mounting parent .git directory"
-            );
+        match detect_git_worktree(workdir) {
+            Ok(Some(parent_git_dir)) => {
+                tracing::info!(
+                    workdir = %workdir.display(),
+                    parent_git = %parent_git_dir.display(),
+                    "Detected git worktree, mounting parent .git directory"
+                );
 
-            // Mount the parent .git directory to the same absolute path in the container
-            // This allows git operations (including commits) to work correctly with worktrees
-            // Read-write access is required for commits, branch operations, etc.
-            args.extend([
-                "-v".to_string(),
-                format!("{}:{}", parent_git_dir.display(), parent_git_dir.display()),
-            ]);
+                // Mount the parent .git directory to the same absolute path in the container
+                // This allows git operations (including commits) to work correctly with worktrees
+                // Read-write access is required for commits, branch operations, etc.
+                //
+                // NOTE: This requires the host and container to have compatible filesystem layouts.
+                // The parent .git directory must be accessible at the same absolute path.
+                // This works for most cases but may fail if:
+                // - The parent repo is on a different volume than the worktree
+                // - There are path conflicts in the container
+                // - The worktree and parent repo are in very different directory structures
+                args.extend([
+                    "-v".to_string(),
+                    format!("{}:{}", parent_git_dir.display(), parent_git_dir.display()),
+                ]);
+            }
+            Ok(None) => {
+                // Not a git worktree, that's fine - normal git repos work without extra mounts
+                tracing::debug!(
+                    workdir = %workdir.display(),
+                    "Not a git worktree, skipping parent .git mount"
+                );
+            }
+            Err(e) => {
+                // Failed to detect worktree - log a warning but continue
+                // Git operations may not work properly if this is actually a worktree
+                tracing::warn!(
+                    workdir = %workdir.display(),
+                    error = %e,
+                    "Failed to detect git worktree, git operations may not work correctly. \
+                    If this directory is a git worktree, you may need to fix the .git file or parent repository."
+                );
+            }
         }
 
         // Add proxy configuration if enabled
@@ -902,6 +960,148 @@ mod tests {
         assert_eq!(
             mount_count, 1,
             "Normal git repo should only have workspace mount, got {mount_count} mounts"
+        );
+    }
+
+    /// Test git worktree with relative gitdir path
+    #[test]
+    fn test_git_worktree_relative_path() {
+        use tempfile::tempdir;
+
+        let temp_dir = tempdir().expect("Failed to create temp dir");
+        let repo_git = temp_dir.path().join("repo/.git");
+        let worktree_dir = temp_dir.path().join("repo/worktrees/test-worktree");
+
+        // Create the directory structure
+        std::fs::create_dir_all(&repo_git).expect("Failed to create repo .git");
+        std::fs::create_dir_all(repo_git.join("worktrees/test"))
+            .expect("Failed to create worktrees dir");
+        std::fs::create_dir_all(&worktree_dir).expect("Failed to create worktree dir");
+        std::fs::write(repo_git.join("HEAD"), "ref: refs/heads/main")
+            .expect("Failed to write HEAD");
+
+        // Create a .git file with RELATIVE path (common for worktrees in same repo tree)
+        let git_file_content = "gitdir: ../../.git/worktrees/test";
+        std::fs::write(worktree_dir.join(".git"), git_file_content)
+            .expect("Failed to write .git file");
+
+        // Build args - should resolve relative path correctly
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            &worktree_dir,
+            "test prompt",
+            1000,
+            None,
+            false,
+        ).expect("Failed to build args");
+
+        // Should have parent .git directory mount
+        let has_git_mount = args.iter().any(|a| a.contains(&format!("{}:", repo_git.display())));
+        assert!(
+            has_git_mount,
+            "Expected parent .git mount for worktree with relative path, got: {args:?}"
+        );
+    }
+
+    /// Test git worktree with trailing whitespace in .git file
+    #[test]
+    fn test_git_worktree_trailing_whitespace() {
+        use tempfile::tempdir;
+
+        let temp_dir = tempdir().expect("Failed to create temp dir");
+        let repo_git = temp_dir.path().join("repo/.git");
+        let worktree_dir = temp_dir.path().join("worktree");
+
+        std::fs::create_dir_all(&repo_git).expect("Failed to create repo .git");
+        std::fs::create_dir_all(repo_git.join("worktrees/test"))
+            .expect("Failed to create worktrees dir");
+        std::fs::create_dir_all(&worktree_dir).expect("Failed to create worktree dir");
+        std::fs::write(repo_git.join("HEAD"), "ref: refs/heads/main")
+            .expect("Failed to write HEAD");
+
+        // Create .git file with trailing whitespace (common from manual editing)
+        let git_file_content = format!("gitdir: {}/worktrees/test   \n", repo_git.display());
+        std::fs::write(worktree_dir.join(".git"), git_file_content)
+            .expect("Failed to write .git file");
+
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            &worktree_dir,
+            "test prompt",
+            1000,
+            None,
+            false,
+        ).expect("Failed to build args");
+
+        // Should still work despite whitespace
+        let has_git_mount = args.iter().any(|a| a.contains(&format!("{}:", repo_git.display())));
+        assert!(
+            has_git_mount,
+            "Expected parent .git mount despite trailing whitespace, got: {args:?}"
+        );
+    }
+
+    /// Test that malformed .git files don't crash, just skip the mount
+    #[test]
+    fn test_malformed_git_file_graceful_failure() {
+        use tempfile::tempdir;
+
+        let temp_dir = tempdir().expect("Failed to create temp dir");
+        let worktree_dir = temp_dir.path().join("worktree");
+        std::fs::create_dir_all(&worktree_dir).expect("Failed to create worktree dir");
+
+        // Create a malformed .git file (missing gitdir: line)
+        std::fs::write(worktree_dir.join(".git"), "invalid content\n")
+            .expect("Failed to write .git file");
+
+        // Should not panic, just skip the git mount
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            &worktree_dir,
+            "test prompt",
+            1000,
+            None,
+            false,
+        ).expect("Failed to build args");
+
+        // Should only have workspace mount (no git mount)
+        let mount_count = args.iter().filter(|a| *a == "-v").count();
+        assert_eq!(
+            mount_count, 1,
+            "Malformed worktree should only have workspace mount, got {mount_count} mounts"
+        );
+    }
+
+    /// Test that missing parent .git directory is handled gracefully
+    #[test]
+    fn test_missing_parent_git_graceful_failure() {
+        use tempfile::tempdir;
+
+        let temp_dir = tempdir().expect("Failed to create temp dir");
+        let worktree_dir = temp_dir.path().join("worktree");
+        std::fs::create_dir_all(&worktree_dir).expect("Failed to create worktree dir");
+
+        // Point to a non-existent parent .git directory
+        let fake_git_path = temp_dir.path().join("nonexistent/.git/worktrees/test");
+        let git_file_content = format!("gitdir: {}", fake_git_path.display());
+        std::fs::write(worktree_dir.join(".git"), git_file_content)
+            .expect("Failed to write .git file");
+
+        // Should not panic, just skip the git mount and log a warning
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            &worktree_dir,
+            "test prompt",
+            1000,
+            None,
+            false,
+        ).expect("Failed to build args");
+
+        // Should only have workspace mount (no git mount due to validation failure)
+        let mount_count = args.iter().filter(|a| *a == "-v").count();
+        assert_eq!(
+            mount_count, 1,
+            "Worktree with missing parent should only have workspace mount, got {mount_count} mounts"
         );
     }
 }
