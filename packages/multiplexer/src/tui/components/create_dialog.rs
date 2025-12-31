@@ -39,6 +39,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
             Constraint::Length(3),                         // Repo path
             Constraint::Length(2),                         // Backend
             Constraint::Length(2),                         // Skip checks
+            Constraint::Length(2),                         // Plan mode
             Constraint::Length(1),                         // Spacer
             Constraint::Length(1),                         // Buttons
         ])
@@ -94,12 +95,21 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         inner[4],
     );
 
+    // Plan mode checkbox
+    render_checkbox_field(
+        frame,
+        "Start in plan mode",
+        dialog.plan_mode,
+        dialog.focus == CreateDialogFocus::PlanMode,
+        inner[5],
+    );
+
     // Buttons
     render_buttons(
         frame,
         dialog.focus == CreateDialogFocus::Buttons,
         dialog.button_create_focused,
-        inner[6],
+        inner[7],
     );
 
     // Render directory picker overlay if active

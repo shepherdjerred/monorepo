@@ -61,6 +61,10 @@ pub struct CreateSessionRequest {
     #[serde(default)]
     pub print_mode: bool,
 
+    /// Start in plan mode
+    #[serde(default = "default_plan_mode")]
+    pub plan_mode: bool,
+
     /// Image file paths to attach to initial prompt.
     ///
     /// Paths should be absolute or relative to the worktree directory.
@@ -69,6 +73,12 @@ pub struct CreateSessionRequest {
     /// Images will be passed to Claude Code using the `--image` flag.
     #[serde(default)]
     pub images: Vec<String>,
+}
+
+/// Default to plan mode for safety - allows users to explore and understand
+/// the codebase before making changes. Users must explicitly opt-out.
+fn default_plan_mode() -> bool {
+    true
 }
 
 /// Progress step during session creation
