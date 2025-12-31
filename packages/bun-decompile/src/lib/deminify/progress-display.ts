@@ -1,0 +1,306 @@
+import type { ExtendedProgress } from "./types.ts";
+
+/** Options for the progress display */
+export interface ProgressDisplayOptions {
+  /** Suppress all progress output */
+  quiet: boolean;
+  /** Show progress bar */
+  showBar: boolean;
+  /** Show stats table */
+  showStats: boolean;
+  /** Terminal width (auto-detected if not specified) */
+  width: number | undefined;
+}
+
+/** ANSI escape codes for terminal control */
+const ANSI = {
+  clearLine: "\x1b[2K",
+  cursorUp: (n: number) => `\x1b[${n}A`,
+  cursorDown: (n: number) => `\x1b[${n}B`,
+  cursorToColumn: (n: number) => `\x1b[${n}G`,
+  hideCursor: "\x1b[?25l",
+  showCursor: "\x1b[?25h",
+  reset: "\x1b[0m",
+  dim: "\x1b[2m",
+  bold: "\x1b[1m",
+  green: "\x1b[32m",
+  yellow: "\x1b[33m",
+  cyan: "\x1b[36m",
+};
+
+/** Box drawing characters */
+const BOX = {
+  topLeft: "┌",
+  topRight: "┐",
+  bottomLeft: "└",
+  bottomRight: "┘",
+  horizontal: "─",
+  vertical: "│",
+  filled: "━",
+  empty: "░",
+};
+
+/** Progress display class for rich terminal output */
+export class ProgressDisplay {
+  private options: ProgressDisplayOptions;
+  private startTime: number;
+  private lastUpdateTime: number;
+  private speeds: number[] = [];
+  private linesWritten = 0;
+  private isTTY: boolean;
+  private width: number;
+  private lastProgress: ExtendedProgress | null = null;
+
+  constructor(options: Partial<ProgressDisplayOptions> = {}) {
+    this.options = {
+      quiet: options.quiet ?? false,
+      showBar: options.showBar ?? true,
+      showStats: options.showStats ?? true,
+      width: options.width,
+    };
+    this.startTime = Date.now();
+    this.lastUpdateTime = this.startTime;
+    this.isTTY = process.stdout.isTTY ?? false;
+    this.width = options.width ?? process.stdout.columns ?? 60;
+
+    // Hide cursor during progress display
+    if (this.isTTY && !this.options.quiet) {
+      process.stdout.write(ANSI.hideCursor);
+    }
+  }
+
+  /** Update the progress display */
+  update(progress: ExtendedProgress): void {
+    if (this.options.quiet) return;
+
+    const now = Date.now();
+    const elapsed = now - this.startTime;
+
+    // Calculate speed (functions per second)
+    if (progress.current > 0 && this.lastProgress) {
+      const timeDiff = (now - this.lastUpdateTime) / 1000;
+      const funcDiff = progress.current - (this.lastProgress.current ?? 0);
+      if (timeDiff > 0 && funcDiff > 0) {
+        const speed = funcDiff / timeDiff;
+        this.speeds.push(speed);
+        // Keep rolling window of last 10 speeds
+        if (this.speeds.length > 10) {
+          this.speeds.shift();
+        }
+      }
+    }
+
+    this.lastUpdateTime = now;
+    this.lastProgress = progress;
+
+    // Calculate average speed
+    const avgSpeed =
+      this.speeds.length > 0
+        ? this.speeds.reduce((a, b) => a + b, 0) / this.speeds.length
+        : 0;
+
+    // Calculate ETA
+    const remaining = progress.total - progress.current;
+    const eta = avgSpeed > 0 ? remaining / avgSpeed : 0;
+
+    if (this.isTTY) {
+      this.renderTTY(progress, elapsed, avgSpeed, eta);
+    } else {
+      this.renderSimple(progress);
+    }
+  }
+
+  /** Render rich TTY output with progress bar and stats */
+  private renderTTY(
+    progress: ExtendedProgress,
+    elapsed: number,
+    speed: number,
+    eta: number,
+  ): void {
+    // Clear previous output
+    if (this.linesWritten > 0) {
+      process.stdout.write(ANSI.cursorUp(this.linesWritten));
+    }
+
+    const lines: string[] = [];
+
+    // Header line
+    if (progress.currentItem) {
+      lines.push(
+        `${ANSI.clearLine}${ANSI.bold}De-minifying:${ANSI.reset} ${progress.currentItem}`,
+      );
+    }
+
+    // Progress bar
+    if (this.options.showBar) {
+      const barLine = this.renderProgressBar(progress.current, progress.total);
+      lines.push(`${ANSI.clearLine}${barLine}`);
+
+      // Speed/ETA line
+      const speedStr = speed > 0 ? `${speed.toFixed(1)} fn/s` : "-- fn/s";
+      const etaStr = eta > 0 ? this.formatDuration(eta * 1000) : "--:--";
+      const elapsedStr = this.formatDuration(elapsed);
+      lines.push(
+        `${ANSI.clearLine}${ANSI.dim}Speed: ${speedStr} │ ETA: ${etaStr} │ Elapsed: ${elapsedStr}${ANSI.reset}`,
+      );
+    }
+
+    // Stats table
+    if (this.options.showStats) {
+      lines.push(`${ANSI.clearLine}`);
+      lines.push(...this.renderStatsTable(progress));
+    }
+
+    // Write all lines
+    for (const line of lines) {
+      process.stdout.write(line + "\n");
+    }
+
+    this.linesWritten = lines.length;
+  }
+
+  /** Render the progress bar */
+  private renderProgressBar(current: number, total: number): string {
+    const percent = total > 0 ? Math.round((current / total) * 100) : 0;
+    const barWidth = Math.min(40, this.width - 25);
+    const filled = Math.round((current / total) * barWidth);
+    const empty = barWidth - filled;
+
+    const bar =
+      ANSI.green +
+      BOX.filled.repeat(filled) +
+      ANSI.reset +
+      ANSI.dim +
+      BOX.empty.repeat(empty) +
+      ANSI.reset;
+
+    return `${bar} ${percent.toString().padStart(3)}% │ ${current}/${total} functions`;
+  }
+
+  /** Render the stats table */
+  private renderStatsTable(progress: ExtendedProgress): string[] {
+    const lines: string[] = [];
+    const tableWidth = Math.min(45, this.width - 2);
+    const innerWidth = tableWidth - 2;
+
+    // Top border
+    lines.push(
+      `${ANSI.clearLine}${ANSI.dim}${BOX.topLeft}${BOX.horizontal.repeat(innerWidth)}${BOX.topRight}${ANSI.reset}`,
+    );
+
+    // Cache line
+    const cacheTotal = progress.cacheHits + progress.cacheMisses;
+    const cacheRate =
+      cacheTotal > 0 ? Math.round((progress.cacheHits / cacheTotal) * 100) : 0;
+    const cacheLine = `Cache:     ${progress.cacheHits} hits │ ${progress.cacheMisses} misses │ ${cacheRate}%`;
+    lines.push(
+      `${ANSI.clearLine}${ANSI.dim}${BOX.vertical}${ANSI.reset} ${cacheLine.padEnd(innerWidth - 1)}${ANSI.dim}${BOX.vertical}${ANSI.reset}`,
+    );
+
+    // Tokens line
+    const tokensLine = `Tokens:    ${this.formatNumber(progress.inputTokens)} in │ ${this.formatNumber(progress.outputTokens)} out`;
+    lines.push(
+      `${ANSI.clearLine}${ANSI.dim}${BOX.vertical}${ANSI.reset} ${tokensLine.padEnd(innerWidth - 1)}${ANSI.dim}${BOX.vertical}${ANSI.reset}`,
+    );
+
+    // Errors line
+    const errorsLine = `Errors:    ${progress.errors}`;
+    lines.push(
+      `${ANSI.clearLine}${ANSI.dim}${BOX.vertical}${ANSI.reset} ${errorsLine.padEnd(innerWidth - 1)}${ANSI.dim}${BOX.vertical}${ANSI.reset}`,
+    );
+
+    // Confidence line
+    const confLine = `Avg Conf:  ${progress.avgConfidence > 0 ? progress.avgConfidence.toFixed(2) : "--"}`;
+    lines.push(
+      `${ANSI.clearLine}${ANSI.dim}${BOX.vertical}${ANSI.reset} ${confLine.padEnd(innerWidth - 1)}${ANSI.dim}${BOX.vertical}${ANSI.reset}`,
+    );
+
+    // Bottom border
+    lines.push(
+      `${ANSI.clearLine}${ANSI.dim}${BOX.bottomLeft}${BOX.horizontal.repeat(innerWidth)}${BOX.bottomRight}${ANSI.reset}`,
+    );
+
+    return lines;
+  }
+
+  /** Render simple non-TTY output */
+  private renderSimple(progress: ExtendedProgress): void {
+    const percent = progress.total > 0 ? Math.round((progress.current / progress.total) * 100) : 0;
+    const line = `[${percent}%] ${progress.phase}: ${progress.current}/${progress.total} - ${progress.currentItem || ""}`;
+    console.log(line);
+  }
+
+  /** Format duration in mm:ss or Xm Ys format */
+  private formatDuration(ms: number): string {
+    const seconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+
+    if (minutes > 0) {
+      return `${minutes}m ${remainingSeconds}s`;
+    }
+    return `${remainingSeconds}s`;
+  }
+
+  /** Format large numbers with commas */
+  private formatNumber(n: number): string {
+    return n.toLocaleString();
+  }
+
+  /** Clear the progress display and show cursor */
+  clear(): void {
+    if (this.options.quiet) return;
+
+    if (this.isTTY) {
+      // Show cursor again
+      process.stdout.write(ANSI.showCursor);
+
+      // Clear the progress lines
+      if (this.linesWritten > 0) {
+        process.stdout.write(ANSI.cursorUp(this.linesWritten));
+        for (let i = 0; i < this.linesWritten; i++) {
+          process.stdout.write(ANSI.clearLine + "\n");
+        }
+        process.stdout.write(ANSI.cursorUp(this.linesWritten));
+      }
+    }
+
+    this.linesWritten = 0;
+  }
+
+  /** Finalize and print final stats */
+  finish(progress: ExtendedProgress): void {
+    if (this.options.quiet) return;
+
+    this.clear();
+
+    const elapsed = Date.now() - this.startTime;
+    const speed =
+      progress.current > 0 ? progress.current / (elapsed / 1000) : 0;
+
+    console.log(`${ANSI.green}✓${ANSI.reset} De-minification complete`);
+    console.log(`  Functions: ${progress.current}`);
+    console.log(
+      `  Cache: ${progress.cacheHits} hits, ${progress.cacheMisses} misses`,
+    );
+    console.log(
+      `  Tokens: ${this.formatNumber(progress.inputTokens)} in, ${this.formatNumber(progress.outputTokens)} out`,
+    );
+    console.log(`  Time: ${this.formatDuration(elapsed)} (${speed.toFixed(1)} fn/s)`);
+    if (progress.errors > 0) {
+      console.log(`  ${ANSI.yellow}Errors: ${progress.errors}${ANSI.reset}`);
+    }
+
+    // Show cursor
+    if (this.isTTY) {
+      process.stdout.write(ANSI.showCursor);
+    }
+  }
+}
+
+/** Create a callback function for use with Deminifier */
+export function createProgressCallback(
+  display: ProgressDisplay,
+): (progress: ExtendedProgress) => void {
+  return (progress) => display.update(progress);
+}
