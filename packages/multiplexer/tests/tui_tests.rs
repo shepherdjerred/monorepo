@@ -162,6 +162,7 @@ fn test_create_dialog_focus_cycle() {
         CreateDialogFocus::RepoPath,
         CreateDialogFocus::Backend,
         CreateDialogFocus::SkipChecks,
+        CreateDialogFocus::PlanMode,
         CreateDialogFocus::Buttons,
         CreateDialogFocus::Name, // Back to start
     ];
@@ -172,7 +173,8 @@ fn test_create_dialog_focus_cycle() {
             CreateDialogFocus::Prompt => CreateDialogFocus::RepoPath,
             CreateDialogFocus::RepoPath => CreateDialogFocus::Backend,
             CreateDialogFocus::Backend => CreateDialogFocus::SkipChecks,
-            CreateDialogFocus::SkipChecks => CreateDialogFocus::Buttons,
+            CreateDialogFocus::SkipChecks => CreateDialogFocus::PlanMode,
+            CreateDialogFocus::PlanMode => CreateDialogFocus::Buttons,
             CreateDialogFocus::Buttons => CreateDialogFocus::Name,
         };
         assert_eq!(app.create_dialog.focus, expected_focus);
@@ -409,19 +411,11 @@ async fn test_create_dialog_space_in_repo_path_field() {
     app.open_create_dialog();
     app.create_dialog.focus = CreateDialogFocus::RepoPath;
 
-    // Type "/path with spaces"
-    handle_key_event(&mut app, char_key('/')).await.unwrap();
-    handle_key_event(&mut app, char_key('p')).await.unwrap();
-    handle_key_event(&mut app, char_key('a')).await.unwrap();
-    handle_key_event(&mut app, char_key('t')).await.unwrap();
-    handle_key_event(&mut app, char_key('h')).await.unwrap();
+    // Space in repo_path opens the directory picker (no longer accepts typed input)
     handle_key_event(&mut app, char_key(' ')).await.unwrap();
-    handle_key_event(&mut app, char_key('w')).await.unwrap();
-    handle_key_event(&mut app, char_key('i')).await.unwrap();
-    handle_key_event(&mut app, char_key('t')).await.unwrap();
-    handle_key_event(&mut app, char_key('h')).await.unwrap();
 
-    assert_eq!(app.create_dialog.repo_path, "/path with");
+    // Directory picker should be active
+    assert!(app.create_dialog.directory_picker.is_active);
 }
 
 #[tokio::test]
@@ -721,7 +715,7 @@ async fn test_create_session_failure() {
 
 #[tokio::test]
 async fn test_delete_session_success() {
-    use crate::tui::app::DeleteProgress;
+    use multiplexer::tui::app::DeleteProgress;
 
     let mut app = App::new();
     let mock = MockApiClient::new();
@@ -768,7 +762,7 @@ async fn test_delete_blocked_during_create() {
     app.refresh_sessions().await.unwrap();
 
     // Simulate starting a create operation
-    let (tx, rx) = tokio::sync::mpsc::channel(16);
+    let (tx, rx) = tokio::sync::mpsc::channel::<multiplexer::tui::app::CreateProgress>(16);
     app.create_task = Some(tokio::spawn(async move {
         // Simulate long-running create
         tokio::time::sleep(std::time::Duration::from_secs(10)).await;
@@ -792,7 +786,7 @@ async fn test_delete_blocked_during_create() {
 
 #[tokio::test]
 async fn test_create_blocked_during_delete() {
-    use crate::tui::app::CreateDialogFocus;
+    use multiplexer::tui::app::CreateDialogFocus;
 
     let mut app = App::new();
     let mock = MockApiClient::new();
@@ -804,7 +798,7 @@ async fn test_create_blocked_during_delete() {
     app.refresh_sessions().await.unwrap();
 
     // Simulate starting a delete operation
-    let (tx, rx) = tokio::sync::mpsc::channel(4);
+    let (tx, rx) = tokio::sync::mpsc::channel::<multiplexer::tui::app::DeleteProgress>(4);
     app.delete_task = Some(tokio::spawn(async move {
         // Simulate long-running delete
         tokio::time::sleep(std::time::Duration::from_secs(10)).await;
@@ -813,7 +807,7 @@ async fn test_create_blocked_during_delete() {
     app.deleting_session_id = Some("test-id".to_string());
 
     // Try to create while delete is in progress
-    app.mode = crate::tui::app::AppMode::CreateDialog;
+    app.mode = multiplexer::tui::app::AppMode::CreateDialog;
     app.create_dialog.name = "new-session".to_string();
     app.create_dialog.repo_path = "/tmp/repo".to_string();
     app.create_dialog.prompt = "test".to_string();
@@ -833,7 +827,7 @@ async fn test_create_blocked_during_delete() {
 
 #[tokio::test]
 async fn test_delete_error_handling() {
-    use crate::tui::app::DeleteProgress;
+    use multiplexer::tui::app::DeleteProgress;
 
     let mut app = App::new();
 
@@ -864,7 +858,7 @@ async fn test_delete_error_handling() {
 
 #[tokio::test]
 async fn test_deletion_state_tracking() {
-    use crate::tui::app::DeleteProgress;
+    use multiplexer::tui::app::DeleteProgress;
 
     let mut app = App::new();
     let mock = MockApiClient::new();
@@ -1050,13 +1044,13 @@ fn test_directory_picker_search() {
 }
 
 #[tokio::test]
-async fn test_directory_picker_open_with_slash() {
+async fn test_directory_picker_open_with_enter() {
     let mut app = App::new();
     app.open_create_dialog();
     app.create_dialog.focus = CreateDialogFocus::RepoPath;
 
-    // Press '/' to open picker
-    handle_key_event(&mut app, char_key('/')).await.unwrap();
+    // Press Enter to open picker
+    handle_key_event(&mut app, key(KeyCode::Enter)).await.unwrap();
 
     assert!(app.create_dialog.directory_picker.is_active);
 }

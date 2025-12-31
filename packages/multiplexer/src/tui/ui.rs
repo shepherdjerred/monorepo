@@ -43,16 +43,59 @@ pub fn render(frame: &mut Frame, app: &App) {
             frame.render_widget(Clear, dialog_area);
             render_help(frame, app, dialog_area);
         }
-        AppMode::SessionList => {}
+        AppMode::SessionList | AppMode::Attached => {}
     }
 }
 
 fn render_main_content(frame: &mut Frame, app: &App, area: Rect) {
     if let Some(error) = &app.connection_error {
         render_connection_error(frame, error, area);
+    } else if app.mode == AppMode::Attached {
+        render_attached_terminal(frame, app, area);
     } else {
         session_list::render(frame, app, area);
     }
+}
+
+/// Render the attached terminal view.
+fn render_attached_terminal(frame: &mut Frame, app: &App, area: Rect) {
+    use super::attached::TerminalWidget;
+
+    if let Some(pty_session) = app.attached_pty_session() {
+        let buffer = pty_session.terminal_buffer();
+        if let Ok(buf) = buffer.try_lock() {
+            // Render the terminal content using the widget
+            frame.render_widget(TerminalWidget::new(&buf), area);
+            return;
+        }
+    }
+
+    // Fallback if we can't access the buffer
+    let block = Block::default()
+        .title(" Attached - Press Ctrl+] to detach ")
+        .borders(Borders::ALL)
+        .border_style(Style::default().fg(Color::Green));
+
+    let text = if app.attached_session_id.is_some() {
+        vec![
+            Line::from(""),
+            Line::from(Span::styled(
+                "Loading terminal...",
+                Style::default().fg(Color::Yellow),
+            )),
+        ]
+    } else {
+        vec![
+            Line::from(""),
+            Line::from(Span::styled(
+                "No session attached",
+                Style::default().fg(Color::Red),
+            )),
+        ]
+    };
+
+    let paragraph = Paragraph::new(text).block(block);
+    frame.render_widget(paragraph, area);
 }
 
 fn render_connection_error(frame: &mut Frame, error: &str, area: Rect) {
@@ -115,17 +158,24 @@ fn render_help(frame: &mut Frame, app: &App, area: Rect) {
         .border_style(Style::default().fg(Color::Cyan));
 
     // Build "While Attached" section based on selected session's backend
-    let detach_hint = app.selected_session().map_or_else(
+    let attached_hints = app.selected_session().map_or_else(
         || {
-            // No session selected - show both options
+            // No session selected - show Docker PTY options
             vec![
-                ("Ctrl+O, d", "Detach (Zellij)"),
-                ("Ctrl+P, Ctrl+Q", "Detach (Docker)"),
+                ("Ctrl+]", "Detach (single tap)"),
+                ("Ctrl+] x2", "Send literal Ctrl+]"),
+                ("Ctrl+←/→", "Switch session"),
+                ("Shift+PgUp/Dn", "Scroll history"),
             ]
         },
         |session| match session.backend {
             BackendType::Zellij => vec![("Ctrl+O, d", "Detach from session")],
-            BackendType::Docker => vec![("Ctrl+P, Ctrl+Q", "Detach from session")],
+            BackendType::Docker => vec![
+                ("Ctrl+]", "Detach (single tap)"),
+                ("Ctrl+] x2", "Send literal Ctrl+]"),
+                ("Ctrl+←/→", "Switch session"),
+                ("Shift+PgUp/Dn", "Scroll history"),
+            ],
         },
     );
 
@@ -155,7 +205,7 @@ fn render_help(frame: &mut Frame, app: &App, area: Rect) {
                 ("Esc", "Cancel"),
             ],
         ),
-        ("While Attached", detach_hint),
+        ("While Attached", attached_hints),
     ];
 
     let mut items = Vec::new();

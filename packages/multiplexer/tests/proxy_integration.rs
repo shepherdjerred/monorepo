@@ -30,7 +30,9 @@ fn test_proxy_config_flows_to_container_args() {
         "test prompt",
         1000,
         Some(&proxy_config),
-        false, // interactive mode
+        false, // print mode
+        false, // plan mode
+        &[],   // images
     ).expect("Failed to build args");
 
     // Verify HTTP_PROXY is set correctly
@@ -129,7 +131,9 @@ fn test_disabled_proxy_config_no_args() {
         "test prompt",
         1000,
         Some(&proxy_config),
-        false, // interactive mode
+        false, // print mode
+        false, // plan mode
+        &[],   // images
     ).expect("Failed to build args");
 
     assert!(
@@ -155,7 +159,9 @@ fn test_none_proxy_config_no_args() {
         "test prompt",
         1000,
         None, // No proxy config
-        false, // interactive mode
+        false, // print mode
+        false, // plan mode
+        &[],   // images
     ).expect("Failed to build args");
 
     assert!(
@@ -184,7 +190,9 @@ fn test_proxy_port_in_env_vars() {
         "test prompt",
         1000,
         Some(&proxy_config),
-        false, // interactive mode
+        false, // print mode
+        false, // plan mode
+        &[],   // images
     ).expect("Failed to build args");
 
     // Verify the custom port is used
@@ -222,7 +230,9 @@ fn test_mux_dir_in_volume_mounts() {
         "test prompt",
         1000,
         Some(&proxy_config),
-        false, // interactive mode
+        false, // print mode
+        false, // plan mode
+        &[],   // images
     ).expect("Failed to build args");
 
     // Verify the mux dir is used in volume mounts (CA cert path contains the temp dir path)
