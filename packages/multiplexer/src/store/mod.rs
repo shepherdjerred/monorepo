@@ -16,6 +16,9 @@ pub struct RecentRepo {
     pub last_used: DateTime<Utc>,
 }
 
+/// Maximum number of recent repositories to track
+pub const MAX_RECENT_REPOS: usize = 10;
+
 /// Trait for session storage backends
 #[async_trait]
 pub trait Store: Send + Sync {
@@ -43,6 +46,6 @@ pub trait Store: Send + Sync {
     /// Add or update a recent repository
     async fn add_recent_repo(&self, repo_path: PathBuf) -> anyhow::Result<()>;
 
-    /// Get recent repositories, ordered by most recently used (limit to 10)
+    /// Get recent repositories, ordered by most recently used
     async fn get_recent_repos(&self) -> anyhow::Result<Vec<RecentRepo>>;
 }

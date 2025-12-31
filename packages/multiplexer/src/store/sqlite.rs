@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use uuid::Uuid;
 
-use super::{RecentRepo, Store};
+use super::{RecentRepo, Store, MAX_RECENT_REPOS};
 use crate::core::{Event, Session};
 
 /// SQLite-based session store
@@ -207,6 +207,12 @@ impl Store for SqliteStore {
     }
 
     async fn add_recent_repo(&self, repo_path: PathBuf) -> anyhow::Result<()> {
+        // Canonicalize the path to prevent duplicates from different representations
+        // (e.g., /home/user/repo vs /home/user/./repo vs ~/repo)
+        let canonical = repo_path
+            .canonicalize()
+            .unwrap_or_else(|_| repo_path.clone()); // Fall back to original if canonicalization fails
+
         let now = Utc::now();
         sqlx::query(
             r"
@@ -214,7 +220,7 @@ impl Store for SqliteStore {
             VALUES (?, ?)
             ",
         )
-        .bind(repo_path.to_string_lossy().to_string())
+        .bind(canonical.to_string_lossy().to_string())
         .bind(now.to_rfc3339())
         .execute(&self.pool)
         .await?;
@@ -224,7 +230,10 @@ impl Store for SqliteStore {
 
     async fn get_recent_repos(&self) -> anyhow::Result<Vec<RecentRepo>> {
         let rows = sqlx::query_as::<_, RecentRepoRow>(
-            "SELECT * FROM recent_repos ORDER BY last_used DESC LIMIT 10",
+            &format!(
+                "SELECT * FROM recent_repos ORDER BY last_used DESC LIMIT {}",
+                MAX_RECENT_REPOS
+            ),
         )
         .fetch_all(&self.pool)
         .await?;
