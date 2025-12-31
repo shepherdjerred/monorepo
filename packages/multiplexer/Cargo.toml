@@ -58,6 +58,7 @@ fs2 = "0.4"
 
 # HTTP Proxy with TLS interception
 hudsucker = { version = "0.24", default-features = false, features = ["rcgen-ca", "rustls-client"] }
+http = "1"
 
 # TLS
 rustls = "0.23"

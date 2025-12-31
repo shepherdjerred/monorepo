@@ -83,6 +83,8 @@ pub struct DockerProxyConfig {
     pub http_proxy_port: u16,
     /// Path to the mux config directory (contains CA cert, kubeconfig, talosconfig).
     pub mux_dir: PathBuf,
+    /// Session-specific proxy port (overrides http_proxy_port if set).
+    pub session_proxy_port: Option<u16>,
 }
 
 impl DockerProxyConfig {
@@ -93,6 +95,7 @@ impl DockerProxyConfig {
             enabled: true,
             http_proxy_port,
             mux_dir,
+            session_proxy_port: None,
         }
     }
 
@@ -118,6 +121,7 @@ impl DockerBackend {
                 enabled: false,
                 http_proxy_port: 0,
                 mux_dir: PathBuf::new(),
+                session_proxy_port: None,
             },
         }
     }
@@ -237,7 +241,8 @@ impl DockerBackend {
         // Add proxy configuration if enabled
         if let Some(proxy) = proxy_config {
             if proxy.enabled {
-                let port = proxy.http_proxy_port;
+                // Use session-specific port if available, otherwise use global port
+                let port = proxy.session_proxy_port.unwrap_or(proxy.http_proxy_port);
                 let mux_dir = &proxy.mux_dir;
 
                 // Validate required files exist before attempting to mount them
@@ -466,8 +471,15 @@ impl ExecutionBackend for DockerBackend {
         // Run as current user to avoid root privileges (claude refuses --dangerously-skip-permissions as root)
         let uid = std::process::id();
 
-        let proxy_config = if self.proxy_config.enabled {
-            Some(&self.proxy_config)
+        let mut proxy_config = self.proxy_config.clone();
+
+        // Override with session-specific proxy port if provided
+        if let Some(session_port) = options.session_proxy_port {
+            proxy_config.session_proxy_port = Some(session_port);
+        }
+
+        let proxy_config_ref = if proxy_config.enabled {
+            Some(&proxy_config)
         } else {
             None
         };
@@ -477,7 +489,7 @@ impl ExecutionBackend for DockerBackend {
             workdir,
             initial_prompt,
             uid,
-            proxy_config,
+            proxy_config_ref,
             options.print_mode,
             options.plan_mode,
             &options.images,
@@ -597,6 +609,7 @@ impl DockerBackend {
             super::traits::CreateOptions {
                 print_mode: false,
                 plan_mode: true, // Default to plan mode
+                session_proxy_port: None,
                 images: vec![],
             },
         )
@@ -970,6 +983,7 @@ mod tests {
             None,
             false,
             false,
+            &[],
         ).expect("Failed to build args");
 
         // Should have workspace mount
@@ -1006,6 +1020,7 @@ mod tests {
             None,
             false,
             false,
+            &[],
         ).expect("Failed to build args");
 
         // Count volume mounts (should only have the workspace mount)
@@ -1047,6 +1062,7 @@ mod tests {
             None,
             false,
             false,
+            &[],
         ).expect("Failed to build args");
 
         // Should have parent .git directory mount
@@ -1086,6 +1102,7 @@ mod tests {
             None,
             false,
             false,
+            &[],
         ).expect("Failed to build args");
 
         // Should still work despite whitespace
@@ -1118,6 +1135,7 @@ mod tests {
             None,
             false,
             false,
+            &[],
         ).expect("Failed to build args");
 
         // Should only have workspace mount (no git mount)
@@ -1152,6 +1170,7 @@ mod tests {
             None,
             false,
             false,
+            &[],
         ).expect("Failed to build args");
 
         // Should only have workspace mount (no git mount due to validation failure)

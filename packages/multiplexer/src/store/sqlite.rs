@@ -56,6 +56,8 @@ impl SqliteStore {
                 dangerous_skip_checks INTEGER NOT NULL,
                 pr_url TEXT,
                 pr_check_status TEXT,
+                access_mode TEXT NOT NULL DEFAULT 'ReadWrite',
+                proxy_port INTEGER,
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL
             )
@@ -85,6 +87,42 @@ impl SqliteStore {
         )
         .execute(pool)
         .await?;
+
+        // Migration: Add access_mode column if it doesn't exist (for existing databases)
+        let access_mode_exists: bool = sqlx::query_scalar(
+            "SELECT COUNT(*) FROM pragma_table_info('sessions') WHERE name = 'access_mode'"
+        )
+        .fetch_one(pool)
+        .await
+        .map(|count: i64| count > 0)
+        .unwrap_or(false);
+
+        if !access_mode_exists {
+            tracing::info!("Running migration: Adding access_mode column to sessions table");
+            sqlx::query(
+                "ALTER TABLE sessions ADD COLUMN access_mode TEXT NOT NULL DEFAULT 'ReadWrite'"
+            )
+            .execute(pool)
+            .await?;
+        }
+
+        // Migration: Add proxy_port column if it doesn't exist
+        let proxy_port_exists: bool = sqlx::query_scalar(
+            "SELECT COUNT(*) FROM pragma_table_info('sessions') WHERE name = 'proxy_port'"
+        )
+        .fetch_one(pool)
+        .await
+        .map(|count: i64| count > 0)
+        .unwrap_or(false);
+
+        if !proxy_port_exists {
+            tracing::info!("Running migration: Adding proxy_port column to sessions table");
+            sqlx::query(
+                "ALTER TABLE sessions ADD COLUMN proxy_port INTEGER"
+            )
+            .execute(pool)
+            .await?;
+        }
 
         Ok(())
     }
@@ -118,8 +156,8 @@ impl Store for SqliteStore {
             INSERT OR REPLACE INTO sessions (
                 id, name, status, backend, agent, repo_path, worktree_path,
                 branch_name, backend_id, initial_prompt, dangerous_skip_checks,
-                pr_url, pr_check_status, created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                pr_url, pr_check_status, access_mode, proxy_port, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ",
         )
         .bind(session.id.to_string())
@@ -139,6 +177,8 @@ impl Store for SqliteStore {
                 .pr_check_status
                 .and_then(|s| serde_json::to_string(&s).ok()),
         )
+        .bind(session.access_mode.to_string())
+        .bind(session.proxy_port.map(|p| p as i64))
         .bind(session.created_at.to_rfc3339())
         .bind(session.updated_at.to_rfc3339())
         .execute(&self.pool)
@@ -226,6 +266,8 @@ struct SessionRow {
     dangerous_skip_checks: bool,
     pr_url: Option<String>,
     pr_check_status: Option<String>,
+    access_mode: String,
+    proxy_port: Option<i64>,
     created_at: String,
     updated_at: String,
 }
@@ -251,6 +293,8 @@ impl TryFrom<SessionRow> for Session {
                 .pr_check_status
                 .map(|s| serde_json::from_str(&s))
                 .transpose()?,
+            access_mode: row.access_mode.parse().unwrap_or_default(),
+            proxy_port: row.proxy_port.map(|p| p as u16),
             created_at: chrono::DateTime::parse_from_rfc3339(&row.created_at)?.into(),
             updated_at: chrono::DateTime::parse_from_rfc3339(&row.updated_at)?.into(),
         })
