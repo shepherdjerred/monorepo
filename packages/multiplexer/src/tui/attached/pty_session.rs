@@ -25,6 +25,9 @@ const EVENT_CHANNEL_SIZE: usize = 256;
 /// Channel buffer size for write requests.
 const WRITE_CHANNEL_SIZE: usize = 256;
 
+/// Timeout for PTY spawn operations.
+const SPAWN_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(10);
+
 /// Events emitted by a PTY session.
 #[derive(Debug)]
 pub enum PtyEvent {

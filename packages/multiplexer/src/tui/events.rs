@@ -426,6 +426,9 @@ fn handle_help_key(app: &mut App, key: KeyEvent) {
 /// Most keys are encoded and sent to the PTY. Ctrl+] is the detach key
 /// which uses a double-tap mechanism (single press waits 300ms for second,
 /// double-tap sends the literal Ctrl+] character).
+///
+/// Session switching: Ctrl+Left/Right switches between Docker sessions.
+/// Scrolling: Shift+PageUp/Down navigates scroll-back buffer.
 async fn handle_attached_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
     use crate::tui::app::DetachState;
     use crate::tui::attached::encode_key;
@@ -459,6 +462,48 @@ async fn handle_attached_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()>
         }
     }
 
+    // Session switching with Ctrl+Left/Right
+    if key.modifiers.contains(KeyModifiers::CONTROL) {
+        match key.code {
+            KeyCode::Left => {
+                if app.switch_to_previous_session().await? {
+                    app.status_message = Some("Switched to previous session".to_string());
+                }
+                return Ok(());
+            }
+            KeyCode::Right => {
+                if app.switch_to_next_session().await? {
+                    app.status_message = Some("Switched to next session".to_string());
+                }
+                return Ok(());
+            }
+            _ => {}
+        }
+    }
+
+    // Scrolling with Shift+PageUp/PageDown
+    if key.modifiers.contains(KeyModifiers::SHIFT) {
+        match key.code {
+            KeyCode::PageUp => {
+                if let Some(pty_session) = app.attached_pty_session() {
+                    let buffer = pty_session.terminal_buffer();
+                    let mut buf = buffer.lock().unwrap();
+                    buf.scroll_up(10);
+                }
+                return Ok(());
+            }
+            KeyCode::PageDown => {
+                if let Some(pty_session) = app.attached_pty_session() {
+                    let buffer = pty_session.terminal_buffer();
+                    let mut buf = buffer.lock().unwrap();
+                    buf.scroll_down(10);
+                }
+                return Ok(());
+            }
+            _ => {}
+        }
+    }
+
     // If we were pending detach and got a different key, send Ctrl+] then this key
     if let DetachState::Pending { since } = &app.detach_state {
         if since.elapsed() >= DETACH_TIMEOUT {
@@ -469,6 +514,13 @@ async fn handle_attached_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()>
         // Not a second Ctrl+], so send the first one as literal and continue
         app.send_to_pty(vec![0x1d]).await?;
         app.detach_state = DetachState::Idle;
+    }
+
+    // Reset scroll position on any regular input (auto-scroll to bottom)
+    if let Some(pty_session) = app.attached_pty_session() {
+        let buffer = pty_session.terminal_buffer();
+        let mut buf = buffer.lock().unwrap();
+        buf.scroll_to_bottom();
     }
 
     // Encode the key and send to PTY

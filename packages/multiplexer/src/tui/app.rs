@@ -705,6 +705,103 @@ impl App {
         self.attached_session_id.is_some() && matches!(self.mode, AppMode::Attached)
     }
 
+    /// Switch to the next Docker session while attached.
+    /// Returns true if switched, false if no next session.
+    pub async fn switch_to_next_session(&mut self) -> anyhow::Result<bool> {
+        use crate::core::BackendType;
+
+        // Get list of Docker sessions (only those support PTY)
+        let docker_sessions: Vec<_> = self
+            .sessions
+            .iter()
+            .filter(|s| s.backend == BackendType::Docker && s.backend_id.is_some())
+            .collect();
+
+        if docker_sessions.len() <= 1 {
+            return Ok(false);
+        }
+
+        // Find current session's index
+        let current_idx = docker_sessions
+            .iter()
+            .position(|s| Some(s.id) == self.attached_session_id);
+
+        let next_idx = match current_idx {
+            Some(idx) => (idx + 1) % docker_sessions.len(),
+            None => 0,
+        };
+
+        let next_session = docker_sessions[next_idx];
+        let session_id = next_session.id;
+        let container_id = next_session.backend_id.clone().unwrap();
+
+        // Create PTY session if needed
+        if !self.pty_sessions.contains_key(&session_id) {
+            let (rows, cols) = self.terminal_size;
+            let pty_session =
+                PtySession::spawn_docker_attach(session_id, container_id, rows, cols).await?;
+            self.pty_sessions.insert(session_id, pty_session);
+        }
+
+        // Update selected index in session list to match
+        if let Some(idx) = self.sessions.iter().position(|s| s.id == session_id) {
+            self.selected_index = idx;
+        }
+
+        self.attached_session_id = Some(session_id);
+        self.detach_state = DetachState::Idle;
+        Ok(true)
+    }
+
+    /// Switch to the previous Docker session while attached.
+    /// Returns true if switched, false if no previous session.
+    pub async fn switch_to_previous_session(&mut self) -> anyhow::Result<bool> {
+        use crate::core::BackendType;
+
+        // Get list of Docker sessions (only those support PTY)
+        let docker_sessions: Vec<_> = self
+            .sessions
+            .iter()
+            .filter(|s| s.backend == BackendType::Docker && s.backend_id.is_some())
+            .collect();
+
+        if docker_sessions.len() <= 1 {
+            return Ok(false);
+        }
+
+        // Find current session's index
+        let current_idx = docker_sessions
+            .iter()
+            .position(|s| Some(s.id) == self.attached_session_id);
+
+        let prev_idx = match current_idx {
+            Some(0) => docker_sessions.len() - 1,
+            Some(idx) => idx - 1,
+            None => 0,
+        };
+
+        let prev_session = docker_sessions[prev_idx];
+        let session_id = prev_session.id;
+        let container_id = prev_session.backend_id.clone().unwrap();
+
+        // Create PTY session if needed
+        if !self.pty_sessions.contains_key(&session_id) {
+            let (rows, cols) = self.terminal_size;
+            let pty_session =
+                PtySession::spawn_docker_attach(session_id, container_id, rows, cols).await?;
+            self.pty_sessions.insert(session_id, pty_session);
+        }
+
+        // Update selected index in session list to match
+        if let Some(idx) = self.sessions.iter().position(|s| s.id == session_id) {
+            self.selected_index = idx;
+        }
+
+        self.attached_session_id = Some(session_id);
+        self.detach_state = DetachState::Idle;
+        Ok(true)
+    }
+
     /// Shutdown all PTY sessions gracefully.
     pub async fn shutdown_all_pty_sessions(&mut self) {
         for (_, mut session) in self.pty_sessions.drain() {
