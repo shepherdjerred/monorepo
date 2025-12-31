@@ -156,6 +156,7 @@ impl DockerBackend {
     /// * `print_mode` - If true, run in non-interactive mode with `--print --verbose` flags.
     ///                  The container will output the response and exit.
     ///                  If false, run interactively for `docker attach`.
+    /// * `plan_mode` - If true, add `--permission-mode plan` flag to start in plan mode.
     ///
     /// # Errors
     ///
@@ -167,6 +168,7 @@ impl DockerBackend {
         uid: u32,
         proxy_config: Option<&DockerProxyConfig>,
         print_mode: bool,
+        plan_mode: bool,
     ) -> anyhow::Result<Vec<String>> {
         let container_name = format!("mux-{name}");
         let escaped_prompt = initial_prompt.replace('\'', "'\\''");
@@ -391,12 +393,23 @@ impl DockerBackend {
         }
 
         // Add image and command
-        let claude_cmd = if print_mode {
-            // Non-interactive mode: output response and exit
-            format!("claude --dangerously-skip-permissions --print --verbose '{escaped_prompt}'")
-        } else {
-            // Interactive mode: user attaches to container to interact
-            format!("claude --dangerously-skip-permissions '{escaped_prompt}'")
+        let claude_cmd = match (print_mode, plan_mode) {
+            (true, true) => {
+                // Non-interactive mode with plan mode
+                format!("claude --dangerously-skip-permissions --permission-mode plan --print --verbose '{escaped_prompt}'")
+            }
+            (true, false) => {
+                // Non-interactive mode without plan mode
+                format!("claude --dangerously-skip-permissions --print --verbose '{escaped_prompt}'")
+            }
+            (false, true) => {
+                // Interactive mode with plan mode
+                format!("claude --dangerously-skip-permissions --permission-mode plan '{escaped_prompt}'")
+            }
+            (false, false) => {
+                // Interactive mode without plan mode
+                format!("claude --dangerously-skip-permissions '{escaped_prompt}'")
+            }
         };
 
         args.extend([
@@ -460,6 +473,7 @@ impl ExecutionBackend for DockerBackend {
             uid,
             proxy_config,
             options.print_mode,
+            options.plan_mode,
         )?;
         let output = Command::new("docker")
             .args(&args)
@@ -569,7 +583,16 @@ impl DockerBackend {
         workdir: &Path,
         initial_prompt: &str,
     ) -> anyhow::Result<String> {
-        self.create(name, workdir, initial_prompt, super::traits::CreateOptions::default()).await
+        self.create(
+            name,
+            workdir,
+            initial_prompt,
+            super::traits::CreateOptions {
+                print_mode: false,
+                plan_mode: true, // Default to plan mode
+            },
+        )
+        .await
     }
 
     /// Check if a Docker container exists (legacy name)
@@ -600,6 +623,7 @@ mod tests {
             1000,
             None,
             false, // interactive mode
+            false, // plan mode
         ).expect("Failed to build args");
 
         // Must have -dit for interactive TTY sessions
@@ -624,6 +648,7 @@ mod tests {
             "test prompt",
             uid,
             None,
+            false,
             false,
         ).expect("Failed to build args");
 
@@ -687,6 +712,7 @@ mod tests {
             1000,
             None,
             false,
+            false,
         ).expect("Failed to build args");
 
         // Find the command argument (last one containing the prompt)
@@ -708,6 +734,7 @@ mod tests {
             "test prompt",
             1000,
             None,
+            false,
             false,
         ).expect("Failed to build args");
 
@@ -747,6 +774,7 @@ mod tests {
             1000,
             Some(&proxy_config),
             false,
+            false,
         ).expect("Failed to build args");
 
         // Should have HTTPS_PROXY
@@ -783,6 +811,7 @@ mod tests {
             1000,
             Some(&proxy_config),
             false,
+            false,
         ).expect("Failed to build args");
 
         // Should have proxy-ca.pem mount
@@ -804,6 +833,7 @@ mod tests {
             "test prompt",
             1000,
             Some(&proxy_config),
+            false,
             false,
         ).expect("Failed to build args");
 
@@ -828,6 +858,7 @@ mod tests {
             "test prompt",
             1000,
             Some(&proxy_config),
+            false,
             false,
         ).expect("Failed to build args");
 
@@ -854,6 +885,7 @@ mod tests {
             1000,
             None,
             true, // print mode enabled
+            false, // plan mode
         ).expect("Failed to build args");
 
         let cmd_arg = args.last().unwrap();
@@ -877,6 +909,7 @@ mod tests {
             1000,
             None,
             false, // interactive mode
+            false, // plan mode
         ).expect("Failed to build args");
 
         let cmd_arg = args.last().unwrap();
@@ -918,6 +951,7 @@ mod tests {
             1000,
             None,
             false,
+            false,
         ).expect("Failed to build args");
 
         // Should have workspace mount
@@ -952,6 +986,7 @@ mod tests {
             "test prompt",
             1000,
             None,
+            false,
             false,
         ).expect("Failed to build args");
 
@@ -993,6 +1028,7 @@ mod tests {
             1000,
             None,
             false,
+            false,
         ).expect("Failed to build args");
 
         // Should have parent .git directory mount
@@ -1031,6 +1067,7 @@ mod tests {
             1000,
             None,
             false,
+            false,
         ).expect("Failed to build args");
 
         // Should still work despite whitespace
@@ -1061,6 +1098,7 @@ mod tests {
             "test prompt",
             1000,
             None,
+            false,
             false,
         ).expect("Failed to build args");
 
@@ -1095,6 +1133,7 @@ mod tests {
             1000,
             None,
             false,
+            false,
         ).expect("Failed to build args");
 
         // Should only have workspace mount (no git mount due to validation failure)
@@ -1102,6 +1141,74 @@ mod tests {
         assert_eq!(
             mount_count, 1,
             "Worktree with missing parent should only have workspace mount, got {mount_count} mounts"
+        );
+    }
+
+    /// Test that plan mode adds --permission-mode plan flag
+    #[test]
+    fn test_plan_mode_adds_flag() {
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            &PathBuf::from("/workspace"),
+            "test prompt",
+            1000,
+            None,
+            false, // print mode
+            true,  // plan mode enabled
+        ).expect("Failed to build args");
+
+        let cmd_arg = args.last().unwrap();
+        assert!(
+            cmd_arg.contains("--permission-mode plan"),
+            "Plan mode should add --permission-mode plan flag: {cmd_arg}"
+        );
+    }
+
+    /// Test that plan mode with print mode includes both flags
+    #[test]
+    fn test_plan_mode_with_print_mode() {
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            &PathBuf::from("/workspace"),
+            "test prompt",
+            1000,
+            None,
+            true, // print mode enabled
+            true, // plan mode enabled
+        ).expect("Failed to build args");
+
+        let cmd_arg = args.last().unwrap();
+        assert!(
+            cmd_arg.contains("--permission-mode plan"),
+            "Should include --permission-mode plan: {cmd_arg}"
+        );
+        assert!(
+            cmd_arg.contains("--print"),
+            "Should include --print: {cmd_arg}"
+        );
+        assert!(
+            cmd_arg.contains("--verbose"),
+            "Should include --verbose: {cmd_arg}"
+        );
+    }
+
+    /// Test that plan mode disabled does not add permission-mode flag
+    #[test]
+    fn test_plan_mode_disabled() {
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            &PathBuf::from("/workspace"),
+            "test prompt",
+            1000,
+            None,
+            false, // print mode
+            false, // plan mode disabled
+        ).expect("Failed to build args");
+
+        let cmd_arg = args.last().unwrap();
+        assert!(
+            !cmd_arg.contains("--permission-mode"),
+            "Should not include --permission-mode when disabled: {cmd_arg}"
         );
     }
 }
