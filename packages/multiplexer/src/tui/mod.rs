@@ -1,4 +1,5 @@
 pub mod app;
+pub mod attached;
 pub mod components;
 pub mod events;
 pub mod ui;
@@ -16,6 +17,7 @@ use crossterm::{
     execute,
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
+use futures::StreamExt;
 use ratatui::{Terminal, backend::CrosstermBackend};
 
 use crate::core::BackendType;
@@ -70,68 +72,89 @@ async fn run_main_loop(
     terminal: &mut Terminal<CrosstermBackend<io::Stdout>>,
     app: &mut App,
 ) -> anyhow::Result<()> {
-    loop {
-        // Increment spinner tick for animation
-        app.tick();
+    // Create async event stream
+    let mut event_stream = events::create_event_stream();
 
+    // Tick interval for animations
+    let mut tick_interval = tokio::time::interval(Duration::from_millis(100));
+
+    loop {
         // Draw UI
         terminal.draw(|frame| ui::render(frame, app))?;
 
-        // Poll for events with timeout
-        if let Some(event) = events::poll_event(Duration::from_millis(100))? {
-            // Handle paste events
-            if let Event::Paste(pasted_text) = &event {
-                events::handle_paste_event(app, pasted_text);
-                continue;
-            }
+        // Use tokio::select! to handle multiple event sources
+        tokio::select! {
+            // Handle terminal events
+            event_result = event_stream.next() => {
+                let Some(event_result) = event_result else {
+                    // Stream ended
+                    break;
+                };
 
-            // Handle key events
-            let Event::Key(key) = event else {
-                continue;
-            };
+                let event = event_result?;
 
-            // Handle Enter in session list to attach
-            if app.mode == AppMode::SessionList && key.code == KeyCode::Enter {
-                // Get backend type before borrowing for attach command
-                let backend_type = app.selected_session().map(|s| s.backend);
-
-                if let Ok(Some(command)) = app.get_attach_command().await {
-                    // Suspend TUI and run attach command
-                    disable_raw_mode()?;
-                    execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
-
-                    // Show detach hint before attaching
-                    if let Some(backend) = backend_type {
-                        let detach_hint = match backend {
-                            BackendType::Zellij => "Ctrl+O, d",
-                            BackendType::Docker => "Ctrl+P, Ctrl+Q",
-                        };
-                        println!("Attaching... Detach with {detach_hint}");
-                    } else {
-                        println!("Attaching...");
-                    }
-
-                    // Execute attach command
-                    let status = std::process::Command::new(&command[0])
-                        .args(&command[1..])
-                        .status();
-
-                    // Restore TUI
-                    enable_raw_mode()?;
-                    execute!(terminal.backend_mut(), EnterAlternateScreen)?;
-                    terminal.clear()?;
-
-                    if let Err(e) = status {
-                        app.status_message = Some(format!("Attach failed: {e}"));
-                    }
-
-                    // Refresh sessions after returning
-                    let _ = app.refresh_sessions().await;
+                // Handle paste events
+                if let Event::Paste(pasted_text) = &event {
+                    events::handle_paste_event(app, pasted_text);
                     continue;
                 }
+
+                // Handle key events
+                let Event::Key(key) = event else {
+                    continue;
+                };
+
+                // Handle Enter in session list to attach
+                if app.mode == AppMode::SessionList && key.code == KeyCode::Enter {
+                    // Get backend type before borrowing for attach command
+                    let backend_type = app.selected_session().map(|s| s.backend);
+
+                    if let Ok(Some(command)) = app.get_attach_command().await {
+                        // Suspend TUI and run attach command
+                        disable_raw_mode()?;
+                        execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
+
+                        // Show detach hint before attaching
+                        if let Some(backend) = backend_type {
+                            let detach_hint = match backend {
+                                BackendType::Zellij => "Ctrl+O, d",
+                                BackendType::Docker => "Ctrl+P, Ctrl+Q",
+                            };
+                            println!("Attaching... Detach with {detach_hint}");
+                        } else {
+                            println!("Attaching...");
+                        }
+
+                        // Execute attach command
+                        let status = std::process::Command::new(&command[0])
+                            .args(&command[1..])
+                            .status();
+
+                        // Restore TUI
+                        enable_raw_mode()?;
+                        execute!(terminal.backend_mut(), EnterAlternateScreen)?;
+                        terminal.clear()?;
+
+                        // Recreate event stream after restoring terminal
+                        event_stream = events::create_event_stream();
+
+                        if let Err(e) = status {
+                            app.status_message = Some(format!("Attach failed: {e}"));
+                        }
+
+                        // Refresh sessions after returning
+                        let _ = app.refresh_sessions().await;
+                        continue;
+                    }
+                }
+
+                events::handle_key_event(app, key).await?;
             }
 
-            events::handle_key_event(app, key).await?;
+            // Handle tick for animations
+            _ = tick_interval.tick() => {
+                app.tick();
+            }
         }
 
         // Poll for progress updates from background tasks (non-blocking)

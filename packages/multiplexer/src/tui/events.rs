@@ -1,6 +1,5 @@
-use std::time::Duration;
-
-use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyModifiers};
+use crossterm::event::{Event, EventStream, KeyCode, KeyEvent, KeyModifiers};
+use futures::StreamExt;
 use tokio::sync::mpsc;
 
 use crate::api::protocol::CreateSessionRequest;
@@ -8,6 +7,25 @@ use crate::api::Client;
 use crate::core::{AgentType, BackendType};
 
 use super::app::{App, AppMode, CreateDialogFocus, CreateProgress};
+
+/// Create a new async event stream for terminal events.
+#[must_use]
+pub fn create_event_stream() -> EventStream {
+    EventStream::new()
+}
+
+/// Read the next event from the stream asynchronously.
+///
+/// # Errors
+///
+/// Returns an error if reading from the event stream fails.
+pub async fn next_event(stream: &mut EventStream) -> anyhow::Result<Option<Event>> {
+    match stream.next().await {
+        Some(Ok(event)) => Ok(Some(event)),
+        Some(Err(e)) => Err(e.into()),
+        None => Ok(None),
+    }
+}
 
 /// Handle a paste event (when text is pasted from clipboard)
 pub fn handle_paste_event(app: &mut App, text: &str) {
@@ -42,18 +60,6 @@ pub fn handle_paste_event(app: &mut App, text: &str) {
     }
 }
 
-/// Poll for events with a timeout
-///
-/// # Errors
-///
-/// Returns an error if event polling fails.
-pub fn poll_event(timeout: Duration) -> anyhow::Result<Option<Event>> {
-    if event::poll(timeout)? {
-        Ok(Some(event::read()?))
-    } else {
-        Ok(None)
-    }
-}
 
 /// Handle a key event based on the current app mode
 ///
