@@ -16,6 +16,8 @@ pub struct DockerProxyConfig {
     pub http_proxy_port: u16,
     /// Path to the mux config directory (contains CA cert, kubeconfig, talosconfig).
     pub mux_dir: PathBuf,
+    /// Session-specific proxy port (overrides http_proxy_port if set).
+    pub session_proxy_port: Option<u16>,
 }
 
 impl DockerProxyConfig {
@@ -124,7 +126,8 @@ impl DockerBackend {
         // Add proxy configuration if enabled
         if let Some(proxy) = proxy_config {
             if proxy.enabled {
-                let port = proxy.http_proxy_port;
+                // Use session-specific port if available, otherwise use global port
+                let port = proxy.session_proxy_port.unwrap_or(proxy.http_proxy_port);
                 let mux_dir = &proxy.mux_dir;
 
                 // Validate required files exist before attempting to mount them
@@ -337,8 +340,15 @@ impl ExecutionBackend for DockerBackend {
         // Run as current user to avoid root privileges (claude refuses --dangerously-skip-permissions as root)
         let uid = std::process::id();
 
-        let proxy_config = if self.proxy_config.enabled {
-            Some(&self.proxy_config)
+        let mut proxy_config = self.proxy_config.clone();
+
+        // Override with session-specific proxy port if provided
+        if let Some(session_port) = options.session_proxy_port {
+            proxy_config.session_proxy_port = Some(session_port);
+        }
+
+        let proxy_config_ref = if proxy_config.enabled {
+            Some(&proxy_config)
         } else {
             None
         };
@@ -348,7 +358,7 @@ impl ExecutionBackend for DockerBackend {
             workdir,
             initial_prompt,
             uid,
-            proxy_config,
+            proxy_config_ref,
             options.print_mode,
         )?;
         let output = Command::new("docker")

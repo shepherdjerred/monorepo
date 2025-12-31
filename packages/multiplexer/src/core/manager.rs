@@ -29,6 +29,8 @@ pub struct SessionManager {
     zellij: Arc<dyn ExecutionBackend>,
     docker: Arc<dyn ExecutionBackend>,
     sessions: RwLock<Vec<Session>>,
+    /// Optional proxy manager for per-session filtering
+    proxy_manager: Option<Arc<crate::proxy::ProxyManager>>,
 }
 
 impl SessionManager {
@@ -54,6 +56,7 @@ impl SessionManager {
             zellij,
             docker,
             sessions: RwLock::new(sessions),
+            proxy_manager: None,
         })
     }
 
@@ -93,6 +96,13 @@ impl SessionManager {
             Arc::new(docker),
         )
         .await
+    }
+
+    /// Set the proxy manager for per-session filtering
+    ///
+    /// This should be called after construction to enable per-session proxy support.
+    pub fn set_proxy_manager(&mut self, proxy_manager: Arc<crate::proxy::ProxyManager>) {
+        self.proxy_manager = Some(proxy_manager);
     }
 
     /// List all sessions
@@ -183,8 +193,40 @@ impl SessionManager {
             .create_worktree(&repo_path_buf, &worktree_path, &full_name)
             .await?;
 
+        // Create per-session proxy for Docker backends BEFORE creating container
+        let proxy_port = if backend == BackendType::Docker {
+            if let Some(ref proxy_manager) = self.proxy_manager {
+                match proxy_manager.create_session_proxy(session.id, access_mode).await {
+                    Ok(proxy_port) => {
+                        session.set_proxy_port(proxy_port);
+                        tracing::info!(
+                            session_id = %session.id,
+                            port = proxy_port,
+                            "Created session proxy"
+                        );
+                        Some(proxy_port)
+                    }
+                    Err(e) => {
+                        tracing::warn!(
+                            session_id = %session.id,
+                            error = %e,
+                            "Failed to create session proxy, using global proxy"
+                        );
+                        None
+                    }
+                }
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+
         // Create backend resource
-        let create_options = crate::backends::CreateOptions { print_mode };
+        let create_options = crate::backends::CreateOptions {
+            print_mode,
+            session_proxy_port: proxy_port,
+        };
         let backend_id = match backend {
             BackendType::Zellij => {
                 self.zellij
@@ -310,6 +352,19 @@ impl SessionManager {
             }
         }
 
+        // Destroy per-session proxy if it exists
+        if session.backend == BackendType::Docker {
+            if let Some(ref proxy_manager) = self.proxy_manager {
+                if let Err(e) = proxy_manager.destroy_session_proxy(session.id).await {
+                    tracing::warn!(
+                        session_id = %session.id,
+                        error = %e,
+                        "Failed to destroy session proxy"
+                    );
+                }
+            }
+        }
+
         // Delete git worktree
         let _ = self.git.delete_worktree(&session.repo_path, &session.worktree_path).await;
 
@@ -373,15 +428,26 @@ impl SessionManager {
             .find(|s| s.name == id_or_name || s.id.to_string() == id_or_name)
             .ok_or_else(|| anyhow::anyhow!("Session not found: {id_or_name}"))?;
 
+        let session_id = session.id;
+        let backend = session.backend;
         session.set_access_mode(new_mode);
         let session_clone = session.clone();
         drop(sessions);
+
+        // Update runtime proxy if session has one
+        if backend == BackendType::Docker {
+            if let Some(ref proxy_manager) = self.proxy_manager {
+                proxy_manager
+                    .update_session_access_mode(session_id, new_mode)
+                    .await?;
+            }
+        }
 
         // Update in store
         self.store.save_session(&session_clone).await?;
 
         tracing::info!(
-            session_id = %session_clone.id,
+            session_id = %session_id,
             mode = ?new_mode,
             "Updated session access mode"
         );

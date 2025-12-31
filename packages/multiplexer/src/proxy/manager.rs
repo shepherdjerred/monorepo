@@ -248,6 +248,34 @@ impl ProxyManager {
             }
         });
 
+        // Wait for proxy to bind (health check)
+        let mut bound = false;
+        for attempt in 1..=10 {
+            tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+            if tokio::net::TcpStream::connect(format!("127.0.0.1:{}", port))
+                .await
+                .is_ok()
+            {
+                tracing::debug!(port = port, "Session proxy ready");
+                bound = true;
+                break;
+            }
+            if attempt == 10 {
+                tracing::warn!(
+                    port = port,
+                    session_id = %session_id,
+                    "Session proxy may not be ready (could not verify binding)"
+                );
+            }
+        }
+
+        if !bound {
+            // Clean up on failure
+            task.abort();
+            self.port_allocator.release(port).await;
+            anyhow::bail!("Session proxy failed to bind on port {}", port);
+        }
+
         self.session_proxies.write().await.insert(
             session_id,
             SessionProxyHandle {
