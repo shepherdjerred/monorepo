@@ -17,7 +17,9 @@ fn test_docker_run_arg_order() {
         "test prompt",
         1000,
         None,
-        false, // interactive mode
+        false, // print mode
+        false, // plan mode
+        &[],   // images
     ).expect("Failed to build args");
 
     // First arg must be "run"
@@ -64,7 +66,9 @@ fn test_docker_env_vars() {
         "test prompt",
         1000,
         None,
-        false, // interactive mode
+        false, // print mode
+        false, // plan mode
+        &[],   // images
     ).expect("Failed to build args");
 
     // Find all -e flags and their values
@@ -144,7 +148,7 @@ fn test_zellij_create_background_schema() {
 /// Validate zellij action schema: zellij action <action> [OPTIONS]
 #[test]
 fn test_zellij_action_schema() {
-    let args = ZellijBackend::build_new_pane_args(&PathBuf::from("/workspace"), "test prompt");
+    let args = ZellijBackend::build_new_pane_args(&PathBuf::from("/workspace"), "test prompt", false, &[]);
 
     // Must start with action
     assert_eq!(args[0], "action", "First arg must be 'action'");
@@ -166,7 +170,9 @@ fn test_volume_mount_format() {
         "test prompt",
         1000,
         None,
-        false, // interactive mode
+        false, // print mode
+        false, // plan mode
+        &[],   // images
     ).expect("Failed to build args");
 
     // Find all -v flags and their values
@@ -214,7 +220,9 @@ fn test_workspace_mount_destination() {
         "test prompt",
         1000,
         None,
-        false, // interactive mode
+        false, // print mode
+        false, // plan mode
+        &[],   // images
     ).expect("Failed to build args");
 
     // Find workspace volume mount
@@ -246,7 +254,9 @@ fn test_final_command_format() {
         prompt,
         1000,
         None,
-        false, // interactive mode
+        false, // print mode
+        false, // plan mode
+        &[],   // images
     ).expect("Failed to build args");
 
     let final_cmd = args.last().unwrap();

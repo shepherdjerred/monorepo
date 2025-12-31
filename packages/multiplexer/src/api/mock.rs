@@ -289,6 +289,7 @@ mod tests {
             agent: AgentType::ClaudeCode,
             dangerous_skip_checks: false,
             print_mode: false,
+            plan_mode: true,
             images: vec![],
         };
 
