@@ -202,25 +202,27 @@ impl DirectoryPickerState {
             let needle = Utf32String::from(self.search_query.as_str());
 
             // Combine recent repos and current directory entries for searching
-            let all_searchable: Vec<&DirEntry> = self
-                .recent_repos
-                .iter()
-                .chain(self.all_entries.iter())
-                .collect();
+            // Clone to avoid potential issues with concurrent modifications
+            let all_searchable: Vec<DirEntry> = {
+                let mut combined = Vec::with_capacity(self.recent_repos.len() + self.all_entries.len());
+                combined.extend(self.recent_repos.iter().cloned());
+                combined.extend(self.all_entries.iter().cloned());
+                combined
+            };
 
             let mut scored: Vec<(DirEntry, u16)> = all_searchable
                 .iter()
                 .filter_map(|entry| {
                     // Never filter out parent directory
                     if entry.is_parent {
-                        return Some(((*entry).clone(), u16::MAX));
+                        return Some((entry.clone(), u16::MAX));
                     }
 
                     // Convert entry name to Utf32String and use nucleo-matcher for fuzzy matching
                     let haystack = Utf32String::from(entry.name.as_str());
                     self.matcher
                         .fuzzy_match(haystack.slice(..), needle.slice(..))
-                        .map(|score| ((*entry).clone(), score))
+                        .map(|score| (entry.clone(), score))
                 })
                 .collect();
 
@@ -595,6 +597,8 @@ impl App {
                 }
                 Err(e) => {
                     tracing::warn!("Failed to load recent repos: {e}");
+                    // Show a subtle status message to inform the user
+                    self.status_message = Some(format!("Note: Recent repos unavailable ({e})"));
                 }
             }
         }

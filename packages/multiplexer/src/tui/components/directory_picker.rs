@@ -103,6 +103,25 @@ fn render_directory_list(frame: &mut Frame, state: &DirectoryPickerState, area: 
     }
 
     // Render directory list with recent repos section
+    // Pre-compute section boundaries for cleaner logic
+    let show_section_headers = state.search_query.is_empty();
+    let first_recent_idx = if show_section_headers {
+        state
+            .filtered_entries
+            .iter()
+            .position(|e| e.is_recent)
+    } else {
+        None
+    };
+    let first_browse_idx = if show_section_headers {
+        state
+            .filtered_entries
+            .iter()
+            .position(|e| !e.is_recent && !e.is_parent)
+    } else {
+        None
+    };
+
     let items: Vec<ListItem> = state
         .filtered_entries
         .iter()
@@ -124,21 +143,14 @@ fn render_directory_list(frame: &mut Frame, state: &DirectoryPickerState, area: 
                 Style::default().fg(Color::White)
             };
 
-            // Add section header for recent repos
-            let line = if idx == 0 && entry.is_recent && state.search_query.is_empty() {
+            // Add section headers based on pre-computed boundaries
+            let line = if first_recent_idx == Some(idx) {
                 Line::from(vec![
                     Span::styled("Recent: ", Style::default().fg(Color::DarkGray)),
                     Span::raw(icon),
                     Span::styled(&entry.name, name_style),
                 ])
-            } else if !entry.is_recent
-                && state
-                    .filtered_entries
-                    .get(idx.saturating_sub(1))
-                    .map_or(false, |prev| prev.is_recent)
-                && state.search_query.is_empty()
-            {
-                // First non-recent entry after recent entries - add "Browse:" header
+            } else if first_browse_idx == Some(idx) {
                 Line::from(vec![
                     Span::styled("Browse: ", Style::default().fg(Color::DarkGray)),
                     Span::raw(icon),
