@@ -25,6 +25,8 @@ fn test_create_session_request_serialization() {
         agent: AgentType::ClaudeCode,
         dangerous_skip_checks: false,
         print_mode: false,
+        plan_mode: true,
+        images: vec![],
     });
 
     let json = serde_json::to_string(&request).unwrap();
@@ -160,6 +162,8 @@ fn test_print_mode_serialization() {
         agent: AgentType::ClaudeCode,
         dangerous_skip_checks: true,
         print_mode: true,
+        plan_mode: false,
+        images: vec![],
     });
 
     let json = serde_json::to_string(&request).unwrap();
@@ -208,6 +212,8 @@ fn test_print_mode_flows_to_docker_args() {
         1000,
         None,
         print_mode,
+        false, // plan_mode
+        &[],   // images
     ).expect("Failed to build args");
 
     // The final command should contain --print --verbose
@@ -242,6 +248,8 @@ fn test_interactive_mode_no_print_flag_in_docker_args() {
         1000,
         None,
         false, // interactive mode
+        false, // plan_mode
+        &[],   // images
     ).expect("Failed to build args");
 
     let cmd_arg = args.last().expect("Should have command argument");

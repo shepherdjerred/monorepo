@@ -36,6 +36,7 @@ pub async fn handle_request(request: Request, manager: &SessionManager) -> Respo
                     req.dangerous_skip_checks,
                     req.print_mode,
                     req.plan_mode,
+                    req.images,
                 )
                 .await
             {
@@ -199,6 +200,7 @@ pub async fn handle_create_session_with_progress(
             req.dangerous_skip_checks,
             req.print_mode,
             req.plan_mode,
+            req.images,
         )
         .await
     {

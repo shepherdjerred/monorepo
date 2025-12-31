@@ -20,7 +20,12 @@ clap = { version = "4", features = ["derive"] }
 
 # TUI
 ratatui = "0.29"
-crossterm = "0.28"
+crossterm = { version = "0.28", features = ["event-stream"] }
+
+# PTY and terminal emulation
+pty-process = { version = "0.5", features = ["async"] }
+vt100 = "0.15"
+futures = "0.3"
 
 # Database
 sqlx = { version = "0.8", features = ["runtime-tokio", "sqlite", "chrono", "uuid"] }
@@ -75,6 +80,7 @@ time = "0.3"
 cargo-husky = { version = "1", features = ["precommit-hook", "run-cargo-fmt", "run-cargo-clippy"] }
 tempfile = "3"
 base64 = "0.22"
+proptest = "1.0"
 
 # HTTP server/client for integration tests
 axum = "0.7"

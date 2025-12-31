@@ -310,6 +310,7 @@ mod tests {
             dangerous_skip_checks: false,
             print_mode: false,
             plan_mode: true,
+            images: vec![],
         };
 
         let (session, warnings) = client.create_session(request).await.unwrap();

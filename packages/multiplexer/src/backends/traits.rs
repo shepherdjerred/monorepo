@@ -41,6 +41,9 @@ pub struct CreateOptions {
     /// Start in plan mode (read-only exploration).
     /// Applicable to both Zellij and Docker backends.
     pub plan_mode: bool,
+
+    /// Image file paths to attach to initial prompt
+    pub images: Vec<String>,
 }
 
 /// Trait for execution backends (Zellij, Docker, etc.)

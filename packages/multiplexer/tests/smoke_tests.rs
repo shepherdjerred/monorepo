@@ -339,7 +339,11 @@ async fn test_claude_print_mode_e2e() {
         .expect("Failed to write test file");
 
     // Use print mode - Claude will output response and exit
-    let options = CreateOptions { print_mode: true };
+    let options = CreateOptions {
+        print_mode: true,
+        plan_mode: false, // Don't need plan mode for this test
+        images: vec![],
+    };
 
     // Simple prompt that should produce predictable-ish output
     println!("Creating container with print mode...");
