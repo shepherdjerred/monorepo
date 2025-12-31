@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use uuid::Uuid;
 
-use super::{RecentRepo, Store, MAX_RECENT_REPOS};
+use super::{RecentRepo, Store};
 use crate::core::{Event, Session};
 
 /// SQLite-based session store
@@ -41,6 +41,45 @@ impl SqliteStore {
 
     /// Run database migrations
     async fn run_migrations(pool: &SqlitePool) -> anyhow::Result<()> {
+        // Create schema_version table if it doesn't exist
+        sqlx::query(
+            r"
+            CREATE TABLE IF NOT EXISTS schema_version (
+                version INTEGER PRIMARY KEY,
+                applied_at TEXT NOT NULL
+            )
+            ",
+        )
+        .execute(pool)
+        .await?;
+
+        // Get current schema version
+        let current_version: Option<i64> = sqlx::query_scalar(
+            "SELECT MAX(version) FROM schema_version"
+        )
+        .fetch_optional(pool)
+        .await?
+        .flatten();
+
+        let current_version = current_version.unwrap_or(0);
+
+        // Apply migrations sequentially
+        if current_version < 1 {
+            Self::migrate_to_v1(pool).await?;
+        }
+
+        if current_version < 2 {
+            Self::migrate_to_v2(pool).await?;
+        }
+
+        Ok(())
+    }
+
+    /// Migration v1: Initial schema (sessions and events tables)
+    async fn migrate_to_v1(pool: &SqlitePool) -> anyhow::Result<()> {
+        tracing::info!("Applying migration v1: Initial schema");
+
+        // Create sessions table
         sqlx::query(
             r"
             CREATE TABLE IF NOT EXISTS sessions (
@@ -65,6 +104,7 @@ impl SqliteStore {
         .execute(pool)
         .await?;
 
+        // Create events table
         sqlx::query(
             r"
             CREATE TABLE IF NOT EXISTS events (
@@ -79,6 +119,7 @@ impl SqliteStore {
         .execute(pool)
         .await?;
 
+        // Create index on events.session_id
         sqlx::query(
             r"
             CREATE INDEX IF NOT EXISTS idx_events_session_id ON events(session_id)
@@ -87,6 +128,25 @@ impl SqliteStore {
         .execute(pool)
         .await?;
 
+        // Record migration
+        let now = Utc::now();
+        sqlx::query(
+            "INSERT OR REPLACE INTO schema_version (version, applied_at) VALUES (?, ?)"
+        )
+        .bind(1)
+        .bind(now.to_rfc3339())
+        .execute(pool)
+        .await?;
+
+        tracing::info!("Migration v1 complete");
+        Ok(())
+    }
+
+    /// Migration v2: Add recent repositories tracking
+    async fn migrate_to_v2(pool: &SqlitePool) -> anyhow::Result<()> {
+        tracing::info!("Applying migration v2: Recent repositories");
+
+        // Create recent_repos table
         sqlx::query(
             r"
             CREATE TABLE IF NOT EXISTS recent_repos (
@@ -98,6 +158,27 @@ impl SqliteStore {
         .execute(pool)
         .await?;
 
+        // Create index on last_used for efficient ordering
+        sqlx::query(
+            r"
+            CREATE INDEX IF NOT EXISTS idx_recent_repos_last_used
+            ON recent_repos(last_used DESC)
+            ",
+        )
+        .execute(pool)
+        .await?;
+
+        // Record migration
+        let now = Utc::now();
+        sqlx::query(
+            "INSERT OR REPLACE INTO schema_version (version, applied_at) VALUES (?, ?)"
+        )
+        .bind(2)
+        .bind(now.to_rfc3339())
+        .execute(pool)
+        .await?;
+
+        tracing::info!("Migration v2 complete");
         Ok(())
     }
 }
@@ -229,16 +310,42 @@ impl Store for SqliteStore {
     }
 
     async fn get_recent_repos(&self) -> anyhow::Result<Vec<RecentRepo>> {
-        let rows = sqlx::query_as::<_, RecentRepoRow>(
-            &format!(
-                "SELECT * FROM recent_repos ORDER BY last_used DESC LIMIT {}",
-                MAX_RECENT_REPOS
-            ),
-        )
-        .fetch_all(&self.pool)
-        .await?;
+        // Use compile-time constant instead of format!() for cleaner SQL
+        const QUERY: &str = "SELECT * FROM recent_repos ORDER BY last_used DESC LIMIT 10";
 
-        rows.into_iter().map(TryInto::try_into).collect()
+        let rows = sqlx::query_as::<_, RecentRepoRow>(QUERY)
+            .fetch_all(&self.pool)
+            .await?;
+
+        let mut repos: Vec<RecentRepo> = rows.into_iter().map(TryInto::try_into).collect::<Result<Vec<_>, _>>()?;
+
+        // Lazy cleanup: Remove entries for repos that no longer exist on disk
+        // This keeps the database clean without requiring periodic maintenance
+        let mut paths_to_remove = Vec::new();
+        repos.retain(|repo| {
+            let exists = repo.repo_path.exists();
+            if !exists {
+                paths_to_remove.push(repo.repo_path.clone());
+                tracing::debug!(
+                    path = %repo.repo_path.display(),
+                    "Removing stale recent repo entry (path no longer exists)"
+                );
+            }
+            exists
+        });
+
+        // Delete stale entries from database
+        for path in paths_to_remove {
+            if let Err(e) = sqlx::query("DELETE FROM recent_repos WHERE repo_path = ?")
+                .bind(path.to_string_lossy().to_string())
+                .execute(&self.pool)
+                .await
+            {
+                tracing::warn!("Failed to delete stale recent repo entry: {e}");
+            }
+        }
+
+        Ok(repos)
     }
 }
 

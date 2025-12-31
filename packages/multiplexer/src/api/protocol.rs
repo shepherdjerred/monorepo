@@ -38,6 +38,17 @@ pub enum Request {
     GetRecentRepos,
 }
 
+/// Recent repository entry with timestamp
+#[typeshare]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RecentRepoDto {
+    /// Path to the repository
+    pub repo_path: String,
+
+    /// When this repository was last used (ISO 8601 timestamp)
+    pub last_used: String,
+}
+
 /// Request to create a new session
 #[typeshare]
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -122,8 +133,8 @@ pub enum Response {
     /// Subscription confirmed
     Subscribed,
 
-    /// List of recent repositories
-    RecentRepos(Vec<String>),
+    /// List of recent repositories with timestamps
+    RecentRepos(Vec<RecentRepoDto>),
 
     /// Error response
     Error { code: String, message: String },

@@ -245,12 +245,12 @@ impl Client {
         }
     }
 
-    /// Get recent repositories
+    /// Get recent repositories with timestamps
     ///
     /// # Errors
     ///
     /// Returns an error if the request fails.
-    pub async fn get_recent_repos(&mut self) -> anyhow::Result<Vec<String>> {
+    pub async fn get_recent_repos(&mut self) -> anyhow::Result<Vec<super::protocol::RecentRepoDto>> {
         let response = self.send_request(Request::GetRecentRepos).await?;
 
         match response {
@@ -296,7 +296,7 @@ impl ApiClient for Client {
         Client::reconcile(self).await
     }
 
-    async fn get_recent_repos(&mut self) -> anyhow::Result<Vec<String>> {
+    async fn get_recent_repos(&mut self) -> anyhow::Result<Vec<super::protocol::RecentRepoDto>> {
         Client::get_recent_repos(self).await
     }
 }

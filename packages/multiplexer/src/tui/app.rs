@@ -115,19 +115,20 @@ impl DirectoryPickerState {
         }
     }
 
-    /// Load recent repositories from a list of paths
-    pub fn load_recent_repos(&mut self, repo_paths: Vec<String>) {
-        self.recent_repos = repo_paths
+    /// Load recent repositories from structured data with timestamps
+    pub fn load_recent_repos(&mut self, repo_dtos: Vec<crate::api::protocol::RecentRepoDto>) {
+        self.recent_repos = repo_dtos
             .into_iter()
-            .filter_map(|path_str| {
-                let path = PathBuf::from(&path_str);
+            .filter_map(|dto| {
+                let path = PathBuf::from(&dto.repo_path);
+                // Note: The store already filters non-existent paths, but we double-check here
                 if !path.exists() {
                     return None;
                 }
                 let name = path
                     .file_name()
                     .map(|n| n.to_string_lossy().to_string())
-                    .unwrap_or(path_str);
+                    .unwrap_or(dto.repo_path);
                 Some(DirEntry {
                     name,
                     path,
