@@ -1,6 +1,5 @@
-use std::time::Duration;
-
-use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyModifiers};
+use crossterm::event::{Event, EventStream, KeyCode, KeyEvent, KeyModifiers};
+use futures::StreamExt;
 use tokio::sync::mpsc;
 
 use crate::api::protocol::CreateSessionRequest;
@@ -8,6 +7,25 @@ use crate::api::Client;
 use crate::core::{AgentType, BackendType};
 
 use super::app::{App, AppMode, CreateDialogFocus, CreateProgress};
+
+/// Create a new async event stream for terminal events.
+#[must_use]
+pub fn create_event_stream() -> EventStream {
+    EventStream::new()
+}
+
+/// Read the next event from the stream asynchronously.
+///
+/// # Errors
+///
+/// Returns an error if reading from the event stream fails.
+pub async fn next_event(stream: &mut EventStream) -> anyhow::Result<Option<Event>> {
+    match stream.next().await {
+        Some(Ok(event)) => Ok(Some(event)),
+        Some(Err(e)) => Err(e.into()),
+        None => Ok(None),
+    }
+}
 
 /// Handle a paste event (when text is pasted from clipboard)
 pub fn handle_paste_event(app: &mut App, text: &str) {
@@ -43,18 +61,6 @@ pub fn handle_paste_event(app: &mut App, text: &str) {
     }
 }
 
-/// Poll for events with a timeout
-///
-/// # Errors
-///
-/// Returns an error if event polling fails.
-pub fn poll_event(timeout: Duration) -> anyhow::Result<Option<Event>> {
-    if event::poll(timeout)? {
-        Ok(Some(event::read()?))
-    } else {
-        Ok(None)
-    }
-}
 
 /// Handle a key event based on the current app mode
 ///
@@ -73,6 +79,7 @@ pub async fn handle_key_event(app: &mut App, key: KeyEvent) -> anyhow::Result<()
         AppMode::CreateDialog => handle_create_dialog_key(app, key).await?,
         AppMode::ConfirmDelete => handle_confirm_delete_key(app, key).await?,
         AppMode::Help => handle_help_key(app, key),
+        AppMode::Attached => handle_attached_key(app, key).await?,
     }
     Ok(())
 }
@@ -445,4 +452,115 @@ fn handle_help_key(app: &mut App, key: KeyEvent) {
         }
         _ => {}
     }
+}
+
+/// Handle key events when attached to a session via PTY.
+///
+/// Most keys are encoded and sent to the PTY. Ctrl+] is the detach key
+/// which uses a double-tap mechanism (single press waits 300ms for second,
+/// double-tap sends the literal Ctrl+] character).
+///
+/// Session switching: Ctrl+Left/Right switches between Docker sessions.
+/// Scrolling: Shift+PageUp/Down navigates scroll-back buffer.
+async fn handle_attached_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
+    use crate::tui::app::DetachState;
+    use crate::tui::attached::encode_key;
+    use std::time::Duration;
+
+    const DETACH_TIMEOUT: Duration = Duration::from_millis(300);
+
+    // Check for Ctrl+] (our detach key)
+    if key.modifiers.contains(KeyModifiers::CONTROL) && key.code == KeyCode::Char(']') {
+        match &app.detach_state {
+            DetachState::Idle => {
+                // First press - start waiting for second
+                app.detach_state = DetachState::Pending {
+                    since: std::time::Instant::now(),
+                };
+                // Don't send anything yet, wait for timeout or second press
+                return Ok(());
+            }
+            DetachState::Pending { since } => {
+                if since.elapsed() < DETACH_TIMEOUT {
+                    // Double-tap detected - send literal Ctrl+]
+                    app.detach_state = DetachState::Idle;
+                    app.send_to_pty(vec![0x1d]).await?; // GS (Ctrl+])
+                } else {
+                    // Timeout expired - this should have been handled by main loop
+                    // but if we get here, treat as detach
+                    app.detach();
+                }
+                return Ok(());
+            }
+        }
+    }
+
+    // Session switching with Ctrl+Left/Right
+    if key.modifiers.contains(KeyModifiers::CONTROL) {
+        match key.code {
+            KeyCode::Left => {
+                if app.switch_to_previous_session().await? {
+                    app.status_message = Some("Switched to previous session".to_string());
+                }
+                return Ok(());
+            }
+            KeyCode::Right => {
+                if app.switch_to_next_session().await? {
+                    app.status_message = Some("Switched to next session".to_string());
+                }
+                return Ok(());
+            }
+            _ => {}
+        }
+    }
+
+    // Scrolling with Shift+PageUp/PageDown
+    if key.modifiers.contains(KeyModifiers::SHIFT) {
+        match key.code {
+            KeyCode::PageUp => {
+                if let Some(pty_session) = app.attached_pty_session() {
+                    let buffer = pty_session.terminal_buffer();
+                    let mut buf = buffer.lock().await;
+                    buf.scroll_up(10);
+                }
+                return Ok(());
+            }
+            KeyCode::PageDown => {
+                if let Some(pty_session) = app.attached_pty_session() {
+                    let buffer = pty_session.terminal_buffer();
+                    let mut buf = buffer.lock().await;
+                    buf.scroll_down(10);
+                }
+                return Ok(());
+            }
+            _ => {}
+        }
+    }
+
+    // If we were pending detach and got a different key, send Ctrl+] then this key
+    if let DetachState::Pending { since } = &app.detach_state {
+        if since.elapsed() >= DETACH_TIMEOUT {
+            // Timeout - detach
+            app.detach();
+            return Ok(());
+        }
+        // Not a second Ctrl+], so send the first one as literal and continue
+        app.send_to_pty(vec![0x1d]).await?;
+        app.detach_state = DetachState::Idle;
+    }
+
+    // Reset scroll position on any regular input (auto-scroll to bottom)
+    if let Some(pty_session) = app.attached_pty_session() {
+        let buffer = pty_session.terminal_buffer();
+        let mut buf = buffer.lock().await;
+        buf.scroll_to_bottom();
+    }
+
+    // Encode the key and send to PTY
+    let encoded = encode_key(&key);
+    if !encoded.is_empty() {
+        app.send_to_pty(encoded).await?;
+    }
+
+    Ok(())
 }
