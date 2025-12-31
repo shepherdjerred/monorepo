@@ -16,6 +16,15 @@ pub enum CreateProgress {
     Error { message: String },
 }
 
+/// Progress update from background session deletion task
+#[derive(Debug, Clone)]
+pub enum DeleteProgress {
+    /// Deletion completed successfully
+    Done { session_id: String },
+    /// Deletion failed
+    Error { session_id: String, message: String },
+}
+
 /// The current view/mode of the application
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum AppMode {
@@ -317,6 +326,15 @@ pub struct App {
     /// Handle to the background create task (for potential cancellation)
     pub create_task: Option<JoinHandle<()>>,
 
+    /// Background task for session deletion
+    pub delete_task: Option<JoinHandle<()>>,
+
+    /// Receiver for deletion progress updates
+    pub delete_progress_rx: Option<mpsc::Receiver<DeleteProgress>>,
+
+    /// ID of session being deleted (for showing loading state)
+    pub deleting_session_id: Option<String>,
+
     /// Tick counter for spinner animation
     pub spinner_tick: u64,
 }
@@ -339,6 +357,9 @@ impl App {
             progress_step: None,
             progress_rx: None,
             create_task: None,
+            delete_task: None,
+            delete_progress_rx: None,
+            deleting_session_id: None,
             spinner_tick: 0,
         }
     }
@@ -437,19 +458,65 @@ impl App {
 
     /// Delete the pending session
     ///
-    /// # Errors
-    ///
-    /// Returns an error if deletion fails.
-    pub async fn confirm_delete(&mut self) -> anyhow::Result<()> {
+    /// Spawns a background task to perform the deletion asynchronously.
+    /// Use the `delete_progress_rx` channel to monitor progress.
+    pub fn confirm_delete(&mut self) {
         if let Some(id) = self.pending_delete.take() {
-            if let Some(client) = &mut self.client {
-                client.delete_session(&id).await?;
-                self.status_message = Some(format!("Deleted session {id}"));
-                self.refresh_sessions().await?;
+            // Prevent multiple concurrent deletes
+            if self.delete_task.is_some() {
+                return;
             }
+
+            // Don't allow deletion while creation is in progress
+            if self.create_task.is_some() {
+                self.status_message = Some("Cannot delete while creating a session".to_string());
+                return;
+            }
+
+            // Create channel for deletion updates
+            let (tx, rx) = mpsc::channel(4);
+            self.delete_progress_rx = Some(rx);
+            self.deleting_session_id = Some(id.clone());
+
+            // Spawn background task
+            let task = tokio::spawn(async move {
+                // Connect to daemon
+                let mut client = match Client::connect().await {
+                    Ok(c) => c,
+                    Err(e) => {
+                        let _ = tx
+                            .send(DeleteProgress::Error {
+                                session_id: id.clone(),
+                                message: format!("Failed to connect to daemon: {e}"),
+                            })
+                            .await;
+                        return;
+                    }
+                };
+
+                // Perform deletion
+                match client.delete_session(&id).await {
+                    Ok(()) => {
+                        let _ = tx
+                            .send(DeleteProgress::Done {
+                                session_id: id.clone(),
+                            })
+                            .await;
+                    }
+                    Err(e) => {
+                        let _ = tx
+                            .send(DeleteProgress::Error {
+                                session_id: id.clone(),
+                                message: e.to_string(),
+                            })
+                            .await;
+                    }
+                }
+            });
+
+            self.delete_task = Some(task);
         }
         self.mode = AppMode::SessionList;
-        Ok(())
     }
 
     /// Archive the selected session

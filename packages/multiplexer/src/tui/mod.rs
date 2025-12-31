@@ -174,6 +174,37 @@ async fn run_main_loop(
             }
         }
 
+        // Poll for deletion updates from background tasks (non-blocking)
+        let mut delete_updates = Vec::new();
+        if let Some(ref mut rx) = app.delete_progress_rx {
+            while let Ok(progress) = rx.try_recv() {
+                delete_updates.push(progress);
+            }
+        }
+
+        // Process deletion updates
+        for progress in delete_updates {
+            match progress {
+                app::DeleteProgress::Done { session_id } => {
+                    app.deleting_session_id = None;
+                    app.delete_progress_rx = None;
+                    if let Some(task) = app.delete_task.take() {
+                        task.abort();
+                    }
+                    app.status_message = Some(format!("Deleted session {session_id}"));
+                    let _ = app.refresh_sessions().await;
+                }
+                app::DeleteProgress::Error { session_id, message } => {
+                    app.deleting_session_id = None;
+                    app.delete_progress_rx = None;
+                    if let Some(task) = app.delete_task.take() {
+                        task.abort();
+                    }
+                    app.status_message = Some(format!("Delete failed: {message}"));
+                }
+            }
+        }
+
         if app.should_quit {
             break;
         }
