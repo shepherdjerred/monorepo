@@ -683,6 +683,7 @@ impl App {
             dangerous_skip_checks: self.create_dialog.skip_checks,
             print_mode: false, // TUI always uses interactive mode
             plan_mode: self.create_dialog.plan_mode,
+            access_mode: Default::default(),
             images: self.create_dialog.images.clone(),
         };
 

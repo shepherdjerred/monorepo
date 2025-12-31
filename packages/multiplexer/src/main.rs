@@ -48,6 +48,10 @@ enum Commands {
         /// Run in print mode (non-interactive, outputs response and exits)
         #[arg(long, default_value = "false")]
         print: bool,
+
+        /// Access mode (read-only or read-write)
+        #[arg(long, default_value = "read-write")]
+        access_mode: String,
     },
 
     /// List all sessions
@@ -77,6 +81,16 @@ enum Commands {
         /// Force delete without confirmation
         #[arg(short, long)]
         force: bool,
+    },
+
+    /// Update session access mode
+    SetAccessMode {
+        /// Session name or ID
+        session: String,
+
+        /// Access mode (read-only or read-write)
+        #[arg(long)]
+        mode: String,
     },
 
     /// Reconcile state with reality
@@ -130,12 +144,15 @@ async fn main() -> anyhow::Result<()> {
             backend,
             dangerous_skip_checks,
             print,
+            access_mode,
         } => {
             let backend_type = match backend.to_lowercase().as_str() {
                 "zellij" => core::session::BackendType::Zellij,
                 "docker" => core::session::BackendType::Docker,
                 _ => anyhow::bail!("Unknown backend: {backend}. Use 'zellij' or 'docker'"),
             };
+
+            let access_mode = access_mode.parse::<core::session::AccessMode>()?;
 
             let mut client = api::client::Client::connect().await?;
             let (session, warnings) = client
@@ -148,6 +165,7 @@ async fn main() -> anyhow::Result<()> {
                     dangerous_skip_checks,
                     print_mode: print,
                     plan_mode: true, // Default to plan mode for safety
+                    access_mode,
                     images: vec![],
                 })
                 .await?;
@@ -200,6 +218,12 @@ async fn main() -> anyhow::Result<()> {
             let mut client = api::client::Client::connect().await?;
             client.delete_session(&session).await?;
             println!("Deleted session: {session}");
+        }
+        Commands::SetAccessMode { session, mode } => {
+            let access_mode = mode.parse::<core::session::AccessMode>()?;
+            let mut client = api::client::Client::connect().await?;
+            client.update_access_mode(&session, access_mode).await?;
+            println!("Updated '{}' to {}", session, access_mode);
         }
         Commands::Reconcile => {
             let mut client = api::client::Client::connect().await?;

@@ -86,6 +86,7 @@ impl MockApiClient {
             backend: BackendType::Zellij,
             agent: AgentType::ClaudeCode,
             dangerous_skip_checks: false,
+            access_mode: Default::default(),
         };
 
         let mut session = Session::new(config);
@@ -160,6 +161,7 @@ impl ApiClient for MockApiClient {
             backend: request.backend,
             agent: request.agent,
             dangerous_skip_checks: request.dangerous_skip_checks,
+            access_mode: request.access_mode,
         };
 
         let mut session = Session::new(config);
@@ -290,6 +292,7 @@ mod tests {
             dangerous_skip_checks: false,
             print_mode: false,
             plan_mode: true,
+            access_mode: Default::default(),
             images: vec![],
         };
 

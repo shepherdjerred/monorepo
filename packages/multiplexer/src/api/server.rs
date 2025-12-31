@@ -34,7 +34,7 @@ pub async fn run_daemon_with_options(enable_proxy: bool) -> anyhow::Result<()> {
     let store = Arc::new(SqliteStore::new(&db_path).await?);
 
     // Initialize proxy services if enabled
-    let proxy_manager: Option<Arc<Mutex<ProxyManager>>> = if enable_proxy {
+    let proxy_manager: Option<Arc<ProxyManager>> = if enable_proxy {
         match ProxyManager::new(ProxyConfig::default()) {
             Ok(mut pm) => {
                 if let Err(e) = pm.start().await {
@@ -42,7 +42,7 @@ pub async fn run_daemon_with_options(enable_proxy: bool) -> anyhow::Result<()> {
                     tracing::warn!("Continuing without proxy support");
                     None
                 } else {
-                    Some(Arc::new(Mutex::new(pm)))
+                    Some(Arc::new(pm))
                 }
             }
             Err(e) => {
@@ -58,14 +58,17 @@ pub async fn run_daemon_with_options(enable_proxy: bool) -> anyhow::Result<()> {
 
     // Initialize the session manager with proxy support if available
     let manager = if let Some(ref pm) = proxy_manager {
-        let pm_guard = pm.lock().await;
         let docker_proxy_config = DockerProxyConfig::new(
-            pm_guard.http_proxy_port(),
-            pm_guard.mux_dir().clone(),
+            pm.http_proxy_port(),
+            pm.mux_dir().clone(),
         );
-        drop(pm_guard);
         let docker_backend = DockerBackend::with_proxy(docker_proxy_config);
-        Arc::new(SessionManager::with_docker_backend(store, docker_backend).await?)
+        let mut session_manager = SessionManager::with_docker_backend(store, docker_backend).await?;
+
+        // Wire up proxy manager for per-session filtering
+        session_manager.set_proxy_manager(Arc::clone(pm));
+
+        Arc::new(session_manager)
     } else {
         Arc::new(SessionManager::with_defaults(store).await?)
     };
