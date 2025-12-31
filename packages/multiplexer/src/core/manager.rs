@@ -131,6 +131,7 @@ impl SessionManager {
         agent: super::session::AgentType,
         dangerous_skip_checks: bool,
         print_mode: bool,
+        access_mode: super::session::AccessMode,
     ) -> anyhow::Result<(Session, Option<Vec<String>>)> {
         // Generate unique session name with retry logic
         const MAX_ATTEMPTS: usize = 3;
@@ -160,6 +161,7 @@ impl SessionManager {
             backend,
             agent,
             dangerous_skip_checks,
+            access_mode,
         });
 
         // Record creation event
@@ -353,5 +355,37 @@ impl SessionManager {
         }
 
         Ok(report)
+    }
+
+    /// Update the access mode for a session
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the session is not found or the store update fails.
+    pub async fn update_access_mode(
+        &self,
+        id_or_name: &str,
+        new_mode: super::session::AccessMode,
+    ) -> anyhow::Result<()> {
+        let mut sessions = self.sessions.write().await;
+        let session = sessions
+            .iter_mut()
+            .find(|s| s.name == id_or_name || s.id.to_string() == id_or_name)
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {id_or_name}"))?;
+
+        session.set_access_mode(new_mode);
+        let session_clone = session.clone();
+        drop(sessions);
+
+        // Update in store
+        self.store.save_session(&session_clone).await?;
+
+        tracing::info!(
+            session_id = %session_clone.id,
+            mode = ?new_mode,
+            "Updated session access mode"
+        );
+
+        Ok(())
     }
 }

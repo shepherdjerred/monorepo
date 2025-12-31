@@ -56,6 +56,7 @@ impl SqliteStore {
                 dangerous_skip_checks INTEGER NOT NULL,
                 pr_url TEXT,
                 pr_check_status TEXT,
+                access_mode TEXT NOT NULL DEFAULT 'ReadWrite',
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL
             )
@@ -118,8 +119,8 @@ impl Store for SqliteStore {
             INSERT OR REPLACE INTO sessions (
                 id, name, status, backend, agent, repo_path, worktree_path,
                 branch_name, backend_id, initial_prompt, dangerous_skip_checks,
-                pr_url, pr_check_status, created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                pr_url, pr_check_status, access_mode, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ",
         )
         .bind(session.id.to_string())
@@ -139,6 +140,7 @@ impl Store for SqliteStore {
                 .pr_check_status
                 .and_then(|s| serde_json::to_string(&s).ok()),
         )
+        .bind(session.access_mode.to_string())
         .bind(session.created_at.to_rfc3339())
         .bind(session.updated_at.to_rfc3339())
         .execute(&self.pool)
@@ -226,6 +228,7 @@ struct SessionRow {
     dangerous_skip_checks: bool,
     pr_url: Option<String>,
     pr_check_status: Option<String>,
+    access_mode: String,
     created_at: String,
     updated_at: String,
 }
@@ -251,6 +254,7 @@ impl TryFrom<SessionRow> for Session {
                 .pr_check_status
                 .map(|s| serde_json::from_str(&s))
                 .transpose()?,
+            access_mode: row.access_mode.parse().unwrap_or_default(),
             created_at: chrono::DateTime::parse_from_rfc3339(&row.created_at)?.into(),
             updated_at: chrono::DateTime::parse_from_rfc3339(&row.updated_at)?.into(),
         })
