@@ -260,11 +260,50 @@ async fn run_main_loop(
             }
         }
 
+        // Poll for deletion updates from background tasks (non-blocking)
+        let mut delete_updates = Vec::new();
+        if let Some(ref mut rx) = app.delete_progress_rx {
+            while let Ok(progress) = rx.try_recv() {
+                delete_updates.push(progress);
+            }
+        }
+
+        // Process deletion updates
+        for progress in delete_updates {
+            match progress {
+                app::DeleteProgress::Done { session_id } => {
+                    app.deleting_session_id = None;
+                    app.delete_progress_rx = None;
+                    // Task is already complete - just take the handle to clean up
+                    app.delete_task.take();
+                    app.status_message = Some(format!("Deleted session {session_id}"));
+                    let _ = app.refresh_sessions().await;
+                }
+                app::DeleteProgress::Error { session_id, message } => {
+                    app.deleting_session_id = None;
+                    app.delete_progress_rx = None;
+                    // Task is already complete - just take the handle to clean up
+                    app.delete_task.take();
+                    app.status_message = Some(format!("Delete failed: {message}"));
+                }
+            }
+        }
+
         if app.should_quit {
             // Shutdown all PTY sessions before quitting
             app.shutdown_all_pty_sessions().await;
             break;
         }
+    }
+
+    // Cleanup: Abort any in-flight background tasks before exiting
+    // Note: The daemon will still complete the actual operations (create/delete),
+    // we're just stopping the TUI's monitoring tasks
+    if let Some(task) = app.create_task.take() {
+        task.abort();
+    }
+    if let Some(task) = app.delete_task.take() {
+        task.abort();
     }
 
     Ok(())
