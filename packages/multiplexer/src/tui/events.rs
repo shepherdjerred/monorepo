@@ -124,7 +124,8 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                 CreateDialogFocus::Prompt => CreateDialogFocus::RepoPath,
                 CreateDialogFocus::RepoPath => CreateDialogFocus::Backend,
                 CreateDialogFocus::Backend => CreateDialogFocus::SkipChecks,
-                CreateDialogFocus::SkipChecks => CreateDialogFocus::Buttons,
+                CreateDialogFocus::SkipChecks => CreateDialogFocus::PlanMode,
+                CreateDialogFocus::PlanMode => CreateDialogFocus::Buttons,
                 CreateDialogFocus::Buttons => CreateDialogFocus::Name,
             };
         }
@@ -136,7 +137,8 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                 CreateDialogFocus::RepoPath => CreateDialogFocus::Prompt,
                 CreateDialogFocus::Backend => CreateDialogFocus::RepoPath,
                 CreateDialogFocus::SkipChecks => CreateDialogFocus::Backend,
-                CreateDialogFocus::Buttons => CreateDialogFocus::SkipChecks,
+                CreateDialogFocus::PlanMode => CreateDialogFocus::SkipChecks,
+                CreateDialogFocus::Buttons => CreateDialogFocus::PlanMode,
             };
         }
         KeyCode::Enter => match app.create_dialog.focus {
@@ -164,6 +166,7 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                         agent: AgentType::ClaudeCode,
                         dangerous_skip_checks: app.create_dialog.skip_checks,
                         print_mode: false, // TUI always uses interactive mode
+                        plan_mode: app.create_dialog.plan_mode,
                     };
 
                     // Spawn background task
@@ -243,7 +246,8 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                 CreateDialogFocus::RepoPath => CreateDialogFocus::Prompt,
                 CreateDialogFocus::Backend => CreateDialogFocus::RepoPath,
                 CreateDialogFocus::SkipChecks => CreateDialogFocus::Backend,
-                CreateDialogFocus::Buttons => CreateDialogFocus::SkipChecks,
+                CreateDialogFocus::PlanMode => CreateDialogFocus::SkipChecks,
+                CreateDialogFocus::Buttons => CreateDialogFocus::PlanMode,
             };
         }
         KeyCode::Down => {
@@ -253,7 +257,8 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                 CreateDialogFocus::Prompt => CreateDialogFocus::RepoPath,
                 CreateDialogFocus::RepoPath => CreateDialogFocus::Backend,
                 CreateDialogFocus::Backend => CreateDialogFocus::SkipChecks,
-                CreateDialogFocus::SkipChecks => CreateDialogFocus::Buttons,
+                CreateDialogFocus::SkipChecks => CreateDialogFocus::PlanMode,
+                CreateDialogFocus::PlanMode => CreateDialogFocus::Buttons,
                 CreateDialogFocus::Buttons => CreateDialogFocus::Name,
             };
         }
@@ -263,6 +268,9 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
             }
             CreateDialogFocus::SkipChecks => {
                 app.create_dialog.skip_checks = !app.create_dialog.skip_checks;
+            }
+            CreateDialogFocus::PlanMode => {
+                app.create_dialog.plan_mode = !app.create_dialog.plan_mode;
             }
             CreateDialogFocus::Buttons => {
                 app.create_dialog.button_create_focused = !app.create_dialog.button_create_focused;
@@ -275,6 +283,9 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
             }
             CreateDialogFocus::SkipChecks => {
                 app.create_dialog.skip_checks = !app.create_dialog.skip_checks;
+            }
+            CreateDialogFocus::PlanMode => {
+                app.create_dialog.plan_mode = !app.create_dialog.plan_mode;
             }
             CreateDialogFocus::Name => app.create_dialog.name.push(' '),
             CreateDialogFocus::Prompt => app.create_dialog.prompt.push(' '),
