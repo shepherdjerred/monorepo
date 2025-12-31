@@ -36,6 +36,7 @@ pub fn handle_paste_event(app: &mut App, text: &str) {
             app.create_dialog
                 .prompt
                 .push_str(&text.replace("\r\n", "\n").replace('\r', "\n"));
+            app.create_dialog.clamp_prompt_scroll();
         }
         // RepoPath doesn't accept typed/pasted input
         _ => {}
@@ -117,6 +118,18 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
         KeyCode::Esc => {
             app.close_create_dialog();
         }
+        KeyCode::PageUp => {
+            // Scroll prompt field up
+            if app.create_dialog.focus == CreateDialogFocus::Prompt {
+                app.create_dialog.scroll_prompt_up();
+            }
+        }
+        KeyCode::PageDown => {
+            // Scroll prompt field down (pass visible lines - we'll use a reasonable default)
+            if app.create_dialog.focus == CreateDialogFocus::Prompt {
+                app.create_dialog.scroll_prompt_down(10); // Assuming ~10 visible lines
+            }
+        }
         KeyCode::Tab => {
             // Cycle through fields
             app.create_dialog.focus = match app.create_dialog.focus {
@@ -140,6 +153,10 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
             };
         }
         KeyCode::Enter => match app.create_dialog.focus {
+            CreateDialogFocus::Prompt => {
+                // Insert newline in prompt field
+                app.create_dialog.prompt.push('\n');
+            }
             CreateDialogFocus::Buttons => {
                 if app.create_dialog.button_create_focused {
                     // Prevent multiple concurrent creates
@@ -164,6 +181,7 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                         agent: AgentType::ClaudeCode,
                         dangerous_skip_checks: app.create_dialog.skip_checks,
                         print_mode: false, // TUI always uses interactive mode
+                        images: app.create_dialog.images.clone(),
                     };
 
                     // Spawn background task
@@ -301,6 +319,7 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
             }
             CreateDialogFocus::Prompt => {
                 app.create_dialog.prompt.pop();
+                app.create_dialog.clamp_prompt_scroll();
             }
             CreateDialogFocus::RepoPath => {
                 // Clear the repo path on backspace

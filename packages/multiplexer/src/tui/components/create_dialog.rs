@@ -23,22 +23,26 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         return;
     }
 
+    let dialog = &app.create_dialog;
+
+    // Calculate dynamic height for prompt field based on content
+    let prompt_lines = dialog.prompt.lines().count().max(1);
+    let prompt_height = prompt_lines.clamp(5, 15); // Min 5, max 15 lines
+
     // Inner area (with padding)
     let inner = Layout::default()
         .direction(Direction::Vertical)
         .margin(1)
         .constraints([
-            Constraint::Length(3), // Name
-            Constraint::Length(5), // Prompt
-            Constraint::Length(3), // Repo path
-            Constraint::Length(2), // Backend
-            Constraint::Length(2), // Skip checks
-            Constraint::Length(1), // Spacer
-            Constraint::Length(1), // Buttons
+            Constraint::Length(3),                         // Name
+            Constraint::Length(prompt_height as u16 + 2), // Prompt (dynamic + borders)
+            Constraint::Length(3),                         // Repo path
+            Constraint::Length(2),                         // Backend
+            Constraint::Length(2),                         // Skip checks
+            Constraint::Length(1),                         // Spacer
+            Constraint::Length(1),                         // Buttons
         ])
         .split(area);
-
-    let dialog = &app.create_dialog;
 
     // Name field
     render_text_field(
@@ -49,12 +53,14 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         inner[0],
     );
 
-    // Prompt field (multiline)
+    // Prompt field (multiline with scrolling)
     render_multiline_field(
         frame,
         "Prompt",
         &dialog.prompt,
         dialog.focus == CreateDialogFocus::Prompt,
+        dialog.prompt_scroll_offset,
+        prompt_height,
         inner[1],
     );
 
@@ -169,22 +175,56 @@ fn render_repo_path_field(
     frame.render_widget(paragraph, area);
 }
 
-fn render_multiline_field(frame: &mut Frame, label: &str, value: &str, focused: bool, area: Rect) {
+fn render_multiline_field(
+    frame: &mut Frame,
+    label: &str,
+    value: &str,
+    focused: bool,
+    scroll_offset: usize,
+    visible_lines: usize,
+    area: Rect,
+) {
     let style = if focused {
         Style::default().fg(Color::Yellow)
     } else {
         Style::default()
     };
 
+    // Calculate scroll indicators
+    let lines: Vec<&str> = value.lines().collect();
+    let total_lines = lines.len().max(1);
+    let has_more_above = scroll_offset > 0;
+    let has_more_below = scroll_offset + visible_lines < total_lines;
+
+    // Build title with scroll indicators
+    let title = if has_more_above && has_more_below {
+        format!(" {label} ↑ more above · ↓ more below ")
+    } else if has_more_above {
+        format!(" {label} ↑ more above ")
+    } else if has_more_below {
+        format!(" {label} ↓ more below ")
+    } else {
+        format!(" {label} ")
+    };
+
     let block = Block::default()
-        .title(format!(" {label} "))
+        .title(title)
         .borders(Borders::ALL)
         .border_style(style);
 
+    // Apply scrolling by skipping lines based on scroll_offset
+    let visible_lines_slice = lines
+        .iter()
+        .skip(scroll_offset)
+        .take(visible_lines)
+        .map(|s| *s)
+        .collect::<Vec<_>>()
+        .join("\n");
+
     let display_value = if focused {
-        format!("{value}▏")
+        format!("{visible_lines_slice}▏")
     } else {
-        value.to_string()
+        visible_lines_slice
     };
 
     let paragraph = Paragraph::new(display_value)

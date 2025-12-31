@@ -100,6 +100,7 @@ impl DockerBackend {
         uid: u32,
         proxy_config: Option<&DockerProxyConfig>,
         print_mode: bool,
+        images: &[String],
     ) -> anyhow::Result<Vec<String>> {
         let container_name = format!("mux-{name}");
         let escaped_prompt = initial_prompt.replace('\'', "'\\''");
@@ -281,12 +282,23 @@ impl DockerBackend {
         }
 
         // Add image and command
-        let claude_cmd = if print_mode {
-            // Non-interactive mode: output response and exit
-            format!("claude --dangerously-skip-permissions --print --verbose '{escaped_prompt}'")
-        } else {
-            // Interactive mode: user attaches to container to interact
-            format!("claude --dangerously-skip-permissions '{escaped_prompt}'")
+        let claude_cmd = {
+            let mut cmd = "claude --dangerously-skip-permissions".to_string();
+
+            // Add print mode flags
+            if print_mode {
+                cmd.push_str(" --print --verbose");
+            }
+
+            // Add image arguments
+            for image in images {
+                let escaped_image = image.replace('\'', "'\\''");
+                cmd.push_str(&format!(" --image '{escaped_image}'"));
+            }
+
+            // Add prompt
+            cmd.push_str(&format!(" '{escaped_prompt}'"));
+            cmd
         };
 
         args.extend([
@@ -350,6 +362,7 @@ impl ExecutionBackend for DockerBackend {
             uid,
             proxy_config,
             options.print_mode,
+            &options.images,
         )?;
         let output = Command::new("docker")
             .args(&args)
@@ -490,6 +503,7 @@ mod tests {
             1000,
             None,
             false, // interactive mode
+            &[],
         ).expect("Failed to build args");
 
         // Must have -dit for interactive TTY sessions
@@ -515,6 +529,7 @@ mod tests {
             uid,
             None,
             false,
+            &[],
         ).expect("Failed to build args");
 
         // Find --user flag and verify it's followed by the UID
@@ -577,6 +592,7 @@ mod tests {
             1000,
             None,
             false,
+            &[],
         ).expect("Failed to build args");
 
         // Find the command argument (last one containing the prompt)
@@ -599,6 +615,7 @@ mod tests {
             1000,
             None,
             false,
+            &[],
         ).expect("Failed to build args");
 
         // Find --name flag and verify the container name
@@ -637,6 +654,7 @@ mod tests {
             1000,
             Some(&proxy_config),
             false,
+            &[],
         ).expect("Failed to build args");
 
         // Should have HTTPS_PROXY
@@ -673,6 +691,7 @@ mod tests {
             1000,
             Some(&proxy_config),
             false,
+            &[],
         ).expect("Failed to build args");
 
         // Should have proxy-ca.pem mount
@@ -695,6 +714,7 @@ mod tests {
             1000,
             Some(&proxy_config),
             false,
+            &[],
         ).expect("Failed to build args");
 
         // Should NOT have HTTPS_PROXY
@@ -719,6 +739,7 @@ mod tests {
             1000,
             Some(&proxy_config),
             false,
+            &[],
         ).expect("Failed to build args");
 
         // Should have --add-host flag
@@ -767,6 +788,7 @@ mod tests {
             1000,
             None,
             false, // interactive mode
+            &[],
         ).expect("Failed to build args");
 
         let cmd_arg = args.last().unwrap();
