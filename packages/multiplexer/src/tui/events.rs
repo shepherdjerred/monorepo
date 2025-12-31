@@ -487,7 +487,7 @@ async fn handle_attached_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()>
             KeyCode::PageUp => {
                 if let Some(pty_session) = app.attached_pty_session() {
                     let buffer = pty_session.terminal_buffer();
-                    let mut buf = buffer.lock().unwrap();
+                    let mut buf = buffer.lock().await;
                     buf.scroll_up(10);
                 }
                 return Ok(());
@@ -495,7 +495,7 @@ async fn handle_attached_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()>
             KeyCode::PageDown => {
                 if let Some(pty_session) = app.attached_pty_session() {
                     let buffer = pty_session.terminal_buffer();
-                    let mut buf = buffer.lock().unwrap();
+                    let mut buf = buffer.lock().await;
                     buf.scroll_down(10);
                 }
                 return Ok(());
@@ -519,7 +519,7 @@ async fn handle_attached_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()>
     // Reset scroll position on any regular input (auto-scroll to bottom)
     if let Some(pty_session) = app.attached_pty_session() {
         let buffer = pty_session.terminal_buffer();
-        let mut buf = buffer.lock().unwrap();
+        let mut buf = buffer.lock().await;
         buf.scroll_to_bottom();
     }
 
