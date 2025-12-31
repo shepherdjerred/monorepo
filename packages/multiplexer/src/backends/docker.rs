@@ -4,6 +4,73 @@ use tokio::process::Command;
 
 use super::traits::ExecutionBackend;
 
+/// Detect if a directory is a git worktree and return the parent .git directory path
+///
+/// # Errors
+///
+/// Returns an error if the .git file cannot be read or paths cannot be resolved
+fn detect_git_worktree(path: &Path) -> anyhow::Result<Option<PathBuf>> {
+    let git_file = path.join(".git");
+
+    // Check if .git exists and is a file (not a directory)
+    if !git_file.exists() || !git_file.is_file() {
+        return Ok(None);
+    }
+
+    // Read the gitdir reference
+    let contents = std::fs::read_to_string(&git_file)?;
+    let gitdir_line = contents
+        .lines()
+        .find(|line| line.starts_with("gitdir: "))
+        .ok_or_else(|| anyhow::anyhow!("Invalid .git file format: missing 'gitdir:' line"))?;
+
+    // Extract the path after "gitdir: " and trim whitespace
+    let gitdir = gitdir_line.strip_prefix("gitdir: ").unwrap().trim();
+
+    // Handle both absolute and relative paths
+    // Git can use relative paths like "../.git/worktrees/name"
+    let gitdir_path = if Path::new(gitdir).is_absolute() {
+        PathBuf::from(gitdir)
+    } else {
+        // Resolve relative path from the worktree directory
+        path.join(gitdir)
+    };
+
+    // Canonicalize to resolve symlinks and get absolute path
+    // This also protects against path traversal attacks
+    let canonical_gitdir = gitdir_path.canonicalize()
+        .map_err(|e| anyhow::anyhow!("Failed to canonicalize gitdir path {}: {}", gitdir_path.display(), e))?;
+
+    // The gitdir points to something like /path/to/repo/.git/worktrees/name
+    // We need to get the parent .git directory: /path/to/repo/.git
+    if let Some(worktrees) = canonical_gitdir.parent() {
+        if let Some(git_parent) = worktrees.parent() {
+            let parent_git = git_parent.to_path_buf();
+
+            // Validate that the parent .git directory actually exists
+            if !parent_git.exists() {
+                anyhow::bail!(
+                    "Parent .git directory does not exist: {}. \
+                    The worktree may be corrupted or the parent repository may have been moved/deleted.",
+                    parent_git.display()
+                );
+            }
+
+            // Validate that it's actually a git directory
+            if !parent_git.join("HEAD").exists() {
+                anyhow::bail!(
+                    "Parent directory exists but doesn't appear to be a valid git repository: {}",
+                    parent_git.display()
+                );
+            }
+
+            return Ok(Some(parent_git));
+        }
+    }
+
+    Ok(None)
+}
+
 /// Docker container image to use
 const DOCKER_IMAGE: &str = "ghcr.io/shepherdjerred/dotfiles";
 
@@ -28,6 +95,7 @@ impl DockerProxyConfig {
             enabled: true,
             http_proxy_port,
             mux_dir,
+            session_proxy_port: None,
         }
     }
 
@@ -53,6 +121,7 @@ impl DockerBackend {
                 enabled: false,
                 http_proxy_port: 0,
                 mux_dir: PathBuf::new(),
+                session_proxy_port: None,
             },
         }
     }
@@ -104,6 +173,7 @@ impl DockerBackend {
         proxy_config: Option<&DockerProxyConfig>,
         print_mode: bool,
         plan_mode: bool,
+        images: &[String],
     ) -> anyhow::Result<Vec<String>> {
         let container_name = format!("mux-{name}");
         let escaped_prompt = initial_prompt.replace('\'', "'\\''");
@@ -124,6 +194,49 @@ impl DockerBackend {
             "-e".to_string(),
             "HOME=/workspace".to_string(),
         ];
+
+        // Detect if workdir is a git worktree and mount parent .git directory
+        match detect_git_worktree(workdir) {
+            Ok(Some(parent_git_dir)) => {
+                tracing::info!(
+                    workdir = %workdir.display(),
+                    parent_git = %parent_git_dir.display(),
+                    "Detected git worktree, mounting parent .git directory"
+                );
+
+                // Mount the parent .git directory to the same absolute path in the container
+                // This allows git operations (including commits) to work correctly with worktrees
+                // Read-write access is required for commits, branch operations, etc.
+                //
+                // NOTE: This requires the host and container to have compatible filesystem layouts.
+                // The parent .git directory must be accessible at the same absolute path.
+                // This works for most cases but may fail if:
+                // - The parent repo is on a different volume than the worktree
+                // - There are path conflicts in the container
+                // - The worktree and parent repo are in very different directory structures
+                args.extend([
+                    "-v".to_string(),
+                    format!("{}:{}", parent_git_dir.display(), parent_git_dir.display()),
+                ]);
+            }
+            Ok(None) => {
+                // Not a git worktree, that's fine - normal git repos work without extra mounts
+                tracing::debug!(
+                    workdir = %workdir.display(),
+                    "Not a git worktree, skipping parent .git mount"
+                );
+            }
+            Err(e) => {
+                // Failed to detect worktree - log a warning but continue
+                // Git operations may not work properly if this is actually a worktree
+                tracing::warn!(
+                    workdir = %workdir.display(),
+                    error = %e,
+                    "Failed to detect git worktree, git operations may not work correctly. \
+                    If this directory is a git worktree, you may need to fix the .git file or parent repository."
+                );
+            }
+        }
 
         // Add proxy configuration if enabled
         if let Some(proxy) = proxy_config {
@@ -286,23 +399,28 @@ impl DockerBackend {
         }
 
         // Add image and command
-        let claude_cmd = match (print_mode, plan_mode) {
-            (true, true) => {
-                // Non-interactive mode with plan mode
-                format!("claude --dangerously-skip-permissions --permission-mode plan --print --verbose '{escaped_prompt}'")
+        let claude_cmd = {
+            let mut cmd = "claude --dangerously-skip-permissions".to_string();
+
+            // Add plan mode flag if enabled
+            if plan_mode {
+                cmd.push_str(" --permission-mode plan");
             }
-            (true, false) => {
-                // Non-interactive mode without plan mode
-                format!("claude --dangerously-skip-permissions --print --verbose '{escaped_prompt}'")
+
+            // Add print mode flags
+            if print_mode {
+                cmd.push_str(" --print --verbose");
             }
-            (false, true) => {
-                // Interactive mode with plan mode
-                format!("claude --dangerously-skip-permissions --permission-mode plan '{escaped_prompt}'")
+
+            // Add image arguments
+            for image in images {
+                let escaped_image = image.replace('\'', "'\\''");
+                cmd.push_str(&format!(" --image '{escaped_image}'"));
             }
-            (false, false) => {
-                // Interactive mode without plan mode
-                format!("claude --dangerously-skip-permissions '{escaped_prompt}'")
-            }
+
+            // Add prompt
+            cmd.push_str(&format!(" '{escaped_prompt}'"));
+            cmd
         };
 
         args.extend([
@@ -374,6 +492,7 @@ impl ExecutionBackend for DockerBackend {
             proxy_config_ref,
             options.print_mode,
             options.plan_mode,
+            &options.images,
         )?;
         let output = Command::new("docker")
             .args(&args)
@@ -490,6 +609,8 @@ impl DockerBackend {
             super::traits::CreateOptions {
                 print_mode: false,
                 plan_mode: true, // Default to plan mode
+                session_proxy_port: None,
+                images: vec![],
             },
         )
         .await
@@ -524,6 +645,7 @@ mod tests {
             None,
             false, // interactive mode
             false, // plan mode
+            &[],   // no images
         ).expect("Failed to build args");
 
         // Must have -dit for interactive TTY sessions
@@ -548,8 +670,9 @@ mod tests {
             "test prompt",
             uid,
             None,
-            false,
-            false,
+            false, // print mode
+            false, // plan mode
+            &[],   // no images
         ).expect("Failed to build args");
 
         // Find --user flag and verify it's followed by the UID
@@ -611,8 +734,9 @@ mod tests {
             prompt_with_quotes,
             1000,
             None,
-            false,
-            false,
+            false, // print mode
+            false, // plan mode
+            &[],   // no images
         ).expect("Failed to build args");
 
         // Find the command argument (last one containing the prompt)
@@ -634,8 +758,9 @@ mod tests {
             "test prompt",
             1000,
             None,
-            false,
-            false,
+            false, // print mode
+            false, // plan mode
+            &[],   // no images
         ).expect("Failed to build args");
 
         // Find --name flag and verify the container name
@@ -673,8 +798,9 @@ mod tests {
             "test prompt",
             1000,
             Some(&proxy_config),
-            false,
-            false,
+            false, // print mode
+            false, // plan mode
+            &[],   // no images
         ).expect("Failed to build args");
 
         // Should have HTTPS_PROXY
@@ -710,8 +836,9 @@ mod tests {
             "test prompt",
             1000,
             Some(&proxy_config),
-            false,
-            false,
+            false, // print mode
+            false, // plan mode
+            &[],   // no images
         ).expect("Failed to build args");
 
         // Should have proxy-ca.pem mount
@@ -733,8 +860,9 @@ mod tests {
             "test prompt",
             1000,
             Some(&proxy_config),
-            false,
-            false,
+            false, // print mode
+            false, // plan mode
+            &[],   // no images
         ).expect("Failed to build args");
 
         // Should NOT have HTTPS_PROXY
@@ -758,8 +886,9 @@ mod tests {
             "test prompt",
             1000,
             Some(&proxy_config),
-            false,
-            false,
+            false, // print mode
+            false, // plan mode
+            &[],   // no images
         ).expect("Failed to build args");
 
         // Should have --add-host flag
@@ -784,8 +913,9 @@ mod tests {
             "test prompt",
             1000,
             None,
-            true, // print mode enabled
+            true,  // print mode enabled
             false, // plan mode
+            &[],   // no images
         ).expect("Failed to build args");
 
         let cmd_arg = args.last().unwrap();
@@ -810,12 +940,244 @@ mod tests {
             None,
             false, // interactive mode
             false, // plan mode
+            &[],   // no images
         ).expect("Failed to build args");
 
         let cmd_arg = args.last().unwrap();
         assert!(
             !cmd_arg.contains("--print"),
             "Interactive mode should NOT include --print flag: {cmd_arg}"
+        );
+    }
+
+    /// Test that git worktrees get their parent .git directory mounted
+    #[test]
+    fn test_git_worktree_mounts_parent_git() {
+        use tempfile::tempdir;
+
+        // Create a fake worktree structure
+        let temp_dir = tempdir().expect("Failed to create temp dir");
+        let repo_git = temp_dir.path().join("repo/.git");
+        let worktree_dir = temp_dir.path().join("worktree");
+
+        // Create the directory structure
+        std::fs::create_dir_all(&repo_git).expect("Failed to create repo .git");
+        std::fs::create_dir_all(repo_git.join("worktrees/test"))
+            .expect("Failed to create worktrees dir");
+        std::fs::create_dir_all(&worktree_dir).expect("Failed to create worktree dir");
+
+        // Create a .git file that points to the parent repo
+        let git_file_content = format!(
+            "gitdir: {}/worktrees/test",
+            repo_git.display()
+        );
+        std::fs::write(worktree_dir.join(".git"), git_file_content)
+            .expect("Failed to write .git file");
+
+        // Build args with the worktree directory
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            &worktree_dir,
+            "test prompt",
+            1000,
+            None,
+            false,
+            false,
+            &[],
+        ).expect("Failed to build args");
+
+        // Should have workspace mount
+        let has_workspace_mount = args.iter().any(|a| a.contains("/workspace"));
+        assert!(has_workspace_mount, "Expected /workspace mount, got: {args:?}");
+
+        // Should also have parent .git directory mount (read-write for commits)
+        let expected_git_mount = format!("{}:{}", repo_git.display(), repo_git.display());
+        let has_git_mount = args.iter().any(|a| a == &expected_git_mount);
+        assert!(
+            has_git_mount,
+            "Expected parent .git mount at {expected_git_mount}, got: {args:?}"
+        );
+    }
+
+    /// Test that non-worktree directories don't get extra git mounts
+    #[test]
+    fn test_non_worktree_no_extra_mounts() {
+        use tempfile::tempdir;
+
+        let temp_dir = tempdir().expect("Failed to create temp dir");
+        let normal_dir = temp_dir.path().join("normal");
+        std::fs::create_dir_all(&normal_dir).expect("Failed to create normal dir");
+
+        // Create a normal .git directory (not a worktree)
+        let git_dir = normal_dir.join(".git");
+        std::fs::create_dir_all(&git_dir).expect("Failed to create .git dir");
+
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            &normal_dir,
+            "test prompt",
+            1000,
+            None,
+            false,
+            false,
+            &[],
+        ).expect("Failed to build args");
+
+        // Count volume mounts (should only have the workspace mount)
+        let mount_count = args.iter().filter(|a| *a == "-v").count();
+        assert_eq!(
+            mount_count, 1,
+            "Normal git repo should only have workspace mount, got {mount_count} mounts"
+        );
+    }
+
+    /// Test git worktree with relative gitdir path
+    #[test]
+    fn test_git_worktree_relative_path() {
+        use tempfile::tempdir;
+
+        let temp_dir = tempdir().expect("Failed to create temp dir");
+        let repo_git = temp_dir.path().join("repo/.git");
+        let worktree_dir = temp_dir.path().join("repo/worktrees/test-worktree");
+
+        // Create the directory structure
+        std::fs::create_dir_all(&repo_git).expect("Failed to create repo .git");
+        std::fs::create_dir_all(repo_git.join("worktrees/test"))
+            .expect("Failed to create worktrees dir");
+        std::fs::create_dir_all(&worktree_dir).expect("Failed to create worktree dir");
+        std::fs::write(repo_git.join("HEAD"), "ref: refs/heads/main")
+            .expect("Failed to write HEAD");
+
+        // Create a .git file with RELATIVE path (common for worktrees in same repo tree)
+        let git_file_content = "gitdir: ../../.git/worktrees/test";
+        std::fs::write(worktree_dir.join(".git"), git_file_content)
+            .expect("Failed to write .git file");
+
+        // Build args - should resolve relative path correctly
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            &worktree_dir,
+            "test prompt",
+            1000,
+            None,
+            false,
+            false,
+            &[],
+        ).expect("Failed to build args");
+
+        // Should have parent .git directory mount
+        let has_git_mount = args.iter().any(|a| a.contains(&format!("{}:", repo_git.display())));
+        assert!(
+            has_git_mount,
+            "Expected parent .git mount for worktree with relative path, got: {args:?}"
+        );
+    }
+
+    /// Test git worktree with trailing whitespace in .git file
+    #[test]
+    fn test_git_worktree_trailing_whitespace() {
+        use tempfile::tempdir;
+
+        let temp_dir = tempdir().expect("Failed to create temp dir");
+        let repo_git = temp_dir.path().join("repo/.git");
+        let worktree_dir = temp_dir.path().join("worktree");
+
+        std::fs::create_dir_all(&repo_git).expect("Failed to create repo .git");
+        std::fs::create_dir_all(repo_git.join("worktrees/test"))
+            .expect("Failed to create worktrees dir");
+        std::fs::create_dir_all(&worktree_dir).expect("Failed to create worktree dir");
+        std::fs::write(repo_git.join("HEAD"), "ref: refs/heads/main")
+            .expect("Failed to write HEAD");
+
+        // Create .git file with trailing whitespace (common from manual editing)
+        let git_file_content = format!("gitdir: {}/worktrees/test   \n", repo_git.display());
+        std::fs::write(worktree_dir.join(".git"), git_file_content)
+            .expect("Failed to write .git file");
+
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            &worktree_dir,
+            "test prompt",
+            1000,
+            None,
+            false,
+            false,
+            &[],
+        ).expect("Failed to build args");
+
+        // Should still work despite whitespace
+        let has_git_mount = args.iter().any(|a| a.contains(&format!("{}:", repo_git.display())));
+        assert!(
+            has_git_mount,
+            "Expected parent .git mount despite trailing whitespace, got: {args:?}"
+        );
+    }
+
+    /// Test that malformed .git files don't crash, just skip the mount
+    #[test]
+    fn test_malformed_git_file_graceful_failure() {
+        use tempfile::tempdir;
+
+        let temp_dir = tempdir().expect("Failed to create temp dir");
+        let worktree_dir = temp_dir.path().join("worktree");
+        std::fs::create_dir_all(&worktree_dir).expect("Failed to create worktree dir");
+
+        // Create a malformed .git file (missing gitdir: line)
+        std::fs::write(worktree_dir.join(".git"), "invalid content\n")
+            .expect("Failed to write .git file");
+
+        // Should not panic, just skip the git mount
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            &worktree_dir,
+            "test prompt",
+            1000,
+            None,
+            false,
+            false,
+            &[],
+        ).expect("Failed to build args");
+
+        // Should only have workspace mount (no git mount)
+        let mount_count = args.iter().filter(|a| *a == "-v").count();
+        assert_eq!(
+            mount_count, 1,
+            "Malformed worktree should only have workspace mount, got {mount_count} mounts"
+        );
+    }
+
+    /// Test that missing parent .git directory is handled gracefully
+    #[test]
+    fn test_missing_parent_git_graceful_failure() {
+        use tempfile::tempdir;
+
+        let temp_dir = tempdir().expect("Failed to create temp dir");
+        let worktree_dir = temp_dir.path().join("worktree");
+        std::fs::create_dir_all(&worktree_dir).expect("Failed to create worktree dir");
+
+        // Point to a non-existent parent .git directory
+        let fake_git_path = temp_dir.path().join("nonexistent/.git/worktrees/test");
+        let git_file_content = format!("gitdir: {}", fake_git_path.display());
+        std::fs::write(worktree_dir.join(".git"), git_file_content)
+            .expect("Failed to write .git file");
+
+        // Should not panic, just skip the git mount and log a warning
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            &worktree_dir,
+            "test prompt",
+            1000,
+            None,
+            false,
+            false,
+            &[],
+        ).expect("Failed to build args");
+
+        // Should only have workspace mount (no git mount due to validation failure)
+        let mount_count = args.iter().filter(|a| *a == "-v").count();
+        assert_eq!(
+            mount_count, 1,
+            "Worktree with missing parent should only have workspace mount, got {mount_count} mounts"
         );
     }
 
@@ -830,6 +1192,7 @@ mod tests {
             None,
             false, // print mode
             true,  // plan mode enabled
+            &[],   // no images
         ).expect("Failed to build args");
 
         let cmd_arg = args.last().unwrap();
@@ -850,6 +1213,7 @@ mod tests {
             None,
             true, // print mode enabled
             true, // plan mode enabled
+            &[],  // no images
         ).expect("Failed to build args");
 
         let cmd_arg = args.last().unwrap();
@@ -878,6 +1242,7 @@ mod tests {
             None,
             false, // print mode
             false, // plan mode disabled
+            &[],   // no images
         ).expect("Failed to build args");
 
         let cmd_arg = args.last().unwrap();

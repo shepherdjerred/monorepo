@@ -79,7 +79,9 @@ impl HttpAuthProxy {
 
     /// Run the proxy server.
     pub async fn run(self) -> anyhow::Result<()> {
-        let proxy = if let Some(session_ctx) = self.session_context {
+        tracing::info!("HTTPS auth proxy listening on {}", self.addr);
+
+        if let Some(session_ctx) = self.session_context {
             // Session-aware proxy with filtering
             let handler = FilteringHandler {
                 session_id: session_ctx.session_id,
@@ -88,12 +90,13 @@ impl HttpAuthProxy {
                 audit_logger: self.audit_logger,
             };
 
-            Proxy::builder()
+            let proxy = Proxy::builder()
                 .with_addr(self.addr)
                 .with_ca(self.ca)
                 .with_rustls_connector(default_provider())
                 .with_http_handler(handler)
-                .build()?
+                .build()?;
+            proxy.start().await?;
         } else {
             // Global proxy without filtering
             let handler = AuthInjector {
@@ -101,16 +104,15 @@ impl HttpAuthProxy {
                 audit_logger: self.audit_logger,
             };
 
-            Proxy::builder()
+            let proxy = Proxy::builder()
                 .with_addr(self.addr)
                 .with_ca(self.ca)
                 .with_rustls_connector(default_provider())
                 .with_http_handler(handler)
-                .build()?
-        };
+                .build()?;
+            proxy.start().await?;
+        }
 
-        tracing::info!("HTTPS auth proxy listening on {}", self.addr);
-        proxy.start().await?;
         Ok(())
     }
 

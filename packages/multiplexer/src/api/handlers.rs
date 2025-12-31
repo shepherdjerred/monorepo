@@ -37,6 +37,7 @@ pub async fn handle_request(request: Request, manager: &SessionManager) -> Respo
                     req.print_mode,
                     req.plan_mode,
                     req.access_mode,
+                    req.images,
                 )
                 .await
             {
@@ -198,6 +199,7 @@ pub async fn handle_create_session_with_progress(
             req.print_mode,
             req.plan_mode,
             req.access_mode,
+            req.images,
         )
         .await
     {

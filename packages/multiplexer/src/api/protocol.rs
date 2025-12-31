@@ -71,6 +71,15 @@ pub struct CreateSessionRequest {
     /// Access mode for proxy filtering
     #[serde(default)]
     pub access_mode: AccessMode,
+
+    /// Image file paths to attach to initial prompt.
+    ///
+    /// Paths should be absolute or relative to the worktree directory.
+    /// The TUI does not currently provide a file picker for selecting images -
+    /// this field is primarily used when creating sessions via the API.
+    /// Images will be passed to Claude Code using the `--image` flag.
+    #[serde(default)]
+    pub images: Vec<String>,
 }
 
 /// Default to plan mode for safety - allows users to explore and understand

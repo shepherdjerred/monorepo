@@ -34,13 +34,16 @@ impl PortAllocator {
 
         for _ in 0..Self::MAX_SESSIONS {
             let port = Self::BASE_PORT + (state.next_port % Self::MAX_SESSIONS);
-            state.next_port = state.next_port.wrapping_add(1);
 
             if !state.allocated.contains_key(&port) {
                 state.allocated.insert(port, session_id);
+                state.next_port = state.next_port.wrapping_add(1);
                 tracing::info!(port, session_id = %session_id, "Allocated proxy port");
                 return Ok(port);
             }
+
+            // Port already allocated, try next one
+            state.next_port = state.next_port.wrapping_add(1);
         }
 
         anyhow::bail!("No available proxy ports (all {} in use)", Self::MAX_SESSIONS)

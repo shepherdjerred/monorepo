@@ -56,6 +56,9 @@ async fn test_create_session_zellij_success() {
             AgentType::ClaudeCode,
             true,
             false, // print_mode
+            true,  // plan_mode
+            Default::default(), // access_mode
+            vec![], // images
         )
         .await
         .expect("Failed to create session");
@@ -96,6 +99,9 @@ async fn test_create_session_docker_success() {
             AgentType::ClaudeCode,
             false,
             false, // print_mode
+            true,  // plan_mode
+            Default::default(), // access_mode
+            vec![], // images
         )
         .await
         .expect("Failed to create session");
@@ -129,6 +135,9 @@ async fn test_create_session_git_fails() {
             AgentType::ClaudeCode,
             true,
             false, // print_mode
+            true,  // plan_mode
+            Default::default(), // access_mode
+            vec![], // images
         )
         .await;
 
@@ -158,6 +167,9 @@ async fn test_create_session_backend_fails() {
             AgentType::ClaudeCode,
             true,
             false, // print_mode
+            true,  // plan_mode
+            Default::default(), // access_mode
+            vec![], // images
         )
         .await;
 
@@ -189,6 +201,9 @@ async fn test_get_session_by_name() {
             AgentType::ClaudeCode,
             true,
             false, // print_mode
+            true,  // plan_mode
+            Default::default(), // access_mode
+            vec![], // images
         )
         .await
         .unwrap();
@@ -212,6 +227,9 @@ async fn test_get_session_by_uuid() {
             AgentType::ClaudeCode,
             true,
             false, // print_mode
+            true,  // plan_mode
+            Default::default(), // access_mode
+            vec![], // images
         )
         .await
         .unwrap();
@@ -245,6 +263,9 @@ async fn test_delete_session_success() {
             AgentType::ClaudeCode,
             true,
             false, // print_mode
+            true,  // plan_mode
+            Default::default(), // access_mode
+            vec![], // images
         )
         .await
         .unwrap();
@@ -291,6 +312,9 @@ async fn test_archive_session_success() {
             AgentType::ClaudeCode,
             true,
             false, // print_mode
+            true,  // plan_mode
+            Default::default(), // access_mode
+            vec![], // images
         )
         .await
         .unwrap();
@@ -329,6 +353,9 @@ async fn test_get_attach_command_zellij() {
             AgentType::ClaudeCode,
             true,
             false, // print_mode
+            true,  // plan_mode
+            Default::default(), // access_mode
+            vec![], // images
         )
         .await
         .unwrap();
@@ -353,6 +380,9 @@ async fn test_get_attach_command_docker() {
             AgentType::ClaudeCode,
             true,
             false, // print_mode
+            true,  // plan_mode
+            Default::default(), // access_mode
+            vec![], // images
         )
         .await
         .unwrap();
@@ -387,6 +417,9 @@ async fn test_reconcile_healthy_session() {
             AgentType::ClaudeCode,
             true,
             false, // print_mode
+            true,  // plan_mode
+            Default::default(), // access_mode
+            vec![], // images
         )
         .await
         .unwrap();
@@ -413,6 +446,9 @@ async fn test_reconcile_missing_backend() {
             AgentType::ClaudeCode,
             true,
             false, // print_mode
+            true,  // plan_mode
+            Default::default(), // access_mode
+            vec![], // images
         )
         .await
         .unwrap();
@@ -451,6 +487,9 @@ async fn test_list_sessions_multiple() {
             AgentType::ClaudeCode,
             true,
             false, // print_mode
+            true,  // plan_mode
+            Default::default(), // access_mode
+            vec![], // images
         )
         .await
         .unwrap();
@@ -464,6 +503,9 @@ async fn test_list_sessions_multiple() {
             AgentType::ClaudeCode,
             true,
             false, // print_mode
+            true,  // plan_mode
+            Default::default(), // access_mode
+            vec![], // images
         )
         .await
         .unwrap();
@@ -477,6 +519,9 @@ async fn test_list_sessions_multiple() {
             AgentType::ClaudeCode,
             true,
             false, // print_mode
+            true,  // plan_mode
+            Default::default(), // access_mode
+            vec![], // images
         )
         .await
         .unwrap();
@@ -501,6 +546,9 @@ async fn test_session_lifecycle() {
             AgentType::ClaudeCode,
             true,
             false, // print_mode
+            true,  // plan_mode
+            Default::default(), // access_mode
+            vec![], // images
         )
         .await
         .unwrap();
