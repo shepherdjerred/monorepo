@@ -60,6 +60,16 @@ pub struct CreateSessionRequest {
     /// Run in print mode (non-interactive, outputs response and exits)
     #[serde(default)]
     pub print_mode: bool,
+
+    /// Start in plan mode
+    #[serde(default = "default_plan_mode")]
+    pub plan_mode: bool,
+}
+
+/// Default to plan mode for safety - allows users to explore and understand
+/// the codebase before making changes. Users must explicitly opt-out.
+fn default_plan_mode() -> bool {
+    true
 }
 
 /// Progress step during session creation
