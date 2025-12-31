@@ -141,6 +141,7 @@ impl SessionManager {
         agent: super::session::AgentType,
         dangerous_skip_checks: bool,
         print_mode: bool,
+        plan_mode: bool,
         access_mode: super::session::AccessMode,
     ) -> anyhow::Result<(Session, Option<Vec<String>>)> {
         // Generate unique session name with retry logic
@@ -225,6 +226,7 @@ impl SessionManager {
         // Create backend resource
         let create_options = crate::backends::CreateOptions {
             print_mode,
+            plan_mode,
             session_proxy_port: proxy_port,
         };
         let backend_id = match backend {
