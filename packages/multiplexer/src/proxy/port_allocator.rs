@@ -1,0 +1,115 @@
+//! Port allocation for per-session HTTP proxies.
+
+use std::collections::HashMap;
+use tokio::sync::RwLock;
+use uuid::Uuid;
+
+/// Allocates unique proxy ports for sessions
+pub struct PortAllocator {
+    state: RwLock<AllocatorState>,
+}
+
+struct AllocatorState {
+    next_port: u16,
+    allocated: HashMap<u16, Uuid>,
+}
+
+impl PortAllocator {
+    const BASE_PORT: u16 = 18100;
+    const MAX_SESSIONS: u16 = 500;
+
+    /// Create a new port allocator
+    pub fn new() -> Self {
+        Self {
+            state: RwLock::new(AllocatorState {
+                next_port: 0,
+                allocated: HashMap::new(),
+            }),
+        }
+    }
+
+    /// Allocate a port for a session
+    pub async fn allocate(&self, session_id: Uuid) -> anyhow::Result<u16> {
+        let mut state = self.state.write().await;
+
+        for _ in 0..Self::MAX_SESSIONS {
+            let port = Self::BASE_PORT + (state.next_port % Self::MAX_SESSIONS);
+
+            if !state.allocated.contains_key(&port) {
+                state.allocated.insert(port, session_id);
+                state.next_port = state.next_port.wrapping_add(1);
+                tracing::info!(port, session_id = %session_id, "Allocated proxy port");
+                return Ok(port);
+            }
+
+            // Port already allocated, try next one
+            state.next_port = state.next_port.wrapping_add(1);
+        }
+
+        anyhow::bail!("No available proxy ports (all {} in use)", Self::MAX_SESSIONS)
+    }
+
+    /// Release a port
+    pub async fn release(&self, port: u16) {
+        self.state.write().await.allocated.remove(&port);
+        tracing::info!(port, "Released proxy port");
+    }
+
+    /// Get the session ID for a port
+    pub async fn get_session_id(&self, port: u16) -> Option<Uuid> {
+        self.state.read().await.allocated.get(&port).copied()
+    }
+}
+
+impl Default for PortAllocator {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_allocation() {
+        let allocator = PortAllocator::new();
+        let session1 = Uuid::new_v4();
+        let session2 = Uuid::new_v4();
+
+        let port1 = allocator.allocate(session1).await.unwrap();
+        let port2 = allocator.allocate(session2).await.unwrap();
+
+        assert_ne!(port1, port2);
+        assert_eq!(allocator.get_session_id(port1).await, Some(session1));
+        assert_eq!(allocator.get_session_id(port2).await, Some(session2));
+    }
+
+    #[tokio::test]
+    async fn test_release() {
+        let allocator = PortAllocator::new();
+        let session = Uuid::new_v4();
+
+        let port = allocator.allocate(session).await.unwrap();
+        assert_eq!(allocator.get_session_id(port).await, Some(session));
+
+        allocator.release(port).await;
+        assert_eq!(allocator.get_session_id(port).await, None);
+    }
+
+    #[tokio::test]
+    async fn test_wraparound() {
+        let allocator = PortAllocator::new();
+
+        // Allocate many ports
+        for _ in 0..10 {
+            let session = Uuid::new_v4();
+            allocator.allocate(session).await.unwrap();
+        }
+
+        // Should still work (wraparound)
+        let session = Uuid::new_v4();
+        let result = allocator.allocate(session).await;
+        assert!(result.is_ok());
+    }
+}

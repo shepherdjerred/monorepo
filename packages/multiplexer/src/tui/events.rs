@@ -197,6 +197,7 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                         dangerous_skip_checks: app.create_dialog.skip_checks,
                         print_mode: false, // TUI always uses interactive mode
                         plan_mode: app.create_dialog.plan_mode,
+                        access_mode: Default::default(),
                         images: app.create_dialog.images.clone(),
                     };
 

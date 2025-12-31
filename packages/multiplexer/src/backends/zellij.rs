@@ -221,6 +221,7 @@ impl ZellijBackend {
             super::traits::CreateOptions {
                 print_mode: false,
                 plan_mode: true, // Default to plan mode
+                session_proxy_port: None,
                 images: vec![],
             },
         )

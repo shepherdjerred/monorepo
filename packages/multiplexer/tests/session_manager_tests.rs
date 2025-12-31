@@ -57,6 +57,7 @@ async fn test_create_session_zellij_success() {
             true,
             false, // print_mode
             true,  // plan_mode
+            Default::default(), // access_mode
             vec![], // images
         )
         .await
@@ -99,6 +100,7 @@ async fn test_create_session_docker_success() {
             false,
             false, // print_mode
             true,  // plan_mode
+            Default::default(), // access_mode
             vec![], // images
         )
         .await
@@ -134,6 +136,7 @@ async fn test_create_session_git_fails() {
             true,
             false, // print_mode
             true,  // plan_mode
+            Default::default(), // access_mode
             vec![], // images
         )
         .await;
@@ -165,6 +168,7 @@ async fn test_create_session_backend_fails() {
             true,
             false, // print_mode
             true,  // plan_mode
+            Default::default(), // access_mode
             vec![], // images
         )
         .await;
@@ -198,6 +202,7 @@ async fn test_get_session_by_name() {
             true,
             false, // print_mode
             true,  // plan_mode
+            Default::default(), // access_mode
             vec![], // images
         )
         .await
@@ -223,6 +228,7 @@ async fn test_get_session_by_uuid() {
             true,
             false, // print_mode
             true,  // plan_mode
+            Default::default(), // access_mode
             vec![], // images
         )
         .await
@@ -258,6 +264,7 @@ async fn test_delete_session_success() {
             true,
             false, // print_mode
             true,  // plan_mode
+            Default::default(), // access_mode
             vec![], // images
         )
         .await
@@ -306,6 +313,7 @@ async fn test_archive_session_success() {
             true,
             false, // print_mode
             true,  // plan_mode
+            Default::default(), // access_mode
             vec![], // images
         )
         .await
@@ -346,6 +354,7 @@ async fn test_get_attach_command_zellij() {
             true,
             false, // print_mode
             true,  // plan_mode
+            Default::default(), // access_mode
             vec![], // images
         )
         .await
@@ -372,6 +381,7 @@ async fn test_get_attach_command_docker() {
             true,
             false, // print_mode
             true,  // plan_mode
+            Default::default(), // access_mode
             vec![], // images
         )
         .await
@@ -408,6 +418,7 @@ async fn test_reconcile_healthy_session() {
             true,
             false, // print_mode
             true,  // plan_mode
+            Default::default(), // access_mode
             vec![], // images
         )
         .await
@@ -436,6 +447,7 @@ async fn test_reconcile_missing_backend() {
             true,
             false, // print_mode
             true,  // plan_mode
+            Default::default(), // access_mode
             vec![], // images
         )
         .await
@@ -476,6 +488,7 @@ async fn test_list_sessions_multiple() {
             true,
             false, // print_mode
             true,  // plan_mode
+            Default::default(), // access_mode
             vec![], // images
         )
         .await
@@ -491,6 +504,7 @@ async fn test_list_sessions_multiple() {
             true,
             false, // print_mode
             true,  // plan_mode
+            Default::default(), // access_mode
             vec![], // images
         )
         .await
@@ -506,6 +520,7 @@ async fn test_list_sessions_multiple() {
             true,
             false, // print_mode
             true,  // plan_mode
+            Default::default(), // access_mode
             vec![], // images
         )
         .await
@@ -532,6 +547,7 @@ async fn test_session_lifecycle() {
             true,
             false, // print_mode
             true,  // plan_mode
+            Default::default(), // access_mode
             vec![], // images
         )
         .await

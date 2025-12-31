@@ -26,6 +26,7 @@ fn test_create_session_request_serialization() {
         dangerous_skip_checks: false,
         print_mode: false,
         plan_mode: true,
+        access_mode: Default::default(),
         images: vec![],
     });
 
@@ -163,6 +164,7 @@ fn test_print_mode_serialization() {
         dangerous_skip_checks: true,
         print_mode: true,
         plan_mode: false,
+        access_mode: Default::default(),
         images: vec![],
     });
 

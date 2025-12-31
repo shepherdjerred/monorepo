@@ -1735,6 +1735,7 @@ dependencies = [
  "exec",
  "fs2",
  "futures",
+ "http",
  "http-body-util",
  "hudsucker",
  "hyper",

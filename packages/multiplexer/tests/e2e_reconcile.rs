@@ -23,6 +23,7 @@ fn create_test_session(name: &str, worktree_path: &std::path::Path) -> Session {
         backend: BackendType::Docker,
         agent: AgentType::ClaudeCode,
         dangerous_skip_checks: true,
+        access_mode: Default::default(),
     });
     session.set_status(SessionStatus::Running);
     session.set_backend_id(format!("mux-{name}"));

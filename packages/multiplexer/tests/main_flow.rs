@@ -20,6 +20,7 @@ fn create_test_session(name: &str) -> Session {
         backend: BackendType::Zellij,
         agent: AgentType::ClaudeCode,
         dangerous_skip_checks: false,
+        access_mode: Default::default(),
     })
 }
 

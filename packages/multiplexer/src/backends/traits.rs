@@ -42,6 +42,10 @@ pub struct CreateOptions {
     /// Applicable to both Zellij and Docker backends.
     pub plan_mode: bool,
 
+    /// Session-specific proxy port (overrides global proxy port).
+    /// Only applicable to Docker backend.
+    pub session_proxy_port: Option<u16>,
+
     /// Image file paths to attach to initial prompt
     pub images: Vec<String>,
 }
