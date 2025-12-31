@@ -66,8 +66,10 @@ pub struct CreateSessionRequest {
     pub plan_mode: bool,
 }
 
+/// Default to plan mode for safety - allows users to explore and understand
+/// the codebase before making changes. Users must explicitly opt-out.
 fn default_plan_mode() -> bool {
-    true // Default ON
+    true
 }
 
 /// Progress step during session creation
