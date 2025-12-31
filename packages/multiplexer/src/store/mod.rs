@@ -1,11 +1,23 @@
 pub mod sqlite;
 
 use async_trait::async_trait;
+use chrono::{DateTime, Utc};
+use std::path::PathBuf;
 use uuid::Uuid;
 
 use crate::core::{Event, Session};
 
 pub use sqlite::SqliteStore;
+
+/// Recent repository entry
+#[derive(Debug, Clone)]
+pub struct RecentRepo {
+    pub repo_path: PathBuf,
+    pub last_used: DateTime<Utc>,
+}
+
+/// Maximum number of recent repositories to track
+pub const MAX_RECENT_REPOS: usize = 10;
 
 /// Trait for session storage backends
 #[async_trait]
@@ -30,4 +42,10 @@ pub trait Store: Send + Sync {
 
     /// Get all events (for replay/recovery)
     async fn get_all_events(&self) -> anyhow::Result<Vec<Event>>;
+
+    /// Add or update a recent repository
+    async fn add_recent_repo(&self, repo_path: PathBuf) -> anyhow::Result<()>;
+
+    /// Get recent repositories, ordered by most recently used
+    async fn get_recent_repos(&self) -> anyhow::Result<Vec<RecentRepo>>;
 }

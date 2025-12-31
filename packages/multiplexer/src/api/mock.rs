@@ -266,6 +266,26 @@ impl ApiClient for MockApiClient {
             orphaned_backends: vec![],
         })
     }
+
+    async fn get_recent_repos(&mut self) -> anyhow::Result<Vec<super::protocol::RecentRepoDto>> {
+        if self.should_fail() {
+            let msg = self.error_message.read().await.clone();
+            anyhow::bail!("{}", msg);
+        }
+
+        // Return mock recent repos with timestamps
+        use chrono::Utc;
+        Ok(vec![
+            super::protocol::RecentRepoDto {
+                repo_path: "/home/user/projects/repo1".to_string(),
+                last_used: Utc::now().to_rfc3339(),
+            },
+            super::protocol::RecentRepoDto {
+                repo_path: "/home/user/projects/repo2".to_string(),
+                last_used: (Utc::now() - chrono::Duration::hours(1)).to_rfc3339(),
+            },
+        ])
+    }
 }
 
 #[cfg(test)]
