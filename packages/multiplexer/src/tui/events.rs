@@ -124,7 +124,8 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                 CreateDialogFocus::Prompt => CreateDialogFocus::RepoPath,
                 CreateDialogFocus::RepoPath => CreateDialogFocus::Backend,
                 CreateDialogFocus::Backend => CreateDialogFocus::SkipChecks,
-                CreateDialogFocus::SkipChecks => CreateDialogFocus::Buttons,
+                CreateDialogFocus::SkipChecks => CreateDialogFocus::PlanMode,
+                CreateDialogFocus::PlanMode => CreateDialogFocus::Buttons,
                 CreateDialogFocus::Buttons => CreateDialogFocus::Name,
             };
         }
@@ -136,7 +137,8 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                 CreateDialogFocus::RepoPath => CreateDialogFocus::Prompt,
                 CreateDialogFocus::Backend => CreateDialogFocus::RepoPath,
                 CreateDialogFocus::SkipChecks => CreateDialogFocus::Backend,
-                CreateDialogFocus::Buttons => CreateDialogFocus::SkipChecks,
+                CreateDialogFocus::PlanMode => CreateDialogFocus::SkipChecks,
+                CreateDialogFocus::Buttons => CreateDialogFocus::PlanMode,
             };
         }
         KeyCode::Enter => match app.create_dialog.focus {
@@ -144,6 +146,12 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                 if app.create_dialog.button_create_focused {
                     // Prevent multiple concurrent creates
                     if app.create_task.is_some() {
+                        return Ok(());
+                    }
+
+                    // Don't allow creation while deletion is in progress
+                    if app.delete_task.is_some() {
+                        app.status_message = Some("Cannot create while deleting a session".to_string());
                         return Ok(());
                     }
 
@@ -164,6 +172,7 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                         agent: AgentType::ClaudeCode,
                         dangerous_skip_checks: app.create_dialog.skip_checks,
                         print_mode: false, // TUI always uses interactive mode
+                        plan_mode: app.create_dialog.plan_mode,
                     };
 
                     // Spawn background task
@@ -244,7 +253,8 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                 CreateDialogFocus::RepoPath => CreateDialogFocus::Prompt,
                 CreateDialogFocus::Backend => CreateDialogFocus::RepoPath,
                 CreateDialogFocus::SkipChecks => CreateDialogFocus::Backend,
-                CreateDialogFocus::Buttons => CreateDialogFocus::SkipChecks,
+                CreateDialogFocus::PlanMode => CreateDialogFocus::SkipChecks,
+                CreateDialogFocus::Buttons => CreateDialogFocus::PlanMode,
             };
         }
         KeyCode::Down => {
@@ -254,7 +264,8 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                 CreateDialogFocus::Prompt => CreateDialogFocus::RepoPath,
                 CreateDialogFocus::RepoPath => CreateDialogFocus::Backend,
                 CreateDialogFocus::Backend => CreateDialogFocus::SkipChecks,
-                CreateDialogFocus::SkipChecks => CreateDialogFocus::Buttons,
+                CreateDialogFocus::SkipChecks => CreateDialogFocus::PlanMode,
+                CreateDialogFocus::PlanMode => CreateDialogFocus::Buttons,
                 CreateDialogFocus::Buttons => CreateDialogFocus::Name,
             };
         }
@@ -264,6 +275,9 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
             }
             CreateDialogFocus::SkipChecks => {
                 app.create_dialog.skip_checks = !app.create_dialog.skip_checks;
+            }
+            CreateDialogFocus::PlanMode => {
+                app.create_dialog.plan_mode = !app.create_dialog.plan_mode;
             }
             CreateDialogFocus::Buttons => {
                 app.create_dialog.button_create_focused = !app.create_dialog.button_create_focused;
@@ -276,6 +290,9 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
             }
             CreateDialogFocus::SkipChecks => {
                 app.create_dialog.skip_checks = !app.create_dialog.skip_checks;
+            }
+            CreateDialogFocus::PlanMode => {
+                app.create_dialog.plan_mode = !app.create_dialog.plan_mode;
             }
             CreateDialogFocus::Name => app.create_dialog.name.push(' '),
             CreateDialogFocus::Prompt => app.create_dialog.prompt.push(' '),
@@ -394,10 +411,7 @@ async fn handle_directory_picker_key(app: &mut App, key: KeyEvent) -> anyhow::Re
 async fn handle_confirm_delete_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
     match key.code {
         KeyCode::Char('y' | 'Y') => {
-            if let Err(e) = app.confirm_delete().await {
-                app.status_message = Some(format!("Delete failed: {e}"));
-                app.cancel_delete();
-            }
+            app.confirm_delete();
         }
         KeyCode::Char('n' | 'N') | KeyCode::Esc => {
             app.cancel_delete();
