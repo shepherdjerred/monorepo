@@ -342,6 +342,7 @@ async fn test_claude_print_mode_e2e() {
     let options = CreateOptions {
         print_mode: true,
         plan_mode: false, // Don't need plan mode for this test
+        session_proxy_port: None,
         images: vec![],
     };
 

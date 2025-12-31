@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use typeshare::typeshare;
 
-use crate::core::session::{AgentType, BackendType, Session, SessionStatus};
+use crate::core::session::{AccessMode, AgentType, BackendType, Session, SessionStatus};
 
 use super::types::ReconcileReportDto;
 
@@ -27,6 +27,9 @@ pub enum Request {
 
     /// Get the attach command for a session
     AttachSession { id: String },
+
+    /// Update session access mode
+    UpdateAccessMode { id: String, access_mode: AccessMode },
 
     /// Reconcile state with reality
     Reconcile,
@@ -78,6 +81,10 @@ pub struct CreateSessionRequest {
     /// Start in plan mode
     #[serde(default = "default_plan_mode")]
     pub plan_mode: bool,
+
+    /// Access mode for proxy filtering
+    #[serde(default)]
+    pub access_mode: AccessMode,
 
     /// Image file paths to attach to initial prompt.
     ///
@@ -144,6 +151,9 @@ pub enum Response {
 
     /// List of recent repositories with timestamps
     RecentRepos(Vec<RecentRepoDto>),
+
+    /// Access mode updated successfully
+    AccessModeUpdated,
 
     /// Error response
     Error { code: String, message: String },

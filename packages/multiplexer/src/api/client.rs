@@ -8,6 +8,7 @@ use crate::utils::{daemon, paths};
 use super::protocol::{CreateSessionRequest, ProgressStep, Request, Response};
 use super::traits::ApiClient;
 use super::types::ReconcileReportDto;
+use crate::core::session::AccessMode;
 
 /// Callback type for progress updates
 pub type ProgressCallback = Box<dyn Fn(ProgressStep) + Send + Sync>;
@@ -255,6 +256,32 @@ impl Client {
 
         match response {
             Response::RecentRepos(repos) => Ok(repos),
+            Response::Error { code, message } => {
+                anyhow::bail!("[{code}] {message}")
+            }
+            _ => anyhow::bail!("Unexpected response"),
+        }
+    }
+
+    /// Update the access mode for a session
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the session is not found or the request fails.
+    pub async fn update_access_mode(
+        &mut self,
+        id: &str,
+        access_mode: crate::core::session::AccessMode,
+    ) -> anyhow::Result<()> {
+        let response = self
+            .send_request(Request::UpdateAccessMode {
+                id: id.to_string(),
+                access_mode,
+            })
+            .await?;
+
+        match response {
+            Response::AccessModeUpdated => Ok(()),
             Response::Error { code, message } => {
                 anyhow::bail!("[{code}] {message}")
             }
