@@ -26,13 +26,23 @@ impl ZellijBackend {
 
     /// Build the args for running Claude in a new pane (exposed for testing)
     #[must_use]
-    pub fn build_new_pane_args(workdir: &Path, initial_prompt: &str, plan_mode: bool) -> Vec<String> {
+    pub fn build_new_pane_args(workdir: &Path, initial_prompt: &str, plan_mode: bool, images: &[String]) -> Vec<String> {
         let escaped_prompt = initial_prompt.replace('\'', "'\\''");
-        let claude_cmd = if plan_mode {
-            format!("claude --dangerously-skip-permissions --permission-mode plan '{escaped_prompt}'")
-        } else {
-            format!("claude --dangerously-skip-permissions '{escaped_prompt}'")
-        };
+
+        // Build claude command with plan_mode and images
+        let mut claude_cmd = "claude --dangerously-skip-permissions".to_string();
+
+        // Add plan mode flag if enabled
+        if plan_mode {
+            claude_cmd.push_str(" --permission-mode plan");
+        }
+
+        // Add image arguments
+        for image in images {
+            let escaped_image = image.replace('\'', "'\\''");
+            claude_cmd.push_str(&format!(" --image '{escaped_image}'"));
+        }
+        claude_cmd.push_str(&format!(" '{escaped_prompt}'"));
 
         vec![
             "action".to_string(),
@@ -94,7 +104,7 @@ impl ExecutionBackend for ZellijBackend {
         }
 
         // Run Claude in the session
-        let pane_args = Self::build_new_pane_args(workdir, initial_prompt, options.plan_mode);
+        let pane_args = Self::build_new_pane_args(workdir, initial_prompt, options.plan_mode, &options.images);
         let output = Command::new("zellij")
             .args(&pane_args[..])
             .env("ZELLIJ_SESSION_NAME", name)
@@ -211,6 +221,7 @@ impl ZellijBackend {
             super::traits::CreateOptions {
                 print_mode: false,
                 plan_mode: true, // Default to plan mode
+                images: vec![],
             },
         )
         .await
@@ -253,7 +264,7 @@ mod tests {
     #[test]
     fn test_new_pane_has_cwd() {
         let workdir = PathBuf::from("/my/work/dir");
-        let args = ZellijBackend::build_new_pane_args(&workdir, "test prompt", false);
+        let args = ZellijBackend::build_new_pane_args(&workdir, "test prompt", false, &[]);
 
         assert!(
             args.contains(&"--cwd".to_string()),
@@ -271,7 +282,7 @@ mod tests {
     /// Test that new-pane uses action subcommand
     #[test]
     fn test_new_pane_uses_action() {
-        let args = ZellijBackend::build_new_pane_args(&PathBuf::from("/workspace"), "test prompt", false);
+        let args = ZellijBackend::build_new_pane_args(&PathBuf::from("/workspace"), "test prompt", false, &[]);
 
         assert_eq!(args[0], "action", "Expected 'action' as first arg");
         assert_eq!(args[1], "new-pane", "Expected 'new-pane' as second arg");
@@ -281,7 +292,7 @@ mod tests {
     #[test]
     fn test_prompt_escaping() {
         let prompt_with_quotes = "Say 'hello world'";
-        let args = ZellijBackend::build_new_pane_args(&PathBuf::from("/workspace"), prompt_with_quotes, false);
+        let args = ZellijBackend::build_new_pane_args(&PathBuf::from("/workspace"), prompt_with_quotes, false, &[]);
 
         // Find the command argument (last one containing the prompt)
         let cmd_arg = args.last().unwrap();
@@ -307,7 +318,7 @@ mod tests {
     /// Test that new-pane command uses bash shell
     #[test]
     fn test_new_pane_uses_bash() {
-        let args = ZellijBackend::build_new_pane_args(&PathBuf::from("/workspace"), "test prompt", false);
+        let args = ZellijBackend::build_new_pane_args(&PathBuf::from("/workspace"), "test prompt", false, &[]);
 
         assert!(
             args.contains(&"bash".to_string()),
@@ -318,7 +329,7 @@ mod tests {
     /// Test that new-pane includes -- separator before command
     #[test]
     fn test_new_pane_has_separator() {
-        let args = ZellijBackend::build_new_pane_args(&PathBuf::from("/workspace"), "test prompt", false);
+        let args = ZellijBackend::build_new_pane_args(&PathBuf::from("/workspace"), "test prompt", false, &[]);
 
         assert!(
             args.contains(&"--".to_string()),
@@ -334,12 +345,59 @@ mod tests {
     /// Test that command includes claude with --dangerously-skip-permissions
     #[test]
     fn test_command_includes_dangerous_flag() {
-        let args = ZellijBackend::build_new_pane_args(&PathBuf::from("/workspace"), "test prompt", false);
+        let args = ZellijBackend::build_new_pane_args(&PathBuf::from("/workspace"), "test prompt", false, &[]);
 
         let cmd_arg = args.last().unwrap();
         assert!(
             cmd_arg.contains("--dangerously-skip-permissions"),
             "Expected --dangerously-skip-permissions flag: {cmd_arg}"
+        );
+    }
+
+    /// Test that images are properly included in command
+    #[test]
+    fn test_command_includes_images() {
+        let images = vec!["/path/to/image1.png".to_string(), "/path/to/image2.jpg".to_string()];
+        let args = ZellijBackend::build_new_pane_args(&PathBuf::from("/workspace"), "test prompt", false, &images);
+
+        let cmd_arg = args.last().unwrap();
+        assert!(
+            cmd_arg.contains("--image '/path/to/image1.png'"),
+            "Expected first image in command: {cmd_arg}"
+        );
+        assert!(
+            cmd_arg.contains("--image '/path/to/image2.jpg'"),
+            "Expected second image in command: {cmd_arg}"
+        );
+    }
+
+    /// Test that image paths with single quotes are properly escaped
+    #[test]
+    fn test_image_path_escaping() {
+        let images = vec!["/path/with'quote/image.png".to_string()];
+        let args = ZellijBackend::build_new_pane_args(&PathBuf::from("/workspace"), "test prompt", false, &images);
+
+        let cmd_arg = args.last().unwrap();
+        // Single quotes should be escaped as '\'' for shell safety (end string, escaped quote, start string)
+        assert!(
+            cmd_arg.contains("'\\''"),
+            "Image path with single quote should be escaped: {cmd_arg}"
+        );
+    }
+
+    /// Test that command works with no images
+    #[test]
+    fn test_command_with_no_images() {
+        let args = ZellijBackend::build_new_pane_args(&PathBuf::from("/workspace"), "test prompt", false, &[]);
+
+        let cmd_arg = args.last().unwrap();
+        assert!(
+            !cmd_arg.contains("--image"),
+            "Should not contain --image flag when no images provided: {cmd_arg}"
+        );
+        assert!(
+            cmd_arg.contains("'test prompt'"),
+            "Should still contain the prompt: {cmd_arg}"
         );
     }
 
@@ -349,7 +407,8 @@ mod tests {
         let args = ZellijBackend::build_new_pane_args(
             &PathBuf::from("/workspace"),
             "test prompt",
-            true, // plan_mode = true
+            true,  // plan_mode = true
+            &[],   // no images
         );
         let cmd_arg = args.last().unwrap();
         assert!(
@@ -365,6 +424,7 @@ mod tests {
             &PathBuf::from("/workspace"),
             "test prompt",
             false, // plan_mode = false
+            &[],   // no images
         );
         let cmd_arg = args.last().unwrap();
         assert!(

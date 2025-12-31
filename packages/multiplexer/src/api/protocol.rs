@@ -64,6 +64,15 @@ pub struct CreateSessionRequest {
     /// Start in plan mode
     #[serde(default = "default_plan_mode")]
     pub plan_mode: bool,
+
+    /// Image file paths to attach to initial prompt.
+    ///
+    /// Paths should be absolute or relative to the worktree directory.
+    /// The TUI does not currently provide a file picker for selecting images -
+    /// this field is primarily used when creating sessions via the API.
+    /// Images will be passed to Claude Code using the `--image` flag.
+    #[serde(default)]
+    pub images: Vec<String>,
 }
 
 /// Default to plan mode for safety - allows users to explore and understand

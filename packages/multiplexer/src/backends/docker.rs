@@ -102,6 +102,7 @@ impl DockerBackend {
         proxy_config: Option<&DockerProxyConfig>,
         print_mode: bool,
         plan_mode: bool,
+        images: &[String],
     ) -> anyhow::Result<Vec<String>> {
         let container_name = format!("mux-{name}");
         let escaped_prompt = initial_prompt.replace('\'', "'\\''");
@@ -283,23 +284,28 @@ impl DockerBackend {
         }
 
         // Add image and command
-        let claude_cmd = match (print_mode, plan_mode) {
-            (true, true) => {
-                // Non-interactive mode with plan mode
-                format!("claude --dangerously-skip-permissions --permission-mode plan --print --verbose '{escaped_prompt}'")
+        let claude_cmd = {
+            let mut cmd = "claude --dangerously-skip-permissions".to_string();
+
+            // Add plan mode flag if enabled
+            if plan_mode {
+                cmd.push_str(" --permission-mode plan");
             }
-            (true, false) => {
-                // Non-interactive mode without plan mode
-                format!("claude --dangerously-skip-permissions --print --verbose '{escaped_prompt}'")
+
+            // Add print mode flags
+            if print_mode {
+                cmd.push_str(" --print --verbose");
             }
-            (false, true) => {
-                // Interactive mode with plan mode
-                format!("claude --dangerously-skip-permissions --permission-mode plan '{escaped_prompt}'")
+
+            // Add image arguments
+            for image in images {
+                let escaped_image = image.replace('\'', "'\\''");
+                cmd.push_str(&format!(" --image '{escaped_image}'"));
             }
-            (false, false) => {
-                // Interactive mode without plan mode
-                format!("claude --dangerously-skip-permissions '{escaped_prompt}'")
-            }
+
+            // Add prompt
+            cmd.push_str(&format!(" '{escaped_prompt}'"));
+            cmd
         };
 
         args.extend([
@@ -364,6 +370,7 @@ impl ExecutionBackend for DockerBackend {
             proxy_config,
             options.print_mode,
             options.plan_mode,
+            &options.images,
         )?;
         let output = Command::new("docker")
             .args(&args)
@@ -480,6 +487,7 @@ impl DockerBackend {
             super::traits::CreateOptions {
                 print_mode: false,
                 plan_mode: true, // Default to plan mode
+                images: vec![],
             },
         )
         .await
@@ -514,6 +522,7 @@ mod tests {
             None,
             false, // interactive mode
             false, // plan mode
+            &[],   // no images
         ).expect("Failed to build args");
 
         // Must have -dit for interactive TTY sessions
@@ -538,8 +547,9 @@ mod tests {
             "test prompt",
             uid,
             None,
-            false,
-            false,
+            false, // print mode
+            false, // plan mode
+            &[],   // no images
         ).expect("Failed to build args");
 
         // Find --user flag and verify it's followed by the UID
@@ -601,8 +611,9 @@ mod tests {
             prompt_with_quotes,
             1000,
             None,
-            false,
-            false,
+            false, // print mode
+            false, // plan mode
+            &[],   // no images
         ).expect("Failed to build args");
 
         // Find the command argument (last one containing the prompt)
@@ -624,8 +635,9 @@ mod tests {
             "test prompt",
             1000,
             None,
-            false,
-            false,
+            false, // print mode
+            false, // plan mode
+            &[],   // no images
         ).expect("Failed to build args");
 
         // Find --name flag and verify the container name
@@ -663,8 +675,9 @@ mod tests {
             "test prompt",
             1000,
             Some(&proxy_config),
-            false,
-            false,
+            false, // print mode
+            false, // plan mode
+            &[],   // no images
         ).expect("Failed to build args");
 
         // Should have HTTPS_PROXY
@@ -700,8 +713,9 @@ mod tests {
             "test prompt",
             1000,
             Some(&proxy_config),
-            false,
-            false,
+            false, // print mode
+            false, // plan mode
+            &[],   // no images
         ).expect("Failed to build args");
 
         // Should have proxy-ca.pem mount
@@ -723,8 +737,9 @@ mod tests {
             "test prompt",
             1000,
             Some(&proxy_config),
-            false,
-            false,
+            false, // print mode
+            false, // plan mode
+            &[],   // no images
         ).expect("Failed to build args");
 
         // Should NOT have HTTPS_PROXY
@@ -748,8 +763,9 @@ mod tests {
             "test prompt",
             1000,
             Some(&proxy_config),
-            false,
-            false,
+            false, // print mode
+            false, // plan mode
+            &[],   // no images
         ).expect("Failed to build args");
 
         // Should have --add-host flag
@@ -774,8 +790,9 @@ mod tests {
             "test prompt",
             1000,
             None,
-            true, // print mode enabled
+            true,  // print mode enabled
             false, // plan mode
+            &[],   // no images
         ).expect("Failed to build args");
 
         let cmd_arg = args.last().unwrap();
@@ -800,6 +817,7 @@ mod tests {
             None,
             false, // interactive mode
             false, // plan mode
+            &[],   // no images
         ).expect("Failed to build args");
 
         let cmd_arg = args.last().unwrap();
@@ -820,6 +838,7 @@ mod tests {
             None,
             false, // print mode
             true,  // plan mode enabled
+            &[],   // no images
         ).expect("Failed to build args");
 
         let cmd_arg = args.last().unwrap();
@@ -840,6 +859,7 @@ mod tests {
             None,
             true, // print mode enabled
             true, // plan mode enabled
+            &[],  // no images
         ).expect("Failed to build args");
 
         let cmd_arg = args.last().unwrap();
@@ -868,6 +888,7 @@ mod tests {
             None,
             false, // print mode
             false, // plan mode disabled
+            &[],   // no images
         ).expect("Failed to build args");
 
         let cmd_arg = args.last().unwrap();

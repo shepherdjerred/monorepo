@@ -89,6 +89,15 @@ pub struct CreateDialogState {
     pub backend_zellij: bool, // true = Zellij, false = Docker
     pub skip_checks: bool,
     pub plan_mode: bool,
+
+    /// Image file paths to attach to the prompt.
+    ///
+    /// Note: Currently there is no UI for selecting/attaching images in the TUI.
+    /// Images can only be provided via the API. A file picker UI will be added
+    /// in a future update to allow interactive image selection.
+    pub images: Vec<String>,
+
+    pub prompt_scroll_offset: usize,
     pub focus: CreateDialogFocus,
     pub button_create_focused: bool, // true = Create, false = Cancel
     pub directory_picker: DirectoryPickerState,
@@ -266,6 +275,8 @@ impl CreateDialogState {
             backend_zellij: true, // Default to Zellij
             skip_checks: false,
             plan_mode: true, // Default to plan mode ON
+            images: Vec::new(),
+            prompt_scroll_offset: 0,
             focus: CreateDialogFocus::default(),
             button_create_focused: false,
             directory_picker: DirectoryPickerState::new(),
@@ -285,6 +296,45 @@ impl CreateDialogState {
         // Docker benefits from skipping checks (isolated environment)
         // Zellij runs locally so checks are more important
         self.skip_checks = !self.backend_zellij;
+    }
+
+    /// Scroll the prompt field up
+    pub fn scroll_prompt_up(&mut self) {
+        if self.prompt_scroll_offset > 0 {
+            self.prompt_scroll_offset -= 1;
+        }
+    }
+
+    /// Scroll the prompt field down
+    pub fn scroll_prompt_down(&mut self, visible_lines: usize) {
+        // Calculate total lines in the prompt
+        let total_lines = self.prompt.lines().count().max(1);
+
+        // Only scroll if there are more lines than visible
+        if total_lines > visible_lines {
+            let max_offset = total_lines.saturating_sub(visible_lines);
+            if self.prompt_scroll_offset < max_offset {
+                self.prompt_scroll_offset += 1;
+            }
+        }
+    }
+
+    /// Clamp scroll offset to valid range when prompt content changes
+    pub fn clamp_prompt_scroll(&mut self) {
+        let total_lines = self.prompt.lines().count().max(1);
+        // Assume ~10 visible lines (matches events.rs)
+        let visible_lines = 10;
+
+        if total_lines <= visible_lines {
+            // All content fits, reset scroll
+            self.prompt_scroll_offset = 0;
+        } else {
+            // Clamp to valid range
+            let max_offset = total_lines.saturating_sub(visible_lines);
+            if self.prompt_scroll_offset > max_offset {
+                self.prompt_scroll_offset = max_offset;
+            }
+        }
     }
 }
 
@@ -592,6 +642,7 @@ impl App {
             dangerous_skip_checks: self.create_dialog.skip_checks,
             print_mode: false, // TUI always uses interactive mode
             plan_mode: self.create_dialog.plan_mode,
+            images: self.create_dialog.images.clone(),
         };
 
         if let Some(client) = &mut self.client {
