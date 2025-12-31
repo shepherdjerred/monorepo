@@ -411,19 +411,11 @@ async fn test_create_dialog_space_in_repo_path_field() {
     app.open_create_dialog();
     app.create_dialog.focus = CreateDialogFocus::RepoPath;
 
-    // Type "/path with spaces"
-    handle_key_event(&mut app, char_key('/')).await.unwrap();
-    handle_key_event(&mut app, char_key('p')).await.unwrap();
-    handle_key_event(&mut app, char_key('a')).await.unwrap();
-    handle_key_event(&mut app, char_key('t')).await.unwrap();
-    handle_key_event(&mut app, char_key('h')).await.unwrap();
+    // Space in repo_path opens the directory picker (no longer accepts typed input)
     handle_key_event(&mut app, char_key(' ')).await.unwrap();
-    handle_key_event(&mut app, char_key('w')).await.unwrap();
-    handle_key_event(&mut app, char_key('i')).await.unwrap();
-    handle_key_event(&mut app, char_key('t')).await.unwrap();
-    handle_key_event(&mut app, char_key('h')).await.unwrap();
 
-    assert_eq!(app.create_dialog.repo_path, "/path with");
+    // Directory picker should be active
+    assert!(app.create_dialog.directory_picker.is_active);
 }
 
 #[tokio::test]
@@ -1052,13 +1044,13 @@ fn test_directory_picker_search() {
 }
 
 #[tokio::test]
-async fn test_directory_picker_open_with_slash() {
+async fn test_directory_picker_open_with_enter() {
     let mut app = App::new();
     app.open_create_dialog();
     app.create_dialog.focus = CreateDialogFocus::RepoPath;
 
-    // Press '/' to open picker
-    handle_key_event(&mut app, char_key('/')).await.unwrap();
+    // Press Enter to open picker
+    handle_key_event(&mut app, key(KeyCode::Enter)).await.unwrap();
 
     assert!(app.create_dialog.directory_picker.is_active);
 }

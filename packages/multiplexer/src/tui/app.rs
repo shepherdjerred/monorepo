@@ -1,9 +1,15 @@
-use crate::api::{ApiClient, Client};
-use crate::core::Session;
-use nucleo_matcher::Utf32String;
+use std::collections::HashMap;
 use std::path::PathBuf;
+use std::time::Instant;
+
+use nucleo_matcher::Utf32String;
 use tokio::sync::mpsc;
 use tokio::task::JoinHandle;
+use uuid::Uuid;
+
+use crate::api::{ApiClient, Client};
+use crate::core::Session;
+use crate::tui::attached::PtySession;
 
 /// Progress update from background session creation task
 #[derive(Debug, Clone)]
@@ -33,6 +39,23 @@ pub enum AppMode {
     CreateDialog,
     ConfirmDelete,
     Help,
+    /// Attached to a session via PTY
+    Attached,
+}
+
+/// State for the detach key detection (Ctrl+] double-tap)
+#[derive(Debug, Clone)]
+pub enum DetachState {
+    /// Not waiting for second key press
+    Idle,
+    /// First Ctrl+] pressed, waiting for second or timeout
+    Pending { since: Instant },
+}
+
+impl Default for DetachState {
+    fn default() -> Self {
+        Self::Idle
+    }
 }
 
 /// Input focus for create dialog
@@ -390,6 +413,19 @@ pub struct App {
 
     /// Tick counter for spinner animation
     pub spinner_tick: u64,
+
+    // === PTY Session Management ===
+    /// All active PTY sessions (persist when detached)
+    pub pty_sessions: HashMap<Uuid, PtySession>,
+
+    /// Currently attached session ID (if in Attached mode)
+    pub attached_session_id: Option<Uuid>,
+
+    /// Detach key state for double-tap detection
+    pub detach_state: DetachState,
+
+    /// Terminal dimensions for PTY resize
+    pub terminal_size: (u16, u16),
 }
 
 impl App {
@@ -414,6 +450,11 @@ impl App {
             delete_progress_rx: None,
             deleting_session_id: None,
             spinner_tick: 0,
+            // PTY session management
+            pty_sessions: HashMap::new(),
+            attached_session_id: None,
+            detach_state: DetachState::Idle,
+            terminal_size: (24, 80), // Default size, updated on resize
         }
     }
 
@@ -702,6 +743,208 @@ impl App {
     /// Increment spinner tick for animation
     pub fn tick(&mut self) {
         self.spinner_tick = self.spinner_tick.wrapping_add(1);
+    }
+
+    // === PTY Session Methods ===
+
+    /// Attach to the selected session via PTY.
+    ///
+    /// Creates a new PTY session if one doesn't exist, or reattaches to an existing one.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the session cannot be attached.
+    pub async fn attach_selected_session(&mut self) -> anyhow::Result<()> {
+        let session = self
+            .selected_session()
+            .ok_or_else(|| anyhow::anyhow!("No session selected"))?;
+
+        // Only Docker sessions support PTY attachment for now
+        if session.backend != crate::core::BackendType::Docker {
+            return Err(anyhow::anyhow!(
+                "PTY attachment only supported for Docker sessions"
+            ));
+        }
+
+        let session_id = session.id;
+        let container_id = session
+            .backend_id
+            .clone()
+            .ok_or_else(|| anyhow::anyhow!("Session has no backend ID"))?;
+
+        // Check if we already have a PTY session for this
+        if self.pty_sessions.contains_key(&session_id) {
+            // Already have a PTY session, just switch to it
+            self.attached_session_id = Some(session_id);
+            self.mode = AppMode::Attached;
+            self.detach_state = DetachState::Idle;
+            return Ok(());
+        }
+
+        // Create new PTY session
+        let (rows, cols) = self.terminal_size;
+        let pty_session =
+            PtySession::spawn_docker_attach(session_id, container_id, rows, cols).await?;
+
+        self.pty_sessions.insert(session_id, pty_session);
+        self.attached_session_id = Some(session_id);
+        self.mode = AppMode::Attached;
+        self.detach_state = DetachState::Idle;
+
+        Ok(())
+    }
+
+    /// Detach from the current session (but keep PTY alive).
+    pub fn detach(&mut self) {
+        self.attached_session_id = None;
+        self.mode = AppMode::SessionList;
+        self.detach_state = DetachState::Idle;
+    }
+
+    /// Get the currently attached PTY session.
+    #[must_use]
+    pub fn attached_pty_session(&self) -> Option<&PtySession> {
+        self.attached_session_id
+            .and_then(|id| self.pty_sessions.get(&id))
+    }
+
+    /// Get the currently attached PTY session mutably.
+    pub fn attached_pty_session_mut(&mut self) -> Option<&mut PtySession> {
+        self.attached_session_id
+            .and_then(|id| self.pty_sessions.get_mut(&id))
+    }
+
+    /// Update terminal size and resize any attached PTY.
+    pub async fn set_terminal_size(&mut self, rows: u16, cols: u16) {
+        self.terminal_size = (rows, cols);
+
+        // Resize the currently attached PTY if any
+        if let Some(pty_session) = self.attached_pty_session() {
+            pty_session.resize(rows, cols).await;
+        }
+    }
+
+    /// Send input to the attached PTY.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if there's no attached session or writing fails.
+    pub async fn send_to_pty(&mut self, data: Vec<u8>) -> anyhow::Result<()> {
+        let session = self
+            .attached_pty_session()
+            .ok_or_else(|| anyhow::anyhow!("No attached session"))?;
+        session.write(data).await
+    }
+
+    /// Check if currently attached to a session.
+    #[must_use]
+    pub const fn is_attached(&self) -> bool {
+        self.attached_session_id.is_some() && matches!(self.mode, AppMode::Attached)
+    }
+
+    /// Switch to the next Docker session while attached.
+    /// Returns true if switched, false if no next session.
+    pub async fn switch_to_next_session(&mut self) -> anyhow::Result<bool> {
+        use crate::core::BackendType;
+
+        // Get list of Docker sessions (only those support PTY)
+        let docker_sessions: Vec<_> = self
+            .sessions
+            .iter()
+            .filter(|s| s.backend == BackendType::Docker && s.backend_id.is_some())
+            .collect();
+
+        if docker_sessions.len() <= 1 {
+            return Ok(false);
+        }
+
+        // Find current session's index
+        let current_idx = docker_sessions
+            .iter()
+            .position(|s| Some(s.id) == self.attached_session_id);
+
+        let next_idx = match current_idx {
+            Some(idx) => (idx + 1) % docker_sessions.len(),
+            None => 0,
+        };
+
+        let next_session = docker_sessions[next_idx];
+        let session_id = next_session.id;
+        let container_id = next_session.backend_id.clone().unwrap();
+
+        // Create PTY session if needed
+        if !self.pty_sessions.contains_key(&session_id) {
+            let (rows, cols) = self.terminal_size;
+            let pty_session =
+                PtySession::spawn_docker_attach(session_id, container_id, rows, cols).await?;
+            self.pty_sessions.insert(session_id, pty_session);
+        }
+
+        // Update selected index in session list to match
+        if let Some(idx) = self.sessions.iter().position(|s| s.id == session_id) {
+            self.selected_index = idx;
+        }
+
+        self.attached_session_id = Some(session_id);
+        self.detach_state = DetachState::Idle;
+        Ok(true)
+    }
+
+    /// Switch to the previous Docker session while attached.
+    /// Returns true if switched, false if no previous session.
+    pub async fn switch_to_previous_session(&mut self) -> anyhow::Result<bool> {
+        use crate::core::BackendType;
+
+        // Get list of Docker sessions (only those support PTY)
+        let docker_sessions: Vec<_> = self
+            .sessions
+            .iter()
+            .filter(|s| s.backend == BackendType::Docker && s.backend_id.is_some())
+            .collect();
+
+        if docker_sessions.len() <= 1 {
+            return Ok(false);
+        }
+
+        // Find current session's index
+        let current_idx = docker_sessions
+            .iter()
+            .position(|s| Some(s.id) == self.attached_session_id);
+
+        let prev_idx = match current_idx {
+            Some(0) => docker_sessions.len() - 1,
+            Some(idx) => idx - 1,
+            None => 0,
+        };
+
+        let prev_session = docker_sessions[prev_idx];
+        let session_id = prev_session.id;
+        let container_id = prev_session.backend_id.clone().unwrap();
+
+        // Create PTY session if needed
+        if !self.pty_sessions.contains_key(&session_id) {
+            let (rows, cols) = self.terminal_size;
+            let pty_session =
+                PtySession::spawn_docker_attach(session_id, container_id, rows, cols).await?;
+            self.pty_sessions.insert(session_id, pty_session);
+        }
+
+        // Update selected index in session list to match
+        if let Some(idx) = self.sessions.iter().position(|s| s.id == session_id) {
+            self.selected_index = idx;
+        }
+
+        self.attached_session_id = Some(session_id);
+        self.detach_state = DetachState::Idle;
+        Ok(true)
+    }
+
+    /// Shutdown all PTY sessions gracefully.
+    pub async fn shutdown_all_pty_sessions(&mut self) {
+        for (_, mut session) in self.pty_sessions.drain() {
+            session.shutdown().await;
+        }
+        self.attached_session_id = None;
     }
 }
 
