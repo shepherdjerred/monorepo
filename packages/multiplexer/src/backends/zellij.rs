@@ -26,9 +26,13 @@ impl ZellijBackend {
 
     /// Build the args for running Claude in a new pane (exposed for testing)
     #[must_use]
-    pub fn build_new_pane_args(workdir: &Path, initial_prompt: &str) -> Vec<String> {
+    pub fn build_new_pane_args(workdir: &Path, initial_prompt: &str, plan_mode: bool) -> Vec<String> {
         let escaped_prompt = initial_prompt.replace('\'', "'\\''");
-        let claude_cmd = format!("claude --dangerously-skip-permissions '{escaped_prompt}'");
+        let claude_cmd = if plan_mode {
+            format!("claude --dangerously-skip-permissions --permission-mode plan '{escaped_prompt}'")
+        } else {
+            format!("claude --dangerously-skip-permissions '{escaped_prompt}'")
+        };
 
         vec![
             "action".to_string(),
@@ -69,7 +73,7 @@ impl ExecutionBackend for ZellijBackend {
         name: &str,
         workdir: &Path,
         initial_prompt: &str,
-        _options: super::traits::CreateOptions,
+        options: super::traits::CreateOptions,
     ) -> anyhow::Result<String> {
         // Create a new Zellij session in the background
         let args = Self::build_create_session_args(name);
@@ -90,7 +94,7 @@ impl ExecutionBackend for ZellijBackend {
         }
 
         // Run Claude in the session
-        let pane_args = Self::build_new_pane_args(workdir, initial_prompt);
+        let pane_args = Self::build_new_pane_args(workdir, initial_prompt, options.plan_mode);
         let output = Command::new("zellij")
             .args(&pane_args[..])
             .env("ZELLIJ_SESSION_NAME", name)
@@ -200,7 +204,16 @@ impl ZellijBackend {
         workdir: &Path,
         initial_prompt: &str,
     ) -> anyhow::Result<String> {
-        self.create(name, workdir, initial_prompt, super::traits::CreateOptions::default()).await
+        self.create(
+            name,
+            workdir,
+            initial_prompt,
+            super::traits::CreateOptions {
+                print_mode: false,
+                plan_mode: true, // Default to plan mode
+            },
+        )
+        .await
     }
 
     /// Check if a Zellij session exists (legacy name)
@@ -240,7 +253,7 @@ mod tests {
     #[test]
     fn test_new_pane_has_cwd() {
         let workdir = PathBuf::from("/my/work/dir");
-        let args = ZellijBackend::build_new_pane_args(&workdir, "test prompt");
+        let args = ZellijBackend::build_new_pane_args(&workdir, "test prompt", false);
 
         assert!(
             args.contains(&"--cwd".to_string()),
@@ -258,7 +271,7 @@ mod tests {
     /// Test that new-pane uses action subcommand
     #[test]
     fn test_new_pane_uses_action() {
-        let args = ZellijBackend::build_new_pane_args(&PathBuf::from("/workspace"), "test prompt");
+        let args = ZellijBackend::build_new_pane_args(&PathBuf::from("/workspace"), "test prompt", false);
 
         assert_eq!(args[0], "action", "Expected 'action' as first arg");
         assert_eq!(args[1], "new-pane", "Expected 'new-pane' as second arg");
@@ -268,7 +281,7 @@ mod tests {
     #[test]
     fn test_prompt_escaping() {
         let prompt_with_quotes = "Say 'hello world'";
-        let args = ZellijBackend::build_new_pane_args(&PathBuf::from("/workspace"), prompt_with_quotes);
+        let args = ZellijBackend::build_new_pane_args(&PathBuf::from("/workspace"), prompt_with_quotes, false);
 
         // Find the command argument (last one containing the prompt)
         let cmd_arg = args.last().unwrap();
@@ -294,7 +307,7 @@ mod tests {
     /// Test that new-pane command uses bash shell
     #[test]
     fn test_new_pane_uses_bash() {
-        let args = ZellijBackend::build_new_pane_args(&PathBuf::from("/workspace"), "test prompt");
+        let args = ZellijBackend::build_new_pane_args(&PathBuf::from("/workspace"), "test prompt", false);
 
         assert!(
             args.contains(&"bash".to_string()),
@@ -305,7 +318,7 @@ mod tests {
     /// Test that new-pane includes -- separator before command
     #[test]
     fn test_new_pane_has_separator() {
-        let args = ZellijBackend::build_new_pane_args(&PathBuf::from("/workspace"), "test prompt");
+        let args = ZellijBackend::build_new_pane_args(&PathBuf::from("/workspace"), "test prompt", false);
 
         assert!(
             args.contains(&"--".to_string()),
@@ -321,12 +334,42 @@ mod tests {
     /// Test that command includes claude with --dangerously-skip-permissions
     #[test]
     fn test_command_includes_dangerous_flag() {
-        let args = ZellijBackend::build_new_pane_args(&PathBuf::from("/workspace"), "test prompt");
+        let args = ZellijBackend::build_new_pane_args(&PathBuf::from("/workspace"), "test prompt", false);
 
         let cmd_arg = args.last().unwrap();
         assert!(
             cmd_arg.contains("--dangerously-skip-permissions"),
             "Expected --dangerously-skip-permissions flag: {cmd_arg}"
+        );
+    }
+
+    /// Test that plan mode adds --permission-mode plan flag
+    #[test]
+    fn test_plan_mode_adds_flag() {
+        let args = ZellijBackend::build_new_pane_args(
+            &PathBuf::from("/workspace"),
+            "test prompt",
+            true, // plan_mode = true
+        );
+        let cmd_arg = args.last().unwrap();
+        assert!(
+            cmd_arg.contains("--permission-mode plan"),
+            "Plan mode should add --permission-mode plan flag: {cmd_arg}"
+        );
+    }
+
+    /// Test that plan mode disabled does not add permission-mode flag
+    #[test]
+    fn test_plan_mode_disabled() {
+        let args = ZellijBackend::build_new_pane_args(
+            &PathBuf::from("/workspace"),
+            "test prompt",
+            false, // plan_mode = false
+        );
+        let cmd_arg = args.last().unwrap();
+        assert!(
+            !cmd_arg.contains("--permission-mode"),
+            "Non-plan mode should not include --permission-mode flag: {cmd_arg}"
         );
     }
 }
