@@ -5,7 +5,7 @@
 
 mod common;
 
-use multiplexer::backends::{DockerBackend, ExecutionBackend};
+use multiplexer::backends::{CreateOptions, DockerBackend, ExecutionBackend};
 use tempfile::TempDir;
 
 /// Full end-to-end test with Docker backend
@@ -33,7 +33,7 @@ async fn test_docker_container_lifecycle() {
 
     // Create container (using ExecutionBackend trait method)
     let result = docker
-        .create(&container_name, workdir, "echo 'Test container'")
+        .create(&container_name, workdir, "echo 'Test container'", CreateOptions::default())
         .await;
 
     match result {

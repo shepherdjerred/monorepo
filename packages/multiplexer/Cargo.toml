@@ -74,6 +74,7 @@ time = "0.3"
 [dev-dependencies]
 cargo-husky = { version = "1", features = ["precommit-hook", "run-cargo-fmt", "run-cargo-clippy"] }
 tempfile = "3"
+base64 = "0.22"
 
 # HTTP server/client for integration tests
 axum = "0.7"
