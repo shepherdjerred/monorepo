@@ -1,14 +1,17 @@
 //! Port allocation for per-session HTTP proxies.
 
 use std::collections::HashMap;
-use std::sync::atomic::{AtomicU16, Ordering};
 use tokio::sync::RwLock;
 use uuid::Uuid;
 
 /// Allocates unique proxy ports for sessions
 pub struct PortAllocator {
-    next_port: AtomicU16,
-    allocated: RwLock<HashMap<u16, Uuid>>,
+    state: RwLock<AllocatorState>,
+}
+
+struct AllocatorState {
+    next_port: u16,
+    allocated: HashMap<u16, Uuid>,
 }
 
 impl PortAllocator {
@@ -18,21 +21,23 @@ impl PortAllocator {
     /// Create a new port allocator
     pub fn new() -> Self {
         Self {
-            next_port: AtomicU16::new(0),
-            allocated: RwLock::new(HashMap::new()),
+            state: RwLock::new(AllocatorState {
+                next_port: 0,
+                allocated: HashMap::new(),
+            }),
         }
     }
 
     /// Allocate a port for a session
     pub async fn allocate(&self, session_id: Uuid) -> anyhow::Result<u16> {
-        let mut allocated = self.allocated.write().await;
+        let mut state = self.state.write().await;
 
         for _ in 0..Self::MAX_SESSIONS {
-            let idx = self.next_port.fetch_add(1, Ordering::SeqCst);
-            let port = Self::BASE_PORT + (idx % Self::MAX_SESSIONS);
+            let port = Self::BASE_PORT + (state.next_port % Self::MAX_SESSIONS);
+            state.next_port = state.next_port.wrapping_add(1);
 
-            if !allocated.contains_key(&port) {
-                allocated.insert(port, session_id);
+            if !state.allocated.contains_key(&port) {
+                state.allocated.insert(port, session_id);
                 tracing::info!(port, session_id = %session_id, "Allocated proxy port");
                 return Ok(port);
             }
@@ -43,13 +48,13 @@ impl PortAllocator {
 
     /// Release a port
     pub async fn release(&self, port: u16) {
-        self.allocated.write().await.remove(&port);
+        self.state.write().await.allocated.remove(&port);
         tracing::info!(port, "Released proxy port");
     }
 
     /// Get the session ID for a port
     pub async fn get_session_id(&self, port: u16) -> Option<Uuid> {
-        self.allocated.read().await.get(&port).copied()
+        self.state.read().await.allocated.get(&port).copied()
     }
 }
 

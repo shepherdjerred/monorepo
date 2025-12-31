@@ -50,6 +50,9 @@ pub struct Session {
     /// Access mode for proxy filtering
     pub access_mode: AccessMode,
 
+    /// Port for session-specific HTTP proxy (Docker only)
+    pub proxy_port: Option<u16>,
+
     /// When the session was created
     pub created_at: DateTime<Utc>,
 
@@ -99,6 +102,7 @@ impl Session {
             pr_url: None,
             pr_check_status: None,
             access_mode: config.access_mode,
+            proxy_port: None,
             created_at: now,
             updated_at: now,
         }
@@ -131,6 +135,12 @@ impl Session {
     /// Update access mode
     pub fn set_access_mode(&mut self, mode: AccessMode) {
         self.access_mode = mode;
+        self.updated_at = Utc::now();
+    }
+
+    /// Set the proxy port
+    pub fn set_proxy_port(&mut self, port: u16) {
+        self.proxy_port = Some(port);
         self.updated_at = Utc::now();
     }
 }
