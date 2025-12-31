@@ -132,6 +132,7 @@ impl SessionManager {
         dangerous_skip_checks: bool,
         print_mode: bool,
         plan_mode: bool,
+        images: Vec<String>,
     ) -> anyhow::Result<(Session, Option<Vec<String>>)> {
         // Generate unique session name with retry logic
         const MAX_ATTEMPTS: usize = 3;
@@ -186,6 +187,7 @@ impl SessionManager {
         let create_options = crate::backends::CreateOptions {
             print_mode,
             plan_mode,
+            images,
         };
         let backend_id = match backend {
             BackendType::Zellij => {
