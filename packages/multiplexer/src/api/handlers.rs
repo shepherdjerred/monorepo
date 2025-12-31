@@ -134,11 +134,14 @@ pub async fn handle_request(request: Request, manager: &SessionManager) -> Respo
 
         Request::GetRecentRepos => match manager.get_recent_repos().await {
             Ok(repos) => {
-                let repo_paths: Vec<String> = repos
+                let repo_dtos: Vec<super::protocol::RecentRepoDto> = repos
                     .into_iter()
-                    .map(|r| r.repo_path.to_string_lossy().to_string())
+                    .map(|r| super::protocol::RecentRepoDto {
+                        repo_path: r.repo_path.to_string_lossy().to_string(),
+                        last_used: r.last_used.to_rfc3339(),
+                    })
                     .collect();
-                Response::RecentRepos(repo_paths)
+                Response::RecentRepos(repo_dtos)
             }
             Err(e) => {
                 tracing::error!(error = %e, "Failed to get recent repos");
