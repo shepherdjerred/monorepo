@@ -21,7 +21,7 @@ use futures::StreamExt;
 use ratatui::{Terminal, backend::CrosstermBackend};
 
 use crate::core::BackendType;
-use crate::tui::app::{AppMode, CreateProgress};
+use crate::tui::app::{AppMode, CreateProgress, DetachState};
 
 /// Run the TUI application
 ///
@@ -68,6 +68,9 @@ pub async fn run() -> anyhow::Result<()> {
     result
 }
 
+/// Detach timeout for the double-tap Ctrl+] mechanism.
+const DETACH_TIMEOUT: Duration = Duration::from_millis(300);
+
 async fn run_main_loop(
     terminal: &mut Terminal<CrosstermBackend<io::Stdout>>,
     app: &mut App,
@@ -75,8 +78,12 @@ async fn run_main_loop(
     // Create async event stream
     let mut event_stream = events::create_event_stream();
 
-    // Tick interval for animations
-    let mut tick_interval = tokio::time::interval(Duration::from_millis(100));
+    // Tick interval for animations and detach timeout checking
+    let mut tick_interval = tokio::time::interval(Duration::from_millis(50));
+
+    // Set initial terminal size
+    let size = terminal.size()?;
+    app.terminal_size = (size.height, size.width);
 
     loop {
         // Draw UI
@@ -92,6 +99,12 @@ async fn run_main_loop(
                 };
 
                 let event = event_result?;
+
+                // Handle resize events
+                if let Event::Resize(cols, rows) = event {
+                    app.set_terminal_size(rows, cols).await;
+                    continue;
+                }
 
                 // Handle paste events
                 if let Event::Paste(pasted_text) = &event {
@@ -109,51 +122,101 @@ async fn run_main_loop(
                     // Get backend type before borrowing for attach command
                     let backend_type = app.selected_session().map(|s| s.backend);
 
-                    if let Ok(Some(command)) = app.get_attach_command().await {
-                        // Suspend TUI and run attach command
-                        disable_raw_mode()?;
-                        execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
-
-                        // Show detach hint before attaching
-                        if let Some(backend) = backend_type {
-                            let detach_hint = match backend {
-                                BackendType::Zellij => "Ctrl+O, d",
-                                BackendType::Docker => "Ctrl+P, Ctrl+Q",
-                            };
-                            println!("Attaching... Detach with {detach_hint}");
-                        } else {
-                            println!("Attaching...");
+                    match backend_type {
+                        Some(BackendType::Docker) => {
+                            // Use PTY-based attachment for Docker
+                            match app.attach_selected_session().await {
+                                Ok(()) => {
+                                    app.status_message = Some("Attached via PTY - Press Ctrl+] to detach".to_string());
+                                }
+                                Err(e) => {
+                                    app.status_message = Some(format!("Attach failed: {e}"));
+                                }
+                            }
+                            continue;
                         }
+                        Some(BackendType::Zellij) => {
+                            // Use external command for Zellij (legacy behavior)
+                            if let Ok(Some(command)) = app.get_attach_command().await {
+                                // Suspend TUI and run attach command
+                                disable_raw_mode()?;
+                                execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
 
-                        // Execute attach command
-                        let status = std::process::Command::new(&command[0])
-                            .args(&command[1..])
-                            .status();
+                                println!("Attaching... Detach with Ctrl+O, d");
 
-                        // Restore TUI
-                        enable_raw_mode()?;
-                        execute!(terminal.backend_mut(), EnterAlternateScreen)?;
-                        terminal.clear()?;
+                                // Execute attach command
+                                let status = std::process::Command::new(&command[0])
+                                    .args(&command[1..])
+                                    .status();
 
-                        // Recreate event stream after restoring terminal
-                        event_stream = events::create_event_stream();
+                                // Restore TUI
+                                enable_raw_mode()?;
+                                execute!(terminal.backend_mut(), EnterAlternateScreen)?;
+                                terminal.clear()?;
 
-                        if let Err(e) = status {
-                            app.status_message = Some(format!("Attach failed: {e}"));
+                                // Recreate event stream after restoring terminal
+                                event_stream = events::create_event_stream();
+
+                                if let Err(e) = status {
+                                    app.status_message = Some(format!("Attach failed: {e}"));
+                                }
+
+                                // Refresh sessions after returning
+                                let _ = app.refresh_sessions().await;
+                                continue;
+                            }
                         }
-
-                        // Refresh sessions after returning
-                        let _ = app.refresh_sessions().await;
-                        continue;
+                        None => {
+                            // No session selected
+                        }
                     }
                 }
 
                 events::handle_key_event(app, key).await?;
             }
 
-            // Handle tick for animations
+            // Handle tick for animations and detach timeout
             _ = tick_interval.tick() => {
                 app.tick();
+
+                // Check for detach timeout when in Attached mode
+                if app.mode == AppMode::Attached {
+                    if let DetachState::Pending { since } = &app.detach_state {
+                        if since.elapsed() >= DETACH_TIMEOUT {
+                            // Timeout expired - detach
+                            app.detach();
+                            app.status_message = Some("Detached from session".to_string());
+                        }
+                    }
+                }
+            }
+        }
+
+        // Poll for PTY events when attached (non-blocking)
+        // Collect events first to avoid borrow issues
+        let mut pty_events = Vec::new();
+        if app.mode == AppMode::Attached {
+            if let Some(pty_session) = app.attached_pty_session_mut() {
+                while let Some(event) = pty_session.try_recv_event() {
+                    pty_events.push(event);
+                }
+            }
+        }
+
+        // Process collected PTY events
+        for event in pty_events {
+            match event {
+                attached::PtyEvent::Output => {
+                    // Terminal buffer is already updated, just redraw
+                }
+                attached::PtyEvent::Exited(code) => {
+                    app.status_message = Some(format!("Session exited with code {code}"));
+                    app.detach();
+                }
+                attached::PtyEvent::Error(msg) => {
+                    app.status_message = Some(format!("PTY error: {msg}"));
+                    app.detach();
+                }
             }
         }
 
@@ -198,6 +261,8 @@ async fn run_main_loop(
         }
 
         if app.should_quit {
+            // Shutdown all PTY sessions before quitting
+            app.shutdown_all_pty_sessions().await;
             break;
         }
     }

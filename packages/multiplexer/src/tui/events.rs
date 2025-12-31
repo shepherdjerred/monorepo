@@ -78,6 +78,7 @@ pub async fn handle_key_event(app: &mut App, key: KeyEvent) -> anyhow::Result<()
         AppMode::CreateDialog => handle_create_dialog_key(app, key).await?,
         AppMode::ConfirmDelete => handle_confirm_delete_key(app, key).await?,
         AppMode::Help => handle_help_key(app, key),
+        AppMode::Attached => handle_attached_key(app, key).await?,
     }
     Ok(())
 }
@@ -418,4 +419,63 @@ fn handle_help_key(app: &mut App, key: KeyEvent) {
         }
         _ => {}
     }
+}
+
+/// Handle key events when attached to a session via PTY.
+///
+/// Most keys are encoded and sent to the PTY. Ctrl+] is the detach key
+/// which uses a double-tap mechanism (single press waits 300ms for second,
+/// double-tap sends the literal Ctrl+] character).
+async fn handle_attached_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
+    use crate::tui::app::DetachState;
+    use crate::tui::attached::encode_key;
+    use std::time::Duration;
+
+    const DETACH_TIMEOUT: Duration = Duration::from_millis(300);
+
+    // Check for Ctrl+] (our detach key)
+    if key.modifiers.contains(KeyModifiers::CONTROL) && key.code == KeyCode::Char(']') {
+        match &app.detach_state {
+            DetachState::Idle => {
+                // First press - start waiting for second
+                app.detach_state = DetachState::Pending {
+                    since: std::time::Instant::now(),
+                };
+                // Don't send anything yet, wait for timeout or second press
+                return Ok(());
+            }
+            DetachState::Pending { since } => {
+                if since.elapsed() < DETACH_TIMEOUT {
+                    // Double-tap detected - send literal Ctrl+]
+                    app.detach_state = DetachState::Idle;
+                    app.send_to_pty(vec![0x1d]).await?; // GS (Ctrl+])
+                } else {
+                    // Timeout expired - this should have been handled by main loop
+                    // but if we get here, treat as detach
+                    app.detach();
+                }
+                return Ok(());
+            }
+        }
+    }
+
+    // If we were pending detach and got a different key, send Ctrl+] then this key
+    if let DetachState::Pending { since } = &app.detach_state {
+        if since.elapsed() >= DETACH_TIMEOUT {
+            // Timeout - detach
+            app.detach();
+            return Ok(());
+        }
+        // Not a second Ctrl+], so send the first one as literal and continue
+        app.send_to_pty(vec![0x1d]).await?;
+        app.detach_state = DetachState::Idle;
+    }
+
+    // Encode the key and send to PTY
+    let encoded = encode_key(&key);
+    if !encoded.is_empty() {
+        app.send_to_pty(encoded).await?;
+    }
+
+    Ok(())
 }

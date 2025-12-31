@@ -43,16 +43,51 @@ pub fn render(frame: &mut Frame, app: &App) {
             frame.render_widget(Clear, dialog_area);
             render_help(frame, app, dialog_area);
         }
-        AppMode::SessionList => {}
+        AppMode::SessionList | AppMode::Attached => {}
     }
 }
 
 fn render_main_content(frame: &mut Frame, app: &App, area: Rect) {
     if let Some(error) = &app.connection_error {
         render_connection_error(frame, error, area);
+    } else if app.mode == AppMode::Attached {
+        render_attached_terminal(frame, app, area);
     } else {
         session_list::render(frame, app, area);
     }
+}
+
+/// Render the attached terminal view.
+fn render_attached_terminal(frame: &mut Frame, app: &App, area: Rect) {
+    // For now, just show a placeholder since we can't access the terminal buffer synchronously
+    // The actual rendering will be integrated in Phase 8 when we have access to the buffer
+    let block = Block::default()
+        .title(" Attached - Press Ctrl+] to detach ")
+        .borders(Borders::ALL)
+        .border_style(Style::default().fg(Color::Green));
+
+    let text = if app.attached_session_id.is_some() {
+        vec![
+            Line::from(""),
+            Line::from(Span::styled(
+                "Terminal session active",
+                Style::default().fg(Color::Green),
+            )),
+            Line::from(""),
+            Line::from("Press Ctrl+] to detach (double-tap sends literal Ctrl+])"),
+        ]
+    } else {
+        vec![
+            Line::from(""),
+            Line::from(Span::styled(
+                "No session attached",
+                Style::default().fg(Color::Red),
+            )),
+        ]
+    };
+
+    let paragraph = Paragraph::new(text).block(block);
+    frame.render_widget(paragraph, area);
 }
 
 fn render_connection_error(frame: &mut Frame, error: &str, area: Rect) {

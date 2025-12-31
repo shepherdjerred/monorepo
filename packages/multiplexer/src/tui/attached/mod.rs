@@ -13,5 +13,5 @@ pub mod terminal_buffer;
 
 pub use input::encode_key;
 pub use pty_session::{PtyEvent, PtySession, SessionStatus};
-pub use renderer::render_terminal;
+pub use renderer::{TerminalWidget, render_terminal};
 pub use terminal_buffer::TerminalBuffer;
