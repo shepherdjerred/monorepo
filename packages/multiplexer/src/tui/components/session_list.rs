@@ -73,9 +73,33 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
                 .and_then(|n| n.to_str())
                 .unwrap_or("unknown");
 
-            let line = Line::from(vec![
+            // Check if this session is being deleted
+            let is_deleting = app
+                .deleting_session_id
+                .as_ref()
+                .is_some_and(|id| id == &session.id.to_string());
+
+            let mut spans = vec![];
+
+            // Add deletion indicator if deleting
+            if is_deleting {
+                let spinner = match app.spinner_tick % 4 {
+                    0 => "⠋",
+                    1 => "⠙",
+                    2 => "⠹",
+                    _ => "⠸",
+                };
+                spans.push(Span::styled(
+                    format!("{spinner} "),
+                    Style::default().fg(Color::Yellow),
+                ));
+            } else {
+                spans.push(Span::raw("  "));
+            }
+
+            spans.extend(vec![
                 Span::styled(
-                    format!("{:24}", session.name),
+                    format!("{:22}", session.name),
                     Style::default().add_modifier(Modifier::BOLD),
                 ),
                 Span::raw(format!("{repo_name:20}")),
@@ -84,6 +108,8 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
                 Span::raw(format!("{pr_text:12}")),
                 check_indicator,
             ]);
+
+            let line = Line::from(spans);
 
             ListItem::new(line)
         })
