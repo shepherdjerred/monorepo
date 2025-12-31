@@ -164,7 +164,9 @@ async fn main() -> anyhow::Result<()> {
                     agent: core::session::AgentType::ClaudeCode,
                     dangerous_skip_checks,
                     print_mode: print,
+                    plan_mode: true, // Default to plan mode for safety
                     access_mode,
+                    images: vec![],
                 })
                 .await?;
 

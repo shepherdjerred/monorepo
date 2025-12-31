@@ -22,6 +22,6 @@ pub trait Agent: Send + Sync {
     /// Get the current state of the agent by analyzing output
     fn detect_state(&self, output: &str) -> AgentState;
 
-    /// Get the command to start the agent with a prompt
-    fn start_command(&self, prompt: &str) -> Vec<String>;
+    /// Get the command to start the agent with a prompt and optional images
+    fn start_command(&self, prompt: &str, images: &[String]) -> Vec<String>;
 }

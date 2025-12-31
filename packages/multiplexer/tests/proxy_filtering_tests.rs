@@ -16,7 +16,7 @@ use std::time::Duration;
 use multiplexer::backends::{ExecutionBackend, GitOperations, MockExecutionBackend, MockGitBackend};
 use multiplexer::core::{AccessMode, AgentType, BackendType, SessionManager, SessionStatus};
 use multiplexer::proxy::{AuditLogger, Credentials, HttpAuthProxy, ProxyCa, ProxyConfig, ProxyManager};
-use multiplexer::store::SqliteStore;
+use multiplexer::store::{SqliteStore, Store};
 use tempfile::TempDir;
 
 /// Helper to create a test environment with proxy support.
@@ -96,7 +96,9 @@ async fn test_create_session_with_read_only_mode() {
             AgentType::ClaudeCode,
             true,
             false, // print_mode
+            false, // plan_mode
             AccessMode::ReadOnly,
+            vec![], // images
         )
         .await
         .expect("Failed to create session");
@@ -123,7 +125,9 @@ async fn test_create_session_with_read_write_mode() {
             AgentType::ClaudeCode,
             true,
             false, // print_mode
+            false, // plan_mode
             AccessMode::ReadWrite,
+            vec![], // images
         )
         .await
         .expect("Failed to create session");
@@ -145,8 +149,10 @@ async fn test_zellij_backend_ignores_proxy_port() {
             BackendType::Zellij,
             AgentType::ClaudeCode,
             true,
-            false,
+            false, // print_mode
+            false, // plan_mode
             AccessMode::ReadOnly,
+            vec![], // images
         )
         .await
         .expect("Failed to create session");
@@ -170,8 +176,10 @@ async fn test_update_access_mode_by_name() {
             BackendType::Docker,
             AgentType::ClaudeCode,
             true,
-            false,
+            false, // print_mode
+            false, // plan_mode
             AccessMode::ReadOnly,
+            vec![], // images
         )
         .await
         .expect("Failed to create session");
@@ -205,8 +213,10 @@ async fn test_update_access_mode_by_id() {
             BackendType::Docker,
             AgentType::ClaudeCode,
             true,
-            false,
+            false, // print_mode
+            false, // plan_mode
             AccessMode::ReadWrite,
+            vec![], // images
         )
         .await
         .expect("Failed to create session");
@@ -345,8 +355,10 @@ async fn test_access_mode_persists_across_restarts() {
                 BackendType::Docker,
                 AgentType::ClaudeCode,
                 true,
-                false,
+                false, // print_mode
+                false, // plan_mode
                 AccessMode::ReadOnly,
+                vec![], // images
             )
             .await
             .expect("Failed to create session");
@@ -469,8 +481,10 @@ async fn test_delete_session_cleans_up_proxy() {
             BackendType::Docker,
             AgentType::ClaudeCode,
             true,
-            false,
+            false, // print_mode
+            false, // plan_mode
             AccessMode::ReadOnly,
+            vec![], // images
         )
         .await
         .expect("Failed to create session");
@@ -550,7 +564,7 @@ fn test_access_mode_default() {
 #[test]
 fn test_is_write_operation() {
     use http::Method;
-    use multiplexer::proxy::filter::{is_read_operation, is_write_operation};
+    use multiplexer::proxy::{is_read_operation, is_write_operation};
 
     // Write operations (should be blocked in read-only mode)
     assert!(is_write_operation(&Method::POST));
@@ -571,7 +585,7 @@ fn test_is_write_operation() {
 #[test]
 fn test_is_read_operation() {
     use http::Method;
-    use multiplexer::proxy::filter::is_read_operation;
+    use multiplexer::proxy::is_read_operation;
 
     // Only these methods are considered safe read operations
     assert!(is_read_operation(&Method::GET));

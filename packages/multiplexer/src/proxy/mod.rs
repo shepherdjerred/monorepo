@@ -19,7 +19,7 @@ pub use audit::{AuditEntry, AuditLogger};
 pub use ca::ProxyCa;
 pub use config::{Credentials, ProxyConfig};
 pub use container_config::generate_container_configs;
-pub use filter::is_write_operation;
+pub use filter::{is_read_operation, is_write_operation};
 pub use http_proxy::HttpAuthProxy;
 pub use k8s_proxy::KubernetesProxy;
 pub use manager::ProxyManager;

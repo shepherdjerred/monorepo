@@ -143,6 +143,7 @@ impl SessionManager {
         print_mode: bool,
         plan_mode: bool,
         access_mode: super::session::AccessMode,
+        images: Vec<String>,
     ) -> anyhow::Result<(Session, Option<Vec<String>>)> {
         // Generate unique session name with retry logic
         const MAX_ATTEMPTS: usize = 3;
@@ -228,6 +229,7 @@ impl SessionManager {
             print_mode,
             plan_mode,
             session_proxy_port: proxy_port,
+            images,
         };
         let backend_id = match backend {
             BackendType::Zellij => {
