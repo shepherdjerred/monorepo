@@ -37,6 +37,8 @@ pub struct CreateOptions {
     /// Run in print mode (non-interactive, outputs response and exits).
     /// Only applicable to Docker backend.
     pub print_mode: bool,
+    /// Image file paths to attach to initial prompt
+    pub images: Vec<String>,
 }
 
 /// Trait for execution backends (Zellij, Docker, etc.)

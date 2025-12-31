@@ -147,6 +147,7 @@ async fn main() -> anyhow::Result<()> {
                     agent: core::session::AgentType::ClaudeCode,
                     dangerous_skip_checks,
                     print_mode: print,
+                    images: vec![],
                 })
                 .await?;
 

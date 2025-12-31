@@ -60,6 +60,15 @@ pub struct CreateSessionRequest {
     /// Run in print mode (non-interactive, outputs response and exits)
     #[serde(default)]
     pub print_mode: bool,
+
+    /// Image file paths to attach to initial prompt.
+    ///
+    /// Paths should be absolute or relative to the worktree directory.
+    /// The TUI does not currently provide a file picker for selecting images -
+    /// this field is primarily used when creating sessions via the API.
+    /// Images will be passed to Claude Code using the `--image` flag.
+    #[serde(default)]
+    pub images: Vec<String>,
 }
 
 /// Progress step during session creation
