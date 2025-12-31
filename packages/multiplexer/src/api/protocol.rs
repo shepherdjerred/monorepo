@@ -33,6 +33,9 @@ pub enum Request {
 
     /// Subscribe to real-time updates
     Subscribe,
+
+    /// Get recent repositories
+    GetRecentRepos,
 }
 
 /// Request to create a new session
@@ -108,6 +111,9 @@ pub enum Response {
 
     /// Subscription confirmed
     Subscribed,
+
+    /// List of recent repositories
+    RecentRepos(Vec<String>),
 
     /// Error response
     Error { code: String, message: String },

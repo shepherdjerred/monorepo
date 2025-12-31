@@ -38,4 +38,7 @@ pub trait ApiClient: Send + Sync {
 
     /// Reconcile state with reality.
     async fn reconcile(&mut self) -> anyhow::Result<ReconcileReportDto>;
+
+    /// Get recent repositories.
+    async fn get_recent_repos(&mut self) -> anyhow::Result<Vec<String>>;
 }
