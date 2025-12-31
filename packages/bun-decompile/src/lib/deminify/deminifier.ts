@@ -1,5 +1,9 @@
 import { DeminifyCache, shouldCache, hashSource } from "./cache.ts";
-import { buildCallGraph, getFunctionContext, getProcessingOrder } from "./call-graph.ts";
+import {
+  buildCallGraph,
+  getFunctionContext,
+  getProcessingOrder,
+} from "./call-graph.ts";
 import { ClaudeClient, formatCostEstimate } from "./claude-client.ts";
 import { OpenAIClient } from "./openai-client.ts";
 import { BatchDeminifyClient } from "./batch-client.ts";
@@ -9,6 +13,7 @@ import {
   loadBatchState,
   clearBatchState,
   formatBatchState,
+  getProjectId,
 } from "./batch-state.ts";
 import { reassemble, verifyReassembly } from "./reassembler.ts";
 import { BatchProcessor } from "./batch-processor.ts";
@@ -110,7 +115,7 @@ export class Deminifier {
   /** De-minify a single JavaScript file */
   async deminifyFile(
     source: string,
-    options?: DeminifyFileOptions,
+    options?: DeminifyFileOptions
   ): Promise<string> {
     const startTime = Date.now();
     this.stats = this.initStats();
@@ -182,7 +187,11 @@ export class Deminifier {
     }
 
     // Phase 2: Estimate cost and confirm
-    emitProgress({ phase: "analyzing", current: 0, total: functionsToProcess.length });
+    emitProgress({
+      phase: "analyzing",
+      current: 0,
+      total: functionsToProcess.length,
+    });
 
     const estimate = this.client.estimateCost(functionsToProcess);
 
@@ -203,7 +212,7 @@ export class Deminifier {
         graph,
         functionsToProcess,
         fileContext,
-        options,
+        options
       );
     }
 
@@ -215,7 +224,7 @@ export class Deminifier {
         graph,
         options,
         startTime,
-        emitProgress,
+        emitProgress
       );
     }
 
@@ -242,14 +251,21 @@ export class Deminifier {
       });
 
       try {
-        const result = await this.processFunction(func, graph, results, fileContext);
+        const result = await this.processFunction(
+          func,
+          graph,
+          results,
+          fileContext
+        );
         if (result) {
           results.set(funcId, result);
           confidences.push(result.confidence);
         }
       } catch (error) {
         this.stats.errors++;
-        console.error(`Error processing ${funcId}: ${(error as Error).message}`);
+        console.error(
+          `Error processing ${funcId}: ${(error as Error).message}`
+        );
       }
 
       processed++;
@@ -329,7 +345,7 @@ export class Deminifier {
     func: ExtractedFunction,
     graph: CallGraph,
     results: Map<string, DeminifyResult>,
-    fileContext: FileContext,
+    fileContext: FileContext
   ): Promise<DeminifyResult | null> {
     // Check cache first
     if (this.cache && shouldCache(func)) {
@@ -373,12 +389,12 @@ export class Deminifier {
     graph: CallGraph,
     options: DeminifyFileOptions | undefined,
     startTime: number,
-    emitProgress: (progress: DeminifyProgress) => void,
+    emitProgress: (progress: DeminifyProgress) => void
   ): Promise<string> {
     // Create function cache for batch processor
     const functionCache = new FunctionCache(
       `${this.config.cacheDir}/functions`,
-      this.config.model,
+      this.config.model
     );
     await functionCache.init();
 
@@ -401,7 +417,8 @@ export class Deminifier {
     });
 
     const result = await processor.processAll(source, graph, {
-      maxBatchTokens: options?.maxBatchTokens ?? 60000,
+      // maxBatchTokens computed from model context limit if not specified
+      maxBatchTokens: options?.maxBatchTokens,
       verbose: this.config.verbose,
       onProgress: (progress) => {
         const progressUpdate: DeminifyProgress = {
@@ -451,11 +468,13 @@ export class Deminifier {
     graph: CallGraph,
     functionsToProcess: ExtractedFunction[],
     fileContext: FileContext,
-    options: DeminifyFileOptions,
+    options: DeminifyFileOptions
   ): Promise<string> {
     // Batch mode only available for Anthropic
     if (!this.batchClient) {
-      throw new Error("Batch mode is only available with Anthropic provider. Use --provider anthropic or remove --batch flag.");
+      throw new Error(
+        "Batch mode is only available with Anthropic provider. Use --provider anthropic or remove --batch flag."
+      );
     }
 
     const fileName = options.fileName ?? "unknown.js";
@@ -463,7 +482,14 @@ export class Deminifier {
     // Check for resume
     if (options.resumeBatchId) {
       console.log(`Resuming batch: ${options.resumeBatchId}`);
-      return this.resumeBatch(source, graph, functionsToProcess, fileContext, options.resumeBatchId, options);
+      return this.resumeBatch(
+        source,
+        graph,
+        functionsToProcess,
+        fileContext,
+        options.resumeBatchId,
+        options
+      );
     }
 
     // Check for existing pending batch
@@ -471,17 +497,26 @@ export class Deminifier {
     if (existingState && existingState.sourceHash === hashSource(source)) {
       console.log("\nFound pending batch for this file:");
       console.log(formatBatchState(existingState));
-      console.log("\nUse --resume to continue, or delete the cache to start fresh.");
+      console.log(
+        "\nUse --resume to continue, or delete the cache to start fresh."
+      );
       throw new Error("Pending batch exists. Use --resume or clear cache.");
     }
 
     // Build all contexts upfront (batch can't do incremental context)
-    console.log(`\nBuilding contexts for ${functionsToProcess.length} functions...`);
+    console.log(
+      `\nBuilding contexts for ${functionsToProcess.length} functions...`
+    );
     const contexts = new Map<string, DeminifyContext>();
 
     for (const func of functionsToProcess) {
       // For batch, we use empty results since we can't do incremental
-      const context = getFunctionContext(graph, func.id, new Map(), fileContext);
+      const context = getFunctionContext(
+        graph,
+        func.id,
+        new Map(),
+        fileContext
+      );
       contexts.set(func.id, context);
     }
 
@@ -489,16 +524,20 @@ export class Deminifier {
     console.log("Submitting batch to Anthropic API...");
     const batchId = await this.batchClient.createBatch(contexts);
 
-    // Save state for resume
-    await saveBatchState({
-      batchId,
-      sourceHash: hashSource(source),
-      outputPath: options.outputPath ?? "./deminified",
-      createdAt: Date.now(),
-      model: this.config.model,
-      functionCount: functionsToProcess.length,
-      fileName,
-    }, this.config.cacheDir);
+    // Save state for resume (includes projectId for isolation in shared environments)
+    await saveBatchState(
+      {
+        batchId,
+        sourceHash: hashSource(source),
+        outputPath: options.outputPath ?? "./deminified",
+        createdAt: Date.now(),
+        model: this.config.model,
+        functionCount: functionsToProcess.length,
+        fileName,
+        projectId: getProjectId(),
+      },
+      this.config.cacheDir
+    );
 
     console.log(`\nBatch submitted: ${batchId}`);
     console.log("Waiting for results (typically 30-60 minutes)...\n");
@@ -509,8 +548,13 @@ export class Deminifier {
         options.onBatchStatus?.(status);
         if (!options.onBatchStatus) {
           // Default console output
-          const pct = status.total > 0 ? Math.round((status.succeeded / status.total) * 100) : 0;
-          process.stdout.write(`\r  Progress: ${status.succeeded}/${status.total} (${pct}%) | Errors: ${status.errored}     `);
+          const pct =
+            status.total > 0
+              ? Math.round((status.succeeded / status.total) * 100)
+              : 0;
+          process.stdout.write(
+            `\r  Progress: ${status.succeeded}/${status.total} (${pct}%) | Errors: ${status.errored}     `
+          );
         }
       },
     });
@@ -564,7 +608,7 @@ export class Deminifier {
     functionsToProcess: ExtractedFunction[],
     fileContext: FileContext,
     batchId: string,
-    options: DeminifyFileOptions,
+    options: DeminifyFileOptions
   ): Promise<string> {
     if (!this.batchClient) {
       throw new Error("Batch mode is only available with Anthropic provider.");
@@ -573,7 +617,12 @@ export class Deminifier {
     // Rebuild contexts
     const contexts = new Map<string, DeminifyContext>();
     for (const func of functionsToProcess) {
-      const context = getFunctionContext(graph, func.id, new Map(), fileContext);
+      const context = getFunctionContext(
+        graph,
+        func.id,
+        new Map(),
+        fileContext
+      );
       contexts.set(func.id, context);
     }
 
@@ -581,15 +630,20 @@ export class Deminifier {
     const status = await this.batchClient.getBatchStatus(batchId);
 
     if (status.status === "in_progress") {
-      console.log(`Batch still processing: ${status.succeeded}/${status.total} complete`);
+      console.log(
+        `Batch still processing: ${status.succeeded}/${status.total} complete`
+      );
       console.log("Waiting for completion...\n");
 
       await this.batchClient.waitForCompletion(batchId, {
         onStatusUpdate: (s) => {
           options.onBatchStatus?.(s);
           if (!options.onBatchStatus) {
-            const pct = s.total > 0 ? Math.round((s.succeeded / s.total) * 100) : 0;
-            process.stdout.write(`\r  Progress: ${s.succeeded}/${s.total} (${pct}%) | Errors: ${s.errored}     `);
+            const pct =
+              s.total > 0 ? Math.round((s.succeeded / s.total) * 100) : 0;
+            process.stdout.write(
+              `\r  Progress: ${s.succeeded}/${s.total} (${pct}%) | Errors: ${s.errored}     `
+            );
           }
         },
       });
@@ -652,23 +706,26 @@ export class Deminifier {
 export async function deminify(
   source: string,
   config: DeminifyConfig,
-  options?: DeminifyFileOptions,
+  options?: DeminifyFileOptions
 ): Promise<string> {
   const deminifier = new Deminifier(config);
   return deminifier.deminifyFile(source, options);
 }
 
-/** Create default config with API key */
+/** Create default config with API key and output path */
 export function createConfig(
   apiKey: string,
-  overrides?: Partial<DeminifyConfig>,
+  outputPath: string,
+  overrides?: Partial<DeminifyConfig>
 ): DeminifyConfig {
+  const cacheDir = `${outputPath}/cache`;
+
   const defaults: Omit<DeminifyConfig, "apiKey"> = {
     provider: "openai",
     model: "gpt-5-nano",
     maxTokens: 16384, // GPT-5 nano uses reasoning tokens, needs more headroom
     cacheEnabled: true,
-    cacheDir: ".bun-decompile-cache",
+    cacheDir,
     concurrency: 3,
     rateLimit: 50,
     verbose: false,
@@ -685,7 +742,7 @@ export function createConfig(
 
 /** Interactive cost confirmation for CLI */
 export async function interactiveConfirmCost(
-  estimate: CostEstimate,
+  estimate: CostEstimate
 ): Promise<boolean> {
   console.log("\n" + formatCostEstimate(estimate));
   console.log("");
@@ -742,7 +799,9 @@ export function formatStats(stats: DeminifyStats): string {
   lines.push(`Errors: ${stats.errors}`);
   lines.push(`Input tokens: ${stats.inputTokensUsed.toLocaleString()}`);
   lines.push(`Output tokens: ${stats.outputTokensUsed.toLocaleString()}`);
-  lines.push(`Average confidence: ${(stats.averageConfidence * 100).toFixed(1)}%`);
+  lines.push(
+    `Average confidence: ${(stats.averageConfidence * 100).toFixed(1)}%`
+  );
   lines.push(`Time: ${(stats.timeTaken / 1000).toFixed(1)}s`);
   return lines.join("\n");
 }

@@ -191,13 +191,12 @@ export interface DeminifyConfig {
   minFunctionSize: number;
 }
 
-/** Default configuration values */
-export const DEFAULT_CONFIG: Omit<DeminifyConfig, "apiKey"> = {
+/** Default configuration values (cacheDir must be provided based on output path) */
+export const DEFAULT_CONFIG: Omit<DeminifyConfig, "apiKey" | "cacheDir"> = {
   provider: "openai",
   model: "gpt-5-nano",
   maxTokens: 16384, // GPT-5 nano uses reasoning tokens, needs more headroom
   cacheEnabled: true,
-  cacheDir: ".bun-decompile-cache",
   concurrency: 3,
   rateLimit: 50,
   verbose: false,

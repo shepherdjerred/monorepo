@@ -1,5 +1,5 @@
 import { mkdir } from "node:fs/promises";
-import { basename, dirname, join } from "node:path";
+import { basename, dirname, join, resolve, sep } from "node:path";
 import { ExtractionError } from "./errors.ts";
 import type {
   DecompileMetadata,
@@ -32,15 +32,20 @@ function getSourceExtension(module: ModuleEntry): string {
 
 /** Ensure the output path is safe (no path traversal) */
 function sanitizePath(basePath: string, relativePath: string): string {
-  // Remove leading slashes and normalize
+  // Normalize: remove leading slashes and convert backslashes to forward slashes
   const normalized = relativePath.replace(/^\/+/, "").replace(/\\/g, "/");
 
-  // Check for path traversal
-  if (normalized.includes("..")) {
+  // Resolve both paths to absolute paths and verify the result stays within basePath
+  const resolved = resolve(basePath, normalized);
+  const normalizedBase = resolve(basePath);
+
+  // Check that resolved path is within the base directory
+  // Must either equal the base or start with base + separator
+  if (!resolved.startsWith(normalizedBase + sep) && resolved !== normalizedBase) {
     throw new ExtractionError("Path traversal detected", relativePath);
   }
 
-  return join(basePath, normalized);
+  return resolved;
 }
 
 /** Write a single file, creating directories as needed */

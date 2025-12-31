@@ -18,20 +18,37 @@ export interface BatchState {
   functionCount: number;
   /** Original file name */
   fileName: string;
+  /** Project identifier to prevent cross-project batch resumption */
+  projectId: string;
 }
 
-const STATE_DIR = ".bun-decompile-cache";
-const STATE_FILE = "pending-batch.json";
+const STATE_FILE_PREFIX = "pending-batch";
 
-/** Get the path to the state file */
-function getStatePath(cacheDir?: string): string {
-  return join(cacheDir ?? STATE_DIR, STATE_FILE);
+/**
+ * Generate a project identifier based on the current working directory.
+ * This prevents different projects/users from resuming each other's batches
+ * when sharing a cache directory (e.g., in CI environments).
+ */
+function getProjectId(): string {
+  const cwd = process.cwd();
+  const hasher = new Bun.CryptoHasher("sha256");
+  hasher.update(cwd);
+  return hasher.digest("hex").slice(0, 8);
+}
+
+/** Export for use in state verification and creation */
+export { getProjectId };
+
+/** Get the path to the state file (includes project ID for isolation) */
+function getStatePath(cacheDir: string): string {
+  const projectId = getProjectId();
+  return join(cacheDir, `${STATE_FILE_PREFIX}-${projectId}.json`);
 }
 
 /** Save batch state to disk */
 export async function saveBatchState(
   state: BatchState,
-  cacheDir?: string,
+  cacheDir: string,
 ): Promise<void> {
   const statePath = getStatePath(cacheDir);
   await mkdir(dirname(statePath), { recursive: true });
@@ -40,7 +57,7 @@ export async function saveBatchState(
 
 /** Load batch state from disk */
 export async function loadBatchState(
-  cacheDir?: string,
+  cacheDir: string,
 ): Promise<BatchState | null> {
   try {
     const statePath = getStatePath(cacheDir);
@@ -52,7 +69,7 @@ export async function loadBatchState(
 }
 
 /** Clear saved batch state */
-export async function clearBatchState(cacheDir?: string): Promise<void> {
+export async function clearBatchState(cacheDir: string): Promise<void> {
   try {
     const statePath = getStatePath(cacheDir);
     await unlink(statePath);
@@ -61,12 +78,15 @@ export async function clearBatchState(cacheDir?: string): Promise<void> {
   }
 }
 
-/** Verify that saved state matches current source */
+/** Verify that saved state matches current source and project */
 export function verifyBatchState(
   state: BatchState,
   source: string,
 ): boolean {
-  return state.sourceHash === hashSource(source);
+  // Verify both source hash and project ID match
+  const projectMatches = state.projectId === getProjectId();
+  const sourceMatches = state.sourceHash === hashSource(source);
+  return projectMatches && sourceMatches;
 }
 
 /** Format batch state for display */

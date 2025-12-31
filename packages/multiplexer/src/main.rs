@@ -49,9 +49,16 @@ enum Commands {
         #[arg(long, default_value = "false")]
         print: bool,
 
+<<<<<<< Updated upstream
         /// Access mode (read-only or read-write)
         #[arg(long, default_value = "read-write")]
         access_mode: String,
+||||||| Stash base
+=======
+        /// Skip plan mode (start directly in implementation mode)
+        #[arg(long, default_value = "false")]
+        no_plan_mode: bool,
+>>>>>>> Stashed changes
     },
 
     /// List all sessions
@@ -144,7 +151,12 @@ async fn main() -> anyhow::Result<()> {
             backend,
             dangerous_skip_checks,
             print,
+<<<<<<< Updated upstream
             access_mode,
+||||||| Stash base
+=======
+            no_plan_mode,
+>>>>>>> Stashed changes
         } => {
             let backend_type = match backend.to_lowercase().as_str() {
                 "zellij" => core::session::BackendType::Zellij,
@@ -164,8 +176,14 @@ async fn main() -> anyhow::Result<()> {
                     agent: core::session::AgentType::ClaudeCode,
                     dangerous_skip_checks,
                     print_mode: print,
+<<<<<<< Updated upstream
                     plan_mode: true, // Default to plan mode for safety
                     access_mode,
+||||||| Stash base
+                    plan_mode: true, // Default to plan mode for safety
+=======
+                    plan_mode: !no_plan_mode,
+>>>>>>> Stashed changes
                     images: vec![],
                 })
                 .await?;

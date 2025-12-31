@@ -1,3 +1,14 @@
+/**
+ * File-based cache for de-minification results.
+ *
+ * Error handling strategy:
+ * - Read errors (file missing, parse error): return null (cache miss)
+ * - Write errors: silently ignored, operation continues without caching
+ * - Directory creation errors: ignored if dir already exists
+ *
+ * This "fail-safe" approach ensures caching never blocks de-minification.
+ */
+
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import type { CacheEntry, DeminifyResult, ExtractedFunction } from "./types.ts";
@@ -197,7 +208,28 @@ export function hashSource(source: string): string {
   return hasher.digest("hex").slice(0, 16); // Use first 16 chars
 }
 
-/** Check if a function should be cached */
+/**
+ * Check if a function should be cached.
+ *
+ * Caching strategy rationale:
+ * - Functions are cached based on source code only (context-independent).
+ * - The thresholds below are heuristics tuned for typical minified code:
+ *
+ * 1. Callee count ≤2: Functions calling 0-2 other functions are usually
+ *    self-contained utilities (formatters, validators, helpers). Their
+ *    de-minified names don't depend much on caller context.
+ *
+ * 2. Small functions (<500 chars) with ≤5 callees: Even with moderate
+ *    dependencies, small functions have limited semantic scope. The LLM
+ *    can usually infer purpose from the code alone.
+ *
+ * 3. Large functions with many callees: These are context-sensitive.
+ *    A function calling 10+ others might be named differently depending
+ *    on whether it's in a "user" module vs "admin" module.
+ *
+ * Future improvement: Track cache hit rates by function characteristics
+ * to tune these thresholds empirically.
+ */
 export function shouldCache(func: ExtractedFunction): boolean {
   // Don't cache functions that are too context-dependent
   // (i.e., functions that call many external functions)

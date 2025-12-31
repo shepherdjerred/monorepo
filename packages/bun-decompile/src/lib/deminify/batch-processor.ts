@@ -7,6 +7,12 @@
  * 3. After each round, apply renames to source
  * 4. Parent functions see renamed callees for better context
  *
+ * Error handling strategy:
+ * - LLM API errors: logged, empty mappings returned, processing continues
+ * - Parse errors: logged, processing continues with other functions
+ * - Cache errors: silently ignored, operation proceeds without caching
+ * - Final rename errors: logged, original source returned
+ *
  * @see Plan: /Users/jerred/.claude/plans/dazzling-popping-firefly.md
  */
 
@@ -22,6 +28,7 @@ import {
   estimateBatchTokens,
   type BatchFunctionInfo,
 } from "./prompt-templates.ts";
+import { getTargetBatchTokens, getModelInfo } from "./tokenizer.ts";
 import type {
   DeminifyConfig,
   ExtractedFunction,
@@ -57,7 +64,10 @@ export interface BatchResult {
 
 /** Options for batch processing */
 export interface BatchProcessorOptions {
-  /** Maximum tokens per batch (default: 60000) */
+  /**
+   * Maximum tokens per batch.
+   * If not specified, automatically computed from model's context limit (90% utilization).
+   */
   maxBatchTokens?: number;
   /** Progress callback */
   onProgress?: (progress: ExtendedProgress) => void;
@@ -153,7 +163,18 @@ export class BatchProcessor {
     graph: CallGraph,
     options: BatchProcessorOptions = {},
   ): Promise<string> {
-    const { maxBatchTokens = 60000, onProgress, verbose } = options;
+    const { onProgress, verbose } = options;
+
+    // Compute token budget from model's context limit if not explicitly specified.
+    // Uses tiktoken/anthropic tokenizer for accurate counting, so no safety margin needed.
+    const modelInfo = getModelInfo(this.config.model);
+    const maxBatchTokens = options.maxBatchTokens ?? getTargetBatchTokens(this.config.model);
+
+    if (verbose) {
+      console.log(
+        `Model: ${this.config.model} | Context: ${modelInfo.contextLimit.toLocaleString()} | Batch budget: ${maxBatchTokens.toLocaleString()} tokens`
+      );
+    }
 
     this.startTime = Date.now();
 
@@ -209,8 +230,15 @@ export class BatchProcessor {
         for (const [id, mapping] of Object.entries(mappings)) {
           allMappings[id] = mapping;
 
-          // Track function name for context in subsequent rounds
-          // This lets the LLM know what names we've chosen
+          // Track function name for context in subsequent rounds.
+          // NOTE: knownNames contains "planned" renames, not "applied" renames.
+          // The LLM sees what names we've *decided* on for earlier functions,
+          // but the actual source modifications happen once at the end to avoid
+          // position-shift bugs that would corrupt AST node positions.
+          //
+          // Trade-off: For circular dependencies, the LLM context is slightly
+          // inconsistent (it sees planned names but reads original source), but
+          // this prevents AST corruption which would be far worse.
           if (mapping.functionName) {
             const fn = functions.find((f) => f.id === id);
             if (fn?.originalName) {
@@ -334,6 +362,7 @@ export class BatchProcessor {
 
   /**
    * Create batches of functions that fit within token budget.
+   * Uses accurate token counting via tiktoken/anthropic tokenizer.
    */
   private createBatches(
     functions: ExtractedFunction[],
@@ -353,7 +382,8 @@ export class BatchProcessor {
         identifiers: extractIdentifiers(funcSource),
       };
 
-      const funcTokens = estimateBatchTokens([funcInfo]);
+      // Use accurate token counting with model-specific tokenizer
+      const funcTokens = estimateBatchTokens([funcInfo], this.config.model);
 
       // If this single function exceeds budget, process it alone
       if (funcTokens > maxTokens) {
@@ -387,6 +417,10 @@ export class BatchProcessor {
   /**
    * Add inline comments to function source showing relevant known renames.
    * This gives the LLM context about what the called functions do.
+   *
+   * Security note: We sanitize the annotation to prevent malicious source code
+   * from injecting fake annotations. Only alphanumeric identifiers and arrows
+   * are included in the comment.
    */
   private annotateWithKnownNames(
     source: string,
@@ -399,6 +433,11 @@ export class BatchProcessor {
     // Find which known names appear in this function's source
     const relevantRenames: string[] = [];
     for (const [original, renamed] of knownNames) {
+      // Validate that original and renamed are safe identifiers (alphanumeric + underscore)
+      // This prevents injection if source contains crafted strings
+      if (!/^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(original)) continue;
+      if (!/^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(renamed)) continue;
+
       // Check if this identifier is called in the source (as a function call)
       // Match patterns like: original(, original), original.
       const callPattern = new RegExp(`\\b${original}\\s*\\(`);
