@@ -1,9 +1,12 @@
 //! Proxy manager - orchestrates all proxy services.
 
+use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
 
+use tokio::sync::RwLock;
 use tokio::task::JoinHandle;
+use uuid::Uuid;
 
 use super::audit::AuditLogger;
 use super::ca::ProxyCa;
@@ -11,7 +14,9 @@ use super::config::{Credentials, ProxyConfig};
 use super::container_config::generate_container_configs;
 use super::http_proxy::HttpAuthProxy;
 use super::k8s_proxy::KubernetesProxy;
+use super::port_allocator::PortAllocator;
 use super::talos_gateway::TalosGateway;
+use crate::core::session::AccessMode;
 
 /// Manages all proxy services.
 pub struct ProxyManager {
@@ -33,6 +38,17 @@ pub struct ProxyManager {
     http_task: Option<JoinHandle<()>>,
     /// Talos gateway task handle.
     talos_task: Option<JoinHandle<()>>,
+    /// Port allocator for session proxies.
+    port_allocator: Arc<PortAllocator>,
+    /// Per-session HTTP proxy tasks.
+    session_proxies: RwLock<HashMap<Uuid, SessionProxyHandle>>,
+}
+
+/// Handle to a session-specific proxy
+struct SessionProxyHandle {
+    port: u16,
+    access_mode: Arc<RwLock<AccessMode>>,
+    task: JoinHandle<()>,
 }
 
 impl ProxyManager {
@@ -72,6 +88,8 @@ impl ProxyManager {
             mux_dir,
             http_task: None,
             talos_task: None,
+            port_allocator: Arc::new(PortAllocator::new()),
+            session_proxies: RwLock::new(HashMap::new()),
         })
     }
 
@@ -203,6 +221,84 @@ impl ProxyManager {
     /// Get the Talos gateway port.
     pub fn talos_gateway_port(&self) -> u16 {
         self.config.talos_gateway_port
+    }
+
+    /// Create a session-specific proxy
+    pub async fn create_session_proxy(
+        &self,
+        session_id: Uuid,
+        access_mode: AccessMode,
+    ) -> anyhow::Result<u16> {
+        let port = self.port_allocator.allocate(session_id).await?;
+        let access_mode_lock = Arc::new(RwLock::new(access_mode));
+
+        let authority = self.ca.to_rcgen_authority()?;
+        let proxy = HttpAuthProxy::for_session(
+            port,
+            authority,
+            Arc::clone(&self.credentials),
+            Arc::clone(&self.audit_logger),
+            session_id,
+            Arc::clone(&access_mode_lock),
+        );
+
+        let task = tokio::spawn(async move {
+            if let Err(e) = proxy.run().await {
+                tracing::error!(session_id = %session_id, "Session proxy error: {}", e);
+            }
+        });
+
+        self.session_proxies.write().await.insert(
+            session_id,
+            SessionProxyHandle {
+                port,
+                access_mode: access_mode_lock,
+                task,
+            },
+        );
+
+        tracing::info!(
+            session_id = %session_id,
+            port = port,
+            access_mode = ?access_mode,
+            "Created session proxy"
+        );
+
+        Ok(port)
+    }
+
+    /// Destroy a session-specific proxy
+    pub async fn destroy_session_proxy(&self, session_id: Uuid) -> anyhow::Result<()> {
+        if let Some(handle) = self.session_proxies.write().await.remove(&session_id) {
+            handle.task.abort();
+            self.port_allocator.release(handle.port).await;
+            tracing::info!(
+                session_id = %session_id,
+                port = handle.port,
+                "Destroyed session proxy"
+            );
+        }
+        Ok(())
+    }
+
+    /// Update the access mode for a session proxy
+    pub async fn update_session_access_mode(
+        &self,
+        session_id: Uuid,
+        new_mode: AccessMode,
+    ) -> anyhow::Result<()> {
+        let proxies = self.session_proxies.read().await;
+        if let Some(handle) = proxies.get(&session_id) {
+            *handle.access_mode.write().await = new_mode;
+            tracing::info!(
+                session_id = %session_id,
+                mode = ?new_mode,
+                "Updated session access mode"
+            );
+            Ok(())
+        } else {
+            anyhow::bail!("Session proxy not found for session {}", session_id)
+        }
     }
 }
 

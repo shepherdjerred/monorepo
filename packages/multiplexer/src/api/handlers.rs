@@ -35,6 +35,7 @@ pub async fn handle_request(request: Request, manager: &SessionManager) -> Respo
                     req.agent,
                     req.dangerous_skip_checks,
                     req.print_mode,
+                    req.access_mode,
                 )
                 .await
             {
@@ -42,6 +43,7 @@ pub async fn handle_request(request: Request, manager: &SessionManager) -> Respo
                     tracing::info!(
                         id = %session.id,
                         name = %session.name,
+                        access_mode = ?session.access_mode,
                         warnings = ?warnings,
                         "Session created"
                     );
@@ -126,6 +128,22 @@ pub async fn handle_request(request: Request, manager: &SessionManager) -> Respo
             }
         },
 
+        Request::UpdateAccessMode { id, access_mode } => {
+            match manager.update_access_mode(&id, access_mode).await {
+                Ok(()) => {
+                    tracing::info!(session = %id, mode = ?access_mode, "Access mode updated");
+                    Response::AccessModeUpdated
+                }
+                Err(e) => {
+                    tracing::error!(session = %id, error = %e, "Failed to update access mode");
+                    Response::Error {
+                        code: "UPDATE_ERROR".to_string(),
+                        message: e.to_string(),
+                    }
+                }
+            }
+        }
+
         Request::Subscribe => {
             // TODO: Implement real-time subscriptions
             Response::Subscribed
@@ -177,6 +195,7 @@ pub async fn handle_create_session_with_progress(
             req.agent,
             req.dangerous_skip_checks,
             req.print_mode,
+            req.access_mode,
         )
         .await
     {

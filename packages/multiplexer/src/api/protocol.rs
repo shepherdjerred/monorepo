@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use typeshare::typeshare;
 
-use crate::core::session::{AgentType, BackendType, Session, SessionStatus};
+use crate::core::session::{AccessMode, AgentType, BackendType, Session, SessionStatus};
 
 use super::types::ReconcileReportDto;
 
@@ -27,6 +27,9 @@ pub enum Request {
 
     /// Get the attach command for a session
     AttachSession { id: String },
+
+    /// Update session access mode
+    UpdateAccessMode { id: String, access_mode: AccessMode },
 
     /// Reconcile state with reality
     Reconcile,
@@ -60,6 +63,10 @@ pub struct CreateSessionRequest {
     /// Run in print mode (non-interactive, outputs response and exits)
     #[serde(default)]
     pub print_mode: bool,
+
+    /// Access mode for proxy filtering
+    #[serde(default)]
+    pub access_mode: AccessMode,
 }
 
 /// Progress step during session creation
@@ -108,6 +115,9 @@ pub enum Response {
 
     /// Subscription confirmed
     Subscribed,
+
+    /// Access mode updated successfully
+    AccessModeUpdated,
 
     /// Error response
     Error { code: String, message: String },

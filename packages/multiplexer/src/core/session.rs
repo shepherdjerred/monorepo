@@ -47,6 +47,9 @@ pub struct Session {
     /// Status of PR checks
     pub pr_check_status: Option<CheckStatus>,
 
+    /// Access mode for proxy filtering
+    pub access_mode: AccessMode,
+
     /// When the session was created
     pub created_at: DateTime<Utc>,
 
@@ -72,6 +75,8 @@ pub struct SessionConfig {
     pub agent: AgentType,
     /// Whether to skip safety checks
     pub dangerous_skip_checks: bool,
+    /// Access mode for proxy filtering
+    pub access_mode: AccessMode,
 }
 
 impl Session {
@@ -93,6 +98,7 @@ impl Session {
             dangerous_skip_checks: config.dangerous_skip_checks,
             pr_url: None,
             pr_check_status: None,
+            access_mode: config.access_mode,
             created_at: now,
             updated_at: now,
         }
@@ -119,6 +125,12 @@ impl Session {
     /// Update PR check status
     pub fn set_check_status(&mut self, status: CheckStatus) {
         self.pr_check_status = Some(status);
+        self.updated_at = Utc::now();
+    }
+
+    /// Update access mode
+    pub fn set_access_mode(&mut self, mode: AccessMode) {
+        self.access_mode = mode;
         self.updated_at = Utc::now();
     }
 }
@@ -186,4 +198,40 @@ pub enum CheckStatus {
 
     /// PR has been merged
     Merged,
+}
+
+/// Access mode for proxy filtering
+#[typeshare]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum AccessMode {
+    /// Read-only: GET, HEAD, OPTIONS allowed; POST, PUT, DELETE, PATCH blocked
+    ReadOnly,
+    /// Read-write: All HTTP methods allowed
+    ReadWrite,
+}
+
+impl Default for AccessMode {
+    fn default() -> Self {
+        Self::ReadWrite
+    }
+}
+
+impl std::fmt::Display for AccessMode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::ReadOnly => write!(f, "ReadOnly"),
+            Self::ReadWrite => write!(f, "ReadWrite"),
+        }
+    }
+}
+
+impl std::str::FromStr for AccessMode {
+    type Err = anyhow::Error;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "readonly" | "read-only" | "ro" => Ok(Self::ReadOnly),
+            "readwrite" | "read-write" | "rw" => Ok(Self::ReadWrite),
+            _ => Err(anyhow::anyhow!("Invalid access mode: {}", s)),
+        }
+    }
 }
