@@ -130,6 +130,7 @@ impl SessionManager {
         backend: BackendType,
         agent: super::session::AgentType,
         dangerous_skip_checks: bool,
+        print_mode: bool,
     ) -> anyhow::Result<(Session, Option<Vec<String>>)> {
         // Generate unique session name with retry logic
         const MAX_ATTEMPTS: usize = 3;
@@ -181,15 +182,16 @@ impl SessionManager {
             .await?;
 
         // Create backend resource
+        let create_options = crate::backends::CreateOptions { print_mode };
         let backend_id = match backend {
             BackendType::Zellij => {
                 self.zellij
-                    .create(&full_name, &worktree_path, &initial_prompt)
+                    .create(&full_name, &worktree_path, &initial_prompt, create_options)
                     .await?
             }
             BackendType::Docker => {
                 self.docker
-                    .create(&full_name, &worktree_path, &initial_prompt)
+                    .create(&full_name, &worktree_path, &initial_prompt, create_options)
                     .await?
             }
         };
