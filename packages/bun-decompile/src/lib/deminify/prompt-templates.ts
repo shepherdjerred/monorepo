@@ -1,4 +1,5 @@
 import type { CodeSegment, DeminifyContext } from "./types.ts";
+import { countTokens } from "./tokenizer.ts";
 
 /** Get the system prompt for de-minification */
 export function getSystemPrompt(): string {
@@ -196,9 +197,18 @@ ${source}
 Output only the de-minified code in \`\`\`javascript blocks, followed by a JSON metadata object on a new line.`;
 }
 
-/** Estimate token count for a prompt (rough approximation) */
-export function estimatePromptTokens(prompt: string): number {
-  // Rough approximation: ~4 characters per token for code
+/**
+ * Estimate token count for a prompt.
+ *
+ * @param prompt - The prompt text
+ * @param model - Optional model name for accurate counting (uses tiktoken/anthropic tokenizer)
+ * @returns The estimated token count
+ */
+export function estimatePromptTokens(prompt: string, model?: string): number {
+  if (model) {
+    return countTokens(prompt, model);
+  }
+  // Fallback: rough approximation (~4 characters per token for code)
   return Math.ceil(prompt.length / 4);
 }
 
@@ -295,29 +305,30 @@ export function getBatchFunctionPrompt(
   return parts.join("\n");
 }
 
-/** Estimate tokens for a batch of functions */
-export function estimateBatchTokens(functions: BatchFunctionInfo[]): number {
-  let total = 0;
+/**
+ * Estimate tokens for a batch of functions.
+ *
+ * @param functions - The functions to estimate tokens for
+ * @param model - Optional model name for accurate counting
+ * @param knownNames - Optional known names map (affects prompt size)
+ * @returns The estimated token count for the full prompt
+ */
+export function estimateBatchTokens(
+  functions: BatchFunctionInfo[],
+  model?: string,
+  knownNames?: Map<string, string>
+): number {
+  // Build the actual prompts for accurate estimation
+  const systemPrompt = getBatchSystemPrompt();
+  const userPrompt = getBatchFunctionPrompt(functions, knownNames);
+  const fullPrompt = systemPrompt + "\n" + userPrompt;
 
-  // System prompt tokens (roughly 400)
-  total += 400;
-
-  // User prompt overhead
-  total += 200;
-
-  // Each function
-  for (const fn of functions) {
-    // ID and wrapper
-    total += 20;
-    // Source code
-    total += estimatePromptTokens(fn.source);
-    // Identifiers list
-    if (fn.identifiers) {
-      total += fn.identifiers.length * 2;
-    }
+  if (model) {
+    return countTokens(fullPrompt, model);
   }
 
-  return total;
+  // Fallback: rough approximation
+  return Math.ceil(fullPrompt.length / 4);
 }
 
 /** Estimate output tokens for a batch of functions */
