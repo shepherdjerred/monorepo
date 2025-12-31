@@ -1,0 +1,35 @@
+{
+  "name": "@shepherdjerred/bun-decompile",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "bun-decompile": "./src/index.ts"
+  },
+  "exports": {
+    ".": "./src/lib/index.ts"
+  },
+  "scripts": {
+    "test": "bun test",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.52.0",
+    "@babel/core": "^7.28.5",
+    "@babel/generator": "^7.28.5",
+    "@babel/parser": "^7.28.5",
+    "@babel/plugin-syntax-jsx": "^7.27.1",
+    "@babel/plugin-syntax-typescript": "^7.27.1",
+    "@babel/traverse": "^7.28.5",
+    "@babel/types": "^7.28.5",
+    "acorn": "^8.15.0",
+    "acorn-walk": "^8.3.4",
+    "openai": "^6.15.0"
+  },
+  "devDependencies": {
+    "@types/babel__core": "^7.20.5",
+    "@types/babel__generator": "^7.27.0",
+    "@types/babel__traverse": "^7.28.0",
+    "bun-types": "^1.3.5",
+    "typescript": "^5.7.2"
+  }
+}
