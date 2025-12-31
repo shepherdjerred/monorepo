@@ -12,7 +12,7 @@
 
 mod common;
 
-use multiplexer::backends::{DockerBackend, ExecutionBackend, GitBackend, GitOperations};
+use multiplexer::backends::{CreateOptions, DockerBackend, ExecutionBackend, GitBackend, GitOperations};
 use tempfile::TempDir;
 use tokio::process::Command;
 
@@ -35,7 +35,7 @@ async fn test_docker_full_lifecycle_with_attach() {
     // Step 1: Create container
     println!("Step 1: Creating container...");
     let result = docker
-        .create(&container_name, temp_dir.path(), "echo ready")
+        .create(&container_name, temp_dir.path(), "echo ready", CreateOptions::default())
         .await;
 
     let name = match result {
@@ -136,7 +136,7 @@ async fn test_worktree_and_container_together() {
     println!("Step 2: Creating container with worktree as workdir...");
 
     let result = docker
-        .create(&container_name, &worktree_path, "echo 'worktree test'")
+        .create(&container_name, &worktree_path, "echo 'worktree test'", CreateOptions::default())
         .await;
 
     match result {
@@ -258,7 +258,7 @@ async fn test_reattach_stopped_container() {
 
     // Step 1: Create container using OUR backend
     println!("Step 1: Creating container via DockerBackend...");
-    let name = match docker.create(&session_name, temp_dir.path(), "echo ready").await {
+    let name = match docker.create(&session_name, temp_dir.path(), "echo ready", CreateOptions::default()).await {
         Ok(n) => n,
         Err(e) => {
             eprintln!("Container creation failed (may need image): {e}");

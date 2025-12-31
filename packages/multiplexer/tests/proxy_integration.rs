@@ -5,20 +5,33 @@
 
 use multiplexer::backends::{DockerBackend, DockerProxyConfig};
 use std::path::PathBuf;
+use tempfile::tempdir;
 
 /// Test that proxy configuration flows through to Docker container args.
 #[test]
 fn test_proxy_config_flows_to_container_args() {
-    let proxy_config = DockerProxyConfig::new(18080, PathBuf::from("/home/test/.mux"));
+    let mux_dir = tempdir().expect("Failed to create temp dir");
+    let ca_cert_path = mux_dir.path().join("proxy-ca.pem");
+    std::fs::write(&ca_cert_path, "dummy cert").expect("Failed to write cert");
+
+    // Create kube and talos directories
+    let kube_dir = mux_dir.path().join("kube");
+    let talos_dir = mux_dir.path().join("talos");
+    std::fs::create_dir(&kube_dir).expect("Failed to create kube dir");
+    std::fs::create_dir(&talos_dir).expect("Failed to create talos dir");
+    std::fs::write(kube_dir.join("config"), "dummy").expect("Failed to write kube config");
+    std::fs::write(talos_dir.join("config"), "dummy").expect("Failed to write talos config");
+
+    let proxy_config = DockerProxyConfig::new(18080, mux_dir.path().to_path_buf());
 
     let args = DockerBackend::build_create_args(
         "test-session",
         &PathBuf::from("/workspace"),
         "test prompt",
         1000,
-        "/home/test",
         Some(&proxy_config),
-    );
+        false, // interactive mode
+    ).expect("Failed to build args");
 
     // Verify HTTP_PROXY is set correctly
     assert!(
@@ -115,9 +128,9 @@ fn test_disabled_proxy_config_no_args() {
         &PathBuf::from("/workspace"),
         "test prompt",
         1000,
-        "/home/test",
         Some(&proxy_config),
-    );
+        false, // interactive mode
+    ).expect("Failed to build args");
 
     assert!(
         !args.iter().any(|a| a.contains("HTTP_PROXY")),
@@ -141,9 +154,9 @@ fn test_none_proxy_config_no_args() {
         &PathBuf::from("/workspace"),
         "test prompt",
         1000,
-        "/home/test",
         None, // No proxy config
-    );
+        false, // interactive mode
+    ).expect("Failed to build args");
 
     assert!(
         !args.iter().any(|a| a.contains("HTTP_PROXY")),
@@ -158,17 +171,21 @@ fn test_none_proxy_config_no_args() {
 /// Test that the proxy port is correctly embedded in env vars.
 #[test]
 fn test_proxy_port_in_env_vars() {
+    let mux_dir = tempdir().expect("Failed to create temp dir");
+    let ca_cert_path = mux_dir.path().join("proxy-ca.pem");
+    std::fs::write(&ca_cert_path, "dummy cert").expect("Failed to write cert");
+
     // Use a custom port
-    let proxy_config = DockerProxyConfig::new(9999, PathBuf::from("/home/test/.mux"));
+    let proxy_config = DockerProxyConfig::new(9999, mux_dir.path().to_path_buf());
 
     let args = DockerBackend::build_create_args(
         "test-session",
         &PathBuf::from("/workspace"),
         "test prompt",
         1000,
-        "/home/test",
         Some(&proxy_config),
-    );
+        false, // interactive mode
+    ).expect("Failed to build args");
 
     // Verify the custom port is used
     assert!(
@@ -188,27 +205,37 @@ fn test_proxy_port_in_env_vars() {
 /// Test that mux_dir path is correctly used in volume mounts.
 #[test]
 fn test_mux_dir_in_volume_mounts() {
-    let proxy_config = DockerProxyConfig::new(18080, PathBuf::from("/custom/mux/path"));
+    let mux_dir = tempdir().expect("Failed to create temp dir");
+    let ca_cert_path = mux_dir.path().join("proxy-ca.pem");
+    std::fs::write(&ca_cert_path, "dummy cert").expect("Failed to write cert");
+
+    // Create kube directory
+    let kube_dir = mux_dir.path().join("kube");
+    std::fs::create_dir(&kube_dir).expect("Failed to create kube dir");
+    std::fs::write(kube_dir.join("config"), "dummy").expect("Failed to write kube config");
+
+    let proxy_config = DockerProxyConfig::new(18080, mux_dir.path().to_path_buf());
 
     let args = DockerBackend::build_create_args(
         "test-session",
         &PathBuf::from("/workspace"),
         "test prompt",
         1000,
-        "/home/test",
         Some(&proxy_config),
-    );
+        false, // interactive mode
+    ).expect("Failed to build args");
 
-    // Verify the custom mux dir is used in volume mounts
+    // Verify the mux dir is used in volume mounts (CA cert path contains the temp dir path)
+    let mux_path = mux_dir.path().to_string_lossy();
     assert!(
         args.iter()
-            .any(|a| a.contains("/custom/mux/path/proxy-ca.pem")),
-        "Expected custom mux dir in CA cert mount, got: {:?}",
+            .any(|a| a.contains(&format!("{}/proxy-ca.pem", mux_path))),
+        "Expected mux dir in CA cert mount, got: {:?}",
         args
     );
     assert!(
-        args.iter().any(|a| a.contains("/custom/mux/path/kube")),
-        "Expected custom mux dir in kube mount, got: {:?}",
+        args.iter().any(|a| a.contains(&format!("{}/kube", mux_path))),
+        "Expected mux dir in kube mount, got: {:?}",
         args
     );
 }

@@ -77,50 +77,6 @@ contexts:
     Ok(())
 }
 
-/// Get the docker environment variables for proxy configuration.
-pub fn get_proxy_env_vars(http_proxy_port: u16) -> Vec<(String, String)> {
-    vec![
-        (
-            "HTTP_PROXY".to_string(),
-            format!("http://host.docker.internal:{http_proxy_port}"),
-        ),
-        (
-            "HTTPS_PROXY".to_string(),
-            format!("http://host.docker.internal:{http_proxy_port}"),
-        ),
-        ("NO_PROXY".to_string(), "localhost,127.0.0.1".to_string()),
-        (
-            "NODE_EXTRA_CA_CERTS".to_string(),
-            "/etc/mux/proxy-ca.pem".to_string(),
-        ),
-        (
-            "SSL_CERT_FILE".to_string(),
-            "/etc/mux/proxy-ca.pem".to_string(),
-        ),
-        (
-            "REQUESTS_CA_BUNDLE".to_string(),
-            "/etc/mux/proxy-ca.pem".to_string(),
-        ),
-        ("KUBECONFIG".to_string(), "/etc/mux/kube/config".to_string()),
-        (
-            "TALOSCONFIG".to_string(),
-            "/etc/mux/talos/config".to_string(),
-        ),
-    ]
-}
-
-/// Get the docker volume mounts for proxy configuration.
-pub fn get_proxy_volume_mounts(mux_dir: &PathBuf) -> Vec<(PathBuf, String)> {
-    vec![
-        (
-            mux_dir.join("proxy-ca.pem"),
-            "/etc/mux/proxy-ca.pem:ro".to_string(),
-        ),
-        (mux_dir.join("kube"), "/etc/mux/kube:ro".to_string()),
-        (mux_dir.join("talos"), "/etc/mux/talos:ro".to_string()),
-    ]
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -153,12 +109,5 @@ mod tests {
 
         let content = std::fs::read_to_string(&config_path).unwrap();
         assert!(content.contains("host.docker.internal:18082"));
-    }
-
-    #[test]
-    fn test_proxy_env_vars() {
-        let vars = get_proxy_env_vars(18080);
-        assert!(vars.iter().any(|(k, v)| k == "HTTPS_PROXY" && v.contains("18080")));
-        assert!(vars.iter().any(|(k, _)| k == "KUBECONFIG"));
     }
 }

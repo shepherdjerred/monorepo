@@ -59,6 +59,8 @@ impl Default for ZellijBackend {
 impl ExecutionBackend for ZellijBackend {
     /// Create a new Zellij session with Claude Code
     ///
+    /// Note: `options.print_mode` is ignored for Zellij - it's always interactive.
+    ///
     /// # Errors
     ///
     /// Returns an error if the zellij command fails.
@@ -67,6 +69,7 @@ impl ExecutionBackend for ZellijBackend {
         name: &str,
         workdir: &Path,
         initial_prompt: &str,
+        _options: super::traits::CreateOptions,
     ) -> anyhow::Result<String> {
         // Create a new Zellij session in the background
         let args = Self::build_create_session_args(name);
@@ -197,7 +200,7 @@ impl ZellijBackend {
         workdir: &Path,
         initial_prompt: &str,
     ) -> anyhow::Result<String> {
-        self.create(name, workdir, initial_prompt).await
+        self.create(name, workdir, initial_prompt, super::traits::CreateOptions::default()).await
     }
 
     /// Check if a Zellij session exists (legacy name)
