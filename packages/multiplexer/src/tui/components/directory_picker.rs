@@ -102,23 +102,63 @@ fn render_directory_list(frame: &mut Frame, state: &DirectoryPickerState, area: 
         return;
     }
 
-    // Render directory list
+    // Render directory list with recent repos section
+    // Pre-compute section boundaries for cleaner logic
+    let show_section_headers = state.search_query.is_empty();
+    let first_recent_idx = if show_section_headers {
+        state
+            .filtered_entries
+            .iter()
+            .position(|e| e.is_recent)
+    } else {
+        None
+    };
+    let first_browse_idx = if show_section_headers {
+        state
+            .filtered_entries
+            .iter()
+            .position(|e| !e.is_recent && !e.is_parent)
+    } else {
+        None
+    };
+
     let items: Vec<ListItem> = state
         .filtered_entries
         .iter()
-        .map(|entry| {
-            let icon = if entry.is_parent { "↰ " } else { "📁 " };
+        .enumerate()
+        .map(|(idx, entry)| {
+            let icon = if entry.is_parent {
+                "↰ "
+            } else if entry.is_recent {
+                "⏱ "
+            } else {
+                "📁 "
+            };
 
             let name_style = if entry.is_parent {
                 Style::default().fg(Color::Yellow)
+            } else if entry.is_recent {
+                Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)
             } else {
                 Style::default().fg(Color::White)
             };
 
-            let line = Line::from(vec![
-                Span::raw(icon),
-                Span::styled(&entry.name, name_style),
-            ]);
+            // Add section headers based on pre-computed boundaries
+            let line = if first_recent_idx == Some(idx) {
+                Line::from(vec![
+                    Span::styled("Recent: ", Style::default().fg(Color::DarkGray)),
+                    Span::raw(icon),
+                    Span::styled(&entry.name, name_style),
+                ])
+            } else if first_browse_idx == Some(idx) {
+                Line::from(vec![
+                    Span::styled("Browse: ", Style::default().fg(Color::DarkGray)),
+                    Span::raw(icon),
+                    Span::styled(&entry.name, name_style),
+                ])
+            } else {
+                Line::from(vec![Span::raw(icon), Span::styled(&entry.name, name_style)])
+            };
 
             ListItem::new(line)
         })

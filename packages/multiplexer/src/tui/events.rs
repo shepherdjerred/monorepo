@@ -260,7 +260,8 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                 }
             }
             CreateDialogFocus::RepoPath => {
-                // Open directory picker when Enter is pressed on RepoPath
+                // Load recent repos and open directory picker when Enter is pressed on RepoPath
+                app.load_recent_repos().await;
                 let initial_path = if app.create_dialog.repo_path.is_empty() {
                     None
                 } else {
@@ -322,7 +323,8 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
             CreateDialogFocus::Name => app.create_dialog.name.push(' '),
             CreateDialogFocus::Prompt => app.create_dialog.prompt.push(' '),
             CreateDialogFocus::RepoPath => {
-                // Open directory picker when space is pressed on RepoPath
+                // Load recent repos and open directory picker when space is pressed on RepoPath
+                app.load_recent_repos().await;
                 let initial_path = if app.create_dialog.repo_path.is_empty() {
                     None
                 } else {

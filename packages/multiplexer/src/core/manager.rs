@@ -123,6 +123,15 @@ impl SessionManager {
         sessions.iter().find(|s| s.name == id_or_name).cloned()
     }
 
+    /// Get recent repositories
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the store cannot be read.
+    pub async fn get_recent_repos(&self) -> anyhow::Result<Vec<crate::store::RecentRepo>> {
+        self.store.get_recent_repos().await
+    }
+
     /// Create a new session
     ///
     /// # Errors
@@ -266,6 +275,11 @@ impl SessionManager {
 
         // Add to in-memory list
         self.sessions.write().await.push(session.clone());
+
+        // Track this repo in recent repos
+        if let Err(e) = self.store.add_recent_repo(repo_path_buf.clone()).await {
+            tracing::warn!("Failed to add repo to recent list: {e}");
+        }
 
         // Collect warnings
         let warnings = worktree_warning.map(|w| vec![w]);
