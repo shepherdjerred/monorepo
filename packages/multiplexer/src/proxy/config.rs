@@ -60,7 +60,7 @@ impl ProxyConfig {
 #[derive(Debug, Clone, Default)]
 pub struct Credentials {
     pub github_token: Option<String>,
-    pub anthropic_api_key: Option<String>,
+    pub anthropic_oauth_token: Option<String>,
     pub pagerduty_token: Option<String>,
     pub sentry_auth_token: Option<String>,
     pub grafana_api_key: Option<String>,
@@ -75,7 +75,7 @@ impl Credentials {
     pub fn load_from_env() -> Self {
         Self {
             github_token: std::env::var("GITHUB_TOKEN").ok(),
-            anthropic_api_key: std::env::var("ANTHROPIC_API_KEY").ok(),
+            anthropic_oauth_token: std::env::var("CLAUDE_CODE_OAUTH_TOKEN").ok(),
             // Support both PAGERDUTY_TOKEN and PAGERDUTY_API_KEY for compatibility
             pagerduty_token: std::env::var("PAGERDUTY_TOKEN")
                 .or_else(|_| std::env::var("PAGERDUTY_API_KEY"))
@@ -98,7 +98,7 @@ impl Credentials {
 
         Self {
             github_token: read_secret("github_token"),
-            anthropic_api_key: read_secret("anthropic_api_key"),
+            anthropic_oauth_token: read_secret("anthropic_oauth_token"),
             pagerduty_token: read_secret("pagerduty_token"),
             sentry_auth_token: read_secret("sentry_auth_token"),
             grafana_api_key: read_secret("grafana_api_key"),
@@ -116,7 +116,7 @@ impl Credentials {
 
         let credentials = Self {
             github_token: from_env.github_token.or(from_files.github_token),
-            anthropic_api_key: from_env.anthropic_api_key.or(from_files.anthropic_api_key),
+            anthropic_oauth_token: from_env.anthropic_oauth_token.or(from_files.anthropic_oauth_token),
             pagerduty_token: from_env.pagerduty_token.or(from_files.pagerduty_token),
             sentry_auth_token: from_env.sentry_auth_token.or(from_files.sentry_auth_token),
             grafana_api_key: from_env.grafana_api_key.or(from_files.grafana_api_key),
@@ -131,8 +131,8 @@ impl Credentials {
         if credentials.github_token.is_some() {
             tracing::info!("  ✓ GitHub token");
         }
-        if credentials.anthropic_api_key.is_some() {
-            tracing::info!("  ✓ Anthropic API key");
+        if credentials.anthropic_oauth_token.is_some() {
+            tracing::info!("  ✓ Anthropic OAuth token");
         }
         if credentials.pagerduty_token.is_some() {
             tracing::info!("  ✓ PagerDuty token");
@@ -157,7 +157,7 @@ impl Credentials {
     pub fn get(&self, service: &str) -> Option<&str> {
         match service {
             "github" => self.github_token.as_deref(),
-            "anthropic" => self.anthropic_api_key.as_deref(),
+            "anthropic" => self.anthropic_oauth_token.as_deref(),
             "pagerduty" => self.pagerduty_token.as_deref(),
             "sentry" => self.sentry_auth_token.as_deref(),
             "grafana" => self.grafana_api_key.as_deref(),

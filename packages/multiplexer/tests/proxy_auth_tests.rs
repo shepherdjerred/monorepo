@@ -44,6 +44,7 @@
 //! **K8s test**: Verifies kubectl proxy is accessible on port 18081
 //! **Talos test**: Verifies Talos mTLS gateway is listening on port 18082 (requires Ed25519 key support)
 
+use base64::Engine;
 use std::path::Path;
 use std::sync::Arc;
 use tempfile::TempDir;
@@ -835,7 +836,7 @@ async fn test_talos_gateway_tls_termination() {
     // Create a test talosconfig that points to the gateway
     // This config has NO certificates - zero-credential access
     let ca_pem = std::fs::read_to_string(&proxy_ca_path).expect("Failed to read proxy CA");
-    let ca_base64 = base64::Engine::encode(&base64::engine::general_purpose::STANDARD, ca_pem.as_bytes());
+    let ca_base64 = base64::engine::general_purpose::STANDARD.encode(ca_pem.as_bytes());
 
     let test_config = format!(
         r#"context: test

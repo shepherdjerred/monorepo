@@ -201,6 +201,7 @@ impl ExecutionBackend for MockExecutionBackend {
         name: &str,
         _workdir: &Path,
         _initial_prompt: &str,
+        _options: super::traits::CreateOptions,
     ) -> anyhow::Result<String> {
         if self.should_fail() {
             let msg = self.error_message.read().await.clone();
@@ -292,10 +293,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_mock_execution_create() {
+        use crate::backends::CreateOptions;
         let backend = MockExecutionBackend::zellij();
 
         let name = backend
-            .create("test-session", Path::new("/workdir"), "prompt")
+            .create("test-session", Path::new("/workdir"), "prompt", CreateOptions::default())
             .await
             .unwrap();
 
@@ -305,10 +307,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_mock_execution_delete() {
+        use crate::backends::CreateOptions;
         let backend = MockExecutionBackend::docker();
 
         let name = backend
-            .create("test-container", Path::new("/workdir"), "prompt")
+            .create("test-container", Path::new("/workdir"), "prompt", CreateOptions::default())
             .await
             .unwrap();
         assert!(backend.exists(&name).await.unwrap());
@@ -327,12 +330,13 @@ mod tests {
 
     #[tokio::test]
     async fn test_mock_execution_should_fail() {
+        use crate::backends::CreateOptions;
         let backend = MockExecutionBackend::new("test");
         backend.set_should_fail(true);
         backend.set_error_message("Docker error").await;
 
         let result = backend
-            .create("session", Path::new("/workdir"), "prompt")
+            .create("session", Path::new("/workdir"), "prompt", CreateOptions::default())
             .await;
 
         assert!(result.is_err());

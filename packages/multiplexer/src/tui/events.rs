@@ -163,6 +163,7 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                         },
                         agent: AgentType::ClaudeCode,
                         dangerous_skip_checks: app.create_dialog.skip_checks,
+                        print_mode: false, // TUI always uses interactive mode
                     };
 
                     // Spawn background task

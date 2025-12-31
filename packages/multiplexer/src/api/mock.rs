@@ -288,6 +288,7 @@ mod tests {
             backend: BackendType::Zellij,
             agent: AgentType::ClaudeCode,
             dangerous_skip_checks: false,
+            print_mode: false,
         };
 
         let (session, warnings) = client.create_session(request).await.unwrap();

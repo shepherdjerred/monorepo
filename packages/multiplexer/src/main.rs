@@ -44,6 +44,10 @@ enum Commands {
         /// Skip safety checks (dangerous)
         #[arg(long, default_value = "false")]
         dangerous_skip_checks: bool,
+
+        /// Run in print mode (non-interactive, outputs response and exits)
+        #[arg(long, default_value = "false")]
+        print: bool,
     },
 
     /// List all sessions
@@ -125,6 +129,7 @@ async fn main() -> anyhow::Result<()> {
             prompt,
             backend,
             dangerous_skip_checks,
+            print,
         } => {
             let backend_type = match backend.to_lowercase().as_str() {
                 "zellij" => core::session::BackendType::Zellij,
@@ -141,6 +146,7 @@ async fn main() -> anyhow::Result<()> {
                     backend: backend_type,
                     agent: core::session::AgentType::ClaudeCode,
                     dangerous_skip_checks,
+                    print_mode: print,
                 })
                 .await?;
 

@@ -56,6 +56,10 @@ pub struct CreateSessionRequest {
 
     /// Skip safety checks
     pub dangerous_skip_checks: bool,
+
+    /// Run in print mode (non-interactive, outputs response and exits)
+    #[serde(default)]
+    pub print_mode: bool,
 }
 
 /// Progress step during session creation
