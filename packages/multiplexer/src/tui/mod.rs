@@ -188,18 +188,16 @@ async fn run_main_loop(
                 app::DeleteProgress::Done { session_id } => {
                     app.deleting_session_id = None;
                     app.delete_progress_rx = None;
-                    if let Some(task) = app.delete_task.take() {
-                        task.abort();
-                    }
+                    // Task is already complete - just take the handle to clean up
+                    app.delete_task.take();
                     app.status_message = Some(format!("Deleted session {session_id}"));
                     let _ = app.refresh_sessions().await;
                 }
                 app::DeleteProgress::Error { session_id, message } => {
                     app.deleting_session_id = None;
                     app.delete_progress_rx = None;
-                    if let Some(task) = app.delete_task.take() {
-                        task.abort();
-                    }
+                    // Task is already complete - just take the handle to clean up
+                    app.delete_task.take();
                     app.status_message = Some(format!("Delete failed: {message}"));
                 }
             }
@@ -208,6 +206,16 @@ async fn run_main_loop(
         if app.should_quit {
             break;
         }
+    }
+
+    // Cleanup: Abort any in-flight background tasks before exiting
+    // Note: The daemon will still complete the actual operations (create/delete),
+    // we're just stopping the TUI's monitoring tasks
+    if let Some(task) = app.create_task.take() {
+        task.abort();
+    }
+    if let Some(task) = app.delete_task.take() {
+        task.abort();
     }
 
     Ok(())
