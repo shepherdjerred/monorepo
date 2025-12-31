@@ -31,6 +31,14 @@ pub trait GitOperations: Send + Sync {
     async fn get_branch(&self, worktree_path: &Path) -> anyhow::Result<String>;
 }
 
+/// Options for creating an execution backend session.
+#[derive(Debug, Clone, Default)]
+pub struct CreateOptions {
+    /// Run in print mode (non-interactive, outputs response and exits).
+    /// Only applicable to Docker backend.
+    pub print_mode: bool,
+}
+
 /// Trait for execution backends (Zellij, Docker, etc.)
 ///
 /// This trait abstracts the creation and management of isolated
@@ -45,6 +53,7 @@ pub trait ExecutionBackend: Send + Sync {
         name: &str,
         workdir: &Path,
         initial_prompt: &str,
+        options: CreateOptions,
     ) -> anyhow::Result<String>;
 
     /// Check if a session/container exists

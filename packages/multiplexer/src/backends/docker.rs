@@ -40,8 +40,6 @@ impl DockerProxyConfig {
 pub struct DockerBackend {
     /// Proxy configuration.
     proxy_config: DockerProxyConfig,
-    /// Run in print mode (non-interactive, outputs response and exits).
-    print_mode: bool,
 }
 
 impl DockerBackend {
@@ -54,24 +52,13 @@ impl DockerBackend {
                 http_proxy_port: 0,
                 mux_dir: PathBuf::new(),
             },
-            print_mode: false,
         }
     }
 
     /// Create a new Docker backend with proxy support.
     #[must_use]
-    pub fn with_proxy(proxy_config: DockerProxyConfig) -> Self {
-        Self {
-            proxy_config,
-            print_mode: false,
-        }
-    }
-
-    /// Set print mode (non-interactive, outputs response and exits).
-    #[must_use]
-    pub const fn with_print_mode(mut self, print_mode: bool) -> Self {
-        self.print_mode = print_mode;
-        self
+    pub const fn with_proxy(proxy_config: DockerProxyConfig) -> Self {
+        Self { proxy_config }
     }
 
     /// Check if a container is running
@@ -341,6 +328,7 @@ impl ExecutionBackend for DockerBackend {
         name: &str,
         workdir: &Path,
         initial_prompt: &str,
+        options: super::traits::CreateOptions,
     ) -> anyhow::Result<String> {
         // Create a container name from the session name
         let container_name = format!("mux-{name}");
@@ -361,7 +349,7 @@ impl ExecutionBackend for DockerBackend {
             initial_prompt,
             uid,
             proxy_config,
-            self.print_mode,
+            options.print_mode,
         )?;
         let output = Command::new("docker")
             .args(&args)
@@ -471,7 +459,7 @@ impl DockerBackend {
         workdir: &Path,
         initial_prompt: &str,
     ) -> anyhow::Result<String> {
-        self.create(name, workdir, initial_prompt).await
+        self.create(name, workdir, initial_prompt, super::traits::CreateOptions::default()).await
     }
 
     /// Check if a Docker container exists (legacy name)
