@@ -147,6 +147,12 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                         return Ok(());
                     }
 
+                    // Don't allow creation while deletion is in progress
+                    if app.delete_task.is_some() {
+                        app.status_message = Some("Cannot create while deleting a session".to_string());
+                        return Ok(());
+                    }
+
                     // Create channel for progress updates
                     let (tx, rx) = mpsc::channel(16);
                     app.progress_rx = Some(rx);

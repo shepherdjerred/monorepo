@@ -458,8 +458,23 @@ impl App {
 
     /// Delete the pending session
     ///
-    /// Spawns a background task to perform the deletion asynchronously.
-    /// Use the `delete_progress_rx` channel to monitor progress.
+    /// Spawns a background task to perform the deletion asynchronously to keep
+    /// the TUI responsive. This follows the same pattern as session creation.
+    ///
+    /// # Behavior
+    ///
+    /// - Spawns a tokio task that connects to the daemon and performs deletion
+    /// - Sets `deleting_session_id` to show spinner indicator in UI
+    /// - Progress updates are sent via `delete_progress_rx` channel
+    /// - Main event loop polls the channel and handles completion/errors
+    /// - Blocks deletion if a create operation is in progress
+    ///
+    /// # State Changes
+    ///
+    /// - Sets `delete_task` to Some(JoinHandle) while deletion is in progress
+    /// - Sets `delete_progress_rx` to receive progress updates
+    /// - Sets `deleting_session_id` to show which session is being deleted
+    /// - Returns to `SessionList` mode immediately (non-blocking)
     pub fn confirm_delete(&mut self) {
         if let Some(id) = self.pending_delete.take() {
             // Prevent multiple concurrent deletes
