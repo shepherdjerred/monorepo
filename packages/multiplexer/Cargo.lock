@@ -1704,6 +1704,7 @@ dependencies = [
  "anyhow",
  "async-trait",
  "axum",
+ "base64",
  "cargo-husky",
  "chrono",
  "clap",

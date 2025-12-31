@@ -107,28 +107,31 @@ impl HttpHandler for AuthInjector {
             let mut auth_injected = false;
             if let Some(rule) = find_matching_rule(&host) {
                 if let Some(token) = credentials.get(rule.credential_key) {
-                    let (header_name, header_value) = if rule.credential_key == "anthropic" {
+                    if rule.credential_key == "anthropic" {
                         // Remove placeholder auth header before injecting real OAuth token
                         req.headers_mut().remove("authorization");
 
                         // Validate OAuth token format - only sk-ant-oat01-* tokens work with Bearer auth
+                        // Skip injection entirely for non-OAuth tokens to avoid confusing double errors
                         if !token.starts_with("sk-ant-oat01-") {
-                            tracing::error!(
-                                "Invalid Anthropic credential: multiplexer only supports OAuth tokens (sk-ant-oat01-*), \
-                                 got token starting with: {}...",
+                            tracing::warn!(
+                                "Skipping auth injection for Anthropic: multiplexer only supports OAuth tokens \
+                                 (sk-ant-oat01-*), got token starting with: {}... - request will fail with 401",
                                 &token[..token.len().min(12)]
                             );
+                            // Don't inject - let the request fail clearly without auth
+                        } else if let Ok(value) = format!("Bearer {}", token).parse() {
+                            req.headers_mut().insert("authorization", value);
+                            auth_injected = true;
+                            tracing::debug!("Injected authorization header for {}", host);
                         }
-
-                        ("authorization", format!("Bearer {}", token))
                     } else {
-                        (rule.header_name, rule.format_header(token))
-                    };
-
-                    if let Ok(value) = header_value.parse() {
-                        req.headers_mut().insert(header_name, value);
-                        auth_injected = true;
-                        tracing::debug!("Injected {} header for {}", header_name, host);
+                        let header_value = rule.format_header(token);
+                        if let Ok(value) = header_value.parse() {
+                            req.headers_mut().insert(rule.header_name, value);
+                            auth_injected = true;
+                            tracing::debug!("Injected {} header for {}", rule.header_name, host);
+                        }
                     }
                 } else {
                     tracing::warn!(
@@ -178,21 +181,23 @@ mod tests {
 
     #[test]
     fn test_oauth_token_validation() {
-        // Valid OAuth tokens start with sk-ant-oat01-
+        // Valid OAuth tokens start with sk-ant-oat01- and will have auth injected
         let valid_oauth = "sk-ant-oat01-abc123xyz";
         assert!(
             valid_oauth.starts_with("sk-ant-oat01-"),
             "Valid OAuth token should match prefix"
         );
 
-        // Regular API keys should NOT match (and will trigger error log)
+        // Regular API keys should NOT match - auth injection will be skipped
+        // and a warning logged. The request will fail with 401 from Anthropic.
         let api_key = "sk-ant-api03-xyz789";
         assert!(
             !api_key.starts_with("sk-ant-oat01-"),
-            "API key should not match OAuth prefix"
+            "API key should not match OAuth prefix - auth will be skipped"
         );
 
-        // Placeholder token should NOT match
+        // Placeholder token matches the OAuth prefix format, so auth will be injected
+        // (the proxy will replace it with the real token from the host)
         let placeholder = "sk-ant-oat01-mux-proxy-placeholder";
         assert!(
             placeholder.starts_with("sk-ant-oat01-"),

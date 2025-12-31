@@ -55,6 +55,7 @@ async fn test_create_session_zellij_success() {
             BackendType::Zellij,
             AgentType::ClaudeCode,
             true,
+            false, // print_mode
         )
         .await
         .expect("Failed to create session");
@@ -94,6 +95,7 @@ async fn test_create_session_docker_success() {
             BackendType::Docker,
             AgentType::ClaudeCode,
             false,
+            false, // print_mode
         )
         .await
         .expect("Failed to create session");
@@ -126,6 +128,7 @@ async fn test_create_session_git_fails() {
             BackendType::Zellij,
             AgentType::ClaudeCode,
             true,
+            false, // print_mode
         )
         .await;
 
@@ -154,6 +157,7 @@ async fn test_create_session_backend_fails() {
             BackendType::Zellij,
             AgentType::ClaudeCode,
             true,
+            false, // print_mode
         )
         .await;
 
@@ -184,6 +188,7 @@ async fn test_get_session_by_name() {
             BackendType::Zellij,
             AgentType::ClaudeCode,
             true,
+            false, // print_mode
         )
         .await
         .unwrap();
@@ -206,6 +211,7 @@ async fn test_get_session_by_uuid() {
             BackendType::Zellij,
             AgentType::ClaudeCode,
             true,
+            false, // print_mode
         )
         .await
         .unwrap();
@@ -238,6 +244,7 @@ async fn test_delete_session_success() {
             BackendType::Zellij,
             AgentType::ClaudeCode,
             true,
+            false, // print_mode
         )
         .await
         .unwrap();
@@ -283,6 +290,7 @@ async fn test_archive_session_success() {
             BackendType::Zellij,
             AgentType::ClaudeCode,
             true,
+            false, // print_mode
         )
         .await
         .unwrap();
@@ -320,6 +328,7 @@ async fn test_get_attach_command_zellij() {
             BackendType::Zellij,
             AgentType::ClaudeCode,
             true,
+            false, // print_mode
         )
         .await
         .unwrap();
@@ -343,6 +352,7 @@ async fn test_get_attach_command_docker() {
             BackendType::Docker,
             AgentType::ClaudeCode,
             true,
+            false, // print_mode
         )
         .await
         .unwrap();
@@ -376,6 +386,7 @@ async fn test_reconcile_healthy_session() {
             BackendType::Zellij,
             AgentType::ClaudeCode,
             true,
+            false, // print_mode
         )
         .await
         .unwrap();
@@ -401,6 +412,7 @@ async fn test_reconcile_missing_backend() {
             BackendType::Zellij,
             AgentType::ClaudeCode,
             true,
+            false, // print_mode
         )
         .await
         .unwrap();
@@ -438,6 +450,7 @@ async fn test_list_sessions_multiple() {
             BackendType::Zellij,
             AgentType::ClaudeCode,
             true,
+            false, // print_mode
         )
         .await
         .unwrap();
@@ -450,6 +463,7 @@ async fn test_list_sessions_multiple() {
             BackendType::Docker,
             AgentType::ClaudeCode,
             true,
+            false, // print_mode
         )
         .await
         .unwrap();
@@ -462,6 +476,7 @@ async fn test_list_sessions_multiple() {
             BackendType::Zellij,
             AgentType::ClaudeCode,
             true,
+            false, // print_mode
         )
         .await
         .unwrap();
@@ -485,6 +500,7 @@ async fn test_session_lifecycle() {
             BackendType::Zellij,
             AgentType::ClaudeCode,
             true,
+            false, // print_mode
         )
         .await
         .unwrap();

@@ -17,6 +17,7 @@ fn test_docker_run_arg_order() {
         "test prompt",
         1000,
         None,
+        false, // interactive mode
     ).expect("Failed to build args");
 
     // First arg must be "run"
@@ -63,6 +64,7 @@ fn test_docker_env_vars() {
         "test prompt",
         1000,
         None,
+        false, // interactive mode
     ).expect("Failed to build args");
 
     // Find all -e flags and their values
@@ -164,6 +166,7 @@ fn test_volume_mount_format() {
         "test prompt",
         1000,
         None,
+        false, // interactive mode
     ).expect("Failed to build args");
 
     // Find all -v flags and their values
@@ -211,6 +214,7 @@ fn test_workspace_mount_destination() {
         "test prompt",
         1000,
         None,
+        false, // interactive mode
     ).expect("Failed to build args");
 
     // Find workspace volume mount
@@ -242,6 +246,7 @@ fn test_final_command_format() {
         prompt,
         1000,
         None,
+        false, // interactive mode
     ).expect("Failed to build args");
 
     let final_cmd = args.last().unwrap();
