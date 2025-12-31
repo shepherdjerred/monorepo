@@ -721,6 +721,8 @@ async fn test_create_session_failure() {
 
 #[tokio::test]
 async fn test_delete_session_success() {
+    use crate::tui::app::DeleteProgress;
+
     let mut app = App::new();
     let mock = MockApiClient::new();
 
@@ -733,7 +735,21 @@ async fn test_delete_session_success() {
     assert_eq!(app.sessions.len(), 1);
 
     app.open_delete_confirm();
-    app.confirm_delete().await.unwrap();
+    app.confirm_delete();
+
+    // Poll for deletion completion (since deletion is now async)
+    let mut rx = app.delete_progress_rx.take().expect("delete progress receiver should be set");
+    let progress = rx.recv().await.expect("should receive deletion progress");
+
+    match progress {
+        DeleteProgress::Done { session_id } => {
+            app.status_message = Some(format!("Deleted session {session_id}"));
+            app.refresh_sessions().await.unwrap();
+        }
+        DeleteProgress::Error { message, .. } => {
+            panic!("Deletion should succeed, but got error: {message}");
+        }
+    }
 
     assert!(app.sessions.is_empty());
     assert!(app.status_message.is_some());

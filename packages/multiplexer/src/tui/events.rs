@@ -392,10 +392,7 @@ async fn handle_directory_picker_key(app: &mut App, key: KeyEvent) -> anyhow::Re
 async fn handle_confirm_delete_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
     match key.code {
         KeyCode::Char('y' | 'Y') => {
-            if let Err(e) = app.confirm_delete().await {
-                app.status_message = Some(format!("Delete failed: {e}"));
-                app.cancel_delete();
-            }
+            app.confirm_delete();
         }
         KeyCode::Char('n' | 'N') | KeyCode::Esc => {
             app.cancel_delete();
