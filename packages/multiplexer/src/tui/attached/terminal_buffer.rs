@@ -49,6 +49,7 @@ pub struct TerminalBuffer {
     scroll_back: VecDeque<Line>,
 
     /// Maximum number of scroll-back lines to keep.
+    #[allow(dead_code)]
     scroll_back_limit: usize,
 
     /// Current scroll offset (0 = at bottom, showing live output).

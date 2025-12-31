@@ -59,13 +59,13 @@ fn render_main_content(frame: &mut Frame, app: &App, area: Rect) {
 
 /// Render the attached terminal view.
 fn render_attached_terminal(frame: &mut Frame, app: &App, area: Rect) {
-    use super::attached::render_terminal;
+    use super::attached::TerminalWidget;
 
     if let Some(pty_session) = app.attached_pty_session() {
         let buffer = pty_session.terminal_buffer();
         if let Ok(buf) = buffer.try_lock() {
-            // Render the terminal content
-            render_terminal(frame, &buf, area);
+            // Render the terminal content using the widget
+            frame.render_widget(TerminalWidget::new(&buf), area);
             return;
         }
     }
