@@ -130,6 +130,23 @@ pub async fn handle_request(request: Request, manager: &SessionManager) -> Respo
             // TODO: Implement real-time subscriptions
             Response::Subscribed
         }
+
+        Request::GetRecentRepos => match manager.get_recent_repos().await {
+            Ok(repos) => {
+                let repo_paths: Vec<String> = repos
+                    .into_iter()
+                    .map(|r| r.repo_path.to_string_lossy().to_string())
+                    .collect();
+                Response::RecentRepos(repo_paths)
+            }
+            Err(e) => {
+                tracing::error!(error = %e, "Failed to get recent repos");
+                Response::Error {
+                    code: "RECENT_REPOS_ERROR".to_string(),
+                    message: e.to_string(),
+                }
+            }
+        },
     }
 }
 

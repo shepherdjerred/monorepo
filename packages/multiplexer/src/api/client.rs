@@ -244,6 +244,23 @@ impl Client {
             _ => anyhow::bail!("Unexpected response"),
         }
     }
+
+    /// Get recent repositories
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the request fails.
+    pub async fn get_recent_repos(&mut self) -> anyhow::Result<Vec<String>> {
+        let response = self.send_request(Request::GetRecentRepos).await?;
+
+        match response {
+            Response::RecentRepos(repos) => Ok(repos),
+            Response::Error { code, message } => {
+                anyhow::bail!("[{code}] {message}")
+            }
+            _ => anyhow::bail!("Unexpected response"),
+        }
+    }
 }
 
 #[async_trait]
@@ -277,5 +294,9 @@ impl ApiClient for Client {
 
     async fn reconcile(&mut self) -> anyhow::Result<ReconcileReportDto> {
         Client::reconcile(self).await
+    }
+
+    async fn get_recent_repos(&mut self) -> anyhow::Result<Vec<String>> {
+        Client::get_recent_repos(self).await
     }
 }

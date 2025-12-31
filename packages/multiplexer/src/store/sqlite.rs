@@ -1,10 +1,11 @@
 use async_trait::async_trait;
+use chrono::Utc;
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePool, SqlitePoolOptions};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use uuid::Uuid;
 
-use super::Store;
+use super::{RecentRepo, Store};
 use crate::core::{Event, Session};
 
 /// SQLite-based session store
@@ -81,6 +82,17 @@ impl SqliteStore {
         sqlx::query(
             r"
             CREATE INDEX IF NOT EXISTS idx_events_session_id ON events(session_id)
+            ",
+        )
+        .execute(pool)
+        .await?;
+
+        sqlx::query(
+            r"
+            CREATE TABLE IF NOT EXISTS recent_repos (
+                repo_path TEXT PRIMARY KEY,
+                last_used TEXT NOT NULL
+            )
             ",
         )
         .execute(pool)
@@ -193,6 +205,32 @@ impl Store for SqliteStore {
 
         rows.into_iter().map(TryInto::try_into).collect()
     }
+
+    async fn add_recent_repo(&self, repo_path: PathBuf) -> anyhow::Result<()> {
+        let now = Utc::now();
+        sqlx::query(
+            r"
+            INSERT OR REPLACE INTO recent_repos (repo_path, last_used)
+            VALUES (?, ?)
+            ",
+        )
+        .bind(repo_path.to_string_lossy().to_string())
+        .bind(now.to_rfc3339())
+        .execute(&self.pool)
+        .await?;
+
+        Ok(())
+    }
+
+    async fn get_recent_repos(&self) -> anyhow::Result<Vec<RecentRepo>> {
+        let rows = sqlx::query_as::<_, RecentRepoRow>(
+            "SELECT * FROM recent_repos ORDER BY last_used DESC LIMIT 10",
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
+        rows.into_iter().map(TryInto::try_into).collect()
+    }
 }
 
 /// Helper to get event type name for storage
@@ -277,6 +315,24 @@ impl TryFrom<EventRow> for Event {
             session_id: Uuid::parse_str(&row.session_id)?,
             event_type: serde_json::from_str(&row.payload)?,
             timestamp: chrono::DateTime::parse_from_rfc3339(&row.timestamp)?.into(),
+        })
+    }
+}
+
+/// Row type for recent_repos table
+#[derive(sqlx::FromRow)]
+struct RecentRepoRow {
+    repo_path: String,
+    last_used: String,
+}
+
+impl TryFrom<RecentRepoRow> for RecentRepo {
+    type Error = anyhow::Error;
+
+    fn try_from(row: RecentRepoRow) -> Result<Self, Self::Error> {
+        Ok(Self {
+            repo_path: row.repo_path.into(),
+            last_used: chrono::DateTime::parse_from_rfc3339(&row.last_used)?.into(),
         })
     }
 }

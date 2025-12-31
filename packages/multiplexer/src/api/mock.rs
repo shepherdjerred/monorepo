@@ -264,6 +264,19 @@ impl ApiClient for MockApiClient {
             orphaned_backends: vec![],
         })
     }
+
+    async fn get_recent_repos(&mut self) -> anyhow::Result<Vec<String>> {
+        if self.should_fail() {
+            let msg = self.error_message.read().await.clone();
+            anyhow::bail!("{}", msg);
+        }
+
+        // Return mock recent repos
+        Ok(vec![
+            "/home/user/projects/repo1".to_string(),
+            "/home/user/projects/repo2".to_string(),
+        ])
+    }
 }
 
 #[cfg(test)]

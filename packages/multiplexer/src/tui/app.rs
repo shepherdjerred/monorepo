@@ -47,6 +47,8 @@ pub struct DirEntry {
     pub path: PathBuf,
     /// Whether this is the parent directory (..)
     pub is_parent: bool,
+    /// Whether this is from recent repos list
+    pub is_recent: bool,
 }
 
 /// Directory picker state
@@ -56,6 +58,8 @@ pub struct DirectoryPickerState {
     pub current_dir: PathBuf,
     /// All directory entries in current directory
     pub all_entries: Vec<DirEntry>,
+    /// Recent repositories
+    pub recent_repos: Vec<DirEntry>,
     /// Filtered entries based on search query
     pub filtered_entries: Vec<DirEntry>,
     /// Current search query
@@ -90,6 +94,7 @@ impl DirectoryPickerState {
         Self {
             current_dir: std::env::current_dir().unwrap_or_default(),
             all_entries: Vec::new(),
+            recent_repos: Vec::new(),
             filtered_entries: Vec::new(),
             search_query: String::new(),
             selected_index: 0,
@@ -97,6 +102,29 @@ impl DirectoryPickerState {
             error: None,
             matcher: nucleo_matcher::Matcher::new(nucleo_matcher::Config::DEFAULT),
         }
+    }
+
+    /// Load recent repositories from a list of paths
+    pub fn load_recent_repos(&mut self, repo_paths: Vec<String>) {
+        self.recent_repos = repo_paths
+            .into_iter()
+            .filter_map(|path_str| {
+                let path = PathBuf::from(&path_str);
+                if !path.exists() {
+                    return None;
+                }
+                let name = path
+                    .file_name()
+                    .map(|n| n.to_string_lossy().to_string())
+                    .unwrap_or(path_str);
+                Some(DirEntry {
+                    name,
+                    path,
+                    is_parent: false,
+                    is_recent: true,
+                })
+            })
+            .collect();
     }
 
     /// Open the directory picker with an optional initial path
@@ -136,6 +164,7 @@ impl DirectoryPickerState {
                 name: "..".to_string(),
                 path: parent.to_path_buf(),
                 is_parent: true,
+                is_recent: false,
             });
         }
 
@@ -148,6 +177,7 @@ impl DirectoryPickerState {
                             name: name.to_string_lossy().to_string(),
                             path: dir,
                             is_parent: false,
+                            is_recent: false,
                         });
                     }
                 }
@@ -163,26 +193,34 @@ impl DirectoryPickerState {
     /// Apply fuzzy filter to entries based on search query
     pub fn apply_filter(&mut self) {
         if self.search_query.is_empty() {
-            self.filtered_entries = self.all_entries.clone();
+            // When no search query, show recent repos first, then current directory entries
+            self.filtered_entries = self.recent_repos.clone();
+            self.filtered_entries.extend(self.all_entries.clone());
         } else {
             // Score and filter entries
             // Convert search query to Utf32String once
             let needle = Utf32String::from(self.search_query.as_str());
 
-            let mut scored: Vec<(DirEntry, u16)> = self
-                .all_entries
+            // Combine recent repos and current directory entries for searching
+            let all_searchable: Vec<&DirEntry> = self
+                .recent_repos
+                .iter()
+                .chain(self.all_entries.iter())
+                .collect();
+
+            let mut scored: Vec<(DirEntry, u16)> = all_searchable
                 .iter()
                 .filter_map(|entry| {
                     // Never filter out parent directory
                     if entry.is_parent {
-                        return Some((entry.clone(), u16::MAX));
+                        return Some(((*entry).clone(), u16::MAX));
                     }
 
                     // Convert entry name to Utf32String and use nucleo-matcher for fuzzy matching
                     let haystack = Utf32String::from(entry.name.as_str());
                     self.matcher
                         .fuzzy_match(haystack.slice(..), needle.slice(..))
-                        .map(|score| (entry.clone(), score))
+                        .map(|score| ((*entry).clone(), score))
                 })
                 .collect();
 
@@ -546,6 +584,20 @@ impl App {
             self.status_message = Some(msg);
         }
         Ok(())
+    }
+
+    /// Load recent repositories into the directory picker
+    pub async fn load_recent_repos(&mut self) {
+        if let Some(client) = &mut self.client {
+            match client.get_recent_repos().await {
+                Ok(repos) => {
+                    self.create_dialog.directory_picker.load_recent_repos(repos);
+                }
+                Err(e) => {
+                    tracing::warn!("Failed to load recent repos: {e}");
+                }
+            }
+        }
     }
 
     /// Toggle help view
