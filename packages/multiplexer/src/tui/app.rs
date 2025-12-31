@@ -35,6 +35,7 @@ pub enum CreateDialogFocus {
     RepoPath,
     Backend,
     SkipChecks,
+    PlanMode,
     Buttons,
 }
 
@@ -78,6 +79,7 @@ pub struct CreateDialogState {
     pub repo_path: String,
     pub backend_zellij: bool, // true = Zellij, false = Docker
     pub skip_checks: bool,
+    pub plan_mode: bool,
     pub focus: CreateDialogFocus,
     pub button_create_focused: bool, // true = Create, false = Cancel
     pub directory_picker: DirectoryPickerState,
@@ -254,6 +256,7 @@ impl CreateDialogState {
             repo_path: String::new(),
             backend_zellij: true, // Default to Zellij
             skip_checks: false,
+            plan_mode: true, // Default to plan mode ON
             focus: CreateDialogFocus::default(),
             button_create_focused: false,
             directory_picker: DirectoryPickerState::new(),
@@ -506,6 +509,7 @@ impl App {
             agent: AgentType::ClaudeCode,
             dangerous_skip_checks: self.create_dialog.skip_checks,
             print_mode: false, // TUI always uses interactive mode
+            plan_mode: self.create_dialog.plan_mode,
         };
 
         if let Some(client) = &mut self.client {

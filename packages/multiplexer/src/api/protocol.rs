@@ -64,9 +64,19 @@ pub struct CreateSessionRequest {
     #[serde(default)]
     pub print_mode: bool,
 
+    /// Start in plan mode
+    #[serde(default = "default_plan_mode")]
+    pub plan_mode: bool,
+
     /// Access mode for proxy filtering
     #[serde(default)]
     pub access_mode: AccessMode,
+}
+
+/// Default to plan mode for safety - allows users to explore and understand
+/// the codebase before making changes. Users must explicitly opt-out.
+fn default_plan_mode() -> bool {
+    true
 }
 
 /// Progress step during session creation

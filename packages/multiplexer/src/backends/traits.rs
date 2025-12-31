@@ -37,6 +37,11 @@ pub struct CreateOptions {
     /// Run in print mode (non-interactive, outputs response and exits).
     /// Only applicable to Docker backend.
     pub print_mode: bool,
+
+    /// Start in plan mode (read-only exploration).
+    /// Applicable to both Zellij and Docker backends.
+    pub plan_mode: bool,
+
     /// Session-specific proxy port (overrides global proxy port).
     /// Only applicable to Docker backend.
     pub session_proxy_port: Option<u16>,
