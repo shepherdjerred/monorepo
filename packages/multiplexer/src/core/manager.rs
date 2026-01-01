@@ -233,6 +233,13 @@ impl SessionManager {
             None
         };
 
+        // Prepend plan mode instruction if enabled
+        let transformed_prompt = if plan_mode {
+            format!("Enter plan mode and create a plan before doing anything.\n\n{}", initial_prompt.trim())
+        } else {
+            initial_prompt.clone()
+        };
+
         // Create backend resource
         let create_options = crate::backends::CreateOptions {
             print_mode,
@@ -243,12 +250,12 @@ impl SessionManager {
         let backend_id = match backend {
             BackendType::Zellij => {
                 self.zellij
-                    .create(&full_name, &worktree_path, &initial_prompt, create_options)
+                    .create(&full_name, &worktree_path, &transformed_prompt, create_options)
                     .await?
             }
             BackendType::Docker => {
                 self.docker
-                    .create(&full_name, &worktree_path, &initial_prompt, create_options)
+                    .create(&full_name, &worktree_path, &transformed_prompt, create_options)
                     .await?
             }
         };
