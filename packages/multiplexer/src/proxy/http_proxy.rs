@@ -3,7 +3,6 @@
 use std::future::Future;
 use std::net::SocketAddr;
 use std::sync::Arc;
-use std::time::Instant;
 
 use chrono::Utc;
 use hudsucker::certificate_authority::RcgenAuthority;
@@ -122,6 +121,35 @@ impl HttpAuthProxy {
     }
 }
 
+/// Classify proxy errors into specific types for debugging.
+fn classify_proxy_error(err: &hudsucker::Error) -> &'static str {
+    let error_str = err.to_string().to_lowercase();
+
+    if error_str.contains("dns") || error_str.contains("resolve") {
+        "DNS_RESOLUTION_FAILURE"
+    } else if error_str.contains("connect") || error_str.contains("connection refused") {
+        "CONNECTION_REFUSED"
+    } else if error_str.contains("timeout") {
+        "CONNECTION_TIMEOUT"
+    } else if error_str.contains("certificate") || error_str.contains("tls") {
+        "TLS_CERTIFICATE_ERROR"
+    } else {
+        "UNKNOWN_ERROR"
+    }
+}
+
+/// Build an error response with proper fallback handling.
+fn build_error_response(error_type: &'static str) -> Response<Body> {
+    Response::builder()
+        .status(502)
+        .header("X-Proxy-Error-Type", error_type)
+        .body(Body::from(format!(
+            "Proxy error: {}",
+            error_type.replace('_', " ").to_lowercase()
+        )))
+        .expect("Failed to build error response")
+}
+
 /// Handler that injects authentication headers into requests.
 #[derive(Clone)]
 struct AuthInjector {
@@ -233,16 +261,13 @@ impl HttpHandler for AuthInjector {
             .host()
             .map(String::from)
             .unwrap_or_else(|| String::from("unknown"));
-        let start = Instant::now();
 
         async move {
             let status = res.status();
-            let duration = start.elapsed();
 
             tracing::debug!(
                 host = %host,
                 status = %status,
-                duration_ms = duration.as_millis(),
                 "Response received from upstream"
             );
 
@@ -272,23 +297,9 @@ impl HttpHandler for AuthInjector {
         let method = ctx.method.to_string();
 
         async move {
-            let error_str = err.to_string();
+            let error_type = classify_proxy_error(&err);
 
-            // Classify error types
-            let error_type = if error_str.contains("dns") || error_str.contains("resolve") {
-                "DNS_RESOLUTION_FAILURE"
-            } else if error_str.contains("connect") || error_str.contains("connection refused") {
-                "CONNECTION_REFUSED"
-            } else if error_str.contains("timeout") {
-                "CONNECTION_TIMEOUT"
-            } else if error_str.contains("certificate") || error_str.contains("tls") {
-                "TLS_CERTIFICATE_ERROR"
-            } else if error_str.contains("502") {
-                "UPSTREAM_502_ERROR"
-            } else {
-                "UNKNOWN_ERROR"
-            };
-
+            // Log full error details for debugging (not sent to client)
             tracing::error!(
                 host = %host,
                 method = %method,
@@ -297,13 +308,8 @@ impl HttpHandler for AuthInjector {
                 "Proxy error while handling request"
             );
 
-            // Return error response with classification
-            let body = format!("Proxy error ({}): {}", error_type, err);
-            Response::builder()
-                .status(502)
-                .header("X-Proxy-Error-Type", error_type)
-                .body(Body::from(body))
-                .unwrap()
+            // Return error response (only error_type, not full error details)
+            build_error_response(error_type)
         }
     }
 }
@@ -441,17 +447,14 @@ impl HttpHandler for FilteringHandler {
             .host()
             .map(String::from)
             .unwrap_or_else(|| String::from("unknown"));
-        let start = Instant::now();
 
         async move {
             let status = res.status();
-            let duration = start.elapsed();
 
             tracing::debug!(
                 session_id = %session_id,
                 host = %host,
                 status = %status,
-                duration_ms = duration.as_millis(),
                 "Response received from upstream"
             );
 
@@ -483,23 +486,9 @@ impl HttpHandler for FilteringHandler {
         let method = ctx.method.to_string();
 
         async move {
-            let error_str = err.to_string();
+            let error_type = classify_proxy_error(&err);
 
-            // Classify error types
-            let error_type = if error_str.contains("dns") || error_str.contains("resolve") {
-                "DNS_RESOLUTION_FAILURE"
-            } else if error_str.contains("connect") || error_str.contains("connection refused") {
-                "CONNECTION_REFUSED"
-            } else if error_str.contains("timeout") {
-                "CONNECTION_TIMEOUT"
-            } else if error_str.contains("certificate") || error_str.contains("tls") {
-                "TLS_CERTIFICATE_ERROR"
-            } else if error_str.contains("502") {
-                "UPSTREAM_502_ERROR"
-            } else {
-                "UNKNOWN_ERROR"
-            };
-
+            // Log full error details for debugging (not sent to client)
             tracing::error!(
                 session_id = %session_id,
                 host = %host,
@@ -509,13 +498,8 @@ impl HttpHandler for FilteringHandler {
                 "Proxy error while handling request"
             );
 
-            // Return error response with classification
-            let body = format!("Proxy error ({}): {}", error_type, err);
-            Response::builder()
-                .status(502)
-                .header("X-Proxy-Error-Type", error_type)
-                .body(Body::from(body))
-                .unwrap()
+            // Return error response (only error_type, not full error details)
+            build_error_response(error_type)
         }
     }
 }
