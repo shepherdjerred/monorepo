@@ -4,7 +4,7 @@ import { ApiError, NetworkError, SessionNotFoundError } from "./errors.js";
 /**
  * Configuration options for MuxClient
  */
-export interface MuxClientConfig {
+export type MuxClientConfig = {
   /**
    * Base URL for the Mux HTTP API
    * @default "http://localhost:3030"
@@ -18,6 +18,18 @@ export interface MuxClientConfig {
 }
 
 /**
+ * Get the default base URL based on the current environment.
+ * In browser context, derives from window.location.
+ * In non-browser context, defaults to localhost:3030.
+ */
+function getDefaultBaseUrl(): string {
+  if (typeof window !== "undefined") {
+    return `${window.location.protocol}//${window.location.host}`;
+  }
+  return "http://localhost:3030";
+}
+
+/**
  * Type-safe HTTP client for the Mux API
  */
 export class MuxClient {
@@ -25,7 +37,7 @@ export class MuxClient {
   private readonly fetch: typeof fetch;
 
   constructor(config: MuxClientConfig = {}) {
-    this.baseUrl = config.baseUrl ?? "http://localhost:3030";
+    this.baseUrl = config.baseUrl ?? getDefaultBaseUrl();
     this.fetch = config.fetch ?? globalThis.fetch.bind(globalThis);
   }
 
@@ -123,13 +135,13 @@ export class MuxClient {
       }
 
       // Parse JSON response
-      const data = await response.json();
+      const data: unknown = await response.json();
 
       // Check for error responses
       if (!response.ok) {
         const errorData = data as { error?: string };
         throw new ApiError(
-          errorData.error ?? `HTTP ${response.status}: ${response.statusText}`,
+          errorData.error ?? `HTTP ${String(response.status)}: ${response.statusText}`,
           undefined,
           response.status
         );

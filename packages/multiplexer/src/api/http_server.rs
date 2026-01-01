@@ -1,6 +1,7 @@
 use crate::core::manager::SessionManager;
 use crate::api::protocol::CreateSessionRequest;
 use crate::api::static_files::serve_static;
+use crate::api::ws_events::EventBroadcaster;
 use crate::core::session::AccessMode;
 use axum::{
     extract::{Path, State},
@@ -18,6 +19,7 @@ use tower_http::cors::{Any, CorsLayer};
 #[derive(Clone)]
 pub struct AppState {
     pub session_manager: Arc<SessionManager>,
+    pub event_broadcaster: EventBroadcaster,
 }
 
 /// Create the HTTP router with all endpoints (without state)
@@ -59,6 +61,9 @@ async fn get_session(
     State(state): State<AppState>,
     Path(id): Path<String>,
 ) -> Result<Json<serde_json::Value>, AppError> {
+    // Validate session ID to prevent path traversal attacks
+    validate_session_id(&id)?;
+
     let session = state.session_manager
         .get_session(&id)
         .await
@@ -98,6 +103,7 @@ async fn delete_session(
     State(state): State<AppState>,
     Path(id): Path<String>,
 ) -> Result<StatusCode, AppError> {
+    validate_session_id(&id)?;
     state.session_manager.delete_session(&id).await?;
     Ok(StatusCode::NO_CONTENT)
 }
@@ -107,6 +113,7 @@ async fn archive_session(
     State(state): State<AppState>,
     Path(id): Path<String>,
 ) -> Result<StatusCode, AppError> {
+    validate_session_id(&id)?;
     state.session_manager.archive_session(&id).await?;
     Ok(StatusCode::NO_CONTENT)
 }
@@ -123,6 +130,7 @@ async fn update_access_mode(
     Path(id): Path<String>,
     Json(request): Json<UpdateAccessModeRequest>,
 ) -> Result<StatusCode, AppError> {
+    validate_session_id(&id)?;
     state
         .session_manager
         .update_access_mode(&id, request.access_mode)
@@ -149,12 +157,48 @@ async fn get_recent_repos(
     Ok(Json(json!({ "repos": repos_dto })))
 }
 
+/// Validate session ID to prevent path traversal and injection attacks
+///
+/// Session IDs can be either:
+/// - UUIDs (8-4-4-4-12 hex digits separated by hyphens)
+/// - Session names (alphanumeric with hyphens and underscores)
+///
+/// We reject anything with:
+/// - Path separators (/, \)
+/// - Parent directory references (..)
+/// - Null bytes
+/// - Control characters
+fn validate_session_id(id: &str) -> Result<(), AppError> {
+    // Check length (reasonable bounds)
+    if id.is_empty() || id.len() > 128 {
+        return Err(AppError::BadRequest("Invalid session ID length".to_string()));
+    }
+
+    // Check for path traversal attempts
+    if id.contains("..") || id.contains('/') || id.contains('\\') || id.contains('\0') {
+        return Err(AppError::BadRequest("Invalid session ID format".to_string()));
+    }
+
+    // Check for control characters
+    if id.chars().any(|c| c.is_control()) {
+        return Err(AppError::BadRequest("Invalid session ID format".to_string()));
+    }
+
+    // Session IDs should only contain alphanumeric, hyphens, and underscores
+    if !id.chars().all(|c| c.is_alphanumeric() || c == '-' || c == '_') {
+        return Err(AppError::BadRequest("Invalid session ID format".to_string()));
+    }
+
+    Ok(())
+}
+
 /// Custom error type for HTTP handlers
 #[derive(Debug)]
 pub enum AppError {
     SessionManager(anyhow::Error),
     NotFound(String),
     NotImplemented(String),
+    BadRequest(String),
 }
 
 impl From<anyhow::Error> for AppError {
@@ -175,6 +219,7 @@ impl IntoResponse for AppError {
             }
             AppError::NotFound(msg) => (StatusCode::NOT_FOUND, msg),
             AppError::NotImplemented(msg) => (StatusCode::NOT_IMPLEMENTED, msg),
+            AppError::BadRequest(msg) => (StatusCode::BAD_REQUEST, msg),
         };
 
         let body = Json(json!({

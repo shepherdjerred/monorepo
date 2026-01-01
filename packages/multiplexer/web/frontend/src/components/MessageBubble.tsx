@@ -2,7 +2,7 @@ import type { Message } from "../lib/claudeParser";
 import { User, Bot, Terminal, FileText, Edit, Search } from "lucide-react";
 import { formatRelativeTime } from "../lib/utils";
 
-interface MessageBubbleProps {
+type MessageBubbleProps = {
   message: Message;
 }
 
@@ -72,7 +72,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
                 className="flex items-start gap-2 p-3 bg-secondary/50 rounded-md border text-sm"
               >
                 <div className="flex-shrink-0 mt-0.5">
-                  {toolIcons[tool.name] || <Terminal className="w-4 h-4" />}
+                  {toolIcons[tool.name] ?? <Terminal className="w-4 h-4" />}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="font-semibold">{tool.name}</div>

@@ -1,14 +1,35 @@
 import { WebSocketError } from "./errors.js";
 
 /**
+ * Message received from the console WebSocket
+ */
+type ConsoleMessage = {
+  type: string;
+  data?: string;
+};
+
+/**
  * Configuration for ConsoleClient
  */
-export interface ConsoleClientConfig {
+export type ConsoleClientConfig = {
   /**
    * Base WebSocket URL (without the session ID)
-   * @default "ws://localhost:3030/ws/console"
+   * Defaults to deriving from window.location in browser context
    */
   baseUrl?: string;
+}
+
+/**
+ * Get the default WebSocket base URL based on the current environment.
+ * In browser context, derives from window.location.
+ * In non-browser context, defaults to localhost:3030.
+ */
+function getDefaultWsBaseUrl(): string {
+  if (typeof window !== "undefined") {
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    return `${protocol}//${window.location.host}/ws/console`;
+  }
+  return "ws://localhost:3030/ws/console";
 }
 
 /**
@@ -20,10 +41,10 @@ export class ConsoleClient {
   private sessionId: string | null = null;
 
   private listeners: {
-    connected: Array<() => void>;
-    disconnected: Array<() => void>;
-    data: Array<(data: string) => void>;
-    error: Array<(error: Error) => void>;
+    connected: (() => void)[];
+    disconnected: (() => void)[];
+    data: ((data: string) => void)[];
+    error: ((error: Error) => void)[];
   } = {
     connected: [],
     disconnected: [],
@@ -32,7 +53,7 @@ export class ConsoleClient {
   };
 
   constructor(config: ConsoleClientConfig = {}) {
-    this.baseUrl = config.baseUrl ?? "ws://localhost:3030/ws/console";
+    this.baseUrl = config.baseUrl ?? getDefaultWsBaseUrl();
   }
 
   /**
@@ -61,14 +82,23 @@ export class ConsoleClient {
         this.emit("error", new WebSocketError("WebSocket error occurred", event));
       };
 
-      this.ws.onmessage = (event) => {
+      this.ws.onmessage = (event: MessageEvent<string>) => {
         try {
-          const message = JSON.parse(event.data);
+          const message = JSON.parse(event.data) as ConsoleMessage;
 
           if (message.type === "output" && typeof message.data === "string") {
-            // Decode base64 data
-            const decoded = atob(message.data);
-            this.emit("data", decoded);
+            // Decode base64 data with error handling
+            try {
+              const decoded = atob(message.data);
+              this.emit("data", decoded);
+            } catch (decodeError) {
+              this.emit(
+                "error",
+                new WebSocketError(
+                  `Failed to decode base64 data: ${decodeError instanceof Error ? decodeError.message : String(decodeError)}`
+                )
+              );
+            }
           }
         } catch (error) {
           this.emit(
@@ -105,7 +135,7 @@ export class ConsoleClient {
    * Write input data to the console
    */
   write(data: string): void {
-    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+    if (this.ws?.readyState !== WebSocket.OPEN) {
       throw new WebSocketError("Not connected to console");
     }
 
@@ -124,7 +154,7 @@ export class ConsoleClient {
    * Resize the terminal
    */
   resize(rows: number, cols: number): void {
-    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+    if (this.ws?.readyState !== WebSocket.OPEN) {
       throw new WebSocketError("Not connected to console");
     }
 
@@ -191,13 +221,25 @@ export class ConsoleClient {
     return this.sessionId;
   }
 
-  private emit<K extends keyof typeof this.listeners>(
-    event: K,
-    ...args: Parameters<(typeof this.listeners)[K][number]>
+  private emit(event: "connected" | "disconnected"): void;
+  private emit(event: "data", data: string): void;
+  private emit(event: "error", error: Error): void;
+  private emit(
+    event: keyof typeof this.listeners,
+    arg?: string | Error
   ): void {
-    for (const listener of this.listeners[event]) {
-      // @ts-expect-error - TypeScript doesn't understand the spread here
-      listener(...args);
+    if (event === "connected" || event === "disconnected") {
+      for (const listener of this.listeners[event]) {
+        listener();
+      }
+    } else if (event === "data" && typeof arg === "string") {
+      for (const listener of this.listeners.data) {
+        listener(arg);
+      }
+    } else if (event === "error" && arg instanceof Error) {
+      for (const listener of this.listeners.error) {
+        listener(arg);
+      }
     }
   }
 }

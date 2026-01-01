@@ -1,8 +1,9 @@
 import type { Session } from "@mux/client";
+import { SessionStatus } from "@mux/shared";
 import { formatRelativeTime } from "../lib/utils";
 import { Circle, Archive, Trash2, Terminal } from "lucide-react";
 
-interface SessionCardProps {
+type SessionCardProps = {
   session: Session;
   onAttach: (session: Session) => void;
   onArchive: (session: Session) => void;
@@ -10,16 +11,16 @@ interface SessionCardProps {
 }
 
 export function SessionCard({ session, onAttach, onArchive, onDelete }: SessionCardProps) {
-  const statusColors = {
-    Creating: "text-blue-500",
-    Running: "text-green-500",
-    Idle: "text-yellow-500",
-    Completed: "text-gray-500",
-    Failed: "text-red-500",
-    Archived: "text-gray-400",
+  const statusColors: Record<SessionStatus, string> = {
+    [SessionStatus.Creating]: "text-blue-500",
+    [SessionStatus.Running]: "text-green-500",
+    [SessionStatus.Idle]: "text-yellow-500",
+    [SessionStatus.Completed]: "text-gray-500",
+    [SessionStatus.Failed]: "text-red-500",
+    [SessionStatus.Archived]: "text-gray-400",
   };
 
-  const statusColor = statusColors[session.status] || "text-gray-500";
+  const statusColor = statusColors[session.status];
 
   return (
     <div className="border rounded-lg p-4 hover:shadow-md transition-shadow bg-card">
@@ -40,18 +41,16 @@ export function SessionCard({ session, onAttach, onArchive, onDelete }: SessionC
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
             <span>{formatRelativeTime(session.created_at)}</span>
             <span>{session.branch_name}</span>
-            {session.access_mode && (
-              <span className="px-2 py-0.5 rounded bg-secondary">
-                {session.access_mode}
-              </span>
-            )}
+            <span className="px-2 py-0.5 rounded bg-secondary">
+              {session.access_mode}
+            </span>
           </div>
         </div>
 
         <div className="flex flex-col gap-2 ml-4">
-          {session.status === "Running" && (
+          {session.status === SessionStatus.Running && (
             <button
-              onClick={() => onAttach(session)}
+              onClick={() => { onAttach(session); }}
               className="p-2 hover:bg-secondary rounded-md transition-colors"
               title="Attach to console"
             >
@@ -60,7 +59,7 @@ export function SessionCard({ session, onAttach, onArchive, onDelete }: SessionC
           )}
 
           <button
-            onClick={() => onArchive(session)}
+            onClick={() => { onArchive(session); }}
             className="p-2 hover:bg-secondary rounded-md transition-colors"
             title="Archive session"
           >
@@ -68,7 +67,7 @@ export function SessionCard({ session, onAttach, onArchive, onDelete }: SessionC
           </button>
 
           <button
-            onClick={() => onDelete(session)}
+            onClick={() => { onDelete(session); }}
             className="p-2 hover:bg-destructive/10 text-destructive rounded-md transition-colors"
             title="Delete session"
           >

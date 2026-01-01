@@ -3,7 +3,7 @@ import type { Session, CreateSessionRequest, AccessMode } from "@mux/client";
 import { useMuxClient } from "../hooks/useMuxClient";
 import { useSessionEvents } from "../hooks/useSessionEvents";
 
-interface SessionContextValue {
+type SessionContextValue = {
   sessions: Map<string, Session>;
   isLoading: boolean;
   error: Error | null;
@@ -106,7 +106,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   // Initial load
   useEffect(() => {
-    refreshSessions();
+    void refreshSessions();
   }, [refreshSessions]);
 
   return (

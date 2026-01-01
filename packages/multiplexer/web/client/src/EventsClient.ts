@@ -11,9 +11,18 @@ export type SessionEvent =
   | { type: "status_changed"; sessionId: string; oldStatus: string; newStatus: string };
 
 /**
+ * Message received from the events WebSocket
+ */
+type EventsMessage = {
+  type: string;
+  event?: SessionEvent;
+  message?: string;
+};
+
+/**
  * Configuration for EventsClient
  */
-export interface EventsClientConfig {
+export type EventsClientConfig = {
   /**
    * WebSocket URL for events
    * @default "ws://localhost:3030/ws/events"
@@ -45,10 +54,10 @@ export class EventsClient {
   private intentionallyClosed = false;
 
   private listeners: {
-    connected: Array<() => void>;
-    disconnected: Array<() => void>;
-    event: Array<(event: SessionEvent) => void>;
-    error: Array<(error: Error) => void>;
+    connected: (() => void)[];
+    disconnected: (() => void)[];
+    event: ((event: SessionEvent) => void)[];
+    error: ((error: Error) => void)[];
   } = {
     connected: [],
     disconnected: [],
@@ -92,9 +101,9 @@ export class EventsClient {
         this.emit("error", new WebSocketError("WebSocket error occurred", event));
       };
 
-      this.ws.onmessage = (event) => {
+      this.ws.onmessage = (event: MessageEvent<string>) => {
         try {
-          const data = JSON.parse(event.data);
+          const data = JSON.parse(event.data) as EventsMessage;
 
           // Handle connection acknowledgment
           if (data.type === "connected") {
@@ -103,7 +112,7 @@ export class EventsClient {
 
           // Handle session events
           if (data.type === "event" && data.event) {
-            this.emit("event", data.event as SessionEvent);
+            this.emit("event", data.event);
           }
         } catch (error) {
           this.emit(
@@ -195,13 +204,25 @@ export class EventsClient {
     }, this.reconnectDelay);
   }
 
-  private emit<K extends keyof typeof this.listeners>(
-    event: K,
-    ...args: Parameters<(typeof this.listeners)[K][number]>
+  private emit(event: "connected" | "disconnected"): void;
+  private emit(event: "event", sessionEvent: SessionEvent): void;
+  private emit(event: "error", error: Error): void;
+  private emit(
+    event: keyof typeof this.listeners,
+    arg?: SessionEvent | Error
   ): void {
-    for (const listener of this.listeners[event]) {
-      // @ts-expect-error - TypeScript doesn't understand the spread here
-      listener(...args);
+    if (event === "connected" || event === "disconnected") {
+      for (const listener of this.listeners[event]) {
+        listener();
+      }
+    } else if (event === "event" && arg && "type" in arg && !(arg instanceof Error)) {
+      for (const listener of this.listeners.event) {
+        listener(arg);
+      }
+    } else if (event === "error" && arg instanceof Error) {
+      for (const listener of this.listeners.error) {
+        listener(arg);
+      }
     }
   }
 }

@@ -16,6 +16,10 @@
     "build:client": "cd client && bun run build",
     "build:frontend": "cd frontend && bun run build",
     "typecheck": "bun run --filter='./web/*' typecheck",
+    "lint": "bun run lint:shared && bun run lint:client && bun run lint:frontend",
+    "lint:shared": "cd shared && bun run lint",
+    "lint:client": "cd client && bun run lint",
+    "lint:frontend": "cd frontend && bun run lint",
     "clean": "rm -rf shared/dist client/dist frontend/dist shared/src/generated/*"
   },
   "devDependencies": {

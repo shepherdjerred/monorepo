@@ -149,10 +149,16 @@ async fn run_http_server(manager: Arc<SessionManager>, port: u16) -> anyhow::Res
     use crate::api::http_server::create_router;
     use crate::api::ws_console::ws_console_handler;
     use crate::api::ws_events::ws_events_handler;
+    use tokio::sync::broadcast;
+
+    // Create broadcast channel for session events
+    // Capacity of 100 means we can buffer 100 events before oldest are dropped
+    let (event_broadcaster, _) = broadcast::channel(100);
 
     // Create state
     let state = crate::api::http_server::AppState {
         session_manager: Arc::clone(&manager),
+        event_broadcaster,
     };
 
     // Create the HTTP router with all routes and state

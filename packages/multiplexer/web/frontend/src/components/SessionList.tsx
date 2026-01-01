@@ -1,10 +1,11 @@
 import { useState, useMemo } from "react";
 import type { Session } from "@mux/client";
+import { SessionStatus } from "@mux/shared";
 import { SessionCard } from "./SessionCard";
 import { useSessionContext } from "../contexts/SessionContext";
 import { Plus, RefreshCw } from "lucide-react";
 
-interface SessionListProps {
+type SessionListProps = {
   onAttach: (session: Session) => void;
   onCreateNew: () => void;
 }
@@ -21,27 +22,27 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
 
     switch (filter) {
       case "running":
-        return sessionArray.filter((s) => s.status === "Running");
+        return sessionArray.filter((s) => s.status === SessionStatus.Running);
       case "idle":
-        return sessionArray.filter((s) => s.status === "Idle");
+        return sessionArray.filter((s) => s.status === SessionStatus.Idle);
       case "completed":
-        return sessionArray.filter((s) => s.status === "Completed");
+        return sessionArray.filter((s) => s.status === SessionStatus.Completed);
       case "archived":
-        return sessionArray.filter((s) => s.status === "Archived");
+        return sessionArray.filter((s) => s.status === SessionStatus.Archived);
       default:
         return sessionArray;
     }
   }, [sessions, filter]);
 
-  const handleArchive = async (session: Session) => {
+  const handleArchive = (session: Session) => {
     if (confirm(`Archive session "${session.name}"?`)) {
-      await archiveSession(session.id);
+      void archiveSession(session.id);
     }
   };
 
-  const handleDelete = async (session: Session) => {
+  const handleDelete = (session: Session) => {
     if (confirm(`Delete session "${session.name}"? This cannot be undone.`)) {
-      await deleteSession(session.id);
+      void deleteSession(session.id);
     }
   };
 
@@ -52,7 +53,7 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
         <h1 className="text-2xl font-bold">Sessions</h1>
         <div className="flex gap-2">
           <button
-            onClick={refreshSessions}
+            onClick={() => { void refreshSessions(); }}
             className="p-2 hover:bg-secondary rounded-md transition-colors"
             disabled={isLoading}
           >
@@ -73,7 +74,7 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
         {(["all", "running", "idle", "completed", "archived"] as const).map((status) => (
           <button
             key={status}
-            onClick={() => setFilter(status)}
+            onClick={() => { setFilter(status); }}
             className={`px-3 py-1 rounded-md text-sm capitalize transition-colors ${
               filter === status
                 ? "bg-primary text-primary-foreground"
