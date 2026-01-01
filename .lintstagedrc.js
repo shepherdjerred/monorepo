@@ -26,4 +26,11 @@ export default {
 
     return commands;
   },
+  "packages/multiplexer/**/*.rs": () => {
+    return [
+      "cd packages/multiplexer && cargo fmt --check",
+      "cd packages/multiplexer && cargo clippy -- -D warnings",
+      "cd packages/multiplexer && cargo test",
+    ];
+  },
 };
