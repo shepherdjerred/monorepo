@@ -453,19 +453,52 @@ impl DockerBackend {
         // When a credentials file exists, Claude Code validates it against the API,
         // which would fail with our fake tokens. The env var path skips this validation.
 
-        // Create config files to suppress onboarding and permission warnings
-        // Always do this when proxy is enabled since we always use --dangerously-skip-permissions
-        if let Some(proxy) = proxy_config {
-            // Create the directory if it doesn't exist
-            if let Err(e) = std::fs::create_dir_all(&proxy.mux_dir) {
+        // Determine config directory - use proxy mux_dir if available, otherwise create temp dir
+        let config_dir = if let Some(proxy) = proxy_config {
+            proxy.mux_dir.clone()
+        } else {
+            // Create a temp directory for Claude config when proxy is disabled
+            let temp_dir = std::env::temp_dir().join(format!("mux-{}", name));
+            temp_dir
+        };
+
+        // Create the config directory if it doesn't exist
+        if let Err(e) = std::fs::create_dir_all(&config_dir) {
+            tracing::warn!(
+                "Failed to create config directory at {:?}: {}",
+                config_dir,
+                e
+            );
+        } else {
+            // Write claude.json to skip onboarding and optionally suppress bypass permissions warning
+            // This tells Claude Code we've already completed the setup wizard
+            // Note: Claude Code writes to this file, so we can't mount it read-only
+            let claude_json_path = config_dir.join("claude.json");
+            let claude_json = if dangerous_skip_checks {
+                // If bypass permissions is enabled, also suppress the warning
+                r#"{"hasCompletedOnboarding": true, "bypassPermissionsModeAccepted": true}"#
+            } else {
+                r#"{"hasCompletedOnboarding": true}"#
+            };
+            if let Err(e) = std::fs::write(&claude_json_path, claude_json) {
                 tracing::warn!(
-                    "Failed to create mux directory at {:?}: {}",
-                    proxy.mux_dir,
+                    "Failed to write claude.json file at {:?}: {}",
+                    claude_json_path,
                     e
                 );
             } else {
+                // Mount to /workspace/.claude.json since HOME=/workspace in container
+                // Note: NOT read-only because Claude Code writes to it
+                args.extend([
+                    "-v".to_string(),
+                    format!("{}:/workspace/.claude.json", claude_json_path.display()),
+                ]);
+            }
+
+            // Proxy-specific configuration (only when proxy is enabled)
+            if let Some(proxy) = proxy_config {
                 // Write managed settings file to suppress permission warning
-                let managed_settings_path = proxy.mux_dir.join("managed-settings.json");
+                let managed_settings_path = config_dir.join("managed-settings.json");
                 let managed_settings = r#"{
   "permissions": {
     "defaultMode": "bypassPermissions"
@@ -481,31 +514,6 @@ impl DockerBackend {
                     args.extend([
                         "-v".to_string(),
                         format!("{}:/etc/claude-code/managed-settings.json:ro", managed_settings_path.display()),
-                    ]);
-                }
-
-                // Write claude.json to skip onboarding and optionally suppress bypass permissions warning
-                // This tells Claude Code we've already completed the setup wizard
-                // Note: Claude Code writes to this file, so we can't mount it read-only
-                let claude_json_path = proxy.mux_dir.join("claude.json");
-                let claude_json = if dangerous_skip_checks {
-                    // If bypass permissions is enabled, also suppress the warning
-                    r#"{"hasCompletedOnboarding": true, "bypassPermissionsModeAccepted": true}"#
-                } else {
-                    r#"{"hasCompletedOnboarding": true}"#
-                };
-                if let Err(e) = std::fs::write(&claude_json_path, claude_json) {
-                    tracing::warn!(
-                        "Failed to write claude.json file at {:?}: {}",
-                        claude_json_path,
-                        e
-                    );
-                } else {
-                    // Mount to /workspace/.claude.json since HOME=/workspace in container
-                    // Note: NOT read-only because Claude Code writes to it
-                    args.extend([
-                        "-v".to_string(),
-                        format!("{}:/workspace/.claude.json", claude_json_path.display()),
                     ]);
                 }
             }
@@ -1422,6 +1430,62 @@ mod tests {
             mount_count, 4,
             "Worktree with missing parent should have workspace + 3 cache mounts, got {mount_count} mounts"
         );
+    }
+
+    /// Test that dangerous_skip_checks works without proxy
+    #[test]
+    fn test_dangerous_skip_checks_without_proxy() {
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            &PathBuf::from("/workspace"),
+            "test prompt",
+            1000,
+            None,  // No proxy config
+            false, // print_mode
+            true,  // dangerous_skip_checks = true
+            &[],   // images
+            None,  // git_user_name
+            None,  // git_user_email
+        ).expect("Failed to build args");
+
+        // Should include --dangerously-skip-permissions flag
+        let cmd_arg = args.last().unwrap();
+        assert!(
+            cmd_arg.contains("--dangerously-skip-permissions"),
+            "Flag should be present even without proxy: {cmd_arg}"
+        );
+
+        // Should mount .claude.json with bypassPermissionsModeAccepted
+        let has_claude_json = args.iter().any(|a| a.contains(".claude.json"));
+        assert!(has_claude_json, "Should mount .claude.json even without proxy");
+
+        // Verify the mount includes the container path
+        let claude_json_mount = args.iter().find(|a| a.contains(".claude.json")).unwrap();
+        assert!(
+            claude_json_mount.contains(":/workspace/.claude.json"),
+            "Should mount to /workspace/.claude.json: {claude_json_mount}"
+        );
+    }
+
+    /// Test that .claude.json is created without dangerous_skip_checks
+    #[test]
+    fn test_claude_json_without_dangerous_skip_checks() {
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            &PathBuf::from("/workspace"),
+            "test prompt",
+            1000,
+            None,  // No proxy config
+            false, // print_mode
+            false, // dangerous_skip_checks = false
+            &[],   // images
+            None,  // git_user_name
+            None,  // git_user_email
+        ).expect("Failed to build args");
+
+        // Should still mount .claude.json (for onboarding)
+        let has_claude_json = args.iter().any(|a| a.contains(".claude.json"));
+        assert!(has_claude_json, "Should mount .claude.json for onboarding even without bypass mode");
     }
 
 }
