@@ -430,6 +430,63 @@ impl SessionManager {
 
                 if !exists {
                     report.missing_backends.push(session.id);
+
+                    // Clean up orphaned session proxy
+                    if session.backend == BackendType::Docker {
+                        if let Some(ref proxy_manager) = self.proxy_manager {
+                            tracing::info!(
+                                session_id = %session.id,
+                                "Destroying proxy for session with missing container"
+                            );
+                            let _ = proxy_manager.destroy_session_proxy(session.id).await;
+                        }
+                    }
+                } else {
+                    // Container exists but session is archived/failed - clean up zombie
+                    if matches!(session.status, SessionStatus::Archived | SessionStatus::Failed) {
+                        tracing::warn!(
+                            session_id = %session.id,
+                            status = ?session.status,
+                            "Found zombie container for non-active session, cleaning up"
+                        );
+
+                        match session.backend {
+                            BackendType::Docker => {
+                                let _ = self.docker.delete(backend_id).await;
+                                if let Some(ref proxy_manager) = self.proxy_manager {
+                                    let _ = proxy_manager.destroy_session_proxy(session.id).await;
+                                }
+                            }
+                            BackendType::Zellij => {
+                                let _ = self.zellij.delete(backend_id).await;
+                            }
+                        }
+                    }
+
+                    // Verify proxy exists for running Docker sessions
+                    if session.backend == BackendType::Docker
+                        && session.status == SessionStatus::Running
+                    {
+                        if let Some(ref proxy_manager) = self.proxy_manager {
+                            if let Some(port) = session.proxy_port {
+                                // Check if proxy is actually listening
+                                if tokio::net::TcpStream::connect(format!("127.0.0.1:{}", port))
+                                    .await
+                                    .is_err()
+                                {
+                                    tracing::warn!(
+                                        session_id = %session.id,
+                                        port = port,
+                                        "Session proxy not responding - attempting recreation"
+                                    );
+                                    // Attempt auto-recreation
+                                    let _ = proxy_manager
+                                        .restore_session_proxies(&[session.clone()])
+                                        .await;
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
