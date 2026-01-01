@@ -55,7 +55,6 @@ exec = "0.3"
 async-trait = "0.1"
 nucleo-matcher = "0.3"
 fs2 = "0.4"
-base64 = "0.22"
 include_dir = "0.7"
 mime_guess = "2"
 

@@ -115,6 +115,20 @@ export enum CheckStatus {
 	Merged = "Merged",
 }
 
+/** Claude agent working status */
+export enum ClaudeWorkingStatus {
+	/** Unknown state (no hooks configured or no data yet) */
+	Unknown = "Unknown",
+	/** Claude is actively working (PreToolUse hook triggered) */
+	Working = "Working",
+	/** Waiting for permission approval (PermissionRequest hook) */
+	WaitingApproval = "WaitingApproval",
+	/** Waiting for user input (idle_prompt notification or Stop hook) */
+	WaitingInput = "WaitingInput",
+	/** Agent is idle (60+ seconds without activity) */
+	Idle = "Idle",
+}
+
 /** Represents a single AI coding session */
 export interface Session {
 	/** Unique identifier */
@@ -143,6 +157,10 @@ export interface Session {
 	pr_url?: string;
 	/** Status of PR checks */
 	pr_check_status?: CheckStatus;
+	/** Current Claude agent working status (from hooks) */
+	claude_status: ClaudeWorkingStatus;
+	/** Timestamp of last Claude status update */
+	claude_status_updated_at?: DateTime<Utc>;
 	/** Access mode for proxy filtering */
 	access_mode: AccessMode;
 	/** Port for session-specific HTTP proxy (Docker only) */
@@ -207,6 +225,11 @@ export type EventType =
 	old_status?: CheckStatus;
 	new_status: CheckStatus;
 }}
+	/** Claude working status changed */
+	| { type: "ClaudeStatusChanged", payload: {
+	old_status: ClaudeWorkingStatus;
+	new_status: ClaudeWorkingStatus;
+}}
 	/** Session was archived */
 	| { type: "SessionArchived", payload?: undefined }
 	/** Session was deleted */
@@ -248,7 +271,16 @@ export type Request =
 	/** Subscribe to real-time updates */
 	| { type: "Subscribe", payload?: undefined }
 	/** Get recent repositories */
-	| { type: "GetRecentRepos", payload?: undefined };
+	| { type: "GetRecentRepos", payload?: undefined }
+	/** Send a prompt to a session (for hotkey triggers) */
+	| { type: "SendPrompt", payload: {
+	session: string;
+	prompt: string;
+}}
+	/** Get session ID by name (for hook scripts) */
+	| { type: "GetSessionIdByName", payload: {
+	name: string;
+}};
 
 /** Response types for the API */
 export type Response = 
@@ -279,6 +311,12 @@ export type Response =
 	| { type: "RecentRepos", payload: RecentRepoDto[] }
 	/** Access mode updated successfully */
 	| { type: "AccessModeUpdated", payload?: undefined }
+	/** Session ID returned */
+	| { type: "SessionId", payload: {
+	session_id: string;
+}}
+	/** Generic success response */
+	| { type: "Ok", payload?: undefined }
 	/** Error response */
 	| { type: "Error", payload: {
 	code: string;
