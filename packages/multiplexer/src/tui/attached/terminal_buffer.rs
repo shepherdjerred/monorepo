@@ -2,58 +2,20 @@
 //!
 //! This module provides:
 //! - vt100 terminal emulation parsing
-//! - Scroll-back buffer with configurable limit
+//! - Scroll-back buffer (handled internally by vt100 parser)
 //! - UTF-8 buffering for incomplete sequences
 //! - Scroll position tracking
 
-use std::collections::VecDeque;
-
 /// Default scroll-back buffer limit (number of lines).
 pub const DEFAULT_SCROLLBACK_LIMIT: usize = 10_000;
-
-/// A single line in the scroll-back buffer.
-#[derive(Clone, Debug)]
-pub struct Line {
-    /// The text content of the line.
-    pub text: String,
-    /// Style information for each cell (to be expanded).
-    pub styles: Vec<CellStyle>,
-}
-
-/// Style information for a single cell.
-#[derive(Clone, Debug, Default)]
-pub struct CellStyle {
-    pub foreground: Option<Color>,
-    pub background: Option<Color>,
-    pub bold: bool,
-    pub italic: bool,
-    pub underline: bool,
-    pub inverse: bool,
-}
-
-/// Terminal color representation.
-#[derive(Clone, Copy, Debug)]
-pub enum Color {
-    /// Standard 16 colors (0-15).
-    Indexed(u8),
-    /// 24-bit RGB color.
-    Rgb(u8, u8, u8),
-}
 
 /// Terminal buffer with vt100 emulation and scroll-back.
 pub struct TerminalBuffer {
     /// vt100 parser for terminal emulation.
     parser: vt100::Parser,
 
-    /// Lines that have scrolled off the top of the screen.
-    scroll_back: VecDeque<Line>,
-
     /// Maximum number of scroll-back lines to keep.
-    #[allow(dead_code)]
     scroll_back_limit: usize,
-
-    /// Current scroll offset (0 = at bottom, showing live output).
-    scroll_offset: usize,
 
     /// Buffer for incomplete UTF-8 sequences.
     utf8_buffer: Vec<u8>,
@@ -64,10 +26,8 @@ impl TerminalBuffer {
     #[must_use]
     pub fn new(rows: u16, cols: u16) -> Self {
         Self {
-            parser: vt100::Parser::new(rows, cols, 0),
-            scroll_back: VecDeque::new(),
+            parser: vt100::Parser::new(rows, cols, DEFAULT_SCROLLBACK_LIMIT),
             scroll_back_limit: DEFAULT_SCROLLBACK_LIMIT,
-            scroll_offset: 0,
             utf8_buffer: Vec::new(),
         }
     }
@@ -76,10 +36,8 @@ impl TerminalBuffer {
     #[must_use]
     pub fn with_scrollback_limit(rows: u16, cols: u16, limit: usize) -> Self {
         Self {
-            parser: vt100::Parser::new(rows, cols, 0),
-            scroll_back: VecDeque::new(),
+            parser: vt100::Parser::new(rows, cols, limit),
             scroll_back_limit: limit,
-            scroll_offset: 0,
             utf8_buffer: Vec::new(),
         }
     }
@@ -87,7 +45,7 @@ impl TerminalBuffer {
     /// Process incoming bytes from the PTY.
     ///
     /// This handles UTF-8 buffering for incomplete sequences and updates
-    /// both the vt100 parser and scroll-back buffer.
+    /// the vt100 parser (which handles scroll-back internally).
     pub fn process(&mut self, data: &[u8]) {
         // Append to UTF-8 buffer
         self.utf8_buffer.extend_from_slice(data);
@@ -99,14 +57,11 @@ impl TerminalBuffer {
             // Process valid UTF-8 portion
             let to_process: Vec<u8> = self.utf8_buffer.drain(..valid_len).collect();
 
-            // Capture lines that will scroll off before processing
-            self.capture_scrolled_lines();
-
-            // Process through vt100 parser
+            // Process through vt100 parser (which handles scrollback internally)
             self.parser.process(&to_process);
 
             // Reset scroll to bottom on new output (auto-scroll behavior)
-            self.scroll_offset = 0;
+            self.parser.set_scrollback(0);
         }
     }
 
@@ -148,13 +103,6 @@ impl TerminalBuffer {
         len
     }
 
-    /// Capture lines that scroll off the visible screen.
-    fn capture_scrolled_lines(&mut self) {
-        // This will be called before processing to capture any lines
-        // that might scroll off. Implementation depends on vt100 scroll events.
-        // For now, we rely on periodic screen capture.
-    }
-
     /// Resize the terminal buffer.
     pub fn resize(&mut self, rows: u16, cols: u16) {
         self.parser.set_size(rows, cols);
@@ -166,42 +114,35 @@ impl TerminalBuffer {
         self.parser.screen()
     }
 
-    /// Get the scroll-back buffer.
+    /// Get the current scroll offset (0 = at bottom, viewing live output).
     #[must_use]
-    pub fn scroll_back(&self) -> &VecDeque<Line> {
-        &self.scroll_back
-    }
-
-    /// Get the current scroll offset.
-    #[must_use]
-    pub fn scroll_offset(&self) -> usize {
-        self.scroll_offset
-    }
-
-    /// Set the scroll offset.
-    pub fn set_scroll_offset(&mut self, offset: usize) {
-        self.scroll_offset = offset.min(self.scroll_back.len());
+    pub fn get_scroll_offset(&self) -> usize {
+        self.parser.screen().scrollback()
     }
 
     /// Scroll up by the given number of lines.
     pub fn scroll_up(&mut self, lines: usize) {
-        self.scroll_offset = (self.scroll_offset + lines).min(self.scroll_back.len());
+        let current = self.parser.screen().scrollback();
+        let new_offset = (current + lines).min(self.scroll_back_limit);
+        self.parser.set_scrollback(new_offset);
     }
 
     /// Scroll down by the given number of lines.
     pub fn scroll_down(&mut self, lines: usize) {
-        self.scroll_offset = self.scroll_offset.saturating_sub(lines);
+        let current = self.parser.screen().scrollback();
+        let new_offset = current.saturating_sub(lines);
+        self.parser.set_scrollback(new_offset);
     }
 
     /// Scroll to the bottom (live output).
     pub fn scroll_to_bottom(&mut self) {
-        self.scroll_offset = 0;
+        self.parser.set_scrollback(0);
     }
 
     /// Check if we're at the bottom (viewing live output).
     #[must_use]
     pub fn is_at_bottom(&self) -> bool {
-        self.scroll_offset == 0
+        self.parser.screen().scrollback() == 0
     }
 
     /// Get the terminal dimensions.
@@ -262,25 +203,27 @@ mod tests {
 
         // Initially at bottom
         assert!(buf.is_at_bottom());
+        assert_eq!(buf.get_scroll_offset(), 0);
 
-        // Scroll up with no history has no effect
+        // Add some content to create scrollback history
+        // Print more lines than the screen height to create scrollback
+        for i in 0..100 {
+            buf.process(format!("Line {}\n", i).as_bytes());
+        }
+
+        // Scroll up should work now
         buf.scroll_up(10);
-        assert!(buf.is_at_bottom()); // Still at bottom because no scroll-back history
-
-        // Manually add some scroll-back history for testing
-        buf.scroll_back.push_back(Line {
-            text: "test line".to_string(),
-            styles: Vec::new(),
-        });
-
-        // Now scroll up should work
-        buf.scroll_up(1);
         assert!(!buf.is_at_bottom());
-        assert_eq!(buf.scroll_offset(), 1);
+        assert_eq!(buf.get_scroll_offset(), 10);
+
+        // Scroll down a bit
+        buf.scroll_down(5);
+        assert_eq!(buf.get_scroll_offset(), 5);
 
         // Scroll back to bottom
         buf.scroll_to_bottom();
         assert!(buf.is_at_bottom());
+        assert_eq!(buf.get_scroll_offset(), 0);
     }
 
     #[test]
