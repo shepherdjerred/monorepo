@@ -52,6 +52,10 @@ function installWorkspaceDeps(workspaceSource: Directory, useMounts: boolean): C
       // Each workspace's package.json (bun needs these for workspace resolution)
       .withMountedFile("/workspace/packages/birmel/package.json", workspaceSource.file("packages/birmel/package.json"))
       .withMountedFile(
+        "/workspace/packages/bun-decompile/package.json",
+        workspaceSource.file("packages/bun-decompile/package.json"),
+      )
+      .withMountedFile(
         "/workspace/packages/dagger-utils/package.json",
         workspaceSource.file("packages/dagger-utils/package.json"),
       )
@@ -64,6 +68,10 @@ function installWorkspaceDeps(workspaceSource: Directory, useMounts: boolean): C
       .withFile("/workspace/package.json", workspaceSource.file("package.json"))
       .withFile("/workspace/bun.lock", workspaceSource.file("bun.lock"))
       .withFile("/workspace/packages/birmel/package.json", workspaceSource.file("packages/birmel/package.json"))
+      .withFile(
+        "/workspace/packages/bun-decompile/package.json",
+        workspaceSource.file("packages/bun-decompile/package.json"),
+      )
       .withFile(
         "/workspace/packages/dagger-utils/package.json",
         workspaceSource.file("packages/dagger-utils/package.json"),
@@ -82,12 +90,14 @@ function installWorkspaceDeps(workspaceSource: Directory, useMounts: boolean): C
     container = container
       .withMountedFile("/workspace/tsconfig.base.json", workspaceSource.file("tsconfig.base.json"))
       .withMountedDirectory("/workspace/packages/birmel", workspaceSource.directory("packages/birmel"))
+      .withMountedDirectory("/workspace/packages/bun-decompile", workspaceSource.directory("packages/bun-decompile"))
       .withMountedDirectory("/workspace/packages/dagger-utils", workspaceSource.directory("packages/dagger-utils"))
       .withMountedDirectory("/workspace/packages/eslint-config", workspaceSource.directory("packages/eslint-config"));
   } else {
     container = container
       .withFile("/workspace/tsconfig.base.json", workspaceSource.file("tsconfig.base.json"))
       .withDirectory("/workspace/packages/birmel", workspaceSource.directory("packages/birmel"))
+      .withDirectory("/workspace/packages/bun-decompile", workspaceSource.directory("packages/bun-decompile"))
       .withDirectory("/workspace/packages/dagger-utils", workspaceSource.directory("packages/dagger-utils"))
       .withDirectory("/workspace/packages/eslint-config", workspaceSource.directory("packages/eslint-config"));
   }
@@ -126,6 +136,8 @@ export async function checkBirmel(workspaceSource: Directory): Promise<string> {
     .withEnvVariable("DATABASE_URL", testDbPath)
     .withEnvVariable("OPS_DATABASE_URL", testDbPath)
     .withEnvVariable("BIRMEL_SCREENSHOTS_DIR", screenshotsDir)
+    // Disable browser tests in CI - Chromium crashes in Dagger containers
+    .withEnvVariable("BROWSER_ENABLED", "false")
     // Create test data directories OUTSIDE the mounted workspace
     .withExec(["mkdir", "-p", screenshotsDir])
     .withExec(["bunx", "prisma", "generate"])

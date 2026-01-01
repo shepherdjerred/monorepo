@@ -189,7 +189,7 @@ describe("Phase 2: Timer/Scheduler Tools", () => {
   });
 });
 
-describe("Phase 3: Browser Tools", () => {
+describe.skipIf(process.env["BROWSER_ENABLED"] === "false")("Phase 3: Browser Tools", () => {
   test("navigates to a URL", async () => {
     const result = await (browserAutomationTool as any).execute({
       action: "navigate",

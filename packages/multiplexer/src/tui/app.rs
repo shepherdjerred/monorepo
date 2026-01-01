@@ -43,13 +43,13 @@ pub enum AppMode {
     Attached,
 }
 
-/// State for the detach key detection (Ctrl+] double-tap)
+/// State for the detach key detection (Ctrl+Q/Ctrl+] double-tap)
 #[derive(Debug, Clone)]
 pub enum DetachState {
     /// Not waiting for second key press
     Idle,
-    /// First Ctrl+] pressed, waiting for second or timeout
-    Pending { since: Instant },
+    /// First Ctrl+Q/Ctrl+] pressed, waiting for second or timeout
+    Pending { since: Instant, key_byte: u8 },
 }
 
 impl Default for DetachState {

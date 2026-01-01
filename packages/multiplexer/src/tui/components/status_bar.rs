@@ -53,11 +53,11 @@ fn render_attached_status(app: &App) -> Line<'static> {
         Span::raw(session_name),
         Span::styled(scroll_indicator, Style::default().fg(Color::Yellow)),
         Span::raw(" │ "),
-        Span::styled("Ctrl+]", Style::default().fg(Color::Cyan)),
+        Span::styled("Ctrl+Q", Style::default().fg(Color::Cyan)),
         Span::raw(" detach "),
-        Span::styled("Ctrl+←/→", Style::default().fg(Color::Cyan)),
+        Span::styled("Ctrl+P/N", Style::default().fg(Color::Cyan)),
         Span::raw(" switch "),
-        Span::styled("Shift+PgUp/Dn", Style::default().fg(Color::Cyan)),
+        Span::styled("PgUp/Dn", Style::default().fg(Color::Cyan)),
         Span::raw(" scroll"),
     ])
 }

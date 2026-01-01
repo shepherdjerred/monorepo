@@ -72,7 +72,7 @@ fn render_attached_terminal(frame: &mut Frame, app: &App, area: Rect) {
 
     // Fallback if we can't access the buffer
     let block = Block::default()
-        .title(" Attached - Press Ctrl+] to detach ")
+        .title(" Attached - Press Ctrl+Q to detach ")
         .borders(Borders::ALL)
         .border_style(Style::default().fg(Color::Green));
 
@@ -162,19 +162,25 @@ fn render_help(frame: &mut Frame, app: &App, area: Rect) {
         || {
             // No session selected - show Docker PTY options
             vec![
-                ("Ctrl+]", "Detach (single tap)"),
-                ("Ctrl+] x2", "Send literal Ctrl+]"),
-                ("Ctrl+←/→", "Switch session"),
-                ("Shift+PgUp/Dn", "Scroll history"),
+                ("Ctrl+Q", "Detach (single tap)"),
+                ("Ctrl+Q x2", "Send literal Ctrl+Q"),
+                ("Ctrl+P/N", "Switch session (Prev/Next)"),
+                ("Alt+←/→", "Switch session"),
+                ("PgUp/Dn", "Scroll history (10 lines)"),
+                ("Shift+↑/↓", "Scroll history (1 line)"),
+                ("Mouse wheel", "Scroll history"),
             ]
         },
         |session| match session.backend {
             BackendType::Zellij => vec![("Ctrl+O, d", "Detach from session")],
             BackendType::Docker => vec![
-                ("Ctrl+]", "Detach (single tap)"),
-                ("Ctrl+] x2", "Send literal Ctrl+]"),
-                ("Ctrl+←/→", "Switch session"),
-                ("Shift+PgUp/Dn", "Scroll history"),
+                ("Ctrl+Q", "Detach (single tap)"),
+                ("Ctrl+Q x2", "Send literal Ctrl+Q"),
+                ("Ctrl+P/N", "Switch session (Prev/Next)"),
+                ("Alt+←/→", "Switch session"),
+                ("PgUp/Dn", "Scroll history (10 lines)"),
+                ("Shift+↑/↓", "Scroll history (1 line)"),
+                ("Mouse wheel", "Scroll history"),
             ],
         },
     );
