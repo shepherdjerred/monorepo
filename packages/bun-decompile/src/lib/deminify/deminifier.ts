@@ -422,7 +422,7 @@ export class Deminifier {
     });
 
     const result = await processor.processAll(source, graph, {
-      // maxBatchTokens computed from model context limit if not specified
+      // maxBatchTokens: computed from model context limit if not specified
       ...(options?.maxBatchTokens !== undefined ? { maxBatchTokens: options.maxBatchTokens } : {}),
       verbose: this.config.verbose,
       onProgress: (progress) => {
