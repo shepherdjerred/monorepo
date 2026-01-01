@@ -2,6 +2,7 @@ pub mod app;
 pub mod attached;
 pub mod components;
 pub mod events;
+pub mod text_input;
 pub mod ui;
 
 pub use app::App;
@@ -182,6 +183,100 @@ async fn run_main_loop(
                 }
 
                 events::handle_key_event(app, key).await?;
+
+                // Check if we should launch external editor
+                if app.launch_editor {
+                    app.launch_editor = false;
+
+                    // Get editor command
+                    let editor_cmd = crate::utils::editor::get_editor();
+
+                    // Validate editor command doesn't contain dangerous shell metacharacters
+                    let dangerous_chars = ['&', '|', ';', '<', '>', '`', '$', '(', ')'];
+                    if editor_cmd.chars().any(|c| dangerous_chars.contains(&c)) {
+                        app.status_message = Some(format!(
+                            "Editor command contains unsafe characters: {editor_cmd}. Please use a wrapper script."
+                        ));
+                        continue;
+                    }
+
+                    // Create temp file with current prompt content
+                    match crate::utils::editor::create_temp_file(&app.create_dialog.prompt) {
+                        Ok(temp_path) => {
+                            // Suspend TUI
+                            disable_raw_mode()?;
+                            execute!(terminal.backend_mut(), LeaveAlternateScreen, crossterm::event::PopKeyboardEnhancementFlags)?;
+
+                            // Launch editor
+                            let result = if cfg!(target_os = "windows") {
+                                std::process::Command::new(&editor_cmd)
+                                    .arg(&temp_path)
+                                    .status()
+                            } else {
+                                // Split command by whitespace (safe after validation above)
+                                // Note: If editor path contains spaces, user should set EDITOR to a wrapper script
+                                let parts: Vec<&str> = editor_cmd.split_whitespace().collect();
+                                if parts.is_empty() {
+                                    Err(std::io::Error::new(std::io::ErrorKind::NotFound, "Empty editor command"))
+                                } else {
+                                    std::process::Command::new(parts[0])
+                                        .args(&parts[1..])
+                                        .arg(&temp_path)
+                                        .status()
+                                }
+                            };
+
+                            // Restore TUI
+                            execute!(terminal.backend_mut(), EnterAlternateScreen, crossterm::event::PushKeyboardEnhancementFlags(
+                                crossterm::event::KeyboardEnhancementFlags::DISAMBIGUATE_ESCAPE_CODES
+                            ))?;
+                            enable_raw_mode()?;
+                            terminal.clear()?;
+
+                            // Recreate event stream
+                            event_stream = events::create_event_stream();
+
+                            // Read back edited content if editor exited successfully
+                            match result {
+                                Ok(status) if status.success() => {
+                                    match crate::utils::editor::read_file_content(&temp_path) {
+                                        Ok(content) => {
+                                            // Update prompt with edited content
+                                            app.create_dialog.prompt = content;
+
+                                            // Reset cursor to end of content
+                                            let lines = app.create_dialog.prompt.lines().count().max(1);
+                                            app.create_dialog.prompt_cursor_line = lines.saturating_sub(1);
+                                            let last_line_len = app.create_dialog.prompt
+                                                .lines()
+                                                .last()
+                                                .map_or(0, |l| l.chars().count());
+                                            app.create_dialog.prompt_cursor_col = last_line_len;
+                                            app.create_dialog.ensure_cursor_visible();
+
+                                            app.status_message = Some("Prompt updated from editor".to_string());
+                                        }
+                                        Err(e) => {
+                                            app.status_message = Some(format!("Failed to read edited file: {e}"));
+                                        }
+                                    }
+                                }
+                                Ok(_) => {
+                                    app.status_message = Some("Editor exited without saving".to_string());
+                                }
+                                Err(e) => {
+                                    app.status_message = Some(format!("Failed to launch editor: {e}"));
+                                }
+                            }
+
+                            // Clean up temp file
+                            crate::utils::editor::cleanup_temp_file(&temp_path);
+                        }
+                        Err(e) => {
+                            app.status_message = Some(format!("Failed to create temp file: {e}"));
+                        }
+                    }
+                }
             }
 
             // Handle tick for animations and detach timeout

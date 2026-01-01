@@ -53,6 +53,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         "Name",
         &dialog.name,
         dialog.focus == CreateDialogFocus::Name,
+        dialog.name_cursor,
         inner[0],
     );
 
@@ -62,6 +63,8 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         "Prompt",
         &dialog.prompt,
         dialog.focus == CreateDialogFocus::Prompt,
+        dialog.prompt_cursor_line,
+        dialog.prompt_cursor_col,
         dialog.prompt_scroll_offset,
         prompt_height,
         inner[1],
@@ -139,7 +142,14 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
     }
 }
 
-fn render_text_field(frame: &mut Frame, label: &str, value: &str, focused: bool, area: Rect) {
+fn render_text_field(
+    frame: &mut Frame,
+    label: &str,
+    value: &str,
+    focused: bool,
+    cursor_pos: usize,
+    area: Rect,
+) {
     let style = if focused {
         Style::default().fg(Color::Yellow)
     } else {
@@ -152,7 +162,10 @@ fn render_text_field(frame: &mut Frame, label: &str, value: &str, focused: bool,
         .border_style(style);
 
     let display_value = if focused {
-        format!("{value}▏")
+        // Split text at cursor position and insert cursor character
+        use crate::tui::text_input::split_at_char_boundary;
+        let (before, after) = split_at_char_boundary(value, cursor_pos);
+        format!("{before}▏{after}")
     } else {
         value.to_string()
     };
@@ -204,6 +217,8 @@ fn render_multiline_field(
     label: &str,
     value: &str,
     focused: bool,
+    cursor_line: usize,
+    cursor_col: usize,
     scroll_offset: usize,
     visible_lines: usize,
     area: Rect,
@@ -220,8 +235,18 @@ fn render_multiline_field(
     let has_more_above = scroll_offset > 0;
     let has_more_below = scroll_offset + visible_lines < total_lines;
 
-    // Build title with scroll indicators
-    let title = if has_more_above && has_more_below {
+    // Build title with scroll indicators and help text
+    let title = if focused {
+        if has_more_above && has_more_below {
+            format!(" {label} ↑ more above · ↓ more below · Ctrl+E: Edit in $EDITOR ")
+        } else if has_more_above {
+            format!(" {label} ↑ more above · Ctrl+E: Edit in $EDITOR ")
+        } else if has_more_below {
+            format!(" {label} ↓ more below · Ctrl+E: Edit in $EDITOR ")
+        } else {
+            format!(" {label} · Ctrl+E: Edit in $EDITOR ")
+        }
+    } else if has_more_above && has_more_below {
         format!(" {label} ↑ more above · ↓ more below ")
     } else if has_more_above {
         format!(" {label} ↑ more above ")
@@ -236,19 +261,31 @@ fn render_multiline_field(
         .borders(Borders::ALL)
         .border_style(style);
 
-    // Apply scrolling by skipping lines based on scroll_offset
-    let visible_lines_slice = lines
+    // Apply scrolling and insert cursor
+    let visible_lines_vec: Vec<String> = lines
         .iter()
+        .enumerate()
         .skip(scroll_offset)
         .take(visible_lines)
-        .map(|s| *s)
-        .collect::<Vec<_>>()
-        .join("\n");
+        .map(|(line_idx, line_str)| {
+            // Insert cursor if this is the cursor line and we're focused
+            if focused && line_idx == cursor_line {
+                use crate::tui::text_input::split_at_char_col;
+                let (before, after) = split_at_char_col(line_str, cursor_col);
+                format!("{before}▏{after}")
+            } else {
+                line_str.to_string()
+            }
+        })
+        .collect();
 
-    let display_value = if focused {
-        format!("{visible_lines_slice}▏")
+    let display_value = if visible_lines_vec.is_empty() && focused {
+        // Empty prompt with cursor
+        "▏".to_string()
+    } else if visible_lines_vec.is_empty() {
+        String::new()
     } else {
-        visible_lines_slice
+        visible_lines_vec.join("\n")
     };
 
     let paragraph = Paragraph::new(display_value)

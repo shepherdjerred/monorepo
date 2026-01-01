@@ -126,6 +126,11 @@ pub struct CreateDialogState {
     /// in a future update to allow interactive image selection.
     pub images: Vec<String>,
 
+    /// Cursor position in name field (byte offset)
+    pub name_cursor: usize,
+    /// Cursor position in prompt field (line and column)
+    pub prompt_cursor_line: usize,
+    pub prompt_cursor_col: usize,
     pub prompt_scroll_offset: usize,
     pub focus: CreateDialogFocus,
     pub button_create_focused: bool, // true = Create, false = Cancel
@@ -343,6 +348,9 @@ impl CreateDialogState {
             plan_mode: true, // Default to plan mode ON
             access_mode: Default::default(), // ReadOnly by default (secure)
             images: Vec::new(),
+            name_cursor: 0,
+            prompt_cursor_line: 0,
+            prompt_cursor_col: 0,
             prompt_scroll_offset: 0,
             focus: CreateDialogFocus::default(),
             button_create_focused: false,
@@ -411,6 +419,34 @@ impl CreateDialogState {
             }
         }
     }
+
+    /// Calculate the number of visible lines in the prompt field
+    ///
+    /// This matches the logic in create_dialog.rs rendering to ensure scroll
+    /// calculations stay in sync with the actual displayed height.
+    pub fn prompt_visible_lines(&self) -> usize {
+        let prompt_lines = self.prompt.lines().count().max(1);
+        prompt_lines.clamp(5, 15) // Min 5, max 15 lines
+    }
+
+    /// Ensure the cursor is visible in the prompt field by adjusting scroll offset
+    pub fn ensure_cursor_visible(&mut self) {
+        let visible_lines = self.prompt_visible_lines();
+        let cursor_line = self.prompt_cursor_line;
+
+        // If cursor is above the visible area, scroll up
+        if cursor_line < self.prompt_scroll_offset {
+            self.prompt_scroll_offset = cursor_line;
+        }
+
+        // If cursor is below the visible area, scroll down
+        if cursor_line >= self.prompt_scroll_offset + visible_lines {
+            self.prompt_scroll_offset = cursor_line.saturating_sub(visible_lines - 1);
+        }
+
+        // Clamp scroll to valid range
+        self.clamp_prompt_scroll();
+    }
 }
 
 /// Main application state
@@ -478,6 +514,9 @@ pub struct App {
 
     /// Terminal dimensions for PTY resize
     pub terminal_size: (u16, u16),
+
+    /// Flag to trigger launching external editor for prompt field
+    pub launch_editor: bool,
 }
 
 impl App {
@@ -507,6 +546,7 @@ impl App {
             attached_session_id: None,
             detach_state: DetachState::Idle,
             terminal_size: (24, 80), // Default size, updated on resize
+            launch_editor: false,
         }
     }
 
