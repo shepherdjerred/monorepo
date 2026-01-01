@@ -25,11 +25,25 @@ async function getBrowser(): Promise<Browser> {
   }
 
   logger.info("Launching Chromium browser");
+
+  // Build launch args - include Docker-safe flags for running in containers
+  const launchArgs = [
+    // Required for running Chromium in Docker containers without privileged mode
+    '--no-sandbox',
+    '--disable-setuid-sandbox',
+    // Disable GPU hardware acceleration (not available in headless containers)
+    '--disable-gpu',
+    '--disable-dev-shm-usage', // Overcome limited resource problems in Docker
+  ];
+
+  // Add user agent if configured
+  if (config.browser.userAgent) {
+    launchArgs.push(`--user-agent=${config.browser.userAgent}`);
+  }
+
   browserInstance = await chromium.launch({
     headless: config.browser.headless,
-    args: config.browser.userAgent
-      ? [`--user-agent=${config.browser.userAgent}`]
-      : [],
+    args: launchArgs,
   });
 
   return browserInstance;
