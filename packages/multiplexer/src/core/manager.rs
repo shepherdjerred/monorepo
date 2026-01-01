@@ -9,6 +9,14 @@ use crate::store::Store;
 use super::events::{Event, EventType};
 use super::session::{BackendType, CheckStatus, ClaudeWorkingStatus, Session, SessionStatus};
 
+// Import types for WebSocket event broadcasting
+use crate::api::ws_events::broadcast_event;
+use crate::api::protocol::Event as WsEvent;
+use tokio::sync::broadcast;
+
+/// Event broadcaster for WebSocket real-time updates
+pub type EventBroadcaster = broadcast::Sender<WsEvent>;
+
 /// Report of reconciliation between expected and actual state
 #[derive(Debug, Default, Clone)]
 pub struct ReconcileReport {
@@ -31,6 +39,8 @@ pub struct SessionManager {
     sessions: RwLock<Vec<Session>>,
     /// Optional proxy manager for per-session filtering
     proxy_manager: Option<Arc<crate::proxy::ProxyManager>>,
+    /// Optional event broadcaster for real-time WebSocket updates
+    event_broadcaster: Option<EventBroadcaster>,
 }
 
 impl SessionManager {
@@ -57,6 +67,7 @@ impl SessionManager {
             docker,
             sessions: RwLock::new(sessions),
             proxy_manager: None,
+            event_broadcaster: None,
         })
     }
 
@@ -103,6 +114,14 @@ impl SessionManager {
     /// This should be called after construction to enable per-session proxy support.
     pub fn set_proxy_manager(&mut self, proxy_manager: Arc<crate::proxy::ProxyManager>) {
         self.proxy_manager = Some(proxy_manager);
+    }
+
+    /// Set the event broadcaster for real-time WebSocket updates
+    ///
+    /// This should be called after construction to enable real-time event broadcasting
+    /// to WebSocket clients when session status changes occur.
+    pub fn set_event_broadcaster(&mut self, broadcaster: EventBroadcaster) {
+        self.event_broadcaster = Some(broadcaster);
     }
 
     /// List all sessions
@@ -584,6 +603,13 @@ impl SessionManager {
             "Updated Claude working status"
         );
 
+        // Broadcast event to WebSocket clients if broadcaster available
+        if let Some(ref broadcaster) = self.event_broadcaster {
+            if let Some(session) = self.get_session(&session_id.to_string()).await {
+                broadcast_event(broadcaster, WsEvent::SessionUpdated(session)).await;
+            }
+        }
+
         Ok(())
     }
 
@@ -627,6 +653,13 @@ impl SessionManager {
             new = ?new_status,
             "Updated PR check status"
         );
+
+        // Broadcast event to WebSocket clients if broadcaster available
+        if let Some(ref broadcaster) = self.event_broadcaster {
+            if let Some(session) = self.get_session(&session_id.to_string()).await {
+                broadcast_event(broadcaster, WsEvent::SessionUpdated(session)).await;
+            }
+        }
 
         Ok(())
     }
