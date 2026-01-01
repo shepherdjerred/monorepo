@@ -17,7 +17,8 @@
     "build": "tsc --outDir ./dist",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "lint:fix": "eslint --fix ."
+    "lint:fix": "eslint --fix .",
+    "test": "bun test"
   },
   "devDependencies": {
     "@eslint/js": "^9.28.0",

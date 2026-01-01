@@ -1,6 +1,11 @@
 import eslint from "@eslint/js";
 import tseslint from "typescript-eslint";
 
+/**
+ * ESLint configuration for @mux/shared
+ * Follows patterns from @shepherdjerred/eslint-config but standalone
+ * due to nested workspace limitations
+ */
 export default tseslint.config(
   eslint.configs.recommended,
   ...tseslint.configs.strictTypeChecked,

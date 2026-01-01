@@ -1,7 +1,7 @@
 use crate::core::manager::SessionManager;
-use crate::api::protocol::CreateSessionRequest;
+use crate::api::protocol::{CreateSessionRequest, Event};
 use crate::api::static_files::serve_static;
-use crate::api::ws_events::EventBroadcaster;
+use crate::api::ws_events::{broadcast_event, EventBroadcaster};
 use crate::core::session::AccessMode;
 use axum::{
     extract::{Path, State},
@@ -92,6 +92,9 @@ async fn create_session(
         )
         .await?;
 
+    // Broadcast session created event
+    broadcast_event(&state.event_broadcaster, Event::SessionCreated(session.clone())).await;
+
     Ok(Json(json!({
         "id": session.id.to_string(),
         "warnings": warnings,
@@ -105,6 +108,10 @@ async fn delete_session(
 ) -> Result<StatusCode, AppError> {
     validate_session_id(&id)?;
     state.session_manager.delete_session(&id).await?;
+
+    // Broadcast session deleted event
+    broadcast_event(&state.event_broadcaster, Event::SessionDeleted { id }).await;
+
     Ok(StatusCode::NO_CONTENT)
 }
 
@@ -115,6 +122,12 @@ async fn archive_session(
 ) -> Result<StatusCode, AppError> {
     validate_session_id(&id)?;
     state.session_manager.archive_session(&id).await?;
+
+    // Broadcast session updated event (status changed to Archived)
+    if let Some(session) = state.session_manager.get_session(&id).await {
+        broadcast_event(&state.event_broadcaster, Event::SessionUpdated(session)).await;
+    }
+
     Ok(StatusCode::NO_CONTENT)
 }
 
@@ -135,6 +148,12 @@ async fn update_access_mode(
         .session_manager
         .update_access_mode(&id, request.access_mode)
         .await?;
+
+    // Broadcast session updated event
+    if let Some(session) = state.session_manager.get_session(&id).await {
+        broadcast_event(&state.event_broadcaster, Event::SessionUpdated(session)).await;
+    }
+
     Ok(StatusCode::NO_CONTENT)
 }
 

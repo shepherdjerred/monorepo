@@ -17,7 +17,8 @@
     "build:watch": "tsc --outDir ./dist --watch",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "lint:fix": "eslint --fix ."
+    "lint:fix": "eslint --fix .",
+    "test": "bun test"
   },
   "dependencies": {
     "@mux/shared": "workspace:*"

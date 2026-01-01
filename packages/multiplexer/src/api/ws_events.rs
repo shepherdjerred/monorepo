@@ -9,7 +9,7 @@ use futures::{sink::SinkExt, stream::StreamExt};
 use serde_json::json;
 use tokio::sync::broadcast;
 
-use crate::core::events::Event;
+use crate::api::protocol::Event;
 
 use super::http_server::AppState;
 

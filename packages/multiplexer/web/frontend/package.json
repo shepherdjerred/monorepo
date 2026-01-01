@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "lint:fix": "eslint --fix ."
+    "lint:fix": "eslint --fix .",
+    "test": "bun test"
   },
   "dependencies": {
     "@mux/client": "workspace:*",
@@ -37,6 +38,7 @@
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.21",
     "eslint": "^9.28.0",
+    "eslint-plugin-react-hooks": "^5.1.0",
     "postcss": "^8.5.1",
     "tailwindcss": "^4.1.7",
     "typescript": "^5.9.3",

@@ -20,6 +20,7 @@
     "lint:shared": "cd shared && bun run lint",
     "lint:client": "cd client && bun run lint",
     "lint:frontend": "cd frontend && bun run lint",
+    "test": "cd frontend && bun run test",
     "clean": "rm -rf shared/dist client/dist frontend/dist shared/src/generated/*"
   },
   "devDependencies": {
