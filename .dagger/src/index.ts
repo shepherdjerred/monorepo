@@ -17,12 +17,11 @@ const RELEASE_PLEASE_VERSION = "17.1.3";
 // Rust version for multiplexer
 const RUST_VERSION = "1.85";
 
-// Cross-compilation targets for mux binary
+// Cross-compilation targets for mux binary (Linux only)
+// macOS cross-compilation requires different tooling (osxcross) and is not currently supported
 const MUX_TARGETS = [
   { target: "x86_64-unknown-linux-gnu", os: "linux", arch: "x86_64" },
   { target: "aarch64-unknown-linux-gnu", os: "linux", arch: "arm64" },
-  { target: "x86_64-apple-darwin", os: "darwin", arch: "x86_64" },
-  { target: "aarch64-apple-darwin", os: "darwin", arch: "arm64" },
 ] as const;
 
 /**
@@ -73,7 +72,8 @@ function installWorkspaceDeps(source: Directory): Container {
     .withMountedFile("/workspace/packages/birmel/package.json", source.file("packages/birmel/package.json"))
     .withMountedFile("/workspace/packages/bun-decompile/package.json", source.file("packages/bun-decompile/package.json"))
     .withMountedFile("/workspace/packages/dagger-utils/package.json", source.file("packages/dagger-utils/package.json"))
-    .withMountedFile("/workspace/packages/eslint-config/package.json", source.file("packages/eslint-config/package.json"));
+    .withMountedFile("/workspace/packages/eslint-config/package.json", source.file("packages/eslint-config/package.json"))
+    .withMountedFile("/workspace/packages/mux-site/package.json", source.file("packages/mux-site/package.json"));
 
   // PHASE 2: Install dependencies (cached if lockfile + package.jsons unchanged)
   container = container.withExec(["bun", "install", "--frozen-lockfile"]);
@@ -84,7 +84,8 @@ function installWorkspaceDeps(source: Directory): Container {
     .withMountedDirectory("/workspace/packages/birmel", source.directory("packages/birmel"))
     .withMountedDirectory("/workspace/packages/bun-decompile", source.directory("packages/bun-decompile"))
     .withMountedDirectory("/workspace/packages/dagger-utils", source.directory("packages/dagger-utils"))
-    .withMountedDirectory("/workspace/packages/eslint-config", source.directory("packages/eslint-config"));
+    .withMountedDirectory("/workspace/packages/eslint-config", source.directory("packages/eslint-config"))
+    .withMountedDirectory("/workspace/packages/mux-site", source.directory("packages/mux-site"));
 
   // PHASE 4: Re-run bun install to recreate workspace node_modules symlinks
   // (Source mounts in Phase 3 replace the symlinks that Phase 2 created)
@@ -128,35 +129,6 @@ function getCrossCompileContainer(source: Directory): Container {
     // Add cross-compilation targets
     .withExec(["rustup", "target", "add", "x86_64-unknown-linux-gnu"])
     .withExec(["rustup", "target", "add", "aarch64-unknown-linux-gnu"]);
-}
-
-/**
- * Build mux binary for a specific target
- */
-async function buildMuxBinary(
-  container: Container,
-  target: string,
-  os: string,
-  arch: string
-): Promise<{ file: string; content: string }> {
-  // Configure linker for cross-compilation
-  let buildContainer = container;
-  if (target === "aarch64-unknown-linux-gnu") {
-    buildContainer = container
-      .withEnvVariable("CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER", "aarch64-linux-gnu-gcc");
-  }
-
-  // Build the release binary
-  buildContainer = buildContainer.withExec([
-    "cargo", "build", "--release", "--target", target
-  ]);
-
-  // Get the binary
-  const binaryPath = `/workspace/target-cross/${target}/release/mux`;
-  const binary = await buildContainer.file(binaryPath).contents();
-
-  const filename = `mux-${os}-${arch}`;
-  return { file: filename, content: binary };
 }
 
 /**
@@ -436,10 +408,9 @@ export class Monorepo {
           const binaries = await this.multiplexerBuild(source);
 
           // Get binary contents for upload
-          const linuxTargets = MUX_TARGETS.filter(t => t.os === "linux");
           const assets: Array<{ name: string; data: string }> = [];
 
-          for (const { os, arch } of linuxTargets) {
+          for (const { os, arch } of MUX_TARGETS) {
             const filename = `mux-${os}-${arch}`;
             const content = await binaries.file(filename).contents();
             assets.push({ name: filename, data: content });
@@ -448,11 +419,14 @@ export class Monorepo {
 
           // Find the mux version from the release output
           const muxVersionMatch = releaseResult.output.match(/mux-v([\d.]+)/);
-          const muxVersion = muxVersionMatch?.[1] ?? "0.1.0";
-
-          // Upload to GitHub release
-          const uploadResults = await uploadReleaseAssets(githubToken, muxVersion, assets);
-          outputs.push(...uploadResults);
+          const muxVersion = muxVersionMatch?.[1];
+          if (!muxVersion) {
+            outputs.push("⚠ Could not extract mux version from release output, skipping upload");
+          } else {
+            // Upload to GitHub release
+            const uploadResults = await uploadReleaseAssets(githubToken, muxVersion, assets);
+            outputs.push(...uploadResults);
+          }
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : String(error);
           outputs.push(`✗ Failed to build/upload mux binaries: ${errorMessage}`);
@@ -604,12 +578,9 @@ export class Monorepo {
   async multiplexerBuild(source: Directory): Promise<Directory> {
     const container = getCrossCompileContainer(source);
 
-    // Build for Linux targets only (cross-compiling to macOS requires different tooling)
-    const linuxTargets = MUX_TARGETS.filter(t => t.os === "linux");
-
     let outputContainer = dag.directory();
 
-    for (const { target, os, arch } of linuxTargets) {
+    for (const { target, os, arch } of MUX_TARGETS) {
       let buildContainer = container;
 
       // Configure linker for aarch64 cross-compilation
@@ -652,10 +623,9 @@ export class Monorepo {
     const binaries = await this.multiplexerBuild(source);
 
     // Get binary contents for upload
-    const linuxTargets = MUX_TARGETS.filter(t => t.os === "linux");
     const assets: Array<{ name: string; data: string }> = [];
 
-    for (const { os, arch } of linuxTargets) {
+    for (const { os, arch } of MUX_TARGETS) {
       const filename = `mux-${os}-${arch}`;
       const content = await binaries.file(filename).contents();
       assets.push({ name: filename, data: content });

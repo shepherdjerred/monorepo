@@ -22,6 +22,8 @@ This is a Bun workspaces monorepo with packages in `packages/`:
 - **birmel** - AI-powered Discord bot (Mastra + Claude AI)
 - **eslint-config** - Shared ESLint configuration with custom rules
 - **dagger-utils** - Utilities for Dagger CI/CD pipelines
+- **multiplexer** - Rust-based session management for AI coding agents (binary: `mux`)
+- **mux-site** - Marketing/documentation site for mux (Astro + Starlight)
 - **a2ui-poc** - POC app with Bun backend and React/Vite frontend
 - **claude-plugin** - Claude Code plugin with specialized agents
 
@@ -161,6 +163,32 @@ cd packages/eslint-config
 bun run build            # Compile TypeScript to dist/
 bun run typecheck
 ```
+
+### multiplexer
+
+Rust-based session management for AI coding agents:
+
+```bash
+cd packages/multiplexer
+cargo build --release    # Build release binary
+cargo test               # Run tests
+cargo clippy             # Lint
+```
+
+The binary is named `mux`. Requires Rust 1.85+.
+
+### mux-site
+
+Marketing and documentation site built with Astro + Starlight:
+
+```bash
+cd packages/mux-site
+bun run dev              # Development server
+bun run build            # Production build
+bun run preview          # Preview production build
+```
+
+Note: Uses Astro's TypeScript config, not the monorepo's tsconfig.base.json.
 
 ### a2ui-poc
 
