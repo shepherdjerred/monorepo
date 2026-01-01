@@ -68,12 +68,13 @@ function isElectionStartTime(): boolean {
 }
 
 async function hasElectionThisWeek(guildId: string): Promise<boolean> {
+	const config = getConfig();
+	const current = getCurrentTimeInTimezone(config.elections.timezone);
 	const now = new Date();
-	const dayOfWeek = now.getDay(); // 0=Sunday, 6=Saturday
 
-	// Calculate start of the current week (Sunday at 00:00:00)
+	// Calculate start of the current week (Sunday at 00:00:00) using configured timezone's day
 	const weekStart = new Date(now);
-	weekStart.setDate(now.getDate() - dayOfWeek);
+	weekStart.setDate(now.getDate() - current.dayOfWeek);
 	weekStart.setHours(0, 0, 0, 0);
 
 	// Calculate end of the current week (Saturday at 23:59:59)
