@@ -55,6 +55,9 @@ exec = "0.3"
 async-trait = "0.1"
 nucleo-matcher = "0.3"
 fs2 = "0.4"
+base64 = "0.22"
+include_dir = "0.7"
+mime_guess = "2"
 
 # HTTP Proxy with TLS interception
 hudsucker = { version = "0.24", default-features = false, features = ["rcgen-ca", "rustls-client"] }
@@ -77,18 +80,20 @@ serde_yaml = "0.9"
 # Time handling (for certificate generation)
 time = "0.3"
 
-[dev-dependencies]
-cargo-husky = { version = "1", features = ["precommit-hook", "run-cargo-fmt", "run-cargo-clippy"] }
-tempfile = "3"
-base64 = "0.22"
-proptest = "1.0"
-
-# HTTP server/client for integration tests
-axum = "0.7"
+# HTTP/WebSocket server
+axum = { version = "0.7", features = ["ws"] }
+tower = "0.5"
+tower-http = { version = "0.6", features = ["cors", "trace"] }
 hyper = { version = "1", features = ["full"] }
 hyper-util = { version = "0.1", features = ["tokio", "server"] }
 http-body-util = "0.1"
-tower = "0.5"
+
+[dev-dependencies]
+cargo-husky = { version = "1", features = ["precommit-hook", "run-cargo-fmt", "run-cargo-clippy"] }
+tempfile = "3"
+proptest = "1.0"
+
+# HTTP client for integration tests
 reqwest = { version = "0.12", features = ["json", "blocking"] }
 tokio-test = "0.4"
 

@@ -28,6 +28,16 @@ pub async fn run_daemon() -> anyhow::Result<()> {
 /// Returns an error if the database cannot be opened, the socket cannot be
 /// bound, or other I/O errors occur.
 pub async fn run_daemon_with_options(enable_proxy: bool) -> anyhow::Result<()> {
+    run_daemon_with_http(enable_proxy, Some(3030)).await
+}
+
+/// Run the multiplexer daemon with HTTP server option
+///
+/// # Errors
+///
+/// Returns an error if the database cannot be opened, the socket cannot be
+/// bound, or other I/O errors occur.
+pub async fn run_daemon_with_http(enable_proxy: bool, http_port: Option<u16>) -> anyhow::Result<()> {
     // Initialize the store
     let db_path = paths::database_path();
     let store = Arc::new(SqliteStore::new(&db_path).await?);
@@ -72,6 +82,32 @@ pub async fn run_daemon_with_options(enable_proxy: bool) -> anyhow::Result<()> {
         Arc::new(SessionManager::with_defaults(store).await?)
     };
 
+    // Spawn both Unix socket and HTTP servers concurrently
+    let unix_socket_future = run_unix_socket_server(Arc::clone(&manager));
+
+    if let Some(port) = http_port {
+        let http_future = run_http_server(Arc::clone(&manager), port);
+
+        tracing::info!("Starting daemon with Unix socket and HTTP server on port {}", port);
+
+        tokio::select! {
+            result = unix_socket_future => {
+                tracing::error!("Unix socket server exited: {:?}", result);
+                result
+            }
+            result = http_future => {
+                tracing::error!("HTTP server exited: {:?}", result);
+                result
+            }
+        }
+    } else {
+        tracing::info!("Starting daemon with Unix socket only");
+        unix_socket_future.await
+    }
+}
+
+/// Run the Unix socket server
+async fn run_unix_socket_server(manager: Arc<SessionManager>) -> anyhow::Result<()> {
     // Create the socket path
     let socket_path = paths::socket_path();
 
@@ -88,7 +124,7 @@ pub async fn run_daemon_with_options(enable_proxy: bool) -> anyhow::Result<()> {
     // Bind to the Unix socket
     let listener = UnixListener::bind(&socket_path)?;
 
-    tracing::info!(socket = %socket_path.display(), "Daemon listening");
+    tracing::info!(socket = %socket_path.display(), "Unix socket daemon listening");
 
     // Accept connections
     loop {
@@ -106,6 +142,35 @@ pub async fn run_daemon_with_options(enable_proxy: bool) -> anyhow::Result<()> {
             }
         }
     }
+}
+
+/// Run the HTTP server
+async fn run_http_server(manager: Arc<SessionManager>, port: u16) -> anyhow::Result<()> {
+    use crate::api::http_server::create_router;
+    use crate::api::ws_console::ws_console_handler;
+    use crate::api::ws_events::ws_events_handler;
+
+    // Create state
+    let state = crate::api::http_server::AppState {
+        session_manager: Arc::clone(&manager),
+    };
+
+    // Create the HTTP router with all routes and state
+    let app = create_router()
+        .route("/ws/events", axum::routing::get(ws_events_handler))
+        .route("/ws/console/:sessionId", axum::routing::get(ws_console_handler))
+        .with_state(state);
+
+    // Bind to the HTTP port
+    let addr = std::net::SocketAddr::from(([0, 0, 0, 0], port));
+    let listener = tokio::net::TcpListener::bind(addr).await?;
+
+    tracing::info!("HTTP server listening on {}", addr);
+
+    // Start the server
+    axum::serve(listener, app).await?;
+
+    Ok(())
 }
 
 /// Handle a single client connection

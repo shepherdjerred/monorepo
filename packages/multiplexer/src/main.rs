@@ -18,6 +18,10 @@ enum Commands {
         /// Disable proxy services
         #[arg(long, default_value = "false")]
         no_proxy: bool,
+
+        /// HTTP server port (0 to disable)
+        #[arg(long, default_value = "3030")]
+        http_port: u16,
     },
 
     /// Launch the terminal UI
@@ -133,9 +137,10 @@ async fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Daemon { no_proxy } => {
+        Commands::Daemon { no_proxy, http_port } => {
             tracing::info!("Starting multiplexer daemon");
-            api::server::run_daemon_with_options(!no_proxy).await?;
+            let port = if http_port > 0 { Some(http_port) } else { None };
+            api::server::run_daemon_with_http(!no_proxy, port).await?;
         }
         Commands::Tui => {
             tracing::info!("Launching TUI");

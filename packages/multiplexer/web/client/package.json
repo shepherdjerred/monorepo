@@ -1,0 +1,26 @@
+{
+  "name": "@mux/client",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc --outDir ./dist",
+    "build:watch": "tsc --outDir ./dist --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@mux/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

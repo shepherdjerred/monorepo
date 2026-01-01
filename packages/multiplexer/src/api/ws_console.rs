@@ -1,0 +1,215 @@
+use axum::{
+    extract::{
+        ws::{Message, WebSocket},
+        Path, State, WebSocketUpgrade,
+    },
+    response::Response,
+};
+use futures::{sink::SinkExt, stream::StreamExt};
+use serde_json::json;
+use std::sync::Arc;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::sync::Mutex;
+
+use super::http_server::AppState;
+
+/// WebSocket handler for /ws/console/:sessionId endpoint
+/// Clients connect here to stream terminal I/O for a specific session
+pub async fn ws_console_handler(
+    ws: WebSocketUpgrade,
+    Path(session_id): Path<String>,
+    State(state): State<AppState>,
+) -> Response {
+    ws.on_upgrade(move |socket| handle_console_socket(socket, session_id, state))
+}
+
+/// Handle an individual WebSocket connection for console streaming
+async fn handle_console_socket(socket: WebSocket, session_id: String, state: AppState) {
+    tracing::info!("Console WebSocket connected for session: {}", session_id);
+
+    // Get the session to find its backend ID (container ID or Zellij session)
+    let session = match state.session_manager.get_session(&session_id).await {
+        Some(s) => s,
+        None => {
+            tracing::error!("Session not found: {}", session_id);
+            return;
+        }
+    };
+
+    let backend_id: String = match &session.backend_id {
+        Some(id) => id.clone(),
+        None => {
+            tracing::error!("Session {} has no backend_id", session_id);
+            return;
+        }
+    };
+
+    // Spawn PTY process (docker attach or zellij attach)
+    let pty_result = match session.backend {
+        crate::core::session::BackendType::Docker => {
+            spawn_docker_attach(&backend_id).await
+        }
+        crate::core::session::BackendType::Zellij => {
+            spawn_zellij_attach(&backend_id).await
+        }
+    };
+
+    let (pty_reader, pty_writer) = match pty_result {
+        Ok(pty) => pty,
+        Err(e) => {
+            tracing::error!("Failed to spawn PTY for session {}: {}", session_id, e);
+            return;
+        }
+    };
+
+    // PTY handles are already wrapped in Arc<Mutex<>> from spawn functions
+    let (mut ws_sender, mut ws_receiver) = socket.split();
+
+    // Task 1: Read from PTY and send to WebSocket
+    let pty_reader_clone = Arc::clone(&pty_reader);
+    let session_id_clone = session_id.clone();
+    let pty_to_ws = tokio::spawn(async move {
+        let mut buffer = vec![0u8; 4096];
+        loop {
+            let mut reader = pty_reader_clone.lock().await;
+            match reader.read(&mut buffer).await {
+                Ok(0) => {
+                    // EOF - PTY closed
+                    tracing::debug!("PTY EOF for session {}", session_id_clone);
+                    break;
+                }
+                Ok(n) => {
+                    // Convert bytes to base64 for binary-safe transmission
+                    let data = base64::prelude::BASE64_STANDARD.encode(&buffer[..n]);
+                    let message = json!({
+                        "type": "output",
+                        "data": data,
+                    });
+
+                    if let Err(e) = ws_sender
+                        .send(Message::Text(message.to_string()))
+                        .await
+                    {
+                        tracing::error!("Failed to send PTY output to WebSocket: {}", e);
+                        break;
+                    }
+                }
+                Err(e) => {
+                    tracing::error!("PTY read error: {}", e);
+                    break;
+                }
+            }
+        }
+    });
+
+    // Task 2: Read from WebSocket and send to PTY
+    let pty_writer_clone = Arc::clone(&pty_writer);
+    let ws_to_pty = tokio::spawn(async move {
+        while let Some(msg) = ws_receiver.next().await {
+            match msg {
+                Ok(Message::Text(text)) => {
+                    // Parse JSON message
+                    let message: serde_json::Value = match serde_json::from_str(&text) {
+                        Ok(m) => m,
+                        Err(e) => {
+                            tracing::error!("Invalid JSON from WebSocket: {}", e);
+                            continue;
+                        }
+                    };
+
+                    match message["type"].as_str() {
+                        Some("input") => {
+                            // Client is sending input to PTY
+                            if let Some(data) = message["data"].as_str() {
+                                // Data is base64-encoded
+                                if let Ok(bytes) = base64::prelude::BASE64_STANDARD.decode(data) {
+                                    let mut writer = pty_writer_clone.lock().await;
+                                    if let Err(e) = writer.write_all(&bytes).await {
+                                        tracing::error!("Failed to write to PTY: {}", e);
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        Some("resize") => {
+                            // Client is resizing terminal
+                            // TODO: Implement PTY resize
+                            // This would require storing the PTY handle and calling resize()
+                            tracing::debug!("Resize requested: {:?}", message);
+                        }
+                        _ => {
+                            tracing::warn!("Unknown message type from WebSocket: {:?}", message);
+                        }
+                    }
+                }
+                Ok(Message::Close(_)) => {
+                    tracing::debug!("WebSocket closed by client");
+                    break;
+                }
+                Ok(Message::Ping(data)) => {
+                    // WebSocket will auto-respond to pings
+                    tracing::trace!("Received ping: {} bytes", data.len());
+                }
+                Err(e) => {
+                    tracing::error!("WebSocket error: {}", e);
+                    break;
+                }
+                _ => {}
+            }
+        }
+    });
+
+    // Wait for either task to complete
+    tokio::select! {
+        _ = pty_to_ws => {
+            tracing::debug!("PTY->WS task completed");
+        }
+        _ = ws_to_pty => {
+            tracing::debug!("WS->PTY task completed");
+        }
+    }
+
+    tracing::info!("Console WebSocket disconnected for session: {}", session_id);
+}
+
+/// Wrapper type for PTY that can be used as both reader and writer
+type PtyHandle = Arc<Mutex<pty_process::Pty>>;
+
+/// Spawn docker attach command and return reader/writer handles
+async fn spawn_docker_attach(
+    container_id: &str,
+) -> anyhow::Result<(PtyHandle, PtyHandle)> {
+    use pty_process::Command;
+
+    // Create PTY
+    let (pty, pts) = pty_process::open()?;
+
+    // Spawn docker attach
+    let cmd = Command::new("docker").args(["attach", container_id]);
+    cmd.spawn(pts)?;
+
+    // Wrap in Arc<Mutex<>> and return two clones
+    let pty = Arc::new(Mutex::new(pty));
+    Ok((Arc::clone(&pty), pty))
+}
+
+/// Spawn zellij attach command and return reader/writer handles
+async fn spawn_zellij_attach(
+    session_name: &str,
+) -> anyhow::Result<(PtyHandle, PtyHandle)> {
+    use pty_process::Command;
+
+    // Create PTY
+    let (pty, pts) = pty_process::open()?;
+
+    // Spawn zellij attach
+    let cmd = Command::new("zellij").args(["attach", session_name]);
+    cmd.spawn(pts)?;
+
+    // Wrap in Arc<Mutex<>> and return two clones
+    let pty = Arc::new(Mutex::new(pty));
+    Ok((Arc::clone(&pty), pty))
+}
+
+// Add base64 to dependencies
+use base64::prelude::*;
