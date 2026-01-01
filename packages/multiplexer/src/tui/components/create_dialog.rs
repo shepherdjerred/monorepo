@@ -6,6 +6,7 @@ use ratatui::{
     widgets::{Block, Borders, Clear, Paragraph, Wrap},
 };
 
+use crate::core::AccessMode;
 use crate::tui::app::{App, CreateDialogFocus};
 
 /// Render the create session dialog
@@ -38,6 +39,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
             Constraint::Length(prompt_height as u16 + 2), // Prompt (dynamic + borders)
             Constraint::Length(3),                         // Repo path
             Constraint::Length(2),                         // Backend
+            Constraint::Length(2),                         // Access mode
             Constraint::Length(2),                         // Skip checks
             Constraint::Length(2),                         // Plan mode
             Constraint::Length(1),                         // Spacer
@@ -86,13 +88,25 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         inner[3],
     );
 
+    // Access mode selection
+    render_radio_field(
+        frame,
+        "Access Mode",
+        &[
+            ("Read-Only", dialog.access_mode == AccessMode::ReadOnly),
+            ("Read-Write", dialog.access_mode == AccessMode::ReadWrite),
+        ],
+        dialog.focus == CreateDialogFocus::AccessMode,
+        inner[4],
+    );
+
     // Skip checks checkbox
     render_checkbox_field(
         frame,
         "Dangerously skip checks",
         dialog.skip_checks,
         dialog.focus == CreateDialogFocus::SkipChecks,
-        inner[4],
+        inner[5],
     );
 
     // Plan mode checkbox
@@ -101,7 +115,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         "Start in plan mode",
         dialog.plan_mode,
         dialog.focus == CreateDialogFocus::PlanMode,
-        inner[5],
+        inner[6],
     );
 
     // Buttons
@@ -109,7 +123,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         frame,
         dialog.focus == CreateDialogFocus::Buttons,
         dialog.button_create_focused,
-        inner[7],
+        inner[8],
     );
 
     // Render directory picker overlay if active
