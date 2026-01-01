@@ -89,6 +89,18 @@ impl CopyModeState {
             visual_mode: false,
         }
     }
+
+    /// Create new copy mode state with cursor at specific position
+    #[must_use]
+    pub fn new_with_cursor(row: u16, col: u16) -> Self {
+        Self {
+            cursor_row: row,
+            cursor_col: col,
+            selection_start: None,
+            selection_end: None,
+            visual_mode: false,
+        }
+    }
 }
 
 /// Input focus for create dialog
@@ -950,6 +962,25 @@ impl App {
     /// Enter copy mode from attached state
     pub fn enter_copy_mode(&mut self) {
         if self.mode == AppMode::Attached {
+            // Try to get the actual cursor position from the terminal
+            if let Some(pty_session) = self.attached_pty_session() {
+                let buffer = pty_session.terminal_buffer();
+                if let Ok(buf) = buffer.try_lock() {
+                    let cursor_pos = buf.screen().cursor_position();
+                    self.copy_mode_state = Some(CopyModeState::new_with_cursor(
+                        cursor_pos.0,
+                        cursor_pos.1,
+                    ));
+                    self.mode = AppMode::CopyMode;
+                    self.status_message = Some(
+                        "Copy mode | hjkl: move | v: select | y: yank | ?: help | q: exit"
+                            .to_string(),
+                    );
+                    return;
+                }
+            }
+
+            // Fallback to bottom-left if we can't get cursor position
             let (rows, cols) = self.terminal_size;
             self.copy_mode_state = Some(CopyModeState::new(rows, cols));
             self.mode = AppMode::CopyMode;

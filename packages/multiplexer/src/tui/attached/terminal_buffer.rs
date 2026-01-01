@@ -19,6 +19,10 @@ pub struct TerminalBuffer {
 
     /// Buffer for incomplete UTF-8 sequences.
     utf8_buffer: Vec<u8>,
+
+    /// Whether user has manually scrolled up (scroll lock).
+    /// When true, new output won't auto-scroll to bottom.
+    user_scrolled: bool,
 }
 
 impl TerminalBuffer {
@@ -29,6 +33,7 @@ impl TerminalBuffer {
             parser: vt100::Parser::new(rows, cols, DEFAULT_SCROLLBACK_LIMIT),
             scroll_back_limit: DEFAULT_SCROLLBACK_LIMIT,
             utf8_buffer: Vec::new(),
+            user_scrolled: false,
         }
     }
 
@@ -39,6 +44,7 @@ impl TerminalBuffer {
             parser: vt100::Parser::new(rows, cols, limit),
             scroll_back_limit: limit,
             utf8_buffer: Vec::new(),
+            user_scrolled: false,
         }
     }
 
@@ -60,8 +66,10 @@ impl TerminalBuffer {
             // Process through vt100 parser (which handles scrollback internally)
             self.parser.process(&to_process);
 
-            // Reset scroll to bottom on new output (auto-scroll behavior)
-            self.parser.set_scrollback(0);
+            // Auto-scroll to bottom on new output, but only if user hasn't manually scrolled up
+            if !self.user_scrolled {
+                self.parser.set_scrollback(0);
+            }
         }
     }
 
@@ -121,10 +129,14 @@ impl TerminalBuffer {
     }
 
     /// Scroll up by the given number of lines.
+    /// The vt100 parser clamps the scrollback to available content internally.
     pub fn scroll_up(&mut self, lines: usize) {
         let current = self.parser.screen().scrollback();
-        let new_offset = (current + lines).min(self.scroll_back_limit);
+        let new_offset = current + lines;
+        // Let vt100 parser clamp to actual scrollback content
         self.parser.set_scrollback(new_offset);
+        // Mark that user has manually scrolled
+        self.user_scrolled = true;
     }
 
     /// Scroll down by the given number of lines.
@@ -132,17 +144,27 @@ impl TerminalBuffer {
         let current = self.parser.screen().scrollback();
         let new_offset = current.saturating_sub(lines);
         self.parser.set_scrollback(new_offset);
+        // Still mark as user scrolled - they're manually controlling position
+        self.user_scrolled = true;
     }
 
     /// Scroll to the bottom (live output).
     pub fn scroll_to_bottom(&mut self) {
         self.parser.set_scrollback(0);
+        // Resume auto-scroll behavior when user returns to bottom
+        self.user_scrolled = false;
     }
 
     /// Check if we're at the bottom (viewing live output).
     #[must_use]
     pub fn is_at_bottom(&self) -> bool {
         self.parser.screen().scrollback() == 0
+    }
+
+    /// Reset scroll lock (e.g., when user sends input to PTY).
+    /// This allows auto-scroll to resume on new output.
+    pub fn reset_scroll_lock(&mut self) {
+        self.user_scrolled = false;
     }
 
     /// Get the terminal dimensions.

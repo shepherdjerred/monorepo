@@ -10,13 +10,26 @@ const SCROLL_LINES_PER_PAGE: usize = 10;
 pub async fn handle_copy_mode_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
     let state = app.copy_mode_state.as_mut().expect("copy mode state");
 
+    // Get terminal bounds from the buffer
+    let (max_rows, max_cols) = if let Some(pty_session) = app.attached_pty_session() {
+        let buffer = pty_session.terminal_buffer();
+        if let Ok(buf) = buffer.try_lock() {
+            let screen = buf.screen();
+            (screen.size().0, screen.size().1)
+        } else {
+            app.terminal_size
+        }
+    } else {
+        app.terminal_size
+    };
+
     match key.code {
         // Exit copy mode
         KeyCode::Esc | KeyCode::Char('q') => {
             app.exit_copy_mode();
         }
 
-        // Movement - Vi style
+        // Movement - Vi style with bounds checking
         KeyCode::Char('h') | KeyCode::Left => {
             state.cursor_col = state.cursor_col.saturating_sub(1);
             if state.visual_mode {
@@ -24,7 +37,7 @@ pub async fn handle_copy_mode_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
             }
         }
         KeyCode::Char('j') | KeyCode::Down => {
-            state.cursor_row = state.cursor_row.saturating_add(1);
+            state.cursor_row = state.cursor_row.saturating_add(1).min(max_rows.saturating_sub(1));
             if state.visual_mode {
                 state.selection_end = Some((state.cursor_row, state.cursor_col));
             }
@@ -36,7 +49,7 @@ pub async fn handle_copy_mode_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
             }
         }
         KeyCode::Char('l') | KeyCode::Right => {
-            state.cursor_col = state.cursor_col.saturating_add(1);
+            state.cursor_col = state.cursor_col.saturating_add(1).min(max_cols.saturating_sub(1));
             if state.visual_mode {
                 state.selection_end = Some((state.cursor_row, state.cursor_col));
             }
@@ -83,7 +96,11 @@ pub async fn handle_copy_mode_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
         KeyCode::Char('y') => {
             if state.visual_mode {
                 if let Err(e) = copy_selection_to_clipboard(app).await {
-                    app.status_message = Some(format!("Copy failed: {}", e));
+                    app.status_message = Some(format!(
+                        "Copy failed: {}. Press v to cancel selection or q to exit.",
+                        e
+                    ));
+                    // Don't exit copy mode on error - user can retry or cancel
                 } else {
                     app.status_message = Some("Yanked to clipboard".to_string());
                     app.exit_copy_mode();
@@ -137,6 +154,12 @@ fn extract_text_between(
     };
 
     let mut text = String::new();
+    let max_row = screen.size().0;
+    let max_col = screen.size().1;
+
+    // Clamp coordinates to screen bounds
+    let start = (start.0.min(max_row.saturating_sub(1)), start.1.min(max_col.saturating_sub(1)));
+    let end = (end.0.min(max_row.saturating_sub(1)), end.1.min(max_col.saturating_sub(1)));
 
     // Single line selection
     if start.0 == end.0 {
@@ -145,32 +168,40 @@ fn extract_text_between(
                 text.push_str(cell.contents());
             }
         }
+        // Trim trailing whitespace for single line
+        text = text.trim_end().to_string();
     } else {
         // Multi-line selection
         // First line (from start.1 to end of line)
-        for col in start.1..screen.size().1 {
+        let mut line = String::new();
+        for col in start.1..max_col {
             if let Some(cell) = screen.cell(start.0, col) {
-                text.push_str(cell.contents());
+                line.push_str(cell.contents());
             }
         }
+        text.push_str(line.trim_end());
         text.push('\n');
 
-        // Middle lines (full lines)
-        for row in (start.0 + 1)..end.0 {
-            for col in 0..screen.size().1 {
+        // Middle lines (full lines) - with bounds check
+        for row in (start.0 + 1)..end.0.min(max_row) {
+            let mut line = String::new();
+            for col in 0..max_col {
                 if let Some(cell) = screen.cell(row, col) {
-                    text.push_str(cell.contents());
+                    line.push_str(cell.contents());
                 }
             }
+            text.push_str(line.trim_end());
             text.push('\n');
         }
 
         // Last line (from 0 to end.1)
+        let mut line = String::new();
         for col in 0..=end.1 {
             if let Some(cell) = screen.cell(end.0, col) {
-                text.push_str(cell.contents());
+                line.push_str(cell.contents());
             }
         }
+        text.push_str(line.trim_end());
     }
 
     text
