@@ -68,8 +68,22 @@ impl CIPoller {
             .await?;
 
         if !output.status.success() {
-            // gh not authenticated or PR not found
-            return Ok(());
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            // Check for expected failures (PR not found, already merged, etc.)
+            if stderr.contains("not found") || stderr.contains("no pull request") {
+                tracing::debug!(
+                    pr_url = %pr_url,
+                    "PR not found or merged (expected during cleanup)"
+                );
+                return Ok(());
+            }
+            // Log unexpected failures (authentication, network, etc.)
+            tracing::warn!(
+                pr_url = %pr_url,
+                stderr = %stderr.trim(),
+                "gh pr checks failed - may need re-auth or network issue"
+            );
+            return Ok(()); // Don't crash the poller
         }
 
         let json_output = String::from_utf8_lossy(&output.stdout);

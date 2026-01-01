@@ -82,7 +82,13 @@ async fn handle_hook_connection(
                     event = ?message.event,
                     "Received hook message"
                 );
-                let _ = tx.send(message).await;
+                if let Err(e) = tx.send(message).await {
+                    tracing::warn!(
+                        session_id = %e.0.session_id,
+                        error = "Channel closed or full",
+                        "Failed to send hook message (receiver dropped?)"
+                    );
+                }
             }
             Err(e) => {
                 tracing::warn!(error = %e, line = %line, "Failed to parse hook message");

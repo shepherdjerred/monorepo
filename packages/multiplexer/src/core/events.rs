@@ -137,6 +137,9 @@ pub fn replay_events(events: &[Event]) -> Option<Session> {
             EventType::CheckStatusChanged { new_status, .. } => {
                 session.set_check_status(*new_status);
             }
+            EventType::ClaudeStatusChanged { new_status, .. } => {
+                session.set_claude_status(*new_status);
+            }
             EventType::SessionArchived => {
                 session.set_status(super::session::SessionStatus::Archived);
             }

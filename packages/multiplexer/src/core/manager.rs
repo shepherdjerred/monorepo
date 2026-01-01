@@ -590,21 +590,24 @@ impl SessionManager {
 
         match session.backend {
             BackendType::Docker => {
-                // Send prompt via docker exec
+                // Send prompt via docker exec with stdin (avoids shell injection)
                 let container_name = format!("mux-{}", backend_id);
-                // Escape single quotes in prompt
-                let escaped_prompt = prompt.replace('\'', "'\\''");
-                let output = tokio::process::Command::new("docker")
-                    .args([
-                        "exec",
-                        "-i",
-                        &container_name,
-                        "bash",
-                        "-c",
-                        &format!("echo '{}' | claude", escaped_prompt),
-                    ])
-                    .output()
-                    .await?;
+                let mut child = tokio::process::Command::new("docker")
+                    .args(["exec", "-i", &container_name, "claude"])
+                    .stdin(std::process::Stdio::piped())
+                    .stdout(std::process::Stdio::piped())
+                    .stderr(std::process::Stdio::piped())
+                    .spawn()?;
+
+                // Write prompt to stdin
+                if let Some(mut stdin) = child.stdin.take() {
+                    use tokio::io::AsyncWriteExt;
+                    stdin.write_all(prompt.as_bytes()).await?;
+                    stdin.write_all(b"\n").await?;
+                    drop(stdin); // Close stdin to signal end of input
+                }
+
+                let output = child.wait_with_output().await?;
 
                 if !output.status.success() {
                     anyhow::bail!(
