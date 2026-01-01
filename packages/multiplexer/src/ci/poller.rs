@@ -87,7 +87,17 @@ impl CIPoller {
         }
 
         let json_output = String::from_utf8_lossy(&output.stdout);
-        let checks: Vec<serde_json::Value> = serde_json::from_str(&json_output)?;
+        if json_output.trim().is_empty() {
+            tracing::debug!(pr_url = %pr_url, "gh pr checks returned empty output");
+            return Ok(());
+        }
+        let checks: Vec<serde_json::Value> = serde_json::from_str(&json_output).map_err(|e| {
+            anyhow::anyhow!(
+                "Failed to parse gh pr checks output: {}. Raw output: {:?}",
+                e,
+                if json_output.len() > 200 { &json_output[..200] } else { &json_output }
+            )
+        })?;
 
         // Determine overall status
         let new_status = if checks.is_empty() {
