@@ -732,8 +732,10 @@ async fn handle_attached_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()>
             DetachState::Pending { since, key_byte: pending_byte } => {
                 if since.elapsed() < DETACH_TIMEOUT {
                     // Double-tap detected - send the literal key that was pressed
+                    // Copy the byte value before we mutate detach_state
+                    let byte_to_send = *pending_byte;
                     app.detach_state = DetachState::Idle;
-                    app.send_to_pty(vec![*pending_byte]).await?;
+                    app.send_to_pty(vec![byte_to_send]).await?;
                 } else {
                     // Timeout expired - this should have been handled by main loop
                     // but if we get here, treat as detach

@@ -13,7 +13,7 @@ use std::time::Duration;
 use crossterm::{
     event::{
         DisableBracketedPaste, DisableMouseCapture, EnableBracketedPaste, EnableMouseCapture,
-        Event, KeyCode, KeyboardEnhancementFlags, MouseEventKind, PopKeyboardEnhancementFlags,
+        Event, KeyCode, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags,
         PushKeyboardEnhancementFlags,
     },
     execute,
