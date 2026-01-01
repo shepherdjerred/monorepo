@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" fill="none">
+  <!-- Background grid -->
+  <defs>
+    <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+      <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#e2e8f0" stroke-width="0.5"/>
+    </pattern>
+  </defs>
+  <rect width="400" height="300" fill="url(#grid)" opacity="0.5"/>
+
+  <!-- Agent box -->
+  <rect x="30" y="100" width="100" height="80" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-width="2"/>
+  <text x="80" y="135" text-anchor="middle" font-family="system-ui" font-size="12" fill="#475569">AI Agent</text>
+  <text x="80" y="155" text-anchor="middle" font-family="monospace" font-size="9" fill="#94a3b8">placeholder</text>
+
+  <!-- Arrow 1 -->
+  <path d="M 135 140 L 165 140" stroke="#6366f1" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Proxy box -->
+  <rect x="170" y="90" width="100" height="100" rx="8" fill="#eef2ff" stroke="#6366f1" stroke-width="2"/>
+  <text x="220" y="130" text-anchor="middle" font-family="system-ui" font-size="12" font-weight="600" fill="#4f46e5">mux</text>
+  <text x="220" y="150" text-anchor="middle" font-family="system-ui" font-size="10" fill="#6366f1">Proxy</text>
+  <rect x="185" y="160" width="70" height="20" rx="4" fill="#6366f1"/>
+  <text x="220" y="174" text-anchor="middle" font-family="monospace" font-size="8" fill="white">inject creds</text>
+
+  <!-- Arrow 2 -->
+  <path d="M 275 140 L 305 140" stroke="#6366f1" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- API box -->
+  <rect x="310" y="100" width="80" height="80" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-width="2"/>
+  <text x="350" y="135" text-anchor="middle" font-family="system-ui" font-size="12" fill="#475569">API</text>
+  <text x="350" y="155" text-anchor="middle" font-family="monospace" font-size="9" fill="#22c55e">verified</text>
+
+  <!-- Arrow marker -->
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#6366f1"/>
+    </marker>
+  </defs>
+
+  <!-- Security badge -->
+  <circle cx="220" cy="60" r="20" fill="#22c55e" opacity="0.1"/>
+  <path d="M 210 60 L 218 68 L 232 54" stroke="#22c55e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+
+  <!-- Title -->
+  <text x="200" y="260" text-anchor="middle" font-family="system-ui" font-size="14" fill="#64748b">Zero-credential architecture for AI agents</text>
+</svg>
