@@ -257,7 +257,7 @@ pub enum AccessMode {
 
 impl Default for AccessMode {
     fn default() -> Self {
-        Self::ReadWrite
+        Self::ReadOnly  // Principle of least privilege - secure default
     }
 }
 
