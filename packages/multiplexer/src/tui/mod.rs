@@ -190,7 +190,7 @@ async fn run_main_loop(
 
                 // Check for detach timeout when in Attached mode
                 if app.mode == AppMode::Attached {
-                    if let DetachState::Pending { since } = &app.detach_state {
+                    if let DetachState::Pending { since, .. } = &app.detach_state {
                         if since.elapsed() >= DETACH_TIMEOUT {
                             // Timeout expired - detach
                             app.detach();

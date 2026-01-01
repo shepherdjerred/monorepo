@@ -49,7 +49,7 @@ pub enum DetachState {
     /// Not waiting for second key press
     Idle,
     /// First Ctrl+Q/Ctrl+] pressed, waiting for second or timeout
-    Pending { since: Instant },
+    Pending { since: Instant, key_byte: u8 },
 }
 
 impl Default for DetachState {
