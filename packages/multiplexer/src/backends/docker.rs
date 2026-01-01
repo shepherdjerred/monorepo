@@ -75,10 +75,11 @@ fn detect_git_worktree(path: &Path) -> anyhow::Result<Option<PathBuf>> {
 const DOCKER_IMAGE: &str = "ghcr.io/shepherdjerred/dotfiles";
 
 /// Shared cache volumes used across all mux Docker containers for faster Rust builds:
-/// - mux-cargo-registry: Downloaded crates from crates.io (/usr/local/cargo/registry)
-/// - mux-cargo-git: Git dependencies (/usr/local/cargo/git)
-/// - mux-sccache: Compilation cache (/root/.cache/sccache)
+/// - mux-cargo-registry: Downloaded crates from crates.io (/workspace/.cargo/registry)
+/// - mux-cargo-git: Git dependencies (/workspace/.cargo/git)
+/// - mux-sccache: Compilation cache (/workspace/.cache/sccache)
 ///
+/// Caches are mounted under /workspace (HOME) since containers run as non-root user.
 /// sccache (Mozilla's compilation cache) is configured via RUSTC_WRAPPER environment variable.
 /// If sccache is not installed in the dotfiles image, cargo will show a warning but continue
 /// to work. To enable sccache compilation caching, install it in the dotfiles image:
@@ -210,13 +211,14 @@ impl DockerBackend {
         // These are shared across ALL mux sessions and persist between container restarts
         // sccache provides compilation caching (path-independent, content-addressed)
         // cargo caches provide dependency download caching
+        // Note: Mounted under /workspace (HOME) since containers run as non-root user
         args.extend([
             "-v".to_string(),
-            "mux-cargo-registry:/usr/local/cargo/registry".to_string(),
+            "mux-cargo-registry:/workspace/.cargo/registry".to_string(),
             "-v".to_string(),
-            "mux-cargo-git:/usr/local/cargo/git".to_string(),
+            "mux-cargo-git:/workspace/.cargo/git".to_string(),
             "-v".to_string(),
-            "mux-sccache:/root/.cache/sccache".to_string(),
+            "mux-sccache:/workspace/.cache/sccache".to_string(),
         ]);
 
         // Configure sccache as Rust compiler wrapper (if installed in dotfiles image)
@@ -224,9 +226,11 @@ impl DockerBackend {
         // This is a progressive enhancement - works without sccache, better with it
         args.extend([
             "-e".to_string(),
+            "CARGO_HOME=/workspace/.cargo".to_string(),
+            "-e".to_string(),
             "RUSTC_WRAPPER=sccache".to_string(),
             "-e".to_string(),
-            "SCCACHE_DIR=/root/.cache/sccache".to_string(),
+            "SCCACHE_DIR=/workspace/.cache/sccache".to_string(),
         ]);
 
         // Detect if workdir is a git worktree and mount parent .git directory
@@ -738,28 +742,31 @@ mod tests {
         // Check cargo cache volumes
         let has_registry = args
             .iter()
-            .any(|a| a.contains("mux-cargo-registry:/usr/local/cargo/registry"));
+            .any(|a| a.contains("mux-cargo-registry:/workspace/.cargo/registry"));
         assert!(has_registry, "Expected mux-cargo-registry volume mount");
 
         let has_git = args
             .iter()
-            .any(|a| a.contains("mux-cargo-git:/usr/local/cargo/git"));
+            .any(|a| a.contains("mux-cargo-git:/workspace/.cargo/git"));
         assert!(has_git, "Expected mux-cargo-git volume mount");
 
         // Check sccache volume
         let has_sccache = args
             .iter()
-            .any(|a| a.contains("mux-sccache:/root/.cache/sccache"));
+            .any(|a| a.contains("mux-sccache:/workspace/.cache/sccache"));
         assert!(has_sccache, "Expected mux-sccache volume mount");
 
-        // Check sccache environment variables
+        // Check cargo and sccache environment variables
+        let has_cargo_home = args.iter().any(|a| a == "CARGO_HOME=/workspace/.cargo");
+        assert!(has_cargo_home, "Expected CARGO_HOME=/workspace/.cargo");
+
         let has_rustc_wrapper = args.iter().any(|a| a == "RUSTC_WRAPPER=sccache");
         assert!(has_rustc_wrapper, "Expected RUSTC_WRAPPER=sccache");
 
         let has_sccache_dir = args
             .iter()
-            .any(|a| a == "SCCACHE_DIR=/root/.cache/sccache");
-        assert!(has_sccache_dir, "Expected SCCACHE_DIR=/root/.cache/sccache");
+            .any(|a| a == "SCCACHE_DIR=/workspace/.cache/sccache");
+        assert!(has_sccache_dir, "Expected SCCACHE_DIR=/workspace/.cache/sccache");
     }
 
     /// Test that attach command uses bash, not zsh (which doesn't exist in container)
