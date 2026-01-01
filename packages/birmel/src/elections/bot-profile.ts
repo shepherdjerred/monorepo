@@ -1,5 +1,6 @@
 import { getDiscordClient } from "../discord/client.js";
 import { getDiscordIdForPersona } from "./persona-discord-ids.js";
+import { generateNickname } from "./winner.js";
 import { loggers } from "../utils/index.js";
 
 const logger = loggers.scheduler.child("elections").child("profile");
@@ -32,6 +33,9 @@ export async function updateBotProfile(personaName: string): Promise<void> {
 
 		// Fetch and update bio using REST API
 		await updateBotBio(discordId);
+
+		// Update bot username to match persona
+		await updateBotUsername(personaName);
 
 		logger.info("Bot profile updated to match winner", {
 			personaName,
@@ -82,5 +86,24 @@ async function updateBotBio(winnerDiscordId: string): Promise<void> {
 	} catch (error) {
 		logger.error("Failed to update bot bio", error, { winnerDiscordId });
 		// Bio update failure is not critical, continue without throwing
+	}
+}
+
+async function updateBotUsername(personaName: string): Promise<void> {
+	const client = getDiscordClient();
+	if (!client.user) return;
+
+	try {
+		// Generate username using the same pattern as nickname (e.g., "aaron" -> "Bvaron")
+		const username = generateNickname(personaName);
+
+		// Update the bot's username using REST API
+		await client.rest.patch("/users/@me", {
+			body: { username },
+		});
+		logger.info("Bot username updated", { personaName, username });
+	} catch (error) {
+		logger.error("Failed to update bot username", error, { personaName });
+		// Username update failure is not critical, continue without throwing
 	}
 }

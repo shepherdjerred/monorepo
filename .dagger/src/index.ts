@@ -10,7 +10,7 @@ import {
 const PACKAGES = ["eslint-config", "dagger-utils", "bun-decompile"] as const;
 const REPO_URL = "shepherdjerred/monorepo";
 
-const BUN_VERSION = "1.3.4";
+const BUN_VERSION = "1.3.5";
 const PLAYWRIGHT_VERSION = "1.57.0";
 // Pin release-please version for reproducible builds
 const RELEASE_PLEASE_VERSION = "17.1.3";
@@ -73,7 +73,12 @@ function installWorkspaceDeps(source: Directory): Container {
     .withMountedFile("/workspace/packages/bun-decompile/package.json", source.file("packages/bun-decompile/package.json"))
     .withMountedFile("/workspace/packages/dagger-utils/package.json", source.file("packages/dagger-utils/package.json"))
     .withMountedFile("/workspace/packages/eslint-config/package.json", source.file("packages/eslint-config/package.json"))
-    .withMountedFile("/workspace/packages/mux-site/package.json", source.file("packages/mux-site/package.json"));
+    .withMountedFile("/workspace/packages/mux-site/package.json", source.file("packages/mux-site/package.json"))
+    // Multiplexer web packages (in root workspaces)
+    .withMountedFile("/workspace/packages/multiplexer/web/package.json", source.file("packages/multiplexer/web/package.json"))
+    .withMountedFile("/workspace/packages/multiplexer/web/shared/package.json", source.file("packages/multiplexer/web/shared/package.json"))
+    .withMountedFile("/workspace/packages/multiplexer/web/client/package.json", source.file("packages/multiplexer/web/client/package.json"))
+    .withMountedFile("/workspace/packages/multiplexer/web/frontend/package.json", source.file("packages/multiplexer/web/frontend/package.json"));
 
   // PHASE 2: Install dependencies (cached if lockfile + package.jsons unchanged)
   container = container.withExec(["bun", "install", "--frozen-lockfile"]);
@@ -85,7 +90,11 @@ function installWorkspaceDeps(source: Directory): Container {
     .withMountedDirectory("/workspace/packages/bun-decompile", source.directory("packages/bun-decompile"))
     .withMountedDirectory("/workspace/packages/dagger-utils", source.directory("packages/dagger-utils"))
     .withMountedDirectory("/workspace/packages/eslint-config", source.directory("packages/eslint-config"))
-    .withMountedDirectory("/workspace/packages/mux-site", source.directory("packages/mux-site"));
+    .withMountedDirectory("/workspace/packages/mux-site", source.directory("packages/mux-site"))
+    // Multiplexer web packages
+    .withMountedDirectory("/workspace/packages/multiplexer/web/shared", source.directory("packages/multiplexer/web/shared"))
+    .withMountedDirectory("/workspace/packages/multiplexer/web/client", source.directory("packages/multiplexer/web/client"))
+    .withMountedDirectory("/workspace/packages/multiplexer/web/frontend", source.directory("packages/multiplexer/web/frontend"));
 
   // PHASE 4: Re-run bun install to recreate workspace node_modules symlinks
   // (Source mounts in Phase 3 replace the symlinks that Phase 2 created)
@@ -278,17 +287,27 @@ export class Monorepo {
     await container.sync();
     outputs.push("✓ Prisma setup");
 
-    // Run typecheck and build in PARALLEL
+    // Build web packages in dependency order first
+    // Bun's --filter runs packages in parallel, which breaks when packages depend on
+    // each other's dist/ output for type declarations
+    // IMPORTANT: Must update container after each step to preserve build output
+    container = container.withExec(["bun", "run", "--filter", "@mux/shared", "build"]);
+    await container.sync();
+    container = container.withExec(["bun", "run", "--filter", "@mux/client", "build"]);
+    await container.sync();
+    container = container.withExec(["bun", "run", "--filter", "@mux/frontend", "build"]);
+    await container.sync();
+
+    // Now build remaining packages (web packages already built, will be skipped or fast)
     // Note: Skip tests here - bun-decompile tests fail in CI (requires `bun build --compile`)
-    // Individual package tests will run in the birmelCi() call below
-    await Promise.all([
-      container.withExec(["bun", "run", "typecheck"]).sync(),
-      // Skip: container.withExec(["bun", "run", "test"]).sync(),
-      container.withExec(["bun", "run", "build"]).sync(),
-    ]);
-    outputs.push("✓ Typecheck");
-    // outputs.push("✓ Test");  // Skipped - birmel tests run separately below
+    container = container.withExec(["bun", "run", "build"]);
+    await container.sync();
     outputs.push("✓ Build");
+
+    // Typecheck all packages
+    container = container.withExec(["bun", "run", "typecheck"]);
+    await container.sync();
+    outputs.push("✓ Typecheck");
 
     // Birmel CI, Multiplexer CI, and mux-site build in parallel
     const [birmelResult, muxResult, muxSiteResult] = await Promise.all([

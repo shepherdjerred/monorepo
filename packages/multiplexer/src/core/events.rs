@@ -5,8 +5,8 @@ use uuid::Uuid;
 
 use super::session::{BackendType, ClaudeWorkingStatus, Session, SessionStatus};
 
-/// Event representing a state change in the system
-#[typeshare]
+/// Event representing a state change in the system (database model)
+/// Note: This is not exported to TypeScript. For WebSocket events, see api::protocol::Event
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Event {
     /// Unique event ID
