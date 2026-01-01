@@ -53,13 +53,14 @@ pub fn create_temp_file(content: &str) -> Result<PathBuf> {
     // Use system temp directory
     let temp_dir = std::env::temp_dir();
 
-    // Create unique filename using timestamp
+    // Create unique filename using timestamp + PID to avoid collisions
     let timestamp = SystemTime::now()
         .duration_since(SystemTime::UNIX_EPOCH)
         .context("Failed to get system time")?
         .as_millis();
 
-    let filename = format!("mux-prompt-{timestamp}.txt");
+    let pid = std::process::id();
+    let filename = format!("mux-prompt-{timestamp}-{pid}.txt");
     let temp_path = temp_dir.join(filename);
 
     // Write content to file
@@ -77,9 +78,12 @@ pub fn read_file_content(path: &PathBuf) -> Result<String> {
 
 /// Clean up (delete) a temporary file
 ///
-/// Errors are ignored to avoid disrupting the workflow
+/// Logs errors but doesn't fail to avoid disrupting the workflow
 pub fn cleanup_temp_file(path: &PathBuf) {
-    let _ = std::fs::remove_file(path);
+    if let Err(e) = std::fs::remove_file(path) {
+        // Log the error but don't fail - temp files will eventually be cleaned by OS
+        tracing::warn!("Failed to cleanup temp file {}: {}", path.display(), e);
+    }
 }
 
 #[cfg(test)]

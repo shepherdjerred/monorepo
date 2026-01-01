@@ -112,6 +112,20 @@ pub fn split_at_char_boundary(text: &str, pos: usize) -> (&str, &str) {
 // Multiline text editing functions
 // ============================================================================
 
+/// Calculate byte positions where each line starts in the text.
+/// Returns a Vec where the index is the line number and the value is the byte offset.
+fn calculate_line_starts(text: &str) -> Vec<usize> {
+    let mut line_starts = vec![0]; // First line starts at 0
+
+    for (idx, ch) in text.char_indices() {
+        if ch == '\n' {
+            line_starts.push(idx + 1); // Next line starts after newline
+        }
+    }
+
+    line_starts
+}
+
 /// Insert a character at the cursor position in multiline text.
 ///
 /// Returns the new cursor position (line, column).
@@ -121,9 +135,11 @@ pub fn insert_char_at_cursor_multiline(
     col: usize,
     ch: char,
 ) -> (usize, usize) {
-    let lines: Vec<&str> = text.lines().collect();
+    // Calculate line starts first (no borrows of text content)
+    let line_starts = calculate_line_starts(text);
+    let total_lines = line_starts.len();
 
-    if line >= lines.len() {
+    if line >= total_lines {
         // Cursor is beyond last line, append character to end
         if !text.is_empty() && !text.ends_with('\n') {
             text.push('\n');
@@ -132,23 +148,24 @@ pub fn insert_char_at_cursor_multiline(
         return (line, 1);
     }
 
-    // Get the target line
-    let target_line = lines[line];
+    // Get byte position of the start of target line
+    let line_start = line_starts[line];
 
-    // Convert column (character position) to byte offset
+    // Calculate line end
+    let line_end = if line + 1 < line_starts.len() {
+        line_starts[line + 1] - 1 // -1 to exclude the newline
+    } else {
+        text.len()
+    };
+
+    // Extract the target line to calculate column offset
+    let target_line = &text[line_start..line_end];
     let byte_offset = char_col_to_byte_offset(target_line, col);
 
-    // Calculate absolute byte position in the entire text
-    let mut abs_pos = 0;
-    for (i, line_str) in lines.iter().enumerate() {
-        if i == line {
-            abs_pos += byte_offset;
-            break;
-        }
-        abs_pos += line_str.len() + 1; // +1 for newline
-    }
+    // Calculate absolute position
+    let abs_pos = line_start + byte_offset;
 
-    // Insert the character
+    // Insert the character (all borrows are now dropped)
     text.insert(abs_pos, ch);
 
     // Return new cursor position (same line, column advanced)
@@ -159,26 +176,25 @@ pub fn insert_char_at_cursor_multiline(
 ///
 /// Returns the new cursor position (line, column).
 pub fn insert_newline_at_cursor(text: &mut String, line: usize, col: usize) -> (usize, usize) {
-    let lines: Vec<&str> = text.lines().collect();
+    let line_starts = calculate_line_starts(text);
+    let total_lines = line_starts.len();
 
-    if line >= lines.len() {
+    if line >= total_lines {
         // Cursor is beyond last line, just append newline
         text.push('\n');
         return (line + 1, 0);
     }
 
-    let target_line = lines[line];
-    let byte_offset = char_col_to_byte_offset(target_line, col);
+    let line_start = line_starts[line];
+    let line_end = if line + 1 < line_starts.len() {
+        line_starts[line + 1] - 1
+    } else {
+        text.len()
+    };
 
-    // Calculate absolute byte position
-    let mut abs_pos = 0;
-    for (i, line_str) in lines.iter().enumerate() {
-        if i == line {
-            abs_pos += byte_offset;
-            break;
-        }
-        abs_pos += line_str.len() + 1;
-    }
+    let target_line = &text[line_start..line_end];
+    let byte_offset = char_col_to_byte_offset(target_line, col);
+    let abs_pos = line_start + byte_offset;
 
     text.insert(abs_pos, '\n');
 
@@ -200,33 +216,37 @@ pub fn delete_char_before_cursor_multiline(
             return (0, 0); // At very start, nothing to delete
         }
 
-        let lines: Vec<&str> = text.lines().collect();
-        let prev_line_len = lines[line - 1].chars().count();
+        let line_starts = calculate_line_starts(text);
 
-        // Find the newline between previous and current line
-        let mut abs_pos = 0;
-        for (i, line_str) in lines.iter().enumerate() {
-            if i == line {
-                break;
-            }
-            abs_pos += line_str.len() + 1;
-        }
+        // Calculate length of previous line in characters
+        let prev_line_start = line_starts[line - 1];
+        let prev_line_end = line_starts[line] - 1; // -1 to exclude newline
+        let prev_line = &text[prev_line_start..prev_line_end];
+        let prev_line_len = prev_line.chars().count();
 
-        // Delete the newline (abs_pos - 1)
-        if abs_pos > 0 {
-            text.remove(abs_pos - 1);
-        }
+        // Delete the newline at line_starts[line] - 1
+        let newline_pos = line_starts[line] - 1;
+        text.remove(newline_pos);
 
         return (line - 1, prev_line_len);
     }
 
     // Delete character before cursor on current line
-    let lines: Vec<&str> = text.lines().collect();
-    if line >= lines.len() {
+    let line_starts = calculate_line_starts(text);
+    let total_lines = line_starts.len();
+
+    if line >= total_lines {
         return (line, col);
     }
 
-    let target_line = lines[line];
+    let line_start = line_starts[line];
+    let line_end = if line + 1 < line_starts.len() {
+        line_starts[line + 1] - 1
+    } else {
+        text.len()
+    };
+
+    let target_line = &text[line_start..line_end];
     let byte_offset = char_col_to_byte_offset(target_line, col);
 
     // Find start of previous character
@@ -235,16 +255,7 @@ pub fn delete_char_before_cursor_multiline(
         prev_byte -= 1;
     }
 
-    // Calculate absolute position
-    let mut abs_pos = 0;
-    for (i, line_str) in lines.iter().enumerate() {
-        if i == line {
-            abs_pos += prev_byte;
-            break;
-        }
-        abs_pos += line_str.len() + 1;
-    }
-
+    let abs_pos = line_start + prev_byte;
     text.remove(abs_pos);
     (line, col - 1)
 }
@@ -257,45 +268,35 @@ pub fn delete_char_at_cursor_multiline(
     line: usize,
     col: usize,
 ) -> (usize, usize) {
-    let lines: Vec<&str> = text.lines().collect();
+    let line_starts = calculate_line_starts(text);
+    let total_lines = line_starts.len();
 
-    if line >= lines.len() {
+    if line >= total_lines {
         return (line, col);
     }
 
-    let target_line = lines[line];
+    let line_start = line_starts[line];
+    let line_end = if line + 1 < line_starts.len() {
+        line_starts[line + 1] - 1
+    } else {
+        text.len()
+    };
+
+    let target_line = &text[line_start..line_end];
 
     // Check if at end of line
     if col >= target_line.chars().count() {
         // At end of line - delete newline if not last line
-        if line < lines.len() - 1 {
-            // Find the newline after this line
-            let mut abs_pos = 0;
-            for (i, line_str) in lines.iter().enumerate() {
-                if i == line {
-                    abs_pos += line_str.len();
-                    break;
-                }
-                abs_pos += line_str.len() + 1;
-            }
-
-            // Remove newline, merging with next line
-            text.remove(abs_pos);
+        if line < total_lines - 1 {
+            // The newline is at line_end
+            text.remove(line_end);
         }
         return (line, col);
     }
 
     // Delete character at cursor
     let byte_offset = char_col_to_byte_offset(target_line, col);
-
-    let mut abs_pos = 0;
-    for (i, line_str) in lines.iter().enumerate() {
-        if i == line {
-            abs_pos += byte_offset;
-            break;
-        }
-        abs_pos += line_str.len() + 1;
-    }
+    let abs_pos = line_start + byte_offset;
 
     text.remove(abs_pos);
     (line, col)

@@ -182,6 +182,15 @@ async fn run_main_loop(
                     // Get editor command
                     let editor_cmd = crate::utils::editor::get_editor();
 
+                    // Validate editor command doesn't contain dangerous shell metacharacters
+                    let dangerous_chars = ['&', '|', ';', '<', '>', '`', '$', '(', ')'];
+                    if editor_cmd.chars().any(|c| dangerous_chars.contains(&c)) {
+                        app.status_message = Some(format!(
+                            "Editor command contains unsafe characters: {editor_cmd}. Please use a wrapper script."
+                        ));
+                        continue;
+                    }
+
                     // Create temp file with current prompt content
                     match crate::utils::editor::create_temp_file(&app.create_dialog.prompt) {
                         Ok(temp_path) => {
@@ -195,7 +204,8 @@ async fn run_main_loop(
                                     .arg(&temp_path)
                                     .status()
                             } else {
-                                // Parse editor command (might have args like "code --wait")
+                                // Split command by whitespace (safe after validation above)
+                                // Note: If editor path contains spaces, user should set EDITOR to a wrapper script
                                 let parts: Vec<&str> = editor_cmd.split_whitespace().collect();
                                 if parts.is_empty() {
                                     Err(std::io::Error::new(std::io::ErrorKind::NotFound, "Empty editor command"))
