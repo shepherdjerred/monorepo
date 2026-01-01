@@ -42,7 +42,8 @@
   "scripts": {
     "build": "true",
     "test": "bun test",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "bun run typecheck"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.52.0",
