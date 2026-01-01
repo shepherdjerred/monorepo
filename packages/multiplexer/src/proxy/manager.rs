@@ -334,9 +334,10 @@ impl ProxyManager {
         &self.credentials
     }
 
-    /// Check if Kubernetes proxy is running.
+    /// Check if Kubernetes proxy was started.
+    /// Note: This checks if the proxy process exists, not if it's currently alive.
     pub fn is_k8s_proxy_running(&self) -> bool {
-        self.k8s_proxy.is_running()
+        self.k8s_proxy.has_process()
     }
 
     /// Check if Talos gateway is configured.
