@@ -4,6 +4,45 @@ use tokio::process::Command;
 
 use super::traits::ExecutionBackend;
 
+/// Read git user configuration from the host system
+///
+/// Returns (user.name, user.email) if available from git config
+async fn read_git_user_config() -> (Option<String>, Option<String>) {
+    let name = Command::new("git")
+        .args(["config", "--get", "user.name"])
+        .output()
+        .await
+        .ok()
+        .and_then(|output| {
+            if output.status.success() {
+                String::from_utf8(output.stdout)
+                    .ok()
+                    .map(|s| s.trim().to_string())
+                    .filter(|s| !s.is_empty())
+            } else {
+                None
+            }
+        });
+
+    let email = Command::new("git")
+        .args(["config", "--get", "user.email"])
+        .output()
+        .await
+        .ok()
+        .and_then(|output| {
+            if output.status.success() {
+                String::from_utf8(output.stdout)
+                    .ok()
+                    .map(|s| s.trim().to_string())
+                    .filter(|s| !s.is_empty())
+            } else {
+                None
+            }
+        });
+
+    (name, email)
+}
+
 /// Detect if a directory is a git worktree and return the parent .git directory path
 ///
 /// # Errors
@@ -174,6 +213,8 @@ impl DockerBackend {
         print_mode: bool,
         plan_mode: bool,
         images: &[String],
+        git_user_name: Option<&str>,
+        git_user_email: Option<&str>,
     ) -> anyhow::Result<Vec<String>> {
         let container_name = format!("mux-{name}");
         let escaped_prompt = initial_prompt.replace('\'', "'\\''");
@@ -340,6 +381,25 @@ impl DockerBackend {
             }
         }
 
+        // Git user configuration from host
+        // Set both AUTHOR and COMMITTER variables so git commits have proper attribution
+        if let Some(name) = git_user_name {
+            args.extend([
+                "-e".to_string(),
+                format!("GIT_AUTHOR_NAME={}", name),
+                "-e".to_string(),
+                format!("GIT_COMMITTER_NAME={}", name),
+            ]);
+        }
+        if let Some(email) = git_user_email {
+            args.extend([
+                "-e".to_string(),
+                format!("GIT_AUTHOR_EMAIL={}", email),
+                "-e".to_string(),
+                format!("GIT_COMMITTER_EMAIL={}", email),
+            ]);
+        }
+
         // NOTE: We intentionally do NOT create a fake .credentials.json file.
         // The ANTHROPIC_API_KEY env var is sufficient and avoids validation issues.
         // When a credentials file exists, Claude Code validates it against the API,
@@ -484,6 +544,9 @@ impl ExecutionBackend for DockerBackend {
             None
         };
 
+        // Read git user configuration from the host
+        let (git_user_name, git_user_email) = read_git_user_config().await;
+
         let args = Self::build_create_args(
             name,
             workdir,
@@ -493,6 +556,8 @@ impl ExecutionBackend for DockerBackend {
             options.print_mode,
             options.plan_mode,
             &options.images,
+            git_user_name.as_deref(),
+            git_user_email.as_deref(),
         )?;
         let output = Command::new("docker")
             .args(&args)

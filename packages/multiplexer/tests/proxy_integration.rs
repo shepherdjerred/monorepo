@@ -33,6 +33,8 @@ fn test_proxy_config_flows_to_container_args() {
         false, // print mode
         false, // plan mode
         &[],   // images
+        None,  // git user name
+        None,  // git user email
     ).expect("Failed to build args");
 
     // Verify HTTP_PROXY is set correctly
@@ -134,6 +136,8 @@ fn test_disabled_proxy_config_no_args() {
         false, // print mode
         false, // plan mode
         &[],   // images
+        None,  // git user name
+        None,  // git user email
     ).expect("Failed to build args");
 
     assert!(
@@ -162,6 +166,8 @@ fn test_none_proxy_config_no_args() {
         false, // print mode
         false, // plan mode
         &[],   // images
+        None,  // git user name
+        None,  // git user email
     ).expect("Failed to build args");
 
     assert!(
@@ -193,6 +199,8 @@ fn test_proxy_port_in_env_vars() {
         false, // print mode
         false, // plan mode
         &[],   // images
+        None,  // git user name
+        None,  // git user email
     ).expect("Failed to build args");
 
     // Verify the custom port is used
@@ -233,6 +241,8 @@ fn test_mux_dir_in_volume_mounts() {
         false, // print mode
         false, // plan mode
         &[],   // images
+        None,  // git user name
+        None,  // git user email
     ).expect("Failed to build args");
 
     // Verify the mux dir is used in volume mounts (CA cert path contains the temp dir path)
