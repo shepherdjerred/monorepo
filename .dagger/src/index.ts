@@ -290,10 +290,11 @@ export class Monorepo {
     // outputs.push("✓ Test");  // Skipped - birmel tests run separately below
     outputs.push("✓ Build");
 
-    // Birmel CI and Multiplexer CI in parallel
-    const [birmelResult, muxResult] = await Promise.all([
+    // Birmel CI, Multiplexer CI, and mux-site build in parallel
+    const [birmelResult, muxResult, muxSiteResult] = await Promise.all([
       checkBirmel(source),
       this.multiplexerCi(source),
+      this.muxSiteCi(source),
     ]);
 
     outputs.push("\n--- Birmel Validation ---");
@@ -301,6 +302,9 @@ export class Monorepo {
 
     outputs.push("\n--- Multiplexer Validation ---");
     outputs.push(muxResult);
+
+    outputs.push("\n--- mux-site Validation ---");
+    outputs.push(muxSiteResult);
 
     // Build birmel image ONCE and reuse for smoke test + publish
     const birmelImage = buildBirmelImage(source, version ?? "dev", gitSha ?? "dev");
@@ -636,6 +640,32 @@ export class Monorepo {
     outputs.push("\n--- Uploading to GitHub Release ---");
     const uploadResults = await uploadReleaseAssets(githubToken, version, assets);
     outputs.push(...uploadResults);
+
+    return outputs.join("\n");
+  }
+
+  /**
+   * Run mux-site CI: typecheck and build
+   */
+  @func()
+  async muxSiteCi(source: Directory): Promise<string> {
+    const outputs: string[] = [];
+
+    const container = dag
+      .container()
+      .from(`oven/bun:${BUN_VERSION}-debian`)
+      .withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-cache"))
+      .withWorkdir("/workspace")
+      .withDirectory("/workspace", source.directory("packages/mux-site"))
+      .withExec(["bun", "install"]);
+
+    // Typecheck
+    await container.withExec(["bun", "run", "typecheck"]).sync();
+    outputs.push("✓ Typecheck passed");
+
+    // Build
+    await container.withExec(["bun", "run", "build"]).sync();
+    outputs.push("✓ Build succeeded");
 
     return outputs.join("\n");
   }

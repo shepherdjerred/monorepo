@@ -2,7 +2,9 @@ import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
 
 export default defineConfig({
-  site: "https://mux.dev",
+  // TODO: Update to custom domain when registered, currently deploys to gh-pages-mux branch
+  site: "https://shepherdjerred.github.io",
+  base: "/monorepo/mux",
   integrations: [
     starlight({
       title: "mux",
