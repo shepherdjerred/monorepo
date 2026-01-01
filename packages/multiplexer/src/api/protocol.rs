@@ -192,3 +192,68 @@ pub enum Event {
         new: SessionStatus,
     },
 }
+
+/// Credential availability status
+#[typeshare]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CredentialStatus {
+    /// Human-readable credential name (e.g., "GitHub", "Anthropic")
+    pub name: String,
+
+    /// Service identifier for updates (e.g., "github", "anthropic")
+    pub service_id: String,
+
+    /// Whether the credential is available
+    pub available: bool,
+
+    /// Source of credential if available ("environment" or "file")
+    pub source: Option<String>,
+
+    /// Whether the credential is readonly (from environment)
+    pub readonly: bool,
+
+    /// Optional masked preview like "ghp_****...abc123"
+    pub masked_value: Option<String>,
+}
+
+/// Proxy status information
+#[typeshare]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ProxyStatus {
+    /// Proxy name (e.g., "HTTP Auth Proxy", "Kubernetes Proxy")
+    pub name: String,
+
+    /// Port number the proxy is running on
+    pub port: u16,
+
+    /// Whether the proxy is currently active
+    pub active: bool,
+
+    /// Proxy type ("global" or "session-specific")
+    pub proxy_type: String,
+}
+
+/// System status response including credentials and proxies
+#[typeshare]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SystemStatus {
+    /// List of credential statuses
+    pub credentials: Vec<CredentialStatus>,
+
+    /// List of proxy statuses
+    pub proxies: Vec<ProxyStatus>,
+
+    /// Total number of active sessions with proxies
+    pub active_session_proxies: u32,
+}
+
+/// Request to update a credential
+#[typeshare]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UpdateCredentialRequest {
+    /// Service identifier (e.g., "github", "anthropic")
+    pub service_id: String,
+
+    /// The credential token/key value
+    pub value: String,
+}
