@@ -202,7 +202,7 @@ export class Monorepo {
     await Promise.all([
       container.withExec(["bun", "run", "typecheck"]).sync(),
       container.withExec([
-        "bun", "run", "--filter='./packages/*'", "--filter=!./packages/bun-decompile'", "test"
+        "bun", "run", "--filter=./packages/*", "--filter=!./packages/bun-decompile", "test"
       ]).sync(),
       container.withExec(["bun", "run", "build"]).sync(),
     ]);
