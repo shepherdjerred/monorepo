@@ -711,10 +711,16 @@ impl App {
         use crate::api::protocol::CreateSessionRequest;
         use crate::core::{AgentType, BackendType};
 
+        let initial_prompt = if self.create_dialog.plan_mode {
+            format!("Enter plan mode and create a plan before doing anything.\n\n{}", self.create_dialog.prompt)
+        } else {
+            self.create_dialog.prompt.clone()
+        };
+
         let request = CreateSessionRequest {
             name: self.create_dialog.name.clone(),
             repo_path: self.create_dialog.repo_path.clone(),
-            initial_prompt: self.create_dialog.prompt.clone(),
+            initial_prompt,
             backend: if self.create_dialog.backend_zellij {
                 BackendType::Zellij
             } else {
