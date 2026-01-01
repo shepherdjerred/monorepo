@@ -159,8 +159,8 @@ export interface Session {
 	pr_check_status?: CheckStatus;
 	/** Current Claude agent working status (from hooks) */
 	claude_status: ClaudeWorkingStatus;
-	/** Timestamp of last Claude status update (ISO 8601) */
-	claude_status_updated_at?: string;
+	/** Timestamp of last Claude status update */
+	claude_status_updated_at: string;
 	/** Access mode for proxy filtering */
 	access_mode: AccessMode;
 	/** Port for session-specific HTTP proxy (Docker only) */
