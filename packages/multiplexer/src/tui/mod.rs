@@ -12,8 +12,9 @@ use std::time::Duration;
 
 use crossterm::{
     event::{
-        DisableBracketedPaste, EnableBracketedPaste, Event, KeyCode, KeyboardEnhancementFlags,
-        PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags,
+        DisableBracketedPaste, DisableMouseCapture, EnableBracketedPaste, EnableMouseCapture,
+        Event, KeyCode, KeyboardEnhancementFlags, MouseEventKind, PopKeyboardEnhancementFlags,
+        PushKeyboardEnhancementFlags,
     },
     execute,
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
@@ -38,6 +39,7 @@ pub async fn run() -> anyhow::Result<()> {
         stdout,
         EnterAlternateScreen,
         EnableBracketedPaste,
+        EnableMouseCapture,
         PushKeyboardEnhancementFlags(
             KeyboardEnhancementFlags::DISAMBIGUATE_ESCAPE_CODES
                 | KeyboardEnhancementFlags::REPORT_ALL_KEYS_AS_ESCAPE_CODES
@@ -62,6 +64,7 @@ pub async fn run() -> anyhow::Result<()> {
         terminal.backend_mut(),
         PopKeyboardEnhancementFlags,
         DisableBracketedPaste,
+        DisableMouseCapture,
         LeaveAlternateScreen
     )?;
     terminal.show_cursor()?;
@@ -69,7 +72,7 @@ pub async fn run() -> anyhow::Result<()> {
     result
 }
 
-/// Detach timeout for the double-tap Ctrl+] mechanism.
+/// Detach timeout for the double-tap Ctrl+Q/Ctrl+] mechanism.
 const DETACH_TIMEOUT: Duration = Duration::from_millis(300);
 
 async fn run_main_loop(
@@ -113,6 +116,12 @@ async fn run_main_loop(
                     continue;
                 }
 
+                // Handle mouse events
+                if let Event::Mouse(mouse) = event {
+                    events::handle_mouse_event(app, mouse).await?;
+                    continue;
+                }
+
                 // Handle key events
                 let Event::Key(key) = event else {
                     continue;
@@ -128,7 +137,7 @@ async fn run_main_loop(
                             // Use PTY-based attachment for Docker
                             match app.attach_selected_session().await {
                                 Ok(()) => {
-                                    app.status_message = Some("Attached via PTY - Press Ctrl+] to detach".to_string());
+                                    app.status_message = Some("Attached - Press Ctrl+Q to detach, Ctrl+Left/Right to switch sessions".to_string());
                                 }
                                 Err(e) => {
                                     app.status_message = Some(format!("Attach failed: {e}"));
@@ -276,7 +285,7 @@ async fn run_main_loop(
 
                 // Check for detach timeout when in Attached mode
                 if app.mode == AppMode::Attached {
-                    if let DetachState::Pending { since } = &app.detach_state {
+                    if let DetachState::Pending { since, .. } = &app.detach_state {
                         if since.elapsed() >= DETACH_TIMEOUT {
                             // Timeout expired - detach
                             app.detach();
