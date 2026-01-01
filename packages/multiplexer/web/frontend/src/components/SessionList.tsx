@@ -4,8 +4,9 @@ import { SessionStatus } from "@mux/shared";
 import { SessionCard } from "./SessionCard";
 import { ThemeToggle } from "./ThemeToggle";
 import { ConfirmDialog } from "./ConfirmDialog";
+import { StatusDialog } from "./StatusDialog";
 import { useSessionContext } from "../contexts/SessionContext";
-import { Plus, RefreshCw } from "lucide-react";
+import { Plus, RefreshCw, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
@@ -26,6 +27,7 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
     type: "archive" | "delete";
     session: Session;
   } | null>(null);
+  const [showStatusDialog, setShowStatusDialog] = useState(false);
 
   const filteredSessions = useMemo(() => {
     const sessionArray = Array.from(sessions.values());
@@ -77,6 +79,14 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
             aria-label="Refresh sessions"
           >
             <RefreshCw className={`w-5 h-5 ${isLoading ? "animate-spin" : ""}`} />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => { setShowStatusDialog(true); }}
+            aria-label="System status"
+          >
+            <Info className="w-5 h-5" />
           </Button>
           <Button variant="brutalist" onClick={onCreateNew}>
             <Plus className="w-5 h-5 mr-2" />
@@ -174,6 +184,11 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
           variant={confirmDialog.type === "delete" ? "destructive" : "default"}
           onConfirm={handleConfirm}
         />
+      )}
+
+      {/* Status Dialog */}
+      {showStatusDialog && (
+        <StatusDialog onClose={() => { setShowStatusDialog(false); }} />
       )}
     </div>
   );

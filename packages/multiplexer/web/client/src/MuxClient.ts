@@ -1,4 +1,11 @@
-import type { Session, CreateSessionRequest, RecentRepoDto, AccessMode } from "@mux/shared";
+import type {
+  Session,
+  CreateSessionRequest,
+  RecentRepoDto,
+  AccessMode,
+  SystemStatus,
+  UpdateCredentialRequest,
+} from "@mux/shared";
 import { ApiError, NetworkError, SessionNotFoundError } from "./errors.js";
 
 /**
@@ -102,7 +109,26 @@ export class MuxClient {
    * Update session access mode
    */
   async updateAccessMode(id: string, mode: AccessMode): Promise<void> {
-    await this.request("POST", `/api/sessions/${encodeURIComponent(id)}/access-mode`, { mode });
+    await this.request("POST", `/api/sessions/${encodeURIComponent(id)}/access-mode`, { access_mode: mode });
+  }
+
+  /**
+   * Get system status including credentials and proxies
+   */
+  async getSystemStatus(): Promise<SystemStatus> {
+    const response = await this.request<SystemStatus>("GET", "/api/status");
+    return response;
+  }
+
+  /**
+   * Update a credential value
+   */
+  async updateCredential(serviceId: string, value: string): Promise<void> {
+    const request: UpdateCredentialRequest = {
+      service_id: serviceId,
+      value,
+    };
+    await this.request("POST", "/api/credentials", request);
   }
 
   /**
