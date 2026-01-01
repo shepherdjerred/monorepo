@@ -9,6 +9,7 @@ use chrono::{DateTime, Utc};
 use dashmap::DashMap;
 use hudsucker::certificate_authority::RcgenAuthority;
 use hudsucker::hyper::{Request, Response};
+use hudsucker::hyper_util::client::legacy::Error as ClientError;
 use hudsucker::{Body, HttpContext, HttpHandler, Proxy, RequestOrResponse};
 use rustls::crypto::aws_lc_rs::default_provider;
 use tokio::sync::RwLock;
@@ -128,6 +129,7 @@ impl HttpAuthProxy {
 /// Pending request data for timing correlation.
 #[derive(Debug, Clone)]
 struct PendingRequest {
+    request_id: Uuid,
     start_time: Instant,
     timestamp: DateTime<Utc>,
     service: String,
@@ -137,10 +139,11 @@ struct PendingRequest {
 }
 
 /// Shared request tracking for timing measurements.
-type RequestTracker = Arc<DashMap<Uuid, PendingRequest>>;
+/// Uses client_addr as key since HttpContext only provides client_addr.
+type RequestTracker = Arc<DashMap<SocketAddr, PendingRequest>>;
 
-/// Classify proxy errors into specific types for debugging.
-fn classify_proxy_error(err: &hudsucker::Error) -> &'static str {
+/// Classify client errors into specific types for debugging.
+fn classify_client_error(err: &ClientError) -> &'static str {
     let error_str = err.to_string().to_lowercase();
 
     if error_str.contains("dns") || error_str.contains("resolve") {
@@ -179,11 +182,12 @@ struct AuthInjector {
 impl HttpHandler for AuthInjector {
     fn handle_request(
         &mut self,
-        _ctx: &HttpContext,
+        ctx: &HttpContext,
         mut req: Request<Body>,
     ) -> impl Future<Output = RequestOrResponse> + Send {
         let credentials = Arc::clone(&self.credentials);
         let request_tracker = Arc::clone(&self.request_tracker);
+        let client_addr = ctx.client_addr;
 
         async move {
             let request_id = Uuid::new_v4();
@@ -255,10 +259,11 @@ impl HttpHandler for AuthInjector {
                 }
             }
 
-            // Store request metadata for timing correlation
+            // Store request metadata for timing correlation (keyed by client address)
             request_tracker.insert(
-                request_id,
+                client_addr,
                 PendingRequest {
+                    request_id,
                     start_time,
                     timestamp,
                     service: host,
@@ -277,36 +282,22 @@ impl HttpHandler for AuthInjector {
         ctx: &HttpContext,
         res: Response<Body>,
     ) -> impl Future<Output = Response<Body>> + Send {
-        let host = ctx
-            .uri
-            .host()
-            .map(String::from)
-            .unwrap_or_else(|| String::from("unknown"));
-        let method = ctx.method.to_string();
-        let path = ctx.uri.path().to_string();
+        let client_addr = ctx.client_addr;
         let request_tracker = Arc::clone(&self.request_tracker);
         let audit_logger = Arc::clone(&self.audit_logger);
 
         async move {
             let status = res.status();
 
-            // Find and remove matching pending request
-            let pending = request_tracker
-                .iter()
-                .find(|entry| {
-                    let req = entry.value();
-                    req.service == host && req.method == method && req.path == path
-                })
-                .map(|entry| (*entry.key(), entry.value().clone()));
+            // Find and remove matching pending request by client address
+            let pending = request_tracker.remove(&client_addr);
 
-            if let Some((request_id, pending)) = pending {
-                request_tracker.remove(&request_id);
-
+            if let Some((_, pending)) = pending {
                 let duration_ms = pending.start_time.elapsed().as_millis() as u64;
 
                 tracing::debug!(
-                    request_id = %request_id,
-                    host = %host,
+                    request_id = %pending.request_id,
+                    host = %pending.service,
                     status = %status,
                     duration_ms = duration_ms,
                     "Response received from upstream"
@@ -326,21 +317,20 @@ impl HttpHandler for AuthInjector {
                 if let Err(e) = audit_logger.log(&entry) {
                     tracing::warn!("Failed to write audit log entry: {}", e);
                 }
+
+                // Log warning for server errors
+                if status.is_server_error() {
+                    tracing::warn!(
+                        status = %status,
+                        "Upstream server error (5xx)"
+                    );
+                }
             } else {
                 // No matching request found (shouldn't happen in normal operation)
                 tracing::warn!(
-                    host = %host,
+                    client_addr = %client_addr,
                     status = %status,
                     "Response received but no matching request found"
-                );
-            }
-
-            // Log warning for server errors
-            if status.is_server_error() {
-                tracing::warn!(
-                    host = %host,
-                    status = %status,
-                    "Upstream server error (5xx)"
                 );
             }
 
@@ -351,40 +341,26 @@ impl HttpHandler for AuthInjector {
     fn handle_error(
         &mut self,
         ctx: &HttpContext,
-        err: hudsucker::Error,
+        err: ClientError,
     ) -> impl Future<Output = Response<Body>> + Send {
-        let host = ctx
-            .uri
-            .host()
-            .map(String::from)
-            .unwrap_or_else(|| String::from("unknown"));
-        let method = ctx.method.to_string();
-        let path = ctx.uri.path().to_string();
+        let client_addr = ctx.client_addr;
         let request_tracker = Arc::clone(&self.request_tracker);
         let audit_logger = Arc::clone(&self.audit_logger);
 
         async move {
-            let error_type = classify_proxy_error(&err);
+            let error_type = classify_client_error(&err);
 
-            // Find and remove matching pending request
-            let pending = request_tracker
-                .iter()
-                .find(|entry| {
-                    let req = entry.value();
-                    req.service == host && req.method == method && req.path == path
-                })
-                .map(|entry| (*entry.key(), entry.value().clone()));
+            // Find and remove matching pending request by client address
+            let pending = request_tracker.remove(&client_addr);
 
-            if let Some((request_id, pending)) = pending {
-                request_tracker.remove(&request_id);
-
+            if let Some((_, pending)) = pending {
                 let duration_ms = pending.start_time.elapsed().as_millis() as u64;
 
                 // Log full error details for debugging (not sent to client)
                 tracing::error!(
-                    request_id = %request_id,
-                    host = %host,
-                    method = %method,
+                    request_id = %pending.request_id,
+                    host = %pending.service,
+                    method = %pending.method,
                     error_type = error_type,
                     duration_ms = duration_ms,
                     error = %err,
@@ -408,8 +384,7 @@ impl HttpHandler for AuthInjector {
             } else {
                 // No matching request found
                 tracing::error!(
-                    host = %host,
-                    method = %method,
+                    client_addr = %client_addr,
                     error_type = error_type,
                     error = %err,
                     "Proxy error while handling request (no matching request found)"
@@ -435,13 +410,14 @@ struct FilteringHandler {
 impl HttpHandler for FilteringHandler {
     fn handle_request(
         &mut self,
-        _ctx: &HttpContext,
+        ctx: &HttpContext,
         mut req: Request<Body>,
     ) -> impl Future<Output = RequestOrResponse> + Send {
         let session_id = self.session_id;
         let access_mode = Arc::clone(&self.access_mode);
         let credentials = Arc::clone(&self.credentials);
         let request_tracker = Arc::clone(&self.request_tracker);
+        let client_addr = ctx.client_addr;
 
         async move {
             let request_id = Uuid::new_v4();
@@ -530,10 +506,11 @@ impl HttpHandler for FilteringHandler {
                 }
             }
 
-            // Store request metadata for timing correlation
+            // Store request metadata for timing correlation (keyed by client address)
             request_tracker.insert(
-                request_id,
+                client_addr,
                 PendingRequest {
+                    request_id,
                     start_time,
                     timestamp,
                     service: host,
@@ -553,37 +530,23 @@ impl HttpHandler for FilteringHandler {
         res: Response<Body>,
     ) -> impl Future<Output = Response<Body>> + Send {
         let session_id = self.session_id;
-        let host = ctx
-            .uri
-            .host()
-            .map(String::from)
-            .unwrap_or_else(|| String::from("unknown"));
-        let method = ctx.method.to_string();
-        let path = ctx.uri.path().to_string();
+        let client_addr = ctx.client_addr;
         let request_tracker = Arc::clone(&self.request_tracker);
         let audit_logger = Arc::clone(&self.audit_logger);
 
         async move {
             let status = res.status();
 
-            // Find and remove matching pending request
-            let pending = request_tracker
-                .iter()
-                .find(|entry| {
-                    let req = entry.value();
-                    req.service == host && req.method == method && req.path == path
-                })
-                .map(|entry| (*entry.key(), entry.value().clone()));
+            // Find and remove matching pending request by client address
+            let pending = request_tracker.remove(&client_addr);
 
-            if let Some((request_id, pending)) = pending {
-                request_tracker.remove(&request_id);
-
+            if let Some((_, pending)) = pending {
                 let duration_ms = pending.start_time.elapsed().as_millis() as u64;
 
                 tracing::debug!(
-                    request_id = %request_id,
+                    request_id = %pending.request_id,
                     session_id = %session_id,
-                    host = %host,
+                    host = %pending.service,
                     status = %status,
                     duration_ms = duration_ms,
                     "Response received from upstream"
@@ -603,23 +566,22 @@ impl HttpHandler for FilteringHandler {
                 if let Err(e) = audit_logger.log(&entry) {
                     tracing::warn!("Failed to write audit log entry: {}", e);
                 }
+
+                // Log warning for server errors
+                if status.is_server_error() {
+                    tracing::warn!(
+                        session_id = %session_id,
+                        status = %status,
+                        "Upstream server error (5xx)"
+                    );
+                }
             } else {
                 // No matching request found (shouldn't happen in normal operation)
                 tracing::warn!(
                     session_id = %session_id,
-                    host = %host,
+                    client_addr = %client_addr,
                     status = %status,
                     "Response received but no matching request found"
-                );
-            }
-
-            // Log warning for server errors
-            if status.is_server_error() {
-                tracing::warn!(
-                    session_id = %session_id,
-                    host = %host,
-                    status = %status,
-                    "Upstream server error (5xx)"
                 );
             }
 
@@ -630,42 +592,28 @@ impl HttpHandler for FilteringHandler {
     fn handle_error(
         &mut self,
         ctx: &HttpContext,
-        err: hudsucker::Error,
+        err: ClientError,
     ) -> impl Future<Output = Response<Body>> + Send {
         let session_id = self.session_id;
-        let host = ctx
-            .uri
-            .host()
-            .map(String::from)
-            .unwrap_or_else(|| String::from("unknown"));
-        let method = ctx.method.to_string();
-        let path = ctx.uri.path().to_string();
+        let client_addr = ctx.client_addr;
         let request_tracker = Arc::clone(&self.request_tracker);
         let audit_logger = Arc::clone(&self.audit_logger);
 
         async move {
-            let error_type = classify_proxy_error(&err);
+            let error_type = classify_client_error(&err);
 
-            // Find and remove matching pending request
-            let pending = request_tracker
-                .iter()
-                .find(|entry| {
-                    let req = entry.value();
-                    req.service == host && req.method == method && req.path == path
-                })
-                .map(|entry| (*entry.key(), entry.value().clone()));
+            // Find and remove matching pending request by client address
+            let pending = request_tracker.remove(&client_addr);
 
-            if let Some((request_id, pending)) = pending {
-                request_tracker.remove(&request_id);
-
+            if let Some((_, pending)) = pending {
                 let duration_ms = pending.start_time.elapsed().as_millis() as u64;
 
                 // Log full error details for debugging (not sent to client)
                 tracing::error!(
-                    request_id = %request_id,
+                    request_id = %pending.request_id,
                     session_id = %session_id,
-                    host = %host,
-                    method = %method,
+                    host = %pending.service,
+                    method = %pending.method,
                     error_type = error_type,
                     duration_ms = duration_ms,
                     error = %err,
@@ -690,8 +638,7 @@ impl HttpHandler for FilteringHandler {
                 // No matching request found
                 tracing::error!(
                     session_id = %session_id,
-                    host = %host,
-                    method = %method,
+                    client_addr = %client_addr,
                     error_type = error_type,
                     error = %err,
                     "Proxy error while handling request (no matching request found)"
@@ -716,6 +663,7 @@ mod tests {
         let injector = AuthInjector {
             credentials,
             audit_logger,
+            request_tracker: Arc::new(DashMap::new()),
         };
 
         // Just verify it compiles and can be cloned

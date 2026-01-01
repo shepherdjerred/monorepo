@@ -7,9 +7,7 @@ use crate::api::Client;
 use crate::core::{AgentType, BackendType};
 
 use super::app::{App, AppMode, CreateDialogFocus, CreateProgress};
-
-mod events_copy_mode;
-use events_copy_mode::handle_copy_mode_key;
+use super::events_copy_mode::handle_copy_mode_key;
 
 /// Number of lines to scroll per mouse wheel tick
 const SCROLL_LINES_PER_WHEEL_TICK: usize = 3;
