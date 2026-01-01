@@ -99,6 +99,13 @@ enum Commands {
 
     /// Reconcile state with reality
     Reconcile,
+
+    /// Clean Rust compiler cache volumes (frees disk space)
+    CleanCache {
+        /// Force cleanup without confirmation
+        #[arg(short, long)]
+        force: bool,
+    },
 }
 
 #[tokio::main]
@@ -250,6 +257,42 @@ async fn main() -> anyhow::Result<()> {
                     }
                 }
             }
+        }
+        Commands::CleanCache { force } => {
+            use std::io::Write;
+
+            if !force {
+                println!("This will delete shared Rust compiler cache volumes:");
+                println!("  - mux-cargo-registry (downloaded crates)");
+                println!("  - mux-cargo-git (git dependencies)");
+                println!("  - mux-sccache (compilation cache)");
+                println!("\nFuture builds will redownload dependencies and recompile.");
+                print!("Continue? (y/N) ");
+                std::io::stdout().flush()?;
+
+                let mut input = String::new();
+                std::io::stdin().read_line(&mut input)?;
+                if input.trim().to_lowercase() != "y" {
+                    println!("Aborted");
+                    return Ok(());
+                }
+            }
+
+            for volume in ["mux-cargo-registry", "mux-cargo-git", "mux-sccache"] {
+                let output = tokio::process::Command::new("docker")
+                    .args(["volume", "rm", volume])
+                    .output()
+                    .await?;
+
+                if output.status.success() {
+                    println!("Deleted volume: {volume}");
+                } else {
+                    let stderr = String::from_utf8_lossy(&output.stderr);
+                    eprintln!("Warning: Failed to delete {volume}: {stderr}");
+                }
+            }
+
+            println!("Cache cleanup complete");
         }
     }
 
