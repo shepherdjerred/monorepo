@@ -1,9 +1,9 @@
 use ratatui::{
     Frame,
-    layout::Rect,
+    layout::{Constraint, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, List, ListItem, ListState},
+    widgets::{Block, Borders, List, ListItem, ListState, Paragraph},
 };
 
 use crate::core::{CheckStatus, ClaudeWorkingStatus, SessionStatus};
@@ -23,10 +23,33 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
             Span::styled("n", Style::default().fg(Color::Green)),
             Span::raw(" to create one."),
         ]);
-        let paragraph = ratatui::widgets::Paragraph::new(empty_msg).block(block);
+        let paragraph = Paragraph::new(empty_msg).block(block);
         frame.render_widget(paragraph, area);
         return;
     }
+
+    // Render the block and get the inner area
+    let inner_area = block.inner(area);
+    frame.render_widget(block, area);
+
+    // Split inner area into header and list
+    let chunks = Layout::vertical([Constraint::Length(1), Constraint::Min(0)]).split(inner_area);
+    let header_area = chunks[0];
+    let list_area = chunks[1];
+
+    // Render header row
+    // Account for highlight symbol "▶ " (2 chars) + deletion spinner space (2 chars)
+    let header = Line::from(vec![
+        Span::styled("    ", Style::default()),                                      // highlight symbol + spinner space
+        Span::styled(format!("{:22}", "Name"), Style::default().fg(Color::DarkGray)),
+        Span::styled(format!("{:20}", "Repository"), Style::default().fg(Color::DarkGray)),
+        Span::styled(format!("{:12}", "Status"), Style::default().fg(Color::DarkGray)),
+        Span::styled(format!("{:8}", "Backend"), Style::default().fg(Color::DarkGray)),
+        Span::styled(format!("{:12}", "Branch/PR"), Style::default().fg(Color::DarkGray)),
+        Span::styled("◎ ", Style::default().fg(Color::DarkGray)),  // Claude status header
+        Span::styled("CI", Style::default().fg(Color::DarkGray)),  // Check status header
+    ]);
+    frame.render_widget(Paragraph::new(header), header_area);
 
     let items: Vec<ListItem> = app
         .sessions
@@ -142,7 +165,6 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         .collect();
 
     let list = List::new(items)
-        .block(block)
         .highlight_style(
             Style::default()
                 .bg(Color::DarkGray)
@@ -153,5 +175,5 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
     let mut state = ListState::default();
     state.select(Some(app.selected_index));
 
-    frame.render_stateful_widget(list, area, &mut state);
+    frame.render_stateful_widget(list, list_area, &mut state);
 }
