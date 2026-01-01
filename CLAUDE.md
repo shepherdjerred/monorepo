@@ -172,3 +172,26 @@ bun run dev              # Backend with watch
 bun run dev:frontend     # Frontend dev server
 bun run dev:all          # Both concurrently
 ```
+
+### multiplexer
+
+Rust-based session multiplexer with web interface. Contains nested TypeScript workspaces:
+
+```bash
+cd packages/multiplexer
+cargo build              # Build Rust binary
+cargo test               # Run Rust tests
+
+# Web packages (nested workspace)
+cd web
+bun install              # Install web dependencies
+bun run build            # Build all web packages
+bun run test             # Run web tests
+bun run lint             # Lint web packages
+```
+
+**Build Order**: The frontend must be built before the Rust binary (static files are embedded):
+1. `cd packages/multiplexer/web/frontend && bun run build`
+2. `cd packages/multiplexer && cargo build`
+
+**Nested Workspace Exception**: The web packages (`packages/multiplexer/web/*`) use standalone ESLint configs instead of `@shepherdjerred/eslint-config` due to Bun workspace resolution limitations with deeply nested packages. These configs follow the same patterns and rules as the shared config.
