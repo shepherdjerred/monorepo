@@ -365,7 +365,7 @@ mod tests {
 
         // Placeholder token matches the OAuth prefix format, so auth will be injected
         // (the proxy will replace it with the real token from the host)
-        let placeholder = "sk-ant-oat01-mux-proxy-placeholder";
+        let placeholder = "sk-ant-oat01-clauderon-proxy-placeholder";
         assert!(
             placeholder.starts_with("sk-ant-oat01-"),
             "Placeholder should match OAuth prefix format"

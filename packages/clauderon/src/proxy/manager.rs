@@ -32,8 +32,8 @@ pub struct ProxyManager {
     talos_gateway: TalosGateway,
     /// Audit logger.
     audit_logger: Arc<AuditLogger>,
-    /// Mux directory.
-    mux_dir: PathBuf,
+    /// Clauderon directory.
+    clauderon_dir: PathBuf,
     /// HTTP proxy task handle.
     http_task: Option<JoinHandle<()>>,
     /// Talos gateway task handle.
@@ -55,11 +55,11 @@ impl ProxyManager {
     /// Create a new proxy manager.
     pub fn new(config: ProxyConfig) -> anyhow::Result<Self> {
         let home = dirs::home_dir().unwrap_or_else(|| PathBuf::from("/tmp"));
-        let mux_dir = home.join(".clauderon");
-        std::fs::create_dir_all(&mux_dir)?;
+        let clauderon_dir = home.join(".clauderon");
+        std::fs::create_dir_all(&clauderon_dir)?;
 
         // Load or generate CA
-        let ca = ProxyCa::load_or_generate(&mux_dir)?;
+        let ca = ProxyCa::load_or_generate(&clauderon_dir)?;
 
         // Load credentials
         let credentials = Arc::new(Credentials::load(&config.secrets_dir));
@@ -85,7 +85,7 @@ impl ProxyManager {
             k8s_proxy,
             talos_gateway,
             audit_logger,
-            mux_dir,
+            clauderon_dir,
             http_task: None,
             talos_task: None,
             port_allocator: Arc::new(PortAllocator::new()),
@@ -96,7 +96,7 @@ impl ProxyManager {
     /// Generate container configuration files.
     pub fn generate_configs(&self) -> anyhow::Result<()> {
         generate_container_configs(
-            &self.mux_dir,
+            &self.clauderon_dir,
             self.config.k8s_proxy_port,
             self.config.talos_gateway_port,
         )?;
@@ -203,9 +203,9 @@ impl ProxyManager {
         self.ca.cert_path()
     }
 
-    /// Get the mux directory.
-    pub fn mux_dir(&self) -> &PathBuf {
-        &self.mux_dir
+    /// Get the clauderon directory.
+    pub fn clauderon_dir(&self) -> &PathBuf {
+        &self.clauderon_dir
     }
 
     /// Get the HTTP proxy port.

@@ -1,4 +1,4 @@
-//! TUI tests for the multiplexer application.
+//! TUI tests for clauderon application.
 //!
 //! These tests cover:
 //! - State transitions (App struct methods)

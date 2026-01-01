@@ -1,13 +1,13 @@
 ---
 name: zero-credential-claude
-description: Explains how Claude Code works in containers with zero credentials via the mux proxy. Use when testing Claude in containers, debugging authentication issues, or understanding the zero-trust proxy architecture.
+description: Explains how Claude Code works in containers with zero credentials via the clauderon proxy. Use when testing Claude in containers, debugging authentication issues, or understanding the zero-trust proxy architecture.
 ---
 
 # Zero-Credential Claude Code in Containers
 
 ## Overview
 
-The multiplexer enables Claude Code to run in Docker containers with **zero real credentials**. The host proxy intercepts HTTPS requests and injects authentication, so containers never see actual API keys or tokens.
+Clauderon enables Claude Code to run in Docker containers with **zero real credentials**. The host proxy intercepts HTTPS requests and injects authentication, so containers never see actual API keys or tokens.
 
 ## Architecture
 
@@ -34,7 +34,7 @@ Containers receive placeholder credentials that make Claude Code think it's auth
 
 ```rust
 // src/backends/docker.rs
-"-e", "CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-mux-proxy-placeholder"
+"-e", "CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-clauderon-proxy-placeholder"
 ```
 
 A `claude.json` file is mounted to skip onboarding:
@@ -71,9 +71,9 @@ claude --dangerously-skip-permissions 'initial prompt here'
 After the session is created, attach to interact with Claude:
 
 ```bash
-mux session attach <session-name>
+clauderon attach <session-name>
 # Or directly with docker:
-docker attach mux-<session-name>
+docker attach clauderon-<session-name>
 ```
 
 #### Non-Interactive (Print) Mode
@@ -106,15 +106,15 @@ Print mode is useful for:
    export CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-your-real-token
    ```
 
-2. Start the mux daemon:
+2. Start the clauderon daemon:
    ```bash
-   cargo run --bin mux daemon
+   cargo run --bin clauderon daemon
    ```
 
 ### Create a Test Session
 
 ```bash
-cargo run --bin mux session create --name test-session --prompt "Say hello"
+cargo run --bin clauderon create --name test-session --prompt "Say hello"
 ```
 
 ### Manual Container Test
@@ -123,14 +123,14 @@ To manually test without creating a full session:
 
 ```bash
 # Start the daemon first
-cargo run --bin mux daemon &
+cargo run --bin clauderon daemon &
 
 # Run a container with the proxy setup
 docker run -it --rm \
-  -e CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-mux-proxy-placeholder \
+  -e CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-clauderon-proxy-placeholder \
   -e HTTPS_PROXY=http://host.docker.internal:18080 \
   -e HTTP_PROXY=http://host.docker.internal:18080 \
-  -v ~/.clauderon/proxy-ca.pem:/etc/ssl/certs/mux-proxy-ca.pem:ro \
+  -v ~/.clauderon/proxy-ca.pem:/etc/ssl/certs/clauderon-proxy-ca.pem:ro \
   -v ~/.clauderon/claude.json:/root/.claude.json \
   your-claude-image \
   claude --print "Hello, Claude!"

@@ -50,6 +50,6 @@ fn test_socket_path() {
     use clauderon::utils::socket_path;
 
     let path = socket_path();
-    assert!(path.to_string_lossy().contains("mux.sock"));
+    assert!(path.to_string_lossy().contains("clauderon.sock"));
     assert!(path.to_string_lossy().contains(".multiplexer"));
 }

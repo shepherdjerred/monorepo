@@ -1,4 +1,4 @@
-//! Integration tests for the multiplexer authentication proxy.
+//! Integration tests for clauderon authentication proxy.
 //!
 //! These tests verify the full end-to-end flow: container -> proxy -> real service
 //! by making actual HTTPS requests through the proxy to real APIs.
@@ -30,11 +30,11 @@
 //! ```
 //!
 //! ### Infrastructure Tests (K8s, Talos)
-//! These tests require the multiplexer daemon to be running with proper configuration.
+//! These tests require the clauderon daemon to be running with proper configuration.
 //!
 //! ```bash
 //! # Start the daemon (requires ~/.kube/config and ~/.talos/config)
-//! ./target/release/mux daemon &
+//! ./target/release/clauderon daemon &
 //!
 //! # Run infrastructure tests
 //! cargo test --test proxy_auth_tests test_k8s_proxy_integration -- --include-ignored
@@ -55,17 +55,17 @@ use clauderon::proxy::{AuditEntry, AuditLogger, Credentials, HttpAuthProxy, Prox
 async fn setup_proxy_with_env_credentials(
 ) -> anyhow::Result<(HttpAuthProxy, TempDir, u16, std::path::PathBuf)> {
     let temp_dir = TempDir::new()?;
-    let mux_dir = temp_dir.path().to_path_buf();
+    let clauderon_dir = temp_dir.path().to_path_buf();
 
     // Generate CA
-    let ca = ProxyCa::load_or_generate(&mux_dir)?;
+    let ca = ProxyCa::load_or_generate(&clauderon_dir)?;
     let authority = ca.to_rcgen_authority()?;
 
     // Load credentials from environment
     let credentials = Credentials::load_from_env();
 
     // Create audit logger
-    let audit_path = mux_dir.join("audit.jsonl");
+    let audit_path = clauderon_dir.join("audit.jsonl");
     let audit_logger = Arc::new(AuditLogger::new(audit_path.clone())?);
 
     // Use random port to avoid conflicts
@@ -130,7 +130,7 @@ async fn test_github_integration() {
     // Make actual request to GitHub API
     let response = client
         .get("https://api.github.com/user")
-        .header("User-Agent", "multiplexer-integration-test")
+        .header("User-Agent", "clauderon-integration-test")
         .send()
         .await
         .expect("Request failed");
@@ -590,13 +590,13 @@ async fn test_talos_gateway_integration() {
 
     // Check if daemon is running
     let daemon_check = std::process::Command::new("pgrep")
-        .args(["-f", "mux daemon"])
+        .args(["-f", "clauderon daemon"])
         .output()
         .expect("Failed to check for daemon");
 
     if !daemon_check.status.success() {
-        eprintln!("Skipping: mux daemon is not running");
-        eprintln!("Start daemon with: ./target/release/mux daemon");
+        eprintln!("Skipping: clauderon daemon is not running");
+        eprintln!("Start daemon with: ./target/release/clauderon daemon");
         return;
     }
 
@@ -733,7 +733,7 @@ async fn test_auth_injection_proof() {
 
     let response_without_proxy = client_no_proxy
         .get("https://api.github.com/user")
-        .header("User-Agent", "multiplexer-integration-test")
+        .header("User-Agent", "clauderon-integration-test")
         .send()
         .await
         .expect("Request failed");
@@ -762,7 +762,7 @@ async fn test_auth_injection_proof() {
 
     let response_with_proxy = client_with_proxy
         .get("https://api.github.com/user")
-        .header("User-Agent", "multiplexer-integration-test")
+        .header("User-Agent", "clauderon-integration-test")
         .send()
         .await
         .expect("Request through proxy failed");
@@ -787,7 +787,7 @@ async fn test_auth_injection_proof() {
 /// **Setup required:**
 /// 1. Talos cluster must be accessible from host
 /// 2. Host must have valid Talos config at ~/.talos/config
-/// 3. Run: `mux daemon` in a separate terminal
+/// 3. Run: `clauderon daemon` in a separate terminal
 /// 4. Wait for: "Talos mTLS gateway listening on 127.0.0.1:18082"
 ///
 /// **Running the test:**
@@ -804,14 +804,14 @@ async fn test_talos_gateway_tls_termination() {
 
     // Verify daemon is running
     let daemon_check = Command::new("pgrep")
-        .args(["-f", "mux daemon"])
+        .args(["-f", "clauderon daemon"])
         .output()
         .expect("Failed to check for daemon");
 
     if !daemon_check.status.success() {
-        eprintln!("ERROR: mux daemon is not running!");
+        eprintln!("ERROR: clauderon daemon is not running!");
         eprintln!("Please start the daemon in a separate terminal:");
-        eprintln!("  ./target/release/mux daemon");
+        eprintln!("  ./target/release/clauderon daemon");
         panic!("Daemon not running");
     }
 

@@ -65,7 +65,7 @@ pub async fn run_daemon_with_options(enable_proxy: bool) -> anyhow::Result<()> {
     let manager = if let Some(ref pm) = proxy_manager {
         let docker_proxy_config = DockerProxyConfig::new(
             pm.http_proxy_port(),
-            pm.mux_dir().clone(),
+            pm.clauderon_dir().clone(),
         );
         let docker_backend = DockerBackend::with_proxy(docker_proxy_config);
         let mut session_manager = SessionManager::with_docker_backend(store, docker_backend)

@@ -11,16 +11,16 @@ if [ -z "${HOME:-}" ]; then
     exit 0
 fi
 
-SOCKET_PATH="${HOME}/.clauderon/hooks.sock"
-MUX_SOCKET="${HOME}/.clauderon/clauderon.sock"
+HOOKS_SOCKET="${HOME}/.clauderon/hooks.sock"
+DAEMON_SOCKET="${HOME}/.clauderon/clauderon.sock"
 
 # Validate sockets exist
-if [ ! -S "$SOCKET_PATH" ]; then
+if [ ! -S "$HOOKS_SOCKET" ]; then
     # Hooks socket doesn't exist yet (daemon not started), exit silently
     exit 0
 fi
 
-if [ ! -S "$MUX_SOCKET" ]; then
+if [ ! -S "$DAEMON_SOCKET" ]; then
     # Daemon socket doesn't exist, exit silently
     exit 0
 fi
@@ -47,7 +47,7 @@ SESSION_NAME=$(basename "$WORKTREE_PATH")
 # Query daemon for session ID by name
 # Using the Unix socket API
 SESSION_ID=$(echo '{"type":"GetSessionIdByName","payload":{"name":"'"$SESSION_NAME"'"}}' | \
-    nc -U "$MUX_SOCKET" 2>/dev/null | \
+    nc -U "$DAEMON_SOCKET" 2>/dev/null | \
     jq -r '.payload.session_id // empty' 2>/dev/null)
 
 if [ -z "$SESSION_ID" ]; then
@@ -66,6 +66,6 @@ EOF
 )
 
 # Send to hook socket (with timeout)
-echo "$MESSAGE" | timeout 1s nc -U "$SOCKET_PATH" 2>/dev/null || true
+echo "$MESSAGE" | timeout 1s nc -U "$HOOKS_SOCKET" 2>/dev/null || true
 
 exit 0

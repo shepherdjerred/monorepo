@@ -26,7 +26,7 @@ async fn test_zellij_session_lifecycle() {
     let temp_dir = TempDir::new().expect("Failed to create temp dir");
     let workdir = temp_dir.path();
 
-    let session_name = format!("mux-test-{}", &uuid::Uuid::new_v4().to_string()[..8]);
+    let session_name = format!("clauderon-test-{}", &uuid::Uuid::new_v4().to_string()[..8]);
 
     // Create session
     let result = zellij

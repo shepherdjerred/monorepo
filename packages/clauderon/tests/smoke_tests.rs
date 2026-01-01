@@ -284,11 +284,11 @@ async fn test_claude_print_mode_e2e() {
 
     // Set up temp directory for proxy configs
     let temp_dir = TempDir::new().expect("Failed to create temp dir");
-    let mux_dir = temp_dir.path().to_path_buf();
+    let clauderon_dir = temp_dir.path().to_path_buf();
 
     // Generate proxy CA certificate
     println!("Generating proxy CA...");
-    let proxy_ca = ProxyCa::load_or_generate(&mux_dir).expect("Failed to generate proxy CA");
+    let proxy_ca = ProxyCa::load_or_generate(&clauderon_dir).expect("Failed to generate proxy CA");
 
     // Load credentials from environment (reads CLAUDE_CODE_OAUTH_TOKEN)
     let credentials = Credentials::load_from_env();
@@ -326,7 +326,7 @@ async fn test_claude_print_mode_e2e() {
     sleep(Duration::from_millis(500)).await;
 
     // Create Docker backend with proxy config
-    let proxy_config = DockerProxyConfig::new(proxy_port, mux_dir.clone());
+    let proxy_config = DockerProxyConfig::new(proxy_port, clauderon_dir.clone());
     let docker = DockerBackend::with_proxy(proxy_config);
 
     let container_name = format!(

@@ -87,7 +87,7 @@ fn acquire_spawn_lock() -> anyhow::Result<SpawnLockGuard> {
 
 /// Spawn the daemon as a detached background process
 ///
-/// This function spawns a new `mux daemon` process that continues running
+/// This function spawns a new `clauderon daemon` process that continues running
 /// after the parent process exits. The daemon process is fully detached
 /// by creating a new process group, which prevents signals (like SIGTERM
 /// or Ctrl+C) from the parent from propagating to the daemon.

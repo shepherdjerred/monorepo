@@ -29,7 +29,7 @@ async fn test_docker_container_lifecycle() {
     // Create a test file in the workdir
     std::fs::write(workdir.join("test.txt"), "Hello from test").unwrap();
 
-    let container_name = format!("mux-test-{}", uuid::Uuid::new_v4().to_string()[..8].to_string());
+    let container_name = format!("clauderon-test-{}", uuid::Uuid::new_v4().to_string()[..8].to_string());
 
     // Create container (using ExecutionBackend trait method)
     let result = docker
@@ -40,8 +40,8 @@ async fn test_docker_container_lifecycle() {
         Ok(returned_name) => {
             // Verify container was created
             assert!(
-                returned_name.starts_with("mux-"),
-                "Container name should start with mux-"
+                returned_name.starts_with("clauderon-"),
+                "Container name should start with clauderon-"
             );
 
             // Verify container exists (using ExecutionBackend trait method)

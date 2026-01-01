@@ -49,7 +49,7 @@ pub enum SessionStatus {
 
 /// A PTY session with background reader.
 pub struct PtySession {
-    /// Session identifier (matches mux session ID).
+    /// Session identifier (matches clauderon session ID).
     session_id: uuid::Uuid,
 
     /// Container ID for reconnection.

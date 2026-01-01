@@ -26,7 +26,7 @@ fn create_test_session(name: &str, worktree_path: &std::path::Path) -> Session {
         access_mode: Default::default(),
     });
     session.set_status(SessionStatus::Running);
-    session.set_backend_id(format!("mux-{name}"));
+    session.set_backend_id(format!("clauderon-{name}"));
     session
 }
 
@@ -101,7 +101,7 @@ async fn test_docker_container_cleanup_detection() {
     let docker = DockerBackend::new();
 
     // A non-existent container should be detected as missing
-    let fake_container_name = "mux-nonexistent-container-xyz";
+    let fake_container_name = "clauderon-nonexistent-container-xyz";
     let exists = docker
         .container_exists(fake_container_name)
         .await

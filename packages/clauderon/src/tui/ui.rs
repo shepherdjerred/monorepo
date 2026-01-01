@@ -115,7 +115,7 @@ fn render_connection_error(frame: &mut Frame, error: &str, area: Rect) {
         Line::from(""),
         Line::from("Make sure the daemon is running:"),
         Line::from(Span::styled(
-            "  mux daemon",
+            "  clauderon daemon",
             Style::default().fg(Color::Yellow),
         )),
     ];

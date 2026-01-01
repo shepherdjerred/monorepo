@@ -20,28 +20,28 @@ impl ProxyCa {
     ///
     /// If the CA exists at the given path, it will be loaded.
     /// Otherwise, a new CA will be generated and saved.
-    pub fn load_or_generate(mux_dir: &PathBuf) -> anyhow::Result<Self> {
-        let cert_path = mux_dir.join("proxy-ca.pem");
-        let key_path = mux_dir.join("proxy-ca-key.pem");
+    pub fn load_or_generate(clauderon_dir: &PathBuf) -> anyhow::Result<Self> {
+        let cert_path = clauderon_dir.join("proxy-ca.pem");
+        let key_path = clauderon_dir.join("proxy-ca-key.pem");
 
         if cert_path.exists() && key_path.exists() {
             tracing::info!("Loaded proxy CA certificate from {:?}", cert_path);
             Ok(Self { cert_path, key_path })
         } else {
-            Self::generate(mux_dir)
+            Self::generate(clauderon_dir)
         }
     }
 
     /// Generate a new CA certificate.
-    fn generate(mux_dir: &PathBuf) -> anyhow::Result<Self> {
-        std::fs::create_dir_all(mux_dir)?;
+    fn generate(clauderon_dir: &PathBuf) -> anyhow::Result<Self> {
+        std::fs::create_dir_all(clauderon_dir)?;
 
         let mut params = CertificateParams::default();
 
         // Set CA distinguished name
         let mut dn = DistinguishedName::new();
-        dn.push(DnType::CommonName, "Mux Proxy CA");
-        dn.push(DnType::OrganizationName, "Mux");
+        dn.push(DnType::CommonName, "Clauderon Proxy CA");
+        dn.push(DnType::OrganizationName, "Clauderon");
         params.distinguished_name = dn;
 
         // CA settings
@@ -61,8 +61,8 @@ impl ProxyCa {
         let ca_cert = params.self_signed(&key_pair)?;
 
         // Save to files
-        let cert_path = mux_dir.join("proxy-ca.pem");
-        let key_path = mux_dir.join("proxy-ca-key.pem");
+        let cert_path = clauderon_dir.join("proxy-ca.pem");
+        let key_path = clauderon_dir.join("proxy-ca-key.pem");
 
         std::fs::write(&cert_path, ca_cert.pem())?;
         std::fs::write(&key_path, key_pair.serialize_pem())?;
@@ -124,7 +124,7 @@ impl ProxyCa {
         // This certificate will be presented to clients connecting to the gateway
         let mut server_params = CertificateParams::default();
         let mut dn = DistinguishedName::new();
-        dn.push(DnType::CommonName, "Mux Talos Gateway");
+        dn.push(DnType::CommonName, "Clauderon Talos Gateway");
         server_params.distinguished_name = dn;
 
         // Add localhost and common IPs as subject alternative names
@@ -167,13 +167,13 @@ mod tests {
     #[test]
     fn test_ca_generation() {
         let dir = tempdir().unwrap();
-        let mux_dir = dir.path().to_path_buf();
+        let clauderon_dir = dir.path().to_path_buf();
 
-        let ca = ProxyCa::load_or_generate(&mux_dir).unwrap();
+        let ca = ProxyCa::load_or_generate(&clauderon_dir).unwrap();
 
         // Verify files were created
-        assert!(mux_dir.join("proxy-ca.pem").exists());
-        assert!(mux_dir.join("proxy-ca-key.pem").exists());
+        assert!(clauderon_dir.join("proxy-ca.pem").exists());
+        assert!(clauderon_dir.join("proxy-ca-key.pem").exists());
 
         // Verify we can create an authority
         let _authority = ca.to_rcgen_authority().unwrap();
@@ -182,13 +182,13 @@ mod tests {
     #[test]
     fn test_ca_reload() {
         let dir = tempdir().unwrap();
-        let mux_dir = dir.path().to_path_buf();
+        let clauderon_dir = dir.path().to_path_buf();
 
         // Generate CA
-        let _ca1 = ProxyCa::load_or_generate(&mux_dir).unwrap();
+        let _ca1 = ProxyCa::load_or_generate(&clauderon_dir).unwrap();
 
         // Reload CA
-        let ca2 = ProxyCa::load_or_generate(&mux_dir).unwrap();
+        let ca2 = ProxyCa::load_or_generate(&clauderon_dir).unwrap();
 
         // Should be able to create authority
         let _authority = ca2.to_rcgen_authority().unwrap();

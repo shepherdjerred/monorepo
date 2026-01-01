@@ -60,7 +60,7 @@ pub fn create_temp_file(content: &str) -> Result<PathBuf> {
         .as_millis();
 
     let pid = std::process::id();
-    let filename = format!("mux-prompt-{timestamp}-{pid}.txt");
+    let filename = format!("clauderon-prompt-{timestamp}-{pid}.txt");
     let temp_path = temp_dir.join(filename);
 
     // Write content to file

@@ -134,7 +134,7 @@ mod tests {
     #[test]
     fn test_sanitize_spaces() {
         assert_eq!(sanitize_branch_name("my feature"), "my-feature");
-        assert_eq!(sanitize_branch_name("mux automatic daemon"), "mux-automatic-daemon");
+        assert_eq!(sanitize_branch_name("clauderon automatic daemon"), "clauderon-automatic-daemon");
     }
 
     #[test]
@@ -205,8 +205,8 @@ mod tests {
 
     #[test]
     fn test_generate_session_name_with_spaces() {
-        let name = generate_session_name("mux automatic daemon");
-        assert!(name.starts_with("mux-automatic-daemon-"));
+        let name = generate_session_name("clauderon automatic daemon");
+        assert!(name.starts_with("clauderon-automatic-daemon-"));
         // Verify no spaces in generated name
         assert!(!name.contains(' '));
     }

@@ -144,7 +144,7 @@ pub struct DockerProxyConfig {
     /// HTTP proxy port.
     pub http_proxy_port: u16,
     /// Path to the clauderon config directory (contains CA cert, kubeconfig, talosconfig).
-    pub mux_dir: PathBuf,
+    pub clauderon_dir: PathBuf,
     /// Session-specific proxy port (overrides http_proxy_port if set).
     pub session_proxy_port: Option<u16>,
 }
@@ -152,11 +152,11 @@ pub struct DockerProxyConfig {
 impl DockerProxyConfig {
     /// Create a new proxy configuration.
     #[must_use]
-    pub fn new(http_proxy_port: u16, mux_dir: PathBuf) -> Self {
+    pub fn new(http_proxy_port: u16, clauderon_dir: PathBuf) -> Self {
         Self {
             enabled: true,
             http_proxy_port,
-            mux_dir,
+            clauderon_dir,
             session_proxy_port: None,
         }
     }
@@ -182,7 +182,7 @@ impl DockerBackend {
             proxy_config: DockerProxyConfig {
                 enabled: false,
                 http_proxy_port: 0,
-                mux_dir: PathBuf::new(),
+                clauderon_dir: PathBuf::new(),
                 session_proxy_port: None,
             },
         }
@@ -331,12 +331,12 @@ impl DockerBackend {
             if proxy.enabled {
                 // Use session-specific port if available, otherwise use global port
                 let port = proxy.session_proxy_port.unwrap_or(proxy.http_proxy_port);
-                let mux_dir = &proxy.mux_dir;
+                let clauderon_dir = &proxy.clauderon_dir;
 
                 // Validate required files exist before attempting to mount them
-                let ca_cert_path = mux_dir.join("proxy-ca.pem");
-                let kube_config_dir = mux_dir.join("kube");
-                let talos_config_dir = mux_dir.join("talos");
+                let ca_cert_path = clauderon_dir.join("proxy-ca.pem");
+                let kube_config_dir = clauderon_dir.join("kube");
+                let talos_config_dir = clauderon_dir.join("talos");
 
                 // CA certificate is required - fail fast if missing
                 if !ca_cert_path.exists() {
@@ -380,13 +380,13 @@ impl DockerBackend {
                 // Set dummy tokens so CLI tools will make requests (proxy replaces with real tokens)
                 args.extend([
                     "-e".to_string(),
-                    "GH_TOKEN=mux-proxy".to_string(),
+                    "GH_TOKEN=clauderon-proxy".to_string(),
                     "-e".to_string(),
-                    "GITHUB_TOKEN=mux-proxy".to_string(),
+                    "GITHUB_TOKEN=clauderon-proxy".to_string(),
                     // Set placeholder OAuth token - Claude Code uses this for auth
                     // The proxy will intercept API requests and inject the real OAuth token
                     "-e".to_string(),
-                    "CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-mux-proxy-placeholder".to_string(),
+                    "CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-clauderon-proxy-placeholder".to_string(),
                 ]);
 
                 // SSL/TLS environment variables for CA trust
@@ -456,15 +456,15 @@ impl DockerBackend {
         // Always do this when proxy is enabled since we always use --dangerously-skip-permissions
         if let Some(proxy) = proxy_config {
             // Create the directory if it doesn't exist
-            if let Err(e) = std::fs::create_dir_all(&proxy.mux_dir) {
+            if let Err(e) = std::fs::create_dir_all(&proxy.clauderon_dir) {
                 tracing::warn!(
-                    "Failed to create mux directory at {:?}: {}",
-                    proxy.mux_dir,
+                    "Failed to create clauderon directory at {:?}: {}",
+                    proxy.clauderon_dir,
                     e
                 );
             } else {
                 // Write managed settings file to suppress permission warning
-                let managed_settings_path = proxy.mux_dir.join("managed-settings.json");
+                let managed_settings_path = proxy.clauderon_dir.join("managed-settings.json");
                 let managed_settings = r#"{
   "permissions": {
     "defaultMode": "bypassPermissions"
@@ -486,7 +486,7 @@ impl DockerBackend {
                 // Write claude.json to skip onboarding
                 // This tells Claude Code we've already completed the setup wizard
                 // Note: Claude Code writes to this file, so we can't mount it read-only
-                let claude_json_path = proxy.mux_dir.join("claude.json");
+                let claude_json_path = proxy.clauderon_dir.join("claude.json");
                 let claude_json = r#"{"hasCompletedOnboarding": true}"#;
                 if let Err(e) = std::fs::write(&claude_json_path, claude_json) {
                     tracing::warn!(
@@ -936,7 +936,7 @@ mod tests {
         );
     }
 
-    /// Test that container name is prefixed with mux-
+    /// Test that container name is prefixed with clauderon-
     #[test]
     fn test_container_name_prefixed() {
         let args = DockerBackend::build_create_args(
@@ -955,29 +955,29 @@ mod tests {
 
         let container_name = &args[name_idx.unwrap() + 1];
         assert!(
-            container_name.starts_with("mux-"),
-            "Container name should start with 'mux-': {container_name}"
+            container_name.starts_with("clauderon-"),
+            "Container name should start with 'clauderon-': {container_name}"
         );
-        assert_eq!(container_name, "mux-my-session");
+        assert_eq!(container_name, "clauderon-my-session");
     }
 
     /// Test that proxy config adds expected environment variables
     #[test]
     fn test_proxy_config_adds_env_vars() {
         use tempfile::tempdir;
-        let mux_dir = tempdir().expect("Failed to create temp dir");
-        let ca_cert_path = mux_dir.path().join("proxy-ca.pem");
+        let clauderon_dir = tempdir().expect("Failed to create temp dir");
+        let ca_cert_path = clauderon_dir.path().join("proxy-ca.pem");
         std::fs::write(&ca_cert_path, "dummy cert").expect("Failed to write cert");
 
         // Create kube and talos directories so they get mounted
-        let kube_dir = mux_dir.path().join("kube");
-        let talos_dir = mux_dir.path().join("talos");
+        let kube_dir = clauderon_dir.path().join("kube");
+        let talos_dir = clauderon_dir.path().join("talos");
         std::fs::create_dir(&kube_dir).expect("Failed to create kube dir");
         std::fs::create_dir(&talos_dir).expect("Failed to create talos dir");
         std::fs::write(kube_dir.join("config"), "dummy").expect("Failed to write kube config");
         std::fs::write(talos_dir.join("config"), "dummy").expect("Failed to write talos config");
 
-        let proxy_config = DockerProxyConfig::new(18080, mux_dir.path().to_path_buf());
+        let proxy_config = DockerProxyConfig::new(18080, clauderon_dir.path().to_path_buf());
         let args = DockerBackend::build_create_args(
             "test-session",
             &PathBuf::from("/workspace"),
@@ -1005,16 +1005,16 @@ mod tests {
     #[test]
     fn test_proxy_config_adds_volume_mounts() {
         use tempfile::tempdir;
-        let mux_dir = tempdir().expect("Failed to create temp dir");
-        let ca_cert_path = mux_dir.path().join("proxy-ca.pem");
+        let clauderon_dir = tempdir().expect("Failed to create temp dir");
+        let ca_cert_path = clauderon_dir.path().join("proxy-ca.pem");
         std::fs::write(&ca_cert_path, "dummy cert").expect("Failed to write cert");
 
         // Create kube directory so it gets mounted
-        let kube_dir = mux_dir.path().join("kube");
+        let kube_dir = clauderon_dir.path().join("kube");
         std::fs::create_dir(&kube_dir).expect("Failed to create kube dir");
         std::fs::write(kube_dir.join("config"), "dummy").expect("Failed to write kube config");
 
-        let proxy_config = DockerProxyConfig::new(18080, mux_dir.path().to_path_buf());
+        let proxy_config = DockerProxyConfig::new(18080, clauderon_dir.path().to_path_buf());
         let args = DockerBackend::build_create_args(
             "test-session",
             &PathBuf::from("/workspace"),
@@ -1058,11 +1058,11 @@ mod tests {
     #[test]
     fn test_host_docker_internal_always_added() {
         use tempfile::tempdir;
-        let mux_dir = tempdir().expect("Failed to create temp dir");
-        let ca_cert_path = mux_dir.path().join("proxy-ca.pem");
+        let clauderon_dir = tempdir().expect("Failed to create temp dir");
+        let ca_cert_path = clauderon_dir.path().join("proxy-ca.pem");
         std::fs::write(&ca_cert_path, "dummy cert").expect("Failed to write cert");
 
-        let proxy_config = DockerProxyConfig::new(18080, mux_dir.path().to_path_buf());
+        let proxy_config = DockerProxyConfig::new(18080, clauderon_dir.path().to_path_buf());
         let args = DockerBackend::build_create_args(
             "test-session",
             &PathBuf::from("/workspace"),
