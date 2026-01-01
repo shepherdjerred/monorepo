@@ -208,17 +208,23 @@ export class Monorepo {
     // Build web packages in dependency order first
     // Bun's --filter runs packages in parallel, which breaks when packages depend on
     // each other's dist/ output for type declarations
-    await container.withExec(["bun", "run", "--filter", "@mux/shared", "build"]).sync();
-    await container.withExec(["bun", "run", "--filter", "@mux/client", "build"]).sync();
-    await container.withExec(["bun", "run", "--filter", "@mux/frontend", "build"]).sync();
+    // IMPORTANT: Must update container after each step to preserve build output
+    container = container.withExec(["bun", "run", "--filter", "@mux/shared", "build"]);
+    await container.sync();
+    container = container.withExec(["bun", "run", "--filter", "@mux/client", "build"]);
+    await container.sync();
+    container = container.withExec(["bun", "run", "--filter", "@mux/frontend", "build"]);
+    await container.sync();
 
     // Now build remaining packages (web packages already built, will be skipped or fast)
     // Note: Skip tests here - bun-decompile tests fail in CI (requires `bun build --compile`)
-    await container.withExec(["bun", "run", "build"]).sync();
+    container = container.withExec(["bun", "run", "build"]);
+    await container.sync();
     outputs.push("✓ Build");
 
     // Typecheck all packages
-    await container.withExec(["bun", "run", "typecheck"]).sync();
+    container = container.withExec(["bun", "run", "typecheck"]);
+    await container.sync();
     outputs.push("✓ Typecheck");
 
     // Birmel CI (typecheck, lint, test in parallel)
