@@ -287,6 +287,28 @@ impl Client {
             _ => anyhow::bail!("Unexpected response"),
         }
     }
+
+    /// Send a prompt to a session (for hotkey triggers)
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the session is not found or the request fails.
+    pub async fn send_prompt(&mut self, session_name: &str, prompt: &str) -> anyhow::Result<()> {
+        let response = self
+            .send_request(Request::SendPrompt {
+                session: session_name.to_string(),
+                prompt: prompt.to_string(),
+            })
+            .await?;
+
+        match response {
+            Response::Ok => Ok(()),
+            Response::Error { code, message} => {
+                anyhow::bail!("[{code}] {message}")
+            }
+            _ => anyhow::bail!("Unexpected response"),
+        }
+    }
 }
 
 #[async_trait]

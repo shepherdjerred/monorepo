@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+# Install Claude Code hooks for multiplexer status tracking
+
+set -euo pipefail
+
+HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CLAUDE_SETTINGS="${HOME}/.claude/settings.json"
+
+# Ensure .claude directory exists
+mkdir -p "${HOME}/.claude"
+
+# Create/update settings.json with hooks
+cat > "$CLAUDE_SETTINGS" <<'EOF'
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": ["bash", "-c", "${HOME}/.multiplexer/hooks/send_status.sh UserPromptSubmit"]
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ["bash", "-c", "${HOME}/.multiplexer/hooks/send_status.sh PreToolUse"]
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ["bash", "-c", "${HOME}/.multiplexer/hooks/send_status.sh PermissionRequest"]
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": ["bash", "-c", "${HOME}/.multiplexer/hooks/send_status.sh Stop"]
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": {
+          "notification_type": "idle_prompt"
+        },
+        "hooks": [
+          {
+            "type": "command",
+            "command": ["bash", "-c", "${HOME}/.multiplexer/hooks/send_status.sh IdlePrompt"]
+          }
+        ]
+      }
+    ]
+  }
+}
+EOF
+
+# Create hooks directory in ~/.multiplexer if it doesn't exist
+mkdir -p "${HOME}/.multiplexer/hooks"
+
+# Copy hook script to ~/.multiplexer/hooks
+cp "$HOOK_DIR/send_status.sh" "${HOME}/.multiplexer/hooks/send_status.sh"
+chmod +x "${HOME}/.multiplexer/hooks/send_status.sh"
+
+echo "✓ Claude Code hooks installed to $CLAUDE_SETTINGS"
+echo "✓ Hook script copied to ${HOME}/.multiplexer/hooks/send_status.sh"
+echo ""
+echo "Multiplexer status tracking is now active!"
+echo "Claude's working status will be displayed in the session manager TUI."

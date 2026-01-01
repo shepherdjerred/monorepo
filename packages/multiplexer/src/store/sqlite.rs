@@ -72,6 +72,10 @@ impl SqliteStore {
             Self::migrate_to_v2(pool).await?;
         }
 
+        if current_version < 3 {
+            Self::migrate_to_v3(pool).await?;
+        }
+
         Ok(())
     }
 
@@ -220,6 +224,58 @@ impl SqliteStore {
 
         Ok(())
     }
+
+    /// Migration v3: Add Claude working status tracking
+    async fn migrate_to_v3(pool: &SqlitePool) -> anyhow::Result<()> {
+        tracing::info!("Applying migration v3: Claude working status");
+
+        // Add claude_status column
+        let claude_status_exists: bool = sqlx::query_scalar(
+            "SELECT COUNT(*) FROM pragma_table_info('sessions') WHERE name = 'claude_status'"
+        )
+        .fetch_one(pool)
+        .await
+        .map(|count: i64| count > 0)
+        .unwrap_or(false);
+
+        if !claude_status_exists {
+            sqlx::query(
+                "ALTER TABLE sessions ADD COLUMN claude_status TEXT NOT NULL DEFAULT 'Unknown'"
+            )
+            .execute(pool)
+            .await?;
+        }
+
+        // Add claude_status_updated_at column
+        let status_time_exists: bool = sqlx::query_scalar(
+            "SELECT COUNT(*) FROM pragma_table_info('sessions') WHERE name = 'claude_status_updated_at'"
+        )
+        .fetch_one(pool)
+        .await
+        .map(|count: i64| count > 0)
+        .unwrap_or(false);
+
+        if !status_time_exists {
+            sqlx::query(
+                "ALTER TABLE sessions ADD COLUMN claude_status_updated_at TEXT"
+            )
+            .execute(pool)
+            .await?;
+        }
+
+        // Record migration
+        let now = Utc::now();
+        sqlx::query(
+            "INSERT OR REPLACE INTO schema_version (version, applied_at) VALUES (?, ?)"
+        )
+        .bind(3)
+        .bind(now.to_rfc3339())
+        .execute(pool)
+        .await?;
+
+        tracing::info!("Migration v3 complete");
+        Ok(())
+    }
 }
 
 #[async_trait]
@@ -250,8 +306,9 @@ impl Store for SqliteStore {
             INSERT OR REPLACE INTO sessions (
                 id, name, status, backend, agent, repo_path, worktree_path,
                 branch_name, backend_id, initial_prompt, dangerous_skip_checks,
-                pr_url, pr_check_status, access_mode, proxy_port, created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                pr_url, pr_check_status, claude_status, claude_status_updated_at,
+                access_mode, proxy_port, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ",
         )
         .bind(session.id.to_string())
@@ -270,6 +327,12 @@ impl Store for SqliteStore {
             session
                 .pr_check_status
                 .and_then(|s| serde_json::to_string(&s).ok()),
+        )
+        .bind(serde_json::to_string(&session.claude_status)?)
+        .bind(
+            session
+                .claude_status_updated_at
+                .map(|t| t.to_rfc3339()),
         )
         .bind(session.access_mode.to_string())
         .bind(session.proxy_port.map(|p| p as i64))
@@ -399,6 +462,7 @@ const fn event_type_name(event_type: &crate::core::events::EventType) -> &'stati
         EventType::BackendIdSet { .. } => "BackendIdSet",
         EventType::PrLinked { .. } => "PrLinked",
         EventType::CheckStatusChanged { .. } => "CheckStatusChanged",
+        EventType::ClaudeStatusChanged { .. } => "ClaudeStatusChanged",
         EventType::SessionArchived => "SessionArchived",
         EventType::SessionDeleted { .. } => "SessionDeleted",
         EventType::SessionRestored => "SessionRestored",
@@ -421,6 +485,8 @@ struct SessionRow {
     dangerous_skip_checks: bool,
     pr_url: Option<String>,
     pr_check_status: Option<String>,
+    claude_status: String,
+    claude_status_updated_at: Option<String>,
     access_mode: String,
     proxy_port: Option<i64>,
     created_at: String,
@@ -447,6 +513,11 @@ impl TryFrom<SessionRow> for Session {
             pr_check_status: row
                 .pr_check_status
                 .map(|s| serde_json::from_str(&s))
+                .transpose()?,
+            claude_status: serde_json::from_str(&row.claude_status)?,
+            claude_status_updated_at: row
+                .claude_status_updated_at
+                .map(|s| chrono::DateTime::parse_from_rfc3339(&s).map(Into::into))
                 .transpose()?,
             access_mode: row.access_mode.parse().unwrap_or_default(),
             proxy_port: row.proxy_port.map(|p| p as u16),
