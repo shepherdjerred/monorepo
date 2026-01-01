@@ -133,9 +133,20 @@ async fn handle_console_socket(socket: WebSocket, session_id: String, state: App
                         }
                         Some("resize") => {
                             // Client is resizing terminal
-                            // TODO: Implement PTY resize
-                            // This would require storing the PTY handle and calling resize()
-                            tracing::debug!("Resize requested: {:?}", message);
+                            if let (Some(rows), Some(cols)) = (
+                                message["rows"].as_u64(),
+                                message["cols"].as_u64()
+                            ) {
+                                let size = pty_process::Size::new(rows as u16, cols as u16);
+                                let writer = pty_writer_clone.lock().await;
+                                if let Err(e) = writer.resize(size) {
+                                    tracing::error!("Failed to resize PTY: {}", e);
+                                } else {
+                                    tracing::debug!("Resized PTY to {}x{}", rows, cols);
+                                }
+                            } else {
+                                tracing::warn!("Invalid resize message: {:?}", message);
+                            }
                         }
                         _ => {
                             tracing::warn!("Unknown message type from WebSocket: {:?}", message);
@@ -173,6 +184,12 @@ async fn handle_console_socket(socket: WebSocket, session_id: String, state: App
 }
 
 /// Wrapper type for PTY that can be used as both reader and writer
+///
+/// Note: We use Arc<Mutex<>> instead of splitting the PTY because:
+/// 1. pty_process::Pty is a single file descriptor that cannot be split
+/// 2. Both read and write operations require mutable access
+/// 3. Resize operations also need mutable access
+/// The mutex contention is minimal because we only hold the lock during individual I/O operations
 type PtyHandle = Arc<Mutex<pty_process::Pty>>;
 
 /// Spawn docker attach command and return reader/writer handles

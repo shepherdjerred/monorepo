@@ -27,7 +27,7 @@ pub async fn ws_events_handler(
 }
 
 /// Handle an individual WebSocket connection for events
-async fn handle_events_socket(socket: WebSocket, _state: AppState) {
+async fn handle_events_socket(socket: WebSocket, state: AppState) {
     let (mut sender, mut receiver) = socket.split();
 
     // Send initial connection message
@@ -45,31 +45,61 @@ async fn handle_events_socket(socket: WebSocket, _state: AppState) {
         return;
     }
 
-    // TODO: Subscribe to event broadcaster
-    // For now, we'll just keep the connection open
-    // In a complete implementation, we would:
-    // 1. Get a broadcast receiver from the session manager
-    // 2. Listen for events and forward them to the WebSocket
-    // 3. Handle client disconnection gracefully
+    // Subscribe to event broadcaster
+    let mut event_receiver = state.event_broadcaster.subscribe();
 
-    // Keep connection alive until client disconnects
-    while let Some(msg) = receiver.next().await {
-        match msg {
-            Ok(Message::Close(_)) => {
-                tracing::debug!("Client disconnected from events WebSocket");
-                break;
-            }
-            Ok(Message::Ping(data)) => {
-                if let Err(e) = sender.send(Message::Pong(data)).await {
-                    tracing::error!("Failed to send pong: {}", e);
-                    break;
+    // Handle both incoming WebSocket messages and broadcast events
+    loop {
+        tokio::select! {
+            // Handle broadcast events from the channel
+            event_result = event_receiver.recv() => {
+                match event_result {
+                    Ok(event) => {
+                        let message = json!({
+                            "type": "event",
+                            "event": event,
+                        });
+
+                        if let Err(e) = sender.send(Message::Text(message.to_string())).await {
+                            tracing::error!("Failed to send event to WebSocket: {}", e);
+                            break;
+                        }
+                    }
+                    Err(broadcast::error::RecvError::Lagged(skipped)) => {
+                        tracing::warn!("WebSocket client lagged, skipped {} events", skipped);
+                        // Continue receiving
+                    }
+                    Err(broadcast::error::RecvError::Closed) => {
+                        tracing::debug!("Event broadcaster closed");
+                        break;
+                    }
                 }
             }
-            Err(e) => {
-                tracing::error!("WebSocket error: {}", e);
-                break;
+
+            // Handle incoming WebSocket messages from client
+            msg = receiver.next() => {
+                match msg {
+                    Some(Ok(Message::Close(_))) => {
+                        tracing::debug!("Client disconnected from events WebSocket");
+                        break;
+                    }
+                    Some(Ok(Message::Ping(data))) => {
+                        if let Err(e) = sender.send(Message::Pong(data)).await {
+                            tracing::error!("Failed to send pong: {}", e);
+                            break;
+                        }
+                    }
+                    Some(Err(e)) => {
+                        tracing::error!("WebSocket error: {}", e);
+                        break;
+                    }
+                    None => {
+                        tracing::debug!("WebSocket stream ended");
+                        break;
+                    }
+                    _ => {}
+                }
             }
-            _ => {}
         }
     }
 

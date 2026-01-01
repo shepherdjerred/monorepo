@@ -5,20 +5,20 @@
 
 export type MessageRole = "user" | "assistant" | "system";
 
-export interface ToolUse {
+export type ToolUse = {
   name: string;
   description: string | undefined;
   input: Record<string, unknown> | undefined;
   result: string | undefined;
 }
 
-export interface CodeBlock {
+export type CodeBlock = {
   language: string;
   code: string;
   filePath?: string;
 }
 
-export interface Message {
+export type Message = {
   id: string;
   role: MessageRole;
   content: string;
@@ -45,8 +45,8 @@ export function extractCodeBlocks(text: string): CodeBlock[] {
 
   while ((match = regex.exec(text)) !== null) {
     blocks.push({
-      language: match[1] || "text",
-      code: match[2]?.trim() || "",
+      language: match[1] ?? "text",
+      code: match[2]?.trim() ?? "",
     });
   }
 
@@ -58,19 +58,19 @@ export function extractCodeBlocks(text: string): CodeBlock[] {
  */
 export function extractFilePath(text: string): string | undefined {
   // Match patterns like: file_path: "/path/to/file"
-  const filePathMatch = text.match(/file_path:\s*["']([^"']+)["']/);
+  const filePathMatch = /file_path:\s*["']([^"']+)["']/.exec(text);
   if (filePathMatch) {
     return filePathMatch[1];
   }
 
   // Match patterns like: Reading /path/to/file
-  const readingMatch = text.match(/Reading\s+([^\s]+)/i);
+  const readingMatch = /Reading\s+([^\s]+)/i.exec(text);
   if (readingMatch) {
     return readingMatch[1];
   }
 
   // Match patterns like: Writing to /path/to/file
-  const writingMatch = text.match(/Writing\s+(?:to\s+)?([^\s]+)/i);
+  const writingMatch = /Writing\s+(?:to\s+)?([^\s]+)/i.exec(text);
   if (writingMatch) {
     return writingMatch[1];
   }
@@ -160,13 +160,11 @@ export function parseMessages(terminalOutput: string): Message[] {
     // Detect tool uses
     const tools = parseToolUses(line);
     if (tools.length > 0) {
-      if (!currentMessage) {
-        currentMessage = {
-          role: "assistant",
-          content: [],
-          toolUses: [],
-        };
-      }
+      currentMessage ??= {
+        role: "assistant",
+        content: [],
+        toolUses: [],
+      };
       currentMessage.toolUses.push(...tools);
     }
 

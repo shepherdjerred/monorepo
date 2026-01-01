@@ -4,7 +4,7 @@ import { MessageParser } from "../lib/claudeParser";
 import { MessageBubble } from "./MessageBubble";
 import { X, Send, Terminal as TerminalIcon } from "lucide-react";
 
-interface ChatInterfaceProps {
+type ChatInterfaceProps = {
   sessionId: string;
   sessionName: string;
   onClose: () => void;
@@ -129,7 +129,7 @@ export function ChatInterface({
             <input
               type="text"
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={(e) => { setInput(e.target.value); }}
               placeholder="Type a message or command..."
               className="flex-1 px-4 py-2 border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-primary"
               disabled={!isConnected}

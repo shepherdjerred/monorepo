@@ -3,7 +3,7 @@ import type { CreateSessionRequest, BackendType, AgentType, AccessMode } from "@
 import { X } from "lucide-react";
 import { useSessionContext } from "../contexts/SessionContext";
 
-interface CreateSessionDialogProps {
+type CreateSessionDialogProps = {
   onClose: () => void;
 }
 
@@ -65,7 +65,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={(e) => { void handleSubmit(e); }} className="p-6 space-y-4">
           {error && (
             <div className="p-4 bg-destructive/10 text-destructive rounded-md">
               {error}
@@ -79,7 +79,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
             <input
               type="text"
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              onChange={(e) => { setFormData({ ...formData, name: e.target.value }); }}
               className="w-full px-3 py-2 border rounded-md bg-background"
               placeholder="my-feature"
               required
@@ -93,7 +93,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
             <input
               type="text"
               value={formData.repo_path}
-              onChange={(e) => setFormData({ ...formData, repo_path: e.target.value })}
+              onChange={(e) => { setFormData({ ...formData, repo_path: e.target.value }); }}
               className="w-full px-3 py-2 border rounded-md bg-background"
               placeholder="/path/to/repo"
               required
@@ -107,7 +107,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
             <textarea
               value={formData.initial_prompt}
               onChange={(e) =>
-                setFormData({ ...formData, initial_prompt: e.target.value })
+                { setFormData({ ...formData, initial_prompt: e.target.value }); }
               }
               className="w-full px-3 py-2 border rounded-md bg-background min-h-[100px]"
               placeholder="What should Claude Code do?"
@@ -121,7 +121,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
               <select
                 value={formData.backend}
                 onChange={(e) =>
-                  setFormData({ ...formData, backend: e.target.value as BackendType })
+                  { setFormData({ ...formData, backend: e.target.value as BackendType }); }
                 }
                 className="w-full px-3 py-2 border rounded-md bg-background"
               >
@@ -135,10 +135,10 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
               <select
                 value={formData.access_mode}
                 onChange={(e) =>
-                  setFormData({
+                  { setFormData({
                     ...formData,
                     access_mode: e.target.value as AccessMode,
-                  })
+                  }); }
                 }
                 className="w-full px-3 py-2 border rounded-md bg-background"
               >
@@ -154,7 +154,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
               id="plan-mode"
               checked={formData.plan_mode}
               onChange={(e) =>
-                setFormData({ ...formData, plan_mode: e.target.checked })
+                { setFormData({ ...formData, plan_mode: e.target.checked }); }
               }
               className="w-4 h-4"
             />

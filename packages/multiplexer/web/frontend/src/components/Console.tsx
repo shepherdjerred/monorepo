@@ -5,7 +5,7 @@ import { useConsole } from "../hooks/useConsole";
 import "@xterm/xterm/css/xterm.css";
 import { X } from "lucide-react";
 
-interface ConsoleProps {
+type ConsoleProps = {
   sessionId: string;
   sessionName: string;
   onClose: () => void;

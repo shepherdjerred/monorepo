@@ -2,6 +2,9 @@ use std::path::PathBuf;
 use std::process::Command;
 
 fn main() {
+    // Check if we're in CI - fail hard on missing dependencies
+    let is_ci = std::env::var("CI").is_ok();
+
     // Output directory for generated TypeScript types
     let output_dir = PathBuf::from("web/shared/src/generated");
 
@@ -21,15 +24,37 @@ fn main() {
             println!("cargo:warning=TypeShare generation completed successfully");
         }
         Ok(exit_status) => {
-            println!("cargo:warning=TypeShare CLI failed with status: {}", exit_status);
-            println!("cargo:warning=Install typeshare-cli: cargo install typeshare-cli");
+            let msg = format!("TypeShare CLI failed with status: {}. Install typeshare-cli: cargo install typeshare-cli", exit_status);
+            if is_ci {
+                panic!("{}", msg);
+            } else {
+                println!("cargo:warning={}", msg);
+            }
         }
         Err(e) => {
-            println!("cargo:warning=Failed to run TypeShare CLI: {}", e);
-            println!("cargo:warning=Install typeshare-cli: cargo install typeshare-cli");
+            let msg = format!("Failed to run TypeShare CLI: {}. Install typeshare-cli: cargo install typeshare-cli", e);
+            if is_ci {
+                panic!("{}", msg);
+            } else {
+                println!("cargo:warning={}", msg);
+            }
+        }
+    }
+
+    // Check that frontend dist directory exists
+    // Frontend must be built before Rust compilation for static file embedding
+    let frontend_dist = PathBuf::from("web/frontend/dist");
+    if !frontend_dist.exists() {
+        let msg = "Frontend dist directory not found. Build the frontend first: cd web/frontend && bun run build";
+        if is_ci {
+            panic!("{}", msg);
+        } else {
+            println!("cargo:warning={}", msg);
         }
     }
 
     // Trigger rebuild if any Rust source files change
     println!("cargo:rerun-if-changed=src/");
+    // Also rebuild if frontend dist changes
+    println!("cargo:rerun-if-changed=web/frontend/dist/");
 }
