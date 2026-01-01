@@ -14,7 +14,7 @@ fn test_worktree_path_generation() {
 
     let path = worktree_path("test-session");
     assert!(path.to_string_lossy().contains("test-session"));
-    assert!(path.to_string_lossy().contains(".multiplexer"));
+    assert!(path.to_string_lossy().contains(".clauderon"));
 }
 
 #[test]
@@ -42,7 +42,7 @@ fn test_database_path() {
 
     let path = database_path();
     assert!(path.to_string_lossy().contains("db.sqlite"));
-    assert!(path.to_string_lossy().contains(".multiplexer"));
+    assert!(path.to_string_lossy().contains(".clauderon"));
 }
 
 #[test]
@@ -51,5 +51,5 @@ fn test_socket_path() {
 
     let path = socket_path();
     assert!(path.to_string_lossy().contains("clauderon.sock"));
-    assert!(path.to_string_lossy().contains(".multiplexer"));
+    assert!(path.to_string_lossy().contains(".clauderon"));
 }

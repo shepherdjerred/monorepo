@@ -34,6 +34,6 @@ description = "Clean build artifacts"
 run = "cargo clean"
 
 [tasks.install]
-description = "Install mux binary to ~/.cargo/bin"
+description = "Install clauderon binary to ~/.cargo/bin"
 run = "cargo install --path ."
 

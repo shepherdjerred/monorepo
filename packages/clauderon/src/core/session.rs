@@ -9,6 +9,7 @@ use uuid::Uuid;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Session {
     /// Unique identifier
+    #[typeshare(serialized_as = "String")]
     pub id: Uuid,
 
     /// Human-friendly name (user-provided + random suffix)
@@ -24,9 +25,11 @@ pub struct Session {
     pub agent: AgentType,
 
     /// Path to the source repository
+    #[typeshare(serialized_as = "String")]
     pub repo_path: PathBuf,
 
     /// Path to the git worktree
+    #[typeshare(serialized_as = "String")]
     pub worktree_path: PathBuf,
 
     /// Git branch name
@@ -60,9 +63,11 @@ pub struct Session {
     pub proxy_port: Option<u16>,
 
     /// When the session was created
+    #[typeshare(serialized_as = "String")]
     pub created_at: DateTime<Utc>,
 
     /// When the session was last updated
+    #[typeshare(serialized_as = "String")]
     pub updated_at: DateTime<Utc>,
 }
 

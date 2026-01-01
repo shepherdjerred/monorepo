@@ -409,7 +409,7 @@ async fn test_proxy_port_persists_in_database() {
         let store = Arc::new(SqliteStore::new(&db_path).await.expect("Failed to create store"));
 
         // Manually create and update a session to set proxy_port
-        let mut session = multiplexer::core::Session::new(multiplexer::core::SessionConfig {
+        let mut session = clauderon::core::Session::new(clauderon::core::SessionConfig {
             name: "proxy-port-test-abc123".to_string(),
             repo_path: "/tmp/repo".into(),
             worktree_path: "/tmp/worktree".into(),
@@ -438,7 +438,7 @@ async fn test_proxy_port_persists_in_database() {
         let store = Arc::new(SqliteStore::new(&db_path).await.expect("Failed to reconnect"));
         let loaded_session = store
             .get_session(
-                multiplexer::core::Session::new(multiplexer::core::SessionConfig {
+                clauderon::core::Session::new(clauderon::core::SessionConfig {
                     name: session_name.clone(),
                     repo_path: "/tmp".into(),
                     worktree_path: "/tmp".into(),

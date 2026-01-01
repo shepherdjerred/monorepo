@@ -559,7 +559,7 @@ async fn test_k8s_proxy_integration() {
         }
         Err(e) => {
             eprintln!("K8s proxy not accessible: {}", e);
-            eprintln!("Make sure the multiplexer daemon is running");
+            eprintln!("Make sure the clauderon daemon is running");
             eprintln!("The daemon starts kubectl proxy on port 18081");
         }
     }
@@ -625,7 +625,7 @@ async fn test_talos_gateway_integration() {
         Err(e) if e.is_connect() => {
             panic!(
                 "Talos gateway not accessible on port 18082: {}\n\
-                Make sure the multiplexer daemon is running with Talos configuration.\n\
+                Make sure the clauderon daemon is running with Talos configuration.\n\
                 Check daemon logs for: 'Talos mTLS gateway listening on 127.0.0.1:18082'",
                 e
             );

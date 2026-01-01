@@ -1,7 +1,7 @@
 import type { Directory, Container, Secret } from "@dagger.io/dagger";
 import { dag } from "@dagger.io/dagger";
 
-const BUN_VERSION = "1.3.4";
+const BUN_VERSION = "1.3.5";
 const PLAYWRIGHT_VERSION = "1.57.0";
 
 /**
@@ -62,6 +62,23 @@ function installWorkspaceDeps(workspaceSource: Directory, useMounts: boolean): C
       .withMountedFile(
         "/workspace/packages/eslint-config/package.json",
         workspaceSource.file("packages/eslint-config/package.json"),
+      )
+      // Multiplexer web packages (in root workspaces)
+      .withMountedFile(
+        "/workspace/packages/multiplexer/web/package.json",
+        workspaceSource.file("packages/multiplexer/web/package.json"),
+      )
+      .withMountedFile(
+        "/workspace/packages/multiplexer/web/shared/package.json",
+        workspaceSource.file("packages/multiplexer/web/shared/package.json"),
+      )
+      .withMountedFile(
+        "/workspace/packages/multiplexer/web/client/package.json",
+        workspaceSource.file("packages/multiplexer/web/client/package.json"),
+      )
+      .withMountedFile(
+        "/workspace/packages/multiplexer/web/frontend/package.json",
+        workspaceSource.file("packages/multiplexer/web/frontend/package.json"),
       );
   } else {
     container = container
@@ -79,6 +96,23 @@ function installWorkspaceDeps(workspaceSource: Directory, useMounts: boolean): C
       .withFile(
         "/workspace/packages/eslint-config/package.json",
         workspaceSource.file("packages/eslint-config/package.json"),
+      )
+      // Multiplexer web packages (in root workspaces)
+      .withFile(
+        "/workspace/packages/multiplexer/web/package.json",
+        workspaceSource.file("packages/multiplexer/web/package.json"),
+      )
+      .withFile(
+        "/workspace/packages/multiplexer/web/shared/package.json",
+        workspaceSource.file("packages/multiplexer/web/shared/package.json"),
+      )
+      .withFile(
+        "/workspace/packages/multiplexer/web/client/package.json",
+        workspaceSource.file("packages/multiplexer/web/client/package.json"),
+      )
+      .withFile(
+        "/workspace/packages/multiplexer/web/frontend/package.json",
+        workspaceSource.file("packages/multiplexer/web/frontend/package.json"),
       );
   }
 
