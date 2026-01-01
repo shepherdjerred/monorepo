@@ -8,6 +8,9 @@ use crate::core::{AgentType, BackendType};
 
 use super::app::{App, AppMode, CreateDialogFocus, CreateProgress};
 
+mod events_copy_mode;
+use events_copy_mode::handle_copy_mode_key;
+
 /// Number of lines to scroll per mouse wheel tick
 const SCROLL_LINES_PER_WHEEL_TICK: usize = 3;
 
@@ -162,6 +165,7 @@ pub async fn handle_key_event(app: &mut App, key: KeyEvent) -> anyhow::Result<()
         AppMode::ConfirmDelete => handle_confirm_delete_key(app, key).await?,
         AppMode::Help => handle_help_key(app, key),
         AppMode::Attached => handle_attached_key(app, key).await?,
+        AppMode::CopyMode => handle_copy_mode_key(app, key).await?,
     }
     Ok(())
 }
@@ -812,6 +816,14 @@ async fn handle_attached_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()>
                 }
                 return Ok(());
             }
+        }
+    }
+
+    // Enter copy mode with Ctrl+[ (like tmux)
+    if key.modifiers.contains(KeyModifiers::CONTROL) {
+        if let KeyCode::Char('[') = key.code {
+            app.enter_copy_mode();
+            return Ok(());
         }
     }
 
