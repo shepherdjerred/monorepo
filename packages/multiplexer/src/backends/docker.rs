@@ -635,7 +635,8 @@ mod tests {
             "test prompt",
             1000,
             None,
-            false, // interactive mode            &[],   // no images
+            false, // interactive mode
+            &[],   // no images
         ).expect("Failed to build args");
 
         // Must have -dit for interactive TTY sessions
@@ -660,7 +661,8 @@ mod tests {
             "test prompt",
             uid,
             None,
-            false, // print mode            &[],   // no images
+            false, // print mode
+            &[],   // no images
         ).expect("Failed to build args");
 
         // Find --user flag and verify it's followed by the UID
@@ -722,7 +724,8 @@ mod tests {
             prompt_with_quotes,
             1000,
             None,
-            false, // print mode            &[],   // no images
+            false, // print mode
+            &[],   // no images
         ).expect("Failed to build args");
 
         // Find the command argument (last one containing the prompt)
@@ -744,7 +747,8 @@ mod tests {
             "test prompt",
             1000,
             None,
-            false, // print mode            &[],   // no images
+            false, // print mode
+            &[],   // no images
         ).expect("Failed to build args");
 
         // Find --name flag and verify the container name
@@ -782,7 +786,8 @@ mod tests {
             "test prompt",
             1000,
             Some(&proxy_config),
-            false, // print mode            &[],   // no images
+            false, // print mode
+            &[],   // no images
         ).expect("Failed to build args");
 
         // Should have HTTPS_PROXY
@@ -818,7 +823,8 @@ mod tests {
             "test prompt",
             1000,
             Some(&proxy_config),
-            false, // print mode            &[],   // no images
+            false, // print mode
+            &[],   // no images
         ).expect("Failed to build args");
 
         // Should have proxy-ca.pem mount
@@ -840,7 +846,8 @@ mod tests {
             "test prompt",
             1000,
             Some(&proxy_config),
-            false, // print mode            &[],   // no images
+            false, // print mode
+            &[],   // no images
         ).expect("Failed to build args");
 
         // Should NOT have HTTPS_PROXY
@@ -864,7 +871,8 @@ mod tests {
             "test prompt",
             1000,
             Some(&proxy_config),
-            false, // print mode            &[],   // no images
+            false, // print mode
+            &[],   // no images
         ).expect("Failed to build args");
 
         // Should have --add-host flag
@@ -889,7 +897,8 @@ mod tests {
             "test prompt",
             1000,
             None,
-            true,  // print mode enabled            &[],   // no images
+            true, // print mode
+            &[],   // no images
         ).expect("Failed to build args");
 
         let cmd_arg = args.last().unwrap();
@@ -912,7 +921,8 @@ mod tests {
             "test prompt",
             1000,
             None,
-            false, // interactive mode            &[],   // no images
+            false, // interactive mode
+            &[],   // no images
         ).expect("Failed to build args");
 
         let cmd_arg = args.last().unwrap();
