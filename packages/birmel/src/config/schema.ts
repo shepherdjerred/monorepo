@@ -110,6 +110,7 @@ export const ElectionsConfigSchema = z.object({
   endTime: z.string().default("19:00"),
   timezone: z.string().default("America/Los_Angeles"),
   channelId: z.string().optional(),
+  dayOfWeek: z.number().min(0).max(6).default(3), // 0=Sunday, 3=Wednesday, 6=Saturday
 });
 
 export const ConfigSchema = z.object({
