@@ -23,6 +23,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
     agent: "ClaudeCode" as AgentType,
     access_mode: "ReadWrite" as AccessMode,
     plan_mode: true,
+    dangerous_skip_checks: false,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -37,7 +38,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
         initial_prompt: formData.initial_prompt,
         backend: formData.backend,
         agent: formData.agent,
-        dangerous_skip_checks: false,
+        dangerous_skip_checks: formData.dangerous_skip_checks,
         print_mode: false,
         plan_mode: formData.plan_mode,
         access_mode: formData.access_mode,
@@ -158,6 +159,21 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
             <Label htmlFor="plan-mode" className="cursor-pointer">
               Start in plan mode (read-only)
             </Label>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="dangerous-skip-checks"
+              checked={formData.dangerous_skip_checks}
+              onChange={(e) =>
+                { setFormData({ ...formData, dangerous_skip_checks: e.target.checked }); }
+              }
+              className="w-4 h-4"
+            />
+            <label htmlFor="dangerous-skip-checks" className="text-sm text-destructive font-medium">
+              Dangerously skip safety checks (bypass permissions)
+            </label>
           </div>
 
           {/* Actions */}
