@@ -7,7 +7,7 @@ use crate::backends::{DockerBackend, ExecutionBackend, GitBackend, GitOperations
 use crate::store::Store;
 
 use super::events::{Event, EventType};
-use super::session::{BackendType, Session, SessionStatus};
+use super::session::{BackendType, CheckStatus, ClaudeWorkingStatus, Session, SessionStatus};
 
 /// Report of reconciliation between expected and actual state
 #[derive(Debug, Default, Clone)]
@@ -233,6 +233,13 @@ impl SessionManager {
             None
         };
 
+        // Prepend plan mode instruction if enabled
+        let transformed_prompt = if plan_mode {
+            format!("Enter plan mode and create a plan before doing anything.\n\n{}", initial_prompt.trim())
+        } else {
+            initial_prompt.clone()
+        };
+
         // Create backend resource
         let create_options = crate::backends::CreateOptions {
             print_mode,
@@ -243,12 +250,12 @@ impl SessionManager {
         let backend_id = match backend {
             BackendType::Zellij => {
                 self.zellij
-                    .create(&full_name, &worktree_path, &initial_prompt, create_options)
+                    .create(&full_name, &worktree_path, &transformed_prompt, create_options)
                     .await?
             }
             BackendType::Docker => {
                 self.docker
-                    .create(&full_name, &worktree_path, &initial_prompt, create_options)
+                    .create(&full_name, &worktree_path, &transformed_prompt, create_options)
                     .await?
             }
         };
@@ -468,6 +475,174 @@ impl SessionManager {
             session_id = %session_id,
             mode = ?new_mode,
             "Updated session access mode"
+        );
+
+        Ok(())
+    }
+
+    /// Update Claude working status from hook message
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the session is not found or the store update fails.
+    pub async fn update_claude_status(
+        &self,
+        session_id: Uuid,
+        new_status: ClaudeWorkingStatus,
+    ) -> anyhow::Result<()> {
+        let mut sessions = self.sessions.write().await;
+        let session = sessions
+            .iter_mut()
+            .find(|s| s.id == session_id)
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {}", session_id))?;
+
+        let old_status = session.claude_status;
+
+        // Only update if status changed
+        if old_status == new_status {
+            return Ok(());
+        }
+
+        session.set_claude_status(new_status);
+        let session_clone = session.clone();
+        drop(sessions);
+
+        // Record event
+        let event = Event::new(
+            session_id,
+            EventType::ClaudeStatusChanged {
+                old_status,
+                new_status,
+            },
+        );
+        self.store.record_event(&event).await?;
+
+        // Update in store
+        self.store.save_session(&session_clone).await?;
+
+        tracing::debug!(
+            session_id = %session_id,
+            old = ?old_status,
+            new = ?new_status,
+            "Updated Claude working status"
+        );
+
+        Ok(())
+    }
+
+    /// Update PR check status
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the session is not found or the store update fails.
+    pub async fn update_pr_check_status(
+        &self,
+        session_id: Uuid,
+        new_status: CheckStatus,
+    ) -> anyhow::Result<()> {
+        let mut sessions = self.sessions.write().await;
+        let session = sessions
+            .iter_mut()
+            .find(|s| s.id == session_id)
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {}", session_id))?;
+
+        let old_status = session.pr_check_status;
+        session.set_check_status(new_status);
+        let session_clone = session.clone();
+        drop(sessions);
+
+        // Record event
+        let event = Event::new(
+            session_id,
+            EventType::CheckStatusChanged {
+                old_status,
+                new_status,
+            },
+        );
+        self.store.record_event(&event).await?;
+
+        // Update in store
+        self.store.save_session(&session_clone).await?;
+
+        tracing::debug!(
+            session_id = %session_id,
+            old = ?old_status,
+            new = ?new_status,
+            "Updated PR check status"
+        );
+
+        Ok(())
+    }
+
+    /// Send a prompt to a Claude session (for hotkey triggers)
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the session is not found, has no backend ID,
+    /// or the command execution fails.
+    pub async fn send_prompt_to_session(
+        &self,
+        id_or_name: &str,
+        prompt: &str,
+    ) -> anyhow::Result<()> {
+        let session = self
+            .get_session(id_or_name)
+            .await
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {}", id_or_name))?;
+
+        let backend_id = session
+            .backend_id
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("Session has no backend ID"))?;
+
+        match session.backend {
+            BackendType::Docker => {
+                // Send prompt via docker exec with stdin (avoids shell injection)
+                let container_name = format!("mux-{}", backend_id);
+                let mut child = tokio::process::Command::new("docker")
+                    .args(["exec", "-i", &container_name, "claude"])
+                    .stdin(std::process::Stdio::piped())
+                    .stdout(std::process::Stdio::piped())
+                    .stderr(std::process::Stdio::piped())
+                    .spawn()?;
+
+                // Write prompt to stdin
+                if let Some(mut stdin) = child.stdin.take() {
+                    use tokio::io::AsyncWriteExt;
+                    stdin.write_all(prompt.as_bytes()).await?;
+                    stdin.write_all(b"\n").await?;
+                    drop(stdin); // Close stdin to signal end of input
+                }
+
+                let output = child.wait_with_output().await?;
+
+                if !output.status.success() {
+                    anyhow::bail!(
+                        "Failed to send prompt: {}",
+                        String::from_utf8_lossy(&output.stderr)
+                    );
+                }
+            }
+            BackendType::Zellij => {
+                // Send prompt via zellij write
+                let output = tokio::process::Command::new("zellij")
+                    .args(["action", "write-chars", prompt, "-s", backend_id])
+                    .output()
+                    .await?;
+
+                if !output.status.success() {
+                    anyhow::bail!(
+                        "Failed to send prompt: {}",
+                        String::from_utf8_lossy(&output.stderr)
+                    );
+                }
+            }
+        }
+
+        tracing::info!(
+            session = %id_or_name,
+            prompt_len = prompt.len(),
+            "Sent prompt to session"
         );
 
         Ok(())

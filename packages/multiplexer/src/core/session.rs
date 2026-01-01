@@ -50,6 +50,12 @@ pub struct Session {
     /// Status of PR checks
     pub pr_check_status: Option<CheckStatus>,
 
+    /// Current Claude agent working status (from hooks)
+    pub claude_status: ClaudeWorkingStatus,
+
+    /// Timestamp of last Claude status update
+    pub claude_status_updated_at: Option<DateTime<Utc>>,
+
     /// Access mode for proxy filtering
     pub access_mode: AccessMode,
 
@@ -106,6 +112,8 @@ impl Session {
             dangerous_skip_checks: config.dangerous_skip_checks,
             pr_url: None,
             pr_check_status: None,
+            claude_status: ClaudeWorkingStatus::Unknown,
+            claude_status_updated_at: None,
             access_mode: config.access_mode,
             proxy_port: None,
             created_at: now,
@@ -134,6 +142,13 @@ impl Session {
     /// Update PR check status
     pub fn set_check_status(&mut self, status: CheckStatus) {
         self.pr_check_status = Some(status);
+        self.updated_at = Utc::now();
+    }
+
+    /// Set the Claude working status
+    pub fn set_claude_status(&mut self, status: ClaudeWorkingStatus) {
+        self.claude_status = status;
+        self.claude_status_updated_at = Some(Utc::now());
         self.updated_at = Utc::now();
     }
 
@@ -215,6 +230,42 @@ pub enum CheckStatus {
     Merged,
 }
 
+/// Claude agent working status
+#[typeshare]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+pub enum ClaudeWorkingStatus {
+    /// Unknown state (no hooks configured or no data yet)
+    #[default]
+    Unknown,
+
+    /// Claude is actively working (PreToolUse hook triggered)
+    Working,
+
+    /// Waiting for permission approval (PermissionRequest hook)
+    WaitingApproval,
+
+    /// Waiting for user input (idle_prompt notification or Stop hook)
+    WaitingInput,
+
+    /// Agent is idle (60+ seconds without activity)
+    Idle,
+}
+
+impl std::str::FromStr for ClaudeWorkingStatus {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "Unknown" => Ok(Self::Unknown),
+            "Working" => Ok(Self::Working),
+            "WaitingApproval" => Ok(Self::WaitingApproval),
+            "WaitingInput" => Ok(Self::WaitingInput),
+            "Idle" => Ok(Self::Idle),
+            _ => anyhow::bail!("unknown ClaudeWorkingStatus: {}", s),
+        }
+    }
+}
+
 /// Access mode for proxy filtering
 #[typeshare]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -227,7 +278,7 @@ pub enum AccessMode {
 
 impl Default for AccessMode {
     fn default() -> Self {
-        Self::ReadWrite
+        Self::ReadOnly  // Principle of least privilege - secure default
     }
 }
 

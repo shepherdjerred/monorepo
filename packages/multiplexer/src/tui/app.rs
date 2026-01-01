@@ -8,7 +8,7 @@ use tokio::task::JoinHandle;
 use uuid::Uuid;
 
 use crate::api::{ApiClient, Client};
-use crate::core::Session;
+use crate::core::{AccessMode, Session};
 use crate::tui::attached::PtySession;
 
 /// Progress update from background session creation task
@@ -66,6 +66,7 @@ pub enum CreateDialogFocus {
     Prompt,
     RepoPath,
     Backend,
+    AccessMode,
     SkipChecks,
     PlanMode,
     Buttons,
@@ -116,6 +117,7 @@ pub struct CreateDialogState {
     pub backend_zellij: bool, // true = Zellij, false = Docker
     pub skip_checks: bool,
     pub plan_mode: bool,
+    pub access_mode: AccessMode,
 
     /// Image file paths to attach to the prompt.
     ///
@@ -339,6 +341,7 @@ impl CreateDialogState {
             backend_zellij: true, // Default to Zellij
             skip_checks: false,
             plan_mode: true, // Default to plan mode ON
+            access_mode: Default::default(), // ReadOnly by default (secure)
             images: Vec::new(),
             prompt_scroll_offset: 0,
             focus: CreateDialogFocus::default(),
@@ -360,6 +363,14 @@ impl CreateDialogState {
         // Docker benefits from skipping checks (isolated environment)
         // Zellij runs locally so checks are more important
         self.skip_checks = !self.backend_zellij;
+    }
+
+    /// Toggle between ReadOnly and ReadWrite access modes
+    pub fn toggle_access_mode(&mut self) {
+        self.access_mode = match self.access_mode {
+            AccessMode::ReadOnly => AccessMode::ReadWrite,
+            AccessMode::ReadWrite => AccessMode::ReadOnly,
+        };
     }
 
     /// Scroll the prompt field up
@@ -724,7 +735,7 @@ impl App {
             dangerous_skip_checks: self.create_dialog.skip_checks,
             print_mode: false, // TUI always uses interactive mode
             plan_mode: self.create_dialog.plan_mode,
-            access_mode: Default::default(),
+            access_mode: self.create_dialog.access_mode,
             images: self.create_dialog.images.clone(),
         };
 

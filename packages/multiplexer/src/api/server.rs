@@ -39,8 +39,13 @@ pub async fn run_daemon_with_options(enable_proxy: bool) -> anyhow::Result<()> {
 /// bound, or other I/O errors occur.
 pub async fn run_daemon_with_http(enable_proxy: bool, http_port: Option<u16>) -> anyhow::Result<()> {
     // Initialize the store
+    tracing::debug!("Initializing database store...");
     let db_path = paths::database_path();
-    let store = Arc::new(SqliteStore::new(&db_path).await?);
+    let store = Arc::new(SqliteStore::new(&db_path).await.map_err(|e| {
+        tracing::error!("Failed to initialize database at {:?}: {}", db_path, e);
+        e
+    })?);
+    tracing::debug!("Database store initialized successfully");
 
     // Initialize proxy services if enabled
     let proxy_manager: Option<Arc<ProxyManager>> = if enable_proxy {
@@ -66,21 +71,31 @@ pub async fn run_daemon_with_http(enable_proxy: bool, http_port: Option<u16>) ->
     };
 
     // Initialize the session manager with proxy support if available
+    tracing::debug!("Initializing session manager...");
     let manager = if let Some(ref pm) = proxy_manager {
         let docker_proxy_config = DockerProxyConfig::new(
             pm.http_proxy_port(),
             pm.mux_dir().clone(),
         );
         let docker_backend = DockerBackend::with_proxy(docker_proxy_config);
-        let mut session_manager = SessionManager::with_docker_backend(store, docker_backend).await?;
+        let mut session_manager = SessionManager::with_docker_backend(store, docker_backend)
+            .await
+            .map_err(|e| {
+                tracing::error!("Failed to initialize session manager: {}", e);
+                e
+            })?;
 
         // Wire up proxy manager for per-session filtering
         session_manager.set_proxy_manager(Arc::clone(pm));
 
         Arc::new(session_manager)
     } else {
-        Arc::new(SessionManager::with_defaults(store).await?)
+        Arc::new(SessionManager::with_defaults(store).await.map_err(|e| {
+            tracing::error!("Failed to initialize session manager (no proxy): {}", e);
+            e
+        })?)
     };
+    tracing::info!("Session manager initialized");
 
     // Spawn both Unix socket and HTTP servers concurrently
     let unix_socket_future = run_unix_socket_server(Arc::clone(&manager));
@@ -125,6 +140,50 @@ async fn run_unix_socket_server(manager: Arc<SessionManager>) -> anyhow::Result<
     let listener = UnixListener::bind(&socket_path)?;
 
     tracing::info!(socket = %socket_path.display(), "Unix socket daemon listening");
+
+    // Start hook listener for Claude status updates
+    let hook_socket_path = paths::hooks_socket_path();
+    let (hook_listener, mut hook_rx) = crate::hooks::HookListener::new(hook_socket_path);
+
+    tokio::spawn(async move {
+        if let Err(e) = hook_listener.start().await {
+            tracing::error!("Hook listener failed: {}", e);
+        }
+    });
+
+    // Process hook messages
+    let process_manager = Arc::clone(&manager);
+    tokio::spawn(async move {
+        use crate::core::ClaudeWorkingStatus;
+        use crate::hooks::HookEvent;
+
+        while let Some(msg) = hook_rx.recv().await {
+            let new_status = match msg.event {
+                HookEvent::UserPromptSubmit => ClaudeWorkingStatus::Working,
+                HookEvent::PreToolUse { .. } => ClaudeWorkingStatus::Working,
+                HookEvent::PermissionRequest => ClaudeWorkingStatus::WaitingApproval,
+                HookEvent::Stop => ClaudeWorkingStatus::WaitingInput,
+                HookEvent::IdlePrompt => ClaudeWorkingStatus::Idle,
+            };
+
+            if let Err(e) = process_manager
+                .update_claude_status(msg.session_id, new_status)
+                .await
+            {
+                tracing::error!(
+                    session_id = %msg.session_id,
+                    error = %e,
+                    "Failed to update Claude status from hook"
+                );
+            }
+        }
+    });
+
+    // Start CI status poller for GitHub PR checks
+    let ci_poller = crate::ci::CIPoller::new(Arc::clone(&manager));
+    tokio::spawn(async move {
+        ci_poller.start().await;
+    });
 
     // Accept connections
     loop {

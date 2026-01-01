@@ -4,6 +4,56 @@ use tokio::process::Command;
 
 use super::traits::ExecutionBackend;
 
+/// Sanitize git config value to prevent environment variable injection
+///
+/// Removes newlines and other control characters that could be used for injection attacks
+fn sanitize_git_config_value(value: &str) -> String {
+    value
+        .chars()
+        .filter(|c| !c.is_control() || *c == '\t')
+        .collect()
+}
+
+/// Read git user configuration from the host system
+///
+/// Returns (user.name, user.email) if available from git config
+/// Values are sanitized to prevent environment variable injection
+async fn read_git_user_config() -> (Option<String>, Option<String>) {
+    let name = Command::new("git")
+        .args(["config", "--get", "user.name"])
+        .output()
+        .await
+        .ok()
+        .and_then(|output| {
+            if output.status.success() {
+                String::from_utf8(output.stdout)
+                    .ok()
+                    .map(|s| sanitize_git_config_value(s.trim()))
+                    .filter(|s| !s.is_empty())
+            } else {
+                None
+            }
+        });
+
+    let email = Command::new("git")
+        .args(["config", "--get", "user.email"])
+        .output()
+        .await
+        .ok()
+        .and_then(|output| {
+            if output.status.success() {
+                String::from_utf8(output.stdout)
+                    .ok()
+                    .map(|s| sanitize_git_config_value(s.trim()))
+                    .filter(|s| !s.is_empty())
+            } else {
+                None
+            }
+        });
+
+    (name, email)
+}
+
 /// Detect if a directory is a git worktree and return the parent .git directory path
 ///
 /// # Errors
@@ -73,6 +123,18 @@ fn detect_git_worktree(path: &Path) -> anyhow::Result<Option<PathBuf>> {
 
 /// Docker container image to use
 const DOCKER_IMAGE: &str = "ghcr.io/shepherdjerred/dotfiles";
+
+/// Shared cache volumes used across all mux Docker containers for faster Rust builds:
+/// - mux-cargo-registry: Downloaded crates from crates.io (/workspace/.cargo/registry)
+/// - mux-cargo-git: Git dependencies (/workspace/.cargo/git)
+/// - mux-sccache: Compilation cache (/workspace/.cache/sccache)
+///
+/// Caches are mounted under /workspace (HOME) since containers run as non-root user.
+/// sccache (Mozilla's compilation cache) is configured via RUSTC_WRAPPER environment variable.
+/// If sccache is not installed in the dotfiles image, cargo will show a warning but continue
+/// to work. To enable sccache compilation caching, install it in the dotfiles image:
+///   cargo install sccache
+/// or add it to the Dockerfile.
 
 /// Proxy configuration for Docker containers.
 #[derive(Debug, Clone, Default)]
@@ -160,7 +222,6 @@ impl DockerBackend {
     /// * `print_mode` - If true, run in non-interactive mode with `--print --verbose` flags.
     ///                  The container will output the response and exit.
     ///                  If false, run interactively for `docker attach`.
-    /// * `plan_mode` - If true, add `--permission-mode plan` flag to start in plan mode.
     ///
     /// # Errors
     ///
@@ -172,8 +233,9 @@ impl DockerBackend {
         uid: u32,
         proxy_config: Option<&DockerProxyConfig>,
         print_mode: bool,
-        plan_mode: bool,
         images: &[String],
+        git_user_name: Option<&str>,
+        git_user_email: Option<&str>,
     ) -> anyhow::Result<Vec<String>> {
         let container_name = format!("mux-{name}");
         let escaped_prompt = initial_prompt.replace('\'', "'\\''");
@@ -194,6 +256,32 @@ impl DockerBackend {
             "-e".to_string(),
             "HOME=/workspace".to_string(),
         ];
+
+        // Mount shared Rust cargo and sccache cache volumes for faster builds
+        // These are shared across ALL mux sessions and persist between container restarts
+        // sccache provides compilation caching (path-independent, content-addressed)
+        // cargo caches provide dependency download caching
+        // Note: Mounted under /workspace (HOME) since containers run as non-root user
+        args.extend([
+            "-v".to_string(),
+            "mux-cargo-registry:/workspace/.cargo/registry".to_string(),
+            "-v".to_string(),
+            "mux-cargo-git:/workspace/.cargo/git".to_string(),
+            "-v".to_string(),
+            "mux-sccache:/workspace/.cache/sccache".to_string(),
+        ]);
+
+        // Configure sccache as Rust compiler wrapper (if installed in dotfiles image)
+        // If sccache is not installed, cargo will show a clear warning but continue to work
+        // This is a progressive enhancement - works without sccache, better with it
+        args.extend([
+            "-e".to_string(),
+            "CARGO_HOME=/workspace/.cargo".to_string(),
+            "-e".to_string(),
+            "RUSTC_WRAPPER=sccache".to_string(),
+            "-e".to_string(),
+            "SCCACHE_DIR=/workspace/.cache/sccache".to_string(),
+        ]);
 
         // Detect if workdir is a git worktree and mount parent .git directory
         match detect_git_worktree(workdir) {
@@ -340,6 +428,25 @@ impl DockerBackend {
             }
         }
 
+        // Git user configuration from host
+        // Set both AUTHOR and COMMITTER variables so git commits have proper attribution
+        if let Some(name) = git_user_name {
+            args.extend([
+                "-e".to_string(),
+                format!("GIT_AUTHOR_NAME={}", name),
+                "-e".to_string(),
+                format!("GIT_COMMITTER_NAME={}", name),
+            ]);
+        }
+        if let Some(email) = git_user_email {
+            args.extend([
+                "-e".to_string(),
+                format!("GIT_AUTHOR_EMAIL={}", email),
+                "-e".to_string(),
+                format!("GIT_COMMITTER_EMAIL={}", email),
+            ]);
+        }
+
         // NOTE: We intentionally do NOT create a fake .credentials.json file.
         // The ANTHROPIC_API_KEY env var is sufficient and avoids validation issues.
         // When a credentials file exists, Claude Code validates it against the API,
@@ -401,11 +508,6 @@ impl DockerBackend {
         // Add image and command
         let claude_cmd = {
             let mut cmd = "claude --dangerously-skip-permissions".to_string();
-
-            // Add plan mode flag if enabled
-            if plan_mode {
-                cmd.push_str(" --permission-mode plan");
-            }
 
             // Add print mode flags
             if print_mode {
@@ -484,6 +586,9 @@ impl ExecutionBackend for DockerBackend {
             None
         };
 
+        // Read git user configuration from the host
+        let (git_user_name, git_user_email) = read_git_user_config().await;
+
         let args = Self::build_create_args(
             name,
             workdir,
@@ -491,8 +596,9 @@ impl ExecutionBackend for DockerBackend {
             uid,
             proxy_config_ref,
             options.print_mode,
-            options.plan_mode,
             &options.images,
+            git_user_name.as_deref(),
+            git_user_email.as_deref(),
         )?;
         let output = Command::new("docker")
             .args(&args)
@@ -644,8 +750,9 @@ mod tests {
             1000,
             None,
             false, // interactive mode
-            false, // plan mode
             &[],   // no images
+            None,  // git user name
+            None,  // git user email
         ).expect("Failed to build args");
 
         // Must have -dit for interactive TTY sessions
@@ -660,6 +767,43 @@ mod tests {
         );
     }
 
+    /// Test sanitization of git config values to prevent injection attacks
+    #[test]
+    fn test_sanitize_git_config_removes_newlines() {
+        // Test newline injection attempt
+        let malicious = "John Doe\nGIT_EVIL=injected";
+        let sanitized = sanitize_git_config_value(malicious);
+        assert_eq!(sanitized, "John DoeGIT_EVIL=injected");
+        assert!(!sanitized.contains('\n'));
+    }
+
+    #[test]
+    fn test_sanitize_git_config_removes_control_chars() {
+        // Test various control characters
+        let malicious = "user\x00name\x01with\x02control";
+        let sanitized = sanitize_git_config_value(malicious);
+        assert!(!sanitized.contains('\x00'));
+        assert!(!sanitized.contains('\x01'));
+        assert!(!sanitized.contains('\x02'));
+        assert_eq!(sanitized, "usernamewithcontrol");
+    }
+
+    #[test]
+    fn test_sanitize_git_config_preserves_tabs() {
+        // Tabs should be preserved as they're valid in names
+        let with_tab = "John\tDoe";
+        let sanitized = sanitize_git_config_value(with_tab);
+        assert_eq!(sanitized, "John\tDoe");
+    }
+
+    #[test]
+    fn test_sanitize_git_config_preserves_normal_chars() {
+        // Normal characters should pass through
+        let normal = "John Doe <john@example.com>";
+        let sanitized = sanitize_git_config_value(normal);
+        assert_eq!(sanitized, normal);
+    }
+
     /// Test that docker run includes --user flag with non-root UID
     #[test]
     fn test_create_runs_as_non_root() {
@@ -671,7 +815,6 @@ mod tests {
             uid,
             None,
             false, // print mode
-            false, // plan mode
             &[],   // no images
         ).expect("Failed to build args");
 
@@ -684,6 +827,51 @@ mod tests {
             uid_arg, "1000",
             "Expected UID 1000 after --user, got: {uid_arg}"
         );
+    }
+
+    /// Test that Rust caching is configured with cargo and sccache volumes
+    #[test]
+    fn test_rust_caching_configured() {
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            &PathBuf::from("/workspace"),
+            "test prompt",
+            1000,
+            None,
+            false,
+            false,
+            &[],
+        )
+        .expect("Failed to build args");
+
+        // Check cargo cache volumes
+        let has_registry = args
+            .iter()
+            .any(|a| a.contains("mux-cargo-registry:/workspace/.cargo/registry"));
+        assert!(has_registry, "Expected mux-cargo-registry volume mount");
+
+        let has_git = args
+            .iter()
+            .any(|a| a.contains("mux-cargo-git:/workspace/.cargo/git"));
+        assert!(has_git, "Expected mux-cargo-git volume mount");
+
+        // Check sccache volume
+        let has_sccache = args
+            .iter()
+            .any(|a| a.contains("mux-sccache:/workspace/.cache/sccache"));
+        assert!(has_sccache, "Expected mux-sccache volume mount");
+
+        // Check cargo and sccache environment variables
+        let has_cargo_home = args.iter().any(|a| a == "CARGO_HOME=/workspace/.cargo");
+        assert!(has_cargo_home, "Expected CARGO_HOME=/workspace/.cargo");
+
+        let has_rustc_wrapper = args.iter().any(|a| a == "RUSTC_WRAPPER=sccache");
+        assert!(has_rustc_wrapper, "Expected RUSTC_WRAPPER=sccache");
+
+        let has_sccache_dir = args
+            .iter()
+            .any(|a| a == "SCCACHE_DIR=/workspace/.cache/sccache");
+        assert!(has_sccache_dir, "Expected SCCACHE_DIR=/workspace/.cache/sccache");
     }
 
     /// Test that attach command uses bash, not zsh (which doesn't exist in container)
@@ -735,7 +923,6 @@ mod tests {
             1000,
             None,
             false, // print mode
-            false, // plan mode
             &[],   // no images
         ).expect("Failed to build args");
 
@@ -759,7 +946,6 @@ mod tests {
             1000,
             None,
             false, // print mode
-            false, // plan mode
             &[],   // no images
         ).expect("Failed to build args");
 
@@ -799,7 +985,6 @@ mod tests {
             1000,
             Some(&proxy_config),
             false, // print mode
-            false, // plan mode
             &[],   // no images
         ).expect("Failed to build args");
 
@@ -837,7 +1022,6 @@ mod tests {
             1000,
             Some(&proxy_config),
             false, // print mode
-            false, // plan mode
             &[],   // no images
         ).expect("Failed to build args");
 
@@ -861,7 +1045,6 @@ mod tests {
             1000,
             Some(&proxy_config),
             false, // print mode
-            false, // plan mode
             &[],   // no images
         ).expect("Failed to build args");
 
@@ -887,7 +1070,6 @@ mod tests {
             1000,
             Some(&proxy_config),
             false, // print mode
-            false, // plan mode
             &[],   // no images
         ).expect("Failed to build args");
 
@@ -913,8 +1095,7 @@ mod tests {
             "test prompt",
             1000,
             None,
-            true,  // print mode enabled
-            false, // plan mode
+            true, // print mode
             &[],   // no images
         ).expect("Failed to build args");
 
@@ -939,7 +1120,6 @@ mod tests {
             1000,
             None,
             false, // interactive mode
-            false, // plan mode
             &[],   // no images
         ).expect("Failed to build args");
 
@@ -1023,11 +1203,11 @@ mod tests {
             &[],
         ).expect("Failed to build args");
 
-        // Count volume mounts (should only have the workspace mount)
+        // Count volume mounts (should have workspace + 3 cargo/sccache cache mounts)
         let mount_count = args.iter().filter(|a| *a == "-v").count();
         assert_eq!(
-            mount_count, 1,
-            "Normal git repo should only have workspace mount, got {mount_count} mounts"
+            mount_count, 4,
+            "Normal git repo should have workspace + 3 cache mounts, got {mount_count} mounts"
         );
     }
 
@@ -1138,11 +1318,11 @@ mod tests {
             &[],
         ).expect("Failed to build args");
 
-        // Should only have workspace mount (no git mount)
+        // Should have workspace + 3 cache mounts (no git parent mount)
         let mount_count = args.iter().filter(|a| *a == "-v").count();
         assert_eq!(
-            mount_count, 1,
-            "Malformed worktree should only have workspace mount, got {mount_count} mounts"
+            mount_count, 4,
+            "Malformed worktree should have workspace + 3 cache mounts, got {mount_count} mounts"
         );
     }
 
@@ -1173,82 +1353,12 @@ mod tests {
             &[],
         ).expect("Failed to build args");
 
-        // Should only have workspace mount (no git mount due to validation failure)
+        // Should have workspace + 3 cache mounts (no git parent mount due to validation failure)
         let mount_count = args.iter().filter(|a| *a == "-v").count();
         assert_eq!(
-            mount_count, 1,
-            "Worktree with missing parent should only have workspace mount, got {mount_count} mounts"
+            mount_count, 4,
+            "Worktree with missing parent should have workspace + 3 cache mounts, got {mount_count} mounts"
         );
     }
 
-    /// Test that plan mode adds --permission-mode plan flag
-    #[test]
-    fn test_plan_mode_adds_flag() {
-        let args = DockerBackend::build_create_args(
-            "test-session",
-            &PathBuf::from("/workspace"),
-            "test prompt",
-            1000,
-            None,
-            false, // print mode
-            true,  // plan mode enabled
-            &[],   // no images
-        ).expect("Failed to build args");
-
-        let cmd_arg = args.last().unwrap();
-        assert!(
-            cmd_arg.contains("--permission-mode plan"),
-            "Plan mode should add --permission-mode plan flag: {cmd_arg}"
-        );
-    }
-
-    /// Test that plan mode with print mode includes both flags
-    #[test]
-    fn test_plan_mode_with_print_mode() {
-        let args = DockerBackend::build_create_args(
-            "test-session",
-            &PathBuf::from("/workspace"),
-            "test prompt",
-            1000,
-            None,
-            true, // print mode enabled
-            true, // plan mode enabled
-            &[],  // no images
-        ).expect("Failed to build args");
-
-        let cmd_arg = args.last().unwrap();
-        assert!(
-            cmd_arg.contains("--permission-mode plan"),
-            "Should include --permission-mode plan: {cmd_arg}"
-        );
-        assert!(
-            cmd_arg.contains("--print"),
-            "Should include --print: {cmd_arg}"
-        );
-        assert!(
-            cmd_arg.contains("--verbose"),
-            "Should include --verbose: {cmd_arg}"
-        );
-    }
-
-    /// Test that plan mode disabled does not add permission-mode flag
-    #[test]
-    fn test_plan_mode_disabled() {
-        let args = DockerBackend::build_create_args(
-            "test-session",
-            &PathBuf::from("/workspace"),
-            "test prompt",
-            1000,
-            None,
-            false, // print mode
-            false, // plan mode disabled
-            &[],   // no images
-        ).expect("Failed to build args");
-
-        let cmd_arg = args.last().unwrap();
-        assert!(
-            !cmd_arg.contains("--permission-mode"),
-            "Should not include --permission-mode when disabled: {cmd_arg}"
-        );
-    }
 }

@@ -170,6 +170,32 @@ pub async fn handle_request(request: Request, manager: &SessionManager) -> Respo
                 }
             }
         },
+
+        Request::SendPrompt { session, prompt } => {
+            match manager.send_prompt_to_session(&session, &prompt).await {
+                Ok(()) => {
+                    tracing::info!(session = %session, "Prompt sent to session");
+                    Response::Ok
+                }
+                Err(e) => {
+                    tracing::error!(session = %session, error = %e, "Failed to send prompt");
+                    Response::Error {
+                        code: "SEND_PROMPT_ERROR".to_string(),
+                        message: e.to_string(),
+                    }
+                }
+            }
+        }
+
+        Request::GetSessionIdByName { name } => match manager.get_session(&name).await {
+            Some(session) => Response::SessionId {
+                session_id: session.id.to_string(),
+            },
+            None => Response::Error {
+                code: "NOT_FOUND".to_string(),
+                message: format!("Session not found: {name}"),
+            },
+        },
     }
 }
 
