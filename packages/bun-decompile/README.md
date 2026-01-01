@@ -21,7 +21,8 @@ bun add @shepherdjerred/bun-decompile
 bun add -g @shepherdjerred/bun-decompile
 ```
 
-Requires [Bun](https://bun.sh) runtime.
+> **Note:** This package requires [Bun](https://bun.sh) runtime and will not work with Node.js.
+> It uses Bun-specific APIs (`Bun.file()`, `Bun.write()`) for file operations.
 
 ## Quick Start
 
