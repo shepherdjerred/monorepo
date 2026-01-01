@@ -197,13 +197,17 @@ export class Monorepo {
     outputs.push("✓ Prisma setup");
 
     // Run typecheck, test, and build in PARALLEL
+    // Note: Exclude bun-decompile from tests - it requires `bun build --compile` which needs
+    // additional system dependencies not available in the Debian-based container
     await Promise.all([
       container.withExec(["bun", "run", "typecheck"]).sync(),
-      container.withExec(["bun", "run", "test"]).sync(),
+      container.withExec([
+        "bun", "run", "--filter='./packages/*'", "--filter=!./packages/bun-decompile'", "test"
+      ]).sync(),
       container.withExec(["bun", "run", "build"]).sync(),
     ]);
     outputs.push("✓ Typecheck");
-    outputs.push("✓ Test");
+    outputs.push("✓ Test (excluding bun-decompile)");
     outputs.push("✓ Build");
 
     // Birmel CI (typecheck, lint, test in parallel)
