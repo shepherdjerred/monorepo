@@ -647,4 +647,285 @@ impl SessionManager {
 
         Ok(())
     }
+
+    /// Get system status including credentials and proxies.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the proxy manager is not available.
+    pub async fn get_system_status(&self) -> anyhow::Result<crate::api::protocol::SystemStatus> {
+        use crate::api::protocol::{CredentialStatus, ProxyStatus, SystemStatus};
+
+        let mut credentials = Vec::new();
+        let mut proxies = Vec::new();
+        let mut active_session_proxies = 0;
+
+        // Collect credential and proxy status if proxy manager is available
+        if let Some(ref pm) = self.proxy_manager {
+            let creds = pm.get_credentials();
+            let secrets_dir = pm.secrets_dir();
+
+            // Helper to create masked value (first 8 chars + "****..." + last 4 chars)
+            let mask_credential = |value: &str| -> String {
+                if value.len() <= 12 {
+                    format!("{}****", &value[..value.len().min(4)])
+                } else {
+                    format!("{}****...{}", &value[..8], &value[value.len() - 4..])
+                }
+            };
+
+            // Helper to determine credential source
+            let credential_source = |env_var: &str, file_name: &str| -> (Option<String>, bool) {
+                if std::env::var(env_var).is_ok() {
+                    (Some("environment".to_string()), true) // readonly
+                } else {
+                    let path = secrets_dir.join(file_name);
+                    if path.exists() {
+                        (Some("file".to_string()), false) // not readonly
+                    } else {
+                        (None, false)
+                    }
+                }
+            };
+
+            // GitHub
+            let (source, readonly) = credential_source("GITHUB_TOKEN", "github_token");
+            credentials.push(CredentialStatus {
+                name: "GitHub".to_string(),
+                service_id: "github".to_string(),
+                available: creds.github_token.is_some(),
+                source,
+                readonly,
+                masked_value: creds.github_token.as_ref().map(|v| mask_credential(v)),
+            });
+
+            // Anthropic
+            let (source, readonly) =
+                credential_source("CLAUDE_CODE_OAUTH_TOKEN", "anthropic_oauth_token");
+            credentials.push(CredentialStatus {
+                name: "Anthropic".to_string(),
+                service_id: "anthropic".to_string(),
+                available: creds.anthropic_oauth_token.is_some(),
+                source,
+                readonly,
+                masked_value: creds.anthropic_oauth_token.as_ref().map(|v| mask_credential(v)),
+            });
+
+            // PagerDuty
+            let (source, readonly) = credential_source("PAGERDUTY_TOKEN", "pagerduty_token");
+            credentials.push(CredentialStatus {
+                name: "PagerDuty".to_string(),
+                service_id: "pagerduty".to_string(),
+                available: creds.pagerduty_token.is_some(),
+                source,
+                readonly,
+                masked_value: creds.pagerduty_token.as_ref().map(|v| mask_credential(v)),
+            });
+
+            // Sentry
+            let (source, readonly) = credential_source("SENTRY_AUTH_TOKEN", "sentry_auth_token");
+            credentials.push(CredentialStatus {
+                name: "Sentry".to_string(),
+                service_id: "sentry".to_string(),
+                available: creds.sentry_auth_token.is_some(),
+                source,
+                readonly,
+                masked_value: creds.sentry_auth_token.as_ref().map(|v| mask_credential(v)),
+            });
+
+            // Grafana
+            let (source, readonly) = credential_source("GRAFANA_API_KEY", "grafana_api_key");
+            credentials.push(CredentialStatus {
+                name: "Grafana".to_string(),
+                service_id: "grafana".to_string(),
+                available: creds.grafana_api_key.is_some(),
+                source,
+                readonly,
+                masked_value: creds.grafana_api_key.as_ref().map(|v| mask_credential(v)),
+            });
+
+            // npm
+            let (source, readonly) = credential_source("NPM_TOKEN", "npm_token");
+            credentials.push(CredentialStatus {
+                name: "npm".to_string(),
+                service_id: "npm".to_string(),
+                available: creds.npm_token.is_some(),
+                source,
+                readonly,
+                masked_value: creds.npm_token.as_ref().map(|v| mask_credential(v)),
+            });
+
+            // Docker
+            let (source, readonly) = credential_source("DOCKER_TOKEN", "docker_token");
+            credentials.push(CredentialStatus {
+                name: "Docker".to_string(),
+                service_id: "docker".to_string(),
+                available: creds.docker_token.is_some(),
+                source,
+                readonly,
+                masked_value: creds.docker_token.as_ref().map(|v| mask_credential(v)),
+            });
+
+            // Kubernetes
+            let (source, readonly) = credential_source("K8S_TOKEN", "k8s_token");
+            credentials.push(CredentialStatus {
+                name: "Kubernetes".to_string(),
+                service_id: "k8s".to_string(),
+                available: creds.k8s_token.is_some(),
+                source,
+                readonly,
+                masked_value: creds.k8s_token.as_ref().map(|v| mask_credential(v)),
+            });
+
+            // Talos
+            let (source, readonly) = credential_source("TALOS_TOKEN", "talos_token");
+            credentials.push(CredentialStatus {
+                name: "Talos".to_string(),
+                service_id: "talos".to_string(),
+                available: creds.talos_token.is_some(),
+                source,
+                readonly,
+                masked_value: creds.talos_token.as_ref().map(|v| mask_credential(v)),
+            });
+
+            // Collect proxy status
+            proxies.push(ProxyStatus {
+                name: "HTTP Auth Proxy".to_string(),
+                port: pm.http_proxy_port(),
+                active: true,
+                proxy_type: "global".to_string(),
+            });
+
+            proxies.push(ProxyStatus {
+                name: "Kubernetes Proxy".to_string(),
+                port: pm.k8s_proxy_port(),
+                active: pm.is_k8s_proxy_running(),
+                proxy_type: "global".to_string(),
+            });
+
+            if pm.is_talos_configured() {
+                proxies.push(ProxyStatus {
+                    name: "Talos mTLS Gateway".to_string(),
+                    port: pm.talos_gateway_port(),
+                    active: true,
+                    proxy_type: "global".to_string(),
+                });
+            }
+
+            // Count session-specific proxies
+            active_session_proxies = pm.active_session_proxy_count().await;
+        }
+
+        Ok(SystemStatus {
+            credentials,
+            proxies,
+            active_session_proxies,
+        })
+    }
+
+    /// Update a credential value.
+    ///
+    /// Note: The updated credential will be available for newly created sessions.
+    /// Existing proxy instances will continue using their current credentials until
+    /// they are restarted.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - The proxy manager is not available
+    /// - The credential is readonly (from environment variable)
+    /// - The service ID is invalid
+    /// - File I/O fails
+    pub async fn update_credential(
+        &self,
+        service_id: &str,
+        value: &str,
+    ) -> anyhow::Result<()> {
+        // Validate we have a proxy manager
+        let Some(ref pm) = self.proxy_manager else {
+            anyhow::bail!("Proxy manager not available");
+        };
+
+        // Map service ID to file name
+        let file_name = Self::credential_file_name(service_id)?;
+
+        // Map service ID to environment variable name
+        let env_var = Self::credential_env_var(service_id)?;
+
+        // Check if credential is from environment (readonly)
+        if std::env::var(env_var).is_ok() {
+            anyhow::bail!(
+                "Credential for {} is set via environment variable {} and cannot be updated via API",
+                service_id,
+                env_var
+            );
+        }
+
+        // Ensure secrets directory exists with proper permissions
+        let secrets_dir = pm.secrets_dir().clone();
+        if !secrets_dir.exists() {
+            std::fs::create_dir_all(&secrets_dir)?;
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::PermissionsExt;
+                std::fs::set_permissions(&secrets_dir, std::fs::Permissions::from_mode(0o700))?;
+            }
+        }
+
+        // Write credential to file
+        let file_path = secrets_dir.join(file_name);
+        let trimmed_value = value.trim();
+        std::fs::write(&file_path, trimmed_value)?;
+
+        // Set file permissions to 0600 (owner read/write only)
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            std::fs::set_permissions(&file_path, std::fs::Permissions::from_mode(0o600))?;
+        }
+
+        // Note: We don't reload credentials here because ProxyManager is behind Arc
+        // and we don't have mutable access. The credential will be picked up by newly
+        // created sessions/proxies. For a full reload, the proxy service would need to be restarted.
+
+        tracing::info!(
+            service_id = service_id,
+            file_path = %file_path.display(),
+            "Updated credential (will take effect for new sessions)"
+        );
+
+        Ok(())
+    }
+
+    /// Map service ID to credential file name.
+    fn credential_file_name(service_id: &str) -> anyhow::Result<&'static str> {
+        match service_id {
+            "github" => Ok("github_token"),
+            "anthropic" => Ok("anthropic_oauth_token"),
+            "pagerduty" => Ok("pagerduty_token"),
+            "sentry" => Ok("sentry_auth_token"),
+            "grafana" => Ok("grafana_api_key"),
+            "npm" => Ok("npm_token"),
+            "docker" => Ok("docker_token"),
+            "k8s" => Ok("k8s_token"),
+            "talos" => Ok("talos_token"),
+            _ => anyhow::bail!("Invalid service ID: {}", service_id),
+        }
+    }
+
+    /// Map service ID to environment variable name.
+    fn credential_env_var(service_id: &str) -> anyhow::Result<&'static str> {
+        match service_id {
+            "github" => Ok("GITHUB_TOKEN"),
+            "anthropic" => Ok("CLAUDE_CODE_OAUTH_TOKEN"),
+            "pagerduty" => Ok("PAGERDUTY_TOKEN"),
+            "sentry" => Ok("SENTRY_AUTH_TOKEN"),
+            "grafana" => Ok("GRAFANA_API_KEY"),
+            "npm" => Ok("NPM_TOKEN"),
+            "docker" => Ok("DOCKER_TOKEN"),
+            "k8s" => Ok("K8S_TOKEN"),
+            "talos" => Ok("TALOS_TOKEN"),
+            _ => anyhow::bail!("Invalid service ID: {}", service_id),
+        }
+    }
 }
