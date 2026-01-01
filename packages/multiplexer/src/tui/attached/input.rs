@@ -82,7 +82,7 @@ fn encode_char(c: char, has_ctrl: bool, has_alt: bool) -> Vec<u8> {
             }
             '[' => result.push(0x1b), // Ctrl+[ = ESC
             '\\' => result.push(0x1c), // Ctrl+\ = FS
-            ']' => result.push(0x1d), // Ctrl+] = GS (our detach key!)
+            ']' => result.push(0x1d), // Ctrl+] = GS (alternate detach key)
             '^' => result.push(0x1e), // Ctrl+^ = RS
             '_' => result.push(0x1f), // Ctrl+_ = US
             ' ' => result.push(0x00), // Ctrl+Space = NUL
@@ -181,7 +181,7 @@ mod tests {
 
     #[test]
     fn test_encode_ctrl_bracket() {
-        // This is our detach key!
+        // This is an alternate detach key
         let event = key_event(KeyCode::Char(']'), KeyModifiers::CONTROL);
         assert_eq!(encode_key(&event), vec![0x1d]); // GS
     }
