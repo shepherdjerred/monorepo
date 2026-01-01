@@ -109,7 +109,7 @@ export class MuxClient {
    * Update session access mode
    */
   async updateAccessMode(id: string, mode: AccessMode): Promise<void> {
-    await this.request("POST", `/api/sessions/${encodeURIComponent(id)}/access-mode`, { mode });
+    await this.request("POST", `/api/sessions/${encodeURIComponent(id)}/access-mode`, { access_mode: mode });
   }
 
   /**

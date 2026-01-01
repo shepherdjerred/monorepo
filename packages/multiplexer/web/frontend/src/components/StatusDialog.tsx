@@ -92,6 +92,8 @@ export function StatusDialog({ onClose }: StatusDialogProps) {
       const newErrors = new Map(saveErrors);
       newErrors.set(serviceId, err instanceof Error ? err.message : String(err));
       setSaveErrors(newErrors);
+      // Refresh to show actual state even on error
+      await fetchStatus();
     } finally {
       setSavingCredential(null);
     }
@@ -189,6 +191,7 @@ export function StatusDialog({ onClose }: StatusDialogProps) {
                                       placeholder={`Enter ${cred.name} credential`}
                                       className="w-full px-3 py-2 bg-background border border-input rounded-md pr-10"
                                       disabled={savingCredential === cred.service_id}
+                                      autoComplete="new-password"
                                     />
                                     <button
                                       type="button"
@@ -243,9 +246,17 @@ export function StatusDialog({ onClose }: StatusDialogProps) {
                   ))}
                 </div>
 
-                <p className="mt-4 text-sm text-muted-foreground">
-                  Credentials can be loaded from environment variables or files in ~/.secrets/
-                </p>
+                <div className="mt-4 space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    Credentials can be loaded from environment variables or files in ~/.secrets/
+                  </p>
+                  <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-md">
+                    <p className="text-sm text-yellow-600 dark:text-yellow-500">
+                      <strong>Note:</strong> Updated credentials will take effect for new sessions.
+                      Restart the multiplexer process for changes to apply to all services.
+                    </p>
+                  </div>
+                </div>
               </div>
 
               {/* Proxies Section */}

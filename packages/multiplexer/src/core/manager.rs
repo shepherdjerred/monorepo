@@ -668,7 +668,8 @@ impl SessionManager {
             // Helper to create masked value (first 8 chars + "****..." + last 4 chars)
             let mask_credential = |value: &str| -> String {
                 if value.len() <= 12 {
-                    format!("{}****", &value[..value.len().min(4)])
+                    // Don't reveal any chars for short tokens to avoid leaking info
+                    "****".to_string()
                 } else {
                     format!("{}****...{}", &value[..8], &value[value.len() - 4..])
                 }
@@ -841,6 +842,14 @@ impl SessionManager {
         service_id: &str,
         value: &str,
     ) -> anyhow::Result<()> {
+        // Validate service_id format to prevent path traversal
+        if !service_id
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '_')
+        {
+            anyhow::bail!("Invalid service ID format: must be alphanumeric or underscore");
+        }
+
         // Validate we have a proxy manager
         let Some(ref pm) = self.proxy_manager else {
             anyhow::bail!("Proxy manager not available");
