@@ -59,7 +59,7 @@ interface BatchRequest {
   body: {
     model: string;
     messages: Array<{ role: "system" | "user"; content: string }>;
-    max_tokens?: number;
+    max_completion_tokens?: number;
   };
 }
 
@@ -132,7 +132,7 @@ export class OpenAIBatchClient {
             { role: "system", content: systemPrompt },
             { role: "user", content: userPrompt },
           ],
-          max_tokens: this.config.maxTokens,
+          max_completion_tokens: this.config.maxTokens,
         },
       });
     }

@@ -29,8 +29,13 @@ pub async fn run_daemon() -> anyhow::Result<()> {
 /// bound, or other I/O errors occur.
 pub async fn run_daemon_with_options(enable_proxy: bool) -> anyhow::Result<()> {
     // Initialize the store
+    tracing::debug!("Initializing database store...");
     let db_path = paths::database_path();
-    let store = Arc::new(SqliteStore::new(&db_path).await?);
+    let store = Arc::new(SqliteStore::new(&db_path).await.map_err(|e| {
+        tracing::error!("Failed to initialize database at {:?}: {}", db_path, e);
+        e
+    })?);
+    tracing::debug!("Database store initialized successfully");
 
     // Initialize proxy services if enabled
     let proxy_manager: Option<Arc<ProxyManager>> = if enable_proxy {
@@ -56,21 +61,31 @@ pub async fn run_daemon_with_options(enable_proxy: bool) -> anyhow::Result<()> {
     };
 
     // Initialize the session manager with proxy support if available
+    tracing::debug!("Initializing session manager...");
     let manager = if let Some(ref pm) = proxy_manager {
         let docker_proxy_config = DockerProxyConfig::new(
             pm.http_proxy_port(),
             pm.mux_dir().clone(),
         );
         let docker_backend = DockerBackend::with_proxy(docker_proxy_config);
-        let mut session_manager = SessionManager::with_docker_backend(store, docker_backend).await?;
+        let mut session_manager = SessionManager::with_docker_backend(store, docker_backend)
+            .await
+            .map_err(|e| {
+                tracing::error!("Failed to initialize session manager: {}", e);
+                e
+            })?;
 
         // Wire up proxy manager for per-session filtering
         session_manager.set_proxy_manager(Arc::clone(pm));
 
         Arc::new(session_manager)
     } else {
-        Arc::new(SessionManager::with_defaults(store).await?)
+        Arc::new(SessionManager::with_defaults(store).await.map_err(|e| {
+            tracing::error!("Failed to initialize session manager (no proxy): {}", e);
+            e
+        })?)
     };
+    tracing::info!("Session manager initialized");
 
     // Create the socket path
     let socket_path = paths::socket_path();
