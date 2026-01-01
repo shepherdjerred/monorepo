@@ -563,8 +563,23 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
             CreateDialogFocus::PlanMode => {
                 app.create_dialog.plan_mode = !app.create_dialog.plan_mode;
             }
-            CreateDialogFocus::Name => app.create_dialog.name.push(' '),
-            CreateDialogFocus::Prompt => app.create_dialog.prompt.push(' '),
+            CreateDialogFocus::Name => {
+                app.create_dialog.name_cursor = super::text_input::insert_char_at_cursor(
+                    &mut app.create_dialog.name,
+                    app.create_dialog.name_cursor,
+                    ' ',
+                );
+            }
+            CreateDialogFocus::Prompt => {
+                (app.create_dialog.prompt_cursor_line, app.create_dialog.prompt_cursor_col) =
+                    super::text_input::insert_char_at_cursor_multiline(
+                        &mut app.create_dialog.prompt,
+                        app.create_dialog.prompt_cursor_line,
+                        app.create_dialog.prompt_cursor_col,
+                        ' ',
+                    );
+                app.create_dialog.ensure_cursor_visible();
+            }
             CreateDialogFocus::RepoPath => {
                 // Load recent repos and open directory picker when space is pressed on RepoPath
                 app.load_recent_repos().await;
