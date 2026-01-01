@@ -1,4 +1,4 @@
-use crossterm::event::{Event, EventStream, KeyCode, KeyEvent, KeyModifiers};
+use crossterm::event::{Event, EventStream, KeyCode, KeyEvent, KeyModifiers, MouseEvent, MouseEventKind};
 use futures::StreamExt;
 use tokio::sync::mpsc;
 
@@ -7,6 +7,15 @@ use crate::api::Client;
 use crate::core::{AgentType, BackendType};
 
 use super::app::{App, AppMode, CreateDialogFocus, CreateProgress};
+
+/// Number of lines to scroll per mouse wheel tick
+const SCROLL_LINES_PER_WHEEL_TICK: usize = 3;
+
+/// Number of lines to scroll with PageUp/PageDown
+const SCROLL_LINES_PER_PAGE: usize = 10;
+
+/// Number of lines to scroll with Shift+Arrow keys
+const SCROLL_LINES_PER_ARROW: usize = 1;
 
 /// Create a new async event stream for terminal events.
 #[must_use]
@@ -25,6 +34,55 @@ pub async fn next_event(stream: &mut EventStream) -> anyhow::Result<Option<Event
         Some(Err(e)) => Err(e.into()),
         None => Ok(None),
     }
+}
+
+/// Handle a mouse event
+///
+/// # Errors
+///
+/// Returns an error if scrolling operations fail.
+pub async fn handle_mouse_event(app: &mut App, mouse: MouseEvent) -> anyhow::Result<()> {
+    // Only handle mouse events when attached
+    if app.mode != AppMode::Attached {
+        return Ok(());
+    }
+
+    match mouse.kind {
+        MouseEventKind::ScrollUp => {
+            if let Some(pty_session) = app.attached_pty_session() {
+                let buffer = pty_session.terminal_buffer();
+                // Lock acquisition is safe here as this is the only place we hold the lock
+                // and operations are synchronous. If the lock were to fail, it would indicate
+                // a critical issue with the buffer, so we log and continue gracefully.
+                match buffer.try_lock() {
+                    Ok(mut buf) => {
+                        buf.scroll_up(SCROLL_LINES_PER_WHEEL_TICK);
+                    }
+                    Err(_) => {
+                        tracing::warn!("Failed to acquire terminal buffer lock for scroll up");
+                    }
+                }
+            }
+        }
+        MouseEventKind::ScrollDown => {
+            if let Some(pty_session) = app.attached_pty_session() {
+                let buffer = pty_session.terminal_buffer();
+                match buffer.try_lock() {
+                    Ok(mut buf) => {
+                        buf.scroll_down(SCROLL_LINES_PER_WHEEL_TICK);
+                    }
+                    Err(_) => {
+                        tracing::warn!("Failed to acquire terminal buffer lock for scroll down");
+                    }
+                }
+            }
+        }
+        _ => {
+            // Ignore other mouse events (clicks, moves, etc.) for now
+        }
+    }
+
+    Ok(())
 }
 
 /// Handle a paste event (when text is pasted from clipboard)
@@ -503,12 +561,12 @@ fn handle_help_key(app: &mut App, key: KeyEvent) {
 
 /// Handle key events when attached to a session via PTY.
 ///
-/// Most keys are encoded and sent to the PTY. Ctrl+] is the detach key
+/// Most keys are encoded and sent to the PTY. Ctrl+Q (or Ctrl+]) is the detach key
 /// which uses a double-tap mechanism (single press waits 300ms for second,
-/// double-tap sends the literal Ctrl+] character).
+/// double-tap sends the literal character to the terminal).
 ///
-/// Session switching: Ctrl+Left/Right switches between Docker sessions.
-/// Scrolling: Shift+PageUp/Down navigates scroll-back buffer.
+/// Session switching: Ctrl+P/N or Alt+Left/Right switches between Docker sessions.
+/// Scrolling: PageUp/Down (10 lines), Shift+Up/Down (1 line), or mouse wheel.
 async fn handle_attached_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
     use crate::tui::app::DetachState;
     use crate::tui::attached::encode_key;
@@ -516,22 +574,38 @@ async fn handle_attached_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()>
 
     const DETACH_TIMEOUT: Duration = Duration::from_millis(300);
 
-    // Check for Ctrl+] (our detach key)
-    if key.modifiers.contains(KeyModifiers::CONTROL) && key.code == KeyCode::Char(']') {
+    // Log key events for debugging (only in debug builds)
+    #[cfg(debug_assertions)]
+    tracing::debug!("Key event: {:?} with modifiers {:?}", key.code, key.modifiers);
+
+    // Check for Ctrl+Q as primary detach key (more reliable across terminals)
+    // Also support Ctrl+] as alternative
+    let detach_key_byte = if key.modifiers.contains(KeyModifiers::CONTROL) {
+        match key.code {
+            KeyCode::Char('q') => Some(0x11), // Ctrl+Q
+            KeyCode::Char(']') => Some(0x1d), // Ctrl+] = GS
+            _ => None,
+        }
+    } else {
+        None
+    };
+
+    if let Some(key_byte) = detach_key_byte {
         match &app.detach_state {
             DetachState::Idle => {
                 // First press - start waiting for second
                 app.detach_state = DetachState::Pending {
                     since: std::time::Instant::now(),
+                    key_byte,
                 };
                 // Don't send anything yet, wait for timeout or second press
                 return Ok(());
             }
-            DetachState::Pending { since } => {
+            DetachState::Pending { since, key_byte: pending_byte } => {
                 if since.elapsed() < DETACH_TIMEOUT {
-                    // Double-tap detected - send literal Ctrl+]
+                    // Double-tap detected - send the literal key that was pressed
                     app.detach_state = DetachState::Idle;
-                    app.send_to_pty(vec![0x1d]).await?; // GS (Ctrl+])
+                    app.send_to_pty(vec![*pending_byte]).await?;
                 } else {
                     // Timeout expired - this should have been handled by main loop
                     // but if we get here, treat as detach
@@ -542,8 +616,27 @@ async fn handle_attached_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()>
         }
     }
 
-    // Session switching with Ctrl+Left/Right
+    // Session switching with Ctrl+Left/Right or Ctrl+P/Ctrl+N
     if key.modifiers.contains(KeyModifiers::CONTROL) {
+        match key.code {
+            KeyCode::Left | KeyCode::Char('p') => {
+                if app.switch_to_previous_session().await? {
+                    app.status_message = Some("Switched to previous session".to_string());
+                }
+                return Ok(());
+            }
+            KeyCode::Right | KeyCode::Char('n') => {
+                if app.switch_to_next_session().await? {
+                    app.status_message = Some("Switched to next session".to_string());
+                }
+                return Ok(());
+            }
+            _ => {}
+        }
+    }
+
+    // Also support Alt+Left/Right as alternative (more reliable)
+    if key.modifiers.contains(KeyModifiers::ALT) {
         match key.code {
             KeyCode::Left => {
                 if app.switch_to_previous_session().await? {
@@ -561,51 +654,94 @@ async fn handle_attached_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()>
         }
     }
 
-    // Scrolling with Shift+PageUp/PageDown
-    if key.modifiers.contains(KeyModifiers::SHIFT) {
-        match key.code {
-            KeyCode::PageUp => {
-                if let Some(pty_session) = app.attached_pty_session() {
-                    let buffer = pty_session.terminal_buffer();
-                    let mut buf = buffer.lock().await;
-                    buf.scroll_up(10);
+    // Scrolling: PageUp/PageDown and Shift+Up/Down scroll the buffer by default
+    // Hold Ctrl to send PageUp/PageDown to PTY instead (for apps like less/vim)
+    match key.code {
+        KeyCode::PageUp if !key.modifiers.contains(KeyModifiers::CONTROL) => {
+            if let Some(pty_session) = app.attached_pty_session() {
+                let buffer = pty_session.terminal_buffer();
+                match buffer.try_lock() {
+                    Ok(mut buf) => {
+                        buf.scroll_up(SCROLL_LINES_PER_PAGE);
+                    }
+                    Err(_) => {
+                        tracing::warn!("Failed to acquire terminal buffer lock for PageUp scroll");
+                    }
                 }
-                return Ok(());
             }
-            KeyCode::PageDown => {
-                if let Some(pty_session) = app.attached_pty_session() {
-                    let buffer = pty_session.terminal_buffer();
-                    let mut buf = buffer.lock().await;
-                    buf.scroll_down(10);
-                }
-                return Ok(());
-            }
-            _ => {}
+            return Ok(());
         }
+        KeyCode::PageDown if !key.modifiers.contains(KeyModifiers::CONTROL) => {
+            if let Some(pty_session) = app.attached_pty_session() {
+                let buffer = pty_session.terminal_buffer();
+                match buffer.try_lock() {
+                    Ok(mut buf) => {
+                        buf.scroll_down(SCROLL_LINES_PER_PAGE);
+                    }
+                    Err(_) => {
+                        tracing::warn!("Failed to acquire terminal buffer lock for PageDown scroll");
+                    }
+                }
+            }
+            return Ok(());
+        }
+        // Shift+Arrow keys: Scroll one line at a time
+        KeyCode::Up if key.modifiers.contains(KeyModifiers::SHIFT) => {
+            if let Some(pty_session) = app.attached_pty_session() {
+                let buffer = pty_session.terminal_buffer();
+                match buffer.try_lock() {
+                    Ok(mut buf) => {
+                        buf.scroll_up(SCROLL_LINES_PER_ARROW);
+                    }
+                    Err(_) => {
+                        tracing::warn!("Failed to acquire terminal buffer lock for Shift+Up scroll");
+                    }
+                }
+            }
+            return Ok(());
+        }
+        KeyCode::Down if key.modifiers.contains(KeyModifiers::SHIFT) => {
+            if let Some(pty_session) = app.attached_pty_session() {
+                let buffer = pty_session.terminal_buffer();
+                match buffer.try_lock() {
+                    Ok(mut buf) => {
+                        buf.scroll_down(SCROLL_LINES_PER_ARROW);
+                    }
+                    Err(_) => {
+                        tracing::warn!("Failed to acquire terminal buffer lock for Shift+Down scroll");
+                    }
+                }
+            }
+            return Ok(());
+        }
+        _ => {}
     }
 
-    // If we were pending detach and got a different key, send Ctrl+] then this key
-    if let DetachState::Pending { since } = &app.detach_state {
+    // If we were pending detach and got a different key, send the pending key then this key
+    if let DetachState::Pending { since, key_byte } = &app.detach_state {
         if since.elapsed() >= DETACH_TIMEOUT {
             // Timeout - detach
             app.detach();
             return Ok(());
         }
-        // Not a second Ctrl+], so send the first one as literal and continue
-        app.send_to_pty(vec![0x1d]).await?;
+        // Not a second detach key, so send the first one as literal and continue
+        let pending_byte = *key_byte;
         app.detach_state = DetachState::Idle;
-    }
-
-    // Reset scroll position on any regular input (auto-scroll to bottom)
-    if let Some(pty_session) = app.attached_pty_session() {
-        let buffer = pty_session.terminal_buffer();
-        let mut buf = buffer.lock().await;
-        buf.scroll_to_bottom();
+        app.send_to_pty(vec![pending_byte]).await?;
     }
 
     // Encode the key and send to PTY
     let encoded = encode_key(&key);
     if !encoded.is_empty() {
+        // Reset scroll position when sending input to PTY (auto-scroll to bottom)
+        // This ensures scrollback isn't disrupted when reviewing history with scroll keys
+        if let Some(pty_session) = app.attached_pty_session() {
+            let buffer = pty_session.terminal_buffer();
+            if let Ok(mut buf) = buffer.try_lock() {
+                buf.scroll_to_bottom();
+            }
+            // Silently ignore lock failures for scroll-to-bottom as it's non-critical
+        }
         app.send_to_pty(encoded).await?;
     }
 
