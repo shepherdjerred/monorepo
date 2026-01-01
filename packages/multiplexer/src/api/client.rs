@@ -8,7 +8,6 @@ use crate::utils::{daemon, paths};
 use super::protocol::{CreateSessionRequest, ProgressStep, Request, Response};
 use super::traits::ApiClient;
 use super::types::ReconcileReportDto;
-use crate::core::session::AccessMode;
 
 /// Callback type for progress updates
 pub type ProgressCallback = Box<dyn Fn(ProgressStep) + Send + Sync>;

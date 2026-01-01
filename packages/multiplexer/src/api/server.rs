@@ -1,7 +1,6 @@
 use std::sync::Arc;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::{UnixListener, UnixStream};
-use tokio::sync::Mutex;
 
 use crate::backends::{DockerBackend, DockerProxyConfig};
 use crate::core::SessionManager;
