@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use typeshare::typeshare;
 use uuid::Uuid;
 
-use super::session::{BackendType, Session, SessionStatus};
+use super::session::{BackendType, ClaudeWorkingStatus, Session, SessionStatus};
 
 /// Event representing a state change in the system
 #[typeshare]
@@ -51,6 +51,12 @@ pub enum EventType {
     CheckStatusChanged {
         old_status: Option<super::session::CheckStatus>,
         new_status: super::session::CheckStatus,
+    },
+
+    /// Claude working status changed
+    ClaudeStatusChanged {
+        old_status: ClaudeWorkingStatus,
+        new_status: ClaudeWorkingStatus,
     },
 
     /// Session was archived
@@ -130,6 +136,9 @@ pub fn replay_events(events: &[Event]) -> Option<Session> {
             }
             EventType::CheckStatusChanged { new_status, .. } => {
                 session.set_check_status(*new_status);
+            }
+            EventType::ClaudeStatusChanged { new_status, .. } => {
+                session.set_claude_status(*new_status);
             }
             EventType::SessionArchived => {
                 session.set_status(super::session::SessionStatus::Archived);

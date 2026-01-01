@@ -24,6 +24,12 @@ pub fn socket_path() -> PathBuf {
     base_dir().join("mux.sock")
 }
 
+/// Get the path to the hooks Unix socket
+#[must_use]
+pub fn hooks_socket_path() -> PathBuf {
+    base_dir().join("hooks.sock")
+}
+
 /// Get the directory for worktrees
 #[must_use]
 pub fn worktrees_dir() -> PathBuf {
