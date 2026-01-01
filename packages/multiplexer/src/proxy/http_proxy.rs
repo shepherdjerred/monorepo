@@ -167,8 +167,6 @@ impl HttpHandler for AuthInjector {
         let audit_logger = Arc::clone(&self.audit_logger);
 
         async move {
-            let start = Instant::now();
-
             // Get host from URI or Host header
             let host = req
                 .uri()
@@ -241,7 +239,7 @@ impl HttpHandler for AuthInjector {
                 path,
                 auth_injected,
                 response_code: None, // Will be filled in handle_response if needed
-                duration_ms: start.elapsed().as_millis() as u64,
+                duration_ms: 0,      // Request processing time only (not end-to-end)
             };
             if let Err(e) = audit_logger.log(&entry) {
                 tracing::warn!("Failed to write audit log entry: {}", e);
@@ -335,8 +333,6 @@ impl HttpHandler for FilteringHandler {
         let audit_logger = Arc::clone(&self.audit_logger);
 
         async move {
-            let start = Instant::now();
-
             // Check access mode and filter write operations
             let current_mode = *access_mode.read().await;
             if current_mode == AccessMode::ReadOnly && is_write_operation(req.method()) {
@@ -426,7 +422,7 @@ impl HttpHandler for FilteringHandler {
                 path,
                 auth_injected,
                 response_code: None,
-                duration_ms: start.elapsed().as_millis() as u64,
+                duration_ms: 0, // Request processing time only (not end-to-end)
             };
             if let Err(e) = audit_logger.log(&entry) {
                 tracing::warn!("Failed to write audit log entry: {}", e);
