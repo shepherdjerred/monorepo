@@ -124,6 +124,18 @@ fn detect_git_worktree(path: &Path) -> anyhow::Result<Option<PathBuf>> {
 /// Docker container image to use
 const DOCKER_IMAGE: &str = "ghcr.io/shepherdjerred/dotfiles";
 
+/// Shared cache volumes used across all mux Docker containers for faster Rust builds:
+/// - mux-cargo-registry: Downloaded crates from crates.io (/workspace/.cargo/registry)
+/// - mux-cargo-git: Git dependencies (/workspace/.cargo/git)
+/// - mux-sccache: Compilation cache (/workspace/.cache/sccache)
+///
+/// Caches are mounted under /workspace (HOME) since containers run as non-root user.
+/// sccache (Mozilla's compilation cache) is configured via RUSTC_WRAPPER environment variable.
+/// If sccache is not installed in the dotfiles image, cargo will show a warning but continue
+/// to work. To enable sccache compilation caching, install it in the dotfiles image:
+///   cargo install sccache
+/// or add it to the Dockerfile.
+
 /// Proxy configuration for Docker containers.
 #[derive(Debug, Clone, Default)]
 pub struct DockerProxyConfig {
@@ -244,6 +256,32 @@ impl DockerBackend {
             "-e".to_string(),
             "HOME=/workspace".to_string(),
         ];
+
+        // Mount shared Rust cargo and sccache cache volumes for faster builds
+        // These are shared across ALL mux sessions and persist between container restarts
+        // sccache provides compilation caching (path-independent, content-addressed)
+        // cargo caches provide dependency download caching
+        // Note: Mounted under /workspace (HOME) since containers run as non-root user
+        args.extend([
+            "-v".to_string(),
+            "mux-cargo-registry:/workspace/.cargo/registry".to_string(),
+            "-v".to_string(),
+            "mux-cargo-git:/workspace/.cargo/git".to_string(),
+            "-v".to_string(),
+            "mux-sccache:/workspace/.cache/sccache".to_string(),
+        ]);
+
+        // Configure sccache as Rust compiler wrapper (if installed in dotfiles image)
+        // If sccache is not installed, cargo will show a clear warning but continue to work
+        // This is a progressive enhancement - works without sccache, better with it
+        args.extend([
+            "-e".to_string(),
+            "CARGO_HOME=/workspace/.cargo".to_string(),
+            "-e".to_string(),
+            "RUSTC_WRAPPER=sccache".to_string(),
+            "-e".to_string(),
+            "SCCACHE_DIR=/workspace/.cache/sccache".to_string(),
+        ]);
 
         // Detect if workdir is a git worktree and mount parent .git directory
         match detect_git_worktree(workdir) {
@@ -791,6 +829,51 @@ mod tests {
         );
     }
 
+    /// Test that Rust caching is configured with cargo and sccache volumes
+    #[test]
+    fn test_rust_caching_configured() {
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            &PathBuf::from("/workspace"),
+            "test prompt",
+            1000,
+            None,
+            false,
+            false,
+            &[],
+        )
+        .expect("Failed to build args");
+
+        // Check cargo cache volumes
+        let has_registry = args
+            .iter()
+            .any(|a| a.contains("mux-cargo-registry:/workspace/.cargo/registry"));
+        assert!(has_registry, "Expected mux-cargo-registry volume mount");
+
+        let has_git = args
+            .iter()
+            .any(|a| a.contains("mux-cargo-git:/workspace/.cargo/git"));
+        assert!(has_git, "Expected mux-cargo-git volume mount");
+
+        // Check sccache volume
+        let has_sccache = args
+            .iter()
+            .any(|a| a.contains("mux-sccache:/workspace/.cache/sccache"));
+        assert!(has_sccache, "Expected mux-sccache volume mount");
+
+        // Check cargo and sccache environment variables
+        let has_cargo_home = args.iter().any(|a| a == "CARGO_HOME=/workspace/.cargo");
+        assert!(has_cargo_home, "Expected CARGO_HOME=/workspace/.cargo");
+
+        let has_rustc_wrapper = args.iter().any(|a| a == "RUSTC_WRAPPER=sccache");
+        assert!(has_rustc_wrapper, "Expected RUSTC_WRAPPER=sccache");
+
+        let has_sccache_dir = args
+            .iter()
+            .any(|a| a == "SCCACHE_DIR=/workspace/.cache/sccache");
+        assert!(has_sccache_dir, "Expected SCCACHE_DIR=/workspace/.cache/sccache");
+    }
+
     /// Test that attach command uses bash, not zsh (which doesn't exist in container)
     #[test]
     fn test_attach_uses_bash_not_zsh() {
@@ -1120,11 +1203,11 @@ mod tests {
             &[],
         ).expect("Failed to build args");
 
-        // Count volume mounts (should only have the workspace mount)
+        // Count volume mounts (should have workspace + 3 cargo/sccache cache mounts)
         let mount_count = args.iter().filter(|a| *a == "-v").count();
         assert_eq!(
-            mount_count, 1,
-            "Normal git repo should only have workspace mount, got {mount_count} mounts"
+            mount_count, 4,
+            "Normal git repo should have workspace + 3 cache mounts, got {mount_count} mounts"
         );
     }
 
@@ -1235,11 +1318,11 @@ mod tests {
             &[],
         ).expect("Failed to build args");
 
-        // Should only have workspace mount (no git mount)
+        // Should have workspace + 3 cache mounts (no git parent mount)
         let mount_count = args.iter().filter(|a| *a == "-v").count();
         assert_eq!(
-            mount_count, 1,
-            "Malformed worktree should only have workspace mount, got {mount_count} mounts"
+            mount_count, 4,
+            "Malformed worktree should have workspace + 3 cache mounts, got {mount_count} mounts"
         );
     }
 
@@ -1270,11 +1353,11 @@ mod tests {
             &[],
         ).expect("Failed to build args");
 
-        // Should only have workspace mount (no git mount due to validation failure)
+        // Should have workspace + 3 cache mounts (no git parent mount due to validation failure)
         let mount_count = args.iter().filter(|a| *a == "-v").count();
         assert_eq!(
-            mount_count, 1,
-            "Worktree with missing parent should only have workspace mount, got {mount_count} mounts"
+            mount_count, 4,
+            "Worktree with missing parent should have workspace + 3 cache mounts, got {mount_count} mounts"
         );
     }
 
