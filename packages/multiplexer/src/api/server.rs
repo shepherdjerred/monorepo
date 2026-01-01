@@ -94,7 +94,6 @@ pub async fn run_daemon_with_options(enable_proxy: bool) -> anyhow::Result<()> {
     let hook_socket_path = paths::hooks_socket_path();
     let (hook_listener, mut hook_rx) = crate::hooks::HookListener::new(hook_socket_path);
 
-    let hook_manager = Arc::clone(&manager);
     tokio::spawn(async move {
         if let Err(e) = hook_listener.start().await {
             tracing::error!("Hook listener failed: {}", e);
