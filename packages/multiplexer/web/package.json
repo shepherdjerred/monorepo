@@ -1,0 +1,25 @@
+{
+  "name": "@mux/web",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "workspaces": [
+    "shared",
+    "client",
+    "frontend"
+  ],
+  "scripts": {
+    "dev": "bun run dev:frontend",
+    "dev:frontend": "cd frontend && bun run dev",
+    "build": "bun run build:shared && bun run build:client && bun run build:frontend",
+    "build:shared": "cd shared && bun run build",
+    "build:client": "cd client && bun run build",
+    "build:frontend": "cd frontend && bun run build",
+    "typecheck": "bun run --filter='./web/*' typecheck",
+    "clean": "rm -rf shared/dist client/dist frontend/dist shared/src/generated/*"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.18",
+    "concurrently": "^9.1.2"
+  }
+}
