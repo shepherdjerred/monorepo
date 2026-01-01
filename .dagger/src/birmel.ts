@@ -126,6 +126,8 @@ export async function checkBirmel(workspaceSource: Directory): Promise<string> {
     .withEnvVariable("DATABASE_URL", testDbPath)
     .withEnvVariable("OPS_DATABASE_URL", testDbPath)
     .withEnvVariable("BIRMEL_SCREENSHOTS_DIR", screenshotsDir)
+    // Disable browser tests in CI - Chromium crashes in Dagger containers
+    .withEnvVariable("BROWSER_ENABLED", "false")
     // Create test data directories OUTSIDE the mounted workspace
     .withExec(["mkdir", "-p", screenshotsDir])
     .withExec(["bunx", "prisma", "generate"])
