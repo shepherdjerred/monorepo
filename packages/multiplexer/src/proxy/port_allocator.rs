@@ -59,6 +59,42 @@ impl PortAllocator {
     pub async fn get_session_id(&self, port: u16) -> Option<Uuid> {
         self.state.read().await.allocated.get(&port).copied()
     }
+
+    /// Restore port allocations from database
+    ///
+    /// Called on daemon startup to restore in-memory state from persistent storage.
+    /// Prevents port conflicts and maintains session-to-port mappings across restarts.
+    pub async fn restore_allocations(&self, allocations: Vec<(u16, Uuid)>) -> anyhow::Result<()> {
+        let mut state = self.state.write().await;
+
+        for (port, session_id) in allocations {
+            // Validate port is in our range
+            if port < Self::BASE_PORT || port >= Self::BASE_PORT + Self::MAX_SESSIONS {
+                tracing::warn!(
+                    port,
+                    session_id = %session_id,
+                    "Skipping invalid port allocation from database (out of range)"
+                );
+                continue;
+            }
+
+            state.allocated.insert(port, session_id);
+            tracing::debug!(port, session_id = %session_id, "Restored port allocation");
+        }
+
+        // Update next_port to avoid collisions with restored allocations
+        if let Some(&max_port) = state.allocated.keys().max() {
+            state.next_port = (max_port - Self::BASE_PORT + 1) % Self::MAX_SESSIONS;
+        }
+
+        tracing::info!(
+            count = state.allocated.len(),
+            "Restored {} port allocations from database",
+            state.allocated.len()
+        );
+
+        Ok(())
+    }
 }
 
 impl Default for PortAllocator {

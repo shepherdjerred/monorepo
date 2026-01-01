@@ -1,6 +1,7 @@
 use std::sync::Arc;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::{UnixListener, UnixStream};
+use uuid::Uuid;
 
 use crate::backends::{DockerBackend, DockerProxyConfig};
 use crate::core::SessionManager;
@@ -72,13 +73,13 @@ pub async fn run_daemon_with_http(enable_proxy: bool, http_port: Option<u16>) ->
 
     // Initialize the session manager with proxy support if available
     tracing::debug!("Initializing session manager...");
-    let manager = if let Some(ref pm) = proxy_manager {
+    let mut session_manager = if let Some(ref pm) = proxy_manager {
         let docker_proxy_config = DockerProxyConfig::new(
             pm.http_proxy_port(),
             pm.mux_dir().clone(),
         );
         let docker_backend = DockerBackend::with_proxy(docker_proxy_config);
-        let mut session_manager = SessionManager::with_docker_backend(store, docker_backend)
+        let mut sm = SessionManager::with_docker_backend(Arc::clone(&store), docker_backend)
             .await
             .map_err(|e| {
                 tracing::error!("Failed to initialize session manager: {}", e);
@@ -86,22 +87,68 @@ pub async fn run_daemon_with_http(enable_proxy: bool, http_port: Option<u16>) ->
             })?;
 
         // Wire up proxy manager for per-session filtering
-        session_manager.set_proxy_manager(Arc::clone(pm));
-
-        Arc::new(session_manager)
+        sm.set_proxy_manager(Arc::clone(pm));
+        sm
     } else {
-        Arc::new(SessionManager::with_defaults(store).await.map_err(|e| {
+        SessionManager::with_defaults(Arc::clone(&store)).await.map_err(|e| {
             tracing::error!("Failed to initialize session manager (no proxy): {}", e);
             e
-        })?)
+        })?
     };
-    tracing::info!("Session manager initialized");
 
-    // Spawn both Unix socket and HTTP servers concurrently
-    let unix_socket_future = run_unix_socket_server(Arc::clone(&manager));
-
+    // Create event broadcaster and wire it up if HTTP server is enabled
     if let Some(port) = http_port {
-        let http_future = run_http_server(Arc::clone(&manager), port);
+        use crate::api::protocol::Event;
+
+        // Create broadcast channel for session events
+        let (event_broadcaster, _) = tokio::sync::broadcast::channel::<Event>(100);
+
+        // Set broadcaster on manager before Arc wrapping
+        session_manager.set_event_broadcaster(event_broadcaster.clone());
+
+        let manager = Arc::new(session_manager);
+        tracing::info!("Session manager initialized with event broadcasting");
+
+        // Restore session proxies for active sessions (if proxy manager is enabled)
+        if let Some(ref pm) = proxy_manager {
+            tracing::info!("Restoring session proxies for active sessions...");
+
+            // Get all sessions from database
+            let sessions = manager.list_sessions().await;
+
+            // Extract port allocations for PortAllocator restoration
+            let port_allocations: Vec<(u16, Uuid)> = sessions
+                .iter()
+                .filter_map(|s| s.proxy_port.map(|port| (port, s.id)))
+                .collect();
+
+            // Restore port allocations in PortAllocator
+            // This must succeed before we attempt to restore session proxies to avoid state inconsistency
+            let port_allocation_success = if !port_allocations.is_empty() {
+                match pm.port_allocator().restore_allocations(port_allocations).await {
+                    Ok(()) => true,
+                    Err(e) => {
+                        tracing::error!("Failed to restore port allocations: {}", e);
+                        tracing::warn!("Skipping session proxy restoration to avoid port conflicts");
+                        false
+                    }
+                }
+            } else {
+                true // No ports to restore, safe to proceed
+            };
+
+            // Restore session proxies only if port allocations were successful
+            if port_allocation_success {
+                if let Err(e) = pm.restore_session_proxies(&sessions).await {
+                    tracing::error!("Failed to restore session proxies: {}", e);
+                    tracing::warn!("Existing sessions may not have network connectivity");
+                }
+            }
+        }
+
+        // Spawn both Unix socket and HTTP servers concurrently
+        let unix_socket_future = run_unix_socket_server(Arc::clone(&manager));
+        let http_future = run_http_server(Arc::clone(&manager), port, event_broadcaster);
 
         tracing::info!("Starting daemon with Unix socket and HTTP server on port {}", port);
 
@@ -116,6 +163,11 @@ pub async fn run_daemon_with_http(enable_proxy: bool, http_port: Option<u16>) ->
             }
         }
     } else {
+        let manager = Arc::new(session_manager);
+        tracing::info!("Session manager initialized");
+
+        // Spawn Unix socket server only
+        let unix_socket_future = run_unix_socket_server(Arc::clone(&manager));
         tracing::info!("Starting daemon with Unix socket only");
         unix_socket_future.await
     }
@@ -204,18 +256,16 @@ async fn run_unix_socket_server(manager: Arc<SessionManager>) -> anyhow::Result<
 }
 
 /// Run the HTTP server
-async fn run_http_server(manager: Arc<SessionManager>, port: u16) -> anyhow::Result<()> {
+async fn run_http_server(
+    manager: Arc<SessionManager>,
+    port: u16,
+    event_broadcaster: tokio::sync::broadcast::Sender<crate::api::protocol::Event>,
+) -> anyhow::Result<()> {
     use crate::api::http_server::create_router;
-    use crate::api::protocol::Event;
     use crate::api::ws_console::ws_console_handler;
     use crate::api::ws_events::ws_events_handler;
-    use tokio::sync::broadcast;
 
-    // Create broadcast channel for session events
-    // Capacity of 100 means we can buffer 100 events before oldest are dropped
-    let (event_broadcaster, _) = broadcast::channel::<Event>(100);
-
-    // Create state
+    // Create state with the provided event broadcaster
     let state = crate::api::http_server::AppState {
         session_manager: Arc::clone(&manager),
         event_broadcaster,
