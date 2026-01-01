@@ -2,6 +2,7 @@ pub mod app;
 pub mod attached;
 pub mod components;
 pub mod events;
+mod events_copy_mode;
 pub mod text_input;
 pub mod ui;
 

@@ -57,6 +57,22 @@ export interface CreateSessionRequest {
 	images?: string[];
 }
 
+/** Credential availability status */
+export interface CredentialStatus {
+	/** Human-readable credential name (e.g., "GitHub", "Anthropic") */
+	name: string;
+	/** Service identifier for updates (e.g., "github", "anthropic") */
+	service_id: string;
+	/** Whether the credential is available */
+	available: boolean;
+	/** Source of credential if available ("environment" or "file") */
+	source?: string;
+	/** Whether the credential is readonly (from environment) */
+	readonly: boolean;
+	/** Optional masked preview like "ghp_****...abc123" */
+	masked_value?: string;
+}
+
 /** Progress step during session creation */
 export interface ProgressStep {
 	/** Current step number (1-indexed) */
@@ -65,6 +81,18 @@ export interface ProgressStep {
 	total: number;
 	/** Description of current step */
 	message: string;
+}
+
+/** Proxy status information */
+export interface ProxyStatus {
+	/** Proxy name (e.g., "HTTP Auth Proxy", "Kubernetes Proxy") */
+	name: string;
+	/** Port number the proxy is running on */
+	port: number;
+	/** Whether the proxy is currently active */
+	active: boolean;
+	/** Proxy type ("global" or "session-specific") */
+	proxy_type: string;
 }
 
 /** Recent repository entry with timestamp */
@@ -169,6 +197,24 @@ export interface Session {
 	created_at: string;
 	/** When the session was last updated */
 	updated_at: string;
+}
+
+/** System status response including credentials and proxies */
+export interface SystemStatus {
+	/** List of credential statuses */
+	credentials: CredentialStatus[];
+	/** List of proxy statuses */
+	proxies: ProxyStatus[];
+	/** Total number of active sessions with proxies */
+	active_session_proxies: number;
+}
+
+/** Request to update a credential */
+export interface UpdateCredentialRequest {
+	/** Service identifier (e.g., "github", "anthropic") */
+	service_id: string;
+	/** The credential token/key value */
+	value: string;
 }
 
 /** Current state of an AI agent */

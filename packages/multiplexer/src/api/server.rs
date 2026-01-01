@@ -6,7 +6,7 @@ use uuid::Uuid;
 use crate::backends::{DockerBackend, DockerProxyConfig};
 use crate::core::SessionManager;
 use crate::proxy::{ProxyConfig, ProxyManager};
-use crate::store::SqliteStore;
+use crate::store::{SqliteStore, Store};
 use crate::utils::paths;
 
 use super::handlers::handle_request;
@@ -42,7 +42,7 @@ pub async fn run_daemon_with_http(enable_proxy: bool, http_port: Option<u16>) ->
     // Initialize the store
     tracing::debug!("Initializing database store...");
     let db_path = paths::database_path();
-    let store = Arc::new(SqliteStore::new(&db_path).await.map_err(|e| {
+    let store: Arc<dyn Store> = Arc::new(SqliteStore::new(&db_path).await.map_err(|e| {
         tracing::error!("Failed to initialize database at {:?}: {}", db_path, e);
         e
     })?);

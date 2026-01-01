@@ -20,8 +20,8 @@ pub fn render_terminal(buffer: &TerminalBuffer, area: Rect, buf: &mut Buffer) {
     let visible_rows = area.height.min(rows);
     let visible_cols = area.width.min(cols);
 
-    // Get scroll offset
-    let scroll_offset = buffer.get_scroll_offset();
+    // Note: scroll offset is handled by TerminalBuffer's set_scrollback() method
+    // which configures the vt100 parser's viewport, so we don't need to use it here
 
     // Render each cell
     // The vt100 parser's screen() method already returns the correct viewport

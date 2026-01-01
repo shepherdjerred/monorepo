@@ -8,20 +8,18 @@ const SCROLL_LINES_PER_PAGE: usize = 10;
 
 /// Handle keyboard input in copy mode
 pub async fn handle_copy_mode_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
-    let state = app.copy_mode_state.as_mut().expect("copy mode state");
+    // Get terminal bounds from the buffer first, before mutably borrowing copy_mode_state
+    let (max_rows, max_cols) = app.attached_pty_session()
+        .and_then(|pty_session| {
+            let buffer = pty_session.terminal_buffer();
+            buffer.try_lock().ok().map(|buf| {
+                let screen = buf.screen();
+                (screen.size().0, screen.size().1)
+            })
+        })
+        .unwrap_or(app.terminal_size);
 
-    // Get terminal bounds from the buffer
-    let (max_rows, max_cols) = if let Some(pty_session) = app.attached_pty_session() {
-        let buffer = pty_session.terminal_buffer();
-        if let Ok(buf) = buffer.try_lock() {
-            let screen = buf.screen();
-            (screen.size().0, screen.size().1)
-        } else {
-            app.terminal_size
-        }
-    } else {
-        app.terminal_size
-    };
+    let state = app.copy_mode_state.as_mut().expect("copy mode state");
 
     match key.code {
         // Exit copy mode
@@ -165,7 +163,7 @@ fn extract_text_between(
     if start.0 == end.0 {
         for col in start.1..=end.1 {
             if let Some(cell) = screen.cell(start.0, col) {
-                text.push_str(cell.contents());
+                text.push_str(&cell.contents());
             }
         }
         // Trim trailing whitespace for single line
@@ -176,7 +174,7 @@ fn extract_text_between(
         let mut line = String::new();
         for col in start.1..max_col {
             if let Some(cell) = screen.cell(start.0, col) {
-                line.push_str(cell.contents());
+                line.push_str(&cell.contents());
             }
         }
         text.push_str(line.trim_end());
@@ -187,7 +185,7 @@ fn extract_text_between(
             let mut line = String::new();
             for col in 0..max_col {
                 if let Some(cell) = screen.cell(row, col) {
-                    line.push_str(cell.contents());
+                    line.push_str(&cell.contents());
                 }
             }
             text.push_str(line.trim_end());
@@ -198,7 +196,7 @@ fn extract_text_between(
         let mut line = String::new();
         for col in 0..=end.1 {
             if let Some(cell) = screen.cell(end.0, col) {
-                line.push_str(cell.contents());
+                line.push_str(&cell.contents());
             }
         }
         text.push_str(line.trim_end());

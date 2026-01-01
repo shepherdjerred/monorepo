@@ -794,6 +794,7 @@ impl DockerBackend {
                 plan_mode: true, // Default to plan mode
                 session_proxy_port: None,
                 images: vec![],
+                dangerous_skip_checks: false,
             },
         )
         .await
