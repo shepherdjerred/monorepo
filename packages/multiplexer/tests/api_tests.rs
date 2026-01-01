@@ -216,6 +216,8 @@ fn test_print_mode_flows_to_docker_args() {
         print_mode,
         false, // plan_mode
         &[],   // images
+        None,  // git user name
+        None,  // git user email
     ).expect("Failed to build args");
 
     // The final command should contain --print --verbose
@@ -252,6 +254,8 @@ fn test_interactive_mode_no_print_flag_in_docker_args() {
         false, // interactive mode
         false, // plan_mode
         &[],   // images
+        None,  // git user name
+        None,  // git user email
     ).expect("Failed to build args");
 
     let cmd_arg = args.last().expect("Should have command argument");

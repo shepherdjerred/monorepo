@@ -7,6 +7,80 @@
 use multiplexer::backends::{DockerBackend, ZellijBackend};
 use std::path::PathBuf;
 
+/// Validate git user configuration is injected as environment variables
+#[test]
+fn test_git_config_env_vars() {
+    let args = DockerBackend::build_create_args(
+        "test-session",
+        &PathBuf::from("/workspace"),
+        "test prompt",
+        1000,
+        None,
+        false,
+        false,
+        &[],
+        Some("John Doe"),
+        Some("john@example.com"),
+    )
+    .expect("Failed to build args");
+
+    // Verify GIT_AUTHOR_NAME is set
+    assert!(
+        args.iter()
+            .any(|a| a == "GIT_AUTHOR_NAME=John Doe"),
+        "Expected GIT_AUTHOR_NAME env var"
+    );
+
+    // Verify GIT_COMMITTER_NAME is set
+    assert!(
+        args.iter()
+            .any(|a| a == "GIT_COMMITTER_NAME=John Doe"),
+        "Expected GIT_COMMITTER_NAME env var"
+    );
+
+    // Verify GIT_AUTHOR_EMAIL is set
+    assert!(
+        args.iter()
+            .any(|a| a == "GIT_AUTHOR_EMAIL=john@example.com"),
+        "Expected GIT_AUTHOR_EMAIL env var"
+    );
+
+    // Verify GIT_COMMITTER_EMAIL is set
+    assert!(
+        args.iter()
+            .any(|a| a == "GIT_COMMITTER_EMAIL=john@example.com"),
+        "Expected GIT_COMMITTER_EMAIL env var"
+    );
+}
+
+/// Validate git config is omitted when None
+#[test]
+fn test_git_config_omitted_when_none() {
+    let args = DockerBackend::build_create_args(
+        "test-session",
+        &PathBuf::from("/workspace"),
+        "test prompt",
+        1000,
+        None,
+        false,
+        false,
+        &[],
+        None,
+        None,
+    )
+    .expect("Failed to build args");
+
+    // Verify no GIT_* environment variables are set
+    assert!(
+        !args.iter().any(|a| a.starts_with("GIT_AUTHOR_")),
+        "Should not have GIT_AUTHOR_ env vars when config is None"
+    );
+    assert!(
+        !args.iter().any(|a| a.starts_with("GIT_COMMITTER_")),
+        "Should not have GIT_COMMITTER_ env vars when config is None"
+    );
+}
+
 /// Validate docker run argument structure follows correct order:
 /// docker run [OPTIONS] IMAGE [COMMAND] [ARG...]
 #[test]
@@ -20,6 +94,8 @@ fn test_docker_run_arg_order() {
         false, // print mode
         false, // plan mode
         &[],   // images
+        None,  // git user name
+        None,  // git user email
     ).expect("Failed to build args");
 
     // First arg must be "run"
@@ -69,6 +145,8 @@ fn test_docker_env_vars() {
         false, // print mode
         false, // plan mode
         &[],   // images
+        None,  // git user name
+        None,  // git user email
     ).expect("Failed to build args");
 
     // Find all -e flags and their values
@@ -173,6 +251,8 @@ fn test_volume_mount_format() {
         false, // print mode
         false, // plan mode
         &[],   // images
+        None,  // git user name
+        None,  // git user email
     ).expect("Failed to build args");
 
     // Find all -v flags and their values
@@ -223,6 +303,8 @@ fn test_workspace_mount_destination() {
         false, // print mode
         false, // plan mode
         &[],   // images
+        None,  // git user name
+        None,  // git user email
     ).expect("Failed to build args");
 
     // Find workspace volume mount
@@ -257,6 +339,8 @@ fn test_final_command_format() {
         false, // print mode
         false, // plan mode
         &[],   // images
+        None,  // git user name
+        None,  // git user email
     ).expect("Failed to build args");
 
     let final_cmd = args.last().unwrap();
