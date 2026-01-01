@@ -7,7 +7,7 @@ use crate::backends::{DockerBackend, ExecutionBackend, GitBackend, GitOperations
 use crate::store::Store;
 
 use super::events::{Event, EventType};
-use super::session::{BackendType, Session, SessionStatus};
+use super::session::{BackendType, CheckStatus, ClaudeWorkingStatus, Session, SessionStatus};
 
 /// Report of reconciliation between expected and actual state
 #[derive(Debug, Default, Clone)]
@@ -468,6 +468,171 @@ impl SessionManager {
             session_id = %session_id,
             mode = ?new_mode,
             "Updated session access mode"
+        );
+
+        Ok(())
+    }
+
+    /// Update Claude working status from hook message
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the session is not found or the store update fails.
+    pub async fn update_claude_status(
+        &self,
+        session_id: Uuid,
+        new_status: ClaudeWorkingStatus,
+    ) -> anyhow::Result<()> {
+        let mut sessions = self.sessions.write().await;
+        let session = sessions
+            .iter_mut()
+            .find(|s| s.id == session_id)
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {}", session_id))?;
+
+        let old_status = session.claude_status;
+
+        // Only update if status changed
+        if old_status == new_status {
+            return Ok(());
+        }
+
+        session.set_claude_status(new_status);
+        let session_clone = session.clone();
+        drop(sessions);
+
+        // Record event
+        let event = Event::new(
+            session_id,
+            EventType::ClaudeStatusChanged {
+                old_status,
+                new_status,
+            },
+        );
+        self.store.record_event(&event).await?;
+
+        // Update in store
+        self.store.save_session(&session_clone).await?;
+
+        tracing::debug!(
+            session_id = %session_id,
+            old = ?old_status,
+            new = ?new_status,
+            "Updated Claude working status"
+        );
+
+        Ok(())
+    }
+
+    /// Update PR check status
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the session is not found or the store update fails.
+    pub async fn update_pr_check_status(
+        &self,
+        session_id: Uuid,
+        new_status: CheckStatus,
+    ) -> anyhow::Result<()> {
+        let mut sessions = self.sessions.write().await;
+        let session = sessions
+            .iter_mut()
+            .find(|s| s.id == session_id)
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {}", session_id))?;
+
+        let old_status = session.pr_check_status;
+        session.set_check_status(new_status);
+        let session_clone = session.clone();
+        drop(sessions);
+
+        // Record event
+        let event = Event::new(
+            session_id,
+            EventType::CheckStatusChanged {
+                old_status,
+                new_status,
+            },
+        );
+        self.store.record_event(&event).await?;
+
+        // Update in store
+        self.store.save_session(&session_clone).await?;
+
+        tracing::debug!(
+            session_id = %session_id,
+            old = ?old_status,
+            new = ?new_status,
+            "Updated PR check status"
+        );
+
+        Ok(())
+    }
+
+    /// Send a prompt to a Claude session (for hotkey triggers)
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the session is not found, has no backend ID,
+    /// or the command execution fails.
+    pub async fn send_prompt_to_session(
+        &self,
+        id_or_name: &str,
+        prompt: &str,
+    ) -> anyhow::Result<()> {
+        let session = self
+            .get_session(id_or_name)
+            .await
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {}", id_or_name))?;
+
+        let backend_id = session
+            .backend_id
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("Session has no backend ID"))?;
+
+        match session.backend {
+            BackendType::Docker => {
+                // Send prompt via docker exec
+                let container_name = format!("mux-{}", backend_id);
+                // Escape single quotes in prompt
+                let escaped_prompt = prompt.replace('\'', "'\\''");
+                let output = tokio::process::Command::new("docker")
+                    .args([
+                        "exec",
+                        "-i",
+                        &container_name,
+                        "bash",
+                        "-c",
+                        &format!("echo '{}' | claude", escaped_prompt),
+                    ])
+                    .output()
+                    .await?;
+
+                if !output.status.success() {
+                    anyhow::bail!(
+                        "Failed to send prompt: {}",
+                        String::from_utf8_lossy(&output.stderr)
+                    );
+                }
+            }
+            BackendType::Zellij => {
+                // Send prompt via zellij write
+                let output = tokio::process::Command::new("zellij")
+                    .args(["action", "write-chars", prompt, "-s", backend_id])
+                    .output()
+                    .await?;
+
+                if !output.status.success() {
+                    anyhow::bail!(
+                        "Failed to send prompt: {}",
+                        String::from_utf8_lossy(&output.stderr)
+                    );
+                }
+            }
+        }
+
+        tracing::info!(
+            session = %id_or_name,
+            prompt_len = prompt.len(),
+            "Sent prompt to session"
         );
 
         Ok(())

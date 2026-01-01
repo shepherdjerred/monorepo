@@ -39,6 +39,12 @@ pub enum Request {
 
     /// Get recent repositories
     GetRecentRepos,
+
+    /// Send a prompt to a session (for hotkey triggers)
+    SendPrompt { session: String, prompt: String },
+
+    /// Get session ID by name (for hook scripts)
+    GetSessionIdByName { name: String },
 }
 
 /// Recent repository entry with timestamp
@@ -154,6 +160,12 @@ pub enum Response {
 
     /// Access mode updated successfully
     AccessModeUpdated,
+
+    /// Session ID returned
+    SessionId { session_id: String },
+
+    /// Generic success response
+    Ok,
 
     /// Error response
     Error { code: String, message: String },
