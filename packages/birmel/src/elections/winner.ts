@@ -40,8 +40,11 @@ export function determineWinner(
 		.map(([persona, _]) => persona);
 
 	if (tiedCandidates.length > 1) {
+		// Select a random winner from tied candidates
+		const randomIndex = Math.floor(Math.random() * tiedCandidates.length);
+		const randomWinner = tiedCandidates[randomIndex] ?? tiedCandidates[0] ?? "jerred";
 		return {
-			winner: null,
+			winner: randomWinner,
 			isTie: true,
 			tiedCandidates,
 			voteCounts,

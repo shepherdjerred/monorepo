@@ -250,29 +250,26 @@ export async function processElectionResults(): Promise<void> {
 
 				const results = determineWinner(pollResults.data.answers);
 
-				// Handle tie - create runoff
+				// Handle tie - announce and use random winner
 				if (results.isTie) {
-					await updateElectionStatus(election.id, "completed", {
-						actualEnd: new Date(),
-						voteCounts: JSON.stringify(results.voteCounts),
-					});
+					const client = getDiscordClient();
+					const channel = await client.channels.fetch(election.channelId);
+					if (channel?.isTextBased()) {
+						const tiedNames = results.tiedCandidates
+							.map((name) => name.charAt(0).toUpperCase() + name.slice(1))
+							.join(", ");
+						const winnerName = (results.winner ?? "jerred").charAt(0).toUpperCase() + (results.winner ?? "jerred").slice(1);
+						await channel.send(
+							`🎲 **It's a tie!** ${tiedNames} each received ${results.voteCounts[results.tiedCandidates[0] ?? ""] ?? 0} votes. ` +
+							`A random winner has been selected: **${winnerName}**! 🎉`
+						);
+					}
 
-					// Create runoff poll
-					const runoffEnd = new Date(Date.now() + 2 * 60 * 60 * 1000);
-					await createElectionPoll({
-						guildId: election.guildId,
-						channelId: election.channelId,
-						pollType: "runoff",
-						scheduledStart: new Date(),
-						scheduledEnd: runoffEnd,
-						candidates: results.tiedCandidates,
-					});
-
-					logger.info("Runoff created", {
+					logger.info("Tie resolved with random winner", {
 						guildId: election.guildId,
 						tiedCandidates: results.tiedCandidates,
+						randomWinner: results.winner,
 					});
-					continue;
 				}
 
 				// Update guild owner
