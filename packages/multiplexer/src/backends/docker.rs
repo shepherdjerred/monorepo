@@ -454,6 +454,9 @@ impl DockerBackend {
         // which would fail with our fake tokens. The env var path skips this validation.
 
         // Determine config directory - use proxy mux_dir if available, otherwise create temp dir
+        // Note: When proxy is disabled, we create a temp directory for the session config.
+        // These temp directories persist after container deletion and are cleaned up by the OS.
+        // This is acceptable since the files are tiny (just .claude.json) and sessions are infrequent.
         let config_dir = if let Some(proxy) = proxy_config {
             proxy.mux_dir.clone()
         } else {
@@ -497,7 +500,10 @@ impl DockerBackend {
 
             // Proxy-specific configuration (only when proxy is enabled)
             if let Some(proxy) = proxy_config {
-                // Write managed settings file to suppress permission warning
+                // Write managed settings file for proxy environments
+                // Note: managed-settings.json is only created when proxy is enabled because it's
+                // part of the proxy infrastructure that requires elevated permissions.
+                // For non-proxy users, .claude.json with bypassPermissionsModeAccepted is sufficient.
                 let managed_settings_path = config_dir.join("managed-settings.json");
                 let managed_settings = r#"{
   "permissions": {

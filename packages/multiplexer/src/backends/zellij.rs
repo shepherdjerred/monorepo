@@ -120,6 +120,10 @@ impl ExecutionBackend for ZellijBackend {
         }
 
         // Run Claude in the session
+        // Note: Unlike Docker backend, Zellij doesn't create .claude.json config files.
+        // Zellij sessions run in the host environment with the user's existing Claude config,
+        // so there's no need to mount or create additional config files. The bypass permissions
+        // flag is controlled purely through the --dangerously-skip-permissions command-line argument.
         let pane_args = Self::build_new_pane_args(
             workdir,
             initial_prompt,
