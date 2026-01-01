@@ -25,14 +25,36 @@ async function getBrowser(): Promise<Browser> {
   }
 
   logger.info("Launching Chromium browser");
-  browserInstance = await chromium.launch({
-    headless: config.browser.headless,
-    args: config.browser.userAgent
-      ? [`--user-agent=${config.browser.userAgent}`]
-      : [],
-  });
 
-  return browserInstance;
+  try {
+    // Build launch args - include Docker-safe flags for running in containers
+    const launchArgs = [
+      // Required for running Chromium in Docker containers without privileged mode
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      // Disable GPU hardware acceleration (not available in headless containers)
+      '--disable-gpu',
+      '--disable-dev-shm-usage', // Overcome limited resource problems in Docker
+    ];
+
+    // Add user agent if configured
+    if (config.browser.userAgent) {
+      launchArgs.push(`--user-agent=${config.browser.userAgent}`);
+    }
+
+    logger.info("Chromium launch args", { args: launchArgs, headless: config.browser.headless });
+
+    browserInstance = await chromium.launch({
+      headless: config.browser.headless,
+      args: launchArgs,
+    });
+
+    logger.info("Chromium browser launched successfully");
+    return browserInstance;
+  } catch (error) {
+    logger.error("Failed to launch Chromium browser", { error });
+    throw error;
+  }
 }
 
 async function getPage(): Promise<Page> {
@@ -43,16 +65,22 @@ async function getPage(): Promise<Page> {
   const browser = await getBrowser();
   const config = getConfig();
 
-  logger.info("Creating new browser page");
-  currentPage = await browser.newPage({
-    viewport: {
-      width: config.browser.viewportWidth,
-      height: config.browser.viewportHeight,
-    },
-    ...(config.browser.userAgent ? { userAgent: config.browser.userAgent } : {}),
-  });
+  try {
+    logger.info("Creating new browser page");
+    currentPage = await browser.newPage({
+      viewport: {
+        width: config.browser.viewportWidth,
+        height: config.browser.viewportHeight,
+      },
+      ...(config.browser.userAgent ? { userAgent: config.browser.userAgent } : {}),
+    });
 
-  return currentPage;
+    logger.info("Browser page created successfully");
+    return currentPage;
+  } catch (error) {
+    logger.error("Failed to create browser page", { error });
+    throw error;
+  }
 }
 
 function resetSessionTimeout(): void {
