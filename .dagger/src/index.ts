@@ -205,13 +205,19 @@ export class Monorepo {
     await container.sync();
     outputs.push("✓ Prisma setup");
 
-    // Run build FIRST, then typecheck
-    // Build must run first because workspace packages (@mux/client, @mux/frontend)
-    // depend on @mux/shared's dist/ for type declarations
+    // Build web packages in dependency order first
+    // Bun's --filter runs packages in parallel, which breaks when packages depend on
+    // each other's dist/ output for type declarations
+    await container.withExec(["bun", "run", "--filter", "@mux/shared", "build"]).sync();
+    await container.withExec(["bun", "run", "--filter", "@mux/client", "build"]).sync();
+    await container.withExec(["bun", "run", "--filter", "@mux/frontend", "build"]).sync();
+
+    // Now build remaining packages (web packages already built, will be skipped or fast)
     // Note: Skip tests here - bun-decompile tests fail in CI (requires `bun build --compile`)
-    // Individual package tests will run in the birmelCi() call below
     await container.withExec(["bun", "run", "build"]).sync();
     outputs.push("✓ Build");
+
+    // Typecheck all packages
     await container.withExec(["bun", "run", "typecheck"]).sync();
     outputs.push("✓ Typecheck");
 
