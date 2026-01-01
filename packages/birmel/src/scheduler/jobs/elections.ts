@@ -255,7 +255,7 @@ export async function processElectionResults(): Promise<void> {
 				if (results.isTie) {
 					const client = getDiscordClient();
 					const channel = await client.channels.fetch(election.channelId);
-					if (channel?.isTextBased()) {
+					if (channel?.isTextBased() && "send" in channel) {
 						const tiedNames = results.tiedCandidates
 							.map((name) => name.charAt(0).toUpperCase() + name.slice(1))
 							.join(", ");
