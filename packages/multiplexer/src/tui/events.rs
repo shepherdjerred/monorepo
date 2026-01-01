@@ -686,18 +686,18 @@ async fn handle_attached_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()>
         app.send_to_pty(vec![pending_byte]).await?;
     }
 
-    // Reset scroll position on any regular input (auto-scroll to bottom)
-    if let Some(pty_session) = app.attached_pty_session() {
-        let buffer = pty_session.terminal_buffer();
-        if let Ok(mut buf) = buffer.try_lock() {
-            buf.scroll_to_bottom();
-        }
-        // Silently ignore lock failures for scroll-to-bottom as it's non-critical
-    }
-
     // Encode the key and send to PTY
     let encoded = encode_key(&key);
     if !encoded.is_empty() {
+        // Reset scroll position when sending input to PTY (auto-scroll to bottom)
+        // This ensures scrollback isn't disrupted when reviewing history with scroll keys
+        if let Some(pty_session) = app.attached_pty_session() {
+            let buffer = pty_session.terminal_buffer();
+            if let Ok(mut buf) = buffer.try_lock() {
+                buf.scroll_to_bottom();
+            }
+            // Silently ignore lock failures for scroll-to-bottom as it's non-critical
+        }
         app.send_to_pty(encoded).await?;
     }
 
