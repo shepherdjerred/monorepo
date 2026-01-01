@@ -3,8 +3,10 @@
 use std::future::Future;
 use std::net::SocketAddr;
 use std::sync::Arc;
+use std::time::Instant;
 
-use chrono::Utc;
+use chrono::{DateTime, Utc};
+use dashmap::DashMap;
 use hudsucker::certificate_authority::RcgenAuthority;
 use hudsucker::hyper::{Request, Response};
 use hudsucker::{Body, HttpContext, HttpHandler, Proxy, RequestOrResponse};
@@ -87,6 +89,7 @@ impl HttpAuthProxy {
                 access_mode: session_ctx.access_mode,
                 credentials: self.credentials,
                 audit_logger: self.audit_logger,
+                request_tracker: Arc::new(DashMap::new()),
             };
 
             let proxy = Proxy::builder()
@@ -101,6 +104,7 @@ impl HttpAuthProxy {
             let handler = AuthInjector {
                 credentials: self.credentials,
                 audit_logger: self.audit_logger,
+                request_tracker: Arc::new(DashMap::new()),
             };
 
             let proxy = Proxy::builder()
@@ -120,6 +124,20 @@ impl HttpAuthProxy {
         self.addr
     }
 }
+
+/// Pending request data for timing correlation.
+#[derive(Debug, Clone)]
+struct PendingRequest {
+    start_time: Instant,
+    timestamp: DateTime<Utc>,
+    service: String,
+    method: String,
+    path: String,
+    auth_injected: bool,
+}
+
+/// Shared request tracking for timing measurements.
+type RequestTracker = Arc<DashMap<Uuid, PendingRequest>>;
 
 /// Classify proxy errors into specific types for debugging.
 fn classify_proxy_error(err: &hudsucker::Error) -> &'static str {
@@ -155,6 +173,7 @@ fn build_error_response(error_type: &'static str) -> Response<Body> {
 struct AuthInjector {
     credentials: Arc<Credentials>,
     audit_logger: Arc<AuditLogger>,
+    request_tracker: RequestTracker,
 }
 
 impl HttpHandler for AuthInjector {
@@ -164,9 +183,13 @@ impl HttpHandler for AuthInjector {
         mut req: Request<Body>,
     ) -> impl Future<Output = RequestOrResponse> + Send {
         let credentials = Arc::clone(&self.credentials);
-        let audit_logger = Arc::clone(&self.audit_logger);
+        let request_tracker = Arc::clone(&self.request_tracker);
 
         async move {
+            let request_id = Uuid::new_v4();
+            let start_time = Instant::now();
+            let timestamp = Utc::now();
+
             // Get host from URI or Host header
             let host = req
                 .uri()
@@ -185,6 +208,7 @@ impl HttpHandler for AuthInjector {
             let version = req.version();
 
             tracing::debug!(
+                request_id = %request_id,
                 host = %host,
                 method = %method,
                 path = %path,
@@ -231,19 +255,18 @@ impl HttpHandler for AuthInjector {
                 }
             }
 
-            // Log to audit
-            let entry = AuditEntry {
-                timestamp: Utc::now(),
-                service: host,
-                method,
-                path,
-                auth_injected,
-                response_code: None, // Will be filled in handle_response if needed
-                duration_ms: 0,      // Request processing time only (not end-to-end)
-            };
-            if let Err(e) = audit_logger.log(&entry) {
-                tracing::warn!("Failed to write audit log entry: {}", e);
-            }
+            // Store request metadata for timing correlation
+            request_tracker.insert(
+                request_id,
+                PendingRequest {
+                    start_time,
+                    timestamp,
+                    service: host,
+                    method,
+                    path,
+                    auth_injected,
+                },
+            );
 
             RequestOrResponse::Request(req)
         }
@@ -259,15 +282,58 @@ impl HttpHandler for AuthInjector {
             .host()
             .map(String::from)
             .unwrap_or_else(|| String::from("unknown"));
+        let method = ctx.method.to_string();
+        let path = ctx.uri.path().to_string();
+        let request_tracker = Arc::clone(&self.request_tracker);
+        let audit_logger = Arc::clone(&self.audit_logger);
 
         async move {
             let status = res.status();
 
-            tracing::debug!(
-                host = %host,
-                status = %status,
-                "Response received from upstream"
-            );
+            // Find and remove matching pending request
+            let pending = request_tracker
+                .iter()
+                .find(|entry| {
+                    let req = entry.value();
+                    req.service == host && req.method == method && req.path == path
+                })
+                .map(|entry| (*entry.key(), entry.value().clone()));
+
+            if let Some((request_id, pending)) = pending {
+                request_tracker.remove(&request_id);
+
+                let duration_ms = pending.start_time.elapsed().as_millis() as u64;
+
+                tracing::debug!(
+                    request_id = %request_id,
+                    host = %host,
+                    status = %status,
+                    duration_ms = duration_ms,
+                    "Response received from upstream"
+                );
+
+                // Log complete audit entry with timing
+                let entry = AuditEntry {
+                    timestamp: pending.timestamp,
+                    service: pending.service,
+                    method: pending.method,
+                    path: pending.path,
+                    auth_injected: pending.auth_injected,
+                    response_code: Some(status.as_u16()),
+                    duration_ms,
+                };
+
+                if let Err(e) = audit_logger.log(&entry) {
+                    tracing::warn!("Failed to write audit log entry: {}", e);
+                }
+            } else {
+                // No matching request found (shouldn't happen in normal operation)
+                tracing::warn!(
+                    host = %host,
+                    status = %status,
+                    "Response received but no matching request found"
+                );
+            }
 
             // Log warning for server errors
             if status.is_server_error() {
@@ -293,18 +359,62 @@ impl HttpHandler for AuthInjector {
             .map(String::from)
             .unwrap_or_else(|| String::from("unknown"));
         let method = ctx.method.to_string();
+        let path = ctx.uri.path().to_string();
+        let request_tracker = Arc::clone(&self.request_tracker);
+        let audit_logger = Arc::clone(&self.audit_logger);
 
         async move {
             let error_type = classify_proxy_error(&err);
 
-            // Log full error details for debugging (not sent to client)
-            tracing::error!(
-                host = %host,
-                method = %method,
-                error_type = error_type,
-                error = %err,
-                "Proxy error while handling request"
-            );
+            // Find and remove matching pending request
+            let pending = request_tracker
+                .iter()
+                .find(|entry| {
+                    let req = entry.value();
+                    req.service == host && req.method == method && req.path == path
+                })
+                .map(|entry| (*entry.key(), entry.value().clone()));
+
+            if let Some((request_id, pending)) = pending {
+                request_tracker.remove(&request_id);
+
+                let duration_ms = pending.start_time.elapsed().as_millis() as u64;
+
+                // Log full error details for debugging (not sent to client)
+                tracing::error!(
+                    request_id = %request_id,
+                    host = %host,
+                    method = %method,
+                    error_type = error_type,
+                    duration_ms = duration_ms,
+                    error = %err,
+                    "Proxy error while handling request"
+                );
+
+                // Log audit entry for failed request
+                let entry = AuditEntry {
+                    timestamp: pending.timestamp,
+                    service: pending.service,
+                    method: pending.method,
+                    path: pending.path,
+                    auth_injected: pending.auth_injected,
+                    response_code: Some(502), // Proxy error
+                    duration_ms,
+                };
+
+                if let Err(e) = audit_logger.log(&entry) {
+                    tracing::warn!("Failed to write audit log entry: {}", e);
+                }
+            } else {
+                // No matching request found
+                tracing::error!(
+                    host = %host,
+                    method = %method,
+                    error_type = error_type,
+                    error = %err,
+                    "Proxy error while handling request (no matching request found)"
+                );
+            }
 
             // Return error response (only error_type, not full error details)
             build_error_response(error_type)
@@ -319,6 +429,7 @@ struct FilteringHandler {
     access_mode: Arc<RwLock<AccessMode>>,
     credentials: Arc<Credentials>,
     audit_logger: Arc<AuditLogger>,
+    request_tracker: RequestTracker,
 }
 
 impl HttpHandler for FilteringHandler {
@@ -330,9 +441,13 @@ impl HttpHandler for FilteringHandler {
         let session_id = self.session_id;
         let access_mode = Arc::clone(&self.access_mode);
         let credentials = Arc::clone(&self.credentials);
-        let audit_logger = Arc::clone(&self.audit_logger);
+        let request_tracker = Arc::clone(&self.request_tracker);
 
         async move {
+            let request_id = Uuid::new_v4();
+            let start_time = Instant::now();
+            let timestamp = Utc::now();
+
             // Check access mode and filter write operations
             let current_mode = *access_mode.read().await;
             if current_mode == AccessMode::ReadOnly && is_write_operation(req.method()) {
@@ -369,6 +484,7 @@ impl HttpHandler for FilteringHandler {
             let version = req.version();
 
             tracing::debug!(
+                request_id = %request_id,
                 session_id = %session_id,
                 host = %host,
                 method = %method,
@@ -414,19 +530,18 @@ impl HttpHandler for FilteringHandler {
                 }
             }
 
-            // Log to audit
-            let entry = AuditEntry {
-                timestamp: Utc::now(),
-                service: host,
-                method,
-                path,
-                auth_injected,
-                response_code: None,
-                duration_ms: 0, // Request processing time only (not end-to-end)
-            };
-            if let Err(e) = audit_logger.log(&entry) {
-                tracing::warn!("Failed to write audit log entry: {}", e);
-            }
+            // Store request metadata for timing correlation
+            request_tracker.insert(
+                request_id,
+                PendingRequest {
+                    start_time,
+                    timestamp,
+                    service: host,
+                    method,
+                    path,
+                    auth_injected,
+                },
+            );
 
             RequestOrResponse::Request(req)
         }
@@ -443,16 +558,60 @@ impl HttpHandler for FilteringHandler {
             .host()
             .map(String::from)
             .unwrap_or_else(|| String::from("unknown"));
+        let method = ctx.method.to_string();
+        let path = ctx.uri.path().to_string();
+        let request_tracker = Arc::clone(&self.request_tracker);
+        let audit_logger = Arc::clone(&self.audit_logger);
 
         async move {
             let status = res.status();
 
-            tracing::debug!(
-                session_id = %session_id,
-                host = %host,
-                status = %status,
-                "Response received from upstream"
-            );
+            // Find and remove matching pending request
+            let pending = request_tracker
+                .iter()
+                .find(|entry| {
+                    let req = entry.value();
+                    req.service == host && req.method == method && req.path == path
+                })
+                .map(|entry| (*entry.key(), entry.value().clone()));
+
+            if let Some((request_id, pending)) = pending {
+                request_tracker.remove(&request_id);
+
+                let duration_ms = pending.start_time.elapsed().as_millis() as u64;
+
+                tracing::debug!(
+                    request_id = %request_id,
+                    session_id = %session_id,
+                    host = %host,
+                    status = %status,
+                    duration_ms = duration_ms,
+                    "Response received from upstream"
+                );
+
+                // Log complete audit entry with timing
+                let entry = AuditEntry {
+                    timestamp: pending.timestamp,
+                    service: pending.service,
+                    method: pending.method,
+                    path: pending.path,
+                    auth_injected: pending.auth_injected,
+                    response_code: Some(status.as_u16()),
+                    duration_ms,
+                };
+
+                if let Err(e) = audit_logger.log(&entry) {
+                    tracing::warn!("Failed to write audit log entry: {}", e);
+                }
+            } else {
+                // No matching request found (shouldn't happen in normal operation)
+                tracing::warn!(
+                    session_id = %session_id,
+                    host = %host,
+                    status = %status,
+                    "Response received but no matching request found"
+                );
+            }
 
             // Log warning for server errors
             if status.is_server_error() {
@@ -480,19 +639,64 @@ impl HttpHandler for FilteringHandler {
             .map(String::from)
             .unwrap_or_else(|| String::from("unknown"));
         let method = ctx.method.to_string();
+        let path = ctx.uri.path().to_string();
+        let request_tracker = Arc::clone(&self.request_tracker);
+        let audit_logger = Arc::clone(&self.audit_logger);
 
         async move {
             let error_type = classify_proxy_error(&err);
 
-            // Log full error details for debugging (not sent to client)
-            tracing::error!(
-                session_id = %session_id,
-                host = %host,
-                method = %method,
-                error_type = error_type,
-                error = %err,
-                "Proxy error while handling request"
-            );
+            // Find and remove matching pending request
+            let pending = request_tracker
+                .iter()
+                .find(|entry| {
+                    let req = entry.value();
+                    req.service == host && req.method == method && req.path == path
+                })
+                .map(|entry| (*entry.key(), entry.value().clone()));
+
+            if let Some((request_id, pending)) = pending {
+                request_tracker.remove(&request_id);
+
+                let duration_ms = pending.start_time.elapsed().as_millis() as u64;
+
+                // Log full error details for debugging (not sent to client)
+                tracing::error!(
+                    request_id = %request_id,
+                    session_id = %session_id,
+                    host = %host,
+                    method = %method,
+                    error_type = error_type,
+                    duration_ms = duration_ms,
+                    error = %err,
+                    "Proxy error while handling request"
+                );
+
+                // Log audit entry for failed request
+                let entry = AuditEntry {
+                    timestamp: pending.timestamp,
+                    service: pending.service,
+                    method: pending.method,
+                    path: pending.path,
+                    auth_injected: pending.auth_injected,
+                    response_code: Some(502), // Proxy error
+                    duration_ms,
+                };
+
+                if let Err(e) = audit_logger.log(&entry) {
+                    tracing::warn!("Failed to write audit log entry: {}", e);
+                }
+            } else {
+                // No matching request found
+                tracing::error!(
+                    session_id = %session_id,
+                    host = %host,
+                    method = %method,
+                    error_type = error_type,
+                    error = %err,
+                    "Proxy error while handling request (no matching request found)"
+                );
+            }
 
             // Return error response (only error_type, not full error details)
             build_error_response(error_type)
