@@ -428,6 +428,8 @@ impl ProxyManager {
                     "Failed to restore session proxy - port may be in use"
                 );
                 task.abort();
+                // Release the port to prevent leaking it
+                self.port_allocator.release(port).await;
                 skipped += 1;
                 continue;
             }

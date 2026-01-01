@@ -112,17 +112,26 @@ pub async fn run_daemon_with_http(enable_proxy: bool, http_port: Option<u16>) ->
             .collect();
 
         // Restore port allocations in PortAllocator
-        if !port_allocations.is_empty() {
-            if let Err(e) = pm.port_allocator().restore_allocations(port_allocations).await {
-                tracing::error!("Failed to restore port allocations: {}", e);
-                tracing::warn!("New sessions may experience port conflicts");
+        // This must succeed before we attempt to restore session proxies to avoid state inconsistency
+        let port_allocation_success = if !port_allocations.is_empty() {
+            match pm.port_allocator().restore_allocations(port_allocations).await {
+                Ok(()) => true,
+                Err(e) => {
+                    tracing::error!("Failed to restore port allocations: {}", e);
+                    tracing::warn!("Skipping session proxy restoration to avoid port conflicts");
+                    false
+                }
             }
-        }
+        } else {
+            true // No ports to restore, safe to proceed
+        };
 
-        // Restore session proxies (creates new proxy tasks on allocated ports)
-        if let Err(e) = pm.restore_session_proxies(&sessions).await {
-            tracing::error!("Failed to restore session proxies: {}", e);
-            tracing::warn!("Existing sessions may not have network connectivity");
+        // Restore session proxies only if port allocations were successful
+        if port_allocation_success {
+            if let Err(e) = pm.restore_session_proxies(&sessions).await {
+                tracing::error!("Failed to restore session proxies: {}", e);
+                tracing::warn!("Existing sessions may not have network connectivity");
+            }
         }
     }
 
