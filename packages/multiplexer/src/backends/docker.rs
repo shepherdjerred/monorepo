@@ -4,9 +4,20 @@ use tokio::process::Command;
 
 use super::traits::ExecutionBackend;
 
+/// Sanitize git config value to prevent environment variable injection
+///
+/// Removes newlines and other control characters that could be used for injection attacks
+fn sanitize_git_config_value(value: &str) -> String {
+    value
+        .chars()
+        .filter(|c| !c.is_control() || *c == '\t')
+        .collect()
+}
+
 /// Read git user configuration from the host system
 ///
 /// Returns (user.name, user.email) if available from git config
+/// Values are sanitized to prevent environment variable injection
 async fn read_git_user_config() -> (Option<String>, Option<String>) {
     let name = Command::new("git")
         .args(["config", "--get", "user.name"])
@@ -17,7 +28,7 @@ async fn read_git_user_config() -> (Option<String>, Option<String>) {
             if output.status.success() {
                 String::from_utf8(output.stdout)
                     .ok()
-                    .map(|s| s.trim().to_string())
+                    .map(|s| sanitize_git_config_value(s.trim()))
                     .filter(|s| !s.is_empty())
             } else {
                 None
@@ -33,7 +44,7 @@ async fn read_git_user_config() -> (Option<String>, Option<String>) {
             if output.status.success() {
                 String::from_utf8(output.stdout)
                     .ok()
-                    .map(|s| s.trim().to_string())
+                    .map(|s| sanitize_git_config_value(s.trim()))
                     .filter(|s| !s.is_empty())
             } else {
                 None
@@ -711,6 +722,8 @@ mod tests {
             false, // interactive mode
             false, // plan mode
             &[],   // no images
+            None,  // git user name
+            None,  // git user email
         ).expect("Failed to build args");
 
         // Must have -dit for interactive TTY sessions
@@ -723,6 +736,43 @@ mod tests {
             !args.contains(&"-d".to_string()),
             "Should not use -d alone, need -dit for interactive sessions"
         );
+    }
+
+    /// Test sanitization of git config values to prevent injection attacks
+    #[test]
+    fn test_sanitize_git_config_removes_newlines() {
+        // Test newline injection attempt
+        let malicious = "John Doe\nGIT_EVIL=injected";
+        let sanitized = sanitize_git_config_value(malicious);
+        assert_eq!(sanitized, "John DoeGIT_EVIL=injected");
+        assert!(!sanitized.contains('\n'));
+    }
+
+    #[test]
+    fn test_sanitize_git_config_removes_control_chars() {
+        // Test various control characters
+        let malicious = "user\x00name\x01with\x02control";
+        let sanitized = sanitize_git_config_value(malicious);
+        assert!(!sanitized.contains('\x00'));
+        assert!(!sanitized.contains('\x01'));
+        assert!(!sanitized.contains('\x02'));
+        assert_eq!(sanitized, "usernamewithcontrol");
+    }
+
+    #[test]
+    fn test_sanitize_git_config_preserves_tabs() {
+        // Tabs should be preserved as they're valid in names
+        let with_tab = "John\tDoe";
+        let sanitized = sanitize_git_config_value(with_tab);
+        assert_eq!(sanitized, "John\tDoe");
+    }
+
+    #[test]
+    fn test_sanitize_git_config_preserves_normal_chars() {
+        // Normal characters should pass through
+        let normal = "John Doe <john@example.com>";
+        let sanitized = sanitize_git_config_value(normal);
+        assert_eq!(sanitized, normal);
     }
 
     /// Test that docker run includes --user flag with non-root UID
