@@ -205,6 +205,22 @@ export class Monorepo {
     await container.sync();
     outputs.push("✓ Prisma setup");
 
+    // Build Rust multiplexer FIRST to generate TypeScript types via typeshare
+    // The web packages depend on these generated types
+    outputs.push("\n--- Multiplexer (Rust) ---");
+    const rustContainer = getRustContainer(source);
+    // Only need cargo build to generate types - full multiplexerCi runs fmt/clippy/test which take longer
+    await rustContainer.withExec(["cargo", "build"]).sync();
+    outputs.push("✓ Rust build (types generated)");
+
+    // Copy generated TypeScript types from Rust build to web workspace
+    const generatedTypes = rustContainer
+      .directory("/workspace/web/shared/src/generated");
+    container = container
+      .withDirectory("/workspace/packages/multiplexer/web/shared/src/generated", generatedTypes);
+    await container.sync();
+    outputs.push("✓ TypeScript types copied");
+
     // Build web packages in dependency order first
     // Bun's --filter runs packages in parallel, which breaks when packages depend on
     // each other's dist/ output for type declarations
