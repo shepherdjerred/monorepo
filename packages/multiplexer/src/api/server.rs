@@ -1,6 +1,7 @@
 use std::sync::Arc;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::{UnixListener, UnixStream};
+use uuid::Uuid;
 
 use crate::backends::{DockerBackend, DockerProxyConfig};
 use crate::core::SessionManager;
@@ -96,6 +97,43 @@ pub async fn run_daemon_with_http(enable_proxy: bool, http_port: Option<u16>) ->
         })?)
     };
     tracing::info!("Session manager initialized");
+
+    // Restore session proxies for active sessions (if proxy manager is enabled)
+    if let Some(ref pm) = proxy_manager {
+        tracing::info!("Restoring session proxies for active sessions...");
+
+        // Get all sessions from database
+        let sessions = manager.list_sessions().await;
+
+        // Extract port allocations for PortAllocator restoration
+        let port_allocations: Vec<(u16, Uuid)> = sessions
+            .iter()
+            .filter_map(|s| s.proxy_port.map(|port| (port, s.id)))
+            .collect();
+
+        // Restore port allocations in PortAllocator
+        // This must succeed before we attempt to restore session proxies to avoid state inconsistency
+        let port_allocation_success = if !port_allocations.is_empty() {
+            match pm.port_allocator().restore_allocations(port_allocations).await {
+                Ok(()) => true,
+                Err(e) => {
+                    tracing::error!("Failed to restore port allocations: {}", e);
+                    tracing::warn!("Skipping session proxy restoration to avoid port conflicts");
+                    false
+                }
+            }
+        } else {
+            true // No ports to restore, safe to proceed
+        };
+
+        // Restore session proxies only if port allocations were successful
+        if port_allocation_success {
+            if let Err(e) = pm.restore_session_proxies(&sessions).await {
+                tracing::error!("Failed to restore session proxies: {}", e);
+                tracing::warn!("Existing sessions may not have network connectivity");
+            }
+        }
+    }
 
     // Spawn both Unix socket and HTTP servers concurrently
     let unix_socket_future = run_unix_socket_server(Arc::clone(&manager));
