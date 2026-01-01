@@ -1,0 +1,245 @@
+import { WebSocketError } from "./errors.js";
+
+/**
+ * Message received from the console WebSocket
+ */
+type ConsoleMessage = {
+  type: string;
+  data?: string;
+};
+
+/**
+ * Configuration for ConsoleClient
+ */
+export type ConsoleClientConfig = {
+  /**
+   * Base WebSocket URL (without the session ID)
+   * Defaults to deriving from window.location in browser context
+   */
+  baseUrl?: string;
+}
+
+/**
+ * Get the default WebSocket base URL based on the current environment.
+ * In browser context, derives from window.location.
+ * In non-browser context, defaults to localhost:3030.
+ */
+function getDefaultWsBaseUrl(): string {
+  if (typeof window !== "undefined") {
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    return `${protocol}//${window.location.host}/ws/console`;
+  }
+  return "ws://localhost:3030/ws/console";
+}
+
+/**
+ * WebSocket client for terminal console streaming
+ */
+export class ConsoleClient {
+  private ws: WebSocket | null = null;
+  private readonly baseUrl: string;
+  private sessionId: string | null = null;
+
+  private listeners: {
+    connected: (() => void)[];
+    disconnected: (() => void)[];
+    data: ((data: string) => void)[];
+    error: ((error: Error) => void)[];
+  } = {
+    connected: [],
+    disconnected: [],
+    data: [],
+    error: [],
+  };
+
+  constructor(config: ConsoleClientConfig = {}) {
+    this.baseUrl = config.baseUrl ?? getDefaultWsBaseUrl();
+  }
+
+  /**
+   * Connect to a session's console
+   */
+  connect(sessionId: string): void {
+    if (this.ws?.readyState === WebSocket.OPEN) {
+      this.disconnect();
+    }
+
+    this.sessionId = sessionId;
+    const url = `${this.baseUrl}/${encodeURIComponent(sessionId)}`;
+
+    try {
+      this.ws = new WebSocket(url);
+
+      this.ws.onopen = () => {
+        this.emit("connected");
+      };
+
+      this.ws.onclose = () => {
+        this.emit("disconnected");
+      };
+
+      this.ws.onerror = (event) => {
+        this.emit("error", new WebSocketError("WebSocket error occurred", event));
+      };
+
+      this.ws.onmessage = (event: MessageEvent<string>) => {
+        try {
+          const message = JSON.parse(event.data) as ConsoleMessage;
+
+          if (message.type === "output" && typeof message.data === "string") {
+            // Decode base64 data with error handling
+            try {
+              const decoded = atob(message.data);
+              this.emit("data", decoded);
+            } catch (decodeError) {
+              this.emit(
+                "error",
+                new WebSocketError(
+                  `Failed to decode base64 data: ${decodeError instanceof Error ? decodeError.message : String(decodeError)}`
+                )
+              );
+            }
+          }
+        } catch (error) {
+          this.emit(
+            "error",
+            new WebSocketError(
+              `Failed to parse message: ${error instanceof Error ? error.message : String(error)}`
+            )
+          );
+        }
+      };
+    } catch (error) {
+      this.emit(
+        "error",
+        new WebSocketError(
+          `Failed to connect: ${error instanceof Error ? error.message : String(error)}`,
+          error
+        )
+      );
+    }
+  }
+
+  /**
+   * Disconnect from the console
+   */
+  disconnect(): void {
+    if (this.ws) {
+      this.ws.close();
+      this.ws = null;
+    }
+    this.sessionId = null;
+  }
+
+  /**
+   * Write input data to the console
+   */
+  write(data: string): void {
+    if (this.ws?.readyState !== WebSocket.OPEN) {
+      throw new WebSocketError("Not connected to console");
+    }
+
+    // Encode data as base64
+    const encoded = btoa(data);
+
+    const message = {
+      type: "input",
+      data: encoded,
+    };
+
+    this.ws.send(JSON.stringify(message));
+  }
+
+  /**
+   * Resize the terminal
+   */
+  resize(rows: number, cols: number): void {
+    if (this.ws?.readyState !== WebSocket.OPEN) {
+      throw new WebSocketError("Not connected to console");
+    }
+
+    const message = {
+      type: "resize",
+      rows,
+      cols,
+    };
+
+    this.ws.send(JSON.stringify(message));
+  }
+
+  /**
+   * Listen for connection events
+   */
+  onConnected(callback: () => void): () => void {
+    this.listeners.connected.push(callback);
+    return () => {
+      this.listeners.connected = this.listeners.connected.filter((cb) => cb !== callback);
+    };
+  }
+
+  /**
+   * Listen for disconnection events
+   */
+  onDisconnected(callback: () => void): () => void {
+    this.listeners.disconnected.push(callback);
+    return () => {
+      this.listeners.disconnected = this.listeners.disconnected.filter((cb) => cb !== callback);
+    };
+  }
+
+  /**
+   * Listen for data from the console
+   */
+  onData(callback: (data: string) => void): () => void {
+    this.listeners.data.push(callback);
+    return () => {
+      this.listeners.data = this.listeners.data.filter((cb) => cb !== callback);
+    };
+  }
+
+  /**
+   * Listen for errors
+   */
+  onError(callback: (error: Error) => void): () => void {
+    this.listeners.error.push(callback);
+    return () => {
+      this.listeners.error = this.listeners.error.filter((cb) => cb !== callback);
+    };
+  }
+
+  /**
+   * Get current connection state
+   */
+  get isConnected(): boolean {
+    return this.ws?.readyState === WebSocket.OPEN;
+  }
+
+  /**
+   * Get the current session ID
+   */
+  get currentSessionId(): string | null {
+    return this.sessionId;
+  }
+
+  private emit(event: "connected" | "disconnected"): void;
+  private emit(event: "data", data: string): void;
+  private emit(event: "error", error: Error): void;
+  private emit(
+    event: keyof typeof this.listeners,
+    arg?: string | Error
+  ): void {
+    if (event === "connected" || event === "disconnected") {
+      for (const listener of this.listeners[event]) {
+        listener();
+      }
+    } else if (event === "data" && typeof arg === "string") {
+      for (const listener of this.listeners.data) {
+        listener(arg);
+      }
+    } else if (event === "error" && arg instanceof Error) {
+      for (const listener of this.listeners.error) {
+        listener(arg);
+      }
+    }
+  }
+}
