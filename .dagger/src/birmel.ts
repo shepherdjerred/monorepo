@@ -62,6 +62,10 @@ function installWorkspaceDeps(workspaceSource: Directory, useMounts: boolean): C
       .withMountedFile(
         "/workspace/packages/eslint-config/package.json",
         workspaceSource.file("packages/eslint-config/package.json"),
+      )
+      .withMountedFile(
+        "/workspace/packages/mux-site/package.json",
+        workspaceSource.file("packages/mux-site/package.json"),
       );
   } else {
     container = container
@@ -79,6 +83,10 @@ function installWorkspaceDeps(workspaceSource: Directory, useMounts: boolean): C
       .withFile(
         "/workspace/packages/eslint-config/package.json",
         workspaceSource.file("packages/eslint-config/package.json"),
+      )
+      .withFile(
+        "/workspace/packages/mux-site/package.json",
+        workspaceSource.file("packages/mux-site/package.json"),
       );
   }
 
