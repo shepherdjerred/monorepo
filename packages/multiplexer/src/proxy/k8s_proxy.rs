@@ -87,6 +87,12 @@ impl KubernetesProxy {
         Ok(())
     }
 
+    /// Check if a process was started (without checking if it's still alive).
+    /// This is a non-mutable check suitable for status reporting.
+    pub fn has_process(&self) -> bool {
+        self.process.is_some()
+    }
+
     /// Check if the proxy is running.
     pub fn is_running(&mut self) -> bool {
         if let Some(ref mut child) = self.process {

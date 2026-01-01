@@ -1,7 +1,10 @@
 import { useState } from "react";
 import type { CreateSessionRequest, BackendType, AgentType, AccessMode } from "@mux/client";
-import { X } from "lucide-react";
 import { useSessionContext } from "../contexts/SessionContext";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 type CreateSessionDialogProps = {
   onClose: () => void;
@@ -51,88 +54,82 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-card rounded-lg max-w-2xl w-full max-h-[90vh] overflow-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-2xl font-bold">Create New Session</h2>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-secondary rounded-md transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+    <Dialog open={true} onOpenChange={(open) => { if (!open) { onClose(); } }}>
+      <DialogContent className="max-w-2xl border-4 border-primary">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-mono uppercase">
+            Create New Session
+          </DialogTitle>
+        </DialogHeader>
 
         {/* Form */}
-        <form onSubmit={(e) => { void handleSubmit(e); }} className="p-6 space-y-4">
+        <form onSubmit={(e) => { void handleSubmit(e); }} className="space-y-6">
           {error && (
-            <div className="p-4 bg-destructive/10 text-destructive rounded-md">
-              {error}
+            <div className="p-4 bg-destructive/10 text-destructive border-2 border-destructive rounded-md">
+              <strong className="font-mono">Error:</strong> {error}
             </div>
           )}
 
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              Session Name
-            </label>
-            <input
+          <div className="space-y-2">
+            <Label htmlFor="name" className="font-semibold">Session Name</Label>
+            <Input
+              id="name"
               type="text"
               value={formData.name}
               onChange={(e) => { setFormData({ ...formData, name: e.target.value }); }}
-              className="w-full px-3 py-2 border rounded-md bg-background"
+              className="border-2"
               placeholder="my-feature"
               required
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              Repository Path
-            </label>
-            <input
+          <div className="space-y-2">
+            <Label htmlFor="repo_path" className="font-semibold">Repository Path</Label>
+            <Input
+              id="repo_path"
               type="text"
               value={formData.repo_path}
               onChange={(e) => { setFormData({ ...formData, repo_path: e.target.value }); }}
-              className="w-full px-3 py-2 border rounded-md bg-background"
+              className="border-2"
               placeholder="/path/to/repo"
               required
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              Initial Prompt
-            </label>
+          <div className="space-y-2">
+            <Label htmlFor="initial_prompt" className="font-semibold">Initial Prompt</Label>
             <textarea
+              id="initial_prompt"
               value={formData.initial_prompt}
               onChange={(e) =>
                 { setFormData({ ...formData, initial_prompt: e.target.value }); }
               }
-              className="w-full px-3 py-2 border rounded-md bg-background min-h-[100px]"
+              className="flex w-full rounded-md border-2 border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm min-h-[100px]"
               placeholder="What should Claude Code do?"
               required
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">Backend</label>
+            <div className="space-y-2">
+              <Label htmlFor="backend" className="font-semibold">Backend</Label>
               <select
+                id="backend"
                 value={formData.backend}
                 onChange={(e) =>
                   { setFormData({ ...formData, backend: e.target.value as BackendType }); }
                 }
-                className="w-full px-3 py-2 border rounded-md bg-background"
+                className="flex h-10 w-full rounded-md border-2 border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <option value="Docker">Docker</option>
                 <option value="Zellij">Zellij</option>
               </select>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-2">Access Mode</label>
+            <div className="space-y-2">
+              <Label htmlFor="access_mode" className="font-semibold">Access Mode</Label>
               <select
+                id="access_mode"
                 value={formData.access_mode}
                 onChange={(e) =>
                   { setFormData({
@@ -140,7 +137,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                     access_mode: e.target.value as AccessMode,
                   }); }
                 }
-                className="w-full px-3 py-2 border rounded-md bg-background"
+                className="flex h-10 w-full rounded-md border-2 border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <option value="ReadWrite">Read-Write</option>
                 <option value="ReadOnly">Read-Only</option>
@@ -156,32 +153,24 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
               onChange={(e) =>
                 { setFormData({ ...formData, plan_mode: e.target.checked }); }
               }
-              className="w-4 h-4"
+              className="w-4 h-4 rounded border-2 border-input"
             />
-            <label htmlFor="plan-mode" className="text-sm">
+            <Label htmlFor="plan-mode" className="cursor-pointer">
               Start in plan mode (read-only)
-            </label>
+            </Label>
           </div>
 
           {/* Actions */}
-          <div className="flex justify-end gap-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 border rounded-md hover:bg-secondary transition-colors"
-            >
+          <div className="flex justify-end gap-3 pt-4 border-t-2">
+            <Button type="button" variant="outline" onClick={onClose}>
               Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50"
-            >
+            </Button>
+            <Button type="submit" variant="brutalist" disabled={isSubmitting}>
               {isSubmitting ? "Creating..." : "Create Session"}
-            </button>
+            </Button>
           </div>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
