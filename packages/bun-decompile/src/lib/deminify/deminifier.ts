@@ -8,6 +8,8 @@ import { ClaudeClient, formatCostEstimate } from "./claude-client.ts";
 import { OpenAIClient } from "./openai-client.ts";
 import { BatchDeminifyClient } from "./batch-client.ts";
 import type { BatchStatus } from "./batch-client.ts";
+import { OpenAIBatchClient } from "./openai-batch.ts";
+import type { OpenAIBatchStatus } from "./openai-batch.ts";
 import {
   saveBatchState,
   loadBatchState,
@@ -77,6 +79,7 @@ export class Deminifier {
   private config: DeminifyConfig;
   private client: ClaudeClient | OpenAIClient;
   private batchClient: BatchDeminifyClient | null;
+  private openAIBatchClient: OpenAIBatchClient | null;
   private cache: DeminifyCache | null;
   private stats: DeminifyStats;
 
@@ -86,10 +89,12 @@ export class Deminifier {
     // Select client based on provider
     if (config.provider === "openai") {
       this.client = new OpenAIClient(config);
-      this.batchClient = null; // OpenAI doesn't have equivalent batch API
+      this.batchClient = null;
+      this.openAIBatchClient = new OpenAIBatchClient(config);
     } else {
       this.client = new ClaudeClient(config);
       this.batchClient = new BatchDeminifyClient(config);
+      this.openAIBatchClient = null;
     }
 
     this.cache = config.cacheEnabled
@@ -418,7 +423,13 @@ export class Deminifier {
 
     const result = await processor.processAll(source, graph, {
       // maxBatchTokens computed from model context limit if not specified
+<<<<<<< Updated upstream
       ...(options?.maxBatchTokens !== undefined ? { maxBatchTokens: options.maxBatchTokens } : {}),
+||||||| Stash base
+      maxBatchTokens: options?.maxBatchTokens,
+=======
+      ...(options?.maxBatchTokens !== undefined && { maxBatchTokens: options.maxBatchTokens }),
+>>>>>>> Stashed changes
       verbose: this.config.verbose,
       onProgress: (progress) => {
         const progressUpdate: DeminifyProgress = {
@@ -470,11 +481,13 @@ export class Deminifier {
     fileContext: FileContext,
     options: DeminifyFileOptions
   ): Promise<string> {
-    // Batch mode only available for Anthropic
-    if (!this.batchClient) {
-      throw new Error(
-        "Batch mode is only available with Anthropic provider. Use --provider anthropic or remove --batch flag."
-      );
+    // Check that we have a batch client for the provider
+    const isOpenAI = this.config.provider === "openai";
+    if (isOpenAI && !this.openAIBatchClient) {
+      throw new Error("OpenAI batch client not initialized");
+    }
+    if (!isOpenAI && !this.batchClient) {
+      throw new Error("Anthropic batch client not initialized");
     }
 
     const fileName = options.fileName ?? "unknown.js";
@@ -520,9 +533,16 @@ export class Deminifier {
       contexts.set(func.id, context);
     }
 
-    // Create batch
-    console.log("Submitting batch to Anthropic API...");
-    const batchId = await this.batchClient.createBatch(contexts);
+    // Create batch using the appropriate client
+    const providerName = isOpenAI ? "OpenAI" : "Anthropic";
+    console.log(`Submitting batch to ${providerName} API...`);
+
+    let batchId: string;
+    if (isOpenAI) {
+      batchId = await this.openAIBatchClient!.createBatch(contexts);
+    } else {
+      batchId = await this.batchClient!.createBatch(contexts);
+    }
 
     // Save state for resume (includes projectId for isolation in shared environments)
     await saveBatchState(
@@ -542,27 +562,57 @@ export class Deminifier {
     console.log(`\nBatch submitted: ${batchId}`);
     console.log("Waiting for results (typically 30-60 minutes)...\n");
 
-    // Poll for completion
-    await this.batchClient.waitForCompletion(batchId, {
-      onStatusUpdate: (status) => {
-        options.onBatchStatus?.(status);
-        if (!options.onBatchStatus) {
-          // Default console output
-          const pct =
-            status.total > 0
-              ? Math.round((status.succeeded / status.total) * 100)
-              : 0;
-          process.stdout.write(
-            `\r  Progress: ${status.succeeded}/${status.total} (${pct}%) | Errors: ${status.errored}     `
-          );
-        }
-      },
-    });
+    // Poll for completion using the appropriate client
+    if (isOpenAI) {
+      await this.openAIBatchClient!.waitForCompletion(batchId, {
+        onStatusUpdate: (status: OpenAIBatchStatus) => {
+          // Convert to common format for callback
+          const commonStatus: BatchStatus = {
+            batchId: status.batchId,
+            status: status.status === "completed" ? "ended" : "in_progress",
+            total: status.total,
+            succeeded: status.completed,
+            errored: status.failed,
+            processing: status.total - status.completed - status.failed,
+          };
+          options.onBatchStatus?.(commonStatus);
+          if (!options.onBatchStatus) {
+            const pct =
+              status.total > 0
+                ? Math.round((status.completed / status.total) * 100)
+                : 0;
+            process.stdout.write(
+              `\r  Progress: ${status.completed}/${status.total} (${pct}%) | Errors: ${status.failed}     `
+            );
+          }
+        },
+      });
+    } else {
+      await this.batchClient!.waitForCompletion(batchId, {
+        onStatusUpdate: (status) => {
+          options.onBatchStatus?.(status);
+          if (!options.onBatchStatus) {
+            const pct =
+              status.total > 0
+                ? Math.round((status.succeeded / status.total) * 100)
+                : 0;
+            process.stdout.write(
+              `\r  Progress: ${status.succeeded}/${status.total} (${pct}%) | Errors: ${status.errored}     `
+            );
+          }
+        },
+      });
+    }
 
     console.log("\n\nBatch complete! Retrieving results...");
 
-    // Get results
-    const results = await this.batchClient.getResults(batchId, contexts);
+    // Get results using the appropriate client
+    let results: Map<string, DeminifyResult>;
+    if (isOpenAI) {
+      results = await this.openAIBatchClient!.getResults(batchId, contexts);
+    } else {
+      results = await this.batchClient!.getResults(batchId, contexts);
+    }
 
     console.log(`Retrieved ${results.size} results`);
 
@@ -610,8 +660,12 @@ export class Deminifier {
     batchId: string,
     options: DeminifyFileOptions
   ): Promise<string> {
-    if (!this.batchClient) {
-      throw new Error("Batch mode is only available with Anthropic provider.");
+    const isOpenAI = this.config.provider === "openai";
+    if (isOpenAI && !this.openAIBatchClient) {
+      throw new Error("OpenAI batch client not initialized");
+    }
+    if (!isOpenAI && !this.batchClient) {
+      throw new Error("Anthropic batch client not initialized");
     }
 
     // Rebuild contexts
@@ -626,33 +680,74 @@ export class Deminifier {
       contexts.set(func.id, context);
     }
 
-    // Check batch status
-    const status = await this.batchClient.getBatchStatus(batchId);
+    // Check batch status using appropriate client
+    if (isOpenAI) {
+      const status = await this.openAIBatchClient!.getBatchStatus(batchId);
 
-    if (status.status === "in_progress") {
-      console.log(
-        `Batch still processing: ${status.succeeded}/${status.total} complete`
-      );
-      console.log("Waiting for completion...\n");
+      if (
+        status.status === "in_progress" ||
+        status.status === "validating" ||
+        status.status === "finalizing"
+      ) {
+        console.log(
+          `Batch still processing: ${status.completed}/${status.total} complete`
+        );
+        console.log("Waiting for completion...\n");
 
-      await this.batchClient.waitForCompletion(batchId, {
-        onStatusUpdate: (s) => {
-          options.onBatchStatus?.(s);
-          if (!options.onBatchStatus) {
-            const pct =
-              s.total > 0 ? Math.round((s.succeeded / s.total) * 100) : 0;
-            process.stdout.write(
-              `\r  Progress: ${s.succeeded}/${s.total} (${pct}%) | Errors: ${s.errored}     `
-            );
-          }
-        },
-      });
+        await this.openAIBatchClient!.waitForCompletion(batchId, {
+          onStatusUpdate: (s: OpenAIBatchStatus) => {
+            const commonStatus: BatchStatus = {
+              batchId: s.batchId,
+              status: s.status === "completed" ? "ended" : "in_progress",
+              total: s.total,
+              succeeded: s.completed,
+              errored: s.failed,
+              processing: s.total - s.completed - s.failed,
+            };
+            options.onBatchStatus?.(commonStatus);
+            if (!options.onBatchStatus) {
+              const pct =
+                s.total > 0 ? Math.round((s.completed / s.total) * 100) : 0;
+              process.stdout.write(
+                `\r  Progress: ${s.completed}/${s.total} (${pct}%) | Errors: ${s.failed}     `
+              );
+            }
+          },
+        });
+      }
+    } else {
+      const status = await this.batchClient!.getBatchStatus(batchId);
+
+      if (status.status === "in_progress") {
+        console.log(
+          `Batch still processing: ${status.succeeded}/${status.total} complete`
+        );
+        console.log("Waiting for completion...\n");
+
+        await this.batchClient!.waitForCompletion(batchId, {
+          onStatusUpdate: (s) => {
+            options.onBatchStatus?.(s);
+            if (!options.onBatchStatus) {
+              const pct =
+                s.total > 0 ? Math.round((s.succeeded / s.total) * 100) : 0;
+              process.stdout.write(
+                `\r  Progress: ${s.succeeded}/${s.total} (${pct}%) | Errors: ${s.errored}     `
+              );
+            }
+          },
+        });
+      }
     }
 
     console.log("\n\nRetrieving results...");
 
-    // Get results
-    const results = await this.batchClient.getResults(batchId, contexts);
+    // Get results using appropriate client
+    let results: Map<string, DeminifyResult>;
+    if (isOpenAI) {
+      results = await this.openAIBatchClient!.getResults(batchId, contexts);
+    } else {
+      results = await this.batchClient!.getResults(batchId, contexts);
+    }
 
     console.log(`Retrieved ${results.size} results`);
 
