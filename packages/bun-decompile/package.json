@@ -1,6 +1,7 @@
 {
   "name": "@shepherdjerred/bun-decompile",
   "version": "0.1.0",
+  "description": "Extract and de-minify source code from Bun-compiled executables using AI",
   "type": "module",
   "bin": {
     "bun-decompile": "./src/index.ts"
@@ -8,7 +9,38 @@
   "exports": {
     ".": "./src/lib/index.ts"
   },
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "bun",
+    "decompile",
+    "decompiler",
+    "deminify",
+    "reverse-engineering",
+    "sourcemap",
+    "ai",
+    "claude",
+    "openai"
+  ],
+  "author": "Jerred Shepherd",
+  "license": "GPL-3.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shepherdjerred/monorepo.git",
+    "directory": "packages/bun-decompile"
+  },
+  "homepage": "https://github.com/shepherdjerred/monorepo/tree/main/packages/bun-decompile#readme",
+  "bugs": {
+    "url": "https://github.com/shepherdjerred/monorepo/issues"
+  },
+  "engines": {
+    "bun": ">=1.0.0"
+  },
   "scripts": {
+    "build": "true",
     "test": "bun test",
     "typecheck": "tsc --noEmit"
   },

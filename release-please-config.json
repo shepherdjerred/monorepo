@@ -1,6 +1,10 @@
 {
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
   "packages": {
+    "packages/bun-decompile": {
+      "release-type": "node",
+      "package-name": "@shepherdjerred/bun-decompile"
+    },
     "packages/dagger-utils": {
       "release-type": "node",
       "package-name": "@shepherdjerred/dagger-utils"
