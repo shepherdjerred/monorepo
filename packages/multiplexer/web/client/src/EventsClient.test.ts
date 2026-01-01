@@ -1,6 +1,8 @@
 import { describe, expect, test, mock, beforeEach, afterEach } from "bun:test";
 import { EventsClient } from "./EventsClient";
 import type { SessionEvent } from "./EventsClient";
+import { SessionStatus, AccessMode, BackendType, AgentType, ClaudeWorkingStatus } from "@mux/shared";
+import type { Session } from "@mux/shared";
 
 // Mock WebSocket implementation
 class MockWebSocket {
@@ -39,6 +41,27 @@ class MockWebSocket {
   simulateError(event: unknown): void {
     this.onerror?.(event);
   }
+}
+
+// Helper to create a valid mock session
+function createMockSession(overrides: Partial<Session> = {}): Session {
+  return {
+    id: "session1",
+    name: "Test Session",
+    status: SessionStatus.Running,
+    backend: BackendType.Zellij,
+    agent: AgentType.ClaudeCode,
+    repo_path: "/tmp/repo",
+    worktree_path: "/tmp/worktree",
+    branch_name: "main",
+    initial_prompt: "test prompt",
+    dangerous_skip_checks: false,
+    claude_status: ClaudeWorkingStatus.Unknown,
+    access_mode: AccessMode.ReadWrite,
+    created_at: "2024-01-01T00:00:00Z",
+    updated_at: "2024-01-01T00:00:00Z",
+    ...overrides,
+  };
 }
 
 describe("EventsClient", () => {
@@ -161,14 +184,7 @@ describe("EventsClient", () => {
 
       const event: SessionEvent = {
         type: "session_created",
-        session: {
-          id: "session1",
-          name: "Test",
-          status: "Running",
-          created_at: "2024-01-01T00:00:00Z",
-          working_directory: "/tmp",
-          access_mode: "Ask",
-        },
+        session: createMockSession(),
       };
 
       ws.simulateMessage(JSON.stringify({ type: "event", event }));
@@ -190,14 +206,7 @@ describe("EventsClient", () => {
 
       const event: SessionEvent = {
         type: "session_updated",
-        session: {
-          id: "session1",
-          name: "Updated",
-          status: "Archived",
-          created_at: "2024-01-01T00:00:00Z",
-          working_directory: "/tmp",
-          access_mode: "AllowAll",
-        },
+        session: createMockSession({ status: SessionStatus.Archived, access_mode: AccessMode.ReadOnly }),
       };
 
       ws.simulateMessage(JSON.stringify({ type: "event", event }));
