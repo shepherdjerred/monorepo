@@ -227,9 +227,10 @@ pub enum CheckStatus {
 
 /// Claude agent working status
 #[typeshare]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum ClaudeWorkingStatus {
     /// Unknown state (no hooks configured or no data yet)
+    #[default]
     Unknown,
 
     /// Claude is actively working (PreToolUse hook triggered)
@@ -243,6 +244,21 @@ pub enum ClaudeWorkingStatus {
 
     /// Agent is idle (60+ seconds without activity)
     Idle,
+}
+
+impl std::str::FromStr for ClaudeWorkingStatus {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "Unknown" => Ok(Self::Unknown),
+            "Working" => Ok(Self::Working),
+            "WaitingApproval" => Ok(Self::WaitingApproval),
+            "WaitingInput" => Ok(Self::WaitingInput),
+            "Idle" => Ok(Self::Idle),
+            _ => anyhow::bail!("unknown ClaudeWorkingStatus: {}", s),
+        }
+    }
 }
 
 /// Access mode for proxy filtering
