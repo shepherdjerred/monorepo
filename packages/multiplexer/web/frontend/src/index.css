@@ -32,6 +32,14 @@
     --ring: 220 85% 25%;
 
     --radius: 0.25rem;               /* Minimal radius (brutalist) */
+
+    /* Status indicator colors */
+    --status-creating: 220 85% 55%;  /* Blue */
+    --status-running: 142 71% 45%;   /* Green */
+    --status-idle: 45 93% 47%;       /* Yellow/Orange */
+    --status-completed: 220 13% 55%; /* Gray */
+    --status-failed: 0 72% 51%;      /* Red */
+    --status-archived: 220 13% 69%;  /* Light Gray */
   }
 
   .dark {
@@ -62,6 +70,14 @@
     --border: 220 50% 25%;
     --input: 220 50% 25%;
     --ring: 215 100% 60%;
+
+    /* Status indicator colors (dark mode) */
+    --status-creating: 220 85% 65%;  /* Brighter blue */
+    --status-running: 142 71% 55%;   /* Brighter green */
+    --status-idle: 45 93% 57%;       /* Brighter yellow/orange */
+    --status-completed: 220 13% 65%; /* Lighter gray */
+    --status-failed: 0 72% 61%;      /* Brighter red */
+    --status-archived: 220 13% 50%;  /* Mid gray */
   }
 }
 

@@ -3,6 +3,7 @@ import type { Session } from "@mux/client";
 import { SessionStatus } from "@mux/shared";
 import { SessionCard } from "./SessionCard";
 import { ThemeToggle } from "./ThemeToggle";
+import { ConfirmDialog } from "./ConfirmDialog";
 import { useSessionContext } from "../contexts/SessionContext";
 import { Plus, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,10 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
   const { sessions, isLoading, error, refreshSessions, archiveSession, deleteSession } =
     useSessionContext();
   const [filter, setFilter] = useState<FilterStatus>("all");
+  const [confirmDialog, setConfirmDialog] = useState<{
+    type: "archive" | "delete";
+    session: Session;
+  } | null>(null);
 
   const filteredSessions = useMemo(() => {
     const sessionArray = Array.from(sessions.values());
@@ -40,14 +45,20 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
   }, [sessions, filter]);
 
   const handleArchive = (session: Session) => {
-    if (confirm(`Archive session "${session.name}"?`)) {
-      void archiveSession(session.id);
-    }
+    setConfirmDialog({ type: "archive", session });
   };
 
   const handleDelete = (session: Session) => {
-    if (confirm(`Delete session "${session.name}"? This cannot be undone.`)) {
-      void deleteSession(session.id);
+    setConfirmDialog({ type: "delete", session });
+  };
+
+  const handleConfirm = () => {
+    if (!confirmDialog) return;
+
+    if (confirmDialog.type === "archive") {
+      void archiveSession(confirmDialog.session.id);
+    } else if (confirmDialog.type === "delete") {
+      void deleteSession(confirmDialog.session.id);
     }
   };
 
@@ -143,6 +154,27 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
           </div>
         )}
       </main>
+
+      {/* Confirmation Dialog */}
+      {confirmDialog && (
+        <ConfirmDialog
+          open={true}
+          onOpenChange={(open) => {
+            if (!open) {
+              setConfirmDialog(null);
+            }
+          }}
+          title={confirmDialog.type === "archive" ? "Archive Session" : "Delete Session"}
+          description={
+            confirmDialog.type === "archive"
+              ? `Are you sure you want to archive "${confirmDialog.session.name}"?`
+              : `Are you sure you want to delete "${confirmDialog.session.name}"? This action cannot be undone.`
+          }
+          confirmLabel={confirmDialog.type === "archive" ? "Archive" : "Delete"}
+          variant={confirmDialog.type === "delete" ? "destructive" : "default"}
+          onConfirm={handleConfirm}
+        />
+      )}
     </div>
   );
 }

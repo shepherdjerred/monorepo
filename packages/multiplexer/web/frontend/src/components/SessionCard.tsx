@@ -16,12 +16,12 @@ type SessionCardProps = {
 
 export function SessionCard({ session, onAttach, onArchive, onDelete }: SessionCardProps) {
   const statusColors: Record<SessionStatus, string> = {
-    [SessionStatus.Creating]: "bg-blue-500",
-    [SessionStatus.Running]: "bg-green-500",
-    [SessionStatus.Idle]: "bg-yellow-500",
-    [SessionStatus.Completed]: "bg-gray-500",
-    [SessionStatus.Failed]: "bg-red-500",
-    [SessionStatus.Archived]: "bg-gray-400",
+    [SessionStatus.Creating]: "bg-status-creating",
+    [SessionStatus.Running]: "bg-status-running",
+    [SessionStatus.Idle]: "bg-status-idle",
+    [SessionStatus.Completed]: "bg-status-completed",
+    [SessionStatus.Failed]: "bg-status-failed",
+    [SessionStatus.Archived]: "bg-status-archived",
   };
 
   const statusColor = statusColors[session.status];
