@@ -3,7 +3,8 @@ import type { Session } from "@mux/client";
 import { SessionStatus } from "@mux/shared";
 import { SessionCard } from "./SessionCard";
 import { useSessionContext } from "../contexts/SessionContext";
-import { Plus, RefreshCw } from "lucide-react";
+import { Plus, RefreshCw, Info } from "lucide-react";
+import { StatusDialog } from "./StatusDialog";
 
 type SessionListProps = {
   onAttach: (session: Session) => void;
@@ -16,6 +17,7 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
   const { sessions, isLoading, error, refreshSessions, archiveSession, deleteSession } =
     useSessionContext();
   const [filter, setFilter] = useState<FilterStatus>("all");
+  const [showStatusDialog, setShowStatusDialog] = useState(false);
 
   const filteredSessions = useMemo(() => {
     const sessionArray = Array.from(sessions.values());
@@ -56,8 +58,16 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
             onClick={() => { void refreshSessions(); }}
             className="p-2 hover:bg-secondary rounded-md transition-colors"
             disabled={isLoading}
+            title="Refresh sessions"
           >
             <RefreshCw className={`w-5 h-5 ${isLoading ? "animate-spin" : ""}`} />
+          </button>
+          <button
+            onClick={() => { setShowStatusDialog(true); }}
+            className="p-2 hover:bg-secondary rounded-md transition-colors"
+            title="System Status"
+          >
+            <Info className="w-5 h-5" />
           </button>
           <button
             onClick={onCreateNew}
@@ -113,6 +123,11 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
           </div>
         )}
       </div>
+
+      {/* Status Dialog */}
+      {showStatusDialog && (
+        <StatusDialog onClose={() => { setShowStatusDialog(false); }} />
+      )}
     </div>
   );
 }
