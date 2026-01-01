@@ -279,7 +279,7 @@ async fn run_main_loop(
                     app.status_message = Some(format!("Deleted session {session_id}"));
                     let _ = app.refresh_sessions().await;
                 }
-                app::DeleteProgress::Error { session_id, message } => {
+                app::DeleteProgress::Error { session_id: _, message } => {
                     app.deleting_session_id = None;
                     app.delete_progress_rx = None;
                     // Task is already complete - just take the handle to clean up
