@@ -223,10 +223,9 @@ impl DockerBackend {
     /// Creates .cargo/registry, .cargo/git, and .cache/sccache directories if they don't exist.
     /// This prevents Docker from creating them as root when mounting named volumes.
     ///
-    /// # Errors
-    ///
-    /// Returns an error if directory creation fails.
-    fn ensure_cache_directories(workdir: &Path) -> anyhow::Result<()> {
+    /// This is a best-effort operation - if directory creation fails, we log a warning and
+    /// continue. Docker will still create the directories, but they'll be owned by root.
+    fn ensure_cache_directories(workdir: &Path) {
         let cache_dirs = [
             workdir.join(".cargo/registry"),
             workdir.join(".cargo/git"),
@@ -242,14 +241,12 @@ impl DockerBackend {
                 );
                 // Continue anyway - Docker will create it, but as root
             } else {
-                tracing::debug!(
+                tracing::trace!(
                     path = %dir.display(),
-                    "Ensured cache directory exists"
+                    "Created cache directory"
                 );
             }
         }
-
-        Ok(())
     }
 
     /// Build the docker run command arguments (exposed for testing)
@@ -639,7 +636,7 @@ impl ExecutionBackend for DockerBackend {
 
         // Ensure cache directories exist before creating container
         // This prevents Docker from creating them as root when mounting named volumes
-        Self::ensure_cache_directories(workdir)?;
+        Self::ensure_cache_directories(workdir);
 
         let args = Self::build_create_args(
             name,
