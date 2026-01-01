@@ -18,6 +18,14 @@ export function Console({ sessionId, sessionName, onClose }: ConsoleProps) {
   const { client, isConnected } = useConsole(sessionId);
   const [error, setError] = useState<string | null>(null);
 
+  // Track current client and connection state for terminal input handler
+  const clientRef = useRef({ client, isConnected });
+
+  // Update ref whenever client or connection state changes
+  useEffect(() => {
+    clientRef.current = { client, isConnected };
+  }, [client, isConnected]);
+
   // Initialize terminal
   useEffect(() => {
     if (!terminalRef.current) {
@@ -27,7 +35,7 @@ export function Console({ sessionId, sessionName, onClose }: ConsoleProps) {
     const terminal = new Terminal({
       cursorBlink: true,
       fontSize: 14,
-      fontFamily: 'Menlo, Monaco, "Courier New", monospace',
+      fontFamily: '"Berkeley Mono", Menlo, Monaco, "Courier New", monospace',
       theme: {
         background: "#1e1e1e",
         foreground: "#d4d4d4",
@@ -48,8 +56,9 @@ export function Console({ sessionId, sessionName, onClose }: ConsoleProps) {
 
     // Handle terminal input
     terminal.onData((data) => {
-      if (client && isConnected) {
-        client.write(data);
+      const { client: currentClient, isConnected: currentConnected } = clientRef.current;
+      if (currentClient && currentConnected) {
+        currentClient.write(data);
       }
     });
 
