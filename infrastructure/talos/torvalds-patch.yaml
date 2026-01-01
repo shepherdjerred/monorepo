@@ -1,0 +1,21 @@
+# Talos Machine Config Patch for Node: torvalds
+# This patch increases ZFS ARC maximum and kubelet max pods
+#
+# Apply with:
+#   talosctl patch machineconfig --nodes torvalds --patch @infrastructure/talos/torvalds-patch.yaml
+#   talosctl reboot --nodes torvalds
+#
+# Changes:
+# - ZFS ARC max: 48 GB -> 62.5 GB (50% of 125 GB total RAM)
+# - Kubelet max pods: 250 -> 300
+
+machine:
+  kubelet:
+    extraArgs:
+      max-pods: "300"
+  kernel:
+    modules:
+      - name: zfs
+        parameters:
+          - zfs_arc_max=67108864000  # 62.5 GB (50% of total RAM)
+          - zfs_arc_min=8589934592    # 8 GB minimum
