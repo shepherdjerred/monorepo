@@ -1,7 +1,9 @@
 import { describe, expect, test, mock } from "bun:test";
 import { MuxClient } from "./MuxClient";
 import { ApiError, NetworkError, SessionNotFoundError } from "./errors";
-import type { Session, AccessMode } from "@mux/shared";
+import { SessionStatus, AccessMode, BackendType, AgentType, ClaudeWorkingStatus } from "@mux/shared";
+import type { Session
+, CreateSessionRequest } from "@mux/shared";
 
 // Helper to create a mock fetch function
 function createMockFetch(responses: Map<string, { status: number; body?: unknown }>) {
@@ -26,6 +28,27 @@ function createMockFetch(responses: Map<string, { status: number; body?: unknown
   });
 }
 
+// Helper to create a valid mock session
+function createMockSession(overrides: Partial<Session> = {}): Session {
+  return {
+    id: "session1",
+    name: "Test Session",
+    status: SessionStatus.Running,
+    backend: BackendType.Zellij,
+    agent: AgentType.ClaudeCode,
+    repo_path: "/tmp/repo",
+    worktree_path: "/tmp/worktree",
+    branch_name: "main",
+    initial_prompt: "test prompt",
+    dangerous_skip_checks: false,
+    claude_status: ClaudeWorkingStatus.Unknown,
+    access_mode: AccessMode.ReadWrite,
+    created_at: "2024-01-01T00:00:00Z",
+    updated_at: "2024-01-01T00:00:00Z",
+    ...overrides,
+  };
+}
+
 describe("MuxClient", () => {
   describe("constructor", () => {
     test("uses default baseUrl when not provided", () => {
@@ -42,16 +65,7 @@ describe("MuxClient", () => {
 
   describe("listSessions", () => {
     test("returns list of sessions", async () => {
-      const mockSessions: Session[] = [
-        {
-          id: "session1",
-          name: "Test Session",
-          status: "Running",
-          created_at: "2024-01-01T00:00:00Z",
-          working_directory: "/tmp",
-          access_mode: "Ask",
-        },
-      ];
+      const mockSessions = [createMockSession()];
 
       const mockFetch = createMockFetch(
         new Map([
@@ -77,14 +91,7 @@ describe("MuxClient", () => {
 
   describe("getSession", () => {
     test("returns session by id", async () => {
-      const mockSession: Session = {
-        id: "session1",
-        name: "Test Session",
-        status: "Running",
-        created_at: "2024-01-01T00:00:00Z",
-        working_directory: "/tmp",
-        access_mode: "Ask",
-      };
+      const mockSession = createMockSession();
 
       const mockFetch = createMockFetch(
         new Map([
@@ -111,14 +118,7 @@ describe("MuxClient", () => {
     });
 
     test("encodes session id in URL", async () => {
-      const mockSession: Session = {
-        id: "session/with/slashes",
-        name: "Test",
-        status: "Running",
-        created_at: "2024-01-01T00:00:00Z",
-        working_directory: "/tmp",
-        access_mode: "Ask",
-      };
+      const mockSession = createMockSession({ id: "session/with/slashes" });
 
       const mockFetch = createMockFetch(
         new Map([
@@ -143,10 +143,16 @@ describe("MuxClient", () => {
       );
 
       const client = new MuxClient({ baseUrl: "http://localhost:3030", fetch: mockFetch });
-      const result = await client.createSession({
+      const request: CreateSessionRequest = {
         name: "New Session",
-        working_directory: "/tmp",
-      });
+        repo_path: "/tmp/repo",
+        initial_prompt: "test",
+        backend: BackendType.Zellij,
+        agent: AgentType.ClaudeCode,
+        dangerous_skip_checks: false,
+        plan_mode: false,
+      };
+      const result = await client.createSession(request);
 
       expect(result.id).toBe("new-session");
     });
@@ -162,10 +168,16 @@ describe("MuxClient", () => {
       );
 
       const client = new MuxClient({ baseUrl: "http://localhost:3030", fetch: mockFetch });
-      const result = await client.createSession({
+      const request: CreateSessionRequest = {
         name: "New Session",
-        working_directory: "/tmp",
-      });
+        repo_path: "/tmp/repo",
+        initial_prompt: "test",
+        backend: BackendType.Zellij,
+        agent: AgentType.ClaudeCode,
+        dangerous_skip_checks: false,
+        plan_mode: false,
+      };
+      const result = await client.createSession(request);
 
       expect(result.warnings).toEqual(["Warning 1"]);
     });
@@ -196,8 +208,8 @@ describe("MuxClient", () => {
   describe("getRecentRepos", () => {
     test("returns list of recent repos", async () => {
       const mockRepos = [
-        { path: "/path/to/repo1", name: "repo1", last_used: "2024-01-01T00:00:00Z" },
-        { path: "/path/to/repo2", name: "repo2", last_used: "2024-01-02T00:00:00Z" },
+        { repo_path: "/path/to/repo1", last_used: "2024-01-01T00:00:00Z" },
+        { repo_path: "/path/to/repo2", last_used: "2024-01-02T00:00:00Z" },
       ];
 
       const mockFetch = createMockFetch(
@@ -218,8 +230,7 @@ describe("MuxClient", () => {
       );
 
       const client = new MuxClient({ baseUrl: "http://localhost:3030", fetch: mockFetch });
-      const mode: AccessMode = "AllowAll";
-      await expect(client.updateAccessMode("session1", mode)).resolves.toBeUndefined();
+      await expect(client.updateAccessMode("session1", AccessMode.ReadWrite)).resolves.toBeUndefined();
     });
   });
 

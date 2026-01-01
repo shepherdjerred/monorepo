@@ -65,7 +65,12 @@ function installWorkspaceDeps(source: Directory): Container {
     .withMountedFile("/workspace/packages/birmel/package.json", source.file("packages/birmel/package.json"))
     .withMountedFile("/workspace/packages/bun-decompile/package.json", source.file("packages/bun-decompile/package.json"))
     .withMountedFile("/workspace/packages/dagger-utils/package.json", source.file("packages/dagger-utils/package.json"))
-    .withMountedFile("/workspace/packages/eslint-config/package.json", source.file("packages/eslint-config/package.json"));
+    .withMountedFile("/workspace/packages/eslint-config/package.json", source.file("packages/eslint-config/package.json"))
+    // Multiplexer web packages (in root workspaces)
+    .withMountedFile("/workspace/packages/multiplexer/web/package.json", source.file("packages/multiplexer/web/package.json"))
+    .withMountedFile("/workspace/packages/multiplexer/web/shared/package.json", source.file("packages/multiplexer/web/shared/package.json"))
+    .withMountedFile("/workspace/packages/multiplexer/web/client/package.json", source.file("packages/multiplexer/web/client/package.json"))
+    .withMountedFile("/workspace/packages/multiplexer/web/frontend/package.json", source.file("packages/multiplexer/web/frontend/package.json"));
 
   // PHASE 2: Install dependencies (cached if lockfile + package.jsons unchanged)
   container = container.withExec(["bun", "install", "--frozen-lockfile"]);
@@ -76,7 +81,11 @@ function installWorkspaceDeps(source: Directory): Container {
     .withMountedDirectory("/workspace/packages/birmel", source.directory("packages/birmel"))
     .withMountedDirectory("/workspace/packages/bun-decompile", source.directory("packages/bun-decompile"))
     .withMountedDirectory("/workspace/packages/dagger-utils", source.directory("packages/dagger-utils"))
-    .withMountedDirectory("/workspace/packages/eslint-config", source.directory("packages/eslint-config"));
+    .withMountedDirectory("/workspace/packages/eslint-config", source.directory("packages/eslint-config"))
+    // Multiplexer web packages
+    .withMountedDirectory("/workspace/packages/multiplexer/web/shared", source.directory("packages/multiplexer/web/shared"))
+    .withMountedDirectory("/workspace/packages/multiplexer/web/client", source.directory("packages/multiplexer/web/client"))
+    .withMountedDirectory("/workspace/packages/multiplexer/web/frontend", source.directory("packages/multiplexer/web/frontend"));
 
   // PHASE 4: Re-run bun install to recreate workspace node_modules symlinks
   // (Source mounts in Phase 3 replace the symlinks that Phase 2 created)
