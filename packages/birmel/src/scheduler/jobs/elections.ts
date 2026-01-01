@@ -260,8 +260,9 @@ export async function processElectionResults(): Promise<void> {
 							.map((name) => name.charAt(0).toUpperCase() + name.slice(1))
 							.join(", ");
 						const winnerName = (results.winner ?? "jerred").charAt(0).toUpperCase() + (results.winner ?? "jerred").slice(1);
+						const voteCount = results.voteCounts[results.tiedCandidates[0] ?? ""] ?? 0;
 						await channel.send(
-							`🎲 **It's a tie!** ${tiedNames} each received ${results.voteCounts[results.tiedCandidates[0] ?? ""] ?? 0} votes. ` +
+							`🎲 **It's a tie!** ${tiedNames} each received ${String(voteCount)} votes. ` +
 							`A random winner has been selected: **${winnerName}**! 🎉`
 						);
 					}
