@@ -39,7 +39,8 @@ pub struct CreateOptions {
     pub print_mode: bool,
 
     /// Start in plan mode (read-only exploration).
-    /// Applicable to both Zellij and Docker backends.
+    /// Note: This field is kept for protocol compatibility but is not used by backends.
+    /// Plan mode is activated via prompt instruction prepending in the TUI layer.
     pub plan_mode: bool,
 
     /// Session-specific proxy port (overrides global proxy port).
