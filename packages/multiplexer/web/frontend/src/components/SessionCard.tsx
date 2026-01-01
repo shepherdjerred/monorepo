@@ -1,7 +1,11 @@
 import type { Session } from "@mux/client";
 import { SessionStatus } from "@mux/shared";
 import { formatRelativeTime } from "../lib/utils";
-import { Circle, Archive, Trash2, Terminal } from "lucide-react";
+import { Archive, Trash2, Terminal } from "lucide-react";
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 type SessionCardProps = {
   session: Session;
@@ -12,69 +16,89 @@ type SessionCardProps = {
 
 export function SessionCard({ session, onAttach, onArchive, onDelete }: SessionCardProps) {
   const statusColors: Record<SessionStatus, string> = {
-    [SessionStatus.Creating]: "text-blue-500",
-    [SessionStatus.Running]: "text-green-500",
-    [SessionStatus.Idle]: "text-yellow-500",
-    [SessionStatus.Completed]: "text-gray-500",
-    [SessionStatus.Failed]: "text-red-500",
-    [SessionStatus.Archived]: "text-gray-400",
+    [SessionStatus.Creating]: "bg-blue-500",
+    [SessionStatus.Running]: "bg-green-500",
+    [SessionStatus.Idle]: "bg-yellow-500",
+    [SessionStatus.Completed]: "bg-gray-500",
+    [SessionStatus.Failed]: "bg-red-500",
+    [SessionStatus.Archived]: "bg-gray-400",
   };
 
   const statusColor = statusColors[session.status];
 
   return (
-    <div className="border rounded-lg p-4 hover:shadow-md transition-shadow bg-card">
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-2">
-            <Circle className={`w-3 h-3 fill-current ${statusColor}`} />
-            <h3 className="font-semibold text-lg">{session.name}</h3>
-            <span className="text-xs text-muted-foreground">
-              {session.backend}
-            </span>
-          </div>
-
-          <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
-            {session.initial_prompt}
-          </p>
-
-          <div className="flex items-center gap-4 text-xs text-muted-foreground">
-            <span>{formatRelativeTime(session.created_at)}</span>
-            <span>{session.branch_name}</span>
-            <span className="px-2 py-0.5 rounded bg-secondary">
-              {session.access_mode}
-            </span>
-          </div>
+    <Card className="border-2 hover:shadow-[4px_4px_0_hsl(var(--foreground))] transition-all">
+      <CardHeader className="pb-3">
+        <div className="flex items-center gap-2">
+          <div className={`w-4 h-4 border-2 border-foreground ${statusColor}`} />
+          <h3 className="font-bold text-lg flex-1">{session.name}</h3>
+          <Badge variant="outline" className="border-2 font-mono text-xs">
+            {session.backend}
+          </Badge>
         </div>
-
-        <div className="flex flex-col gap-2 ml-4">
+      </CardHeader>
+      <CardContent>
+        <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+          {session.initial_prompt}
+        </p>
+        <div className="flex items-center gap-4 text-xs">
+          <span className="font-mono text-muted-foreground">
+            {formatRelativeTime(session.created_at)}
+          </span>
+          <span className="text-muted-foreground">{session.branch_name}</span>
+          <Badge variant="secondary" className="font-mono">
+            {session.access_mode}
+          </Badge>
+        </div>
+      </CardContent>
+      <CardFooter className="flex gap-2 border-t-2 pt-4">
+        <TooltipProvider>
           {session.status === SessionStatus.Running && (
-            <button
-              onClick={() => { onAttach(session); }}
-              className="p-2 hover:bg-secondary rounded-md transition-colors"
-              title="Attach to console"
-            >
-              <Terminal className="w-4 h-4" />
-            </button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => { onAttach(session); }}
+                  aria-label="Attach to console"
+                >
+                  <Terminal className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Attach to console</TooltipContent>
+            </Tooltip>
           )}
 
-          <button
-            onClick={() => { onArchive(session); }}
-            className="p-2 hover:bg-secondary rounded-md transition-colors"
-            title="Archive session"
-          >
-            <Archive className="w-4 h-4" />
-          </button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => { onArchive(session); }}
+                aria-label="Archive session"
+              >
+                <Archive className="w-4 h-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Archive session</TooltipContent>
+          </Tooltip>
 
-          <button
-            onClick={() => { onDelete(session); }}
-            className="p-2 hover:bg-destructive/10 text-destructive rounded-md transition-colors"
-            title="Delete session"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-    </div>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => { onDelete(session); }}
+                aria-label="Delete session"
+                className="text-destructive hover:bg-destructive/10"
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Delete session</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </CardFooter>
+    </Card>
   );
 }

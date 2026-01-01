@@ -111,26 +111,27 @@ export function Console({ sessionId, sessionName, onClose }: ConsoleProps) {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-card rounded-lg max-w-6xl w-full h-[80vh] flex flex-col">
+      <div className="bg-card rounded-lg max-w-6xl w-full h-[80vh] flex flex-col border-4 border-primary">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b">
+        <div className="flex items-center justify-between p-4 border-b-4 border-primary">
           <div className="flex items-center gap-3">
-            <h2 className="text-xl font-bold">{sessionName}</h2>
+            <h2 className="text-xl font-bold font-mono uppercase">{sessionName}</h2>
             <div className="flex items-center gap-2">
               <div
-                className={`w-2 h-2 rounded-full ${
+                className={`w-3 h-3 border-2 border-foreground ${
                   isConnected ? "bg-green-500" : "bg-red-500"
                 }`}
               />
-              <span className="text-sm text-muted-foreground">
+              <span className="text-sm font-mono">
                 {isConnected ? "Connected" : "Disconnected"}
               </span>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-secondary rounded-md transition-colors"
+            className="p-2 hover:bg-secondary rounded-md transition-colors border-2 border-transparent hover:border-border"
             title="Close console"
+            aria-label="Close console"
           >
             <X className="w-5 h-5" />
           </button>
@@ -138,8 +139,8 @@ export function Console({ sessionId, sessionName, onClose }: ConsoleProps) {
 
         {/* Error display */}
         {error && (
-          <div className="p-4 bg-destructive/10 text-destructive border-b">
-            Error: {error}
+          <div className="p-4 bg-destructive/10 text-destructive border-b-2 border-destructive">
+            <strong className="font-mono">Error:</strong> {error}
           </div>
         )}
 
@@ -147,16 +148,15 @@ export function Console({ sessionId, sessionName, onClose }: ConsoleProps) {
         <div className="flex-1 p-4 overflow-hidden">
           <div
             ref={terminalRef}
-            className="w-full h-full rounded-md overflow-hidden"
+            className="terminal-retro w-full h-full rounded-sm overflow-hidden"
           />
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t text-sm text-muted-foreground">
-          <p>
-            Press <kbd className="px-2 py-1 bg-secondary rounded">Ctrl+C</kbd>{" "}
-            to send interrupt signal. Close this window to detach (session
-            continues running).
+        <div className="p-4 border-t-4 border-primary text-sm">
+          <p className="font-mono">
+            Press <kbd className="px-2 py-1 bg-secondary border-2 border-foreground rounded font-bold">Ctrl+C</kbd>{" "}
+            to send interrupt signal. Close this window to detach (session continues running).
           </p>
         </div>
       </div>
