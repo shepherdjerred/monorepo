@@ -246,6 +246,7 @@ impl SessionManager {
             plan_mode,
             session_proxy_port: proxy_port,
             images,
+            dangerous_skip_checks,
         };
         let backend_id = match backend {
             BackendType::Zellij => {

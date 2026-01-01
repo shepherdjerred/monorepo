@@ -233,6 +233,7 @@ impl DockerBackend {
         uid: u32,
         proxy_config: Option<&DockerProxyConfig>,
         print_mode: bool,
+        dangerous_skip_checks: bool,
         images: &[String],
         git_user_name: Option<&str>,
         git_user_email: Option<&str>,
@@ -483,11 +484,16 @@ impl DockerBackend {
                     ]);
                 }
 
-                // Write claude.json to skip onboarding
+                // Write claude.json to skip onboarding and optionally suppress bypass permissions warning
                 // This tells Claude Code we've already completed the setup wizard
                 // Note: Claude Code writes to this file, so we can't mount it read-only
                 let claude_json_path = proxy.mux_dir.join("claude.json");
-                let claude_json = r#"{"hasCompletedOnboarding": true}"#;
+                let claude_json = if dangerous_skip_checks {
+                    // If bypass permissions is enabled, also suppress the warning
+                    r#"{"hasCompletedOnboarding": true, "bypassPermissionsModeAccepted": true}"#
+                } else {
+                    r#"{"hasCompletedOnboarding": true}"#
+                };
                 if let Err(e) = std::fs::write(&claude_json_path, claude_json) {
                     tracing::warn!(
                         "Failed to write claude.json file at {:?}: {}",
@@ -507,22 +513,32 @@ impl DockerBackend {
 
         // Add image and command
         let claude_cmd = {
-            let mut cmd = "claude --dangerously-skip-permissions".to_string();
+            use crate::agents::claude_code::ClaudeCodeAgent;
+            use crate::agents::traits::Agent;
 
-            // Add print mode flags
+            let agent = ClaudeCodeAgent::new();
+            let mut cmd_vec = agent.start_command(&escaped_prompt, images, dangerous_skip_checks);
+
+            // Add print mode flags if enabled
             if print_mode {
-                cmd.push_str(" --print --verbose");
+                // Insert after "claude" but before other args
+                cmd_vec.insert(1, "--print".to_string());
+                cmd_vec.insert(2, "--verbose".to_string());
             }
 
-            // Add image arguments
-            for image in images {
-                let escaped_image = image.replace('\'', "'\\''");
-                cmd.push_str(&format!(" --image '{escaped_image}'"));
-            }
-
-            // Add prompt
-            cmd.push_str(&format!(" '{escaped_prompt}'"));
-            cmd
+            // Join all arguments into a shell command, properly quoting each argument
+            cmd_vec
+                .iter()
+                .map(|arg| {
+                    // Always quote arguments that contain special characters or spaces
+                    if arg.contains('\'') || arg.contains(' ') || arg.contains('\n') || arg.contains('&') || arg.contains('|') {
+                        format!("'{}'", arg.replace('\'', "'\\''"))
+                    } else {
+                        arg.clone()
+                    }
+                })
+                .collect::<Vec<_>>()
+                .join(" ")
         };
 
         args.extend([
@@ -596,6 +612,7 @@ impl ExecutionBackend for DockerBackend {
             uid,
             proxy_config_ref,
             options.print_mode,
+            options.dangerous_skip_checks,
             &options.images,
             git_user_name.as_deref(),
             git_user_email.as_deref(),
@@ -750,6 +767,7 @@ mod tests {
             1000,
             None,
             false, // interactive mode
+            true,  // dangerous_skip_checks
             &[],   // no images
             None,  // git user name
             None,  // git user email
@@ -815,6 +833,7 @@ mod tests {
             uid,
             None,
             false, // print mode
+            true,  // dangerous_skip_checks
             &[],   // no images
         ).expect("Failed to build args");
 
@@ -838,9 +857,11 @@ mod tests {
             "test prompt",
             1000,
             None,
-            false,
-            false,
-            &[],
+            false, // print_mode
+            true,  // dangerous_skip_checks
+            &[],   // images
+            None,  // git_user_name
+            None,  // git_user_email
         )
         .expect("Failed to build args");
 
@@ -923,6 +944,7 @@ mod tests {
             1000,
             None,
             false, // print mode
+            true,  // dangerous_skip_checks
             &[],   // no images
         ).expect("Failed to build args");
 
@@ -946,6 +968,7 @@ mod tests {
             1000,
             None,
             false, // print mode
+            true,  // dangerous_skip_checks
             &[],   // no images
         ).expect("Failed to build args");
 
@@ -985,6 +1008,7 @@ mod tests {
             1000,
             Some(&proxy_config),
             false, // print mode
+            true,  // dangerous_skip_checks
             &[],   // no images
         ).expect("Failed to build args");
 
@@ -1022,6 +1046,7 @@ mod tests {
             1000,
             Some(&proxy_config),
             false, // print mode
+            true,  // dangerous_skip_checks
             &[],   // no images
         ).expect("Failed to build args");
 
@@ -1045,6 +1070,7 @@ mod tests {
             1000,
             Some(&proxy_config),
             false, // print mode
+            true,  // dangerous_skip_checks
             &[],   // no images
         ).expect("Failed to build args");
 
@@ -1070,6 +1096,7 @@ mod tests {
             1000,
             Some(&proxy_config),
             false, // print mode
+            true,  // dangerous_skip_checks
             &[],   // no images
         ).expect("Failed to build args");
 
@@ -1161,9 +1188,15 @@ mod tests {
             "test prompt",
             1000,
             None,
-            false,
-            false,
-            &[],
+            false, // print_mode
+
+            true,  // dangerous_skip_checks
+
+            &[],   // images
+
+            None,  // git_user_name
+
+            None,  // git_user_email
         ).expect("Failed to build args");
 
         // Should have workspace mount
@@ -1198,9 +1231,15 @@ mod tests {
             "test prompt",
             1000,
             None,
-            false,
-            false,
-            &[],
+            false, // print_mode
+
+            true,  // dangerous_skip_checks
+
+            &[],   // images
+
+            None,  // git_user_name
+
+            None,  // git_user_email
         ).expect("Failed to build args");
 
         // Count volume mounts (should have workspace + 3 cargo/sccache cache mounts)
@@ -1240,9 +1279,15 @@ mod tests {
             "test prompt",
             1000,
             None,
-            false,
-            false,
-            &[],
+            false, // print_mode
+
+            true,  // dangerous_skip_checks
+
+            &[],   // images
+
+            None,  // git_user_name
+
+            None,  // git_user_email
         ).expect("Failed to build args");
 
         // Should have parent .git directory mount
@@ -1280,9 +1325,15 @@ mod tests {
             "test prompt",
             1000,
             None,
-            false,
-            false,
-            &[],
+            false, // print_mode
+
+            true,  // dangerous_skip_checks
+
+            &[],   // images
+
+            None,  // git_user_name
+
+            None,  // git_user_email
         ).expect("Failed to build args");
 
         // Should still work despite whitespace
@@ -1313,9 +1364,15 @@ mod tests {
             "test prompt",
             1000,
             None,
-            false,
-            false,
-            &[],
+            false, // print_mode
+
+            true,  // dangerous_skip_checks
+
+            &[],   // images
+
+            None,  // git_user_name
+
+            None,  // git_user_email
         ).expect("Failed to build args");
 
         // Should have workspace + 3 cache mounts (no git parent mount)
@@ -1348,9 +1405,15 @@ mod tests {
             "test prompt",
             1000,
             None,
-            false,
-            false,
-            &[],
+            false, // print_mode
+
+            true,  // dangerous_skip_checks
+
+            &[],   // images
+
+            None,  // git_user_name
+
+            None,  // git_user_email
         ).expect("Failed to build args");
 
         // Should have workspace + 3 cache mounts (no git parent mount due to validation failure)

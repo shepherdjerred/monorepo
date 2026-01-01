@@ -23,5 +23,10 @@ pub trait Agent: Send + Sync {
     fn detect_state(&self, output: &str) -> AgentState;
 
     /// Get the command to start the agent with a prompt and optional images
-    fn start_command(&self, prompt: &str, images: &[String]) -> Vec<String>;
+    fn start_command(
+        &self,
+        prompt: &str,
+        images: &[String],
+        dangerous_skip_checks: bool,
+    ) -> Vec<String>;
 }
