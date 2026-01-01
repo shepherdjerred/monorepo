@@ -409,10 +409,18 @@ impl CreateDialogState {
         }
     }
 
+    /// Calculate the number of visible lines in the prompt field
+    ///
+    /// This matches the logic in create_dialog.rs rendering to ensure scroll
+    /// calculations stay in sync with the actual displayed height.
+    pub fn prompt_visible_lines(&self) -> usize {
+        let prompt_lines = self.prompt.lines().count().max(1);
+        prompt_lines.clamp(5, 15) // Min 5, max 15 lines
+    }
+
     /// Ensure the cursor is visible in the prompt field by adjusting scroll offset
     pub fn ensure_cursor_visible(&mut self) {
-        // Assume ~10 visible lines (should match rendering)
-        let visible_lines = 10;
+        let visible_lines = self.prompt_visible_lines();
         let cursor_line = self.prompt_cursor_line;
 
         // If cursor is above the visible area, scroll up

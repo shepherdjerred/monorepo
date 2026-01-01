@@ -165,9 +165,10 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
             }
         }
         KeyCode::PageDown => {
-            // Scroll prompt field down (pass visible lines - we'll use a reasonable default)
+            // Scroll prompt field down
             if app.create_dialog.focus == CreateDialogFocus::Prompt {
-                app.create_dialog.scroll_prompt_down(10); // Assuming ~10 visible lines
+                let visible_lines = app.create_dialog.prompt_visible_lines();
+                app.create_dialog.scroll_prompt_down(visible_lines);
             }
         }
         KeyCode::Home => match app.create_dialog.focus {
