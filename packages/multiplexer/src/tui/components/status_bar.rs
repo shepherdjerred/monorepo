@@ -10,10 +10,10 @@ use crate::tui::app::{App, AppMode};
 
 /// Render the status bar
 pub fn render(frame: &mut Frame, app: &App, area: Rect) {
-    let line = if app.mode == AppMode::Attached {
-        render_attached_status(app)
-    } else {
-        render_normal_status(app)
+    let line = match app.mode {
+        AppMode::Attached => render_attached_status(app),
+        AppMode::CopyMode => render_copy_mode_status(app),
+        _ => render_normal_status(app),
     };
 
     let paragraph = Paragraph::new(line).style(Style::default().bg(Color::DarkGray));
@@ -33,7 +33,7 @@ fn render_attached_status(app: &App) -> Line<'static> {
         let buffer = pty_session.terminal_buffer();
         if let Ok(buf) = buffer.try_lock() {
             if !buf.is_at_bottom() {
-                format!(" [scroll: {}]", buf.scroll_offset())
+                format!(" [SCROLLED - PgDn to bottom]")
             } else {
                 String::new()
             }
@@ -54,12 +54,61 @@ fn render_attached_status(app: &App) -> Line<'static> {
         Span::styled(scroll_indicator, Style::default().fg(Color::Yellow)),
         Span::raw(" │ "),
         Span::styled("Ctrl+Q", Style::default().fg(Color::Cyan)),
-        Span::raw(" detach "),
+        Span::raw(" detach │ "),
         Span::styled("Ctrl+P/N", Style::default().fg(Color::Cyan)),
-        Span::raw(" switch "),
+        Span::raw(" switch │ "),
+        Span::styled("Ctrl+[", Style::default().fg(Color::Cyan)),
+        Span::raw(" copy │ "),
         Span::styled("PgUp/Dn", Style::default().fg(Color::Cyan)),
-        Span::raw(" scroll"),
+        Span::raw(" scroll │ "),
+        Span::styled("?", Style::default().fg(Color::Cyan)),
+        Span::raw(" help"),
     ])
+}
+
+/// Render status bar for copy mode
+fn render_copy_mode_status(app: &App) -> Line<'static> {
+    let is_visual = app
+        .copy_mode_state
+        .as_ref()
+        .map(|s| s.visual_mode)
+        .unwrap_or(false);
+
+    if is_visual {
+        Line::from(vec![
+            Span::raw(" "),
+            Span::styled("●", Style::default().fg(Color::Yellow)),
+            Span::raw(" "),
+            Span::styled("VISUAL", Style::default().fg(Color::Yellow)),
+            Span::raw(" │ "),
+            Span::styled("hjkl", Style::default().fg(Color::Cyan)),
+            Span::raw(" move │ "),
+            Span::styled("y", Style::default().fg(Color::Cyan)),
+            Span::raw(" yank │ "),
+            Span::styled("v", Style::default().fg(Color::Cyan)),
+            Span::raw(" cancel │ "),
+            Span::styled("q/Esc", Style::default().fg(Color::Cyan)),
+            Span::raw(" exit"),
+        ])
+    } else {
+        Line::from(vec![
+            Span::raw(" "),
+            Span::styled("●", Style::default().fg(Color::Magenta)),
+            Span::raw(" "),
+            Span::styled("COPY MODE", Style::default().fg(Color::Magenta)),
+            Span::raw(" │ "),
+            Span::styled("hjkl", Style::default().fg(Color::Cyan)),
+            Span::raw(" move │ "),
+            Span::styled("v", Style::default().fg(Color::Cyan)),
+            Span::raw(" select │ "),
+            Span::styled("PgUp/Dn", Style::default().fg(Color::Cyan)),
+            Span::raw(" scroll │ "),
+            Span::styled("q/Esc", Style::default().fg(Color::Cyan)),
+            Span::raw(" exit │ "),
+            Span::styled("?", Style::default().fg(Color::Cyan)),
+            Span::raw(" help"),
+        ])
+    }
 }
 
 /// Render status bar for normal mode

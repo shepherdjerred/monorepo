@@ -21,19 +21,14 @@ pub fn render_terminal(buffer: &TerminalBuffer, area: Rect, buf: &mut Buffer) {
     let visible_cols = area.width.min(cols);
 
     // Get scroll offset
-    let scroll_offset = buffer.scroll_offset();
+    let scroll_offset = buffer.get_scroll_offset();
 
     // Render each cell
+    // The vt100 parser's screen() method already returns the correct viewport
+    // based on the scrollback position set via set_scrollback()
     for row in 0..visible_rows {
         for col in 0..visible_cols {
-            let screen_row = if scroll_offset > 0 {
-                // TODO: Implement scroll-back rendering
-                row
-            } else {
-                row
-            };
-
-            if let Some(cell) = screen.cell(screen_row, col) {
+            if let Some(cell) = screen.cell(row, col) {
                 let x = area.x + col;
                 let y = area.y + row;
 
@@ -56,7 +51,7 @@ pub fn render_terminal(buffer: &TerminalBuffer, area: Rect, buf: &mut Buffer) {
     }
 
     // Render cursor if at bottom (viewing live output)
-    if scroll_offset == 0 {
+    if buffer.is_at_bottom() {
         let cursor_pos = screen.cursor_position();
         let cursor_x = area.x + cursor_pos.1;
         let cursor_y = area.y + cursor_pos.0;

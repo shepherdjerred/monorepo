@@ -27,7 +27,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
 
   return (
     <div
-      className={`flex gap-3 p-4 ${
+      className={`flex gap-4 p-4 border-b-2 ${
         isUser
           ? "bg-primary/5"
           : isSystem
@@ -35,9 +35,9 @@ export function MessageBubble({ message }: MessageBubbleProps) {
             : "bg-card"
       }`}
     >
-      {/* Avatar */}
+      {/* Square Avatar (brutalist) */}
       <div
-        className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+        className={`flex-shrink-0 w-10 h-10 border-2 border-foreground flex items-center justify-center ${
           isUser ? "bg-primary text-primary-foreground" : "bg-secondary"
         }`}
       >
@@ -47,11 +47,11 @@ export function MessageBubble({ message }: MessageBubbleProps) {
       {/* Content */}
       <div className="flex-1 min-w-0">
         {/* Header */}
-        <div className="flex items-center gap-2 mb-1">
-          <span className="font-semibold text-sm">
+        <div className="flex items-center gap-3 mb-2">
+          <span className="font-bold font-mono uppercase text-sm tracking-wide">
             {isUser ? "You" : isSystem ? "System" : "Claude Code"}
           </span>
-          <span className="text-xs text-muted-foreground">
+          <span className="text-xs font-mono text-muted-foreground">
             {formatRelativeTime(message.timestamp.toISOString())}
           </span>
         </div>
@@ -63,26 +63,26 @@ export function MessageBubble({ message }: MessageBubbleProps) {
           </div>
         )}
 
-        {/* Tool uses */}
+        {/* Tool uses with chunky borders */}
         {message.toolUses && message.toolUses.length > 0 && (
-          <div className="space-y-2 mb-3">
+          <div className="space-y-3 mb-3">
             {message.toolUses.map((tool, idx) => (
               <div
                 key={idx}
-                className="flex items-start gap-2 p-3 bg-secondary/50 rounded-md border text-sm"
+                className="flex items-start gap-3 p-3 bg-accent/5 border-2 border-accent text-sm"
               >
                 <div className="flex-shrink-0 mt-0.5">
                   {toolIcons[tool.name] ?? <Terminal className="w-4 h-4" />}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="font-semibold">{tool.name}</div>
+                  <div className="font-bold font-mono">{tool.name}</div>
                   {tool.description && (
                     <div className="text-muted-foreground mt-1 font-mono text-xs break-all">
                       {tool.description}
                     </div>
                   )}
                   {tool.result && (
-                    <div className="mt-2 p-2 bg-background rounded text-xs font-mono overflow-x-auto">
+                    <div className="mt-2 p-2 bg-background border-2 text-xs font-mono overflow-x-auto">
                       {tool.result}
                     </div>
                   )}
@@ -92,19 +92,19 @@ export function MessageBubble({ message }: MessageBubbleProps) {
           </div>
         )}
 
-        {/* Code blocks */}
+        {/* Code blocks with retro terminal style */}
         {message.codeBlocks && message.codeBlocks.length > 0 && (
-          <div className="space-y-2">
+          <div className="space-y-3">
             {message.codeBlocks.map((block, idx) => (
-              <div key={idx} className="rounded-md overflow-hidden border">
-                <div className="flex items-center justify-between px-3 py-1 bg-secondary text-xs">
-                  <span className="font-mono">{block.language}</span>
+              <div key={idx} className="border-4 border-primary overflow-hidden">
+                <div className="flex items-center justify-between px-3 py-2 bg-primary text-primary-foreground">
+                  <span className="font-mono text-xs font-bold uppercase">{block.language}</span>
                   {block.filePath && (
-                    <span className="text-muted-foreground">{block.filePath}</span>
+                    <span className="font-mono text-xs">{block.filePath}</span>
                   )}
                 </div>
-                <pre className="p-3 bg-background overflow-x-auto">
-                  <code className="text-sm font-mono">{block.code}</code>
+                <pre className="p-4 bg-[#0a0e14] overflow-x-auto">
+                  <code className="text-sm font-mono text-[#e6e1dc]">{block.code}</code>
                 </pre>
               </div>
             ))}

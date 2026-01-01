@@ -43,14 +43,14 @@ pub fn render(frame: &mut Frame, app: &App) {
             frame.render_widget(Clear, dialog_area);
             render_help(frame, app, dialog_area);
         }
-        AppMode::SessionList | AppMode::Attached => {}
+        AppMode::SessionList | AppMode::Attached | AppMode::CopyMode => {}
     }
 }
 
 fn render_main_content(frame: &mut Frame, app: &App, area: Rect) {
     if let Some(error) = &app.connection_error {
         render_connection_error(frame, error, area);
-    } else if app.mode == AppMode::Attached {
+    } else if app.mode == AppMode::Attached || app.mode == AppMode::CopyMode {
         render_attached_terminal(frame, app, area);
     } else {
         session_list::render(frame, app, area);
@@ -66,6 +66,33 @@ fn render_attached_terminal(frame: &mut Frame, app: &App, area: Rect) {
         if let Ok(buf) = buffer.try_lock() {
             // Render the terminal content using the widget
             frame.render_widget(TerminalWidget::new(&buf), area);
+
+            // Render scroll indicator if not at bottom
+            if !buf.is_at_bottom() {
+                let scroll_offset = buf.get_scroll_offset();
+                let indicator_text = format!(" ↑ Scrolled {} lines ", scroll_offset);
+                let indicator_width = indicator_text.len() as u16;
+
+                // Position in top-right corner
+                if area.width > indicator_width && area.height > 0 {
+                    let indicator_area = Rect {
+                        x: area.x + area.width.saturating_sub(indicator_width),
+                        y: area.y,
+                        width: indicator_width,
+                        height: 1,
+                    };
+
+                    let indicator = Paragraph::new(indicator_text).style(
+                        Style::default()
+                            .bg(Color::Yellow)
+                            .fg(Color::Black)
+                            .add_modifier(Modifier::BOLD),
+                    );
+
+                    frame.render_widget(indicator, indicator_area);
+                }
+            }
+
             return;
         }
     }
@@ -178,9 +205,11 @@ fn render_help(frame: &mut Frame, app: &App, area: Rect) {
                 ("Ctrl+Q x2", "Send literal Ctrl+Q"),
                 ("Ctrl+P/N", "Switch session (Prev/Next)"),
                 ("Alt+←/→", "Switch session"),
+                ("Ctrl+[", "Enter copy mode"),
                 ("PgUp/Dn", "Scroll history (10 lines)"),
                 ("Shift+↑/↓", "Scroll history (1 line)"),
                 ("Mouse wheel", "Scroll history"),
+                ("?", "Show help"),
             ],
         },
     );
@@ -212,6 +241,18 @@ fn render_help(frame: &mut Frame, app: &App, area: Rect) {
             ],
         ),
         ("While Attached", attached_hints),
+        (
+            "Copy Mode",
+            vec![
+                ("h/j/k/l", "Move cursor (vi-style)"),
+                ("Arrow keys", "Move cursor"),
+                ("v", "Start/cancel visual selection"),
+                ("y", "Yank (copy) selection to clipboard"),
+                ("PgUp/PgDn", "Scroll page up/down"),
+                ("q or Esc", "Exit copy mode"),
+                ("?", "Show help"),
+            ],
+        ),
     ];
 
     let mut items = Vec::new();

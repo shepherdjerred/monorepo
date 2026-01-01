@@ -329,6 +329,43 @@ impl ProxyManager {
         }
     }
 
+    /// Get reference to credentials (for status checking only).
+    pub fn get_credentials(&self) -> &Credentials {
+        &self.credentials
+    }
+
+    /// Check if Kubernetes proxy was started.
+    /// Note: This checks if the proxy process exists, not if it's currently alive.
+    pub fn is_k8s_proxy_running(&self) -> bool {
+        self.k8s_proxy.has_process()
+    }
+
+    /// Check if Talos gateway is configured.
+    pub fn is_talos_configured(&self) -> bool {
+        self.talos_gateway.is_configured()
+    }
+
+    /// Get the secrets directory path.
+    pub fn secrets_dir(&self) -> &PathBuf {
+        &self.config.secrets_dir
+    }
+
+    /// Reload credentials from disk (after they've been updated).
+    ///
+    /// This updates the credentials in the ProxyManager, but note that
+    /// already-running proxy instances will continue using their existing
+    /// credential references. New proxies created after this call will
+    /// use the updated credentials.
+    pub fn reload_credentials(&mut self) {
+        self.credentials = Arc::new(Credentials::load(&self.config.secrets_dir));
+        tracing::info!("Credentials reloaded from disk");
+    }
+
+    /// Count the number of active session proxies.
+    pub async fn active_session_proxy_count(&self) -> usize {
+        self.session_proxies.read().await.len()
+    }
+
     /// Get reference to port allocator (for restoration)
     ///
     /// Exposed to allow daemon initialization code to restore port allocations

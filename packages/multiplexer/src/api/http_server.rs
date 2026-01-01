@@ -44,6 +44,8 @@ pub fn create_router() -> Router<AppState> {
         )
         // Other endpoints
         .route("/api/recent-repos", get(get_recent_repos))
+        .route("/api/status", get(get_system_status))
+        .route("/api/credentials", post(update_credential))
         // WebSocket endpoints will be added by caller
         // Serve static files for all non-API routes (SPA fallback)
         .fallback(serve_static)
@@ -174,6 +176,28 @@ async fn get_recent_repos(
         .collect();
 
     Ok(Json(json!({ "repos": repos_dto })))
+}
+
+/// Get system status (credentials and proxies)
+async fn get_system_status(
+    State(state): State<AppState>,
+) -> Result<Json<crate::api::protocol::SystemStatus>, AppError> {
+    let status = state.session_manager.get_system_status().await?;
+    Ok(Json(status))
+}
+
+/// Update a credential
+async fn update_credential(
+    State(state): State<AppState>,
+    Json(request): Json<crate::api::protocol::UpdateCredentialRequest>,
+) -> Result<StatusCode, AppError> {
+    state
+        .session_manager
+        .update_credential(&request.service_id, &request.value)
+        .await
+        .map_err(|e| AppError::BadRequest(e.to_string()))?;
+
+    Ok(StatusCode::NO_CONTENT)
 }
 
 /// Validate session ID to prevent path traversal and injection attacks
