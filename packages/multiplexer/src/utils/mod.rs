@@ -1,5 +1,6 @@
 pub mod daemon;
 pub mod directory;
+pub mod editor;
 pub mod paths;
 pub mod random;
 
