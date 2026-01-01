@@ -715,7 +715,7 @@ impl SessionManager {
 
         let mut credentials = Vec::new();
         let mut proxies = Vec::new();
-        let mut active_session_proxies = 0;
+        let mut active_session_proxies: u32 = 0;
 
         // Collect credential and proxy status if proxy manager is available
         if let Some(ref pm) = self.proxy_manager {
@@ -871,7 +871,7 @@ impl SessionManager {
             }
 
             // Count session-specific proxies
-            active_session_proxies = pm.active_session_proxy_count().await;
+            active_session_proxies = pm.active_session_proxy_count().await as u32;
         }
 
         Ok(SystemStatus {

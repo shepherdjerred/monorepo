@@ -244,7 +244,7 @@ pub struct SystemStatus {
     pub proxies: Vec<ProxyStatus>,
 
     /// Total number of active sessions with proxies
-    pub active_session_proxies: usize,
+    pub active_session_proxies: u32,
 }
 
 /// Request to update a credential
