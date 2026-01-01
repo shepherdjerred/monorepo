@@ -341,7 +341,7 @@ impl CreateDialogState {
             backend_zellij: true, // Default to Zellij
             skip_checks: false,
             plan_mode: true, // Default to plan mode ON
-            access_mode: AccessMode::ReadOnly, // Safe default
+            access_mode: Default::default(), // ReadOnly by default (secure)
             images: Vec::new(),
             prompt_scroll_offset: 0,
             focus: CreateDialogFocus::default(),
