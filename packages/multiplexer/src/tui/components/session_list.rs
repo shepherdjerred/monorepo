@@ -6,14 +6,14 @@ use ratatui::{
     widgets::{Block, Borders, List, ListItem, ListState},
 };
 
-use crate::core::{CheckStatus, SessionStatus};
+use crate::core::{CheckStatus, ClaudeWorkingStatus, SessionStatus};
 use crate::tui::app::App;
 
 /// Render the session list
 pub fn render(frame: &mut Frame, app: &App, area: Rect) {
     let block = Block::default()
         .title(" Multiplexer - Sessions ")
-        .title_bottom(" [n]ew  [d]elete  [a]rchive  [?]help  [q]uit ")
+        .title_bottom(" [n]ew  [d]elete  [a]rchive  [p]r  [f]ix-ci  [?]help  [q]uit ")
         .borders(Borders::ALL)
         .border_style(Style::default().fg(Color::Cyan));
 
@@ -48,6 +48,30 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
                 SessionStatus::Completed => "Completed",
                 SessionStatus::Failed => "Failed",
                 SessionStatus::Archived => "Archived",
+            };
+
+            // Claude working status indicator (animated for Working state)
+            let claude_indicator = match session.claude_status {
+                ClaudeWorkingStatus::Working => {
+                    // Animate based on spinner tick
+                    let spinner = match app.spinner_tick % 4 {
+                        0 => "⠋",
+                        1 => "⠙",
+                        2 => "⠹",
+                        _ => "⠸",
+                    };
+                    Span::styled(spinner, Style::default().fg(Color::Green))
+                }
+                ClaudeWorkingStatus::WaitingApproval => {
+                    Span::styled("⏸", Style::default().fg(Color::Yellow))
+                }
+                ClaudeWorkingStatus::WaitingInput => {
+                    Span::styled("⌨", Style::default().fg(Color::Cyan))
+                }
+                ClaudeWorkingStatus::Idle => {
+                    Span::styled("○", Style::default().fg(Color::DarkGray))
+                }
+                ClaudeWorkingStatus::Unknown => Span::raw(" "),
             };
 
             let check_indicator = match session.pr_check_status {
@@ -106,6 +130,8 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
                 Span::styled(format!("{status_text:12}"), status_style),
                 Span::raw(format!("{backend_text:8}")),
                 Span::raw(format!("{pr_text:12}")),
+                claude_indicator,
+                Span::raw(" "),
                 check_indicator,
             ]);
 

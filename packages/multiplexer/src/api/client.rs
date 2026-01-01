@@ -61,9 +61,25 @@ impl Client {
 
         let mut reader = BufReader::new(reader);
         let mut line = String::new();
-        reader.read_line(&mut line).await?;
+        let bytes_read = reader.read_line(&mut line).await?;
 
-        let response: Response = serde_json::from_str(line.trim())?;
+        if bytes_read == 0 {
+            anyhow::bail!("Daemon closed connection unexpectedly (0 bytes read)");
+        }
+
+        let trimmed = line.trim();
+        if trimmed.is_empty() {
+            anyhow::bail!("Daemon returned empty response (read {} bytes, trimmed to empty)", bytes_read);
+        }
+
+        let response: Response = serde_json::from_str(trimmed).map_err(|e| {
+            anyhow::anyhow!(
+                "Failed to parse daemon response: {}. Raw response ({} bytes): {:?}",
+                e,
+                trimmed.len(),
+                if trimmed.len() > 200 { &trimmed[..200] } else { trimmed }
+            )
+        })?;
         Ok(response)
     }
 
@@ -282,6 +298,28 @@ impl Client {
         match response {
             Response::AccessModeUpdated => Ok(()),
             Response::Error { code, message } => {
+                anyhow::bail!("[{code}] {message}")
+            }
+            _ => anyhow::bail!("Unexpected response"),
+        }
+    }
+
+    /// Send a prompt to a session (for hotkey triggers)
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the session is not found or the request fails.
+    pub async fn send_prompt(&mut self, session_name: &str, prompt: &str) -> anyhow::Result<()> {
+        let response = self
+            .send_request(Request::SendPrompt {
+                session: session_name.to_string(),
+                prompt: prompt.to_string(),
+            })
+            .await?;
+
+        match response {
+            Response::Ok => Ok(()),
+            Response::Error { code, message} => {
                 anyhow::bail!("[{code}] {message}")
             }
             _ => anyhow::bail!("Unexpected response"),
