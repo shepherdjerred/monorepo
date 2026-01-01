@@ -351,6 +351,16 @@ impl CreateDialogState {
         *self = Self::new();
     }
 
+    /// Build the initial prompt, prepending plan mode instruction if enabled
+    #[must_use]
+    pub fn build_initial_prompt(&self) -> String {
+        if self.plan_mode {
+            format!("Enter plan mode and create a plan before doing anything.\n\n{}", self.prompt.trim())
+        } else {
+            self.prompt.clone()
+        }
+    }
+
     /// Toggle between Zellij and Docker backends, auto-adjusting skip_checks
     pub fn toggle_backend(&mut self) {
         let was_zellij = self.backend_zellij;
@@ -711,16 +721,10 @@ impl App {
         use crate::api::protocol::CreateSessionRequest;
         use crate::core::{AgentType, BackendType};
 
-        let initial_prompt = if self.create_dialog.plan_mode {
-            format!("Enter plan mode and create a plan before doing anything.\n\n{}", self.create_dialog.prompt)
-        } else {
-            self.create_dialog.prompt.clone()
-        };
-
         let request = CreateSessionRequest {
             name: self.create_dialog.name.clone(),
             repo_path: self.create_dialog.repo_path.clone(),
-            initial_prompt,
+            initial_prompt: self.create_dialog.build_initial_prompt(),
             backend: if self.create_dialog.backend_zellij {
                 BackendType::Zellij
             } else {

@@ -160,7 +160,6 @@ impl DockerBackend {
     /// * `print_mode` - If true, run in non-interactive mode with `--print --verbose` flags.
     ///                  The container will output the response and exit.
     ///                  If false, run interactively for `docker attach`.
-    /// * `plan_mode` - If true, add `--permission-mode plan` flag to start in plan mode.
     ///
     /// # Errors
     ///
@@ -172,7 +171,6 @@ impl DockerBackend {
         uid: u32,
         proxy_config: Option<&DockerProxyConfig>,
         print_mode: bool,
-        plan_mode: bool,
         images: &[String],
     ) -> anyhow::Result<Vec<String>> {
         let container_name = format!("mux-{name}");
@@ -402,11 +400,6 @@ impl DockerBackend {
         let claude_cmd = {
             let mut cmd = "claude --dangerously-skip-permissions".to_string();
 
-            // Add plan mode flag if enabled
-            if plan_mode {
-                cmd.push_str(" --permission-mode plan");
-            }
-
             // Add print mode flags
             if print_mode {
                 cmd.push_str(" --print --verbose");
@@ -491,7 +484,6 @@ impl ExecutionBackend for DockerBackend {
             uid,
             proxy_config_ref,
             options.print_mode,
-            options.plan_mode,
             &options.images,
         )?;
         let output = Command::new("docker")
@@ -643,9 +635,7 @@ mod tests {
             "test prompt",
             1000,
             None,
-            false, // interactive mode
-            false, // plan mode
-            &[],   // no images
+            false, // interactive mode            &[],   // no images
         ).expect("Failed to build args");
 
         // Must have -dit for interactive TTY sessions
@@ -670,9 +660,7 @@ mod tests {
             "test prompt",
             uid,
             None,
-            false, // print mode
-            false, // plan mode
-            &[],   // no images
+            false, // print mode            &[],   // no images
         ).expect("Failed to build args");
 
         // Find --user flag and verify it's followed by the UID
@@ -734,9 +722,7 @@ mod tests {
             prompt_with_quotes,
             1000,
             None,
-            false, // print mode
-            false, // plan mode
-            &[],   // no images
+            false, // print mode            &[],   // no images
         ).expect("Failed to build args");
 
         // Find the command argument (last one containing the prompt)
@@ -758,9 +744,7 @@ mod tests {
             "test prompt",
             1000,
             None,
-            false, // print mode
-            false, // plan mode
-            &[],   // no images
+            false, // print mode            &[],   // no images
         ).expect("Failed to build args");
 
         // Find --name flag and verify the container name
@@ -798,9 +782,7 @@ mod tests {
             "test prompt",
             1000,
             Some(&proxy_config),
-            false, // print mode
-            false, // plan mode
-            &[],   // no images
+            false, // print mode            &[],   // no images
         ).expect("Failed to build args");
 
         // Should have HTTPS_PROXY
@@ -836,9 +818,7 @@ mod tests {
             "test prompt",
             1000,
             Some(&proxy_config),
-            false, // print mode
-            false, // plan mode
-            &[],   // no images
+            false, // print mode            &[],   // no images
         ).expect("Failed to build args");
 
         // Should have proxy-ca.pem mount
@@ -860,9 +840,7 @@ mod tests {
             "test prompt",
             1000,
             Some(&proxy_config),
-            false, // print mode
-            false, // plan mode
-            &[],   // no images
+            false, // print mode            &[],   // no images
         ).expect("Failed to build args");
 
         // Should NOT have HTTPS_PROXY
@@ -886,9 +864,7 @@ mod tests {
             "test prompt",
             1000,
             Some(&proxy_config),
-            false, // print mode
-            false, // plan mode
-            &[],   // no images
+            false, // print mode            &[],   // no images
         ).expect("Failed to build args");
 
         // Should have --add-host flag
@@ -913,9 +889,7 @@ mod tests {
             "test prompt",
             1000,
             None,
-            true,  // print mode enabled
-            false, // plan mode
-            &[],   // no images
+            true,  // print mode enabled            &[],   // no images
         ).expect("Failed to build args");
 
         let cmd_arg = args.last().unwrap();
@@ -938,9 +912,7 @@ mod tests {
             "test prompt",
             1000,
             None,
-            false, // interactive mode
-            false, // plan mode
-            &[],   // no images
+            false, // interactive mode            &[],   // no images
         ).expect("Failed to build args");
 
         let cmd_arg = args.last().unwrap();
@@ -1181,74 +1153,4 @@ mod tests {
         );
     }
 
-    /// Test that plan mode adds --permission-mode plan flag
-    #[test]
-    fn test_plan_mode_adds_flag() {
-        let args = DockerBackend::build_create_args(
-            "test-session",
-            &PathBuf::from("/workspace"),
-            "test prompt",
-            1000,
-            None,
-            false, // print mode
-            true,  // plan mode enabled
-            &[],   // no images
-        ).expect("Failed to build args");
-
-        let cmd_arg = args.last().unwrap();
-        assert!(
-            cmd_arg.contains("--permission-mode plan"),
-            "Plan mode should add --permission-mode plan flag: {cmd_arg}"
-        );
-    }
-
-    /// Test that plan mode with print mode includes both flags
-    #[test]
-    fn test_plan_mode_with_print_mode() {
-        let args = DockerBackend::build_create_args(
-            "test-session",
-            &PathBuf::from("/workspace"),
-            "test prompt",
-            1000,
-            None,
-            true, // print mode enabled
-            true, // plan mode enabled
-            &[],  // no images
-        ).expect("Failed to build args");
-
-        let cmd_arg = args.last().unwrap();
-        assert!(
-            cmd_arg.contains("--permission-mode plan"),
-            "Should include --permission-mode plan: {cmd_arg}"
-        );
-        assert!(
-            cmd_arg.contains("--print"),
-            "Should include --print: {cmd_arg}"
-        );
-        assert!(
-            cmd_arg.contains("--verbose"),
-            "Should include --verbose: {cmd_arg}"
-        );
-    }
-
-    /// Test that plan mode disabled does not add permission-mode flag
-    #[test]
-    fn test_plan_mode_disabled() {
-        let args = DockerBackend::build_create_args(
-            "test-session",
-            &PathBuf::from("/workspace"),
-            "test prompt",
-            1000,
-            None,
-            false, // print mode
-            false, // plan mode disabled
-            &[],   // no images
-        ).expect("Failed to build args");
-
-        let cmd_arg = args.last().unwrap();
-        assert!(
-            !cmd_arg.contains("--permission-mode"),
-            "Should not include --permission-mode when disabled: {cmd_arg}"
-        );
-    }
 }

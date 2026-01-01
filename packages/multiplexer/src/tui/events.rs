@@ -184,16 +184,10 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                     app.progress_rx = Some(rx);
 
                     // Capture data for the background task
-                    let initial_prompt = if app.create_dialog.plan_mode {
-                        format!("Enter plan mode and create a plan before doing anything.\n\n{}", app.create_dialog.prompt)
-                    } else {
-                        app.create_dialog.prompt.clone()
-                    };
-
                     let request = CreateSessionRequest {
                         name: app.create_dialog.name.clone(),
                         repo_path: app.create_dialog.repo_path.clone(),
-                        initial_prompt,
+                        initial_prompt: app.create_dialog.build_initial_prompt(),
                         backend: if app.create_dialog.backend_zellij {
                             BackendType::Zellij
                         } else {
