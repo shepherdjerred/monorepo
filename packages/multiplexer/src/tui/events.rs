@@ -187,7 +187,7 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                     let request = CreateSessionRequest {
                         name: app.create_dialog.name.clone(),
                         repo_path: app.create_dialog.repo_path.clone(),
-                        initial_prompt: app.create_dialog.build_initial_prompt(),
+                        initial_prompt: app.create_dialog.prompt.clone(),
                         backend: if app.create_dialog.backend_zellij {
                             BackendType::Zellij
                         } else {

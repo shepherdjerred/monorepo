@@ -600,7 +600,7 @@ impl DockerBackend {
             initial_prompt,
             super::traits::CreateOptions {
                 print_mode: false,
-                plan_mode: true, // Unused - kept for backwards compatibility
+                plan_mode: true, // Default to plan mode
                 session_proxy_port: None,
                 images: vec![],
             },
