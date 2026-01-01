@@ -156,6 +156,15 @@ impl HttpHandler for AuthInjector {
 
             let method = req.method().to_string();
             let path = req.uri().path().to_string();
+            let version = req.version();
+
+            tracing::debug!(
+                host = %host,
+                method = %method,
+                path = %path,
+                version = ?version,
+                "Proxying request"
+            );
 
             // Check for matching rule and inject auth
             let mut auth_injected = false;
@@ -211,6 +220,90 @@ impl HttpHandler for AuthInjector {
             }
 
             RequestOrResponse::Request(req)
+        }
+    }
+
+    fn handle_response(
+        &mut self,
+        ctx: &HttpContext,
+        res: Response<Body>,
+    ) -> impl Future<Output = Response<Body>> + Send {
+        let host = ctx
+            .uri
+            .host()
+            .map(String::from)
+            .unwrap_or_else(|| String::from("unknown"));
+        let start = Instant::now();
+
+        async move {
+            let status = res.status();
+            let duration = start.elapsed();
+
+            tracing::debug!(
+                host = %host,
+                status = %status,
+                duration_ms = duration.as_millis(),
+                "Response received from upstream"
+            );
+
+            // Log warning for server errors
+            if status.is_server_error() {
+                tracing::warn!(
+                    host = %host,
+                    status = %status,
+                    "Upstream server error (5xx)"
+                );
+            }
+
+            res
+        }
+    }
+
+    fn handle_error(
+        &mut self,
+        ctx: &HttpContext,
+        err: hudsucker::Error,
+    ) -> impl Future<Output = Response<Body>> + Send {
+        let host = ctx
+            .uri
+            .host()
+            .map(String::from)
+            .unwrap_or_else(|| String::from("unknown"));
+        let method = ctx.method.to_string();
+
+        async move {
+            let error_str = err.to_string();
+
+            // Classify error types
+            let error_type = if error_str.contains("dns") || error_str.contains("resolve") {
+                "DNS_RESOLUTION_FAILURE"
+            } else if error_str.contains("connect") || error_str.contains("connection refused") {
+                "CONNECTION_REFUSED"
+            } else if error_str.contains("timeout") {
+                "CONNECTION_TIMEOUT"
+            } else if error_str.contains("certificate") || error_str.contains("tls") {
+                "TLS_CERTIFICATE_ERROR"
+            } else if error_str.contains("502") {
+                "UPSTREAM_502_ERROR"
+            } else {
+                "UNKNOWN_ERROR"
+            };
+
+            tracing::error!(
+                host = %host,
+                method = %method,
+                error_type = error_type,
+                error = %err,
+                "Proxy error while handling request"
+            );
+
+            // Return error response with classification
+            let body = format!("Proxy error ({}): {}", error_type, err);
+            Response::builder()
+                .status(502)
+                .header("X-Proxy-Error-Type", error_type)
+                .body(Body::from(body))
+                .unwrap()
         }
     }
 }
@@ -271,6 +364,16 @@ impl HttpHandler for FilteringHandler {
 
             let method = req.method().to_string();
             let path = req.uri().path().to_string();
+            let version = req.version();
+
+            tracing::debug!(
+                session_id = %session_id,
+                host = %host,
+                method = %method,
+                path = %path,
+                version = ?version,
+                "Proxying request"
+            );
 
             // Check for matching rule and inject auth
             let mut auth_injected = false;
@@ -324,6 +427,95 @@ impl HttpHandler for FilteringHandler {
             }
 
             RequestOrResponse::Request(req)
+        }
+    }
+
+    fn handle_response(
+        &mut self,
+        ctx: &HttpContext,
+        res: Response<Body>,
+    ) -> impl Future<Output = Response<Body>> + Send {
+        let session_id = self.session_id;
+        let host = ctx
+            .uri
+            .host()
+            .map(String::from)
+            .unwrap_or_else(|| String::from("unknown"));
+        let start = Instant::now();
+
+        async move {
+            let status = res.status();
+            let duration = start.elapsed();
+
+            tracing::debug!(
+                session_id = %session_id,
+                host = %host,
+                status = %status,
+                duration_ms = duration.as_millis(),
+                "Response received from upstream"
+            );
+
+            // Log warning for server errors
+            if status.is_server_error() {
+                tracing::warn!(
+                    session_id = %session_id,
+                    host = %host,
+                    status = %status,
+                    "Upstream server error (5xx)"
+                );
+            }
+
+            res
+        }
+    }
+
+    fn handle_error(
+        &mut self,
+        ctx: &HttpContext,
+        err: hudsucker::Error,
+    ) -> impl Future<Output = Response<Body>> + Send {
+        let session_id = self.session_id;
+        let host = ctx
+            .uri
+            .host()
+            .map(String::from)
+            .unwrap_or_else(|| String::from("unknown"));
+        let method = ctx.method.to_string();
+
+        async move {
+            let error_str = err.to_string();
+
+            // Classify error types
+            let error_type = if error_str.contains("dns") || error_str.contains("resolve") {
+                "DNS_RESOLUTION_FAILURE"
+            } else if error_str.contains("connect") || error_str.contains("connection refused") {
+                "CONNECTION_REFUSED"
+            } else if error_str.contains("timeout") {
+                "CONNECTION_TIMEOUT"
+            } else if error_str.contains("certificate") || error_str.contains("tls") {
+                "TLS_CERTIFICATE_ERROR"
+            } else if error_str.contains("502") {
+                "UPSTREAM_502_ERROR"
+            } else {
+                "UNKNOWN_ERROR"
+            };
+
+            tracing::error!(
+                session_id = %session_id,
+                host = %host,
+                method = %method,
+                error_type = error_type,
+                error = %err,
+                "Proxy error while handling request"
+            );
+
+            // Return error response with classification
+            let body = format!("Proxy error ({}): {}", error_type, err);
+            Response::builder()
+                .status(502)
+                .header("X-Proxy-Error-Type", error_type)
+                .body(Body::from(body))
+                .unwrap()
         }
     }
 }

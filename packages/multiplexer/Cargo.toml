@@ -59,7 +59,7 @@ include_dir = "0.7"
 mime_guess = "2"
 
 # HTTP Proxy with TLS interception
-hudsucker = { version = "0.24", default-features = false, features = ["rcgen-ca", "rustls-client"] }
+hudsucker = { version = "0.24", default-features = false, features = ["rcgen-ca", "rustls-client", "http2"] }
 http = "1"
 base64 = "0.22"
 
