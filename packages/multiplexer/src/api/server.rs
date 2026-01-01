@@ -227,8 +227,8 @@ async fn run_http_server(manager: Arc<SessionManager>, port: u16) -> anyhow::Res
         .route("/ws/console/:sessionId", axum::routing::get(ws_console_handler))
         .with_state(state);
 
-    // Bind to the HTTP port
-    let addr = std::net::SocketAddr::from(([0, 0, 0, 0], port));
+    // Bind to localhost only for security - prevents remote code execution
+    let addr = std::net::SocketAddr::from(([127, 0, 0, 1], port));
     let listener = tokio::net::TcpListener::bind(addr).await?;
 
     tracing::info!("HTTP server listening on {}", addr);
