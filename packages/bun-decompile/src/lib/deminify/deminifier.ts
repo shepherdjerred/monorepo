@@ -423,13 +423,7 @@ export class Deminifier {
 
     const result = await processor.processAll(source, graph, {
       // maxBatchTokens computed from model context limit if not specified
-<<<<<<< Updated upstream
       ...(options?.maxBatchTokens !== undefined ? { maxBatchTokens: options.maxBatchTokens } : {}),
-||||||| Stash base
-      maxBatchTokens: options?.maxBatchTokens,
-=======
-      ...(options?.maxBatchTokens !== undefined && { maxBatchTokens: options.maxBatchTokens }),
->>>>>>> Stashed changes
       verbose: this.config.verbose,
       onProgress: (progress) => {
         const progressUpdate: DeminifyProgress = {

@@ -285,7 +285,21 @@ impl Store for SqliteStore {
             .fetch_all(&self.pool)
             .await?;
 
-        rows.into_iter().map(TryInto::try_into).collect()
+        tracing::debug!("Loaded {} session rows from database", rows.len());
+
+        rows.into_iter()
+            .enumerate()
+            .map(|(i, row)| {
+                row.try_into().map_err(|e: anyhow::Error| {
+                    tracing::error!(
+                        "Failed to parse session row {}: {}",
+                        i,
+                        e
+                    );
+                    e
+                })
+            })
+            .collect()
     }
 
     async fn get_session(&self, id: Uuid) -> anyhow::Result<Option<Session>> {
@@ -497,12 +511,55 @@ impl TryFrom<SessionRow> for Session {
     type Error = anyhow::Error;
 
     fn try_from(row: SessionRow) -> Result<Self, Self::Error> {
+        let id = Uuid::parse_str(&row.id)
+            .map_err(|e| anyhow::anyhow!("session '{}': invalid id '{}': {}", row.name, row.id, e))?;
+
+        let status = serde_json::from_str(&row.status)
+            .map_err(|e| anyhow::anyhow!("session '{}': invalid status '{}': {}", row.name, row.status, e))?;
+
+        let backend = serde_json::from_str(&row.backend)
+            .map_err(|e| anyhow::anyhow!("session '{}': invalid backend '{}': {}", row.name, row.backend, e))?;
+
+        let agent = serde_json::from_str(&row.agent)
+            .map_err(|e| anyhow::anyhow!("session '{}': invalid agent '{}': {}", row.name, row.agent, e))?;
+
+        let pr_check_status = row
+            .pr_check_status
+            .map(|s| {
+                serde_json::from_str(&s)
+                    .map_err(|e| anyhow::anyhow!("session '{}': invalid pr_check_status '{}': {}", row.name, s, e))
+            })
+            .transpose()?;
+
+        // Try JSON first, then fall back to parsing raw enum variant name
+        // (migration v3 used DEFAULT 'Unknown' which is not valid JSON)
+        let claude_status: crate::core::ClaudeWorkingStatus = serde_json::from_str(&row.claude_status)
+            .or_else(|_| row.claude_status.parse())
+            .map_err(|e| anyhow::anyhow!("session '{}': invalid claude_status '{}': {}", row.name, row.claude_status, e))?;
+
+        let claude_status_updated_at = row
+            .claude_status_updated_at
+            .map(|s| {
+                chrono::DateTime::parse_from_rfc3339(&s)
+                    .map(Into::into)
+                    .map_err(|e| anyhow::anyhow!("session '{}': invalid claude_status_updated_at '{}': {}", row.name, s, e))
+            })
+            .transpose()?;
+
+        let created_at = chrono::DateTime::parse_from_rfc3339(&row.created_at)
+            .map(Into::into)
+            .map_err(|e| anyhow::anyhow!("session '{}': invalid created_at '{}': {}", row.name, row.created_at, e))?;
+
+        let updated_at = chrono::DateTime::parse_from_rfc3339(&row.updated_at)
+            .map(Into::into)
+            .map_err(|e| anyhow::anyhow!("session '{}': invalid updated_at '{}': {}", row.name, row.updated_at, e))?;
+
         Ok(Self {
-            id: Uuid::parse_str(&row.id)?,
+            id,
             name: row.name,
-            status: serde_json::from_str(&row.status)?,
-            backend: serde_json::from_str(&row.backend)?,
-            agent: serde_json::from_str(&row.agent)?,
+            status,
+            backend,
+            agent,
             repo_path: row.repo_path.into(),
             worktree_path: row.worktree_path.into(),
             branch_name: row.branch_name,
@@ -510,19 +567,13 @@ impl TryFrom<SessionRow> for Session {
             initial_prompt: row.initial_prompt,
             dangerous_skip_checks: row.dangerous_skip_checks,
             pr_url: row.pr_url,
-            pr_check_status: row
-                .pr_check_status
-                .map(|s| serde_json::from_str(&s))
-                .transpose()?,
-            claude_status: serde_json::from_str(&row.claude_status)?,
-            claude_status_updated_at: row
-                .claude_status_updated_at
-                .map(|s| chrono::DateTime::parse_from_rfc3339(&s).map(Into::into))
-                .transpose()?,
+            pr_check_status,
+            claude_status,
+            claude_status_updated_at,
             access_mode: row.access_mode.parse().unwrap_or_default(),
             proxy_port: row.proxy_port.map(|p| p as u16),
-            created_at: chrono::DateTime::parse_from_rfc3339(&row.created_at)?.into(),
-            updated_at: chrono::DateTime::parse_from_rfc3339(&row.updated_at)?.into(),
+            created_at,
+            updated_at,
         })
     }
 }
