@@ -4,9 +4,9 @@
   "private": true,
   "workspaces": ["packages/*", "packages/multiplexer/web/*"],
   "scripts": {
-    "build": "bun run --filter='./packages/*' build",
-    "test": "bun run --filter='./packages/*' test",
-    "typecheck": "bun run --filter='./packages/*' typecheck",
+    "build": "bun run --filter='./packages/**' build",
+    "test": "bun run --filter='./packages/**' test",
+    "typecheck": "bun run --filter='./packages/**' typecheck",
     "prepare": "husky"
   },
   "devDependencies": {
