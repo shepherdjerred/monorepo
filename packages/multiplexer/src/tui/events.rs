@@ -44,7 +44,8 @@ pub async fn next_event(stream: &mut EventStream) -> anyhow::Result<Option<Event
 /// # Errors
 ///
 /// Returns an error if scrolling operations fail.
-pub fn handle_mouse_event(app: &mut App, mouse: MouseEvent) -> anyhow::Result<()> {
+#[allow(clippy::unused_async)]
+pub async fn handle_mouse_event(app: &mut App, mouse: MouseEvent) -> anyhow::Result<()> {
     // Only handle mouse events when attached
     if app.mode != AppMode::Attached {
         return Ok(());
@@ -696,7 +697,8 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
     Ok(())
 }
 
-fn handle_directory_picker_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
+#[allow(clippy::unused_async)]
+async fn handle_directory_picker_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
     let picker = &mut app.create_dialog.directory_picker;
 
     match key.code {
@@ -772,7 +774,8 @@ fn handle_directory_picker_key(app: &mut App, key: KeyEvent) -> anyhow::Result<(
     Ok(())
 }
 
-fn handle_confirm_delete_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
+#[allow(clippy::unused_async)]
+async fn handle_confirm_delete_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
     match key.code {
         KeyCode::Char('y' | 'Y') => {
             app.confirm_delete();

@@ -120,7 +120,8 @@ pub async fn handle_copy_mode_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
 }
 
 /// Copy the selected text to system clipboard
-fn copy_selection_to_clipboard(app: &App) -> anyhow::Result<()> {
+#[allow(clippy::unused_async)]
+async fn copy_selection_to_clipboard(app: &App) -> anyhow::Result<()> {
     use arboard::Clipboard;
 
     let state = app.copy_mode_state.as_ref().expect("copy mode state");
