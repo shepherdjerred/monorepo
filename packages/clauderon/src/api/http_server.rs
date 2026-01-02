@@ -1,14 +1,14 @@
-use crate::core::manager::SessionManager;
 use crate::api::protocol::{CreateSessionRequest, Event};
 use crate::api::static_files::serve_static;
-use crate::api::ws_events::{broadcast_event, EventBroadcaster};
+use crate::api::ws_events::{EventBroadcaster, broadcast_event};
+use crate::core::manager::SessionManager;
 use crate::core::session::AccessMode;
 use axum::{
+    Json, Router,
     extract::{Path, State},
     http::StatusCode,
     response::{IntoResponse, Response},
     routing::{delete, get, post},
-    Json, Router,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -38,10 +38,7 @@ pub fn create_router() -> Router<AppState> {
         .route("/api/sessions/:id", get(get_session))
         .route("/api/sessions/:id", delete(delete_session))
         .route("/api/sessions/:id/archive", post(archive_session))
-        .route(
-            "/api/sessions/:id/access-mode",
-            post(update_access_mode),
-        )
+        .route("/api/sessions/:id/access-mode", post(update_access_mode))
         // Other endpoints
         .route("/api/recent-repos", get(get_recent_repos))
         .route("/api/status", get(get_system_status))
@@ -66,7 +63,8 @@ async fn get_session(
     // Validate session ID to prevent path traversal attacks
     validate_session_id(&id)?;
 
-    let session = state.session_manager
+    let session = state
+        .session_manager
         .get_session(&id)
         .await
         .ok_or_else(|| AppError::NotFound(format!("Session not found: {}", id)))?;
@@ -95,7 +93,11 @@ async fn create_session(
         .await?;
 
     // Broadcast session created event
-    broadcast_event(&state.event_broadcaster, Event::SessionCreated(session.clone())).await;
+    broadcast_event(
+        &state.event_broadcaster,
+        Event::SessionCreated(session.clone()),
+    )
+    .await;
 
     Ok(Json(json!({
         "id": session.id.to_string(),
@@ -214,22 +216,33 @@ async fn update_credential(
 fn validate_session_id(id: &str) -> Result<(), AppError> {
     // Check length (reasonable bounds)
     if id.is_empty() || id.len() > 128 {
-        return Err(AppError::BadRequest("Invalid session ID length".to_string()));
+        return Err(AppError::BadRequest(
+            "Invalid session ID length".to_string(),
+        ));
     }
 
     // Check for path traversal attempts
     if id.contains("..") || id.contains('/') || id.contains('\\') || id.contains('\0') {
-        return Err(AppError::BadRequest("Invalid session ID format".to_string()));
+        return Err(AppError::BadRequest(
+            "Invalid session ID format".to_string(),
+        ));
     }
 
     // Check for control characters
     if id.chars().any(|c| c.is_control()) {
-        return Err(AppError::BadRequest("Invalid session ID format".to_string()));
+        return Err(AppError::BadRequest(
+            "Invalid session ID format".to_string(),
+        ));
     }
 
     // Session IDs should only contain alphanumeric, hyphens, and underscores
-    if !id.chars().all(|c| c.is_alphanumeric() || c == '-' || c == '_') {
-        return Err(AppError::BadRequest("Invalid session ID format".to_string()));
+    if !id
+        .chars()
+        .all(|c| c.is_alphanumeric() || c == '-' || c == '_')
+    {
+        return Err(AppError::BadRequest(
+            "Invalid session ID format".to_string(),
+        ));
     }
 
     Ok(())

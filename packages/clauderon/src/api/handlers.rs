@@ -200,10 +200,7 @@ pub async fn handle_request(request: Request, manager: &SessionManager) -> Respo
 }
 
 /// Send a response line to the client
-async fn send_response(
-    writer: &mut OwnedWriteHalf,
-    response: &Response,
-) -> anyhow::Result<()> {
+async fn send_response(writer: &mut OwnedWriteHalf, response: &Response) -> anyhow::Result<()> {
     let json = serde_json::to_string(response)?;
     writer.write_all(json.as_bytes()).await?;
     writer.write_all(b"\n").await?;

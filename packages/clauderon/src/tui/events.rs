@@ -1,9 +1,11 @@
-use crossterm::event::{Event, EventStream, KeyCode, KeyEvent, KeyModifiers, MouseEvent, MouseEventKind};
+use crossterm::event::{
+    Event, EventStream, KeyCode, KeyEvent, KeyModifiers, MouseEvent, MouseEventKind,
+};
 use futures::StreamExt;
 use tokio::sync::mpsc;
 
-use crate::api::protocol::CreateSessionRequest;
 use crate::api::Client;
+use crate::api::protocol::CreateSessionRequest;
 use crate::core::{AgentType, BackendType};
 
 use super::app::{App, AppMode, CreateDialogFocus, CreateProgress};
@@ -107,10 +109,9 @@ pub fn handle_paste_event(app: &mut App, text: &str) {
                 .replace('\n', " ");
 
             // Insert at cursor position
-            app.create_dialog.name.insert_str(
-                app.create_dialog.name_cursor,
-                &normalized_text,
-            );
+            app.create_dialog
+                .name
+                .insert_str(app.create_dialog.name_cursor, &normalized_text);
             // Move cursor to end of pasted content
             app.create_dialog.name_cursor += normalized_text.len();
         }
@@ -121,20 +122,24 @@ pub fn handle_paste_event(app: &mut App, text: &str) {
             // Insert each character at cursor position
             for ch in normalized_text.chars() {
                 if ch == '\n' {
-                    (app.create_dialog.prompt_cursor_line, app.create_dialog.prompt_cursor_col) =
-                        super::text_input::insert_newline_at_cursor(
-                            &mut app.create_dialog.prompt,
-                            app.create_dialog.prompt_cursor_line,
-                            app.create_dialog.prompt_cursor_col,
-                        );
+                    (
+                        app.create_dialog.prompt_cursor_line,
+                        app.create_dialog.prompt_cursor_col,
+                    ) = super::text_input::insert_newline_at_cursor(
+                        &mut app.create_dialog.prompt,
+                        app.create_dialog.prompt_cursor_line,
+                        app.create_dialog.prompt_cursor_col,
+                    );
                 } else {
-                    (app.create_dialog.prompt_cursor_line, app.create_dialog.prompt_cursor_col) =
-                        super::text_input::insert_char_at_cursor_multiline(
-                            &mut app.create_dialog.prompt,
-                            app.create_dialog.prompt_cursor_line,
-                            app.create_dialog.prompt_cursor_col,
-                            ch,
-                        );
+                    (
+                        app.create_dialog.prompt_cursor_line,
+                        app.create_dialog.prompt_cursor_col,
+                    ) = super::text_input::insert_char_at_cursor_multiline(
+                        &mut app.create_dialog.prompt,
+                        app.create_dialog.prompt_cursor_line,
+                        app.create_dialog.prompt_cursor_col,
+                        ch,
+                    );
                 }
             }
             app.create_dialog.ensure_cursor_visible();
@@ -143,7 +148,6 @@ pub fn handle_paste_event(app: &mut App, text: &str) {
         _ => {}
     }
 }
-
 
 /// Handle a key event based on the current app mode
 ///
@@ -197,10 +201,14 @@ async fn handle_session_list_key(app: &mut App, key: KeyEvent) -> anyhow::Result
                 let session_name = session.name.clone();
                 match Client::connect().await {
                     Ok(mut client) => {
-                        if let Err(e) = client.send_prompt(&session_name, "Create a pull request").await {
+                        if let Err(e) = client
+                            .send_prompt(&session_name, "Create a pull request")
+                            .await
+                        {
                             app.status_message = Some(format!("Failed to send prompt: {e}"));
                         } else {
-                            app.status_message = Some(format!("Sent 'Create PR' prompt to {session_name}"));
+                            app.status_message =
+                                Some(format!("Sent 'Create PR' prompt to {session_name}"));
                         }
                     }
                     Err(e) => {
@@ -215,7 +223,10 @@ async fn handle_session_list_key(app: &mut App, key: KeyEvent) -> anyhow::Result
                 let session_name = session.name.clone();
 
                 // Warn if CI is not failing, but still allow sending the prompt
-                let warning = if !matches!(session.pr_check_status, Some(crate::core::CheckStatus::Failing)) {
+                let warning = if !matches!(
+                    session.pr_check_status,
+                    Some(crate::core::CheckStatus::Failing)
+                ) {
                     " (Warning: CI is not currently failing)"
                 } else {
                     ""
@@ -223,10 +234,14 @@ async fn handle_session_list_key(app: &mut App, key: KeyEvent) -> anyhow::Result
 
                 match Client::connect().await {
                     Ok(mut client) => {
-                        if let Err(e) = client.send_prompt(&session_name, "Fix the CI failures").await {
+                        if let Err(e) = client
+                            .send_prompt(&session_name, "Fix the CI failures")
+                            .await
+                        {
                             app.status_message = Some(format!("Failed to send prompt: {e}"));
                         } else {
-                            app.status_message = Some(format!("Sent 'Fix CI' prompt to {session_name}{warning}"));
+                            app.status_message =
+                                Some(format!("Sent 'Fix CI' prompt to {session_name}{warning}"));
                         }
                     }
                     Err(e) => {
@@ -280,10 +295,12 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                 app.create_dialog.name_cursor = super::text_input::move_cursor_to_start();
             }
             CreateDialogFocus::Prompt => {
-                (app.create_dialog.prompt_cursor_line, app.create_dialog.prompt_cursor_col) =
-                    super::text_input::move_cursor_to_line_start(
-                        app.create_dialog.prompt_cursor_line,
-                    );
+                (
+                    app.create_dialog.prompt_cursor_line,
+                    app.create_dialog.prompt_cursor_col,
+                ) = super::text_input::move_cursor_to_line_start(
+                    app.create_dialog.prompt_cursor_line,
+                );
             }
             _ => {}
         },
@@ -293,11 +310,13 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                     super::text_input::move_cursor_to_end(&app.create_dialog.name);
             }
             CreateDialogFocus::Prompt => {
-                (app.create_dialog.prompt_cursor_line, app.create_dialog.prompt_cursor_col) =
-                    super::text_input::move_cursor_to_line_end(
-                        &app.create_dialog.prompt,
-                        app.create_dialog.prompt_cursor_line,
-                    );
+                (
+                    app.create_dialog.prompt_cursor_line,
+                    app.create_dialog.prompt_cursor_col,
+                ) = super::text_input::move_cursor_to_line_end(
+                    &app.create_dialog.prompt,
+                    app.create_dialog.prompt_cursor_line,
+                );
             }
             _ => {}
         },
@@ -330,12 +349,14 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
         KeyCode::Enter => match app.create_dialog.focus {
             CreateDialogFocus::Prompt => {
                 // Insert newline at cursor position
-                (app.create_dialog.prompt_cursor_line, app.create_dialog.prompt_cursor_col) =
-                    super::text_input::insert_newline_at_cursor(
-                        &mut app.create_dialog.prompt,
-                        app.create_dialog.prompt_cursor_line,
-                        app.create_dialog.prompt_cursor_col,
-                    );
+                (
+                    app.create_dialog.prompt_cursor_line,
+                    app.create_dialog.prompt_cursor_col,
+                ) = super::text_input::insert_newline_at_cursor(
+                    &mut app.create_dialog.prompt,
+                    app.create_dialog.prompt_cursor_line,
+                    app.create_dialog.prompt_cursor_col,
+                );
                 app.create_dialog.ensure_cursor_visible();
             }
             CreateDialogFocus::Buttons => {
@@ -347,7 +368,8 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
 
                     // Don't allow creation while deletion is in progress
                     if app.delete_task.is_some() {
-                        app.status_message = Some("Cannot create while deleting a session".to_string());
+                        app.status_message =
+                            Some("Cannot create while deleting a session".to_string());
                         return Ok(());
                     }
 
@@ -451,12 +473,14 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                     app.create_dialog.focus = CreateDialogFocus::Name;
                 } else {
                     // Move cursor up within prompt
-                    (app.create_dialog.prompt_cursor_line, app.create_dialog.prompt_cursor_col) =
-                        super::text_input::move_cursor_up_multiline(
-                            &app.create_dialog.prompt,
-                            app.create_dialog.prompt_cursor_line,
-                            app.create_dialog.prompt_cursor_col,
-                        );
+                    (
+                        app.create_dialog.prompt_cursor_line,
+                        app.create_dialog.prompt_cursor_col,
+                    ) = super::text_input::move_cursor_up_multiline(
+                        &app.create_dialog.prompt,
+                        app.create_dialog.prompt_cursor_line,
+                        app.create_dialog.prompt_cursor_col,
+                    );
                     app.create_dialog.ensure_cursor_visible();
                 }
             } else {
@@ -482,12 +506,14 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                     app.create_dialog.focus = CreateDialogFocus::RepoPath;
                 } else {
                     // Move cursor down within prompt
-                    (app.create_dialog.prompt_cursor_line, app.create_dialog.prompt_cursor_col) =
-                        super::text_input::move_cursor_down_multiline(
-                            &app.create_dialog.prompt,
-                            app.create_dialog.prompt_cursor_line,
-                            app.create_dialog.prompt_cursor_col,
-                        );
+                    (
+                        app.create_dialog.prompt_cursor_line,
+                        app.create_dialog.prompt_cursor_col,
+                    ) = super::text_input::move_cursor_down_multiline(
+                        &app.create_dialog.prompt,
+                        app.create_dialog.prompt_cursor_line,
+                        app.create_dialog.prompt_cursor_col,
+                    );
                     app.create_dialog.ensure_cursor_visible();
                 }
             } else {
@@ -519,20 +545,22 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                 };
             }
             CreateDialogFocus::Prompt => {
-                (app.create_dialog.prompt_cursor_line, app.create_dialog.prompt_cursor_col) =
-                    if key.code == KeyCode::Left {
-                        super::text_input::move_cursor_left_multiline(
-                            &app.create_dialog.prompt,
-                            app.create_dialog.prompt_cursor_line,
-                            app.create_dialog.prompt_cursor_col,
-                        )
-                    } else {
-                        super::text_input::move_cursor_right_multiline(
-                            &app.create_dialog.prompt,
-                            app.create_dialog.prompt_cursor_line,
-                            app.create_dialog.prompt_cursor_col,
-                        )
-                    };
+                (
+                    app.create_dialog.prompt_cursor_line,
+                    app.create_dialog.prompt_cursor_col,
+                ) = if key.code == KeyCode::Left {
+                    super::text_input::move_cursor_left_multiline(
+                        &app.create_dialog.prompt,
+                        app.create_dialog.prompt_cursor_line,
+                        app.create_dialog.prompt_cursor_col,
+                    )
+                } else {
+                    super::text_input::move_cursor_right_multiline(
+                        &app.create_dialog.prompt,
+                        app.create_dialog.prompt_cursor_line,
+                        app.create_dialog.prompt_cursor_col,
+                    )
+                };
                 app.create_dialog.ensure_cursor_visible();
             }
             CreateDialogFocus::Backend => {
@@ -573,13 +601,15 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                 );
             }
             CreateDialogFocus::Prompt => {
-                (app.create_dialog.prompt_cursor_line, app.create_dialog.prompt_cursor_col) =
-                    super::text_input::insert_char_at_cursor_multiline(
-                        &mut app.create_dialog.prompt,
-                        app.create_dialog.prompt_cursor_line,
-                        app.create_dialog.prompt_cursor_col,
-                        ' ',
-                    );
+                (
+                    app.create_dialog.prompt_cursor_line,
+                    app.create_dialog.prompt_cursor_col,
+                ) = super::text_input::insert_char_at_cursor_multiline(
+                    &mut app.create_dialog.prompt,
+                    app.create_dialog.prompt_cursor_line,
+                    app.create_dialog.prompt_cursor_col,
+                    ' ',
+                );
                 app.create_dialog.ensure_cursor_visible();
             }
             CreateDialogFocus::RepoPath => {
@@ -603,13 +633,15 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                 );
             }
             CreateDialogFocus::Prompt => {
-                (app.create_dialog.prompt_cursor_line, app.create_dialog.prompt_cursor_col) =
-                    super::text_input::insert_char_at_cursor_multiline(
-                        &mut app.create_dialog.prompt,
-                        app.create_dialog.prompt_cursor_line,
-                        app.create_dialog.prompt_cursor_col,
-                        c,
-                    );
+                (
+                    app.create_dialog.prompt_cursor_line,
+                    app.create_dialog.prompt_cursor_col,
+                ) = super::text_input::insert_char_at_cursor_multiline(
+                    &mut app.create_dialog.prompt,
+                    app.create_dialog.prompt_cursor_line,
+                    app.create_dialog.prompt_cursor_col,
+                    c,
+                );
                 app.create_dialog.ensure_cursor_visible();
             }
             // RepoPath no longer accepts typed input - use directory picker instead
@@ -623,12 +655,14 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                 );
             }
             CreateDialogFocus::Prompt => {
-                (app.create_dialog.prompt_cursor_line, app.create_dialog.prompt_cursor_col) =
-                    super::text_input::delete_char_before_cursor_multiline(
-                        &mut app.create_dialog.prompt,
-                        app.create_dialog.prompt_cursor_line,
-                        app.create_dialog.prompt_cursor_col,
-                    );
+                (
+                    app.create_dialog.prompt_cursor_line,
+                    app.create_dialog.prompt_cursor_col,
+                ) = super::text_input::delete_char_before_cursor_multiline(
+                    &mut app.create_dialog.prompt,
+                    app.create_dialog.prompt_cursor_line,
+                    app.create_dialog.prompt_cursor_col,
+                );
                 app.create_dialog.ensure_cursor_visible();
             }
             CreateDialogFocus::RepoPath => {
@@ -645,12 +679,14 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                 );
             }
             CreateDialogFocus::Prompt => {
-                (app.create_dialog.prompt_cursor_line, app.create_dialog.prompt_cursor_col) =
-                    super::text_input::delete_char_at_cursor_multiline(
-                        &mut app.create_dialog.prompt,
-                        app.create_dialog.prompt_cursor_line,
-                        app.create_dialog.prompt_cursor_col,
-                    );
+                (
+                    app.create_dialog.prompt_cursor_line,
+                    app.create_dialog.prompt_cursor_col,
+                ) = super::text_input::delete_char_at_cursor_multiline(
+                    &mut app.create_dialog.prompt,
+                    app.create_dialog.prompt_cursor_line,
+                    app.create_dialog.prompt_cursor_col,
+                );
                 app.create_dialog.ensure_cursor_visible();
             }
             _ => {}
@@ -775,7 +811,11 @@ async fn handle_attached_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()>
 
     // Log key events for debugging (only in debug builds)
     #[cfg(debug_assertions)]
-    tracing::debug!("Key event: {:?} with modifiers {:?}", key.code, key.modifiers);
+    tracing::debug!(
+        "Key event: {:?} with modifiers {:?}",
+        key.code,
+        key.modifiers
+    );
 
     // Check for Ctrl+Q as primary detach key (more reliable across terminals)
     // Also support Ctrl+] as alternative
@@ -800,7 +840,10 @@ async fn handle_attached_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()>
                 // Don't send anything yet, wait for timeout or second press
                 return Ok(());
             }
-            DetachState::Pending { since, key_byte: pending_byte } => {
+            DetachState::Pending {
+                since,
+                key_byte: pending_byte,
+            } => {
                 if since.elapsed() < DETACH_TIMEOUT {
                     // Double-tap detected - send the literal key that was pressed
                     // Copy the byte value before we mutate detach_state
@@ -888,7 +931,9 @@ async fn handle_attached_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()>
                         buf.scroll_down(SCROLL_LINES_PER_PAGE);
                     }
                     Err(_) => {
-                        tracing::warn!("Failed to acquire terminal buffer lock for PageDown scroll");
+                        tracing::warn!(
+                            "Failed to acquire terminal buffer lock for PageDown scroll"
+                        );
                     }
                 }
             }
@@ -903,7 +948,9 @@ async fn handle_attached_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()>
                         buf.scroll_up(SCROLL_LINES_PER_ARROW);
                     }
                     Err(_) => {
-                        tracing::warn!("Failed to acquire terminal buffer lock for Shift+Up scroll");
+                        tracing::warn!(
+                            "Failed to acquire terminal buffer lock for Shift+Up scroll"
+                        );
                     }
                 }
             }
@@ -917,7 +964,9 @@ async fn handle_attached_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()>
                         buf.scroll_down(SCROLL_LINES_PER_ARROW);
                     }
                     Err(_) => {
-                        tracing::warn!("Failed to acquire terminal buffer lock for Shift+Down scroll");
+                        tracing::warn!(
+                            "Failed to acquire terminal buffer lock for Shift+Down scroll"
+                        );
                     }
                 }
             }

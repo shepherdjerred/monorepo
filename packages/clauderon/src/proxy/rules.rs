@@ -27,7 +27,7 @@
 //! HTTPS_PROXY is set. GitHub and other git hosts accept this format for
 //! authenticating git operations over HTTPS.
 
-use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
+use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64};
 
 /// How to encode the credential into the header value.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -197,7 +197,10 @@ mod tests {
         let rule = rule.unwrap();
         assert_eq!(rule.header_name, "Authorization");
         assert_eq!(rule.encoding, AuthEncoding::Simple);
-        assert_eq!(rule.format_header("sk-ant-oat01-test"), "Bearer sk-ant-oat01-test");
+        assert_eq!(
+            rule.format_header("sk-ant-oat01-test"),
+            "Bearer sk-ant-oat01-test"
+        );
     }
 
     #[test]

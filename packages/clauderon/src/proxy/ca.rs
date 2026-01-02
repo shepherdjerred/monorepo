@@ -3,7 +3,10 @@
 use std::path::PathBuf;
 
 use hudsucker::certificate_authority::RcgenAuthority;
-use rcgen::{BasicConstraints, CertificateParams, DistinguishedName, DnType, IsCa, Issuer, KeyPair, KeyUsagePurpose};
+use rcgen::{
+    BasicConstraints, CertificateParams, DistinguishedName, DnType, IsCa, Issuer, KeyPair,
+    KeyUsagePurpose,
+};
 use rustls::crypto::aws_lc_rs::default_provider;
 
 /// Proxy CA for generating certificates for HTTPS interception.
@@ -26,7 +29,10 @@ impl ProxyCa {
 
         if cert_path.exists() && key_path.exists() {
             tracing::info!("Loaded proxy CA certificate from {:?}", cert_path);
-            Ok(Self { cert_path, key_path })
+            Ok(Self {
+                cert_path,
+                key_path,
+            })
         } else {
             Self::generate(clauderon_dir)
         }
@@ -76,7 +82,10 @@ impl ProxyCa {
 
         tracing::info!("Generated new proxy CA certificate at {:?}", cert_path);
 
-        Ok(Self { cert_path, key_path })
+        Ok(Self {
+            cert_path,
+            key_path,
+        })
     }
 
     /// Create a hudsucker RcgenAuthority from this CA.
@@ -146,9 +155,8 @@ impl ProxyCa {
 
         // Convert to rustls types
         let server_cert_der = CertificateDer::from(server_cert.der().to_vec());
-        let server_key_der = PrivateKeyDer::Pkcs8(PrivatePkcs8KeyDer::from(
-            server_key_pair.serialize_der(),
-        ));
+        let server_key_der =
+            PrivateKeyDer::Pkcs8(PrivatePkcs8KeyDer::from(server_key_pair.serialize_der()));
 
         // Build ServerConfig
         let config = rustls::ServerConfig::builder()

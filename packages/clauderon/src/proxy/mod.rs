@@ -24,5 +24,5 @@ pub use http_proxy::HttpAuthProxy;
 pub use k8s_proxy::KubernetesProxy;
 pub use manager::ProxyManager;
 pub use port_allocator::PortAllocator;
-pub use rules::{find_matching_rule, Rule};
+pub use rules::{Rule, find_matching_rule};
 pub use talos_gateway::TalosGateway;

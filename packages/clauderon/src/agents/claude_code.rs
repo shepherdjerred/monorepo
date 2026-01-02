@@ -209,10 +209,7 @@ mod tests {
     #[test]
     fn test_detect_state_idle_what_would_you_like() {
         let agent = ClaudeCodeAgent::new();
-        assert_eq!(
-            agent.detect_state("What would you like"),
-            AgentState::Idle
-        );
+        assert_eq!(agent.detect_state("What would you like"), AgentState::Idle);
     }
 
     #[test]
@@ -401,7 +398,10 @@ mod tests {
     #[test]
     fn test_start_command_with_images_and_dangerous_skip() {
         let agent = ClaudeCodeAgent::new();
-        let images = vec!["/path/to/image1.png".to_string(), "/path/to/image2.jpg".to_string()];
+        let images = vec![
+            "/path/to/image1.png".to_string(),
+            "/path/to/image2.jpg".to_string(),
+        ];
         let cmd = agent.start_command("Analyze these images", &images, true);
         assert_eq!(cmd.len(), 7); // claude, --dangerously-skip-permissions, --image, path1, --image, path2, prompt
         assert_eq!(cmd[0], "claude");
@@ -416,7 +416,10 @@ mod tests {
     #[test]
     fn test_start_command_with_images_without_dangerous_skip() {
         let agent = ClaudeCodeAgent::new();
-        let images = vec!["/path/to/image1.png".to_string(), "/path/to/image2.jpg".to_string()];
+        let images = vec![
+            "/path/to/image1.png".to_string(),
+            "/path/to/image2.jpg".to_string(),
+        ];
         let cmd = agent.start_command("Analyze these images", &images, false);
         assert_eq!(cmd.len(), 6); // claude, --image, path1, --image, path2, prompt
         assert_eq!(cmd[0], "claude");

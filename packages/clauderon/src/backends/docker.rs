@@ -590,7 +590,12 @@ impl DockerBackend {
                 .iter()
                 .map(|arg| {
                     // Always quote arguments that contain special characters or spaces
-                    if arg.contains('\'') || arg.contains(' ') || arg.contains('\n') || arg.contains('&') || arg.contains('|') {
+                    if arg.contains('\'')
+                        || arg.contains(' ')
+                        || arg.contains('\n')
+                        || arg.contains('&')
+                        || arg.contains('|')
+                    {
                         format!("'{}'", arg.replace('\'', "'\\''"))
                     } else {
                         arg.clone()
@@ -932,7 +937,10 @@ mod tests {
         let has_registry = args
             .iter()
             .any(|a| a.contains("clauderon-cargo-registry:/workspace/.cargo/registry"));
-        assert!(has_registry, "Expected clauderon-cargo-registry volume mount");
+        assert!(
+            has_registry,
+            "Expected clauderon-cargo-registry volume mount"
+        );
 
         let has_git = args
             .iter()
@@ -1520,7 +1528,10 @@ mod tests {
 
         // Should mount .claude.json with bypassPermissionsModeAccepted
         let has_claude_json = args.iter().any(|a| a.contains(".claude.json"));
-        assert!(has_claude_json, "Should mount .claude.json even without proxy");
+        assert!(
+            has_claude_json,
+            "Should mount .claude.json even without proxy"
+        );
 
         // Verify the mount includes the container path
         let claude_json_mount = args.iter().find(|a| a.contains(".claude.json")).unwrap();
@@ -1549,7 +1560,9 @@ mod tests {
 
         // Should still mount .claude.json (for onboarding)
         let has_claude_json = args.iter().any(|a| a.contains(".claude.json"));
-        assert!(has_claude_json, "Should mount .claude.json for onboarding even without bypass mode");
+        assert!(
+            has_claude_json,
+            "Should mount .claude.json for onboarding even without bypass mode"
+        );
     }
-
 }

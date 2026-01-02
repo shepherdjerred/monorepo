@@ -80,12 +80,12 @@ fn encode_char(c: char, has_ctrl: bool, has_alt: bool) -> Vec<u8> {
                 let ctrl_char = (c.to_ascii_lowercase() as u8) - b'a' + 1;
                 result.push(ctrl_char);
             }
-            '[' => result.push(0x1b), // Ctrl+[ = ESC
+            '[' => result.push(0x1b),  // Ctrl+[ = ESC
             '\\' => result.push(0x1c), // Ctrl+\ = FS
-            ']' => result.push(0x1d), // Ctrl+] = GS (alternate detach key)
-            '^' => result.push(0x1e), // Ctrl+^ = RS
-            '_' => result.push(0x1f), // Ctrl+_ = US
-            ' ' => result.push(0x00), // Ctrl+Space = NUL
+            ']' => result.push(0x1d),  // Ctrl+] = GS (alternate detach key)
+            '^' => result.push(0x1e),  // Ctrl+^ = RS
+            '_' => result.push(0x1f),  // Ctrl+_ = US
+            ' ' => result.push(0x00),  // Ctrl+Space = NUL
             _ => {
                 // For other characters, just encode normally
                 result.extend(c.to_string().as_bytes());

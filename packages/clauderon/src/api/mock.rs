@@ -168,7 +168,10 @@ impl ApiClient for MockApiClient {
         session.set_status(SessionStatus::Running);
         session.set_backend_id(format!("mock-backend-{}", request.name));
 
-        self.sessions.write().await.insert(session.id, session.clone());
+        self.sessions
+            .write()
+            .await
+            .insert(session.id, session.clone());
 
         Ok((session, None))
     }
@@ -246,7 +249,10 @@ impl ApiClient for MockApiClient {
 
         match session {
             Some(s) => {
-                let backend_id = s.backend_id.clone().unwrap_or_else(|| "mock-session".to_string());
+                let backend_id = s
+                    .backend_id
+                    .clone()
+                    .unwrap_or_else(|| "mock-session".to_string());
                 Ok(vec!["zellij".to_string(), "attach".to_string(), backend_id])
             }
             None => anyhow::bail!("Session not found: {id}"),
@@ -416,7 +422,12 @@ mod tests {
 
         let result = client.list_sessions().await;
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Connection refused"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Connection refused")
+        );
     }
 
     #[tokio::test]

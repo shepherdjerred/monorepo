@@ -20,7 +20,13 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
 
     // If loading, show loading message with spinner and progress
     if let Some(loading_msg) = &app.loading_message {
-        render_loading(frame, loading_msg, app.progress_step.as_ref(), app.spinner_tick, area);
+        render_loading(
+            frame,
+            loading_msg,
+            app.progress_step.as_ref(),
+            app.spinner_tick,
+            area,
+        );
         return;
     }
 
@@ -35,15 +41,15 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         .direction(Direction::Vertical)
         .margin(1)
         .constraints([
-            Constraint::Length(3),                         // Name
+            Constraint::Length(3),                        // Name
             Constraint::Length(prompt_height as u16 + 2), // Prompt (dynamic + borders)
-            Constraint::Length(3),                         // Repo path
-            Constraint::Length(2),                         // Backend
-            Constraint::Length(2),                         // Access mode
-            Constraint::Length(2),                         // Skip checks
-            Constraint::Length(2),                         // Plan mode
-            Constraint::Length(1),                         // Spacer
-            Constraint::Length(1),                         // Buttons
+            Constraint::Length(3),                        // Repo path
+            Constraint::Length(2),                        // Backend
+            Constraint::Length(2),                        // Access mode
+            Constraint::Length(2),                        // Skip checks
+            Constraint::Length(2),                        // Plan mode
+            Constraint::Length(1),                        // Spacer
+            Constraint::Length(1),                        // Buttons
         ])
         .split(area);
 
@@ -174,13 +180,7 @@ fn render_text_field(
     frame.render_widget(paragraph, area);
 }
 
-fn render_repo_path_field(
-    frame: &mut Frame,
-    label: &str,
-    value: &str,
-    focused: bool,
-    area: Rect,
-) {
+fn render_repo_path_field(frame: &mut Frame, label: &str, value: &str, focused: bool, area: Rect) {
     let style = if focused {
         Style::default().fg(Color::Yellow)
     } else {

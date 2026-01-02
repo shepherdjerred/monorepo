@@ -4,7 +4,7 @@
 
 use std::sync::Arc;
 
-use clauderon::core::events::{replay_events, Event, EventType};
+use clauderon::core::events::{Event, EventType, replay_events};
 use clauderon::core::{AgentType, BackendType, Session, SessionConfig, SessionStatus};
 use clauderon::store::{SqliteStore, Store};
 use tempfile::TempDir;

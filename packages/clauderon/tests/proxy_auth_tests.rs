@@ -52,8 +52,8 @@ use tempfile::TempDir;
 use clauderon::proxy::{AuditEntry, AuditLogger, Credentials, HttpAuthProxy, ProxyCa};
 
 /// Helper to set up a test proxy with real credentials from environment.
-async fn setup_proxy_with_env_credentials(
-) -> anyhow::Result<(HttpAuthProxy, TempDir, u16, std::path::PathBuf)> {
+async fn setup_proxy_with_env_credentials()
+-> anyhow::Result<(HttpAuthProxy, TempDir, u16, std::path::PathBuf)> {
     let temp_dir = TempDir::new()?;
     let clauderon_dir = temp_dir.path().to_path_buf();
 
@@ -212,8 +212,9 @@ async fn test_anthropic_api_key_integration() {
     tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
     let audit_entries = read_audit_log(&audit_path).expect("Failed to read audit log");
     assert!(
-        audit_entries.iter().any(|e| e.service == "api.anthropic.com"
-            && e.auth_injected),
+        audit_entries
+            .iter()
+            .any(|e| e.service == "api.anthropic.com" && e.auth_injected),
         "Auth not injected for Anthropic"
     );
 }
@@ -633,7 +634,10 @@ async fn test_talos_gateway_integration() {
         Err(e) => {
             // Other errors (timeout, protocol error) are acceptable - port is listening
             // The gateway expects TLS, so HTTP requests will fail at protocol level
-            println!("✓ Talos gateway is listening (HTTP request failed as expected: {})", e);
+            println!(
+                "✓ Talos gateway is listening (HTTP request failed as expected: {})",
+                e
+            );
         }
     }
 }
@@ -663,11 +667,7 @@ async fn test_audit_logging_multiple_services() {
     let client = create_proxy_client(proxy_port, &ca_cert_path).expect("Failed to create client");
 
     // Make requests to multiple services
-    client
-        .get("https://api.github.com/user")
-        .send()
-        .await
-        .ok();
+    client.get("https://api.github.com/user").send().await.ok();
 
     // If Anthropic key is available, test it too
     if std::env::var("ANTHROPIC_API_KEY").is_ok() {
@@ -757,8 +757,8 @@ async fn test_auth_injection_proof() {
     tokio::time::sleep(tokio::time::Duration::from_millis(200)).await;
 
     let ca_cert_path = _temp_dir.path().join("proxy-ca.pem");
-    let client_with_proxy = create_proxy_client(proxy_port, &ca_cert_path)
-        .expect("Failed to create client");
+    let client_with_proxy =
+        create_proxy_client(proxy_port, &ca_cert_path).expect("Failed to create client");
 
     let response_with_proxy = client_with_proxy
         .get("https://api.github.com/user")
@@ -773,7 +773,10 @@ async fn test_auth_injection_proof() {
         response_with_proxy.status()
     );
 
-    println!("✓ Verified auth injection: without proxy = 401, with proxy = {}", response_with_proxy.status());
+    println!(
+        "✓ Verified auth injection: without proxy = 401, with proxy = {}",
+        response_with_proxy.status()
+    );
 }
 
 /// Test Talos gateway TLS termination with zero-credential access.
@@ -821,14 +824,20 @@ async fn test_talos_gateway_tls_termination() {
     let home = dirs::home_dir().expect("No home directory");
     let proxy_ca_path = home.join(".clauderon/proxy-ca.pem");
     if !proxy_ca_path.exists() {
-        panic!("Proxy CA not found at {:?}. Is the daemon running?", proxy_ca_path);
+        panic!(
+            "Proxy CA not found at {:?}. Is the daemon running?",
+            proxy_ca_path
+        );
     }
     println!("✓ Proxy CA found at {:?}", proxy_ca_path);
 
     // Check if Talos config exists
     let talos_config_path = home.join(".talos/config");
     if !talos_config_path.exists() {
-        eprintln!("Skipping test: No Talos config found at {:?}", talos_config_path);
+        eprintln!(
+            "Skipping test: No Talos config found at {:?}",
+            talos_config_path
+        );
         return;
     }
     println!("✓ Talos config found");
@@ -891,7 +900,10 @@ contexts:
     println!("✓ talosctl version succeeded through TLS-terminating gateway");
     println!("\nServer info from response:");
     for line in stdout.lines() {
-        if line.trim().starts_with("Server:") || line.trim().starts_with("NODE:") || line.trim().starts_with("Tag:") {
+        if line.trim().starts_with("Server:")
+            || line.trim().starts_with("NODE:")
+            || line.trim().starts_with("Tag:")
+        {
             println!("  {}", line.trim());
         }
     }
