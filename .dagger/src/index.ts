@@ -613,7 +613,15 @@ export class Monorepo {
   async clauderonCi(source: Directory): Promise<string> {
     const outputs: string[] = [];
 
-    let container = getRustContainer(source);
+    // Build frontend first (required for static file embedding)
+    const frontendBuildContainer = getBaseContainer(source)
+      .withWorkdir("/workspace/packages/clauderon/web/frontend")
+      .withExec(["bun", "install"])
+      .withExec(["bun", "run", "build"]);
+    const builtFrontend = frontendBuildContainer.directory("/workspace/packages/clauderon/web/frontend/dist");
+
+    let container = getRustContainer(source)
+      .withDirectory("/workspace/web/frontend/dist", builtFrontend);
 
     // Format check
     container = container.withExec(["cargo", "fmt", "--check"]);
