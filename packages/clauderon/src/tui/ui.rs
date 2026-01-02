@@ -6,9 +6,9 @@ use ratatui::{
     widgets::{Block, Borders, Clear, List, ListItem, Paragraph, Wrap},
 };
 
-use crate::core::BackendType;
 use super::app::{App, AppMode};
 use super::components::{create_dialog, session_list, status_bar};
+use crate::core::BackendType;
 
 /// Render the entire UI
 pub fn render(frame: &mut Frame, app: &App) {
@@ -43,7 +43,11 @@ pub fn render(frame: &mut Frame, app: &App) {
             frame.render_widget(Clear, dialog_area);
             render_help(frame, app, dialog_area);
         }
-        AppMode::SessionList | AppMode::Attached | AppMode::CopyMode => {}
+        AppMode::SessionList
+        | AppMode::Attached
+        | AppMode::CopyMode
+        | AppMode::Locked
+        | AppMode::Scroll => {}
     }
 }
 
@@ -198,7 +202,7 @@ fn render_help(frame: &mut Frame, app: &App, area: Rect) {
         },
         |session| match session.backend {
             BackendType::Zellij => vec![("Ctrl+O, d", "Detach from session")],
-            BackendType::Docker => vec![
+            BackendType::Docker | BackendType::Kubernetes => vec![
                 ("Ctrl+Q", "Detach"),
                 ("Ctrl+P/N", "Switch session (Prev/Next)"),
                 ("Ctrl+S", "Enter scroll mode"),
