@@ -1037,13 +1037,17 @@ impl App {
     /// Switch to the next Docker session while attached.
     /// Returns true if switched, false if no next session.
     pub async fn switch_to_next_session(&mut self) -> anyhow::Result<bool> {
-        use crate::core::BackendType;
+        use crate::core::{BackendType, SessionStatus};
 
         // Get list of Docker sessions (only those support PTY)
         let docker_sessions: Vec<_> = self
             .sessions
             .iter()
-            .filter(|s| s.backend == BackendType::Docker && s.backend_id.is_some())
+            .filter(|s| {
+                s.backend == BackendType::Docker
+                    && s.backend_id.is_some()
+                    && s.status != SessionStatus::Archived
+            })
             .collect();
 
         if docker_sessions.len() <= 1 {
@@ -1085,13 +1089,17 @@ impl App {
     /// Switch to the previous Docker session while attached.
     /// Returns true if switched, false if no previous session.
     pub async fn switch_to_previous_session(&mut self) -> anyhow::Result<bool> {
-        use crate::core::BackendType;
+        use crate::core::{BackendType, SessionStatus};
 
         // Get list of Docker sessions (only those support PTY)
         let docker_sessions: Vec<_> = self
             .sessions
             .iter()
-            .filter(|s| s.backend == BackendType::Docker && s.backend_id.is_some())
+            .filter(|s| {
+                s.backend == BackendType::Docker
+                    && s.backend_id.is_some()
+                    && s.status != SessionStatus::Archived
+            })
             .collect();
 
         if docker_sessions.len() <= 1 {
