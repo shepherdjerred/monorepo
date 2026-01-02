@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useConsole } from "../hooks/useConsole";
-import { MessageParser } from "../lib/claudeParser";
+import { useSessionHistory } from "../hooks/useSessionHistory";
 import { MessageBubble } from "./MessageBubble";
 import { Send, Terminal as TerminalIcon } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -20,34 +20,14 @@ export function ChatInterface({
   onClose,
   onSwitchToConsole,
 }: ChatInterfaceProps) {
+  // Use session history hook for reading messages
+  const { messages, isLoading, error, fileExists } = useSessionHistory(sessionId);
+
+  // Still need console client for sending input
   const { client, isConnected } = useConsole(sessionId);
+
   const [input, setInput] = useState("");
-  const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const parserRef = useRef(new MessageParser());
-
-  const [messages, setMessages] = useState(() => parserRef.current.getMessages());
-
-  // Handle incoming terminal data
-  useEffect(() => {
-    if (!client) {
-      return;
-    }
-
-    const unsubscribe = client.onData((data) => {
-      parserRef.current.addOutput(data);
-      setMessages([...parserRef.current.getMessages()]);
-    });
-
-    const unsubscribeError = client.onError((err) => {
-      setError(err.message);
-    });
-
-    return () => {
-      unsubscribe();
-      unsubscribeError();
-    };
-  }, [client]);
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
@@ -104,21 +84,30 @@ export function ChatInterface({
           </div>
         )}
 
+        {/* Loading state */}
+        {isLoading && messages.length === 0 && (
+          <div className="flex items-center justify-center h-full text-muted-foreground">
+            <p className="font-semibold">Loading conversation history...</p>
+          </div>
+        )}
+
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto">
-          {messages.length === 0 ? (
-            <div className="flex items-center justify-center h-full text-muted-foreground">
-              <p className="font-semibold">No messages yet. Start a conversation!</p>
-            </div>
-          ) : (
-            <div>
-              {messages.map((message) => (
-                <MessageBubble key={message.id} message={message} />
-              ))}
-              <div ref={messagesEndRef} />
-            </div>
-          )}
-        </div>
+        {!isLoading && (
+          <div className="flex-1 overflow-y-auto">
+            {messages.length === 0 ? (
+              <div className="flex items-center justify-center h-full text-muted-foreground">
+                <p className="font-semibold">No messages yet. Start a conversation!</p>
+              </div>
+            ) : (
+              <div>
+                {messages.map((message) => (
+                  <MessageBubble key={message.id} message={message} />
+                ))}
+                <div ref={messagesEndRef} />
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Input */}
         <div className="p-4 border-t-4 border-primary">
@@ -141,7 +130,7 @@ export function ChatInterface({
             </Button>
           </form>
           <p className="text-xs text-muted-foreground mt-2 font-mono">
-            This is a best-effort chat view. For full terminal control, switch to console view.
+            Reading from Claude Code session history. For full terminal control, switch to console view.
           </p>
         </div>
       </DialogContent>
