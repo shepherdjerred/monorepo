@@ -362,17 +362,17 @@ export class Monorepo {
     await container.sync();
     outputs.push("✓ Build");
 
-    // Birmel CI and Multiplexer CI in parallel
-    const [birmelResult, muxResult] = await Promise.all([
+    // Birmel CI and Clauderon CI in parallel
+    const [birmelResult, clauderonResult] = await Promise.all([
       checkBirmel(source),
-      this.multiplexerCi(source),
+      this.clauderonCi(source),
     ]);
 
     outputs.push("\n--- Birmel Validation ---");
     outputs.push(birmelResult);
 
-    outputs.push("\n--- Multiplexer Validation ---");
-    outputs.push(muxResult);
+    outputs.push("\n--- Clauderon Validation ---");
+    outputs.push(clauderonResult);
 
     // Build birmel image ONCE and reuse for smoke test + publish
     const birmelImage = buildBirmelImage(source, version ?? "dev", gitSha ?? "dev");
@@ -688,8 +688,8 @@ export class Monorepo {
     const outputs: string[] = [];
 
     // Run CI first
-    outputs.push("--- Multiplexer CI ---");
-    outputs.push(await this.multiplexerCi(source));
+    outputs.push("--- Clauderon CI ---");
+    outputs.push(await this.clauderonCi(source));
 
     // Build binaries for Linux
     outputs.push("\n--- Building Binaries ---");
