@@ -19,7 +19,14 @@ pub fn encode_key(key: &KeyEvent) -> Vec<u8> {
         KeyCode::Char(c) => encode_char(c, has_ctrl, has_alt),
 
         // Enter
-        KeyCode::Enter => vec![b'\r'],
+        KeyCode::Enter => {
+            if has_shift {
+                // Shift+Enter sends CSI escape sequence
+                vec![0x1b, b'[', b'1', b'3', b'~']
+            } else {
+                vec![b'\r']
+            }
+        }
 
         // Backspace
         KeyCode::Backspace => {
