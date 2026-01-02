@@ -332,10 +332,13 @@ export class Monorepo {
     await container.sync();
     outputs.push("✓ Typecheck");
 
+    // Get the built frontend directory to pass to multiplexerCi
+    const builtFrontend = container.directory("/workspace/packages/multiplexer/web/frontend/dist");
+
     // Birmel CI, Multiplexer CI, and mux-site build in parallel
     const [birmelResult, muxResult, muxSiteResult] = await Promise.all([
       checkBirmel(source),
-      this.multiplexerCi(source),
+      this.multiplexerCi(source, builtFrontend),
       this.muxSiteCi(source),
     ]);
 
@@ -604,12 +607,28 @@ export class Monorepo {
 
   /**
    * Run Multiplexer CI: fmt check, clippy, test, build
+   * Note: Requires frontend to be pre-built since it's embedded in the Rust binary
    */
   @func()
-  async multiplexerCi(source: Directory): Promise<string> {
+  async multiplexerCi(source: Directory, frontendDist?: Directory): Promise<string> {
     const outputs: string[] = [];
 
     let container = getRustContainer(source);
+
+    // If frontend dist is provided, mount it (for when called from main CI)
+    // Otherwise build it now (for standalone multiplexer CI)
+    if (frontendDist) {
+      container = container.withDirectory("/workspace/web/frontend/dist", frontendDist);
+    } else {
+      // Build frontend first (required for static file embedding)
+      const bunContainer = getBaseContainer(source)
+        .withWorkdir("/workspace/packages/multiplexer/web/frontend")
+        .withExec(["bun", "install"])
+        .withExec(["bun", "run", "build"]);
+
+      const builtFrontend = bunContainer.directory("/workspace/packages/multiplexer/web/frontend/dist");
+      container = container.withDirectory("/workspace/web/frontend/dist", builtFrontend);
+    }
 
     // Format check
     container = container.withExec(["cargo", "fmt", "--check"]);
