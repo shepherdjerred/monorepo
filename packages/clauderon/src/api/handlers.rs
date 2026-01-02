@@ -55,7 +55,6 @@ pub async fn handle_request(request: Request, manager: &SessionManager) -> Respo
                 }
                 Err(e) => {
                     tracing::error!(
-                        name = %req.name,
                         repo_path = %req.repo_path,
                         error = %e,
                         "Failed to create session"
@@ -273,7 +272,6 @@ pub async fn handle_create_session_with_progress(
         }
         Err(e) => {
             tracing::error!(
-                name = %req.name,
                 repo_path = %req.repo_path,
                 error = %e,
                 "Failed to create session"
