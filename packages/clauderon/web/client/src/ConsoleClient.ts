@@ -144,8 +144,11 @@ export class ConsoleClient {
       throw new WebSocketError("Not connected to console");
     }
 
-    // Encode data as base64
-    const encoded = btoa(data);
+    // Encode UTF-8 string to bytes, then to base64
+    const encoder = new TextEncoder();
+    const bytes = encoder.encode(data);
+    const binaryString = Array.from(bytes, (byte) => String.fromCharCode(byte)).join('');
+    const encoded = btoa(binaryString);
 
     const message = {
       type: "input",
