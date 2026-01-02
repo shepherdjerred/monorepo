@@ -20,7 +20,7 @@ export function ChatInterface({
   onSwitchToConsole,
 }: ChatInterfaceProps) {
   // Use session history hook for reading messages
-  const { messages, isLoading, error, fileExists } = useSessionHistory(sessionId);
+  const { messages, isLoading, error } = useSessionHistory(sessionId);
 
   // Still need console client for sending input
   const { client, isConnected } = useConsole(sessionId);
