@@ -1,6 +1,34 @@
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
+/// Proxy mode for Kubernetes backend
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum ProxyMode {
+    /// No proxy (default)
+    Disabled,
+    /// Use ClusterIP service for proxy access from within cluster
+    ClusterIp,
+    /// Use host-gateway extra host mapping
+    HostGateway,
+}
+
+impl Default for ProxyMode {
+    fn default() -> Self {
+        Self::Disabled
+    }
+}
+
+impl std::fmt::Display for ProxyMode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Disabled => write!(f, "disabled"),
+            Self::ClusterIp => write!(f, "clusterip"),
+            Self::HostGateway => write!(f, "host-gateway"),
+        }
+    }
+}
+
 /// Configuration for the Kubernetes backend
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct KubernetesConfig {
@@ -45,11 +73,16 @@ pub struct KubernetesConfig {
     pub service_account: String,
 
     /// Proxy mode for remote cluster access
-    /// Options: "disabled", "nodeport", "host-gateway"
-    pub proxy_mode: String,
+    pub proxy_mode: ProxyMode,
 
-    /// NodePort service port (when proxy_mode = "nodeport")
-    pub proxy_nodeport: Option<u16>,
+    /// Proxy service port (when proxy_mode = ClusterIp)
+    /// This is the ClusterIP service port, not the NodePort
+    pub proxy_service_port: Option<u16>,
+
+    /// Host gateway IP address (when proxy_mode = HostGateway)
+    /// This is the IP address of the host machine that will be mapped to "host-gateway" hostname
+    /// Common values: "192.168.65.254" (Docker Desktop), node IP for other clusters
+    pub host_gateway_ip: Option<String>,
 
     /// Use ReadWriteOnce for cache PVCs (fallback when RWX unavailable)
     pub use_rwo_cache: bool,
@@ -71,8 +104,9 @@ impl Default for KubernetesConfig {
             git_remote_url: None, // Auto-detect
             git_remote_name: "origin".to_string(),
             service_account: "clauderon".to_string(),
-            proxy_mode: "disabled".to_string(), // Disabled by default for remote clusters
-            proxy_nodeport: None,
+            proxy_mode: ProxyMode::Disabled, // Disabled by default for remote clusters
+            proxy_service_port: None,
+            host_gateway_ip: Some("192.168.65.254".to_string()), // Docker Desktop default
             use_rwo_cache: false, // Try RWX first, fallback to RWO on error
         }
     }
