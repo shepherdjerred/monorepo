@@ -54,9 +54,16 @@ async fn call_claude_cli(repo_path: &str, initial_prompt: &str) -> anyhow::Resul
     // Build the prompt
     let prompt = build_prompt(repo_path, initial_prompt);
 
-    // Build JSON schema for structured output
-    let json_schema =
-        r#"{"type":"object","properties":{"name":{"type":"string"}},"required":["name"]}"#;
+    // Build JSON schema for structured output with title, description, and branch name
+    let json_schema = r#"{
+        "type": "object",
+        "properties": {
+            "title": {"type": "string"},
+            "description": {"type": "string"},
+            "branch_name": {"type": "string"}
+        },
+        "required": ["title", "description", "branch_name"]
+    }"#;
 
     // Build command arguments
     let mut cmd = tokio::process::Command::new("claude");
@@ -96,18 +103,36 @@ async fn call_claude_cli(repo_path: &str, initial_prompt: &str) -> anyhow::Resul
     let json: serde_json::Value = serde_json::from_str(&stdout)
         .map_err(|e| anyhow::anyhow!("Failed to parse JSON output: {}", e))?;
 
-    // Extract name field
-    let name = json
-        .get("name")
+    // Extract all three fields from JSON
+    let title = json
+        .get("title")
         .and_then(|v| v.as_str())
-        .ok_or_else(|| anyhow::anyhow!("Missing 'name' field in JSON response"))?;
+        .ok_or_else(|| anyhow::anyhow!("Missing 'title' field in JSON response"))?;
 
-    // Sanitize the name
-    let sanitized = crate::utils::random::sanitize_branch_name(name);
+    let description = json
+        .get("description")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| anyhow::anyhow!("Missing 'description' field in JSON response"))?;
+
+    let branch_name = json
+        .get("branch_name")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| anyhow::anyhow!("Missing 'branch_name' field in JSON response"))?;
+
+    // Log the AI-generated metadata
+    tracing::info!(
+        title = %title,
+        description = %description,
+        branch_name = %branch_name,
+        "AI generated session metadata"
+    );
+
+    // Sanitize the branch name
+    let sanitized = crate::utils::random::sanitize_branch_name(branch_name);
 
     // Validate not empty after sanitization
     if sanitized.is_empty() {
-        anyhow::bail!("Empty name after sanitization");
+        anyhow::bail!("Empty branch name after sanitization");
     }
 
     Ok(sanitized)
@@ -124,7 +149,14 @@ fn build_prompt(repo_path: &str, initial_prompt: &str) -> String {
     let truncated_prompt: String = initial_prompt.chars().take(200).collect();
 
     format!(
-        "Generate a concise git branch name (2-4 words, kebab-case) for working on: {} in repository: {}",
+        "Analyze this task and generate session metadata:\n\
+        Task: {}\n\
+        Repository: {}\n\n\
+        Generate three fields:\n\
+        - title: A short title under 10 words describing what will be done\n\
+        - description: A brief description in 1-2 sentences explaining the task\n\
+        - branch_name: A git branch name with 2-4 words in kebab-case\n\n\
+        Be concise and specific.",
         truncated_prompt, repo_name
     )
 }

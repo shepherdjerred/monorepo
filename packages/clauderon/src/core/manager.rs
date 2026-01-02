@@ -238,6 +238,7 @@ impl SessionManager {
                         session.set_proxy_port(proxy_port);
                         tracing::info!(
                             session_id = %session.id,
+                            name = %session.name,
                             port = proxy_port,
                             "Created session proxy"
                         );
@@ -246,6 +247,7 @@ impl SessionManager {
                     Err(e) => {
                         tracing::warn!(
                             session_id = %session.id,
+                            name = %session.name,
                             error = %e,
                             "Failed to create session proxy, using global proxy"
                         );
@@ -423,6 +425,7 @@ impl SessionManager {
                 if let Err(e) = proxy_manager.destroy_session_proxy(session.id).await {
                     tracing::warn!(
                         session_id = %session.id,
+                        name = %session.name,
                         error = %e,
                         "Failed to destroy session proxy"
                     );
@@ -479,6 +482,7 @@ impl SessionManager {
                         if let Some(ref proxy_manager) = self.proxy_manager {
                             tracing::info!(
                                 session_id = %session.id,
+                                name = %session.name,
                                 "Destroying proxy for session with missing container"
                             );
                             let _ = proxy_manager.destroy_session_proxy(session.id).await;
@@ -492,6 +496,7 @@ impl SessionManager {
                     ) {
                         tracing::warn!(
                             session_id = %session.id,
+                            name = %session.name,
                             status = ?session.status,
                             "Found zombie container for non-active session, cleaning up"
                         );
@@ -522,6 +527,7 @@ impl SessionManager {
                                 {
                                     tracing::warn!(
                                         session_id = %session.id,
+                                        name = %session.name,
                                         port = port,
                                         "Session proxy not responding - attempting recreation"
                                     );
@@ -576,6 +582,7 @@ impl SessionManager {
 
         tracing::info!(
             session_id = %session_id,
+            name = %session_clone.name,
             mode = ?new_mode,
             "Updated session access mode"
         );
