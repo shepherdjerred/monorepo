@@ -62,9 +62,6 @@ pub struct RecentRepoDto {
 #[typeshare]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CreateSessionRequest {
-    /// Session name (a random suffix will be added)
-    pub name: String,
-
     /// Path to the repository
     pub repo_path: String,
 

@@ -16,7 +16,6 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
   const [error, setError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
-    name: "",
     repo_path: "",
     initial_prompt: "",
     backend: "Docker" as BackendType,
@@ -33,7 +32,6 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
 
     try {
       const request: CreateSessionRequest = {
-        name: formData.name,
         repo_path: formData.repo_path,
         initial_prompt: formData.initial_prompt,
         backend: formData.backend,
@@ -70,19 +68,6 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
               <strong className="font-mono">Error:</strong> {error}
             </div>
           )}
-
-          <div className="space-y-2">
-            <Label htmlFor="name" className="font-semibold">Session Name</Label>
-            <Input
-              id="name"
-              type="text"
-              value={formData.name}
-              onChange={(e) => { setFormData({ ...formData, name: e.target.value }); }}
-              className="border-2"
-              placeholder="my-feature"
-              required
-            />
-          </div>
 
           <div className="space-y-2">
             <Label htmlFor="repo_path" className="font-semibold">Repository Path</Label>

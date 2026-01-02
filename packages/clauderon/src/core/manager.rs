@@ -10,8 +10,8 @@ use super::events::{Event, EventType};
 use super::session::{BackendType, CheckStatus, ClaudeWorkingStatus, Session, SessionStatus};
 
 // Import types for WebSocket event broadcasting
-use crate::api::ws_events::broadcast_event;
 use crate::api::protocol::Event as WsEvent;
+use crate::api::ws_events::broadcast_event;
 use tokio::sync::broadcast;
 
 /// Event broadcaster for WebSocket real-time updates
@@ -162,7 +162,6 @@ impl SessionManager {
     /// the post-checkout hook failed but the worktree was created successfully).
     pub async fn create_session(
         &self,
-        name: String,
         repo_path: String,
         initial_prompt: String,
         backend: BackendType,
@@ -173,19 +172,24 @@ impl SessionManager {
         access_mode: super::session::AccessMode,
         images: Vec<String>,
     ) -> anyhow::Result<(Session, Option<Vec<String>>)> {
-        // Generate unique session name with retry logic
+        // Generate base name using AI (with fallback to "session")
+        let base_name = crate::utils::generate_session_name_ai(&repo_path, &initial_prompt).await;
+
+        // Generate unique session name with random suffix and retry logic
         const MAX_ATTEMPTS: usize = 3;
         let full_name = {
             let mut attempts = 0;
             loop {
-                let candidate = crate::utils::random::generate_session_name(&name);
+                let candidate = crate::utils::random::generate_session_name(&base_name);
                 let sessions = self.sessions.read().await;
                 if !sessions.iter().any(|s| s.name == candidate) {
                     break candidate;
                 }
                 attempts += 1;
                 if attempts >= MAX_ATTEMPTS {
-                    anyhow::bail!("Failed to generate unique session name after {MAX_ATTEMPTS} attempts");
+                    anyhow::bail!(
+                        "Failed to generate unique session name after {MAX_ATTEMPTS} attempts"
+                    );
                 }
             }
         };
@@ -226,11 +230,15 @@ impl SessionManager {
         // Create per-session proxy for Docker backends BEFORE creating container
         let proxy_port = if backend == BackendType::Docker {
             if let Some(ref proxy_manager) = self.proxy_manager {
-                match proxy_manager.create_session_proxy(session.id, access_mode).await {
+                match proxy_manager
+                    .create_session_proxy(session.id, access_mode)
+                    .await
+                {
                     Ok(proxy_port) => {
                         session.set_proxy_port(proxy_port);
                         tracing::info!(
                             session_id = %session.id,
+                            name = %session.name,
                             port = proxy_port,
                             "Created session proxy"
                         );
@@ -239,6 +247,7 @@ impl SessionManager {
                     Err(e) => {
                         tracing::warn!(
                             session_id = %session.id,
+                            name = %session.name,
                             error = %e,
                             "Failed to create session proxy, using global proxy"
                         );
@@ -254,7 +263,10 @@ impl SessionManager {
 
         // Prepend plan mode instruction if enabled
         let transformed_prompt = if plan_mode {
-            format!("Enter plan mode and create a plan before doing anything.\n\n{}", initial_prompt.trim())
+            format!(
+                "Enter plan mode and create a plan before doing anything.\n\n{}",
+                initial_prompt.trim()
+            )
         } else {
             initial_prompt.clone()
         };
@@ -270,12 +282,22 @@ impl SessionManager {
         let backend_id = match backend {
             BackendType::Zellij => {
                 self.zellij
-                    .create(&full_name, &worktree_path, &transformed_prompt, create_options)
+                    .create(
+                        &full_name,
+                        &worktree_path,
+                        &transformed_prompt,
+                        create_options,
+                    )
                     .await?
             }
             BackendType::Docker => {
                 self.docker
-                    .create(&full_name, &worktree_path, &transformed_prompt, create_options)
+                    .create(
+                        &full_name,
+                        &worktree_path,
+                        &transformed_prompt,
+                        create_options,
+                    )
                     .await?
             }
         };
@@ -403,6 +425,7 @@ impl SessionManager {
                 if let Err(e) = proxy_manager.destroy_session_proxy(session.id).await {
                     tracing::warn!(
                         session_id = %session.id,
+                        name = %session.name,
                         error = %e,
                         "Failed to destroy session proxy"
                     );
@@ -411,7 +434,10 @@ impl SessionManager {
         }
 
         // Delete git worktree
-        let _ = self.git.delete_worktree(&session.repo_path, &session.worktree_path).await;
+        let _ = self
+            .git
+            .delete_worktree(&session.repo_path, &session.worktree_path)
+            .await;
 
         // Record deletion event
         let event = Event::new(session.id, EventType::SessionDeleted { reason: None });
@@ -456,6 +482,7 @@ impl SessionManager {
                         if let Some(ref proxy_manager) = self.proxy_manager {
                             tracing::info!(
                                 session_id = %session.id,
+                                name = %session.name,
                                 "Destroying proxy for session with missing container"
                             );
                             let _ = proxy_manager.destroy_session_proxy(session.id).await;
@@ -463,9 +490,13 @@ impl SessionManager {
                     }
                 } else {
                     // Container exists but session is archived/failed - clean up zombie
-                    if matches!(session.status, SessionStatus::Archived | SessionStatus::Failed) {
+                    if matches!(
+                        session.status,
+                        SessionStatus::Archived | SessionStatus::Failed
+                    ) {
                         tracing::warn!(
                             session_id = %session.id,
+                            name = %session.name,
                             status = ?session.status,
                             "Found zombie container for non-active session, cleaning up"
                         );
@@ -496,6 +527,7 @@ impl SessionManager {
                                 {
                                     tracing::warn!(
                                         session_id = %session.id,
+                                        name = %session.name,
                                         port = port,
                                         "Session proxy not responding - attempting recreation"
                                     );
@@ -550,6 +582,7 @@ impl SessionManager {
 
         tracing::info!(
             session_id = %session_id,
+            name = %session_clone.name,
             mode = ?new_mode,
             "Updated session access mode"
         );
@@ -800,7 +833,10 @@ impl SessionManager {
                 available: creds.anthropic_oauth_token.is_some(),
                 source,
                 readonly,
-                masked_value: creds.anthropic_oauth_token.as_ref().map(|v| mask_credential(v)),
+                masked_value: creds
+                    .anthropic_oauth_token
+                    .as_ref()
+                    .map(|v| mask_credential(v)),
             });
 
             // PagerDuty
@@ -928,11 +964,7 @@ impl SessionManager {
     /// - The credential is readonly (from environment variable)
     /// - The service ID is invalid
     /// - File I/O fails
-    pub async fn update_credential(
-        &self,
-        service_id: &str,
-        value: &str,
-    ) -> anyhow::Result<()> {
+    pub async fn update_credential(&self, service_id: &str, value: &str) -> anyhow::Result<()> {
         // Validate service_id format to prevent path traversal
         if !service_id
             .chars()

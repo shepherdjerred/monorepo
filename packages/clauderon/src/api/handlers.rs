@@ -28,7 +28,6 @@ pub async fn handle_request(request: Request, manager: &SessionManager) -> Respo
         Request::CreateSession(req) => {
             match manager
                 .create_session(
-                    req.name.clone(),
                     req.repo_path.clone(),
                     req.initial_prompt,
                     req.backend,
@@ -56,7 +55,6 @@ pub async fn handle_request(request: Request, manager: &SessionManager) -> Respo
                 }
                 Err(e) => {
                     tracing::error!(
-                        name = %req.name,
                         repo_path = %req.repo_path,
                         error = %e,
                         "Failed to create session"
@@ -200,10 +198,7 @@ pub async fn handle_request(request: Request, manager: &SessionManager) -> Respo
 }
 
 /// Send a response line to the client
-async fn send_response(
-    writer: &mut OwnedWriteHalf,
-    response: &Response,
-) -> anyhow::Result<()> {
+async fn send_response(writer: &mut OwnedWriteHalf, response: &Response) -> anyhow::Result<()> {
     let json = serde_json::to_string(response)?;
     writer.write_all(json.as_bytes()).await?;
     writer.write_all(b"\n").await?;
@@ -236,7 +231,6 @@ pub async fn handle_create_session_with_progress(
     // Actually create the session (this does both steps internally)
     match manager
         .create_session(
-            req.name.clone(),
             req.repo_path.clone(),
             req.initial_prompt,
             req.backend,
@@ -278,7 +272,6 @@ pub async fn handle_create_session_with_progress(
         }
         Err(e) => {
             tracing::error!(
-                name = %req.name,
                 repo_path = %req.repo_path,
                 error = %e,
                 "Failed to create session"
