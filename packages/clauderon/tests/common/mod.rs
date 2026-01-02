@@ -29,6 +29,16 @@ pub fn docker_available() -> bool {
         .unwrap_or(false)
 }
 
+/// Check if Kubernetes cluster is accessible via kubectl
+#[must_use]
+pub fn kubernetes_available() -> bool {
+    Command::new("kubectl")
+        .args(["cluster-info"])
+        .output()
+        .map(|o| o.status.success())
+        .unwrap_or(false)
+}
+
 /// Initialize a git repository in the given directory with an initial commit
 ///
 /// # Panics
@@ -97,6 +107,17 @@ macro_rules! skip_if_no_zellij {
     () => {
         if !common::zellij_available() {
             eprintln!("Skipping test: Zellij not available");
+            return;
+        }
+    };
+}
+
+/// Skip the test if Kubernetes is not available
+#[macro_export]
+macro_rules! skip_if_no_kubernetes {
+    () => {
+        if !common::kubernetes_available() {
+            eprintln!("Skipping test: Kubernetes not available");
             return;
         }
     };

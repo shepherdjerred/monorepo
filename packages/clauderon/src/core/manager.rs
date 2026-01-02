@@ -3,7 +3,7 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use uuid::Uuid;
 
-use crate::backends::{DockerBackend, ExecutionBackend, GitBackend, GitOperations, ZellijBackend};
+use crate::backends::{DockerBackend, ExecutionBackend, GitBackend, GitOperations, KubernetesBackend, ZellijBackend};
 use crate::store::Store;
 
 use super::events::{Event, EventType};
@@ -36,6 +36,7 @@ pub struct SessionManager {
     git: Arc<dyn GitOperations>,
     zellij: Arc<dyn ExecutionBackend>,
     docker: Arc<dyn ExecutionBackend>,
+    kubernetes: Arc<dyn ExecutionBackend>,
     sessions: RwLock<Vec<Session>>,
     /// Optional proxy manager for per-session filtering
     proxy_manager: Option<Arc<crate::proxy::ProxyManager>>,
@@ -57,6 +58,7 @@ impl SessionManager {
         git: Arc<dyn GitOperations>,
         zellij: Arc<dyn ExecutionBackend>,
         docker: Arc<dyn ExecutionBackend>,
+        kubernetes: Arc<dyn ExecutionBackend>,
     ) -> anyhow::Result<Self> {
         let sessions = store.list_sessions().await?;
 
@@ -65,6 +67,7 @@ impl SessionManager {
             git,
             zellij,
             docker,
+            kubernetes,
             sessions: RwLock::new(sessions),
             proxy_manager: None,
             event_broadcaster: None,
@@ -74,17 +77,22 @@ impl SessionManager {
     /// Create a new session manager with default backends
     ///
     /// This is a convenience constructor for production use that creates
-    /// real Git, Zellij, and Docker backends.
+    /// real Git, Zellij, Docker, and Kubernetes backends.
     ///
     /// # Errors
     ///
-    /// Returns an error if the store cannot be read.
+    /// Returns an error if the store cannot be read or Kubernetes client fails.
     pub async fn with_defaults(store: Arc<dyn Store>) -> anyhow::Result<Self> {
+        let kubernetes_backend = KubernetesBackend::new(
+            crate::backends::KubernetesConfig::load_or_default()
+        ).await?;
+
         Self::new(
             store,
             Arc::new(GitBackend::new()),
             Arc::new(ZellijBackend::new()),
             Arc::new(DockerBackend::new()),
+            Arc::new(kubernetes_backend),
         )
         .await
     }
@@ -95,16 +103,21 @@ impl SessionManager {
     ///
     /// # Errors
     ///
-    /// Returns an error if the store cannot be read.
+    /// Returns an error if the store cannot be read or Kubernetes client fails.
     pub async fn with_docker_backend(
         store: Arc<dyn Store>,
         docker: DockerBackend,
     ) -> anyhow::Result<Self> {
+        let kubernetes_backend = KubernetesBackend::new(
+            crate::backends::KubernetesConfig::load_or_default()
+        ).await?;
+
         Self::new(
             store,
             Arc::new(GitBackend::new()),
             Arc::new(ZellijBackend::new()),
             Arc::new(docker),
+            Arc::new(kubernetes_backend),
         )
         .await
     }
@@ -278,6 +291,11 @@ impl SessionManager {
                     .create(&full_name, &worktree_path, &transformed_prompt, create_options)
                     .await?
             }
+            BackendType::Kubernetes => {
+                self.kubernetes
+                    .create(&full_name, &worktree_path, &transformed_prompt, create_options)
+                    .await?
+            }
         };
 
         session.set_backend_id(backend_id.clone());
@@ -333,6 +351,7 @@ impl SessionManager {
         match session.backend {
             BackendType::Zellij => Ok(self.zellij.attach_command(backend_id)),
             BackendType::Docker => Ok(self.docker.attach_command(backend_id)),
+            BackendType::Kubernetes => Ok(self.kubernetes.attach_command(backend_id)),
         }
     }
 
@@ -394,6 +413,9 @@ impl SessionManager {
                 BackendType::Docker => {
                     let _ = self.docker.delete(backend_id).await;
                 }
+                BackendType::Kubernetes => {
+                    let _ = self.kubernetes.delete(backend_id).await;
+                }
             }
         }
 
@@ -446,6 +468,7 @@ impl SessionManager {
                 let exists = match session.backend {
                     BackendType::Zellij => self.zellij.exists(backend_id).await?,
                     BackendType::Docker => self.docker.exists(backend_id).await?,
+                    BackendType::Kubernetes => self.kubernetes.exists(backend_id).await?,
                 };
 
                 if !exists {
@@ -476,6 +499,9 @@ impl SessionManager {
                                 if let Some(ref proxy_manager) = self.proxy_manager {
                                     let _ = proxy_manager.destroy_session_proxy(session.id).await;
                                 }
+                            }
+                            BackendType::Kubernetes => {
+                                let _ = self.kubernetes.delete(backend_id).await;
                             }
                             BackendType::Zellij => {
                                 let _ = self.zellij.delete(backend_id).await;
@@ -692,6 +718,33 @@ impl SessionManager {
                 let container_name = format!("clauderon-{}", backend_id);
                 let mut child = tokio::process::Command::new("docker")
                     .args(["exec", "-i", &container_name, "claude"])
+                    .stdin(std::process::Stdio::piped())
+                    .stdout(std::process::Stdio::piped())
+                    .stderr(std::process::Stdio::piped())
+                    .spawn()?;
+
+                // Write prompt to stdin
+                if let Some(mut stdin) = child.stdin.take() {
+                    use tokio::io::AsyncWriteExt;
+                    stdin.write_all(prompt.as_bytes()).await?;
+                    stdin.write_all(b"\n").await?;
+                    drop(stdin); // Close stdin to signal end of input
+                }
+
+                let output = child.wait_with_output().await?;
+
+                if !output.status.success() {
+                    anyhow::bail!(
+                        "Failed to send prompt: {}",
+                        String::from_utf8_lossy(&output.stderr)
+                    );
+                }
+            }
+            BackendType::Kubernetes => {
+                // Send prompt via kubectl exec with stdin (similar to Docker)
+                let namespace = crate::backends::KubernetesConfig::load_or_default().namespace;
+                let mut child = tokio::process::Command::new("kubectl")
+                    .args(["exec", "-i", "-n", &namespace, backend_id, "-c", "claude", "--", "claude"])
                     .stdin(std::process::Stdio::piped())
                     .stdout(std::process::Stdio::piped())
                     .stderr(std::process::Stdio::piped())
