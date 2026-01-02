@@ -24,6 +24,8 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
     let line = match app.mode {
         AppMode::Attached => render_attached_status(app),
         AppMode::CopyMode => render_copy_mode_status(app),
+        AppMode::Locked => render_locked_status(app),
+        AppMode::Scroll => render_scroll_status(app),
         _ => render_normal_status(app),
     };
 
@@ -44,7 +46,7 @@ fn render_attached_status(app: &App) -> Line<'static> {
         let buffer = pty_session.terminal_buffer();
         if let Ok(buf) = buffer.try_lock() {
             if !buf.is_at_bottom() {
-                format!(" [SCROLLED - {} to bottom]", SCROLL_TO_BOTTOM)
+                format!(" [SCROLLED - Ctrl+S then {} to bottom]", SCROLL_TO_BOTTOM)
             } else {
                 String::new()
             }
@@ -68,8 +70,10 @@ fn render_attached_status(app: &App) -> Line<'static> {
         Span::raw(" detach │ "),
         Span::styled("Ctrl+P/N", Style::default().fg(Color::Cyan)),
         Span::raw(" switch │ "),
-        Span::styled(SCROLL_KEYS_SHORT, Style::default().fg(Color::Cyan)),
+        Span::styled("Ctrl+S", Style::default().fg(Color::Cyan)),
         Span::raw(" scroll │ "),
+        Span::styled("Ctrl+Space", Style::default().fg(Color::Cyan)),
+        Span::raw(" lock │ "),
         Span::styled("?", Style::default().fg(Color::Cyan)),
         Span::raw(" help"),
     ])
@@ -118,6 +122,40 @@ fn render_copy_mode_status(app: &App) -> Line<'static> {
             Span::raw(" help"),
         ])
     }
+}
+
+/// Render status bar for locked mode
+fn render_locked_status(_app: &App) -> Line<'static> {
+    Line::from(vec![
+        Span::raw(" "),
+        Span::styled("🔒", Style::default().fg(Color::Red)),
+        Span::raw(" "),
+        Span::styled("LOCKED", Style::default().fg(Color::Red)),
+        Span::raw(" - All keys forwarded to application │ "),
+        Span::styled("Ctrl+Space", Style::default().fg(Color::Cyan)),
+        Span::raw(" to unlock"),
+    ])
+}
+
+/// Render status bar for scroll mode
+fn render_scroll_status(_app: &App) -> Line<'static> {
+    Line::from(vec![
+        Span::raw(" "),
+        Span::styled("📜", Style::default().fg(Color::Cyan)),
+        Span::raw(" "),
+        Span::styled("SCROLL MODE", Style::default().fg(Color::Cyan)),
+        Span::raw(" │ "),
+        Span::styled("↑/↓", Style::default().fg(Color::Yellow)),
+        Span::raw(" or "),
+        Span::styled("j/k", Style::default().fg(Color::Yellow)),
+        Span::raw(" line │ "),
+        Span::styled(SCROLL_KEYS_SHORT, Style::default().fg(Color::Yellow)),
+        Span::raw(" or "),
+        Span::styled("Ctrl+b/f", Style::default().fg(Color::Yellow)),
+        Span::raw(" page │ "),
+        Span::styled("ESC/q", Style::default().fg(Color::Cyan)),
+        Span::raw(" exit"),
+    ])
 }
 
 /// Render status bar for normal mode

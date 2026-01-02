@@ -43,21 +43,10 @@ pub enum AppMode {
     Attached,
     /// Copy mode - navigate and select text from terminal buffer
     CopyMode,
-}
-
-/// State for the detach key detection (Ctrl+Q/Ctrl+] double-tap)
-#[derive(Debug, Clone)]
-pub enum DetachState {
-    /// Not waiting for second key press
-    Idle,
-    /// First Ctrl+Q/Ctrl+] pressed, waiting for second or timeout
-    Pending { since: Instant, key_byte: u8 },
-}
-
-impl Default for DetachState {
-    fn default() -> Self {
-        Self::Idle
-    }
+    /// Locked mode - forward all keys to application except unlock key
+    Locked,
+    /// Scroll mode - scroll terminal buffer
+    Scroll,
 }
 
 /// Copy mode state for text selection and navigation
@@ -554,9 +543,6 @@ pub struct App {
     /// Currently attached session ID (if in Attached mode)
     pub attached_session_id: Option<Uuid>,
 
-    /// Detach key state for double-tap detection
-    pub detach_state: DetachState,
-
     /// Terminal dimensions for PTY resize
     pub terminal_size: (u16, u16),
 
@@ -592,7 +578,6 @@ impl App {
             // PTY session management
             pty_sessions: HashMap::new(),
             attached_session_id: None,
-            detach_state: DetachState::Idle,
             terminal_size: (24, 80), // Default size, updated on resize
             launch_editor: false,
             copy_mode_state: None,
@@ -935,7 +920,6 @@ impl App {
             // Already have a PTY session, just switch to it
             self.attached_session_id = Some(session_id);
             self.mode = AppMode::Attached;
-            self.detach_state = DetachState::Idle;
             return Ok(());
         }
 
@@ -947,7 +931,6 @@ impl App {
         self.pty_sessions.insert(session_id, pty_session);
         self.attached_session_id = Some(session_id);
         self.mode = AppMode::Attached;
-        self.detach_state = DetachState::Idle;
 
         Ok(())
     }
@@ -956,7 +939,6 @@ impl App {
     pub fn detach(&mut self) {
         self.attached_session_id = None;
         self.mode = AppMode::SessionList;
-        self.detach_state = DetachState::Idle;
     }
 
     /// Enter copy mode from attached state
@@ -988,6 +970,47 @@ impl App {
     pub fn exit_copy_mode(&mut self) {
         if self.mode == AppMode::CopyMode {
             self.copy_mode_state = None;
+            self.mode = AppMode::Attached;
+            self.status_message = None;
+        }
+    }
+
+    /// Enter locked mode (disables all keybindings except unlock)
+    pub fn enter_locked_mode(&mut self) {
+        if self.mode == AppMode::Attached {
+            self.mode = AppMode::Locked;
+            self.status_message = Some("🔒 LOCKED - Ctrl+Space to unlock".to_string());
+        }
+    }
+
+    /// Exit locked mode back to attached
+    pub fn exit_locked_mode(&mut self) {
+        if self.mode == AppMode::Locked {
+            self.mode = AppMode::Attached;
+            self.status_message = None;
+        }
+    }
+
+    /// Toggle locked mode
+    pub fn toggle_locked_mode(&mut self) {
+        match self.mode {
+            AppMode::Attached => self.enter_locked_mode(),
+            AppMode::Locked => self.exit_locked_mode(),
+            _ => {}
+        }
+    }
+
+    /// Enter scroll mode from attached state
+    pub fn enter_scroll_mode(&mut self) {
+        if self.mode == AppMode::Attached {
+            self.mode = AppMode::Scroll;
+            self.status_message = Some("📜 SCROLL MODE - arrows/PgUp/PgDn to scroll, ESC to exit".to_string());
+        }
+    }
+
+    /// Exit scroll mode back to attached
+    pub fn exit_scroll_mode(&mut self) {
+        if self.mode == AppMode::Scroll {
             self.mode = AppMode::Attached;
             self.status_message = None;
         }
@@ -1078,7 +1101,6 @@ impl App {
         }
 
         self.attached_session_id = Some(session_id);
-        self.detach_state = DetachState::Idle;
         Ok(true)
     }
 
@@ -1127,7 +1149,6 @@ impl App {
         }
 
         self.attached_session_id = Some(session_id);
-        self.detach_state = DetachState::Idle;
         Ok(true)
     }
 

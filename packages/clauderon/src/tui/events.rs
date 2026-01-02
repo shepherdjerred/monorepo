@@ -184,6 +184,8 @@ pub async fn handle_key_event(app: &mut App, key: KeyEvent) -> anyhow::Result<()
         AppMode::Help => handle_help_key(app, key),
         AppMode::Attached => handle_attached_key(app, key).await?,
         AppMode::CopyMode => handle_copy_mode_key(app, key).await?,
+        AppMode::Locked => handle_locked_key(app, key).await?,
+        AppMode::Scroll => handle_scroll_mode_key(app, key).await?,
     }
     Ok(())
 }
@@ -780,58 +782,23 @@ fn handle_help_key(app: &mut App, key: KeyEvent) {
 
 /// Handle key events when attached to a session via PTY.
 ///
-/// Most keys are encoded and sent to the PTY. Ctrl+Q is the detach key
-/// which uses a double-tap mechanism (single press waits 300ms for second,
-/// double-tap sends the literal character to the terminal).
-///
-/// Session switching: Ctrl+P/N switches between Docker sessions.
-/// Scrolling: PageUp/Down (10 lines), Shift+Up/Down (1 line).
+/// Most keys are encoded and sent to the PTY. Special keys:
+/// - Ctrl+Q: Detach instantly
+/// - Ctrl+Space: Toggle locked mode (forwards all keys to app)
+/// - Ctrl+S: Enter scroll mode
+/// - Ctrl+P/N: Switch between Docker sessions
 async fn handle_attached_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
-    use crate::tui::app::DetachState;
     use crate::tui::attached::encode_key;
-    use std::time::Duration;
-
-    const DETACH_TIMEOUT: Duration = Duration::from_millis(300);
 
     // Log key events for debugging (only in debug builds)
     #[cfg(debug_assertions)]
     tracing::debug!("Key event: {:?} with modifiers {:?}", key.code, key.modifiers);
 
-    // Check for Ctrl+Q as detach key
-    let detach_key_byte = if key.modifiers.contains(KeyModifiers::CONTROL) {
-        match key.code {
-            KeyCode::Char('q') => Some(0x11), // Ctrl+Q
-            _ => None,
-        }
-    } else {
-        None
-    };
-
-    if let Some(key_byte) = detach_key_byte {
-        match &app.detach_state {
-            DetachState::Idle => {
-                // First press - start waiting for second
-                app.detach_state = DetachState::Pending {
-                    since: std::time::Instant::now(),
-                    key_byte,
-                };
-                // Don't send anything yet, wait for timeout or second press
-                return Ok(());
-            }
-            DetachState::Pending { since, key_byte: pending_byte } => {
-                if since.elapsed() < DETACH_TIMEOUT {
-                    // Double-tap detected - send the literal key that was pressed
-                    // Copy the byte value before we mutate detach_state
-                    let byte_to_send = *pending_byte;
-                    app.detach_state = DetachState::Idle;
-                    app.send_to_pty(vec![byte_to_send]).await?;
-                } else {
-                    // Timeout expired - this should have been handled by main loop
-                    // but if we get here, treat as detach
-                    app.detach();
-                }
-                return Ok(());
-            }
+    // Ctrl+Q: instant detach (no double-tap delay)
+    if key.modifiers.contains(KeyModifiers::CONTROL) {
+        if let KeyCode::Char('q') = key.code {
+            app.detach();
+            return Ok(());
         }
     }
 
@@ -846,6 +813,22 @@ async fn handle_attached_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()>
     //         return Ok(());
     //     }
     // }
+
+    // Toggle locked mode with Ctrl+Space
+    if key.modifiers.contains(KeyModifiers::CONTROL) {
+        if let KeyCode::Char(' ') = key.code {
+            app.toggle_locked_mode();
+            return Ok(());
+        }
+    }
+
+    // Enter scroll mode with Ctrl+S
+    if key.modifiers.contains(KeyModifiers::CONTROL) {
+        if let KeyCode::Char('s') = key.code {
+            app.enter_scroll_mode();
+            return Ok(());
+        }
+    }
 
     // Session switching with Ctrl+P/Ctrl+N
     // Note: Ctrl+Left/Right and Alt+Left/Right removed to avoid conflicts with applications
@@ -867,81 +850,9 @@ async fn handle_attached_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()>
         }
     }
 
-    // Scrolling: PageUp/PageDown and Shift+Up/Down scroll the buffer by default
-    // Hold Ctrl to send PageUp/PageDown to PTY instead (for apps like less/vim)
-    match key.code {
-        KeyCode::PageUp if !key.modifiers.contains(KeyModifiers::CONTROL) => {
-            if let Some(pty_session) = app.attached_pty_session() {
-                let buffer = pty_session.terminal_buffer();
-                match buffer.try_lock() {
-                    Ok(mut buf) => {
-                        buf.scroll_up(SCROLL_LINES_PER_PAGE);
-                    }
-                    Err(_) => {
-                        tracing::warn!("Failed to acquire terminal buffer lock for PageUp scroll");
-                    }
-                }
-            }
-            return Ok(());
-        }
-        KeyCode::PageDown if !key.modifiers.contains(KeyModifiers::CONTROL) => {
-            if let Some(pty_session) = app.attached_pty_session() {
-                let buffer = pty_session.terminal_buffer();
-                match buffer.try_lock() {
-                    Ok(mut buf) => {
-                        buf.scroll_down(SCROLL_LINES_PER_PAGE);
-                    }
-                    Err(_) => {
-                        tracing::warn!("Failed to acquire terminal buffer lock for PageDown scroll");
-                    }
-                }
-            }
-            return Ok(());
-        }
-        // Shift+Arrow keys: Scroll one line at a time
-        KeyCode::Up if key.modifiers.contains(KeyModifiers::SHIFT) => {
-            if let Some(pty_session) = app.attached_pty_session() {
-                let buffer = pty_session.terminal_buffer();
-                match buffer.try_lock() {
-                    Ok(mut buf) => {
-                        buf.scroll_up(SCROLL_LINES_PER_ARROW);
-                    }
-                    Err(_) => {
-                        tracing::warn!("Failed to acquire terminal buffer lock for Shift+Up scroll");
-                    }
-                }
-            }
-            return Ok(());
-        }
-        KeyCode::Down if key.modifiers.contains(KeyModifiers::SHIFT) => {
-            if let Some(pty_session) = app.attached_pty_session() {
-                let buffer = pty_session.terminal_buffer();
-                match buffer.try_lock() {
-                    Ok(mut buf) => {
-                        buf.scroll_down(SCROLL_LINES_PER_ARROW);
-                    }
-                    Err(_) => {
-                        tracing::warn!("Failed to acquire terminal buffer lock for Shift+Down scroll");
-                    }
-                }
-            }
-            return Ok(());
-        }
-        _ => {}
-    }
-
-    // If we were pending detach and got a different key, send the pending key then this key
-    if let DetachState::Pending { since, key_byte } = &app.detach_state {
-        if since.elapsed() >= DETACH_TIMEOUT {
-            // Timeout - detach
-            app.detach();
-            return Ok(());
-        }
-        // Not a second detach key, so send the first one as literal and continue
-        let pending_byte = *key_byte;
-        app.detach_state = DetachState::Idle;
-        app.send_to_pty(vec![pending_byte]).await?;
-    }
+    // Scrolling is now mode-based (Ctrl+S enters Scroll mode).
+    // PageUp/PageDown and Shift+Up/Down now forward to applications (less, vim, etc.)
+    // when in Attached mode. Use Ctrl+S to enter Scroll mode for buffer scrolling.
 
     // Encode the key and send to PTY
     let encoded = encode_key(&key);
@@ -956,6 +867,80 @@ async fn handle_attached_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()>
             // Silently ignore lock failures for scroll-to-bottom as it's non-critical
         }
         app.send_to_pty(encoded).await?;
+    }
+
+    Ok(())
+}
+
+/// Handle key events when in Locked mode.
+///
+/// In Locked mode, all keys are forwarded to the application except Ctrl+Space which unlocks.
+/// This provides an "escape hatch" when clauderon keybindings conflict with applications.
+async fn handle_locked_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
+    use crate::tui::attached::encode_key;
+
+    // Ctrl+Space: unlock and return to Attached mode
+    if key.modifiers.contains(KeyModifiers::CONTROL) {
+        if let KeyCode::Char(' ') = key.code {
+            app.exit_locked_mode();
+            return Ok(());
+        }
+    }
+
+    // ALL other keys forward to PTY
+    let encoded = encode_key(&key);
+    if !encoded.is_empty() {
+        app.send_to_pty(encoded).await?;
+    }
+
+    Ok(())
+}
+
+/// Handle key events when in Scroll mode.
+///
+/// In Scroll mode, arrow keys and page keys scroll the terminal buffer.
+/// ESC, q, or Ctrl+S exits scroll mode.
+async fn handle_scroll_mode_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
+    match key.code {
+        KeyCode::Esc | KeyCode::Char('q') => {
+            app.exit_scroll_mode();
+        }
+        KeyCode::Char('s') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+            app.exit_scroll_mode();
+        }
+        KeyCode::PageUp | KeyCode::Char('b') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+            if let Some(pty_session) = app.attached_pty_session() {
+                let buffer = pty_session.terminal_buffer();
+                if let Ok(mut buf) = buffer.try_lock() {
+                    buf.scroll_up(SCROLL_LINES_PER_PAGE);
+                }
+            }
+        }
+        KeyCode::PageDown | KeyCode::Char('f') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+            if let Some(pty_session) = app.attached_pty_session() {
+                let buffer = pty_session.terminal_buffer();
+                if let Ok(mut buf) = buffer.try_lock() {
+                    buf.scroll_down(SCROLL_LINES_PER_PAGE);
+                }
+            }
+        }
+        KeyCode::Up | KeyCode::Char('k') => {
+            if let Some(pty_session) = app.attached_pty_session() {
+                let buffer = pty_session.terminal_buffer();
+                if let Ok(mut buf) = buffer.try_lock() {
+                    buf.scroll_up(SCROLL_LINES_PER_ARROW);
+                }
+            }
+        }
+        KeyCode::Down | KeyCode::Char('j') => {
+            if let Some(pty_session) = app.attached_pty_session() {
+                let buffer = pty_session.terminal_buffer();
+                if let Ok(mut buf) = buffer.try_lock() {
+                    buf.scroll_down(SCROLL_LINES_PER_ARROW);
+                }
+            }
+        }
+        _ => {}
     }
 
     Ok(())
