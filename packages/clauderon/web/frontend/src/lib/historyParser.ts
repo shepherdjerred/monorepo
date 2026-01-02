@@ -100,71 +100,65 @@ export function parseHistoryEntry(line: string): Message | null {
 /**
  * Parse multiple JSONL lines into Messages
  *
- * This function also handles matching tool results to their corresponding tool uses
- * across message boundaries.
+ * This function uses a two-pass approach to correctly match tool results
+ * to their corresponding tool uses, even when results appear before uses.
  *
  * @param lines - Array of JSONL lines from the history file
  * @returns Array of parsed messages
  */
 export function parseHistoryLines(lines: string[]): Message[] {
-  const messages: Message[] = [];
   const toolUseMap = new Map<string, ToolUse>(); // Map of tool_use_id -> ToolUse
+  const parsedEntries: Array<{ entry: HistoryEntry; message: Message | null }> = [];
 
+  // First pass: Parse all entries and collect tool uses
   for (const line of lines) {
     if (!line.trim()) {
       continue;
     }
 
-    const message = parseHistoryEntry(line);
-    if (!message) {
-      // Still need to check for tool results in non-displayable messages
-      try {
-        const entry: HistoryEntry = JSON.parse(line);
-        if (
-          entry.message &&
-          Array.isArray(entry.message.content)
-        ) {
-          for (const block of entry.message.content) {
-            if (block.type === "tool_result" && block.tool_use_id) {
-              // Find the tool use and update its result
-              const toolUse = toolUseMap.get(block.tool_use_id);
-              if (toolUse) {
-                toolUse.result =
-                  typeof block.content === "string"
-                    ? block.content
-                    : JSON.stringify(block.content);
-              }
+    try {
+      const entry: HistoryEntry = JSON.parse(line);
+      const message = parseHistoryEntry(line);
+
+      // Collect tool uses from assistant messages
+      if (message?.toolUses && entry.message && Array.isArray(entry.message.content)) {
+        for (const block of entry.message.content) {
+          if (block.type === "tool_use" && block.id) {
+            // Find the matching ToolUse object
+            const toolUse = message.toolUses.find(t => t.name === block.name);
+            if (toolUse) {
+              toolUseMap.set(block.id, toolUse);
             }
           }
         }
-      } catch {
-        // Ignore parse errors for non-message entries
       }
-      continue;
-    }
 
-    // Track tool uses by their ID for matching with results
-    if (message.toolUses) {
-      for (const toolUse of message.toolUses) {
-        // Extract tool_use ID from the original line
-        try {
-          const entry: HistoryEntry = JSON.parse(line);
-          if (entry.message && Array.isArray(entry.message.content)) {
-            for (const block of entry.message.content) {
-              if (block.type === "tool_use" && block.id && block.name === toolUse.name) {
-                toolUseMap.set(block.id, toolUse);
-                break;
-              }
-            }
-          }
-        } catch {
-          // Ignore
-        }
-      }
+      parsedEntries.push({ entry, message });
+    } catch (error) {
+      console.error("Failed to parse JSONL line:", error, line);
+      // Skip malformed lines
     }
-
-    messages.push(message);
   }
 
-  return messages;
+  // Second pass: Match tool results to tool uses
+  for (const { entry } of parsedEntries) {
+    if (entry.message && Array.isArray(entry.message.content)) {
+      for (const block of entry.message.content) {
+        if (block.type === "tool_result" && block.tool_use_id) {
+          const toolUse = toolUseMap.get(block.tool_use_id);
+          if (toolUse) {
+            toolUse.result =
+              typeof block.content === "string"
+                ? block.content
+                : JSON.stringify(block.content);
+          }
+        }
+      }
+    }
+  }
+
+  // Return only the parsed messages (filter out nulls)
+  return parsedEntries
+    .map(({ message }) => message)
+    .filter((m): m is Message => m !== null);
 }

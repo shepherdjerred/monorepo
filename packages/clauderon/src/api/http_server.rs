@@ -241,6 +241,20 @@ async fn get_session_history(
     let history_path = session.history_file_path
         .ok_or_else(|| AppError::NotFound("History file path not configured".to_string()))?;
 
+    // Security: Validate path is within worktree bounds and matches expected pattern
+    if !history_path.starts_with(&session.worktree_path) {
+        return Err(AppError::BadRequest("Invalid history file path: outside worktree".to_string()));
+    }
+
+    // Verify path matches expected pattern (defense in depth)
+    let expected_path = crate::core::session::get_history_file_path(
+        &session.worktree_path,
+        &session.id,
+    );
+    if history_path != expected_path {
+        return Err(AppError::BadRequest("Invalid history file path: pattern mismatch".to_string()));
+    }
+
     // Check if file exists
     if !history_path.exists() {
         return Ok(Json(HistoryResponse {
