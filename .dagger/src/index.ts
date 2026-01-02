@@ -473,6 +473,15 @@ export class Monorepo {
           const errorMessage = error instanceof Error ? error.message : String(error);
           outputs.push(`✗ Failed to build/upload mux binaries: ${errorMessage}`);
         }
+
+        // Deploy mux-site to GitHub Pages
+        outputs.push("\n--- mux-site Deployment ---");
+        try {
+          outputs.push(await this.muxSiteDeploy(source, githubToken));
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          outputs.push(`✗ Failed to deploy mux-site: ${errorMessage}`);
+        }
       }
     }
 
