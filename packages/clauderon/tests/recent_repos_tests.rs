@@ -12,7 +12,7 @@ use std::sync::Arc;
 
 use clauderon::backends::{ExecutionBackend, GitOperations, MockExecutionBackend, MockGitBackend};
 use clauderon::core::{AgentType, BackendType, SessionManager};
-use clauderon::store::SqliteStore;
+use clauderon::store::{SqliteStore, Store};
 use tempfile::TempDir;
 
 /// Helper to create a test environment with a real temp directory for repos

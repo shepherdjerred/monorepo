@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useCallback, useEffect, type React
 import type { Session, CreateSessionRequest, AccessMode } from "@clauderon/client";
 import { useClauderonClient } from "../hooks/useClauderonClient";
 import { useSessionEvents } from "../hooks/useSessionEvents";
-import { MuxClient } from "@mux/client";
+import { ClauderonClient } from "@clauderon/client";
 
 type SessionContextValue = {
   sessions: Map<string, Session>;
@@ -13,7 +13,7 @@ type SessionContextValue = {
   deleteSession: (id: string) => Promise<void>;
   archiveSession: (id: string) => Promise<void>;
   updateAccessMode: (id: string, mode: AccessMode) => Promise<void>;
-  client: MuxClient;
+  client: ClauderonClient;
 }
 
 const SessionContext = createContext<SessionContextValue | undefined>(undefined);

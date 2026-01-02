@@ -445,7 +445,8 @@ mod tests {
     #[test]
     fn test_delete_char_before_cursor_emoji() {
         let mut text = String::from("hello😀");
-        let cursor = delete_char_before_cursor(&mut text, text.len());
+        let len = text.len();
+        let cursor = delete_char_before_cursor(&mut text, len);
         assert_eq!(text, "hello");
         assert_eq!(cursor, 5);
     }

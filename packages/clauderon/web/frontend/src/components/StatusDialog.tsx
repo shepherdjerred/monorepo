@@ -11,7 +11,7 @@ import {
   Lock,
   Loader2,
 } from "lucide-react";
-import type { SystemStatus, CredentialStatus } from "@mux/client";
+import type { SystemStatus, CredentialStatus, ProxyStatus } from "@clauderon/client";
 import { useSessionContext } from "../contexts/SessionContext";
 
 type StatusDialogProps = {
@@ -267,7 +267,7 @@ export function StatusDialog({ onClose }: StatusDialogProps) {
                 </div>
 
                 <div className="grid gap-3">
-                  {status.proxies.map((proxy) => (
+                  {status.proxies.map((proxy: ProxyStatus) => (
                     <div
                       key={`${proxy.name}-${String(proxy.port)}`}
                       className="flex items-center justify-between p-4 bg-secondary/30 rounded-md border border-secondary"

@@ -92,18 +92,28 @@ mod tests {
 
     #[test]
     fn test_get_editor_with_visual() {
-        std::env::set_var("VISUAL", "emacs");
-        std::env::remove_var("EDITOR");
+        // SAFETY: This test runs in isolation and modifies env vars for testing only
+        unsafe {
+            std::env::set_var("VISUAL", "emacs");
+            std::env::remove_var("EDITOR");
+        }
         assert_eq!(get_editor(), "emacs");
-        std::env::remove_var("VISUAL");
+        unsafe {
+            std::env::remove_var("VISUAL");
+        }
     }
 
     #[test]
     fn test_get_editor_with_editor() {
-        std::env::remove_var("VISUAL");
-        std::env::set_var("EDITOR", "nano");
+        // SAFETY: This test runs in isolation and modifies env vars for testing only
+        unsafe {
+            std::env::remove_var("VISUAL");
+            std::env::set_var("EDITOR", "nano");
+        }
         assert_eq!(get_editor(), "nano");
-        std::env::remove_var("EDITOR");
+        unsafe {
+            std::env::remove_var("EDITOR");
+        }
     }
 
     #[test]
