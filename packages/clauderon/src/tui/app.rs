@@ -15,7 +15,11 @@ use crate::tui::attached::PtySession;
 #[derive(Debug, Clone)]
 pub enum CreateProgress {
     /// Progress step update
-    Step { step: u32, total: u32, message: String },
+    Step {
+        step: u32,
+        total: u32,
+        message: String,
+    },
     /// Session creation completed successfully
     Done { session_name: String },
     /// Session creation failed
@@ -96,7 +100,6 @@ impl CopyModeState {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum CreateDialogFocus {
     #[default]
-    Name,
     Prompt,
     RepoPath,
     Backend,
@@ -145,7 +148,6 @@ pub struct DirectoryPickerState {
 /// Create dialog state
 #[derive(Debug, Clone)]
 pub struct CreateDialogState {
-    pub name: String,
     pub prompt: String,
     pub repo_path: String,
     pub backend_zellij: bool, // true = Zellij, false = Docker
@@ -160,8 +162,6 @@ pub struct CreateDialogState {
     /// in a future update to allow interactive image selection.
     pub images: Vec<String>,
 
-    /// Cursor position in name field (byte offset)
-    pub name_cursor: usize,
     /// Cursor position in prompt field (line and column)
     pub prompt_cursor_line: usize,
     pub prompt_cursor_col: usize,
@@ -289,7 +289,8 @@ impl DirectoryPickerState {
             // Combine recent repos and current directory entries for searching
             // Clone to avoid potential issues with concurrent modifications
             let all_searchable: Vec<DirEntry> = {
-                let mut combined = Vec::with_capacity(self.recent_repos.len() + self.all_entries.len());
+                let mut combined =
+                    Vec::with_capacity(self.recent_repos.len() + self.all_entries.len());
                 combined.extend(self.recent_repos.iter().cloned());
                 combined.extend(self.all_entries.iter().cloned());
                 combined
@@ -318,15 +319,15 @@ impl DirectoryPickerState {
         }
 
         // Clamp selected index
-        if !self.filtered_entries.is_empty() && self.selected_index >= self.filtered_entries.len()
-        {
+        if !self.filtered_entries.is_empty() && self.selected_index >= self.filtered_entries.len() {
             self.selected_index = self.filtered_entries.len() - 1;
         }
     }
 
     /// Navigate to the next entry in the list
     pub fn select_next(&mut self) {
-        if !self.filtered_entries.is_empty() && self.selected_index < self.filtered_entries.len() - 1
+        if !self.filtered_entries.is_empty()
+            && self.selected_index < self.filtered_entries.len() - 1
         {
             self.selected_index += 1;
         }
@@ -374,15 +375,13 @@ impl CreateDialogState {
     #[must_use]
     pub fn new() -> Self {
         Self {
-            name: String::new(),
             prompt: String::new(),
             repo_path: String::new(),
             backend_zellij: true, // Default to Zellij
             skip_checks: false,
-            plan_mode: true, // Default to plan mode ON
+            plan_mode: true,                 // Default to plan mode ON
             access_mode: Default::default(), // ReadOnly by default (secure)
             images: Vec::new(),
-            name_cursor: 0,
             prompt_cursor_line: 0,
             prompt_cursor_col: 0,
             prompt_scroll_offset: 0,
@@ -948,7 +947,10 @@ impl App {
             // Extract cursor position first to avoid borrow issues
             let cursor_pos = self.attached_pty_session().and_then(|pty_session| {
                 let buffer = pty_session.terminal_buffer();
-                buffer.try_lock().ok().map(|buf| buf.screen().cursor_position())
+                buffer
+                    .try_lock()
+                    .ok()
+                    .map(|buf| buf.screen().cursor_position())
             });
 
             if let Some((row, col)) = cursor_pos {

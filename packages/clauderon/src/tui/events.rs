@@ -1,9 +1,11 @@
-use crossterm::event::{Event, EventStream, KeyCode, KeyEvent, KeyModifiers, MouseEvent, MouseEventKind};
+use crossterm::event::{
+    Event, EventStream, KeyCode, KeyEvent, KeyModifiers, MouseEvent, MouseEventKind,
+};
 use futures::StreamExt;
 use tokio::sync::mpsc;
 
-use crate::api::protocol::CreateSessionRequest;
 use crate::api::Client;
+use crate::api::protocol::CreateSessionRequest;
 use crate::core::{AgentType, BackendType};
 
 use super::app::{App, AppMode, CreateDialogFocus, CreateProgress};
@@ -164,7 +166,6 @@ pub async fn handle_paste_event(app: &mut App, text: &str) -> anyhow::Result<()>
     Ok(())
 }
 
-
 /// Handle a key event based on the current app mode
 ///
 /// # Errors
@@ -219,10 +220,14 @@ async fn handle_session_list_key(app: &mut App, key: KeyEvent) -> anyhow::Result
                 let session_name = session.name.clone();
                 match Client::connect().await {
                     Ok(mut client) => {
-                        if let Err(e) = client.send_prompt(&session_name, "Create a pull request").await {
+                        if let Err(e) = client
+                            .send_prompt(&session_name, "Create a pull request")
+                            .await
+                        {
                             app.status_message = Some(format!("Failed to send prompt: {e}"));
                         } else {
-                            app.status_message = Some(format!("Sent 'Create PR' prompt to {session_name}"));
+                            app.status_message =
+                                Some(format!("Sent 'Create PR' prompt to {session_name}"));
                         }
                     }
                     Err(e) => {
@@ -237,7 +242,10 @@ async fn handle_session_list_key(app: &mut App, key: KeyEvent) -> anyhow::Result
                 let session_name = session.name.clone();
 
                 // Warn if CI is not failing, but still allow sending the prompt
-                let warning = if !matches!(session.pr_check_status, Some(crate::core::CheckStatus::Failing)) {
+                let warning = if !matches!(
+                    session.pr_check_status,
+                    Some(crate::core::CheckStatus::Failing)
+                ) {
                     " (Warning: CI is not currently failing)"
                 } else {
                     ""
@@ -245,10 +253,14 @@ async fn handle_session_list_key(app: &mut App, key: KeyEvent) -> anyhow::Result
 
                 match Client::connect().await {
                     Ok(mut client) => {
-                        if let Err(e) = client.send_prompt(&session_name, "Fix the CI failures").await {
+                        if let Err(e) = client
+                            .send_prompt(&session_name, "Fix the CI failures")
+                            .await
+                        {
                             app.status_message = Some(format!("Failed to send prompt: {e}"));
                         } else {
-                            app.status_message = Some(format!("Sent 'Fix CI' prompt to {session_name}{warning}"));
+                            app.status_message =
+                                Some(format!("Sent 'Fix CI' prompt to {session_name}{warning}"));
                         }
                     }
                     Err(e) => {
@@ -298,49 +310,44 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
             }
         }
         KeyCode::Home => match app.create_dialog.focus {
-            CreateDialogFocus::Name => {
-                app.create_dialog.name_cursor = super::text_input::move_cursor_to_start();
-            }
             CreateDialogFocus::Prompt => {
-                (app.create_dialog.prompt_cursor_line, app.create_dialog.prompt_cursor_col) =
-                    super::text_input::move_cursor_to_line_start(
-                        app.create_dialog.prompt_cursor_line,
-                    );
+                (
+                    app.create_dialog.prompt_cursor_line,
+                    app.create_dialog.prompt_cursor_col,
+                ) = super::text_input::move_cursor_to_line_start(
+                    app.create_dialog.prompt_cursor_line,
+                );
             }
             _ => {}
         },
         KeyCode::End => match app.create_dialog.focus {
-            CreateDialogFocus::Name => {
-                app.create_dialog.name_cursor =
-                    super::text_input::move_cursor_to_end(&app.create_dialog.name);
-            }
             CreateDialogFocus::Prompt => {
-                (app.create_dialog.prompt_cursor_line, app.create_dialog.prompt_cursor_col) =
-                    super::text_input::move_cursor_to_line_end(
-                        &app.create_dialog.prompt,
-                        app.create_dialog.prompt_cursor_line,
-                    );
+                (
+                    app.create_dialog.prompt_cursor_line,
+                    app.create_dialog.prompt_cursor_col,
+                ) = super::text_input::move_cursor_to_line_end(
+                    &app.create_dialog.prompt,
+                    app.create_dialog.prompt_cursor_line,
+                );
             }
             _ => {}
         },
         KeyCode::Tab => {
             // Cycle through fields
             app.create_dialog.focus = match app.create_dialog.focus {
-                CreateDialogFocus::Name => CreateDialogFocus::Prompt,
                 CreateDialogFocus::Prompt => CreateDialogFocus::RepoPath,
                 CreateDialogFocus::RepoPath => CreateDialogFocus::Backend,
                 CreateDialogFocus::Backend => CreateDialogFocus::AccessMode,
                 CreateDialogFocus::AccessMode => CreateDialogFocus::SkipChecks,
                 CreateDialogFocus::SkipChecks => CreateDialogFocus::PlanMode,
                 CreateDialogFocus::PlanMode => CreateDialogFocus::Buttons,
-                CreateDialogFocus::Buttons => CreateDialogFocus::Name,
+                CreateDialogFocus::Buttons => CreateDialogFocus::Prompt,
             };
         }
         KeyCode::BackTab => {
             // Cycle backwards
             app.create_dialog.focus = match app.create_dialog.focus {
-                CreateDialogFocus::Name => CreateDialogFocus::Buttons,
-                CreateDialogFocus::Prompt => CreateDialogFocus::Name,
+                CreateDialogFocus::Prompt => CreateDialogFocus::Buttons,
                 CreateDialogFocus::RepoPath => CreateDialogFocus::Prompt,
                 CreateDialogFocus::Backend => CreateDialogFocus::RepoPath,
                 CreateDialogFocus::AccessMode => CreateDialogFocus::Backend,
@@ -352,12 +359,14 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
         KeyCode::Enter => match app.create_dialog.focus {
             CreateDialogFocus::Prompt => {
                 // Insert newline at cursor position
-                (app.create_dialog.prompt_cursor_line, app.create_dialog.prompt_cursor_col) =
-                    super::text_input::insert_newline_at_cursor(
-                        &mut app.create_dialog.prompt,
-                        app.create_dialog.prompt_cursor_line,
-                        app.create_dialog.prompt_cursor_col,
-                    );
+                (
+                    app.create_dialog.prompt_cursor_line,
+                    app.create_dialog.prompt_cursor_col,
+                ) = super::text_input::insert_newline_at_cursor(
+                    &mut app.create_dialog.prompt,
+                    app.create_dialog.prompt_cursor_line,
+                    app.create_dialog.prompt_cursor_col,
+                );
                 app.create_dialog.ensure_cursor_visible();
             }
             CreateDialogFocus::Buttons => {
@@ -369,7 +378,8 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
 
                     // Don't allow creation while deletion is in progress
                     if app.delete_task.is_some() {
-                        app.status_message = Some("Cannot create while deleting a session".to_string());
+                        app.status_message =
+                            Some("Cannot create while deleting a session".to_string());
                         return Ok(());
                     }
 
@@ -379,7 +389,6 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
 
                     // Capture data for the background task
                     let request = CreateSessionRequest {
-                        name: app.create_dialog.name.clone(),
                         repo_path: app.create_dialog.repo_path.clone(),
                         initial_prompt: app.create_dialog.prompt.clone(),
                         backend: if app.create_dialog.backend_zellij {
@@ -469,23 +478,24 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
             // Special handling for Prompt field - move cursor up, or navigate to previous field if at top
             if app.create_dialog.focus == CreateDialogFocus::Prompt {
                 if app.create_dialog.prompt_cursor_line == 0 {
-                    // At top of prompt, navigate to previous field
-                    app.create_dialog.focus = CreateDialogFocus::Name;
+                    // At top of prompt, navigate to previous field (wrap to Buttons)
+                    app.create_dialog.focus = CreateDialogFocus::Buttons;
                 } else {
                     // Move cursor up within prompt
-                    (app.create_dialog.prompt_cursor_line, app.create_dialog.prompt_cursor_col) =
-                        super::text_input::move_cursor_up_multiline(
-                            &app.create_dialog.prompt,
-                            app.create_dialog.prompt_cursor_line,
-                            app.create_dialog.prompt_cursor_col,
-                        );
+                    (
+                        app.create_dialog.prompt_cursor_line,
+                        app.create_dialog.prompt_cursor_col,
+                    ) = super::text_input::move_cursor_up_multiline(
+                        &app.create_dialog.prompt,
+                        app.create_dialog.prompt_cursor_line,
+                        app.create_dialog.prompt_cursor_col,
+                    );
                     app.create_dialog.ensure_cursor_visible();
                 }
             } else {
                 // Navigate to previous field
                 app.create_dialog.focus = match app.create_dialog.focus {
-                    CreateDialogFocus::Name => CreateDialogFocus::Buttons,
-                    CreateDialogFocus::Prompt => CreateDialogFocus::Name,
+                    CreateDialogFocus::Prompt => CreateDialogFocus::Buttons,
                     CreateDialogFocus::RepoPath => CreateDialogFocus::Prompt,
                     CreateDialogFocus::Backend => CreateDialogFocus::RepoPath,
                     CreateDialogFocus::AccessMode => CreateDialogFocus::Backend,
@@ -504,57 +514,47 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                     app.create_dialog.focus = CreateDialogFocus::RepoPath;
                 } else {
                     // Move cursor down within prompt
-                    (app.create_dialog.prompt_cursor_line, app.create_dialog.prompt_cursor_col) =
-                        super::text_input::move_cursor_down_multiline(
-                            &app.create_dialog.prompt,
-                            app.create_dialog.prompt_cursor_line,
-                            app.create_dialog.prompt_cursor_col,
-                        );
+                    (
+                        app.create_dialog.prompt_cursor_line,
+                        app.create_dialog.prompt_cursor_col,
+                    ) = super::text_input::move_cursor_down_multiline(
+                        &app.create_dialog.prompt,
+                        app.create_dialog.prompt_cursor_line,
+                        app.create_dialog.prompt_cursor_col,
+                    );
                     app.create_dialog.ensure_cursor_visible();
                 }
             } else {
                 // Navigate to next field
                 app.create_dialog.focus = match app.create_dialog.focus {
-                    CreateDialogFocus::Name => CreateDialogFocus::Prompt,
                     CreateDialogFocus::Prompt => CreateDialogFocus::RepoPath,
                     CreateDialogFocus::RepoPath => CreateDialogFocus::Backend,
                     CreateDialogFocus::Backend => CreateDialogFocus::AccessMode,
                     CreateDialogFocus::AccessMode => CreateDialogFocus::SkipChecks,
                     CreateDialogFocus::SkipChecks => CreateDialogFocus::PlanMode,
                     CreateDialogFocus::PlanMode => CreateDialogFocus::Buttons,
-                    CreateDialogFocus::Buttons => CreateDialogFocus::Name,
+                    CreateDialogFocus::Buttons => CreateDialogFocus::Prompt,
                 };
             }
         }
         KeyCode::Left | KeyCode::Right => match app.create_dialog.focus {
-            CreateDialogFocus::Name => {
-                app.create_dialog.name_cursor = if key.code == KeyCode::Left {
-                    super::text_input::move_cursor_left(
-                        &app.create_dialog.name,
-                        app.create_dialog.name_cursor,
+            CreateDialogFocus::Prompt => {
+                (
+                    app.create_dialog.prompt_cursor_line,
+                    app.create_dialog.prompt_cursor_col,
+                ) = if key.code == KeyCode::Left {
+                    super::text_input::move_cursor_left_multiline(
+                        &app.create_dialog.prompt,
+                        app.create_dialog.prompt_cursor_line,
+                        app.create_dialog.prompt_cursor_col,
                     )
                 } else {
-                    super::text_input::move_cursor_right(
-                        &app.create_dialog.name,
-                        app.create_dialog.name_cursor,
+                    super::text_input::move_cursor_right_multiline(
+                        &app.create_dialog.prompt,
+                        app.create_dialog.prompt_cursor_line,
+                        app.create_dialog.prompt_cursor_col,
                     )
                 };
-            }
-            CreateDialogFocus::Prompt => {
-                (app.create_dialog.prompt_cursor_line, app.create_dialog.prompt_cursor_col) =
-                    if key.code == KeyCode::Left {
-                        super::text_input::move_cursor_left_multiline(
-                            &app.create_dialog.prompt,
-                            app.create_dialog.prompt_cursor_line,
-                            app.create_dialog.prompt_cursor_col,
-                        )
-                    } else {
-                        super::text_input::move_cursor_right_multiline(
-                            &app.create_dialog.prompt,
-                            app.create_dialog.prompt_cursor_line,
-                            app.create_dialog.prompt_cursor_col,
-                        )
-                    };
                 app.create_dialog.ensure_cursor_visible();
             }
             CreateDialogFocus::Backend => {
@@ -587,21 +587,16 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
             CreateDialogFocus::PlanMode => {
                 app.create_dialog.plan_mode = !app.create_dialog.plan_mode;
             }
-            CreateDialogFocus::Name => {
-                app.create_dialog.name_cursor = super::text_input::insert_char_at_cursor(
-                    &mut app.create_dialog.name,
-                    app.create_dialog.name_cursor,
+            CreateDialogFocus::Prompt => {
+                (
+                    app.create_dialog.prompt_cursor_line,
+                    app.create_dialog.prompt_cursor_col,
+                ) = super::text_input::insert_char_at_cursor_multiline(
+                    &mut app.create_dialog.prompt,
+                    app.create_dialog.prompt_cursor_line,
+                    app.create_dialog.prompt_cursor_col,
                     ' ',
                 );
-            }
-            CreateDialogFocus::Prompt => {
-                (app.create_dialog.prompt_cursor_line, app.create_dialog.prompt_cursor_col) =
-                    super::text_input::insert_char_at_cursor_multiline(
-                        &mut app.create_dialog.prompt,
-                        app.create_dialog.prompt_cursor_line,
-                        app.create_dialog.prompt_cursor_col,
-                        ' ',
-                    );
                 app.create_dialog.ensure_cursor_visible();
             }
             CreateDialogFocus::RepoPath => {
@@ -617,40 +612,31 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
             _ => {}
         },
         KeyCode::Char(c) => match app.create_dialog.focus {
-            CreateDialogFocus::Name => {
-                app.create_dialog.name_cursor = super::text_input::insert_char_at_cursor(
-                    &mut app.create_dialog.name,
-                    app.create_dialog.name_cursor,
+            CreateDialogFocus::Prompt => {
+                (
+                    app.create_dialog.prompt_cursor_line,
+                    app.create_dialog.prompt_cursor_col,
+                ) = super::text_input::insert_char_at_cursor_multiline(
+                    &mut app.create_dialog.prompt,
+                    app.create_dialog.prompt_cursor_line,
+                    app.create_dialog.prompt_cursor_col,
                     c,
                 );
-            }
-            CreateDialogFocus::Prompt => {
-                (app.create_dialog.prompt_cursor_line, app.create_dialog.prompt_cursor_col) =
-                    super::text_input::insert_char_at_cursor_multiline(
-                        &mut app.create_dialog.prompt,
-                        app.create_dialog.prompt_cursor_line,
-                        app.create_dialog.prompt_cursor_col,
-                        c,
-                    );
                 app.create_dialog.ensure_cursor_visible();
             }
             // RepoPath no longer accepts typed input - use directory picker instead
             _ => {}
         },
         KeyCode::Backspace => match app.create_dialog.focus {
-            CreateDialogFocus::Name => {
-                app.create_dialog.name_cursor = super::text_input::delete_char_before_cursor(
-                    &mut app.create_dialog.name,
-                    app.create_dialog.name_cursor,
-                );
-            }
             CreateDialogFocus::Prompt => {
-                (app.create_dialog.prompt_cursor_line, app.create_dialog.prompt_cursor_col) =
-                    super::text_input::delete_char_before_cursor_multiline(
-                        &mut app.create_dialog.prompt,
-                        app.create_dialog.prompt_cursor_line,
-                        app.create_dialog.prompt_cursor_col,
-                    );
+                (
+                    app.create_dialog.prompt_cursor_line,
+                    app.create_dialog.prompt_cursor_col,
+                ) = super::text_input::delete_char_before_cursor_multiline(
+                    &mut app.create_dialog.prompt,
+                    app.create_dialog.prompt_cursor_line,
+                    app.create_dialog.prompt_cursor_col,
+                );
                 app.create_dialog.ensure_cursor_visible();
             }
             CreateDialogFocus::RepoPath => {
@@ -660,19 +646,15 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
             _ => {}
         },
         KeyCode::Delete => match app.create_dialog.focus {
-            CreateDialogFocus::Name => {
-                app.create_dialog.name_cursor = super::text_input::delete_char_at_cursor(
-                    &mut app.create_dialog.name,
-                    app.create_dialog.name_cursor,
-                );
-            }
             CreateDialogFocus::Prompt => {
-                (app.create_dialog.prompt_cursor_line, app.create_dialog.prompt_cursor_col) =
-                    super::text_input::delete_char_at_cursor_multiline(
-                        &mut app.create_dialog.prompt,
-                        app.create_dialog.prompt_cursor_line,
-                        app.create_dialog.prompt_cursor_col,
-                    );
+                (
+                    app.create_dialog.prompt_cursor_line,
+                    app.create_dialog.prompt_cursor_col,
+                ) = super::text_input::delete_char_at_cursor_multiline(
+                    &mut app.create_dialog.prompt,
+                    app.create_dialog.prompt_cursor_line,
+                    app.create_dialog.prompt_cursor_col,
+                );
                 app.create_dialog.ensure_cursor_visible();
             }
             _ => {}
@@ -792,7 +774,11 @@ async fn handle_attached_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()>
 
     // Log key events for debugging (only in debug builds)
     #[cfg(debug_assertions)]
-    tracing::debug!("Key event: {:?} with modifiers {:?}", key.code, key.modifiers);
+    tracing::debug!(
+        "Key event: {:?} with modifiers {:?}",
+        key.code,
+        key.modifiers
+    );
 
     // Ctrl+Q: instant detach (no double-tap delay)
     if key.modifiers.contains(KeyModifiers::CONTROL) {
