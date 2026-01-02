@@ -140,7 +140,6 @@ const DOCKER_IMAGE: &str = "ghcr.io/shepherdjerred/dotfiles";
 /// to work. To enable sccache compilation caching, install it in the dotfiles image:
 ///   cargo install sccache
 /// or add it to the Dockerfile.
-
 /// Proxy configuration for Docker containers.
 #[derive(Debug, Clone, Default)]
 pub struct DockerProxyConfig {

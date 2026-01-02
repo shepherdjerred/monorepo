@@ -91,6 +91,7 @@ mod tests {
     use super::*;
 
     #[test]
+    #[allow(clippy::undocumented_unsafe_blocks)]
     fn test_get_editor_with_visual() {
         // SAFETY: This test runs in isolation and modifies env vars for testing only
         unsafe {
@@ -104,6 +105,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::undocumented_unsafe_blocks)]
     fn test_get_editor_with_editor() {
         // SAFETY: This test runs in isolation and modifies env vars for testing only
         unsafe {
