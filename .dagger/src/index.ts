@@ -615,20 +615,8 @@ export class Monorepo {
     const outputs: string[] = [];
 
     // Build frontend first (required for static file embedding)
-    const frontendBuildContainer = getBaseContainer()
-      .withWorkdir("/workspace")
-      .withMountedFile("/workspace/package.json", source.file("package.json"))
-      .withMountedFile("/workspace/bun.lock", source.file("bun.lock"))
-      .withMountedFile("/workspace/packages/clauderon/web/package.json", source.file("packages/clauderon/web/package.json"))
-      .withMountedFile("/workspace/packages/clauderon/web/bun.lock", source.file("packages/clauderon/web/bun.lock"))
-      .withMountedFile("/workspace/packages/clauderon/web/shared/package.json", source.file("packages/clauderon/web/shared/package.json"))
-      .withMountedFile("/workspace/packages/clauderon/web/client/package.json", source.file("packages/clauderon/web/client/package.json"))
-      .withMountedFile("/workspace/packages/clauderon/web/frontend/package.json", source.file("packages/clauderon/web/frontend/package.json"))
-      .withExec(["bun", "install", "--frozen-lockfile"])
-      .withMountedDirectory("/workspace/packages/clauderon/web/shared", source.directory("packages/clauderon/web/shared"))
-      .withMountedDirectory("/workspace/packages/clauderon/web/client", source.directory("packages/clauderon/web/client"))
-      .withMountedDirectory("/workspace/packages/clauderon/web/frontend", source.directory("packages/clauderon/web/frontend"))
-      .withExec(["bun", "install", "--frozen-lockfile"])
+    // Use the already-configured workspace container from installWorkspaceDeps
+    const frontendBuildContainer = installWorkspaceDeps(source)
       .withWorkdir("/workspace/packages/clauderon/web/frontend")
       .withExec(["bun", "run", "build"]);
     const builtFrontend = frontendBuildContainer.directory("/workspace/packages/clauderon/web/frontend/dist");
