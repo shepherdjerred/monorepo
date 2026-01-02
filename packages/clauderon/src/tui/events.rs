@@ -780,12 +780,12 @@ fn handle_help_key(app: &mut App, key: KeyEvent) {
 
 /// Handle key events when attached to a session via PTY.
 ///
-/// Most keys are encoded and sent to the PTY. Ctrl+Q (or Ctrl+]) is the detach key
+/// Most keys are encoded and sent to the PTY. Ctrl+Q is the detach key
 /// which uses a double-tap mechanism (single press waits 300ms for second,
 /// double-tap sends the literal character to the terminal).
 ///
-/// Session switching: Ctrl+P/N or Alt+Left/Right switches between Docker sessions.
-/// Scrolling: PageUp/Down (10 lines), Shift+Up/Down (1 line), or mouse wheel.
+/// Session switching: Ctrl+P/N switches between Docker sessions.
+/// Scrolling: PageUp/Down (10 lines), Shift+Up/Down (1 line).
 async fn handle_attached_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
     use crate::tui::app::DetachState;
     use crate::tui::attached::encode_key;
@@ -797,12 +797,10 @@ async fn handle_attached_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()>
     #[cfg(debug_assertions)]
     tracing::debug!("Key event: {:?} with modifiers {:?}", key.code, key.modifiers);
 
-    // Check for Ctrl+Q as primary detach key (more reliable across terminals)
-    // Also support Ctrl+] as alternative
+    // Check for Ctrl+Q as detach key
     let detach_key_byte = if key.modifiers.contains(KeyModifiers::CONTROL) {
         match key.code {
             KeyCode::Char('q') => Some(0x11), // Ctrl+Q
-            KeyCode::Char(']') => Some(0x1d), // Ctrl+] = GS
             _ => None,
         }
     } else {
@@ -849,35 +847,17 @@ async fn handle_attached_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()>
     //     }
     // }
 
-    // Session switching with Ctrl+Left/Right or Ctrl+P/Ctrl+N
+    // Session switching with Ctrl+P/Ctrl+N
+    // Note: Ctrl+Left/Right and Alt+Left/Right removed to avoid conflicts with applications
     if key.modifiers.contains(KeyModifiers::CONTROL) {
         match key.code {
-            KeyCode::Left | KeyCode::Char('p') => {
+            KeyCode::Char('p') => {
                 if app.switch_to_previous_session().await? {
                     app.status_message = Some("Switched to previous session".to_string());
                 }
                 return Ok(());
             }
-            KeyCode::Right | KeyCode::Char('n') => {
-                if app.switch_to_next_session().await? {
-                    app.status_message = Some("Switched to next session".to_string());
-                }
-                return Ok(());
-            }
-            _ => {}
-        }
-    }
-
-    // Also support Alt+Left/Right as alternative (more reliable)
-    if key.modifiers.contains(KeyModifiers::ALT) {
-        match key.code {
-            KeyCode::Left => {
-                if app.switch_to_previous_session().await? {
-                    app.status_message = Some("Switched to previous session".to_string());
-                }
-                return Ok(());
-            }
-            KeyCode::Right => {
+            KeyCode::Char('n') => {
                 if app.switch_to_next_session().await? {
                     app.status_message = Some("Switched to next session".to_string());
                 }
