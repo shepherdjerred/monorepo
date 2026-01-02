@@ -166,6 +166,10 @@ async fn run_main_loop(
                                 continue;
                             }
                         }
+                        Some(BackendType::Kubernetes) => {
+                            // TODO: Implement Kubernetes PTY attach
+                            app.status_message = Some("Kubernetes attach not yet implemented".to_string());
+                        }
                         None => {
                             // No session selected
                         }
@@ -315,7 +319,11 @@ async fn run_main_loop(
         // Process collected updates
         for progress in updates {
             match progress {
-                CreateProgress::Step { step, total, message } => {
+                CreateProgress::Step {
+                    step,
+                    total,
+                    message,
+                } => {
                     app.progress_step = Some((step, total, message));
                 }
                 CreateProgress::Done { session_name } => {
@@ -362,7 +370,10 @@ async fn run_main_loop(
                     app.status_message = Some(format!("Deleted session {session_id}"));
                     let _ = app.refresh_sessions().await;
                 }
-                app::DeleteProgress::Error { session_id: _, message } => {
+                app::DeleteProgress::Error {
+                    session_id: _,
+                    message,
+                } => {
                     app.deleting_session_id = None;
                     app.delete_progress_rx = None;
                     // Task is already complete - just take the handle to clean up
