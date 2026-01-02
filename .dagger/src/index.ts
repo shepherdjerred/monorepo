@@ -14,7 +14,7 @@ const BUN_VERSION = "1.3.5";
 const PLAYWRIGHT_VERSION = "1.57.0";
 // Pin release-please version for reproducible builds
 const RELEASE_PLEASE_VERSION = "17.1.3";
-// Rust version for multiplexer
+// Rust version for clauderon
 const RUST_VERSION = "1.85";
 
 /**
@@ -66,11 +66,11 @@ function installWorkspaceDeps(source: Directory): Container {
     .withMountedFile("/workspace/packages/bun-decompile/package.json", source.file("packages/bun-decompile/package.json"))
     .withMountedFile("/workspace/packages/dagger-utils/package.json", source.file("packages/dagger-utils/package.json"))
     .withMountedFile("/workspace/packages/eslint-config/package.json", source.file("packages/eslint-config/package.json"))
-    // Multiplexer web packages (in root workspaces)
-    .withMountedFile("/workspace/packages/multiplexer/web/package.json", source.file("packages/multiplexer/web/package.json"))
-    .withMountedFile("/workspace/packages/multiplexer/web/shared/package.json", source.file("packages/multiplexer/web/shared/package.json"))
-    .withMountedFile("/workspace/packages/multiplexer/web/client/package.json", source.file("packages/multiplexer/web/client/package.json"))
-    .withMountedFile("/workspace/packages/multiplexer/web/frontend/package.json", source.file("packages/multiplexer/web/frontend/package.json"));
+    // Clauderon web packages (in root workspaces)
+    .withMountedFile("/workspace/packages/clauderon/web/package.json", source.file("packages/clauderon/web/package.json"))
+    .withMountedFile("/workspace/packages/clauderon/web/shared/package.json", source.file("packages/clauderon/web/shared/package.json"))
+    .withMountedFile("/workspace/packages/clauderon/web/client/package.json", source.file("packages/clauderon/web/client/package.json"))
+    .withMountedFile("/workspace/packages/clauderon/web/frontend/package.json", source.file("packages/clauderon/web/frontend/package.json"));
 
   // PHASE 2: Install dependencies (cached if lockfile + package.jsons unchanged)
   container = container.withExec(["bun", "install", "--frozen-lockfile"]);
@@ -82,10 +82,10 @@ function installWorkspaceDeps(source: Directory): Container {
     .withMountedDirectory("/workspace/packages/bun-decompile", source.directory("packages/bun-decompile"))
     .withMountedDirectory("/workspace/packages/dagger-utils", source.directory("packages/dagger-utils"))
     .withMountedDirectory("/workspace/packages/eslint-config", source.directory("packages/eslint-config"))
-    // Multiplexer web packages
-    .withMountedDirectory("/workspace/packages/multiplexer/web/shared", source.directory("packages/multiplexer/web/shared"))
-    .withMountedDirectory("/workspace/packages/multiplexer/web/client", source.directory("packages/multiplexer/web/client"))
-    .withMountedDirectory("/workspace/packages/multiplexer/web/frontend", source.directory("packages/multiplexer/web/frontend"));
+    // Clauderon web packages
+    .withMountedDirectory("/workspace/packages/clauderon/web/shared", source.directory("packages/clauderon/web/shared"))
+    .withMountedDirectory("/workspace/packages/clauderon/web/client", source.directory("packages/clauderon/web/client"))
+    .withMountedDirectory("/workspace/packages/clauderon/web/frontend", source.directory("packages/clauderon/web/frontend"));
 
   // PHASE 4: Re-run bun install to recreate workspace node_modules symlinks
   // (Source mounts in Phase 3 replace the symlinks that Phase 2 created)
@@ -95,7 +95,7 @@ function installWorkspaceDeps(source: Directory): Container {
 }
 
 /**
- * Get a Rust container with caching enabled for multiplexer builds
+ * Get a Rust container with caching enabled for clauderon builds
  */
 function getRustContainer(source: Directory): Container {
   return dag
@@ -104,8 +104,8 @@ function getRustContainer(source: Directory): Container {
     .withWorkdir("/workspace")
     .withMountedCache("/usr/local/cargo/registry", dag.cacheVolume("cargo-registry"))
     .withMountedCache("/usr/local/cargo/git", dag.cacheVolume("cargo-git"))
-    .withMountedCache("/workspace/target", dag.cacheVolume("multiplexer-target"))
-    .withMountedDirectory("/workspace", source.directory("packages/multiplexer"))
+    .withMountedCache("/workspace/target", dag.cacheVolume("clauderon-target"))
+    .withMountedDirectory("/workspace", source.directory("packages/clauderon"))
     .withExec(["rustup", "component", "add", "rustfmt", "clippy"]);
 }
 
@@ -205,8 +205,8 @@ export class Monorepo {
     await container.sync();
     outputs.push("✓ Prisma setup");
 
-    // Build multiplexer web packages (requires special ordering due to TypeShare)
-    outputs.push("\n--- Multiplexer TypeScript Type Generation ---");
+    // Build clauderon web packages (requires special ordering due to TypeShare)
+    outputs.push("\n--- Clauderon TypeScript Type Generation ---");
 
     // Step 1: Generate TypeScript types from Rust using typeshare
     // This must happen BEFORE building web packages since they import these types
@@ -221,17 +221,28 @@ export class Monorepo {
     // Step 2: Copy generated types to main container
     const generatedTypes = rustContainer.directory("/workspace/web/shared/src/generated");
     container = container
-      .withDirectory("/workspace/packages/multiplexer/web/shared/src/generated", generatedTypes);
+      .withDirectory("/workspace/packages/clauderon/web/shared/src/generated", generatedTypes);
     await container.sync();
     outputs.push("✓ Types copied to workspace");
 
-    // Step 3: Build web packages in dependency order (now that types exist)
-    outputs.push("\n--- Multiplexer Web Packages ---");
-    container = container.withExec(["bun", "run", "--filter", "@mux/shared", "build"]);
+    // Step 3: Install dependencies for web workspace
+    outputs.push("\n--- Clauderon Web Packages ---");
+    container = container
+      .withWorkdir("/workspace/packages/clauderon/web")
+      .withExec(["bun", "install", "--frozen-lockfile"])
+      .withWorkdir("/workspace");
     await container.sync();
-    container = container.withExec(["bun", "run", "--filter", "@mux/client", "build"]);
-    await container.sync();
-    container = container.withExec(["bun", "run", "--filter", "@mux/frontend", "build"]);
+    outputs.push("✓ Web workspace dependencies installed");
+
+    // Step 4: Build web packages in dependency order (now that types and deps exist)
+    container = container
+      .withWorkdir("/workspace/packages/clauderon/web/shared")
+      .withExec(["bun", "run", "build"])
+      .withWorkdir("/workspace/packages/clauderon/web/client")
+      .withExec(["bun", "run", "build"])
+      .withWorkdir("/workspace/packages/clauderon/web/frontend")
+      .withExec(["bun", "run", "build"])
+      .withWorkdir("/workspace");
     await container.sync();
     outputs.push("✓ Web packages built");
 
@@ -447,10 +458,10 @@ export class Monorepo {
   }
 
   /**
-   * Run Multiplexer CI: fmt check, clippy, test, build
+   * Run Clauderon CI: fmt check, clippy, test, build
    */
   @func()
-  async multiplexerCi(source: Directory): Promise<string> {
+  async clauderonCi(source: Directory): Promise<string> {
     const outputs: string[] = [];
 
     let container = getRustContainer(source);
