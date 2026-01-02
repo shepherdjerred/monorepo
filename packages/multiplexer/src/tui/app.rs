@@ -41,6 +41,8 @@ pub enum AppMode {
     Help,
     /// Attached to a session via PTY
     Attached,
+    /// Copy mode - navigate and select text from terminal buffer
+    CopyMode,
 }
 
 /// State for the detach key detection (Ctrl+Q/Ctrl+] double-tap)
@@ -55,6 +57,49 @@ pub enum DetachState {
 impl Default for DetachState {
     fn default() -> Self {
         Self::Idle
+    }
+}
+
+/// Copy mode state for text selection and navigation
+#[derive(Debug, Clone)]
+pub struct CopyModeState {
+    /// Cursor position in terminal buffer
+    pub cursor_row: u16,
+    pub cursor_col: u16,
+
+    /// Selection start position (when 'v' pressed)
+    pub selection_start: Option<(u16, u16)>,
+
+    /// Selection end position (follows cursor)
+    pub selection_end: Option<(u16, u16)>,
+
+    /// Whether in visual selection mode
+    pub visual_mode: bool,
+}
+
+impl CopyModeState {
+    /// Create new copy mode state with cursor at bottom-left
+    #[must_use]
+    pub fn new(rows: u16, _cols: u16) -> Self {
+        Self {
+            cursor_row: rows.saturating_sub(1),
+            cursor_col: 0,
+            selection_start: None,
+            selection_end: None,
+            visual_mode: false,
+        }
+    }
+
+    /// Create new copy mode state with cursor at specific position
+    #[must_use]
+    pub fn new_with_cursor(row: u16, col: u16) -> Self {
+        Self {
+            cursor_row: row,
+            cursor_col: col,
+            selection_start: None,
+            selection_end: None,
+            visual_mode: false,
+        }
     }
 }
 
@@ -517,6 +562,9 @@ pub struct App {
 
     /// Flag to trigger launching external editor for prompt field
     pub launch_editor: bool,
+
+    /// Copy mode state (when in CopyMode)
+    pub copy_mode_state: Option<CopyModeState>,
 }
 
 impl App {
@@ -547,6 +595,7 @@ impl App {
             detach_state: DetachState::Idle,
             terminal_size: (24, 80), // Default size, updated on resize
             launch_editor: false,
+            copy_mode_state: None,
         }
     }
 
@@ -908,6 +957,40 @@ impl App {
         self.attached_session_id = None;
         self.mode = AppMode::SessionList;
         self.detach_state = DetachState::Idle;
+    }
+
+    /// Enter copy mode from attached state
+    pub fn enter_copy_mode(&mut self) {
+        if self.mode == AppMode::Attached {
+            // Try to get the actual cursor position from the terminal
+            // Extract cursor position first to avoid borrow issues
+            let cursor_pos = self.attached_pty_session().and_then(|pty_session| {
+                let buffer = pty_session.terminal_buffer();
+                buffer.try_lock().ok().map(|buf| buf.screen().cursor_position())
+            });
+
+            if let Some((row, col)) = cursor_pos {
+                self.copy_mode_state = Some(CopyModeState::new_with_cursor(row, col));
+            } else {
+                // Fallback to bottom-left if we can't get cursor position
+                let (rows, cols) = self.terminal_size;
+                self.copy_mode_state = Some(CopyModeState::new(rows, cols));
+            }
+
+            self.mode = AppMode::CopyMode;
+            self.status_message = Some(
+                "Copy mode | hjkl: move | v: select | y: yank | ?: help | q: exit".to_string(),
+            );
+        }
+    }
+
+    /// Exit copy mode back to attached state
+    pub fn exit_copy_mode(&mut self) {
+        if self.mode == AppMode::CopyMode {
+            self.copy_mode_state = None;
+            self.mode = AppMode::Attached;
+            self.status_message = None;
+        }
     }
 
     /// Get the currently attached PTY session.

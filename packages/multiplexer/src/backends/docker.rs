@@ -88,8 +88,13 @@ fn detect_git_worktree(path: &Path) -> anyhow::Result<Option<PathBuf>> {
 
     // Canonicalize to resolve symlinks and get absolute path
     // This also protects against path traversal attacks
-    let canonical_gitdir = gitdir_path.canonicalize()
-        .map_err(|e| anyhow::anyhow!("Failed to canonicalize gitdir path {}: {}", gitdir_path.display(), e))?;
+    let canonical_gitdir = gitdir_path.canonicalize().map_err(|e| {
+        anyhow::anyhow!(
+            "Failed to canonicalize gitdir path {}: {}",
+            gitdir_path.display(),
+            e
+        )
+    })?;
 
     // The gitdir points to something like /path/to/repo/.git/worktrees/name
     // We need to get the parent .git directory: /path/to/repo/.git
@@ -213,6 +218,37 @@ impl DockerBackend {
         Ok(stdout.lines().any(|line| line == name))
     }
 
+    /// Ensure cache directories exist in workdir with correct permissions.
+    ///
+    /// Creates .cargo/registry, .cargo/git, and .cache/sccache directories if they don't exist.
+    /// This prevents Docker from creating them as root when mounting named volumes.
+    ///
+    /// This is a best-effort operation - if directory creation fails, we log a warning and
+    /// continue. Docker will still create the directories, but they'll be owned by root.
+    fn ensure_cache_directories(workdir: &Path) {
+        let cache_dirs = [
+            workdir.join(".cargo/registry"),
+            workdir.join(".cargo/git"),
+            workdir.join(".cache/sccache"),
+        ];
+
+        for dir in &cache_dirs {
+            if let Err(e) = std::fs::create_dir_all(dir) {
+                tracing::warn!(
+                    path = %dir.display(),
+                    error = %e,
+                    "Failed to create cache directory"
+                );
+                // Continue anyway - Docker will create it, but as root
+            } else {
+                tracing::trace!(
+                    path = %dir.display(),
+                    "Created cache directory"
+                );
+            }
+        }
+    }
+
     /// Build the docker run command arguments (exposed for testing)
     ///
     /// Returns all arguments that would be passed to `docker run`.
@@ -233,6 +269,7 @@ impl DockerBackend {
         uid: u32,
         proxy_config: Option<&DockerProxyConfig>,
         print_mode: bool,
+        dangerous_skip_checks: bool,
         images: &[String],
         git_user_name: Option<&str>,
         git_user_email: Option<&str>,
@@ -352,11 +389,17 @@ impl DockerBackend {
                 let has_talos_config = talos_config_dir.exists();
 
                 if !has_kube_config {
-                    tracing::debug!("Kubeconfig not found at {:?}, skipping mount", kube_config_dir);
+                    tracing::debug!(
+                        "Kubeconfig not found at {:?}, skipping mount",
+                        kube_config_dir
+                    );
                 }
 
                 if !has_talos_config {
-                    tracing::debug!("Talosconfig not found at {:?}, skipping mount", talos_config_dir);
+                    tracing::debug!(
+                        "Talosconfig not found at {:?}, skipping mount",
+                        talos_config_dir
+                    );
                 }
 
                 // Add host.docker.internal resolution
@@ -452,19 +495,58 @@ impl DockerBackend {
         // When a credentials file exists, Claude Code validates it against the API,
         // which would fail with our fake tokens. The env var path skips this validation.
 
-        // Create config files to suppress onboarding and permission warnings
-        // Always do this when proxy is enabled since we always use --dangerously-skip-permissions
-        if let Some(proxy) = proxy_config {
-            // Create the directory if it doesn't exist
-            if let Err(e) = std::fs::create_dir_all(&proxy.mux_dir) {
+        // Determine config directory - use proxy mux_dir if available, otherwise create temp dir
+        // Note: When proxy is disabled, we create a temp directory for the session config.
+        // These temp directories persist after container deletion and are cleaned up by the OS.
+        // This is acceptable since the files are tiny (just .claude.json) and sessions are infrequent.
+        let config_dir = if let Some(proxy) = proxy_config {
+            proxy.mux_dir.clone()
+        } else {
+            // Create a temp directory for Claude config when proxy is disabled
+            let temp_dir = std::env::temp_dir().join(format!("mux-{}", name));
+            temp_dir
+        };
+
+        // Create the config directory if it doesn't exist
+        if let Err(e) = std::fs::create_dir_all(&config_dir) {
+            tracing::warn!(
+                "Failed to create config directory at {:?}: {}",
+                config_dir,
+                e
+            );
+        } else {
+            // Write claude.json to skip onboarding and optionally suppress bypass permissions warning
+            // This tells Claude Code we've already completed the setup wizard
+            // Note: Claude Code writes to this file, so we can't mount it read-only
+            let claude_json_path = config_dir.join("claude.json");
+            let claude_json = if dangerous_skip_checks {
+                // If bypass permissions is enabled, also suppress the warning
+                r#"{"hasCompletedOnboarding": true, "bypassPermissionsModeAccepted": true}"#
+            } else {
+                r#"{"hasCompletedOnboarding": true}"#
+            };
+            if let Err(e) = std::fs::write(&claude_json_path, claude_json) {
                 tracing::warn!(
-                    "Failed to create mux directory at {:?}: {}",
-                    proxy.mux_dir,
+                    "Failed to write claude.json file at {:?}: {}",
+                    claude_json_path,
                     e
                 );
             } else {
-                // Write managed settings file to suppress permission warning
-                let managed_settings_path = proxy.mux_dir.join("managed-settings.json");
+                // Mount to /workspace/.claude.json since HOME=/workspace in container
+                // Note: NOT read-only because Claude Code writes to it
+                args.extend([
+                    "-v".to_string(),
+                    format!("{}:/workspace/.claude.json", claude_json_path.display()),
+                ]);
+            }
+
+            // Proxy-specific configuration (only when proxy is enabled)
+            if let Some(proxy) = proxy_config {
+                // Write managed settings file for proxy environments
+                // Note: managed-settings.json is only created when proxy is enabled because it's
+                // part of the proxy infrastructure that requires elevated permissions.
+                // For non-proxy users, .claude.json with bypassPermissionsModeAccepted is sufficient.
+                let managed_settings_path = config_dir.join("managed-settings.json");
                 let managed_settings = r#"{
   "permissions": {
     "defaultMode": "bypassPermissions"
@@ -479,27 +561,10 @@ impl DockerBackend {
                 } else {
                     args.extend([
                         "-v".to_string(),
-                        format!("{}:/etc/claude-code/managed-settings.json:ro", managed_settings_path.display()),
-                    ]);
-                }
-
-                // Write claude.json to skip onboarding
-                // This tells Claude Code we've already completed the setup wizard
-                // Note: Claude Code writes to this file, so we can't mount it read-only
-                let claude_json_path = proxy.mux_dir.join("claude.json");
-                let claude_json = r#"{"hasCompletedOnboarding": true}"#;
-                if let Err(e) = std::fs::write(&claude_json_path, claude_json) {
-                    tracing::warn!(
-                        "Failed to write claude.json file at {:?}: {}",
-                        claude_json_path,
-                        e
-                    );
-                } else {
-                    // Mount to /workspace/.claude.json since HOME=/workspace in container
-                    // Note: NOT read-only because Claude Code writes to it
-                    args.extend([
-                        "-v".to_string(),
-                        format!("{}:/workspace/.claude.json", claude_json_path.display()),
+                        format!(
+                            "{}:/etc/claude-code/managed-settings.json:ro",
+                            managed_settings_path.display()
+                        ),
                     ]);
                 }
             }
@@ -507,22 +572,32 @@ impl DockerBackend {
 
         // Add image and command
         let claude_cmd = {
-            let mut cmd = "claude --dangerously-skip-permissions".to_string();
+            use crate::agents::claude_code::ClaudeCodeAgent;
+            use crate::agents::traits::Agent;
 
-            // Add print mode flags
+            let agent = ClaudeCodeAgent::new();
+            let mut cmd_vec = agent.start_command(&escaped_prompt, images, dangerous_skip_checks);
+
+            // Add print mode flags if enabled
             if print_mode {
-                cmd.push_str(" --print --verbose");
+                // Insert after "claude" but before other args
+                cmd_vec.insert(1, "--print".to_string());
+                cmd_vec.insert(2, "--verbose".to_string());
             }
 
-            // Add image arguments
-            for image in images {
-                let escaped_image = image.replace('\'', "'\\''");
-                cmd.push_str(&format!(" --image '{escaped_image}'"));
-            }
-
-            // Add prompt
-            cmd.push_str(&format!(" '{escaped_prompt}'"));
-            cmd
+            // Join all arguments into a shell command, properly quoting each argument
+            cmd_vec
+                .iter()
+                .map(|arg| {
+                    // Always quote arguments that contain special characters or spaces
+                    if arg.contains('\'') || arg.contains(' ') || arg.contains('\n') || arg.contains('&') || arg.contains('|') {
+                        format!("'{}'", arg.replace('\'', "'\\''"))
+                    } else {
+                        arg.clone()
+                    }
+                })
+                .collect::<Vec<_>>()
+                .join(" ")
         };
 
         args.extend([
@@ -589,6 +664,10 @@ impl ExecutionBackend for DockerBackend {
         // Read git user configuration from the host
         let (git_user_name, git_user_email) = read_git_user_config().await;
 
+        // Ensure cache directories exist before creating container
+        // This prevents Docker from creating them as root when mounting named volumes
+        Self::ensure_cache_directories(workdir);
+
         let args = Self::build_create_args(
             name,
             workdir,
@@ -596,14 +675,12 @@ impl ExecutionBackend for DockerBackend {
             uid,
             proxy_config_ref,
             options.print_mode,
+            options.dangerous_skip_checks,
             &options.images,
             git_user_name.as_deref(),
             git_user_email.as_deref(),
         )?;
-        let output = Command::new("docker")
-            .args(&args)
-            .output()
-            .await?;
+        let output = Command::new("docker").args(&args).output().await?;
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
@@ -717,6 +794,7 @@ impl DockerBackend {
                 plan_mode: true, // Default to plan mode
                 session_proxy_port: None,
                 images: vec![],
+                dangerous_skip_checks: false,
             },
         )
         .await
@@ -750,10 +828,12 @@ mod tests {
             1000,
             None,
             false, // interactive mode
+            true,  // dangerous_skip_checks
             &[],   // no images
             None,  // git user name
             None,  // git user email
-        ).expect("Failed to build args");
+        )
+        .expect("Failed to build args");
 
         // Must have -dit for interactive TTY sessions
         assert!(
@@ -815,8 +895,10 @@ mod tests {
             uid,
             None,
             false, // print mode
+            true,  // dangerous_skip_checks
             &[],   // no images
-        ).expect("Failed to build args");
+        )
+        .expect("Failed to build args");
 
         // Find --user flag and verify it's followed by the UID
         let user_idx = args.iter().position(|a| a == "--user");
@@ -838,9 +920,11 @@ mod tests {
             "test prompt",
             1000,
             None,
-            false,
-            false,
-            &[],
+            false, // print_mode
+            true,  // dangerous_skip_checks
+            &[],   // images
+            None,  // git_user_name
+            None,  // git_user_email
         )
         .expect("Failed to build args");
 
@@ -871,7 +955,10 @@ mod tests {
         let has_sccache_dir = args
             .iter()
             .any(|a| a == "SCCACHE_DIR=/workspace/.cache/sccache");
-        assert!(has_sccache_dir, "Expected SCCACHE_DIR=/workspace/.cache/sccache");
+        assert!(
+            has_sccache_dir,
+            "Expected SCCACHE_DIR=/workspace/.cache/sccache"
+        );
     }
 
     /// Test that attach command uses bash, not zsh (which doesn't exist in container)
@@ -923,8 +1010,10 @@ mod tests {
             1000,
             None,
             false, // print mode
+            true,  // dangerous_skip_checks
             &[],   // no images
-        ).expect("Failed to build args");
+        )
+        .expect("Failed to build args");
 
         // Find the command argument (last one containing the prompt)
         let cmd_arg = args.last().unwrap();
@@ -946,8 +1035,10 @@ mod tests {
             1000,
             None,
             false, // print mode
+            true,  // dangerous_skip_checks
             &[],   // no images
-        ).expect("Failed to build args");
+        )
+        .expect("Failed to build args");
 
         // Find --name flag and verify the container name
         let name_idx = args.iter().position(|a| a == "--name");
@@ -985,16 +1076,24 @@ mod tests {
             1000,
             Some(&proxy_config),
             false, // print mode
+            true,  // dangerous_skip_checks
             &[],   // no images
-        ).expect("Failed to build args");
+        )
+        .expect("Failed to build args");
 
         // Should have HTTPS_PROXY
         let has_https_proxy = args.iter().any(|a| a.contains("HTTPS_PROXY"));
-        assert!(has_https_proxy, "Expected HTTPS_PROXY env var, got: {args:?}");
+        assert!(
+            has_https_proxy,
+            "Expected HTTPS_PROXY env var, got: {args:?}"
+        );
 
         // Should have SSL_CERT_FILE
         let has_ssl_cert = args.iter().any(|a| a.contains("SSL_CERT_FILE"));
-        assert!(has_ssl_cert, "Expected SSL_CERT_FILE env var, got: {args:?}");
+        assert!(
+            has_ssl_cert,
+            "Expected SSL_CERT_FILE env var, got: {args:?}"
+        );
 
         // Should have KUBECONFIG
         let has_kubeconfig = args.iter().any(|a| a.contains("KUBECONFIG"));
@@ -1022,8 +1121,10 @@ mod tests {
             1000,
             Some(&proxy_config),
             false, // print mode
+            true,  // dangerous_skip_checks
             &[],   // no images
-        ).expect("Failed to build args");
+        )
+        .expect("Failed to build args");
 
         // Should have proxy-ca.pem mount
         let has_ca_mount = args.iter().any(|a| a.contains("proxy-ca.pem"));
@@ -1045,12 +1146,17 @@ mod tests {
             1000,
             Some(&proxy_config),
             false, // print mode
+            true,  // dangerous_skip_checks
             &[],   // no images
-        ).expect("Failed to build args");
+        )
+        .expect("Failed to build args");
 
         // Should NOT have HTTPS_PROXY
         let has_https_proxy = args.iter().any(|a| a.contains("HTTPS_PROXY"));
-        assert!(!has_https_proxy, "Disabled proxy should not add HTTPS_PROXY");
+        assert!(
+            !has_https_proxy,
+            "Disabled proxy should not add HTTPS_PROXY"
+        );
     }
 
     /// Test that --add-host is always added for host.docker.internal resolution
@@ -1070,8 +1176,10 @@ mod tests {
             1000,
             Some(&proxy_config),
             false, // print mode
+            true,  // dangerous_skip_checks
             &[],   // no images
-        ).expect("Failed to build args");
+        )
+        .expect("Failed to build args");
 
         // Should have --add-host flag
         assert!(
@@ -1081,7 +1189,8 @@ mod tests {
 
         // Should have host.docker.internal:host-gateway
         assert!(
-            args.iter().any(|arg| arg == "host.docker.internal:host-gateway"),
+            args.iter()
+                .any(|arg| arg == "host.docker.internal:host-gateway"),
             "Expected host.docker.internal:host-gateway, got: {args:?}"
         );
     }
@@ -1096,8 +1205,9 @@ mod tests {
             1000,
             None,
             true, // print mode
-            &[],   // no images
-        ).expect("Failed to build args");
+            &[],  // no images
+        )
+        .expect("Failed to build args");
 
         let cmd_arg = args.last().unwrap();
         assert!(
@@ -1121,7 +1231,8 @@ mod tests {
             None,
             false, // interactive mode
             &[],   // no images
-        ).expect("Failed to build args");
+        )
+        .expect("Failed to build args");
 
         let cmd_arg = args.last().unwrap();
         assert!(
@@ -1147,10 +1258,7 @@ mod tests {
         std::fs::create_dir_all(&worktree_dir).expect("Failed to create worktree dir");
 
         // Create a .git file that points to the parent repo
-        let git_file_content = format!(
-            "gitdir: {}/worktrees/test",
-            repo_git.display()
-        );
+        let git_file_content = format!("gitdir: {}/worktrees/test", repo_git.display());
         std::fs::write(worktree_dir.join(".git"), git_file_content)
             .expect("Failed to write .git file");
 
@@ -1161,14 +1269,20 @@ mod tests {
             "test prompt",
             1000,
             None,
-            false,
-            false,
-            &[],
-        ).expect("Failed to build args");
+            false, // print_mode
+            true,  // dangerous_skip_checks
+            &[],   // images
+            None,  // git_user_name
+            None,  // git_user_email
+        )
+        .expect("Failed to build args");
 
         // Should have workspace mount
         let has_workspace_mount = args.iter().any(|a| a.contains("/workspace"));
-        assert!(has_workspace_mount, "Expected /workspace mount, got: {args:?}");
+        assert!(
+            has_workspace_mount,
+            "Expected /workspace mount, got: {args:?}"
+        );
 
         // Should also have parent .git directory mount (read-write for commits)
         let expected_git_mount = format!("{}:{}", repo_git.display(), repo_git.display());
@@ -1198,10 +1312,13 @@ mod tests {
             "test prompt",
             1000,
             None,
-            false,
-            false,
-            &[],
-        ).expect("Failed to build args");
+            false, // print_mode
+            true,  // dangerous_skip_checks
+            &[],   // images
+            None,  // git_user_name
+            None,  // git_user_email
+        )
+        .expect("Failed to build args");
 
         // Count volume mounts (should have workspace + 3 cargo/sccache cache mounts)
         let mount_count = args.iter().filter(|a| *a == "-v").count();
@@ -1240,13 +1357,18 @@ mod tests {
             "test prompt",
             1000,
             None,
-            false,
-            false,
-            &[],
-        ).expect("Failed to build args");
+            false, // print_mode
+            true,  // dangerous_skip_checks
+            &[],   // images
+            None,  // git_user_name
+            None,  // git_user_email
+        )
+        .expect("Failed to build args");
 
         // Should have parent .git directory mount
-        let has_git_mount = args.iter().any(|a| a.contains(&format!("{}:", repo_git.display())));
+        let has_git_mount = args
+            .iter()
+            .any(|a| a.contains(&format!("{}:", repo_git.display())));
         assert!(
             has_git_mount,
             "Expected parent .git mount for worktree with relative path, got: {args:?}"
@@ -1280,13 +1402,18 @@ mod tests {
             "test prompt",
             1000,
             None,
-            false,
-            false,
-            &[],
-        ).expect("Failed to build args");
+            false, // print_mode
+            true,  // dangerous_skip_checks
+            &[],   // images
+            None,  // git_user_name
+            None,  // git_user_email
+        )
+        .expect("Failed to build args");
 
         // Should still work despite whitespace
-        let has_git_mount = args.iter().any(|a| a.contains(&format!("{}:", repo_git.display())));
+        let has_git_mount = args
+            .iter()
+            .any(|a| a.contains(&format!("{}:", repo_git.display())));
         assert!(
             has_git_mount,
             "Expected parent .git mount despite trailing whitespace, got: {args:?}"
@@ -1313,10 +1440,13 @@ mod tests {
             "test prompt",
             1000,
             None,
-            false,
-            false,
-            &[],
-        ).expect("Failed to build args");
+            false, // print_mode
+            true,  // dangerous_skip_checks
+            &[],   // images
+            None,  // git_user_name
+            None,  // git_user_email
+        )
+        .expect("Failed to build args");
 
         // Should have workspace + 3 cache mounts (no git parent mount)
         let mount_count = args.iter().filter(|a| *a == "-v").count();
@@ -1348,10 +1478,13 @@ mod tests {
             "test prompt",
             1000,
             None,
-            false,
-            false,
-            &[],
-        ).expect("Failed to build args");
+            false, // print_mode
+            true,  // dangerous_skip_checks
+            &[],   // images
+            None,  // git_user_name
+            None,  // git_user_email
+        )
+        .expect("Failed to build args");
 
         // Should have workspace + 3 cache mounts (no git parent mount due to validation failure)
         let mount_count = args.iter().filter(|a| *a == "-v").count();
@@ -1359,6 +1492,64 @@ mod tests {
             mount_count, 4,
             "Worktree with missing parent should have workspace + 3 cache mounts, got {mount_count} mounts"
         );
+    }
+
+    /// Test that dangerous_skip_checks works without proxy
+    #[test]
+    fn test_dangerous_skip_checks_without_proxy() {
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            &PathBuf::from("/workspace"),
+            "test prompt",
+            1000,
+            None,  // No proxy config
+            false, // print_mode
+            true,  // dangerous_skip_checks = true
+            &[],   // images
+            None,  // git_user_name
+            None,  // git_user_email
+        )
+        .expect("Failed to build args");
+
+        // Should include --dangerously-skip-permissions flag
+        let cmd_arg = args.last().unwrap();
+        assert!(
+            cmd_arg.contains("--dangerously-skip-permissions"),
+            "Flag should be present even without proxy: {cmd_arg}"
+        );
+
+        // Should mount .claude.json with bypassPermissionsModeAccepted
+        let has_claude_json = args.iter().any(|a| a.contains(".claude.json"));
+        assert!(has_claude_json, "Should mount .claude.json even without proxy");
+
+        // Verify the mount includes the container path
+        let claude_json_mount = args.iter().find(|a| a.contains(".claude.json")).unwrap();
+        assert!(
+            claude_json_mount.contains(":/workspace/.claude.json"),
+            "Should mount to /workspace/.claude.json: {claude_json_mount}"
+        );
+    }
+
+    /// Test that .claude.json is created without dangerous_skip_checks
+    #[test]
+    fn test_claude_json_without_dangerous_skip_checks() {
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            &PathBuf::from("/workspace"),
+            "test prompt",
+            1000,
+            None,  // No proxy config
+            false, // print_mode
+            false, // dangerous_skip_checks = false
+            &[],   // images
+            None,  // git_user_name
+            None,  // git_user_email
+        )
+        .expect("Failed to build args");
+
+        // Should still mount .claude.json (for onboarding)
+        let has_claude_json = args.iter().any(|a| a.contains(".claude.json"));
+        assert!(has_claude_json, "Should mount .claude.json for onboarding even without bypass mode");
     }
 
 }

@@ -48,6 +48,9 @@ pub struct CreateOptions {
 
     /// Image file paths to attach to initial prompt
     pub images: Vec<String>,
+
+    /// Skip safety checks (dangerous)
+    pub dangerous_skip_checks: bool,
 }
 
 /// Trait for execution backends (Zellij, Docker, etc.)
