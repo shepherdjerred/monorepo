@@ -40,7 +40,6 @@ pub async fn run() -> anyhow::Result<()> {
         stdout,
         EnterAlternateScreen,
         EnableBracketedPaste,
-        EnableMouseCapture,
         PushKeyboardEnhancementFlags(
             KeyboardEnhancementFlags::DISAMBIGUATE_ESCAPE_CODES
                 | KeyboardEnhancementFlags::REPORT_ALL_KEYS_AS_ESCAPE_CODES
@@ -65,7 +64,6 @@ pub async fn run() -> anyhow::Result<()> {
         terminal.backend_mut(),
         PopKeyboardEnhancementFlags,
         DisableBracketedPaste,
-        DisableMouseCapture,
         LeaveAlternateScreen
     )?;
     terminal.show_cursor()?;
@@ -113,13 +111,7 @@ async fn run_main_loop(
 
                 // Handle paste events
                 if let Event::Paste(pasted_text) = &event {
-                    events::handle_paste_event(app, pasted_text);
-                    continue;
-                }
-
-                // Handle mouse events
-                if let Event::Mouse(mouse) = event {
-                    events::handle_mouse_event(app, mouse).await?;
+                    events::handle_paste_event(app, pasted_text).await?;
                     continue;
                 }
 

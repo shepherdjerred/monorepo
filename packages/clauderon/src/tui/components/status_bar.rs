@@ -8,6 +8,17 @@ use ratatui::{
 
 use crate::tui::app::{App, AppMode};
 
+// Platform-specific scrolling key hints
+#[cfg(target_os = "macos")]
+const SCROLL_KEYS_SHORT: &str = "Fn+Opt+↑/↓";
+#[cfg(not(target_os = "macos"))]
+const SCROLL_KEYS_SHORT: &str = "PgUp/Dn";
+
+#[cfg(target_os = "macos")]
+const SCROLL_TO_BOTTOM: &str = "Fn+Opt+↓";
+#[cfg(not(target_os = "macos"))]
+const SCROLL_TO_BOTTOM: &str = "PgDn";
+
 /// Render the status bar
 pub fn render(frame: &mut Frame, app: &App, area: Rect) {
     let line = match app.mode {
@@ -33,7 +44,7 @@ fn render_attached_status(app: &App) -> Line<'static> {
         let buffer = pty_session.terminal_buffer();
         if let Ok(buf) = buffer.try_lock() {
             if !buf.is_at_bottom() {
-                format!(" [SCROLLED - PgDn to bottom]")
+                format!(" [SCROLLED - {} to bottom]", SCROLL_TO_BOTTOM)
             } else {
                 String::new()
             }
@@ -59,7 +70,7 @@ fn render_attached_status(app: &App) -> Line<'static> {
         Span::raw(" switch │ "),
         Span::styled("Ctrl+[", Style::default().fg(Color::Cyan)),
         Span::raw(" copy │ "),
-        Span::styled("PgUp/Dn", Style::default().fg(Color::Cyan)),
+        Span::styled(SCROLL_KEYS_SHORT, Style::default().fg(Color::Cyan)),
         Span::raw(" scroll │ "),
         Span::styled("?", Style::default().fg(Color::Cyan)),
         Span::raw(" help"),
@@ -101,7 +112,7 @@ fn render_copy_mode_status(app: &App) -> Line<'static> {
             Span::raw(" move │ "),
             Span::styled("v", Style::default().fg(Color::Cyan)),
             Span::raw(" select │ "),
-            Span::styled("PgUp/Dn", Style::default().fg(Color::Cyan)),
+            Span::styled(SCROLL_KEYS_SHORT, Style::default().fg(Color::Cyan)),
             Span::raw(" scroll │ "),
             Span::styled("q/Esc", Style::default().fg(Color::Cyan)),
             Span::raw(" exit │ "),

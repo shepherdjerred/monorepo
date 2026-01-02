@@ -37,111 +37,131 @@ pub async fn next_event(stream: &mut EventStream) -> anyhow::Result<Option<Event
     }
 }
 
-/// Handle a mouse event
+// Mouse event handling has been disabled to allow normal terminal text selection.
+// Mouse capture was preventing users from selecting and copying text with their mouse.
+// Keyboard scrolling alternatives (PgUp/PgDn, Shift+Up/Down) are still available.
+//
+// /// Handle a mouse event
+// ///
+// /// # Errors
+// ///
+// /// Returns an error if scrolling operations fail.
+// pub async fn handle_mouse_event(app: &mut App, mouse: MouseEvent) -> anyhow::Result<()> {
+//     // Only handle mouse events when attached
+//     if app.mode != AppMode::Attached {
+//         return Ok(());
+//     }
+//
+//     match mouse.kind {
+//         MouseEventKind::ScrollUp => {
+//             if let Some(pty_session) = app.attached_pty_session() {
+//                 let buffer = pty_session.terminal_buffer();
+//                 // Lock acquisition is safe here as this is the only place we hold the lock
+//                 // and operations are synchronous. If the lock were to fail, it would indicate
+//                 // a critical issue with the buffer, so we log and continue gracefully.
+//                 match buffer.try_lock() {
+//                     Ok(mut buf) => {
+//                         buf.scroll_up(SCROLL_LINES_PER_WHEEL_TICK);
+//                     }
+//                     Err(_) => {
+//                         tracing::warn!("Failed to acquire terminal buffer lock for scroll up");
+//                     }
+//                 }
+//             }
+//         }
+//         MouseEventKind::ScrollDown => {
+//             if let Some(pty_session) = app.attached_pty_session() {
+//                 let buffer = pty_session.terminal_buffer();
+//                 match buffer.try_lock() {
+//                     Ok(mut buf) => {
+//                         buf.scroll_down(SCROLL_LINES_PER_WHEEL_TICK);
+//                     }
+//                     Err(_) => {
+//                         tracing::warn!("Failed to acquire terminal buffer lock for scroll down");
+//                     }
+//                 }
+//             }
+//         }
+//         _ => {
+//             // Ignore other mouse events (clicks, moves, etc.) for now
+//         }
+//     }
+//
+//     Ok(())
+// }
+
+/// Handle a paste event (when text is pasted from clipboard)
 ///
 /// # Errors
 ///
-/// Returns an error if scrolling operations fail.
-pub async fn handle_mouse_event(app: &mut App, mouse: MouseEvent) -> anyhow::Result<()> {
-    // Only handle mouse events when attached
-    if app.mode != AppMode::Attached {
-        return Ok(());
-    }
+/// Returns an error if sending to PTY fails.
+pub async fn handle_paste_event(app: &mut App, text: &str) -> anyhow::Result<()> {
+    match app.mode {
+        AppMode::Attached => {
+            // In Attached mode, send pasted text directly to the PTY
+            let pasted_bytes = text.as_bytes().to_vec();
+            app.send_to_pty(pasted_bytes).await?;
+        }
+        AppMode::CreateDialog => {
+            // Don't handle paste if directory picker is active
+            if app.create_dialog.directory_picker.is_active {
+                return Ok(());
+            }
 
-    match mouse.kind {
-        MouseEventKind::ScrollUp => {
-            if let Some(pty_session) = app.attached_pty_session() {
-                let buffer = pty_session.terminal_buffer();
-                // Lock acquisition is safe here as this is the only place we hold the lock
-                // and operations are synchronous. If the lock were to fail, it would indicate
-                // a critical issue with the buffer, so we log and continue gracefully.
-                match buffer.try_lock() {
-                    Ok(mut buf) => {
-                        buf.scroll_up(SCROLL_LINES_PER_WHEEL_TICK);
-                    }
-                    Err(_) => {
-                        tracing::warn!("Failed to acquire terminal buffer lock for scroll up");
-                    }
+            match app.create_dialog.focus {
+                CreateDialogFocus::Name => {
+                    // For name field, replace all line endings with spaces
+                    let normalized_text = text
+                        .replace("\r\n", " ")
+                        .replace('\r', " ")
+                        .replace('\n', " ");
+
+                    // Insert at cursor position
+                    app.create_dialog.name.insert_str(
+                        app.create_dialog.name_cursor,
+                        &normalized_text,
+                    );
+                    // Move cursor to end of pasted content
+                    app.create_dialog.name_cursor += normalized_text.len();
                 }
+                CreateDialogFocus::Prompt => {
+                    // For prompt field, normalize line endings to \n
+                    let normalized_text = text.replace("\r\n", "\n").replace('\r', "\n");
+
+                    // Insert each character at cursor position
+                    for ch in normalized_text.chars() {
+                        if ch == '\n' {
+                            (app.create_dialog.prompt_cursor_line, app.create_dialog.prompt_cursor_col) =
+                                super::text_input::insert_newline_at_cursor(
+                                    &mut app.create_dialog.prompt,
+                                    app.create_dialog.prompt_cursor_line,
+                                    app.create_dialog.prompt_cursor_col,
+                                );
+                        } else {
+                            (app.create_dialog.prompt_cursor_line, app.create_dialog.prompt_cursor_col) =
+                                super::text_input::insert_char_at_cursor_multiline(
+                                    &mut app.create_dialog.prompt,
+                                    app.create_dialog.prompt_cursor_line,
+                                    app.create_dialog.prompt_cursor_col,
+                                    ch,
+                                );
+                        }
+                    }
+                    app.create_dialog.ensure_cursor_visible();
+                }
+                // RepoPath doesn't accept typed/pasted input
+                _ => {}
             }
         }
-        MouseEventKind::ScrollDown => {
-            if let Some(pty_session) = app.attached_pty_session() {
-                let buffer = pty_session.terminal_buffer();
-                match buffer.try_lock() {
-                    Ok(mut buf) => {
-                        buf.scroll_down(SCROLL_LINES_PER_WHEEL_TICK);
-                    }
-                    Err(_) => {
-                        tracing::warn!("Failed to acquire terminal buffer lock for scroll down");
-                    }
-                }
-            }
+        AppMode::CopyMode => {
+            // Ignore paste events in copy mode
         }
         _ => {
-            // Ignore other mouse events (clicks, moves, etc.) for now
+            // Ignore paste events in other modes
         }
     }
 
     Ok(())
-}
-
-/// Handle a paste event (when text is pasted from clipboard)
-pub fn handle_paste_event(app: &mut App, text: &str) {
-    // Only handle paste events in CreateDialog mode
-    if app.mode != AppMode::CreateDialog {
-        return;
-    }
-
-    // Don't handle paste if directory picker is active
-    if app.create_dialog.directory_picker.is_active {
-        return;
-    }
-
-    match app.create_dialog.focus {
-        CreateDialogFocus::Name => {
-            // For name field, replace all line endings with spaces
-            let normalized_text = text
-                .replace("\r\n", " ")
-                .replace('\r', " ")
-                .replace('\n', " ");
-
-            // Insert at cursor position
-            app.create_dialog.name.insert_str(
-                app.create_dialog.name_cursor,
-                &normalized_text,
-            );
-            // Move cursor to end of pasted content
-            app.create_dialog.name_cursor += normalized_text.len();
-        }
-        CreateDialogFocus::Prompt => {
-            // For prompt field, normalize line endings to \n
-            let normalized_text = text.replace("\r\n", "\n").replace('\r', "\n");
-
-            // Insert each character at cursor position
-            for ch in normalized_text.chars() {
-                if ch == '\n' {
-                    (app.create_dialog.prompt_cursor_line, app.create_dialog.prompt_cursor_col) =
-                        super::text_input::insert_newline_at_cursor(
-                            &mut app.create_dialog.prompt,
-                            app.create_dialog.prompt_cursor_line,
-                            app.create_dialog.prompt_cursor_col,
-                        );
-                } else {
-                    (app.create_dialog.prompt_cursor_line, app.create_dialog.prompt_cursor_col) =
-                        super::text_input::insert_char_at_cursor_multiline(
-                            &mut app.create_dialog.prompt,
-                            app.create_dialog.prompt_cursor_line,
-                            app.create_dialog.prompt_cursor_col,
-                            ch,
-                        );
-                }
-            }
-            app.create_dialog.ensure_cursor_visible();
-        }
-        // RepoPath doesn't accept typed/pasted input
-        _ => {}
-    }
 }
 
 
