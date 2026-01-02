@@ -26,11 +26,11 @@ export default {
 
     return commands;
   },
-  "packages/multiplexer/**/*.rs": () => {
+  "packages/clauderon/**/*.rs": () => {
     return [
-      "cd packages/multiplexer && cargo fmt --check",
-      "cd packages/multiplexer && cargo clippy -- -D warnings",
-      "cd packages/multiplexer && cargo test",
+      "cd packages/clauderon && cargo fmt --check",
+      "cd packages/clauderon && cargo clippy -- -D warnings",
+      "cd packages/clauderon && cargo test",
     ];
   },
 };
