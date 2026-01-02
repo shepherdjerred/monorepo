@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use k8s_openapi::api::core::v1::{
-    ConfigMap, Container, EnvVar, Pod, PodSpec, PersistentVolumeClaim, PersistentVolumeClaimSpec,
+    ConfigMap, Container, EnvVar, HostAlias, Pod, PodSpec, PersistentVolumeClaim, PersistentVolumeClaimSpec,
     ResourceRequirements, Volume, VolumeMount, PodSecurityContext, SecurityContext,
     VolumeResourceRequirements, Namespace,
 };
@@ -16,6 +16,16 @@ use tokio::time::timeout;
 
 use super::kubernetes_config::{KubernetesConfig, KubernetesProxyConfig};
 use super::traits::{CreateOptions, ExecutionBackend};
+
+/// Sanitize git config value to prevent environment variable injection
+///
+/// Removes all control characters (including newlines, tabs, etc.) that could be used for injection attacks
+fn sanitize_git_config_value(value: &str) -> String {
+    value
+        .chars()
+        .filter(|c| !c.is_control())
+        .collect()
+}
 
 /// Kubernetes backend for running Claude Code sessions in pods
 pub struct KubernetesBackend {
@@ -86,6 +96,8 @@ impl KubernetesBackend {
     }
 
     /// Read git user configuration from the host system
+    ///
+    /// Values are sanitized to prevent environment variable injection
     async fn read_git_user_config() -> (Option<String>, Option<String>) {
         let name = Command::new("git")
             .args(["config", "--get", "user.name"])
@@ -96,7 +108,7 @@ impl KubernetesBackend {
                 if output.status.success() {
                     String::from_utf8(output.stdout)
                         .ok()
-                        .map(|s| s.trim().to_string())
+                        .map(|s| sanitize_git_config_value(s.trim()))
                         .filter(|s| !s.is_empty())
                 } else {
                     None
@@ -112,7 +124,7 @@ impl KubernetesBackend {
                 if output.status.success() {
                     String::from_utf8(output.stdout)
                         .ok()
-                        .map(|s| s.trim().to_string())
+                        .map(|s| sanitize_git_config_value(s.trim()))
                         .filter(|s| !s.is_empty())
                 } else {
                     None
@@ -122,16 +134,35 @@ impl KubernetesBackend {
         (name, email)
     }
 
-    /// Ensure the namespace exists
+    /// Ensure the namespace and service account exist
     async fn ensure_namespace_exists(&self) -> anyhow::Result<()> {
         let namespaces: Api<Namespace> = Api::all(self.client.clone());
 
         match namespaces.get(&self.config.namespace).await {
-            Ok(_) => Ok(()),
+            Ok(_) => (),
             Err(kube::Error::Api(err)) if err.code == 404 => {
                 anyhow::bail!(
                     "Namespace '{}' does not exist. Create it with: kubectl create namespace {}",
                     self.config.namespace,
+                    self.config.namespace
+                );
+            }
+            Err(e) => return Err(e.into()),
+        }
+
+        // Validate service account exists
+        use k8s_openapi::api::core::v1::ServiceAccount;
+        let service_accounts: Api<ServiceAccount> =
+            Api::namespaced(self.client.clone(), &self.config.namespace);
+
+        match service_accounts.get(&self.config.service_account).await {
+            Ok(_) => Ok(()),
+            Err(kube::Error::Api(err)) if err.code == 404 => {
+                anyhow::bail!(
+                    "ServiceAccount '{}' does not exist in namespace '{}'. Create it with: kubectl create serviceaccount {} -n {}",
+                    self.config.service_account,
+                    self.config.namespace,
+                    self.config.service_account,
                     self.config.namespace
                 );
             }
@@ -162,12 +193,21 @@ impl KubernetesBackend {
     }
 
     /// Create a shared PVC for caching
+    ///
+    /// Tries ReadWriteMany first, falls back to ReadWriteOnce if RWX is not available
     async fn create_shared_pvc(&self, name: &str, size: &str) -> anyhow::Result<()> {
         let pvcs: Api<PersistentVolumeClaim> =
             Api::namespaced(self.client.clone(), &self.config.namespace);
 
         let mut resources = BTreeMap::new();
         resources.insert("storage".to_string(), Quantity(size.to_string()));
+
+        // Determine access mode based on config
+        let access_modes = if self.config.use_rwo_cache {
+            vec!["ReadWriteOnce".to_string()]
+        } else {
+            vec!["ReadWriteMany".to_string()]
+        };
 
         let pvc = PersistentVolumeClaim {
             metadata: ObjectMeta {
@@ -182,10 +222,10 @@ impl KubernetesBackend {
                 ..Default::default()
             },
             spec: Some(PersistentVolumeClaimSpec {
-                access_modes: Some(vec!["ReadWriteMany".to_string()]),
+                access_modes: Some(access_modes.clone()),
                 storage_class_name: self.config.storage_class.clone(),
                 resources: Some(VolumeResourceRequirements {
-                    requests: Some(resources),
+                    requests: Some(resources.clone()),
                     ..Default::default()
                 }),
                 ..Default::default()
@@ -193,8 +233,89 @@ impl KubernetesBackend {
             ..Default::default()
         };
 
-        pvcs.create(&PostParams::default(), &pvc).await?;
-        Ok(())
+        // Try to create PVC
+        match pvcs.create(&PostParams::default(), &pvc).await {
+            Ok(_) => {
+                tracing::info!(
+                    name = name,
+                    access_mode = ?access_modes[0],
+                    "Created shared cache PVC"
+                );
+                if access_modes[0] == "ReadWriteOnce" {
+                    tracing::warn!(
+                        name = name,
+                        "Using ReadWriteOnce for cache PVC. Only one pod can mount this cache at a time. Concurrent sessions may fail to start."
+                    );
+                }
+                Ok(())
+            }
+            Err(e) if !self.config.use_rwo_cache && Self::is_access_mode_error(&e) => {
+                // Fallback to RWO if RWX not supported
+                tracing::warn!(
+                    name = name,
+                    error = %e,
+                    "ReadWriteMany not supported by storage class, falling back to ReadWriteOnce"
+                );
+                tracing::warn!(
+                    name = name,
+                    "Using ReadWriteOnce for cache PVC. Only one pod can mount this cache at a time. Concurrent sessions may fail to start."
+                );
+
+                let mut rwo_labels = BTreeMap::new();
+                rwo_labels.insert("clauderon.io/managed".to_string(), "true".to_string());
+                rwo_labels.insert("clauderon.io/type".to_string(), "cache".to_string());
+                rwo_labels.insert("clauderon.io/access-mode".to_string(), "rwo-fallback".to_string());
+
+                let rwo_pvc = PersistentVolumeClaim {
+                    metadata: ObjectMeta {
+                        name: Some(name.to_string()),
+                        namespace: Some(self.config.namespace.clone()),
+                        labels: Some(rwo_labels),
+                        ..Default::default()
+                    },
+                    spec: Some(PersistentVolumeClaimSpec {
+                        access_modes: Some(vec!["ReadWriteOnce".to_string()]),
+                        storage_class_name: self.config.storage_class.clone(),
+                        resources: Some(VolumeResourceRequirements {
+                            requests: Some(resources),
+                            ..Default::default()
+                        }),
+                        ..Default::default()
+                    }),
+                    ..Default::default()
+                };
+
+                pvcs.create(&PostParams::default(), &rwo_pvc).await?;
+                tracing::info!(
+                    name = name,
+                    "Created shared cache PVC with ReadWriteOnce (fallback)"
+                );
+                Ok(())
+            }
+            Err(e) => Err(e.into()),
+        }
+    }
+
+    /// Check if error is related to unsupported access mode
+    ///
+    /// Note: This is still somewhat fragile as it relies on error message content,
+    /// but Kubernetes API errors don't always provide structured error codes for
+    /// storage class capabilities.
+    fn is_access_mode_error(e: &kube::Error) -> bool {
+        match e {
+            kube::Error::Api(api_err) => {
+                // Check error message for access mode issues
+                let msg = api_err.message.to_lowercase();
+                (msg.contains("access mode") ||
+                 msg.contains("accessmode") ||
+                 msg.contains("readwritemany") ||
+                 msg.contains("rwx")) &&
+                (msg.contains("not supported") ||
+                 msg.contains("unsupported") ||
+                 msg.contains("invalid"))
+            }
+            _ => false,
+        }
     }
 
     /// Create a workspace PVC for a specific session
@@ -463,13 +584,33 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
 
         // Add proxy configuration if enabled
         if let Some(ref proxy_config) = self.proxy_config {
-            if proxy_config.enabled {
+            if proxy_config.enabled && self.config.proxy_mode != "disabled" {
                 let proxy_port = proxy_config
                     .session_proxy_port
                     .unwrap_or(proxy_config.http_proxy_port);
-                let proxy_url = format!("http://host.kubernetes.internal:{proxy_port}");
 
-                env.extend_from_slice(&[
+                // Build proxy URL based on configured mode
+                use crate::backends::kubernetes_config::ProxyMode;
+                let proxy_url = match self.config.proxy_mode {
+                    ProxyMode::ClusterIp => {
+                        // Use ClusterIP service - requires service to be created separately
+                        // Access via service name from within the cluster
+                        let service_port = self.config.proxy_service_port.unwrap_or(8080);
+                        Some(format!(
+                            "http://clauderon-proxy.{}.svc.cluster.local:{}",
+                            self.config.namespace, service_port
+                        ))
+                    }
+                    ProxyMode::HostGateway => {
+                        // Use host-gateway (requires hostAliases in pod spec)
+                        // This will be configured in build_pod_spec()
+                        Some(format!("http://host-gateway:{proxy_port}"))
+                    }
+                    ProxyMode::Disabled => None,
+                };
+
+                if let Some(proxy_url) = proxy_url {
+                    env.extend_from_slice(&[
                     EnvVar {
                         name: "HTTP_PROXY".to_string(),
                         value: Some(proxy_url.clone()),
@@ -515,7 +656,8 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
                         value: Some("sk-ant-oat01-clauderon-proxy-placeholder".to_string()),
                         ..Default::default()
                     },
-                ]);
+                    ]);
+                }
             }
         }
 
@@ -690,6 +832,22 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
         labels.insert("clauderon.io/session-name".to_string(), session_name.to_string());
         labels.insert("clauderon.io/backend".to_string(), "kubernetes".to_string());
 
+        // Add host aliases for host-gateway mode
+        use crate::backends::kubernetes_config::ProxyMode;
+        let host_aliases = if self.config.proxy_mode == ProxyMode::HostGateway {
+            if let Some(ref host_ip) = self.config.host_gateway_ip {
+                Some(vec![HostAlias {
+                    hostnames: Some(vec!["host-gateway".to_string()]),
+                    ip: Some(host_ip.clone()),
+                }])
+            } else {
+                tracing::warn!("proxy_mode is HostGateway but host_gateway_ip is not set");
+                None
+            }
+        } else {
+            None
+        };
+
         Pod {
             metadata: ObjectMeta {
                 name: Some(pod_name.to_string()),
@@ -707,6 +865,7 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
                     fs_group: Some(1000),
                     ..Default::default()
                 }),
+                host_aliases,
                 ..Default::default()
             }),
             ..Default::default()
@@ -797,8 +956,11 @@ impl ExecutionBackend for KubernetesBackend {
         self.ensure_shared_pvcs_exist().await?;
 
         // Create workspace PVC for this session
-        // Use a placeholder session ID (in real implementation, this would come from the session)
-        let session_id = uuid::Uuid::new_v4().to_string();
+        // Use actual session ID from options for proper PVC labeling and tracking
+        let session_id = options
+            .session_id
+            .ok_or_else(|| anyhow::anyhow!("session_id is required for Kubernetes backend"))?
+            .to_string();
         self.create_workspace_pvc(&pod_name, &session_id).await?;
 
         // Create Claude config ConfigMap

@@ -9,7 +9,7 @@ pub mod zellij;
 pub use docker::{DockerBackend, DockerProxyConfig};
 pub use git::GitBackend;
 pub use kubernetes::KubernetesBackend;
-pub use kubernetes_config::{KubernetesConfig, KubernetesProxyConfig};
+pub use kubernetes_config::{KubernetesConfig, KubernetesProxyConfig, ProxyMode};
 pub use mock::{MockExecutionBackend, MockGitBackend};
 pub use traits::{CreateOptions, ExecutionBackend, GitOperations};
 pub use zellij::ZellijBackend;
