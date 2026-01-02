@@ -40,9 +40,10 @@ pub async fn generate_session_name_ai(repo_path: &str, initial_prompt: &str) -> 
 }
 
 async fn generate_with_timeout(repo_path: &str, initial_prompt: &str) -> anyhow::Result<String> {
-    // 10 second timeout for CLI execution
+    // 30 second timeout for CLI execution to account for network latency,
+    // CLI startup time, OAuth validation, and potential API throttling
     tokio::time::timeout(
-        Duration::from_secs(10),
+        Duration::from_secs(30),
         call_claude_cli(repo_path, initial_prompt),
     )
     .await
