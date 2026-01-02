@@ -253,7 +253,7 @@ export function StatusDialog({ onClose }: StatusDialogProps) {
                   <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-md">
                     <p className="text-sm text-yellow-600 dark:text-yellow-500">
                       <strong>Note:</strong> Updated credentials will take effect for new sessions.
-                      Restart the multiplexer process for changes to apply to all services.
+                      Restart the clauderon daemon for changes to apply to all services.
                     </p>
                   </div>
                 </div>
