@@ -35,7 +35,7 @@ pub struct Session {
     /// Git branch name
     pub branch_name: String,
 
-    /// Backend-specific identifier (zellij session name or docker container id)
+    /// Backend-specific identifier (zellij session name, docker container id, or kubernetes pod name)
     pub backend_id: Option<String>,
 
     /// Initial prompt given to the AI agent
@@ -56,6 +56,9 @@ pub struct Session {
     /// Timestamp of last Claude status update
     #[typeshare(serialized_as = "String")]
     pub claude_status_updated_at: Option<DateTime<Utc>>,
+
+    /// Whether the session branch has merge conflicts with main
+    pub merge_conflict: bool,
 
     /// Access mode for proxy filtering
     pub access_mode: AccessMode,
@@ -119,6 +122,7 @@ impl Session {
             pr_check_status: None,
             claude_status: ClaudeWorkingStatus::Unknown,
             claude_status_updated_at: None,
+            merge_conflict: false,
             access_mode: config.access_mode,
             proxy_port: None,
             history_file_path: None,
@@ -169,6 +173,12 @@ impl Session {
         self.proxy_port = Some(port);
         self.updated_at = Utc::now();
     }
+
+    /// Set the merge conflict status
+    pub fn set_merge_conflict(&mut self, has_conflict: bool) {
+        self.merge_conflict = has_conflict;
+        self.updated_at = Utc::now();
+    }
 }
 
 /// Session lifecycle status
@@ -203,6 +213,9 @@ pub enum BackendType {
 
     /// Docker container
     Docker,
+
+    /// Kubernetes pod
+    Kubernetes,
 }
 
 /// AI agent type

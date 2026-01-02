@@ -4,8 +4,9 @@ import { SessionProvider } from "./contexts/SessionContext";
 import { SessionList } from "./components/SessionList";
 import { CreateSessionDialog } from "./components/CreateSessionDialog";
 import { Console } from "./components/Console";
+import { ChatInterface } from "./components/ChatInterface";
 
-type View = "list" | "console";
+type View = "list" | "console" | "chat";
 
 export function App() {
   const [view, setView] = useState<View>("list");
@@ -22,6 +23,14 @@ export function App() {
     setView("list");
   };
 
+  const handleSwitchToChat = () => {
+    setView("chat");
+  };
+
+  const handleSwitchToConsole = () => {
+    setView("console");
+  };
+
   const handleCreateNew = () => {
     setShowCreateDialog(true);
   };
@@ -33,15 +42,23 @@ export function App() {
   return (
     <SessionProvider>
       <div className="h-screen w-screen overflow-hidden bg-background text-foreground">
-        {view === "list" && (
-          <SessionList onAttach={handleAttach} onCreateNew={handleCreateNew} />
-        )}
+        <SessionList onAttach={handleAttach} onCreateNew={handleCreateNew} />
 
         {view === "console" && attachedSession && (
           <Console
             sessionId={attachedSession.id}
             sessionName={attachedSession.name}
             onClose={handleDetach}
+            onSwitchToChat={handleSwitchToChat}
+          />
+        )}
+
+        {view === "chat" && attachedSession && (
+          <ChatInterface
+            sessionId={attachedSession.id}
+            sessionName={attachedSession.name}
+            onClose={handleDetach}
+            onSwitchToConsole={handleSwitchToConsole}
           />
         )}
 
