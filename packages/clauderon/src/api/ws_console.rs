@@ -128,6 +128,11 @@ async fn handle_console_socket(socket: WebSocket, session_id: String, state: App
                                         tracing::error!("Failed to write to PTY: {}", e);
                                         break;
                                     }
+                                    // Flush immediately to ensure data is sent to PTY
+                                    if let Err(e) = writer.flush().await {
+                                        tracing::error!("Failed to flush PTY: {}", e);
+                                        break;
+                                    }
                                 }
                             }
                         }

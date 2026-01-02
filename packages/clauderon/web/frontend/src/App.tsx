@@ -33,9 +33,7 @@ export function App() {
   return (
     <SessionProvider>
       <div className="h-screen w-screen overflow-hidden bg-background text-foreground">
-        {view === "list" && (
-          <SessionList onAttach={handleAttach} onCreateNew={handleCreateNew} />
-        )}
+        <SessionList onAttach={handleAttach} onCreateNew={handleCreateNew} />
 
         {view === "console" && attachedSession && (
           <Console

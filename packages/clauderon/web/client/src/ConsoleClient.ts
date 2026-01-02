@@ -89,7 +89,12 @@ export class ConsoleClient {
           if (message.type === "output" && typeof message.data === "string") {
             // Decode base64 data with error handling
             try {
-              const decoded = atob(message.data);
+              // Decode base64 to binary string
+              const binaryString = atob(message.data);
+              // Convert binary string to Uint8Array
+              const bytes = Uint8Array.from(binaryString, (char) => char.charCodeAt(0));
+              // Decode UTF-8 bytes to proper string
+              const decoded = new TextDecoder('utf-8').decode(bytes);
               this.emit("data", decoded);
             } catch (decodeError) {
               this.emit(
