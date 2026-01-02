@@ -59,6 +59,9 @@ pub enum EventType {
         new_status: ClaudeWorkingStatus,
     },
 
+    /// Merge conflict status changed
+    ConflictStatusChanged { has_conflict: bool },
+
     /// Session was archived
     SessionArchived,
 
@@ -139,6 +142,9 @@ pub fn replay_events(events: &[Event]) -> Option<Session> {
             }
             EventType::ClaudeStatusChanged { new_status, .. } => {
                 session.set_claude_status(*new_status);
+            }
+            EventType::ConflictStatusChanged { has_conflict } => {
+                session.set_merge_conflict(*has_conflict);
             }
             EventType::SessionArchived => {
                 session.set_status(super::session::SessionStatus::Archived);
