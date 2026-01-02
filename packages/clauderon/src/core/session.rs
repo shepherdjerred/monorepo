@@ -35,7 +35,7 @@ pub struct Session {
     /// Git branch name
     pub branch_name: String,
 
-    /// Backend-specific identifier (zellij session name or docker container id)
+    /// Backend-specific identifier (zellij session name, docker container id, or kubernetes pod name)
     pub backend_id: Option<String>,
 
     /// Initial prompt given to the AI agent
@@ -208,6 +208,9 @@ pub enum BackendType {
 
     /// Docker container
     Docker,
+
+    /// Kubernetes pod
+    Kubernetes,
 }
 
 /// AI agent type
