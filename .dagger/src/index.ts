@@ -614,12 +614,13 @@ export class Monorepo {
     const outputs: string[] = [];
 
     // Build frontend first (required for static file embedding)
-    // The base container already has workspace deps installed, we just need to build the frontend
+    // The base container already has workspace deps installed, but we need to mount the frontend dirs
     const frontendBuildContainer = getBaseContainer(source)
       .withMountedDirectory("/workspace/packages/clauderon/web/frontend", source.directory("packages/clauderon/web/frontend"))
       .withMountedDirectory("/workspace/packages/clauderon/web/shared", source.directory("packages/clauderon/web/shared"))
       .withMountedDirectory("/workspace/packages/clauderon/web/client", source.directory("packages/clauderon/web/client"))
       .withWorkdir("/workspace/packages/clauderon/web/frontend")
+      .withExec(["bun", "install"])
       .withExec(["bun", "run", "build"]);
     const builtFrontend = frontendBuildContainer.directory("/workspace/packages/clauderon/web/frontend/dist");
 
