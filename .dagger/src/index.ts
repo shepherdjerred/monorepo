@@ -227,11 +227,14 @@ export class Monorepo {
 
     // Step 3: Build web packages in dependency order (now that types exist)
     outputs.push("\n--- Clauderon Web Packages ---");
-    container = container.withExec(["bun", "run", "--filter", "@clauderon/shared", "build"]);
-    await container.sync();
-    container = container.withExec(["bun", "run", "--filter", "@clauderon/client", "build"]);
-    await container.sync();
-    container = container.withExec(["bun", "run", "--filter", "@clauderon/frontend", "build"]);
+    container = container
+      .withWorkdir("/workspace/packages/clauderon/web/shared")
+      .withExec(["bun", "run", "build"])
+      .withWorkdir("/workspace/packages/clauderon/web/client")
+      .withExec(["bun", "run", "build"])
+      .withWorkdir("/workspace/packages/clauderon/web/frontend")
+      .withExec(["bun", "run", "build"])
+      .withWorkdir("/workspace");
     await container.sync();
     outputs.push("✓ Web packages built");
 
