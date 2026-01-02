@@ -89,7 +89,12 @@ export class ConsoleClient {
           if (message.type === "output" && typeof message.data === "string") {
             // Decode base64 data with error handling
             try {
-              const decoded = atob(message.data);
+              // Decode base64 to binary string
+              const binaryString = atob(message.data);
+              // Convert binary string to Uint8Array
+              const bytes = Uint8Array.from(binaryString, (char) => char.charCodeAt(0));
+              // Decode UTF-8 bytes to proper string
+              const decoded = new TextDecoder('utf-8').decode(bytes);
               this.emit("data", decoded);
             } catch (decodeError) {
               this.emit(
@@ -139,8 +144,11 @@ export class ConsoleClient {
       throw new WebSocketError("Not connected to console");
     }
 
-    // Encode data as base64
-    const encoded = btoa(data);
+    // Encode UTF-8 string to bytes, then to base64
+    const encoder = new TextEncoder();
+    const bytes = encoder.encode(data);
+    const binaryString = Array.from(bytes, (byte) => String.fromCharCode(byte)).join('');
+    const encoded = btoa(binaryString);
 
     const message = {
       type: "input",
