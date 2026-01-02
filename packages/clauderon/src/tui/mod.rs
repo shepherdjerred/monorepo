@@ -24,7 +24,7 @@ use futures::StreamExt;
 use ratatui::{Terminal, backend::CrosstermBackend};
 
 use crate::core::BackendType;
-use crate::tui::app::{AppMode, CreateProgress, DetachState};
+use crate::tui::app::{AppMode, CreateProgress};
 
 /// Run the TUI application
 ///
@@ -40,7 +40,6 @@ pub async fn run() -> anyhow::Result<()> {
         stdout,
         EnterAlternateScreen,
         EnableBracketedPaste,
-        EnableMouseCapture,
         PushKeyboardEnhancementFlags(
             KeyboardEnhancementFlags::DISAMBIGUATE_ESCAPE_CODES
                 | KeyboardEnhancementFlags::REPORT_ALL_KEYS_AS_ESCAPE_CODES
@@ -65,16 +64,12 @@ pub async fn run() -> anyhow::Result<()> {
         terminal.backend_mut(),
         PopKeyboardEnhancementFlags,
         DisableBracketedPaste,
-        DisableMouseCapture,
         LeaveAlternateScreen
     )?;
     terminal.show_cursor()?;
 
     result
 }
-
-/// Detach timeout for the double-tap Ctrl+Q/Ctrl+] mechanism.
-const DETACH_TIMEOUT: Duration = Duration::from_millis(300);
 
 async fn run_main_loop(
     terminal: &mut Terminal<CrosstermBackend<io::Stdout>>,
@@ -83,7 +78,7 @@ async fn run_main_loop(
     // Create async event stream
     let mut event_stream = events::create_event_stream();
 
-    // Tick interval for animations and detach timeout checking
+    // Tick interval for animations
     let mut tick_interval = tokio::time::interval(Duration::from_millis(50));
 
     // Set initial terminal size
@@ -113,13 +108,7 @@ async fn run_main_loop(
 
                 // Handle paste events
                 if let Event::Paste(pasted_text) = &event {
-                    events::handle_paste_event(app, pasted_text);
-                    continue;
-                }
-
-                // Handle mouse events
-                if let Event::Mouse(mouse) = event {
-                    events::handle_mouse_event(app, mouse).await?;
+                    events::handle_paste_event(app, pasted_text).await?;
                     continue;
                 }
 
@@ -280,20 +269,9 @@ async fn run_main_loop(
                 }
             }
 
-            // Handle tick for animations and detach timeout
+            // Handle tick for animations
             _ = tick_interval.tick() => {
                 app.tick();
-
-                // Check for detach timeout when in Attached mode
-                if app.mode == AppMode::Attached {
-                    if let DetachState::Pending { since, .. } = &app.detach_state {
-                        if since.elapsed() >= DETACH_TIMEOUT {
-                            // Timeout expired - detach
-                            app.detach();
-                            app.status_message = Some("Detached from session".to_string());
-                        }
-                    }
-                }
             }
         }
 

@@ -54,11 +54,12 @@ impl SqliteStore {
         .await?;
 
         // Get current schema version
-        let current_version: Option<i64> =
-            sqlx::query_scalar("SELECT MAX(version) FROM schema_version")
-                .fetch_optional(pool)
-                .await?
-                .flatten();
+        let current_version: Option<i64> = sqlx::query_scalar(
+            "SELECT MAX(version) FROM schema_version"
+        )
+        .fetch_optional(pool)
+        .await?
+        .flatten();
 
         let current_version = current_version.unwrap_or(0);
 
@@ -73,6 +74,10 @@ impl SqliteStore {
 
         if current_version < 3 {
             Self::migrate_to_v3(pool).await?;
+        }
+
+        if current_version < 4 {
+            Self::migrate_to_v4(pool).await?;
         }
 
         Ok(())
@@ -135,11 +140,13 @@ impl SqliteStore {
 
         // Record migration
         let now = Utc::now();
-        sqlx::query("INSERT OR REPLACE INTO schema_version (version, applied_at) VALUES (?, ?)")
-            .bind(1)
-            .bind(now.to_rfc3339())
-            .execute(pool)
-            .await?;
+        sqlx::query(
+            "INSERT OR REPLACE INTO schema_version (version, applied_at) VALUES (?, ?)"
+        )
+        .bind(1)
+        .bind(now.to_rfc3339())
+        .execute(pool)
+        .await?;
 
         tracing::info!("Migration v1 complete");
         Ok(())
@@ -173,17 +180,19 @@ impl SqliteStore {
 
         // Record migration
         let now = Utc::now();
-        sqlx::query("INSERT OR REPLACE INTO schema_version (version, applied_at) VALUES (?, ?)")
-            .bind(2)
-            .bind(now.to_rfc3339())
-            .execute(pool)
-            .await?;
+        sqlx::query(
+            "INSERT OR REPLACE INTO schema_version (version, applied_at) VALUES (?, ?)"
+        )
+        .bind(2)
+        .bind(now.to_rfc3339())
+        .execute(pool)
+        .await?;
 
         tracing::info!("Migration v2 complete");
 
         // Migration: Add access_mode column if it doesn't exist (for existing databases)
         let access_mode_exists: bool = sqlx::query_scalar(
-            "SELECT COUNT(*) FROM pragma_table_info('sessions') WHERE name = 'access_mode'",
+            "SELECT COUNT(*) FROM pragma_table_info('sessions') WHERE name = 'access_mode'"
         )
         .fetch_one(pool)
         .await
@@ -193,7 +202,7 @@ impl SqliteStore {
         if !access_mode_exists {
             tracing::info!("Running migration: Adding access_mode column to sessions table");
             sqlx::query(
-                "ALTER TABLE sessions ADD COLUMN access_mode TEXT NOT NULL DEFAULT 'ReadWrite'",
+                "ALTER TABLE sessions ADD COLUMN access_mode TEXT NOT NULL DEFAULT 'ReadWrite'"
             )
             .execute(pool)
             .await?;
@@ -201,7 +210,7 @@ impl SqliteStore {
 
         // Migration: Add proxy_port column if it doesn't exist
         let proxy_port_exists: bool = sqlx::query_scalar(
-            "SELECT COUNT(*) FROM pragma_table_info('sessions') WHERE name = 'proxy_port'",
+            "SELECT COUNT(*) FROM pragma_table_info('sessions') WHERE name = 'proxy_port'"
         )
         .fetch_one(pool)
         .await
@@ -210,9 +219,11 @@ impl SqliteStore {
 
         if !proxy_port_exists {
             tracing::info!("Running migration: Adding proxy_port column to sessions table");
-            sqlx::query("ALTER TABLE sessions ADD COLUMN proxy_port INTEGER")
-                .execute(pool)
-                .await?;
+            sqlx::query(
+                "ALTER TABLE sessions ADD COLUMN proxy_port INTEGER"
+            )
+            .execute(pool)
+            .await?;
         }
 
         Ok(())
@@ -224,7 +235,7 @@ impl SqliteStore {
 
         // Add claude_status column
         let claude_status_exists: bool = sqlx::query_scalar(
-            "SELECT COUNT(*) FROM pragma_table_info('sessions') WHERE name = 'claude_status'",
+            "SELECT COUNT(*) FROM pragma_table_info('sessions') WHERE name = 'claude_status'"
         )
         .fetch_one(pool)
         .await
@@ -233,7 +244,7 @@ impl SqliteStore {
 
         if !claude_status_exists {
             sqlx::query(
-                "ALTER TABLE sessions ADD COLUMN claude_status TEXT NOT NULL DEFAULT 'Unknown'",
+                "ALTER TABLE sessions ADD COLUMN claude_status TEXT NOT NULL DEFAULT 'Unknown'"
             )
             .execute(pool)
             .await?;
@@ -249,20 +260,59 @@ impl SqliteStore {
         .unwrap_or(false);
 
         if !status_time_exists {
-            sqlx::query("ALTER TABLE sessions ADD COLUMN claude_status_updated_at TEXT")
-                .execute(pool)
-                .await?;
+            sqlx::query(
+                "ALTER TABLE sessions ADD COLUMN claude_status_updated_at TEXT"
+            )
+            .execute(pool)
+            .await?;
         }
 
         // Record migration
         let now = Utc::now();
-        sqlx::query("INSERT OR REPLACE INTO schema_version (version, applied_at) VALUES (?, ?)")
-            .bind(3)
-            .bind(now.to_rfc3339())
-            .execute(pool)
-            .await?;
+        sqlx::query(
+            "INSERT OR REPLACE INTO schema_version (version, applied_at) VALUES (?, ?)"
+        )
+        .bind(3)
+        .bind(now.to_rfc3339())
+        .execute(pool)
+        .await?;
 
         tracing::info!("Migration v3 complete");
+        Ok(())
+    }
+
+    /// Migration v4: Add merge conflict tracking
+    async fn migrate_to_v4(pool: &SqlitePool) -> anyhow::Result<()> {
+        tracing::info!("Applying migration v4: Merge conflict tracking");
+
+        // Add merge_conflict column
+        let merge_conflict_exists: bool = sqlx::query_scalar(
+            "SELECT COUNT(*) FROM pragma_table_info('sessions') WHERE name = 'merge_conflict'"
+        )
+        .fetch_one(pool)
+        .await
+        .map(|count: i64| count > 0)
+        .unwrap_or(false);
+
+        if !merge_conflict_exists {
+            sqlx::query(
+                "ALTER TABLE sessions ADD COLUMN merge_conflict INTEGER NOT NULL DEFAULT 0"
+            )
+            .execute(pool)
+            .await?;
+        }
+
+        // Record migration
+        let now = Utc::now();
+        sqlx::query(
+            "INSERT OR REPLACE INTO schema_version (version, applied_at) VALUES (?, ?)"
+        )
+        .bind(4)
+        .bind(now.to_rfc3339())
+        .execute(pool)
+        .await?;
+
+        tracing::info!("Migration v4 complete");
         Ok(())
     }
 }
@@ -280,7 +330,11 @@ impl Store for SqliteStore {
             .enumerate()
             .map(|(i, row)| {
                 row.try_into().map_err(|e: anyhow::Error| {
-                    tracing::error!("Failed to parse session row {}: {}", i, e);
+                    tracing::error!(
+                        "Failed to parse session row {}: {}",
+                        i,
+                        e
+                    );
                     e
                 })
             })
@@ -306,8 +360,8 @@ impl Store for SqliteStore {
                 id, name, status, backend, agent, repo_path, worktree_path,
                 branch_name, backend_id, initial_prompt, dangerous_skip_checks,
                 pr_url, pr_check_status, claude_status, claude_status_updated_at,
-                access_mode, proxy_port, created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                merge_conflict, access_mode, proxy_port, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ",
         )
         .bind(session.id.to_string())
@@ -328,7 +382,12 @@ impl Store for SqliteStore {
                 .and_then(|s| serde_json::to_string(&s).ok()),
         )
         .bind(serde_json::to_string(&session.claude_status)?)
-        .bind(session.claude_status_updated_at.map(|t| t.to_rfc3339()))
+        .bind(
+            session
+                .claude_status_updated_at
+                .map(|t| t.to_rfc3339()),
+        )
+        .bind(session.merge_conflict)
         .bind(session.access_mode.to_string())
         .bind(session.proxy_port.map(|p| p as i64))
         .bind(session.created_at.to_rfc3339())
@@ -416,10 +475,7 @@ impl Store for SqliteStore {
             .fetch_all(&self.pool)
             .await?;
 
-        let mut repos: Vec<RecentRepo> = rows
-            .into_iter()
-            .map(TryInto::try_into)
-            .collect::<Result<Vec<_>, _>>()?;
+        let mut repos: Vec<RecentRepo> = rows.into_iter().map(TryInto::try_into).collect::<Result<Vec<_>, _>>()?;
 
         // Lazy cleanup: Remove entries for repos that no longer exist on disk
         // This keeps the database clean without requiring periodic maintenance
@@ -461,6 +517,7 @@ const fn event_type_name(event_type: &crate::core::events::EventType) -> &'stati
         EventType::PrLinked { .. } => "PrLinked",
         EventType::CheckStatusChanged { .. } => "CheckStatusChanged",
         EventType::ClaudeStatusChanged { .. } => "ClaudeStatusChanged",
+        EventType::ConflictStatusChanged { .. } => "ConflictStatusChanged",
         EventType::SessionArchived => "SessionArchived",
         EventType::SessionDeleted { .. } => "SessionDeleted",
         EventType::SessionRestored => "SessionRestored",
@@ -485,6 +542,7 @@ struct SessionRow {
     pr_check_status: Option<String>,
     claude_status: String,
     claude_status_updated_at: Option<String>,
+    merge_conflict: bool,
     access_mode: String,
     proxy_port: Option<i64>,
     created_at: String,
@@ -495,102 +553,48 @@ impl TryFrom<SessionRow> for Session {
     type Error = anyhow::Error;
 
     fn try_from(row: SessionRow) -> Result<Self, Self::Error> {
-        let id = Uuid::parse_str(&row.id).map_err(|e| {
-            anyhow::anyhow!("session '{}': invalid id '{}': {}", row.name, row.id, e)
-        })?;
+        let id = Uuid::parse_str(&row.id)
+            .map_err(|e| anyhow::anyhow!("session '{}': invalid id '{}': {}", row.name, row.id, e))?;
 
-        let status = serde_json::from_str(&row.status).map_err(|e| {
-            anyhow::anyhow!(
-                "session '{}': invalid status '{}': {}",
-                row.name,
-                row.status,
-                e
-            )
-        })?;
+        let status = serde_json::from_str(&row.status)
+            .map_err(|e| anyhow::anyhow!("session '{}': invalid status '{}': {}", row.name, row.status, e))?;
 
-        let backend = serde_json::from_str(&row.backend).map_err(|e| {
-            anyhow::anyhow!(
-                "session '{}': invalid backend '{}': {}",
-                row.name,
-                row.backend,
-                e
-            )
-        })?;
+        let backend = serde_json::from_str(&row.backend)
+            .map_err(|e| anyhow::anyhow!("session '{}': invalid backend '{}': {}", row.name, row.backend, e))?;
 
-        let agent = serde_json::from_str(&row.agent).map_err(|e| {
-            anyhow::anyhow!(
-                "session '{}': invalid agent '{}': {}",
-                row.name,
-                row.agent,
-                e
-            )
-        })?;
+        let agent = serde_json::from_str(&row.agent)
+            .map_err(|e| anyhow::anyhow!("session '{}': invalid agent '{}': {}", row.name, row.agent, e))?;
 
         let pr_check_status = row
             .pr_check_status
             .map(|s| {
-                serde_json::from_str(&s).map_err(|e| {
-                    anyhow::anyhow!(
-                        "session '{}': invalid pr_check_status '{}': {}",
-                        row.name,
-                        s,
-                        e
-                    )
-                })
+                serde_json::from_str(&s)
+                    .map_err(|e| anyhow::anyhow!("session '{}': invalid pr_check_status '{}': {}", row.name, s, e))
             })
             .transpose()?;
 
         // Try JSON first, then fall back to parsing raw enum variant name
         // (migration v3 used DEFAULT 'Unknown' which is not valid JSON)
-        let claude_status: crate::core::ClaudeWorkingStatus =
-            serde_json::from_str(&row.claude_status)
-                .or_else(|_| row.claude_status.parse())
-                .map_err(|e| {
-                    anyhow::anyhow!(
-                        "session '{}': invalid claude_status '{}': {}",
-                        row.name,
-                        row.claude_status,
-                        e
-                    )
-                })?;
+        let claude_status: crate::core::ClaudeWorkingStatus = serde_json::from_str(&row.claude_status)
+            .or_else(|_| row.claude_status.parse())
+            .map_err(|e| anyhow::anyhow!("session '{}': invalid claude_status '{}': {}", row.name, row.claude_status, e))?;
 
         let claude_status_updated_at = row
             .claude_status_updated_at
             .map(|s| {
                 chrono::DateTime::parse_from_rfc3339(&s)
                     .map(Into::into)
-                    .map_err(|e| {
-                        anyhow::anyhow!(
-                            "session '{}': invalid claude_status_updated_at '{}': {}",
-                            row.name,
-                            s,
-                            e
-                        )
-                    })
+                    .map_err(|e| anyhow::anyhow!("session '{}': invalid claude_status_updated_at '{}': {}", row.name, s, e))
             })
             .transpose()?;
 
         let created_at = chrono::DateTime::parse_from_rfc3339(&row.created_at)
             .map(Into::into)
-            .map_err(|e| {
-                anyhow::anyhow!(
-                    "session '{}': invalid created_at '{}': {}",
-                    row.name,
-                    row.created_at,
-                    e
-                )
-            })?;
+            .map_err(|e| anyhow::anyhow!("session '{}': invalid created_at '{}': {}", row.name, row.created_at, e))?;
 
         let updated_at = chrono::DateTime::parse_from_rfc3339(&row.updated_at)
             .map(Into::into)
-            .map_err(|e| {
-                anyhow::anyhow!(
-                    "session '{}': invalid updated_at '{}': {}",
-                    row.name,
-                    row.updated_at,
-                    e
-                )
-            })?;
+            .map_err(|e| anyhow::anyhow!("session '{}': invalid updated_at '{}': {}", row.name, row.updated_at, e))?;
 
         Ok(Self {
             id,
@@ -608,6 +612,7 @@ impl TryFrom<SessionRow> for Session {
             pr_check_status,
             claude_status,
             claude_status_updated_at,
+            merge_conflict: row.merge_conflict,
             access_mode: row.access_mode.parse().unwrap_or_default(),
             proxy_port: row.proxy_port.map(|p| p as u16),
             created_at,

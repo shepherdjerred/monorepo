@@ -41,7 +41,6 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         .direction(Direction::Vertical)
         .margin(1)
         .constraints([
-            Constraint::Length(3),                        // Name
             Constraint::Length(prompt_height as u16 + 2), // Prompt (dynamic + borders)
             Constraint::Length(3),                        // Repo path
             Constraint::Length(2),                        // Backend
@@ -53,16 +52,6 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         ])
         .split(area);
 
-    // Name field
-    render_text_field(
-        frame,
-        "Name",
-        &dialog.name,
-        dialog.focus == CreateDialogFocus::Name,
-        dialog.name_cursor,
-        inner[0],
-    );
-
     // Prompt field (multiline with scrolling)
     render_multiline_field(
         frame,
@@ -73,7 +62,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         dialog.prompt_cursor_col,
         dialog.prompt_scroll_offset,
         prompt_height,
-        inner[1],
+        inner[0],
     );
 
     // Repo path field (clickable to open directory picker)
@@ -82,7 +71,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         "Repository",
         &dialog.repo_path,
         dialog.focus == CreateDialogFocus::RepoPath,
-        inner[2],
+        inner[1],
     );
 
     // Backend selection
@@ -94,7 +83,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
             ("Docker", !dialog.backend_zellij),
         ],
         dialog.focus == CreateDialogFocus::Backend,
-        inner[3],
+        inner[2],
     );
 
     // Access mode selection
@@ -106,7 +95,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
             ("Read-Write", dialog.access_mode == AccessMode::ReadWrite),
         ],
         dialog.focus == CreateDialogFocus::AccessMode,
-        inner[4],
+        inner[3],
     );
 
     // Skip checks checkbox
@@ -115,7 +104,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         "Dangerously skip checks",
         dialog.skip_checks,
         dialog.focus == CreateDialogFocus::SkipChecks,
-        inner[5],
+        inner[4],
     );
 
     // Plan mode checkbox
@@ -124,7 +113,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         "Start in plan mode",
         dialog.plan_mode,
         dialog.focus == CreateDialogFocus::PlanMode,
-        inner[6],
+        inner[5],
     );
 
     // Buttons
@@ -132,7 +121,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         frame,
         dialog.focus == CreateDialogFocus::Buttons,
         dialog.button_create_focused,
-        inner[8],
+        inner[7],
     );
 
     // Render directory picker overlay if active

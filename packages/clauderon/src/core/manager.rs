@@ -162,7 +162,6 @@ impl SessionManager {
     /// the post-checkout hook failed but the worktree was created successfully).
     pub async fn create_session(
         &self,
-        name: String,
         repo_path: String,
         initial_prompt: String,
         backend: BackendType,
@@ -173,12 +172,15 @@ impl SessionManager {
         access_mode: super::session::AccessMode,
         images: Vec<String>,
     ) -> anyhow::Result<(Session, Option<Vec<String>>)> {
-        // Generate unique session name with retry logic
+        // Generate base name using AI (with fallback to "session")
+        let base_name = crate::utils::generate_session_name_ai(&repo_path, &initial_prompt).await;
+
+        // Generate unique session name with random suffix and retry logic
         const MAX_ATTEMPTS: usize = 3;
         let full_name = {
             let mut attempts = 0;
             loop {
-                let candidate = crate::utils::random::generate_session_name(&name);
+                let candidate = crate::utils::random::generate_session_name(&base_name);
                 let sessions = self.sessions.read().await;
                 if !sessions.iter().any(|s| s.name == candidate) {
                     break candidate;
@@ -236,6 +238,7 @@ impl SessionManager {
                         session.set_proxy_port(proxy_port);
                         tracing::info!(
                             session_id = %session.id,
+                            name = %session.name,
                             port = proxy_port,
                             "Created session proxy"
                         );
@@ -244,6 +247,7 @@ impl SessionManager {
                     Err(e) => {
                         tracing::warn!(
                             session_id = %session.id,
+                            name = %session.name,
                             error = %e,
                             "Failed to create session proxy, using global proxy"
                         );
@@ -421,6 +425,7 @@ impl SessionManager {
                 if let Err(e) = proxy_manager.destroy_session_proxy(session.id).await {
                     tracing::warn!(
                         session_id = %session.id,
+                        name = %session.name,
                         error = %e,
                         "Failed to destroy session proxy"
                     );
@@ -477,6 +482,7 @@ impl SessionManager {
                         if let Some(ref proxy_manager) = self.proxy_manager {
                             tracing::info!(
                                 session_id = %session.id,
+                                name = %session.name,
                                 "Destroying proxy for session with missing container"
                             );
                             let _ = proxy_manager.destroy_session_proxy(session.id).await;
@@ -490,6 +496,7 @@ impl SessionManager {
                     ) {
                         tracing::warn!(
                             session_id = %session.id,
+                            name = %session.name,
                             status = ?session.status,
                             "Found zombie container for non-active session, cleaning up"
                         );
@@ -520,6 +527,7 @@ impl SessionManager {
                                 {
                                     tracing::warn!(
                                         session_id = %session.id,
+                                        name = %session.name,
                                         port = port,
                                         "Session proxy not responding - attempting recreation"
                                     );
@@ -574,6 +582,7 @@ impl SessionManager {
 
         tracing::info!(
             session_id = %session_id,
+            name = %session_clone.name,
             mode = ?new_mode,
             "Updated session access mode"
         );
@@ -677,6 +686,98 @@ impl SessionManager {
             old = ?old_status,
             new = ?new_status,
             "Updated PR check status"
+        );
+
+        // Broadcast event to WebSocket clients if broadcaster available
+        if let Some(ref broadcaster) = self.event_broadcaster {
+            if let Some(session) = self.get_session(&session_id.to_string()).await {
+                broadcast_event(broadcaster, WsEvent::SessionUpdated(session)).await;
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Link a PR URL to a session
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the session is not found or the store update fails.
+    pub async fn link_pr(&self, session_id: Uuid, pr_url: String) -> anyhow::Result<()> {
+        let mut sessions = self.sessions.write().await;
+        let session = sessions
+            .iter_mut()
+            .find(|s| s.id == session_id)
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {}", session_id))?;
+
+        // Don't update if PR is already linked
+        if session.pr_url.is_some() {
+            return Ok(());
+        }
+
+        session.set_pr_url(pr_url.clone());
+        let session_clone = session.clone();
+        drop(sessions);
+
+        // Record event
+        let event = Event::new(session_id, EventType::PrLinked { pr_url: pr_url.clone() });
+        self.store.record_event(&event).await?;
+
+        // Update in store
+        self.store.save_session(&session_clone).await?;
+
+        tracing::info!(
+            session_id = %session_id,
+            pr_url = %pr_url,
+            "Linked PR to session"
+        );
+
+        // Broadcast event to WebSocket clients if broadcaster available
+        if let Some(ref broadcaster) = self.event_broadcaster {
+            if let Some(session) = self.get_session(&session_id.to_string()).await {
+                broadcast_event(broadcaster, WsEvent::SessionUpdated(session)).await;
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Update merge conflict status for a session
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the session is not found or the store update fails.
+    pub async fn update_conflict_status(
+        &self,
+        session_id: Uuid,
+        has_conflict: bool,
+    ) -> anyhow::Result<()> {
+        let mut sessions = self.sessions.write().await;
+        let session = sessions
+            .iter_mut()
+            .find(|s| s.id == session_id)
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {}", session_id))?;
+
+        // Don't update if status hasn't changed
+        if session.merge_conflict == has_conflict {
+            return Ok(());
+        }
+
+        session.set_merge_conflict(has_conflict);
+        let session_clone = session.clone();
+        drop(sessions);
+
+        // Record event
+        let event = Event::new(session_id, EventType::ConflictStatusChanged { has_conflict });
+        self.store.record_event(&event).await?;
+
+        // Update in store
+        self.store.save_session(&session_clone).await?;
+
+        tracing::info!(
+            session_id = %session_id,
+            has_conflict = %has_conflict,
+            "Updated merge conflict status"
         );
 
         // Broadcast event to WebSocket clients if broadcaster available

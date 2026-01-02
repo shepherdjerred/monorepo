@@ -57,6 +57,9 @@ pub struct Session {
     #[typeshare(serialized_as = "String")]
     pub claude_status_updated_at: Option<DateTime<Utc>>,
 
+    /// Whether the session branch has merge conflicts with main
+    pub merge_conflict: bool,
+
     /// Access mode for proxy filtering
     pub access_mode: AccessMode,
 
@@ -115,6 +118,7 @@ impl Session {
             pr_check_status: None,
             claude_status: ClaudeWorkingStatus::Unknown,
             claude_status_updated_at: None,
+            merge_conflict: false,
             access_mode: config.access_mode,
             proxy_port: None,
             created_at: now,
@@ -162,6 +166,12 @@ impl Session {
     /// Set the proxy port
     pub fn set_proxy_port(&mut self, port: u16) {
         self.proxy_port = Some(port);
+        self.updated_at = Utc::now();
+    }
+
+    /// Set the merge conflict status
+    pub fn set_merge_conflict(&mut self, has_conflict: bool) {
+        self.merge_conflict = has_conflict;
         self.updated_at = Utc::now();
     }
 }

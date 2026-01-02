@@ -39,114 +39,131 @@ pub async fn next_event(stream: &mut EventStream) -> anyhow::Result<Option<Event
     }
 }
 
-/// Handle a mouse event
+// Mouse event handling has been disabled to allow normal terminal text selection.
+// Mouse capture was preventing users from selecting and copying text with their mouse.
+// Keyboard scrolling alternatives (PgUp/PgDn, Shift+Up/Down) are still available.
+//
+// /// Handle a mouse event
+// ///
+// /// # Errors
+// ///
+// /// Returns an error if scrolling operations fail.
+// pub async fn handle_mouse_event(app: &mut App, mouse: MouseEvent) -> anyhow::Result<()> {
+//     // Only handle mouse events when attached
+//     if app.mode != AppMode::Attached {
+//         return Ok(());
+//     }
+//
+//     match mouse.kind {
+//         MouseEventKind::ScrollUp => {
+//             if let Some(pty_session) = app.attached_pty_session() {
+//                 let buffer = pty_session.terminal_buffer();
+//                 // Lock acquisition is safe here as this is the only place we hold the lock
+//                 // and operations are synchronous. If the lock were to fail, it would indicate
+//                 // a critical issue with the buffer, so we log and continue gracefully.
+//                 match buffer.try_lock() {
+//                     Ok(mut buf) => {
+//                         buf.scroll_up(SCROLL_LINES_PER_WHEEL_TICK);
+//                     }
+//                     Err(_) => {
+//                         tracing::warn!("Failed to acquire terminal buffer lock for scroll up");
+//                     }
+//                 }
+//             }
+//         }
+//         MouseEventKind::ScrollDown => {
+//             if let Some(pty_session) = app.attached_pty_session() {
+//                 let buffer = pty_session.terminal_buffer();
+//                 match buffer.try_lock() {
+//                     Ok(mut buf) => {
+//                         buf.scroll_down(SCROLL_LINES_PER_WHEEL_TICK);
+//                     }
+//                     Err(_) => {
+//                         tracing::warn!("Failed to acquire terminal buffer lock for scroll down");
+//                     }
+//                 }
+//             }
+//         }
+//         _ => {
+//             // Ignore other mouse events (clicks, moves, etc.) for now
+//         }
+//     }
+//
+//     Ok(())
+// }
+
+/// Handle a paste event (when text is pasted from clipboard)
 ///
 /// # Errors
 ///
-/// Returns an error if scrolling operations fail.
-pub async fn handle_mouse_event(app: &mut App, mouse: MouseEvent) -> anyhow::Result<()> {
-    // Only handle mouse events when attached
-    if app.mode != AppMode::Attached {
-        return Ok(());
-    }
+/// Returns an error if sending to PTY fails.
+pub async fn handle_paste_event(app: &mut App, text: &str) -> anyhow::Result<()> {
+    match app.mode {
+        AppMode::Attached => {
+            // In Attached mode, send pasted text directly to the PTY
+            let pasted_bytes = text.as_bytes().to_vec();
+            app.send_to_pty(pasted_bytes).await?;
+        }
+        AppMode::CreateDialog => {
+            // Don't handle paste if directory picker is active
+            if app.create_dialog.directory_picker.is_active {
+                return Ok(());
+            }
 
-    match mouse.kind {
-        MouseEventKind::ScrollUp => {
-            if let Some(pty_session) = app.attached_pty_session() {
-                let buffer = pty_session.terminal_buffer();
-                // Lock acquisition is safe here as this is the only place we hold the lock
-                // and operations are synchronous. If the lock were to fail, it would indicate
-                // a critical issue with the buffer, so we log and continue gracefully.
-                match buffer.try_lock() {
-                    Ok(mut buf) => {
-                        buf.scroll_up(SCROLL_LINES_PER_WHEEL_TICK);
-                    }
-                    Err(_) => {
-                        tracing::warn!("Failed to acquire terminal buffer lock for scroll up");
-                    }
+            match app.create_dialog.focus {
+                CreateDialogFocus::Name => {
+                    // For name field, replace all line endings with spaces
+                    let normalized_text = text
+                        .replace("\r\n", " ")
+                        .replace('\r', " ")
+                        .replace('\n', " ");
+
+                    // Insert at cursor position
+                    app.create_dialog.name.insert_str(
+                        app.create_dialog.name_cursor,
+                        &normalized_text,
+                    );
+                    // Move cursor to end of pasted content
+                    app.create_dialog.name_cursor += normalized_text.len();
                 }
+                CreateDialogFocus::Prompt => {
+                    // For prompt field, normalize line endings to \n
+                    let normalized_text = text.replace("\r\n", "\n").replace('\r', "\n");
+
+                    // Insert each character at cursor position
+                    for ch in normalized_text.chars() {
+                        if ch == '\n' {
+                            (app.create_dialog.prompt_cursor_line, app.create_dialog.prompt_cursor_col) =
+                                super::text_input::insert_newline_at_cursor(
+                                    &mut app.create_dialog.prompt,
+                                    app.create_dialog.prompt_cursor_line,
+                                    app.create_dialog.prompt_cursor_col,
+                                );
+                        } else {
+                            (app.create_dialog.prompt_cursor_line, app.create_dialog.prompt_cursor_col) =
+                                super::text_input::insert_char_at_cursor_multiline(
+                                    &mut app.create_dialog.prompt,
+                                    app.create_dialog.prompt_cursor_line,
+                                    app.create_dialog.prompt_cursor_col,
+                                    ch,
+                                );
+                        }
+                    }
+                    app.create_dialog.ensure_cursor_visible();
+                }
+                // RepoPath doesn't accept typed/pasted input
+                _ => {}
             }
         }
-        MouseEventKind::ScrollDown => {
-            if let Some(pty_session) = app.attached_pty_session() {
-                let buffer = pty_session.terminal_buffer();
-                match buffer.try_lock() {
-                    Ok(mut buf) => {
-                        buf.scroll_down(SCROLL_LINES_PER_WHEEL_TICK);
-                    }
-                    Err(_) => {
-                        tracing::warn!("Failed to acquire terminal buffer lock for scroll down");
-                    }
-                }
-            }
+        AppMode::CopyMode => {
+            // Ignore paste events in copy mode
         }
         _ => {
-            // Ignore other mouse events (clicks, moves, etc.) for now
+            // Ignore paste events in other modes
         }
     }
 
     Ok(())
-}
-
-/// Handle a paste event (when text is pasted from clipboard)
-pub fn handle_paste_event(app: &mut App, text: &str) {
-    // Only handle paste events in CreateDialog mode
-    if app.mode != AppMode::CreateDialog {
-        return;
-    }
-
-    // Don't handle paste if directory picker is active
-    if app.create_dialog.directory_picker.is_active {
-        return;
-    }
-
-    match app.create_dialog.focus {
-        CreateDialogFocus::Name => {
-            // For name field, replace all line endings with spaces
-            let normalized_text = text
-                .replace("\r\n", " ")
-                .replace('\r', " ")
-                .replace('\n', " ");
-
-            // Insert at cursor position
-            app.create_dialog
-                .name
-                .insert_str(app.create_dialog.name_cursor, &normalized_text);
-            // Move cursor to end of pasted content
-            app.create_dialog.name_cursor += normalized_text.len();
-        }
-        CreateDialogFocus::Prompt => {
-            // For prompt field, normalize line endings to \n
-            let normalized_text = text.replace("\r\n", "\n").replace('\r', "\n");
-
-            // Insert each character at cursor position
-            for ch in normalized_text.chars() {
-                if ch == '\n' {
-                    (
-                        app.create_dialog.prompt_cursor_line,
-                        app.create_dialog.prompt_cursor_col,
-                    ) = super::text_input::insert_newline_at_cursor(
-                        &mut app.create_dialog.prompt,
-                        app.create_dialog.prompt_cursor_line,
-                        app.create_dialog.prompt_cursor_col,
-                    );
-                } else {
-                    (
-                        app.create_dialog.prompt_cursor_line,
-                        app.create_dialog.prompt_cursor_col,
-                    ) = super::text_input::insert_char_at_cursor_multiline(
-                        &mut app.create_dialog.prompt,
-                        app.create_dialog.prompt_cursor_line,
-                        app.create_dialog.prompt_cursor_col,
-                        ch,
-                    );
-                }
-            }
-            app.create_dialog.ensure_cursor_visible();
-        }
-        // RepoPath doesn't accept typed/pasted input
-        _ => {}
-    }
 }
 
 /// Handle a key event based on the current app mode
@@ -168,6 +185,8 @@ pub async fn handle_key_event(app: &mut App, key: KeyEvent) -> anyhow::Result<()
         AppMode::Help => handle_help_key(app, key),
         AppMode::Attached => handle_attached_key(app, key).await?,
         AppMode::CopyMode => handle_copy_mode_key(app, key).await?,
+        AppMode::Locked => handle_locked_key(app, key).await?,
+        AppMode::Scroll => handle_scroll_mode_key(app, key).await?,
     }
     Ok(())
 }
@@ -291,9 +310,6 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
             }
         }
         KeyCode::Home => match app.create_dialog.focus {
-            CreateDialogFocus::Name => {
-                app.create_dialog.name_cursor = super::text_input::move_cursor_to_start();
-            }
             CreateDialogFocus::Prompt => {
                 (
                     app.create_dialog.prompt_cursor_line,
@@ -305,10 +321,6 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
             _ => {}
         },
         KeyCode::End => match app.create_dialog.focus {
-            CreateDialogFocus::Name => {
-                app.create_dialog.name_cursor =
-                    super::text_input::move_cursor_to_end(&app.create_dialog.name);
-            }
             CreateDialogFocus::Prompt => {
                 (
                     app.create_dialog.prompt_cursor_line,
@@ -323,21 +335,19 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
         KeyCode::Tab => {
             // Cycle through fields
             app.create_dialog.focus = match app.create_dialog.focus {
-                CreateDialogFocus::Name => CreateDialogFocus::Prompt,
                 CreateDialogFocus::Prompt => CreateDialogFocus::RepoPath,
                 CreateDialogFocus::RepoPath => CreateDialogFocus::Backend,
                 CreateDialogFocus::Backend => CreateDialogFocus::AccessMode,
                 CreateDialogFocus::AccessMode => CreateDialogFocus::SkipChecks,
                 CreateDialogFocus::SkipChecks => CreateDialogFocus::PlanMode,
                 CreateDialogFocus::PlanMode => CreateDialogFocus::Buttons,
-                CreateDialogFocus::Buttons => CreateDialogFocus::Name,
+                CreateDialogFocus::Buttons => CreateDialogFocus::Prompt,
             };
         }
         KeyCode::BackTab => {
             // Cycle backwards
             app.create_dialog.focus = match app.create_dialog.focus {
-                CreateDialogFocus::Name => CreateDialogFocus::Buttons,
-                CreateDialogFocus::Prompt => CreateDialogFocus::Name,
+                CreateDialogFocus::Prompt => CreateDialogFocus::Buttons,
                 CreateDialogFocus::RepoPath => CreateDialogFocus::Prompt,
                 CreateDialogFocus::Backend => CreateDialogFocus::RepoPath,
                 CreateDialogFocus::AccessMode => CreateDialogFocus::Backend,
@@ -379,7 +389,6 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
 
                     // Capture data for the background task
                     let request = CreateSessionRequest {
-                        name: app.create_dialog.name.clone(),
                         repo_path: app.create_dialog.repo_path.clone(),
                         initial_prompt: app.create_dialog.prompt.clone(),
                         backend: if app.create_dialog.backend_zellij {
@@ -469,8 +478,8 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
             // Special handling for Prompt field - move cursor up, or navigate to previous field if at top
             if app.create_dialog.focus == CreateDialogFocus::Prompt {
                 if app.create_dialog.prompt_cursor_line == 0 {
-                    // At top of prompt, navigate to previous field
-                    app.create_dialog.focus = CreateDialogFocus::Name;
+                    // At top of prompt, navigate to previous field (wrap to Buttons)
+                    app.create_dialog.focus = CreateDialogFocus::Buttons;
                 } else {
                     // Move cursor up within prompt
                     (
@@ -486,8 +495,7 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
             } else {
                 // Navigate to previous field
                 app.create_dialog.focus = match app.create_dialog.focus {
-                    CreateDialogFocus::Name => CreateDialogFocus::Buttons,
-                    CreateDialogFocus::Prompt => CreateDialogFocus::Name,
+                    CreateDialogFocus::Prompt => CreateDialogFocus::Buttons,
                     CreateDialogFocus::RepoPath => CreateDialogFocus::Prompt,
                     CreateDialogFocus::Backend => CreateDialogFocus::RepoPath,
                     CreateDialogFocus::AccessMode => CreateDialogFocus::Backend,
@@ -519,31 +527,17 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
             } else {
                 // Navigate to next field
                 app.create_dialog.focus = match app.create_dialog.focus {
-                    CreateDialogFocus::Name => CreateDialogFocus::Prompt,
                     CreateDialogFocus::Prompt => CreateDialogFocus::RepoPath,
                     CreateDialogFocus::RepoPath => CreateDialogFocus::Backend,
                     CreateDialogFocus::Backend => CreateDialogFocus::AccessMode,
                     CreateDialogFocus::AccessMode => CreateDialogFocus::SkipChecks,
                     CreateDialogFocus::SkipChecks => CreateDialogFocus::PlanMode,
                     CreateDialogFocus::PlanMode => CreateDialogFocus::Buttons,
-                    CreateDialogFocus::Buttons => CreateDialogFocus::Name,
+                    CreateDialogFocus::Buttons => CreateDialogFocus::Prompt,
                 };
             }
         }
         KeyCode::Left | KeyCode::Right => match app.create_dialog.focus {
-            CreateDialogFocus::Name => {
-                app.create_dialog.name_cursor = if key.code == KeyCode::Left {
-                    super::text_input::move_cursor_left(
-                        &app.create_dialog.name,
-                        app.create_dialog.name_cursor,
-                    )
-                } else {
-                    super::text_input::move_cursor_right(
-                        &app.create_dialog.name,
-                        app.create_dialog.name_cursor,
-                    )
-                };
-            }
             CreateDialogFocus::Prompt => {
                 (
                     app.create_dialog.prompt_cursor_line,
@@ -593,13 +587,6 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
             CreateDialogFocus::PlanMode => {
                 app.create_dialog.plan_mode = !app.create_dialog.plan_mode;
             }
-            CreateDialogFocus::Name => {
-                app.create_dialog.name_cursor = super::text_input::insert_char_at_cursor(
-                    &mut app.create_dialog.name,
-                    app.create_dialog.name_cursor,
-                    ' ',
-                );
-            }
             CreateDialogFocus::Prompt => {
                 (
                     app.create_dialog.prompt_cursor_line,
@@ -625,13 +612,6 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
             _ => {}
         },
         KeyCode::Char(c) => match app.create_dialog.focus {
-            CreateDialogFocus::Name => {
-                app.create_dialog.name_cursor = super::text_input::insert_char_at_cursor(
-                    &mut app.create_dialog.name,
-                    app.create_dialog.name_cursor,
-                    c,
-                );
-            }
             CreateDialogFocus::Prompt => {
                 (
                     app.create_dialog.prompt_cursor_line,
@@ -648,12 +628,6 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
             _ => {}
         },
         KeyCode::Backspace => match app.create_dialog.focus {
-            CreateDialogFocus::Name => {
-                app.create_dialog.name_cursor = super::text_input::delete_char_before_cursor(
-                    &mut app.create_dialog.name,
-                    app.create_dialog.name_cursor,
-                );
-            }
             CreateDialogFocus::Prompt => {
                 (
                     app.create_dialog.prompt_cursor_line,
@@ -672,12 +646,6 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
             _ => {}
         },
         KeyCode::Delete => match app.create_dialog.focus {
-            CreateDialogFocus::Name => {
-                app.create_dialog.name_cursor = super::text_input::delete_char_at_cursor(
-                    &mut app.create_dialog.name,
-                    app.create_dialog.name_cursor,
-                );
-            }
             CreateDialogFocus::Prompt => {
                 (
                     app.create_dialog.prompt_cursor_line,
@@ -796,18 +764,13 @@ fn handle_help_key(app: &mut App, key: KeyEvent) {
 
 /// Handle key events when attached to a session via PTY.
 ///
-/// Most keys are encoded and sent to the PTY. Ctrl+Q (or Ctrl+]) is the detach key
-/// which uses a double-tap mechanism (single press waits 300ms for second,
-/// double-tap sends the literal character to the terminal).
-///
-/// Session switching: Ctrl+P/N or Alt+Left/Right switches between Docker sessions.
-/// Scrolling: PageUp/Down (10 lines), Shift+Up/Down (1 line), or mouse wheel.
+/// Most keys are encoded and sent to the PTY. Special keys:
+/// - Ctrl+Q: Detach instantly
+/// - Ctrl+Space: Toggle locked mode (forwards all keys to app)
+/// - Ctrl+S: Enter scroll mode
+/// - Ctrl+P/N: Switch between Docker sessions
 async fn handle_attached_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
-    use crate::tui::app::DetachState;
     use crate::tui::attached::encode_key;
-    use std::time::Duration;
-
-    const DETACH_TIMEOUT: Duration = Duration::from_millis(300);
 
     // Log key events for debugging (only in debug builds)
     #[cfg(debug_assertions)]
@@ -817,176 +780,65 @@ async fn handle_attached_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()>
         key.modifiers
     );
 
-    // Check for Ctrl+Q as primary detach key (more reliable across terminals)
-    // Also support Ctrl+] as alternative
-    let detach_key_byte = if key.modifiers.contains(KeyModifiers::CONTROL) {
-        match key.code {
-            KeyCode::Char('q') => Some(0x11), // Ctrl+Q
-            KeyCode::Char(']') => Some(0x1d), // Ctrl+] = GS
-            _ => None,
-        }
-    } else {
-        None
-    };
-
-    if let Some(key_byte) = detach_key_byte {
-        match &app.detach_state {
-            DetachState::Idle => {
-                // First press - start waiting for second
-                app.detach_state = DetachState::Pending {
-                    since: std::time::Instant::now(),
-                    key_byte,
-                };
-                // Don't send anything yet, wait for timeout or second press
-                return Ok(());
-            }
-            DetachState::Pending {
-                since,
-                key_byte: pending_byte,
-            } => {
-                if since.elapsed() < DETACH_TIMEOUT {
-                    // Double-tap detected - send the literal key that was pressed
-                    // Copy the byte value before we mutate detach_state
-                    let byte_to_send = *pending_byte;
-                    app.detach_state = DetachState::Idle;
-                    app.send_to_pty(vec![byte_to_send]).await?;
-                } else {
-                    // Timeout expired - this should have been handled by main loop
-                    // but if we get here, treat as detach
-                    app.detach();
-                }
-                return Ok(());
-            }
-        }
-    }
-
-    // Enter copy mode with Ctrl+[ (like tmux)
+    // Ctrl+Q: instant detach (no double-tap delay)
     if key.modifiers.contains(KeyModifiers::CONTROL) {
-        if let KeyCode::Char('[') = key.code {
-            app.enter_copy_mode();
-            return Ok(());
-        }
-    }
-
-    // Session switching with Ctrl+Left/Right or Ctrl+P/Ctrl+N
-    if key.modifiers.contains(KeyModifiers::CONTROL) {
-        match key.code {
-            KeyCode::Left | KeyCode::Char('p') => {
-                if app.switch_to_previous_session().await? {
-                    app.status_message = Some("Switched to previous session".to_string());
-                }
-                return Ok(());
-            }
-            KeyCode::Right | KeyCode::Char('n') => {
-                if app.switch_to_next_session().await? {
-                    app.status_message = Some("Switched to next session".to_string());
-                }
-                return Ok(());
-            }
-            _ => {}
-        }
-    }
-
-    // Also support Alt+Left/Right as alternative (more reliable)
-    if key.modifiers.contains(KeyModifiers::ALT) {
-        match key.code {
-            KeyCode::Left => {
-                if app.switch_to_previous_session().await? {
-                    app.status_message = Some("Switched to previous session".to_string());
-                }
-                return Ok(());
-            }
-            KeyCode::Right => {
-                if app.switch_to_next_session().await? {
-                    app.status_message = Some("Switched to next session".to_string());
-                }
-                return Ok(());
-            }
-            _ => {}
-        }
-    }
-
-    // Scrolling: PageUp/PageDown and Shift+Up/Down scroll the buffer by default
-    // Hold Ctrl to send PageUp/PageDown to PTY instead (for apps like less/vim)
-    match key.code {
-        KeyCode::PageUp if !key.modifiers.contains(KeyModifiers::CONTROL) => {
-            if let Some(pty_session) = app.attached_pty_session() {
-                let buffer = pty_session.terminal_buffer();
-                match buffer.try_lock() {
-                    Ok(mut buf) => {
-                        buf.scroll_up(SCROLL_LINES_PER_PAGE);
-                    }
-                    Err(_) => {
-                        tracing::warn!("Failed to acquire terminal buffer lock for PageUp scroll");
-                    }
-                }
-            }
-            return Ok(());
-        }
-        KeyCode::PageDown if !key.modifiers.contains(KeyModifiers::CONTROL) => {
-            if let Some(pty_session) = app.attached_pty_session() {
-                let buffer = pty_session.terminal_buffer();
-                match buffer.try_lock() {
-                    Ok(mut buf) => {
-                        buf.scroll_down(SCROLL_LINES_PER_PAGE);
-                    }
-                    Err(_) => {
-                        tracing::warn!(
-                            "Failed to acquire terminal buffer lock for PageDown scroll"
-                        );
-                    }
-                }
-            }
-            return Ok(());
-        }
-        // Shift+Arrow keys: Scroll one line at a time
-        KeyCode::Up if key.modifiers.contains(KeyModifiers::SHIFT) => {
-            if let Some(pty_session) = app.attached_pty_session() {
-                let buffer = pty_session.terminal_buffer();
-                match buffer.try_lock() {
-                    Ok(mut buf) => {
-                        buf.scroll_up(SCROLL_LINES_PER_ARROW);
-                    }
-                    Err(_) => {
-                        tracing::warn!(
-                            "Failed to acquire terminal buffer lock for Shift+Up scroll"
-                        );
-                    }
-                }
-            }
-            return Ok(());
-        }
-        KeyCode::Down if key.modifiers.contains(KeyModifiers::SHIFT) => {
-            if let Some(pty_session) = app.attached_pty_session() {
-                let buffer = pty_session.terminal_buffer();
-                match buffer.try_lock() {
-                    Ok(mut buf) => {
-                        buf.scroll_down(SCROLL_LINES_PER_ARROW);
-                    }
-                    Err(_) => {
-                        tracing::warn!(
-                            "Failed to acquire terminal buffer lock for Shift+Down scroll"
-                        );
-                    }
-                }
-            }
-            return Ok(());
-        }
-        _ => {}
-    }
-
-    // If we were pending detach and got a different key, send the pending key then this key
-    if let DetachState::Pending { since, key_byte } = &app.detach_state {
-        if since.elapsed() >= DETACH_TIMEOUT {
-            // Timeout - detach
+        if let KeyCode::Char('q') = key.code {
             app.detach();
             return Ok(());
         }
-        // Not a second detach key, so send the first one as literal and continue
-        let pending_byte = *key_byte;
-        app.detach_state = DetachState::Idle;
-        app.send_to_pty(vec![pending_byte]).await?;
     }
+
+    // Copy mode hotkey has been disabled to allow ESC to forward to applications.
+    // Users can use mouse selection (select + CMD+C) to copy text instead.
+    // Keyboard-only copy mode could be re-enabled with a different hotkey if needed.
+    //
+    // // Enter copy mode with Ctrl+[ (like tmux)
+    // if key.modifiers.contains(KeyModifiers::CONTROL) {
+    //     if let KeyCode::Char('[') = key.code {
+    //         app.enter_copy_mode();
+    //         return Ok(());
+    //     }
+    // }
+
+    // Toggle locked mode with Ctrl+Space
+    if key.modifiers.contains(KeyModifiers::CONTROL) {
+        if let KeyCode::Char(' ') = key.code {
+            app.toggle_locked_mode();
+            return Ok(());
+        }
+    }
+
+    // Enter scroll mode with Ctrl+S
+    if key.modifiers.contains(KeyModifiers::CONTROL) {
+        if let KeyCode::Char('s') = key.code {
+            app.enter_scroll_mode();
+            return Ok(());
+        }
+    }
+
+    // Session switching with Ctrl+P/Ctrl+N
+    // Note: Ctrl+Left/Right and Alt+Left/Right removed to avoid conflicts with applications
+    if key.modifiers.contains(KeyModifiers::CONTROL) {
+        match key.code {
+            KeyCode::Char('p') => {
+                if app.switch_to_previous_session().await? {
+                    app.status_message = Some("Switched to previous session".to_string());
+                }
+                return Ok(());
+            }
+            KeyCode::Char('n') => {
+                if app.switch_to_next_session().await? {
+                    app.status_message = Some("Switched to next session".to_string());
+                }
+                return Ok(());
+            }
+            _ => {}
+        }
+    }
+
+    // Scrolling is now mode-based (Ctrl+S enters Scroll mode).
+    // PageUp/PageDown and Shift+Up/Down now forward to applications (less, vim, etc.)
+    // when in Attached mode. Use Ctrl+S to enter Scroll mode for buffer scrolling.
 
     // Encode the key and send to PTY
     let encoded = encode_key(&key);
@@ -1001,6 +853,80 @@ async fn handle_attached_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()>
             // Silently ignore lock failures for scroll-to-bottom as it's non-critical
         }
         app.send_to_pty(encoded).await?;
+    }
+
+    Ok(())
+}
+
+/// Handle key events when in Locked mode.
+///
+/// In Locked mode, all keys are forwarded to the application except Ctrl+Space which unlocks.
+/// This provides an "escape hatch" when clauderon keybindings conflict with applications.
+async fn handle_locked_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
+    use crate::tui::attached::encode_key;
+
+    // Ctrl+Space: unlock and return to Attached mode
+    if key.modifiers.contains(KeyModifiers::CONTROL) {
+        if let KeyCode::Char(' ') = key.code {
+            app.exit_locked_mode();
+            return Ok(());
+        }
+    }
+
+    // ALL other keys forward to PTY
+    let encoded = encode_key(&key);
+    if !encoded.is_empty() {
+        app.send_to_pty(encoded).await?;
+    }
+
+    Ok(())
+}
+
+/// Handle key events when in Scroll mode.
+///
+/// In Scroll mode, arrow keys and page keys scroll the terminal buffer.
+/// ESC, q, or Ctrl+S exits scroll mode.
+async fn handle_scroll_mode_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
+    match key.code {
+        KeyCode::Esc | KeyCode::Char('q') => {
+            app.exit_scroll_mode();
+        }
+        KeyCode::Char('s') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+            app.exit_scroll_mode();
+        }
+        KeyCode::PageUp | KeyCode::Char('b') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+            if let Some(pty_session) = app.attached_pty_session() {
+                let buffer = pty_session.terminal_buffer();
+                if let Ok(mut buf) = buffer.try_lock() {
+                    buf.scroll_up(SCROLL_LINES_PER_PAGE);
+                }
+            }
+        }
+        KeyCode::PageDown | KeyCode::Char('f') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+            if let Some(pty_session) = app.attached_pty_session() {
+                let buffer = pty_session.terminal_buffer();
+                if let Ok(mut buf) = buffer.try_lock() {
+                    buf.scroll_down(SCROLL_LINES_PER_PAGE);
+                }
+            }
+        }
+        KeyCode::Up | KeyCode::Char('k') => {
+            if let Some(pty_session) = app.attached_pty_session() {
+                let buffer = pty_session.terminal_buffer();
+                if let Ok(mut buf) = buffer.try_lock() {
+                    buf.scroll_up(SCROLL_LINES_PER_ARROW);
+                }
+            }
+        }
+        KeyCode::Down | KeyCode::Char('j') => {
+            if let Some(pty_session) = app.attached_pty_session() {
+                let buffer = pty_session.terminal_buffer();
+                if let Ok(mut buf) = buffer.try_lock() {
+                    buf.scroll_down(SCROLL_LINES_PER_ARROW);
+                }
+            }
+        }
+        _ => {}
     }
 
     Ok(())
