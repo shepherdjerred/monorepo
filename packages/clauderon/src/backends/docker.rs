@@ -1225,11 +1225,11 @@ mod tests {
             "test prompt",
             1000,
             None,
-            true,  // print mode
-            true,  // dangerous_skip_checks
-            &[],   // no images
-            None,  // git user name
-            None,  // git user email
+            true, // print mode
+            true, // dangerous_skip_checks
+            &[],  // no images
+            None, // git user name
+            None, // git user email
         )
         .expect("Failed to build args");
 
