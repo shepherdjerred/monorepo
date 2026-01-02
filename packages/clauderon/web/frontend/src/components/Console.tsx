@@ -1,15 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import { init, Terminal, FitAddon } from "ghostty-web";
 import { useConsole } from "../hooks/useConsole";
-import { X } from "lucide-react";
+import { X, MessageSquare } from "lucide-react";
 
 type ConsoleProps = {
   sessionId: string;
   sessionName: string;
   onClose: () => void;
+  onSwitchToChat?: () => void;
 }
 
-export function Console({ sessionId, sessionName, onClose }: ConsoleProps) {
+export function Console({ sessionId, sessionName, onClose, onSwitchToChat }: ConsoleProps) {
   const terminalRef = useRef<HTMLDivElement>(null);
   const terminalInstanceRef = useRef<Terminal | null>(null);
   const initializingRef = useRef<boolean>(false);
@@ -248,14 +249,26 @@ export function Console({ sessionId, sessionName, onClose }: ConsoleProps) {
               </span>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 border-2 border-white bg-white/10 hover:bg-red-600 hover:text-white transition-all font-bold text-white"
-            title="Close console"
-            aria-label="Close console"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            {onSwitchToChat && (
+              <button
+                onClick={onSwitchToChat}
+                className="p-2 border-2 border-white bg-white/10 hover:bg-blue-600 hover:text-white transition-all font-bold text-white"
+                title="Switch to chat view"
+                aria-label="Switch to chat view"
+              >
+                <MessageSquare className="w-5 h-5" />
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="p-2 border-2 border-white bg-white/10 hover:bg-red-600 hover:text-white transition-all font-bold text-white"
+              title="Close console"
+              aria-label="Close console"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Error display */}
