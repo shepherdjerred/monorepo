@@ -837,13 +837,17 @@ async fn handle_attached_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()>
         }
     }
 
-    // Enter copy mode with Ctrl+[ (like tmux)
-    if key.modifiers.contains(KeyModifiers::CONTROL) {
-        if let KeyCode::Char('[') = key.code {
-            app.enter_copy_mode();
-            return Ok(());
-        }
-    }
+    // Copy mode hotkey has been disabled to allow ESC to forward to applications.
+    // Users can use mouse selection (select + CMD+C) to copy text instead.
+    // Keyboard-only copy mode could be re-enabled with a different hotkey if needed.
+    //
+    // // Enter copy mode with Ctrl+[ (like tmux)
+    // if key.modifiers.contains(KeyModifiers::CONTROL) {
+    //     if let KeyCode::Char('[') = key.code {
+    //         app.enter_copy_mode();
+    //         return Ok(());
+    //     }
+    // }
 
     // Session switching with Ctrl+Left/Right or Ctrl+P/Ctrl+N
     if key.modifiers.contains(KeyModifiers::CONTROL) {

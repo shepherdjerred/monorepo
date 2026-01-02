@@ -68,8 +68,6 @@ fn render_attached_status(app: &App) -> Line<'static> {
         Span::raw(" detach │ "),
         Span::styled("Ctrl+P/N", Style::default().fg(Color::Cyan)),
         Span::raw(" switch │ "),
-        Span::styled("Ctrl+[", Style::default().fg(Color::Cyan)),
-        Span::raw(" copy │ "),
         Span::styled(SCROLL_KEYS_SHORT, Style::default().fg(Color::Cyan)),
         Span::raw(" scroll │ "),
         Span::styled("?", Style::default().fg(Color::Cyan)),
