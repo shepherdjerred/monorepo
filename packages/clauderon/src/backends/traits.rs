@@ -51,6 +51,10 @@ pub struct CreateOptions {
 
     /// Skip safety checks (dangerous)
     pub dangerous_skip_checks: bool,
+
+    /// Session UUID (for Kubernetes PVC labeling and tracking)
+    /// Only applicable to Kubernetes backend.
+    pub session_id: Option<uuid::Uuid>,
 }
 
 /// Trait for execution backends (Zellij, Docker, etc.)
