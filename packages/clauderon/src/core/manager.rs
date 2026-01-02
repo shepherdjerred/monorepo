@@ -221,6 +221,12 @@ impl SessionManager {
             access_mode,
         });
 
+        // Set history file path
+        session.history_file_path = Some(super::session::get_history_file_path(
+            &worktree_path,
+            &session.id,
+        ));
+
         // Record creation event
         let event = Event::new(
             session.id,
