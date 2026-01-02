@@ -14,7 +14,6 @@ export function Console({ sessionId, sessionName, onClose, onSwitchToChat }: Con
   const terminalRef = useRef<HTMLDivElement>(null);
   const terminalInstanceRef = useRef<Terminal | null>(null);
   const initializingRef = useRef<boolean>(false);
-  const userScrolledUpRef = useRef<boolean>(false);
   const { client, isConnected } = useConsole(sessionId);
   const [error, setError] = useState<string | null>(null);
 
