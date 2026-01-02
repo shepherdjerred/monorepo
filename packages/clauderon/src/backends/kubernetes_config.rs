@@ -43,6 +43,16 @@ pub struct KubernetesConfig {
 
     /// Service account name for pods
     pub service_account: String,
+
+    /// Proxy mode for remote cluster access
+    /// Options: "disabled", "nodeport", "host-gateway"
+    pub proxy_mode: String,
+
+    /// NodePort service port (when proxy_mode = "nodeport")
+    pub proxy_nodeport: Option<u16>,
+
+    /// Use ReadWriteOnce for cache PVCs (fallback when RWX unavailable)
+    pub use_rwo_cache: bool,
 }
 
 impl Default for KubernetesConfig {
@@ -61,6 +71,9 @@ impl Default for KubernetesConfig {
             git_remote_url: None, // Auto-detect
             git_remote_name: "origin".to_string(),
             service_account: "clauderon".to_string(),
+            proxy_mode: "disabled".to_string(), // Disabled by default for remote clusters
+            proxy_nodeport: None,
+            use_rwo_cache: false, // Try RWX first, fallback to RWO on error
         }
     }
 }

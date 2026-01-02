@@ -291,6 +291,7 @@ impl SessionManager {
             session_proxy_port: proxy_port,
             images,
             dangerous_skip_checks,
+            session_id: Some(session.id), // Pass session ID for Kubernetes PVC labeling
         };
         let backend_id = match backend {
             BackendType::Zellij => {
