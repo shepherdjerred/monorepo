@@ -256,7 +256,11 @@ export class Monorepo {
     version?: string,
     gitSha?: string,
     registryUsername?: string,
-    registryPassword?: Secret
+    registryPassword?: Secret,
+    awsAccessKeyId?: Secret,
+    awsSecretAccessKey?: Secret,
+    muxSiteS3Bucket?: string,
+    awsRegion?: string,
   ): Promise<string> {
     const outputs: string[] = [];
     const isRelease = branch === "main";
@@ -474,13 +478,24 @@ export class Monorepo {
           outputs.push(`✗ Failed to build/upload mux binaries: ${errorMessage}`);
         }
 
-        // Deploy mux-site to GitHub Pages
-        outputs.push("\n--- mux-site Deployment ---");
-        try {
-          outputs.push(await this.muxSiteDeploy(source, githubToken));
-        } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : String(error);
-          outputs.push(`✗ Failed to deploy mux-site: ${errorMessage}`);
+        // Deploy mux-site to S3
+        if (awsAccessKeyId && awsSecretAccessKey && muxSiteS3Bucket) {
+          outputs.push("\n--- mux-site Deployment ---");
+          try {
+            outputs.push(await this.muxSiteDeploy(
+              source,
+              awsAccessKeyId,
+              awsSecretAccessKey,
+              muxSiteS3Bucket,
+              awsRegion ?? "us-east-1",
+            ));
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            outputs.push(`✗ Failed to deploy mux-site: ${errorMessage}`);
+          }
+        } else {
+          outputs.push("\n--- mux-site Deployment ---");
+          outputs.push("⚠ Skipped: AWS credentials or S3 bucket not configured");
         }
       }
     }
@@ -742,12 +757,15 @@ export class Monorepo {
   }
 
   /**
-   * Deploy mux site to GitHub Pages
+   * Deploy mux site to S3
    */
   @func()
   async muxSiteDeploy(
     source: Directory,
-    githubToken: Secret,
+    awsAccessKeyId: Secret,
+    awsSecretAccessKey: Secret,
+    s3Bucket: string,
+    awsRegion: string = "us-east-1",
   ): Promise<string> {
     const outputs: string[] = [];
 
@@ -755,27 +773,33 @@ export class Monorepo {
     const siteDir = await this.muxSiteOutput(source);
     outputs.push("✓ Built mux-site");
 
-    // Deploy to GitHub Pages using gh-pages
+    // Deploy to S3 using AWS CLI
     const deployContainer = dag
       .container()
-      .from(`oven/bun:${BUN_VERSION}-debian`)
-      .withMountedCache("/var/cache/apt", dag.cacheVolume(`apt-cache-bun-${BUN_VERSION}-debian`))
-      .withMountedCache("/var/lib/apt", dag.cacheVolume(`apt-lib-bun-${BUN_VERSION}-debian`))
-      .withExec(["apt-get", "update"])
-      .withExec(["apt-get", "install", "-y", "git"])
-      .withSecretVariable("GITHUB_TOKEN", githubToken)
+      .from("amazon/aws-cli:latest")
+      .withSecretVariable("AWS_ACCESS_KEY_ID", awsAccessKeyId)
+      .withSecretVariable("AWS_SECRET_ACCESS_KEY", awsSecretAccessKey)
+      .withEnvVariable("AWS_REGION", awsRegion)
       .withWorkdir("/workspace")
       .withDirectory("/workspace/dist", siteDir)
-      .withExec(["bun", "add", "-g", "gh-pages"])
-      .withExec(["git", "config", "--global", "user.email", "github-actions@github.com"])
-      .withExec(["git", "config", "--global", "user.name", "GitHub Actions"])
       .withExec([
-        "sh", "-c",
-        `cd /workspace && gh-pages -d dist -r https://x-access-token:\${GITHUB_TOKEN}@github.com/${REPO_URL}.git -b gh-pages-mux`
+        "s3", "sync", "/workspace/dist", `s3://${s3Bucket}`,
+        "--delete",
+        "--cache-control", "max-age=31536000,public",
+      ])
+      // Set correct content-type for HTML files and no-cache for index
+      .withExec([
+        "s3", "cp", `s3://${s3Bucket}`, `s3://${s3Bucket}`,
+        "--recursive",
+        "--exclude", "*",
+        "--include", "*.html",
+        "--metadata-directive", "REPLACE",
+        "--cache-control", "no-cache,no-store,must-revalidate",
+        "--content-type", "text/html",
       ]);
 
     await deployContainer.sync();
-    outputs.push("✓ Deployed to GitHub Pages (gh-pages-mux branch)");
+    outputs.push(`✓ Deployed to S3 (s3://${s3Bucket})`);
 
     return outputs.join("\n");
   }
