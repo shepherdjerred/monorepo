@@ -773,29 +773,30 @@ export class Monorepo {
     const siteDir = await this.muxSiteOutput(source);
     outputs.push("✓ Built mux-site");
 
-    // Deploy to S3 using AWS CLI
+    // Deploy to S3 using AWS CLI with proper cache headers
+    // Use two syncs: one for static assets (long cache), one for HTML (no cache)
     const deployContainer = dag
       .container()
-      .from("amazon/aws-cli:latest")
+      .from("amazon/aws-cli:2.22.35")
       .withSecretVariable("AWS_ACCESS_KEY_ID", awsAccessKeyId)
       .withSecretVariable("AWS_SECRET_ACCESS_KEY", awsSecretAccessKey)
       .withEnvVariable("AWS_REGION", awsRegion)
       .withWorkdir("/workspace")
       .withDirectory("/workspace/dist", siteDir)
+      // Sync static assets (JS, CSS, images, fonts) with long cache
       .withExec([
         "s3", "sync", "/workspace/dist", `s3://${s3Bucket}`,
+        "--exclude", "*.html",
+        "--cache-control", "max-age=31536000,public,immutable",
         "--delete",
-        "--cache-control", "max-age=31536000,public",
       ])
-      // Set correct content-type for HTML files and no-cache for index
+      // Sync HTML files with no-cache (must revalidate)
       .withExec([
-        "s3", "cp", `s3://${s3Bucket}`, `s3://${s3Bucket}`,
-        "--recursive",
+        "s3", "sync", "/workspace/dist", `s3://${s3Bucket}`,
         "--exclude", "*",
         "--include", "*.html",
-        "--metadata-directive", "REPLACE",
         "--cache-control", "no-cache,no-store,must-revalidate",
-        "--content-type", "text/html",
+        "--content-type", "text/html; charset=utf-8",
       ]);
 
     await deployContainer.sync();
