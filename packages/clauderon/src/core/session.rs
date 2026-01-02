@@ -54,6 +54,7 @@ pub struct Session {
     pub claude_status: ClaudeWorkingStatus,
 
     /// Timestamp of last Claude status update
+    #[typeshare(serialized_as = "String")]
     pub claude_status_updated_at: Option<DateTime<Utc>>,
 
     /// Access mode for proxy filtering

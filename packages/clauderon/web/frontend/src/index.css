@@ -1,55 +1,143 @@
 @import "tailwindcss";
 
-:root {
-  --background: 0 0% 100%;
-  --foreground: 222.2 84% 4.9%;
-  --card: 0 0% 100%;
-  --card-foreground: 222.2 84% 4.9%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 222.2 84% 4.9%;
-  --primary: 222.2 47.4% 11.2%;
-  --primary-foreground: 210 40% 98%;
-  --secondary: 210 40% 96.1%;
-  --secondary-foreground: 222.2 47.4% 11.2%;
-  --muted: 210 40% 96.1%;
-  --muted-foreground: 215.4 16.3% 46.9%;
-  --accent: 210 40% 96.1%;
-  --accent-foreground: 222.2 47.4% 11.2%;
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 210 40% 98%;
-  --border: 214.3 31.8% 91.4%;
-  --input: 214.3 31.8% 91.4%;
-  --ring: 222.2 84% 4.9%;
-  --radius: 0.5rem;
+@layer base {
+  :root {
+    /* Deep blue brutalist palette */
+    --background: 0 0% 100%;
+    --foreground: 220 90% 10%;
+
+    --card: 0 0% 98%;
+    --card-foreground: 220 90% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 90% 10%;
+
+    --primary: 220 85% 25%;          /* Rich navy blue */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 15% 92%;        /* Cool gray */
+    --secondary-foreground: 220 90% 10%;
+
+    --muted: 220 15% 95%;
+    --muted-foreground: 220 20% 45%;
+
+    --accent: 215 100% 45%;          /* Brighter blue for interaction */
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 75% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 20% 80%;
+    --input: 220 20% 80%;
+    --ring: 220 85% 25%;
+
+    --radius: 0.25rem;               /* Minimal radius (brutalist) */
+
+    /* Status indicator colors */
+    --status-creating: 220 85% 55%;  /* Blue */
+    --status-running: 142 71% 45%;   /* Green */
+    --status-idle: 45 93% 47%;       /* Yellow/Orange */
+    --status-completed: 220 13% 55%; /* Gray */
+    --status-failed: 0 72% 51%;      /* Red */
+    --status-archived: 220 13% 69%;  /* Light Gray */
+  }
+
+  .dark {
+    --background: 220 90% 8%;
+    --foreground: 220 10% 95%;
+
+    --card: 220 85% 10%;
+    --card-foreground: 220 10% 95%;
+
+    --popover: 220 85% 10%;
+    --popover-foreground: 220 10% 95%;
+
+    --primary: 215 100% 60%;         /* Bright blue in dark */
+    --primary-foreground: 220 90% 10%;
+
+    --secondary: 220 50% 18%;
+    --secondary-foreground: 220 10% 95%;
+
+    --muted: 220 50% 15%;
+    --muted-foreground: 220 15% 60%;
+
+    --accent: 215 100% 55%;
+    --accent-foreground: 220 90% 10%;
+
+    --destructive: 0 75% 55%;
+    --destructive-foreground: 220 10% 95%;
+
+    --border: 220 50% 25%;
+    --input: 220 50% 25%;
+    --ring: 215 100% 60%;
+
+    /* Status indicator colors (dark mode) */
+    --status-creating: 220 85% 65%;  /* Brighter blue */
+    --status-running: 142 71% 55%;   /* Brighter green */
+    --status-idle: 45 93% 57%;       /* Brighter yellow/orange */
+    --status-completed: 220 13% 65%; /* Lighter gray */
+    --status-failed: 0 72% 61%;      /* Brighter red */
+    --status-archived: 220 13% 50%;  /* Mid gray */
+  }
 }
 
-.dark {
-  --background: 222.2 84% 4.9%;
-  --foreground: 210 40% 98%;
-  --card: 222.2 84% 4.9%;
-  --card-foreground: 210 40% 98%;
-  --popover: 222.2 84% 4.9%;
-  --popover-foreground: 210 40% 98%;
-  --primary: 210 40% 98%;
-  --primary-foreground: 222.2 47.4% 11.2%;
-  --secondary: 217.2 32.6% 17.5%;
-  --secondary-foreground: 210 40% 98%;
-  --muted: 217.2 32.6% 17.5%;
-  --muted-foreground: 215 20.2% 65.1%;
-  --accent: 217.2 32.6% 17.5%;
-  --accent-foreground: 210 40% 98%;
-  --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 210 40% 98%;
-  --border: 217.2 32.6% 17.5%;
-  --input: 217.2 32.6% 17.5%;
-  --ring: 212.7 26.8% 83.9%;
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: system-ui, sans-serif;
+  }
+
+  /* Brutalist borders - chunky and visible */
+  button, input, select, textarea {
+    border-width: 2px;
+  }
+
+  /* Underlined links (UX requirement) */
+  a {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 4px;
+    text-decoration-color: hsl(var(--primary));
+    transition: color 200ms, text-decoration-color 200ms;
+  }
+
+  a:hover {
+    text-decoration-color: hsl(var(--accent));
+    color: hsl(var(--accent));
+  }
+
+  /* Retro monospace accents */
+  code, kbd, pre {
+    font-family: 'Berkeley Mono', 'Menlo', 'Monaco', monospace;
+  }
+
+  /* Chunky focus rings (brutalist affordance) */
+  :focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 4px hsl(var(--ring)), 0 0 0 6px hsl(var(--background));
+  }
 }
 
-* {
-  border-color: hsl(var(--border));
-}
+/* Retro terminal aesthetics */
+@layer components {
+  .terminal-retro {
+    background: #0a0e14;
+    font-family: 'Berkeley Mono', 'Courier New', monospace;
+    border: 4px solid hsl(var(--primary));
+    box-shadow:
+      0 0 10px hsla(var(--primary), 0.3),
+      inset 0 0 20px rgba(0, 0, 0, 0.5);
+  }
 
-body {
-  background-color: hsl(var(--background));
-  color: hsl(var(--foreground));
+  /* Brutalist card shadows */
+  .card-brutalist {
+    box-shadow:
+      4px 4px 0 hsl(var(--foreground)),
+      8px 8px 0 hsl(var(--muted));
+  }
 }
