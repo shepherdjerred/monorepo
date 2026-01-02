@@ -140,7 +140,6 @@ const DOCKER_IMAGE: &str = "ghcr.io/shepherdjerred/dotfiles";
 /// to work. To enable sccache compilation caching, install it in the dotfiles image:
 ///   cargo install sccache
 /// or add it to the Dockerfile.
-
 /// Proxy configuration for Docker containers.
 #[derive(Debug, Clone, Default)]
 pub struct DockerProxyConfig {
@@ -541,7 +540,7 @@ impl DockerBackend {
             }
 
             // Proxy-specific configuration (only when proxy is enabled)
-            if let Some(proxy) = proxy_config {
+            if let Some(_proxy) = proxy_config {
                 // Write managed settings file for proxy environments
                 // Note: managed-settings.json is only created when proxy is enabled because it's
                 // part of the proxy infrastructure that requires elevated permissions.
@@ -902,6 +901,8 @@ mod tests {
             false, // print mode
             true,  // dangerous_skip_checks
             &[],   // no images
+            None,  // git_user_name
+            None,  // git_user_email
         )
         .expect("Failed to build args");
 

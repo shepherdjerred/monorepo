@@ -83,6 +83,7 @@ impl PtySession {
     /// # Errors
     ///
     /// Returns an error if the PTY cannot be spawned.
+    #[allow(clippy::unused_async)]
     pub async fn spawn_docker_attach(
         session_id: uuid::Uuid,
         container_id: String,

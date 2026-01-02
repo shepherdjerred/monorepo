@@ -25,7 +25,7 @@ fn generate_kubeconfig(mux_dir: &PathBuf, port: u16) -> anyhow::Result<()> {
     std::fs::create_dir_all(&kube_dir)?;
 
     let config = format!(
-        r#"apiVersion: v1
+        r"apiVersion: v1
 kind: Config
 clusters:
 - cluster:
@@ -36,7 +36,7 @@ contexts:
     cluster: mux-proxied
   name: default
 current-context: default
-"#
+"
     );
 
     let config_path = kube_dir.join("config");
@@ -60,14 +60,14 @@ fn generate_talosconfig(mux_dir: &PathBuf, port: u16) -> anyhow::Result<()> {
     // talosctl will use TLS to connect to the gateway at host.docker.internal:port
     // Gateway terminates TLS and re-establishes mTLS to real Talos with host's cert
     let config = format!(
-        r#"context: mux-proxied
+        r"context: mux-proxied
 contexts:
     mux-proxied:
         endpoints:
             - host.docker.internal:{port}
         nodes:
             - host.docker.internal:{port}
-"#
+"
     );
 
     let config_path = talos_dir.join("config");
