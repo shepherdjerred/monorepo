@@ -78,7 +78,8 @@ function installWorkspaceDeps(source: Directory): Container {
     .withMountedFile("/workspace/packages/clauderon/web/package.json", source.file("packages/clauderon/web/package.json"))
     .withMountedFile("/workspace/packages/clauderon/web/shared/package.json", source.file("packages/clauderon/web/shared/package.json"))
     .withMountedFile("/workspace/packages/clauderon/web/client/package.json", source.file("packages/clauderon/web/client/package.json"))
-    .withMountedFile("/workspace/packages/clauderon/web/frontend/package.json", source.file("packages/clauderon/web/frontend/package.json"));
+    .withMountedFile("/workspace/packages/clauderon/web/frontend/package.json", source.file("packages/clauderon/web/frontend/package.json"))
+    .withMountedFile("/workspace/packages/mux-site/package.json", source.file("packages/mux-site/package.json"));
 
   // PHASE 2: Install dependencies (cached if lockfile + package.jsons unchanged)
   container = container.withExec(["bun", "install", "--frozen-lockfile"]);
@@ -129,8 +130,8 @@ function getCrossCompileContainer(source: Directory): Container {
     .withMountedCache("/usr/local/cargo/git", dag.cacheVolume("cargo-git"))
     // Use separate target directories for cross-compilation to avoid conflicts
     .withEnvVariable("CARGO_TARGET_DIR", "/workspace/target-cross")
-    .withMountedCache("/workspace/target-cross", dag.cacheVolume("multiplexer-cross-target"))
-    .withMountedDirectory("/workspace", source.directory("packages/multiplexer"))
+    .withMountedCache("/workspace/target-cross", dag.cacheVolume("clauderon-cross-target"))
+    .withMountedDirectory("/workspace", source.directory("packages/clauderon"))
     // Install cross-compilation dependencies
     .withExec(["apt-get", "update"])
     .withExec(["apt-get", "install", "-y", "gcc-aarch64-linux-gnu", "libc6-dev-arm64-cross"])
@@ -161,7 +162,7 @@ async function buildMuxBinary(
   ]);
 
   // Get the binary
-  const binaryPath = `/workspace/target-cross/${target}/release/mux`;
+  const binaryPath = `/workspace/target-cross/${target}/release/clauderon`;
   const binary = await buildContainer.file(binaryPath).contents();
 
   const filename = `mux-${os}-${arch}`;
@@ -469,7 +470,7 @@ export class Monorepo {
 
       // Check if a mux release was created and upload binaries
       const muxReleaseCreated = releaseResult.output.includes("mux-v") ||
-        releaseResult.output.includes("packages/multiplexer");
+        releaseResult.output.includes("packages/clauderon");
 
       if (muxReleaseCreated) {
         outputs.push("\n--- Multiplexer Release ---");
@@ -614,13 +615,20 @@ export class Monorepo {
     const outputs: string[] = [];
 
     // Build frontend first (required for static file embedding)
-    // The base container already has workspace deps installed, but we need to mount the frontend dirs
-    const frontendBuildContainer = getBaseContainer(source)
-      .withMountedDirectory("/workspace/packages/clauderon/web/frontend", source.directory("packages/clauderon/web/frontend"))
+    const frontendBuildContainer = getBaseContainer()
+      .withWorkdir("/workspace")
+      .withMountedFile("/workspace/package.json", source.file("package.json"))
+      .withMountedFile("/workspace/bun.lock", source.file("bun.lock"))
+      .withMountedFile("/workspace/packages/clauderon/web/package.json", source.file("packages/clauderon/web/package.json"))
+      .withMountedFile("/workspace/packages/clauderon/web/shared/package.json", source.file("packages/clauderon/web/shared/package.json"))
+      .withMountedFile("/workspace/packages/clauderon/web/client/package.json", source.file("packages/clauderon/web/client/package.json"))
+      .withMountedFile("/workspace/packages/clauderon/web/frontend/package.json", source.file("packages/clauderon/web/frontend/package.json"))
+      .withExec(["bun", "install", "--frozen-lockfile"])
       .withMountedDirectory("/workspace/packages/clauderon/web/shared", source.directory("packages/clauderon/web/shared"))
       .withMountedDirectory("/workspace/packages/clauderon/web/client", source.directory("packages/clauderon/web/client"))
+      .withMountedDirectory("/workspace/packages/clauderon/web/frontend", source.directory("packages/clauderon/web/frontend"))
+      .withExec(["bun", "install", "--frozen-lockfile"])
       .withWorkdir("/workspace/packages/clauderon/web/frontend")
-      .withExec(["bun", "install"])
       .withExec(["bun", "run", "build"]);
     const builtFrontend = frontendBuildContainer.directory("/workspace/packages/clauderon/web/frontend/dist");
 
@@ -680,7 +688,7 @@ export class Monorepo {
       ]);
 
       // Get the binary and add to output directory
-      const binaryPath = `/workspace/target-cross/${target}/release/mux`;
+      const binaryPath = `/workspace/target-cross/${target}/release/clauderon`;
       const filename = `mux-${os}-${arch}`;
       outputContainer = outputContainer.withFile(filename, buildContainer.file(binaryPath));
     }
