@@ -1,14 +1,14 @@
+use crate::core::manager::SessionManager;
 use crate::api::protocol::{CreateSessionRequest, Event};
 use crate::api::static_files::serve_static;
-use crate::api::ws_events::{EventBroadcaster, broadcast_event};
-use crate::core::manager::SessionManager;
+use crate::api::ws_events::{broadcast_event, EventBroadcaster};
 use crate::core::session::AccessMode;
 use axum::{
-    Json, Router,
-    extract::{Path, State},
+    extract::{Path, Query, State},
     http::StatusCode,
     response::{IntoResponse, Response},
     routing::{delete, get, post},
+    Json, Router,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -38,7 +38,11 @@ pub fn create_router() -> Router<AppState> {
         .route("/api/sessions/:id", get(get_session))
         .route("/api/sessions/:id", delete(delete_session))
         .route("/api/sessions/:id/archive", post(archive_session))
-        .route("/api/sessions/:id/access-mode", post(update_access_mode))
+        .route(
+            "/api/sessions/:id/access-mode",
+            post(update_access_mode),
+        )
+        .route("/api/sessions/:id/history", get(get_session_history))
         // Other endpoints
         .route("/api/recent-repos", get(get_recent_repos))
         .route("/api/status", get(get_system_status))
@@ -63,8 +67,7 @@ async fn get_session(
     // Validate session ID to prevent path traversal attacks
     validate_session_id(&id)?;
 
-    let session = state
-        .session_manager
+    let session = state.session_manager
         .get_session(&id)
         .await
         .ok_or_else(|| AppError::NotFound(format!("Session not found: {}", id)))?;
@@ -93,11 +96,7 @@ async fn create_session(
         .await?;
 
     // Broadcast session created event
-    broadcast_event(
-        &state.event_broadcaster,
-        Event::SessionCreated(session.clone()),
-    )
-    .await;
+    broadcast_event(&state.event_broadcaster, Event::SessionCreated(session.clone())).await;
 
     Ok(Json(json!({
         "id": session.id.to_string(),
@@ -139,6 +138,26 @@ async fn archive_session(
 #[derive(Debug, Deserialize, Serialize)]
 struct UpdateAccessModeRequest {
     access_mode: AccessMode,
+}
+
+/// Query parameters for session history endpoint
+#[derive(Debug, Deserialize)]
+struct HistoryQueryParams {
+    /// Start reading from this line number (1-indexed, for incremental updates)
+    since_line: Option<u64>,
+    /// Maximum number of lines to return
+    limit: Option<usize>,
+}
+
+/// Response for session history endpoint
+#[derive(Debug, Serialize)]
+struct HistoryResponse {
+    /// Raw JSONL lines from the history file
+    lines: Vec<String>,
+    /// Total number of lines in the file
+    total_lines: u64,
+    /// Whether the history file exists
+    file_exists: bool,
 }
 
 /// Update session access mode
@@ -202,6 +221,86 @@ async fn update_credential(
     Ok(StatusCode::NO_CONTENT)
 }
 
+/// Get session history from Claude Code's JSONL file
+///
+/// Query parameters:
+/// - since_line: Optional line number to start from (for incremental updates)
+/// - limit: Optional max number of lines to return (default: all)
+async fn get_session_history(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+    Query(params): Query<HistoryQueryParams>,
+) -> Result<Json<HistoryResponse>, AppError> {
+    validate_session_id(&id)?;
+
+    let session = state.session_manager
+        .get_session(&id)
+        .await
+        .ok_or_else(|| AppError::NotFound(format!("Session not found: {}", id)))?;
+
+    let history_path = session.history_file_path
+        .ok_or_else(|| AppError::NotFound("History file path not configured".to_string()))?;
+
+    // Security: Validate path is within worktree bounds and matches expected pattern
+    if !history_path.starts_with(&session.worktree_path) {
+        return Err(AppError::BadRequest("Invalid history file path: outside worktree".to_string()));
+    }
+
+    // Verify path matches expected pattern (defense in depth)
+    let expected_path = crate::core::session::get_history_file_path(
+        &session.worktree_path,
+        &session.id,
+    );
+    if history_path != expected_path {
+        return Err(AppError::BadRequest("Invalid history file path: pattern mismatch".to_string()));
+    }
+
+    // Check if file exists
+    if !history_path.exists() {
+        return Ok(Json(HistoryResponse {
+            lines: vec![],
+            total_lines: 0,
+            file_exists: false,
+        }));
+    }
+
+    // Read file with optional offset
+    let file = tokio::fs::File::open(&history_path).await
+        .map_err(|e| AppError::BadRequest(format!("Failed to read history: {}", e)))?;
+
+    let reader = tokio::io::BufReader::new(file);
+    use tokio::io::AsyncBufReadExt;
+    let mut lines_stream = reader.lines();
+
+    let mut lines = Vec::new();
+    let mut line_num = 0u64;
+    let since_line = params.since_line.unwrap_or(0);
+    let limit = params.limit.unwrap_or(usize::MAX);
+
+    while let Some(line) = lines_stream.next_line().await
+        .map_err(|e| AppError::BadRequest(format!("Failed to read line: {}", e)))?
+    {
+        line_num += 1;
+
+        // Skip lines before since_line
+        if line_num <= since_line {
+            continue;
+        }
+
+        lines.push(line);
+
+        if lines.len() >= limit {
+            break;
+        }
+    }
+
+    Ok(Json(HistoryResponse {
+        lines,
+        total_lines: line_num,
+        file_exists: true,
+    }))
+}
+
 /// Validate session ID to prevent path traversal and injection attacks
 ///
 /// Session IDs can be either:
@@ -216,33 +315,22 @@ async fn update_credential(
 fn validate_session_id(id: &str) -> Result<(), AppError> {
     // Check length (reasonable bounds)
     if id.is_empty() || id.len() > 128 {
-        return Err(AppError::BadRequest(
-            "Invalid session ID length".to_string(),
-        ));
+        return Err(AppError::BadRequest("Invalid session ID length".to_string()));
     }
 
     // Check for path traversal attempts
     if id.contains("..") || id.contains('/') || id.contains('\\') || id.contains('\0') {
-        return Err(AppError::BadRequest(
-            "Invalid session ID format".to_string(),
-        ));
+        return Err(AppError::BadRequest("Invalid session ID format".to_string()));
     }
 
     // Check for control characters
     if id.chars().any(|c| c.is_control()) {
-        return Err(AppError::BadRequest(
-            "Invalid session ID format".to_string(),
-        ));
+        return Err(AppError::BadRequest("Invalid session ID format".to_string()));
     }
 
     // Session IDs should only contain alphanumeric, hyphens, and underscores
-    if !id
-        .chars()
-        .all(|c| c.is_alphanumeric() || c == '-' || c == '_')
-    {
-        return Err(AppError::BadRequest(
-            "Invalid session ID format".to_string(),
-        ));
+    if !id.chars().all(|c| c.is_alphanumeric() || c == '-' || c == '_') {
+        return Err(AppError::BadRequest("Invalid session ID format".to_string()));
     }
 
     Ok(())

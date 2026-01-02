@@ -132,6 +132,42 @@ export class ClauderonClient {
   }
 
   /**
+   * Get session history from Claude Code's JSONL file
+   *
+   * @param id Session ID
+   * @param sinceLine Optional line number to start from (for incremental updates)
+   * @param limit Optional max number of lines to return
+   */
+  async getSessionHistory(
+    id: string,
+    sinceLine?: number,
+    limit?: number
+  ): Promise<{ lines: string[]; totalLines: number; fileExists: boolean }> {
+    const params = new URLSearchParams();
+    if (sinceLine !== undefined) {
+      params.append("since_line", sinceLine.toString());
+    }
+    if (limit !== undefined) {
+      params.append("limit", limit.toString());
+    }
+
+    const queryString = params.toString();
+    const url = `/api/sessions/${encodeURIComponent(id)}/history${queryString ? `?${queryString}` : ""}`;
+
+    const response = await this.request<{
+      lines: string[];
+      total_lines: number;
+      file_exists: boolean;
+    }>("GET", url);
+
+    return {
+      lines: response.lines,
+      totalLines: response.total_lines,
+      fileExists: response.file_exists,
+    };
+  }
+
+  /**
    * Internal method to make HTTP requests
    */
   private async request<T = void>(

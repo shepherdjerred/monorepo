@@ -35,7 +35,7 @@ pub struct Session {
     /// Git branch name
     pub branch_name: String,
 
-    /// Backend-specific identifier (zellij session name or docker container id)
+    /// Backend-specific identifier (zellij session name, docker container id, or kubernetes pod name)
     pub backend_id: Option<String>,
 
     /// Initial prompt given to the AI agent
@@ -65,6 +65,10 @@ pub struct Session {
 
     /// Port for session-specific HTTP proxy (Docker only)
     pub proxy_port: Option<u16>,
+
+    /// Path to Claude Code's session history file (.jsonl)
+    #[typeshare(serialized_as = "String")]
+    pub history_file_path: Option<PathBuf>,
 
     /// When the session was created
     #[typeshare(serialized_as = "String")]
@@ -121,6 +125,7 @@ impl Session {
             merge_conflict: false,
             access_mode: config.access_mode,
             proxy_port: None,
+            history_file_path: None,
             created_at: now,
             updated_at: now,
         }
@@ -208,6 +213,9 @@ pub enum BackendType {
 
     /// Docker container
     Docker,
+
+    /// Kubernetes pod
+    Kubernetes,
 }
 
 /// AI agent type
@@ -311,4 +319,24 @@ impl std::str::FromStr for AccessMode {
             _ => Err(anyhow::anyhow!("Invalid access mode: {}", s)),
         }
     }
+}
+
+/// Get the path to the Claude Code session history file
+///
+/// Claude Code stores session history at:
+/// `<worktree>/.claude/projects/-workspace/<session-id>.jsonl`
+///
+/// # Arguments
+/// * `worktree_path` - Path to the git worktree
+/// * `session_id` - UUID of the session
+///
+/// # Returns
+/// The path to the history file (may not exist yet)
+#[must_use]
+pub fn get_history_file_path(worktree_path: &PathBuf, session_id: &Uuid) -> PathBuf {
+    worktree_path
+        .join(".claude")
+        .join("projects")
+        .join("-workspace")
+        .join(format!("{}.jsonl", session_id))
 }
