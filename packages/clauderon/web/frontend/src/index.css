@@ -121,6 +121,13 @@
     outline: none;
     box-shadow: 0 0 0 4px hsl(var(--ring)), 0 0 0 6px hsl(var(--background));
   }
+
+  /* Remove canvas margins/padding for terminal */
+  canvas {
+    display: block;
+    margin: 0;
+    padding: 0;
+  }
 }
 
 /* Retro terminal aesthetics */

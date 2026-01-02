@@ -2,8 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useConsole } from "../hooks/useConsole";
 import { MessageParser } from "../lib/claudeParser";
 import { MessageBubble } from "./MessageBubble";
-import { Send, Terminal as TerminalIcon } from "lucide-react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Send, Terminal as TerminalIcon, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -66,41 +65,59 @@ export function ChatInterface({
   };
 
   return (
-    <Dialog open={true} onOpenChange={(open) => { if (!open) { onClose(); } }}>
-      <DialogContent className="max-w-6xl h-[80vh] border-4 border-primary flex flex-col p-0">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b-4 border-primary">
-          <div className="flex items-center gap-3">
-            <h2 className="text-xl font-bold font-mono uppercase">{sessionName}</h2>
+    <>
+      <div className="fixed inset-0 z-40" style={{
+        backgroundColor: 'hsl(220, 90%, 8%)',
+        opacity: 0.85
+      }} />
+      <div className="fixed inset-0 flex items-center justify-center p-8 z-50">
+        <div className="max-w-5xl w-full h-[85vh] flex flex-col border-4 border-primary" style={{
+          backgroundColor: 'hsl(220, 15%, 95%)',
+          boxShadow: '12px 12px 0 hsl(220, 85%, 25%), 24px 24px 0 hsl(220, 90%, 10%)'
+        }}>
+          {/* Header */}
+          <div className="flex items-center justify-between p-4 border-b-4 border-primary" style={{ backgroundColor: 'hsl(220, 85%, 25%)' }}>
+            <div className="flex items-center gap-4">
+              <h2 className="text-2xl font-bold font-mono uppercase tracking-wider text-white">
+                {sessionName}
+              </h2>
+              <div className="flex items-center gap-2 px-3 py-1 border-2 border-white bg-white/10">
+                <div
+                  className={`w-3 h-3 border-2 border-white ${
+                    isConnected ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"
+                  }`}
+                />
+                <span className="text-sm font-mono font-bold uppercase text-white">
+                  {isConnected ? "Online" : "Offline"}
+                </span>
+              </div>
+            </div>
             <div className="flex items-center gap-2">
-              <div
-                className={`w-3 h-3 border-2 border-foreground ${
-                  isConnected ? "bg-green-500" : "bg-red-500"
-                }`}
-              />
-              <span className="text-sm font-mono">
-                {isConnected ? "Connected" : "Disconnected"}
-              </span>
+              {onSwitchToConsole && (
+                <button
+                  onClick={onSwitchToConsole}
+                  className="p-2 border-2 border-white bg-white/10 hover:bg-blue-600 hover:text-white transition-all font-bold text-white"
+                  title="Switch to console view"
+                  aria-label="Switch to console view"
+                >
+                  <TerminalIcon className="w-5 h-5" />
+                </button>
+              )}
+              <button
+                onClick={onClose}
+                className="p-2 border-2 border-white bg-white/10 hover:bg-red-600 hover:text-white transition-all font-bold text-white"
+                title="Close"
+                aria-label="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            {onSwitchToConsole && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={onSwitchToConsole}
-                aria-label="Switch to raw console view"
-              >
-                <TerminalIcon className="w-5 h-5" />
-              </Button>
-            )}
-          </div>
-        </div>
 
         {/* Error display */}
         {error && (
-          <div className="p-4 bg-destructive/10 text-destructive border-b-2 border-destructive">
-            <strong className="font-mono">Error:</strong> {error}
+          <div className="p-4 border-b-4 font-mono" style={{ backgroundColor: 'hsl(0, 75%, 95%)', color: 'hsl(0, 75%, 40%)', borderColor: 'hsl(0, 75%, 50%)' }}>
+            <strong className="font-bold">ERROR:</strong> {error}
           </div>
         )}
 
@@ -121,7 +138,7 @@ export function ChatInterface({
         </div>
 
         {/* Input */}
-        <div className="p-4 border-t-4 border-primary">
+        <div className="p-4 border-t-4 border-primary" style={{ backgroundColor: 'hsl(220, 15%, 90%)' }}>
           <form onSubmit={handleSubmit} className="flex gap-3">
             <Input
               type="text"
@@ -140,11 +157,12 @@ export function ChatInterface({
               Send
             </Button>
           </form>
-          <p className="text-xs text-muted-foreground mt-2 font-mono">
+          <p className="text-xs mt-2 font-mono" style={{ color: 'hsl(220, 20%, 45%)' }}>
             This is a best-effort chat view. For full terminal control, switch to console view.
           </p>
         </div>
-      </DialogContent>
-    </Dialog>
+        </div>
+      </div>
+    </>
   );
 }

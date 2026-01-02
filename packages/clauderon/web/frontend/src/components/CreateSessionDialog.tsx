@@ -1,10 +1,10 @@
 import { useState } from "react";
 import type { CreateSessionRequest, BackendType, AgentType, AccessMode } from "@clauderon/client";
 import { useSessionContext } from "../contexts/SessionContext";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { X } from "lucide-react";
 
 type CreateSessionDialogProps = {
   onClose: () => void;
@@ -53,19 +53,36 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
   };
 
   return (
-    <Dialog open={true} onOpenChange={(open) => { if (!open) { onClose(); } }}>
-      <DialogContent className="max-w-2xl border-4 border-primary">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-mono uppercase">
-            Create New Session
-          </DialogTitle>
-        </DialogHeader>
+    <>
+      <div className="fixed inset-0 z-40" style={{
+        backgroundColor: 'hsl(220, 90%, 8%)',
+        opacity: 0.85
+      }} />
+      <div className="fixed inset-0 flex items-center justify-center p-8 z-50">
+        <div className="max-w-2xl w-full flex flex-col border-4 border-primary" style={{
+          backgroundColor: 'hsl(220, 15%, 95%)',
+          boxShadow: '12px 12px 0 hsl(220, 85%, 25%), 24px 24px 0 hsl(220, 90%, 10%)'
+        }}>
+          {/* Header */}
+          <div className="flex items-center justify-between p-4 border-b-4 border-primary" style={{ backgroundColor: 'hsl(220, 85%, 25%)' }}>
+            <h2 className="text-2xl font-bold font-mono uppercase tracking-wider text-white">
+              Create New Session
+            </h2>
+            <button
+              onClick={onClose}
+              className="p-2 border-2 border-white bg-white/10 hover:bg-red-600 hover:text-white transition-all font-bold text-white"
+              title="Close dialog"
+              aria-label="Close dialog"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
 
         {/* Form */}
-        <form onSubmit={(e) => { void handleSubmit(e); }} className="space-y-6">
+        <form onSubmit={(e) => { void handleSubmit(e); }} className="p-6 space-y-6" style={{ backgroundColor: 'hsl(220, 15%, 95%)' }}>
           {error && (
-            <div className="p-4 bg-destructive/10 text-destructive border-2 border-destructive rounded-md">
-              <strong className="font-mono">Error:</strong> {error}
+            <div className="p-4 border-4 font-mono" style={{ backgroundColor: 'hsl(0, 75%, 95%)', color: 'hsl(0, 75%, 40%)', borderColor: 'hsl(0, 75%, 50%)' }}>
+              <strong className="font-bold">ERROR:</strong> {error}
             </div>
           )}
 
@@ -162,7 +179,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
           </div>
 
           {/* Actions */}
-          <div className="flex justify-end gap-3 pt-4 border-t-2">
+          <div className="flex justify-end gap-3 pt-4 border-t-4 border-primary">
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
@@ -171,7 +188,8 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
             </Button>
           </div>
         </form>
-      </DialogContent>
-    </Dialog>
+        </div>
+      </div>
+    </>
   );
 }
