@@ -76,6 +76,10 @@ impl SqliteStore {
             Self::migrate_to_v3(pool).await?;
         }
 
+        if current_version < 4 {
+            Self::migrate_to_v4(pool).await?;
+        }
+
         Ok(())
     }
 
@@ -276,6 +280,41 @@ impl SqliteStore {
         tracing::info!("Migration v3 complete");
         Ok(())
     }
+
+    /// Migration v4: Add merge conflict tracking
+    async fn migrate_to_v4(pool: &SqlitePool) -> anyhow::Result<()> {
+        tracing::info!("Applying migration v4: Merge conflict tracking");
+
+        // Add merge_conflict column
+        let merge_conflict_exists: bool = sqlx::query_scalar(
+            "SELECT COUNT(*) FROM pragma_table_info('sessions') WHERE name = 'merge_conflict'"
+        )
+        .fetch_one(pool)
+        .await
+        .map(|count: i64| count > 0)
+        .unwrap_or(false);
+
+        if !merge_conflict_exists {
+            sqlx::query(
+                "ALTER TABLE sessions ADD COLUMN merge_conflict INTEGER NOT NULL DEFAULT 0"
+            )
+            .execute(pool)
+            .await?;
+        }
+
+        // Record migration
+        let now = Utc::now();
+        sqlx::query(
+            "INSERT OR REPLACE INTO schema_version (version, applied_at) VALUES (?, ?)"
+        )
+        .bind(4)
+        .bind(now.to_rfc3339())
+        .execute(pool)
+        .await?;
+
+        tracing::info!("Migration v4 complete");
+        Ok(())
+    }
 }
 
 #[async_trait]
@@ -321,8 +360,8 @@ impl Store for SqliteStore {
                 id, name, status, backend, agent, repo_path, worktree_path,
                 branch_name, backend_id, initial_prompt, dangerous_skip_checks,
                 pr_url, pr_check_status, claude_status, claude_status_updated_at,
-                access_mode, proxy_port, created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                merge_conflict, access_mode, proxy_port, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ",
         )
         .bind(session.id.to_string())
@@ -348,6 +387,7 @@ impl Store for SqliteStore {
                 .claude_status_updated_at
                 .map(|t| t.to_rfc3339()),
         )
+        .bind(session.merge_conflict)
         .bind(session.access_mode.to_string())
         .bind(session.proxy_port.map(|p| p as i64))
         .bind(session.created_at.to_rfc3339())
@@ -477,6 +517,7 @@ const fn event_type_name(event_type: &crate::core::events::EventType) -> &'stati
         EventType::PrLinked { .. } => "PrLinked",
         EventType::CheckStatusChanged { .. } => "CheckStatusChanged",
         EventType::ClaudeStatusChanged { .. } => "ClaudeStatusChanged",
+        EventType::ConflictStatusChanged { .. } => "ConflictStatusChanged",
         EventType::SessionArchived => "SessionArchived",
         EventType::SessionDeleted { .. } => "SessionDeleted",
         EventType::SessionRestored => "SessionRestored",
@@ -501,6 +542,7 @@ struct SessionRow {
     pr_check_status: Option<String>,
     claude_status: String,
     claude_status_updated_at: Option<String>,
+    merge_conflict: bool,
     access_mode: String,
     proxy_port: Option<i64>,
     created_at: String,
@@ -570,6 +612,7 @@ impl TryFrom<SessionRow> for Session {
             pr_check_status,
             claude_status,
             claude_status_updated_at,
+            merge_conflict: row.merge_conflict,
             access_mode: row.access_mode.parse().unwrap_or_default(),
             proxy_port: row.proxy_port.map(|p| p as u16),
             created_at,

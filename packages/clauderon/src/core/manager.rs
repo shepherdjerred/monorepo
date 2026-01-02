@@ -698,6 +698,98 @@ impl SessionManager {
         Ok(())
     }
 
+    /// Link a PR URL to a session
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the session is not found or the store update fails.
+    pub async fn link_pr(&self, session_id: Uuid, pr_url: String) -> anyhow::Result<()> {
+        let mut sessions = self.sessions.write().await;
+        let session = sessions
+            .iter_mut()
+            .find(|s| s.id == session_id)
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {}", session_id))?;
+
+        // Don't update if PR is already linked
+        if session.pr_url.is_some() {
+            return Ok(());
+        }
+
+        session.set_pr_url(pr_url.clone());
+        let session_clone = session.clone();
+        drop(sessions);
+
+        // Record event
+        let event = Event::new(session_id, EventType::PrLinked { pr_url: pr_url.clone() });
+        self.store.record_event(&event).await?;
+
+        // Update in store
+        self.store.save_session(&session_clone).await?;
+
+        tracing::info!(
+            session_id = %session_id,
+            pr_url = %pr_url,
+            "Linked PR to session"
+        );
+
+        // Broadcast event to WebSocket clients if broadcaster available
+        if let Some(ref broadcaster) = self.event_broadcaster {
+            if let Some(session) = self.get_session(&session_id.to_string()).await {
+                broadcast_event(broadcaster, WsEvent::SessionUpdated(session)).await;
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Update merge conflict status for a session
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the session is not found or the store update fails.
+    pub async fn update_conflict_status(
+        &self,
+        session_id: Uuid,
+        has_conflict: bool,
+    ) -> anyhow::Result<()> {
+        let mut sessions = self.sessions.write().await;
+        let session = sessions
+            .iter_mut()
+            .find(|s| s.id == session_id)
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {}", session_id))?;
+
+        // Don't update if status hasn't changed
+        if session.merge_conflict == has_conflict {
+            return Ok(());
+        }
+
+        session.set_merge_conflict(has_conflict);
+        let session_clone = session.clone();
+        drop(sessions);
+
+        // Record event
+        let event = Event::new(session_id, EventType::ConflictStatusChanged { has_conflict });
+        self.store.record_event(&event).await?;
+
+        // Update in store
+        self.store.save_session(&session_clone).await?;
+
+        tracing::info!(
+            session_id = %session_id,
+            has_conflict = %has_conflict,
+            "Updated merge conflict status"
+        );
+
+        // Broadcast event to WebSocket clients if broadcaster available
+        if let Some(ref broadcaster) = self.event_broadcaster {
+            if let Some(session) = self.get_session(&session_id.to_string()).await {
+                broadcast_event(broadcaster, WsEvent::SessionUpdated(session)).await;
+            }
+        }
+
+        Ok(())
+    }
+
     /// Send a prompt to a Claude session (for hotkey triggers)
     ///
     /// # Errors

@@ -320,6 +320,16 @@ impl DockerBackend {
             "SCCACHE_DIR=/workspace/.cache/sccache".to_string(),
         ]);
 
+        // Mount .clauderon directory for hook socket communication
+        // This allows Claude Code hooks inside the container to send status updates
+        // to the daemon on the host via shared Unix sockets
+        let home_dir = std::env::var("HOME").unwrap_or_else(|_| "/root".to_string());
+        let clauderon_dir = format!("{}/.clauderon", home_dir);
+        args.extend([
+            "-v".to_string(),
+            format!("{}:/workspace/.clauderon", clauderon_dir),
+        ]);
+
         // Detect if workdir is a git worktree and mount parent .git directory
         match detect_git_worktree(workdir) {
             Ok(Some(parent_git_dir)) => {
@@ -701,6 +711,15 @@ impl ExecutionBackend for DockerBackend {
             workdir = %workdir.display(),
             "Created Docker container"
         );
+
+        // Install Claude Code hooks inside the container for status tracking
+        if let Err(e) = crate::hooks::install_hooks_in_container(&container_name).await {
+            tracing::warn!(
+                container_name = %container_name,
+                error = %e,
+                "Failed to install hooks in container (non-fatal), status tracking may not work"
+            );
+        }
 
         Ok(container_name)
     }
