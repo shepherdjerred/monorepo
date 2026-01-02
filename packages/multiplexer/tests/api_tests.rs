@@ -169,13 +169,19 @@ fn test_print_mode_serialization() {
     });
 
     let json = serde_json::to_string(&request).unwrap();
-    assert!(json.contains(r#""print_mode":true"#), "print_mode should be true in JSON: {json}");
+    assert!(
+        json.contains(r#""print_mode":true"#),
+        "print_mode should be true in JSON: {json}"
+    );
 
     // Verify deserialization
     let parsed: Request = serde_json::from_str(&json).unwrap();
     match parsed {
         Request::CreateSession(req) => {
-            assert!(req.print_mode, "print_mode should be true after deserialization");
+            assert!(
+                req.print_mode,
+                "print_mode should be true after deserialization"
+            );
         }
         _ => panic!("Expected CreateSession"),
     }
@@ -218,7 +224,8 @@ fn test_print_mode_flows_to_docker_args() {
         &[],   // images
         None,  // git user name
         None,  // git user email
-    ).expect("Failed to build args");
+    )
+    .expect("Failed to build args");
 
     // The final command should contain --print --verbose
     let cmd_arg = args.last().expect("Should have command argument");
@@ -256,7 +263,8 @@ fn test_interactive_mode_no_print_flag_in_docker_args() {
         &[],   // images
         None,  // git user name
         None,  // git user email
-    ).expect("Failed to build args");
+    )
+    .expect("Failed to build args");
 
     let cmd_arg = args.last().expect("Should have command argument");
 

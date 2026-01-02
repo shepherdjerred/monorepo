@@ -6,9 +6,9 @@ use ratatui::{
     widgets::{Block, Borders, Clear, List, ListItem, Paragraph, Wrap},
 };
 
-use crate::core::BackendType;
 use super::app::{App, AppMode};
 use super::components::{create_dialog, session_list, status_bar};
+use crate::core::BackendType;
 
 /// Render the entire UI
 pub fn render(frame: &mut Frame, app: &App) {

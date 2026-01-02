@@ -1,7 +1,7 @@
 use axum::{
     extract::{
-        ws::{Message, WebSocket},
         Path, State, WebSocketUpgrade,
+        ws::{Message, WebSocket},
     },
     response::Response,
 };
@@ -46,12 +46,8 @@ async fn handle_console_socket(socket: WebSocket, session_id: String, state: App
 
     // Spawn PTY process (docker attach or zellij attach)
     let pty_result = match session.backend {
-        crate::core::session::BackendType::Docker => {
-            spawn_docker_attach(&backend_id).await
-        }
-        crate::core::session::BackendType::Zellij => {
-            spawn_zellij_attach(&backend_id).await
-        }
+        crate::core::session::BackendType::Docker => spawn_docker_attach(&backend_id).await,
+        crate::core::session::BackendType::Zellij => spawn_zellij_attach(&backend_id).await,
     };
 
     let (pty_reader, pty_writer) = match pty_result {
@@ -86,10 +82,7 @@ async fn handle_console_socket(socket: WebSocket, session_id: String, state: App
                         "data": data,
                     });
 
-                    if let Err(e) = ws_sender
-                        .send(Message::Text(message.to_string()))
-                        .await
-                    {
+                    if let Err(e) = ws_sender.send(Message::Text(message.to_string())).await {
                         tracing::error!("Failed to send PTY output to WebSocket: {}", e);
                         break;
                     }
@@ -133,10 +126,9 @@ async fn handle_console_socket(socket: WebSocket, session_id: String, state: App
                         }
                         Some("resize") => {
                             // Client is resizing terminal
-                            if let (Some(rows), Some(cols)) = (
-                                message["rows"].as_u64(),
-                                message["cols"].as_u64()
-                            ) {
+                            if let (Some(rows), Some(cols)) =
+                                (message["rows"].as_u64(), message["cols"].as_u64())
+                            {
                                 let size = pty_process::Size::new(rows as u16, cols as u16);
                                 let writer = pty_writer_clone.lock().await;
                                 if let Err(e) = writer.resize(size) {
@@ -193,9 +185,7 @@ async fn handle_console_socket(socket: WebSocket, session_id: String, state: App
 type PtyHandle = Arc<Mutex<pty_process::Pty>>;
 
 /// Spawn docker attach command and return reader/writer handles
-async fn spawn_docker_attach(
-    container_id: &str,
-) -> anyhow::Result<(PtyHandle, PtyHandle)> {
+async fn spawn_docker_attach(container_id: &str) -> anyhow::Result<(PtyHandle, PtyHandle)> {
     use pty_process::Command;
 
     // Create PTY
@@ -211,9 +201,7 @@ async fn spawn_docker_attach(
 }
 
 /// Spawn zellij attach command and return reader/writer handles
-async fn spawn_zellij_attach(
-    session_name: &str,
-) -> anyhow::Result<(PtyHandle, PtyHandle)> {
+async fn spawn_zellij_attach(session_name: &str) -> anyhow::Result<(PtyHandle, PtyHandle)> {
     use pty_process::Command;
 
     // Create PTY

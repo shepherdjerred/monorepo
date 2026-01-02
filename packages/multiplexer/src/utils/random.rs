@@ -134,7 +134,10 @@ mod tests {
     #[test]
     fn test_sanitize_spaces() {
         assert_eq!(sanitize_branch_name("my feature"), "my-feature");
-        assert_eq!(sanitize_branch_name("mux automatic daemon"), "mux-automatic-daemon");
+        assert_eq!(
+            sanitize_branch_name("mux automatic daemon"),
+            "mux-automatic-daemon"
+        );
     }
 
     #[test]

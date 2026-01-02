@@ -121,10 +121,8 @@ async fn main() -> anyhow::Result<()> {
     }
 
     // Set up file appender
-    let file_appender = tracing_appender::rolling::daily(
-        log_path.parent().unwrap(),
-        log_path.file_name().unwrap(),
-    );
+    let file_appender =
+        tracing_appender::rolling::daily(log_path.parent().unwrap(), log_path.file_name().unwrap());
 
     // Initialize tracing with both console and file output
     let env_filter = tracing_subscriber::EnvFilter::new(
@@ -144,7 +142,10 @@ async fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Daemon { no_proxy, http_port } => {
+        Commands::Daemon {
+            no_proxy,
+            http_port,
+        } => {
             tracing::info!("Starting multiplexer daemon");
             let port = if http_port > 0 { Some(http_port) } else { None };
             api::server::run_daemon_with_http(!no_proxy, port).await?;

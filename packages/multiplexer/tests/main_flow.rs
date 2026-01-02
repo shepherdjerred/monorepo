@@ -4,7 +4,7 @@
 
 use std::sync::Arc;
 
-use multiplexer::core::events::{replay_events, Event, EventType};
+use multiplexer::core::events::{Event, EventType, replay_events};
 use multiplexer::core::{AgentType, BackendType, Session, SessionConfig, SessionStatus};
 use multiplexer::store::{SqliteStore, Store};
 use tempfile::TempDir;

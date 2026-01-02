@@ -35,7 +35,8 @@ fn test_proxy_config_flows_to_container_args() {
         &[],   // images
         None,  // git user name
         None,  // git user email
-    ).expect("Failed to build args");
+    )
+    .expect("Failed to build args");
 
     // Verify HTTP_PROXY is set correctly
     assert!(
@@ -138,7 +139,8 @@ fn test_disabled_proxy_config_no_args() {
         &[],   // images
         None,  // git user name
         None,  // git user email
-    ).expect("Failed to build args");
+    )
+    .expect("Failed to build args");
 
     assert!(
         !args.iter().any(|a| a.contains("HTTP_PROXY")),
@@ -162,13 +164,14 @@ fn test_none_proxy_config_no_args() {
         &PathBuf::from("/workspace"),
         "test prompt",
         1000,
-        None, // No proxy config
+        None,  // No proxy config
         false, // print mode
         false, // plan mode
         &[],   // images
         None,  // git user name
         None,  // git user email
-    ).expect("Failed to build args");
+    )
+    .expect("Failed to build args");
 
     assert!(
         !args.iter().any(|a| a.contains("HTTP_PROXY")),
@@ -201,7 +204,8 @@ fn test_proxy_port_in_env_vars() {
         &[],   // images
         None,  // git user name
         None,  // git user email
-    ).expect("Failed to build args");
+    )
+    .expect("Failed to build args");
 
     // Verify the custom port is used
     assert!(
@@ -243,7 +247,8 @@ fn test_mux_dir_in_volume_mounts() {
         &[],   // images
         None,  // git user name
         None,  // git user email
-    ).expect("Failed to build args");
+    )
+    .expect("Failed to build args");
 
     // Verify the mux dir is used in volume mounts (CA cert path contains the temp dir path)
     let mux_path = mux_dir.path().to_string_lossy();
@@ -254,7 +259,8 @@ fn test_mux_dir_in_volume_mounts() {
         args
     );
     assert!(
-        args.iter().any(|a| a.contains(&format!("{}/kube", mux_path))),
+        args.iter()
+            .any(|a| a.contains(&format!("{}/kube", mux_path))),
         "Expected mux dir in kube mount, got: {:?}",
         args
     );

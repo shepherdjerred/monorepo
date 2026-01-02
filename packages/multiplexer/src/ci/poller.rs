@@ -95,7 +95,11 @@ impl CIPoller {
             anyhow::anyhow!(
                 "Failed to parse gh pr checks output: {}. Raw output: {:?}",
                 e,
-                if json_output.len() > 200 { &json_output[..200] } else { &json_output }
+                if json_output.len() > 200 {
+                    &json_output[..200]
+                } else {
+                    &json_output
+                }
             )
         })?;
 
