@@ -189,26 +189,20 @@ fn render_help(frame: &mut Frame, app: &App, area: Rect) {
         || {
             // No session selected - show Docker PTY options
             vec![
-                ("Ctrl+Q", "Detach (single tap)"),
-                ("Ctrl+Q x2", "Send literal Ctrl+Q"),
+                ("Ctrl+Q", "Detach"),
                 ("Ctrl+P/N", "Switch session (Prev/Next)"),
-                ("Alt+←/→", "Switch session"),
-                ("PgUp/Dn", "Scroll history (10 lines)"),
-                ("Shift+↑/↓", "Scroll history (1 line)"),
-                ("Mouse wheel", "Scroll history"),
+                ("Ctrl+S", "Enter scroll mode"),
+                ("Ctrl+Space", "Toggle locked mode"),
+                ("?", "Show help"),
             ]
         },
         |session| match session.backend {
             BackendType::Zellij => vec![("Ctrl+O, d", "Detach from session")],
             BackendType::Docker => vec![
-                ("Ctrl+Q", "Detach (single tap)"),
-                ("Ctrl+Q x2", "Send literal Ctrl+Q"),
+                ("Ctrl+Q", "Detach"),
                 ("Ctrl+P/N", "Switch session (Prev/Next)"),
-                ("Alt+←/→", "Switch session"),
-                ("Ctrl+[", "Enter copy mode"),
-                ("PgUp/Dn", "Scroll history (10 lines)"),
-                ("Shift+↑/↓", "Scroll history (1 line)"),
-                ("Mouse wheel", "Scroll history"),
+                ("Ctrl+S", "Enter scroll mode"),
+                ("Ctrl+Space", "Toggle locked mode"),
                 ("?", "Show help"),
             ],
         },
@@ -241,6 +235,23 @@ fn render_help(frame: &mut Frame, app: &App, area: Rect) {
             ],
         ),
         ("While Attached", attached_hints),
+        (
+            "Locked Mode",
+            vec![
+                ("Ctrl+Space", "Unlock and return to attached"),
+                ("All keys", "Forwarded to application"),
+            ],
+        ),
+        (
+            "Scroll Mode",
+            vec![
+                ("↑/↓ or j/k", "Scroll one line"),
+                ("PgUp/PgDn", "Scroll one page"),
+                ("Ctrl+b/f", "Scroll one page (vi-style)"),
+                ("Esc/q", "Exit scroll mode"),
+                ("Ctrl+S", "Exit scroll mode"),
+            ],
+        ),
         (
             "Copy Mode",
             vec![
