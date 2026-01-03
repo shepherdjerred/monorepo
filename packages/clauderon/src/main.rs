@@ -209,7 +209,7 @@ async fn main() -> anyhow::Result<()> {
                 })
                 .await?;
 
-            println!("Created session: {}", &session.name);
+            println!("Created session: {name}", name = &session.name);
 
             if let Some(warnings) = warnings {
                 for warning in warnings {

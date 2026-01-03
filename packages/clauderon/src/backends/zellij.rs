@@ -52,7 +52,7 @@ impl ZellijBackend {
                     || arg.contains('&')
                     || arg.contains('|')
                 {
-                    format!("'{}'", arg.replace('\'', "'\\''"))
+                    format!("'{escaped}'", escaped = arg.replace('\'', "'\\''"))
                 } else {
                     arg.clone()
                 }

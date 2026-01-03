@@ -217,7 +217,11 @@ impl ExecutionBackend for MockExecutionBackend {
             anyhow::bail!("{msg}");
         }
 
-        let session_name = format!("{}-{}", self.name_prefix, name);
+        let session_name = format!(
+            "{name_prefix}-{name}",
+            name_prefix = self.name_prefix,
+            name = name
+        );
         self.sessions.write().await.insert(session_name.clone());
         Ok(session_name)
     }

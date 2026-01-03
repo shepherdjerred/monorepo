@@ -816,7 +816,7 @@ impl App {
             self.progress_step = None;
 
             // Build status message, including any warnings
-            let mut status = format!("Created session {}", session.name);
+            let mut status = format!("Created session {name}", name = session.name);
             if let Some(warns) = warnings {
                 for warn in warns {
                     status.push_str(&format!(" (Warning: {warn})"));
