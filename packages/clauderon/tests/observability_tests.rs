@@ -54,7 +54,11 @@ fn test_operation_context_elapsed() {
     std::thread::sleep(std::time::Duration::from_millis(10));
 
     let elapsed = ctx.elapsed_ms();
-    assert!(elapsed >= 10, "Expected at least 10ms elapsed, got {}", elapsed);
+    assert!(
+        elapsed >= 10,
+        "Expected at least 10ms elapsed, got {}",
+        elapsed
+    );
 }
 
 #[test]

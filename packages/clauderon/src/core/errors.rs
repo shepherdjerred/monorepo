@@ -62,7 +62,9 @@ pub enum SessionError {
     InvalidRepoPath { path: String, reason: String },
 
     /// Session is in invalid state for operation.
-    #[error("Session {session_id} is in invalid state for operation '{operation}': current state is {current_state:?}")]
+    #[error(
+        "Session {session_id} is in invalid state for operation '{operation}': current state is {current_state:?}"
+    )]
     InvalidState {
         session_id: Uuid,
         operation: String,

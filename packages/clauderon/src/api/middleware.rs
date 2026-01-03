@@ -1,12 +1,6 @@
 //! HTTP middleware for API requests.
 
-use axum::{
-    body::Body,
-    extract::Request,
-    http::HeaderValue,
-    middleware::Next,
-    response::Response,
-};
+use axum::{body::Body, extract::Request, http::HeaderValue, middleware::Next, response::Response};
 use uuid::Uuid;
 
 use crate::observability::CorrelationId;
@@ -63,12 +57,12 @@ pub async fn correlation_id_middleware(mut request: Request, next: Next) -> Resp
 mod tests {
     use super::*;
     use axum::{
+        Router,
         body::Body,
         http::{Request, StatusCode},
         middleware,
         response::IntoResponse,
         routing::get,
-        Router,
     };
     use tower::ServiceExt;
 
