@@ -16,7 +16,13 @@ export default tseslint.config(
   {
     languageOptions: {
       parserOptions: {
-        projectService: true,
+        projectService: {
+          allowDefaultProject: [
+            "src/ClauderonClient.test.ts",
+            "src/ConsoleClient.test.ts",
+            "src/EventsClient.test.ts",
+          ],
+        },
         tsconfigRootDir: import.meta.dirname,
       },
     },
@@ -39,6 +45,16 @@ export default tseslint.config(
           caughtErrorsIgnorePattern: "^_",
         },
       ],
+    },
+  },
+  {
+    files: ["**/*.test.ts"],
+    rules: {
+      "@typescript-eslint/no-empty-function": "off",
+      "@typescript-eslint/no-non-null-assertion": "off",
+      "@typescript-eslint/require-await": "off",
+      "@typescript-eslint/await-thenable": "off",
+      "@typescript-eslint/no-confusing-void-expression": "off",
     },
   },
 );

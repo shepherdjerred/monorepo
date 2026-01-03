@@ -143,7 +143,7 @@ describe("EventsClient", () => {
 
     test("handles disconnect when not connected", () => {
       const client = new EventsClient();
-      expect(() => client.disconnect()).not.toThrow();
+      expect(() => { client.disconnect(); }).not.toThrow();
     });
 
     test("prevents auto-reconnect after intentional disconnect", async () => {
