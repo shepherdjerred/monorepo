@@ -436,6 +436,8 @@ async fn test_proxy_port_persists_in_database() {
         // Manually create and update a session to set proxy_port
         let mut session = clauderon::core::Session::new(clauderon::core::SessionConfig {
             name: "proxy-port-test-abc123".to_string(),
+            title: None,
+            description: None,
             repo_path: "/tmp/repo".into(),
             worktree_path: "/tmp/worktree".into(),
             branch_name: "test-branch".to_string(),
@@ -469,6 +471,8 @@ async fn test_proxy_port_persists_in_database() {
             .get_session(
                 clauderon::core::Session::new(clauderon::core::SessionConfig {
                     name: session_name.clone(),
+                    title: None,
+                    description: None,
                     repo_path: "/tmp".into(),
                     worktree_path: "/tmp".into(),
                     branch_name: "test".to_string(),

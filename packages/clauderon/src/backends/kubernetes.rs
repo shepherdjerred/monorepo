@@ -822,7 +822,7 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
             Volume {
                 name: "claude-config".to_string(),
                 config_map: Some(k8s_openapi::api::core::v1::ConfigMapVolumeSource {
-                    name: Some(format!("{pod_name}-config")),
+                    name: format!("{pod_name}-config"),
                     ..Default::default()
                 }),
                 ..Default::default()
@@ -835,7 +835,7 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
                 volumes.push(Volume {
                     name: "proxy-ca".to_string(),
                     config_map: Some(k8s_openapi::api::core::v1::ConfigMapVolumeSource {
-                        name: Some("clauderon-proxy-ca".to_string()),
+                        name: "clauderon-proxy-ca".to_string(),
                         ..Default::default()
                     }),
                     ..Default::default()
@@ -861,7 +861,7 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
             if let Some(ref host_ip) = self.config.host_gateway_ip {
                 Some(vec![HostAlias {
                     hostnames: Some(vec!["host-gateway".to_string()]),
-                    ip: Some(host_ip.clone()),
+                    ip: host_ip.clone(),
                 }])
             } else {
                 tracing::warn!("proxy_mode is HostGateway but host_gateway_ip is not set");
