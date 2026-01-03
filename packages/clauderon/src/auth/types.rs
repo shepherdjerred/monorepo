@@ -48,6 +48,7 @@ pub struct RegistrationStartRequest {
 #[typeshare]
 pub struct RegistrationStartResponse {
     pub challenge_id: String,
+    #[typeshare(typescript(type = "any"))]
     pub options: serde_json::Value, // PublicKeyCredentialCreationOptions
 }
 
@@ -57,6 +58,7 @@ pub struct RegistrationStartResponse {
 pub struct RegistrationFinishRequest {
     pub username: String,
     pub challenge_id: String,
+    #[typeshare(typescript(type = "any"))]
     pub credential: serde_json::Value, // PublicKeyCredential
     pub device_name: Option<String>,
 }
@@ -80,6 +82,7 @@ pub struct LoginStartRequest {
 #[typeshare]
 pub struct LoginStartResponse {
     pub challenge_id: String,
+    #[typeshare(typescript(type = "any"))]
     pub options: serde_json::Value, // PublicKeyCredentialRequestOptions
 }
 
@@ -89,6 +92,7 @@ pub struct LoginStartResponse {
 pub struct LoginFinishRequest {
     pub username: String,
     pub challenge_id: String,
+    #[typeshare(typescript(type = "any"))]
     pub credential: serde_json::Value, // PublicKeyCredential
 }
 
