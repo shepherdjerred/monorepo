@@ -368,11 +368,11 @@ impl SessionManager {
         let _permit = self.creation_semaphore.acquire().await.unwrap();
 
         // Helper to update progress
-        let update_progress = |step: u32, message: &str| async move {
+        let update_progress = |step: u32, message: String| async move {
             let progress = crate::api::protocol::ProgressStep {
                 step,
                 total: 5,
-                message: message.to_string(),
+                message,
             };
 
             // Update session progress
@@ -397,7 +397,7 @@ impl SessionManager {
 
         // Execute creation steps
         let result: anyhow::Result<()> = async {
-            update_progress(1, "Creating git worktree").await;
+            update_progress(1, "Creating git worktree".to_string()).await;
             let repo_path_buf = PathBuf::from(&repo_path);
             let _worktree_warning = self
                 .git
@@ -417,7 +417,7 @@ impl SessionManager {
                 }
             }
 
-            update_progress(2, "Setting up session proxy").await;
+            update_progress(2, "Setting up session proxy".to_string()).await;
             // Create per-session proxy for Docker backends
             let proxy_port = if backend == BackendType::Docker {
                 if let Some(ref proxy_manager) = self.proxy_manager {
@@ -460,7 +460,7 @@ impl SessionManager {
                 None
             };
 
-            update_progress(3, "Preparing agent environment").await;
+            update_progress(3, "Preparing agent environment".to_string()).await;
             // Prepend plan mode instruction if enabled
             let transformed_prompt = if plan_mode {
                 format!(
@@ -471,7 +471,7 @@ impl SessionManager {
                 initial_prompt.clone()
             };
 
-            update_progress(4, "Starting backend resource").await;
+            update_progress(4, "Starting backend resource".to_string()).await;
             // Create backend resource
             let create_options = crate::backends::CreateOptions {
                 print_mode,
@@ -515,7 +515,7 @@ impl SessionManager {
                 }
             };
 
-            update_progress(5, "Finalizing session").await;
+            update_progress(5, "Finalizing session".to_string()).await;
 
             // Update session with backend ID and Running status
             {
@@ -1002,11 +1002,11 @@ impl SessionManager {
         let _permit = self.deletion_semaphore.acquire().await.unwrap();
 
         // Helper to update progress
-        let update_progress = |step: u32, message: &str| async move {
+        let update_progress = |step: u32, message: String| async move {
             let progress = crate::api::protocol::ProgressStep {
                 step,
                 total: 4,
-                message: message.to_string(),
+                message,
             };
 
             if let Some(session) = self
@@ -1045,7 +1045,7 @@ impl SessionManager {
 
         // Execute deletion steps
         let result: anyhow::Result<()> = async {
-            update_progress(1, "Destroying backend resources").await;
+            update_progress(1, "Destroying backend resources".to_string()).await;
             // Delete backend resources
             if let Some(ref backend_id) = backend_id {
                 match backend {
@@ -1061,7 +1061,7 @@ impl SessionManager {
                 }
             }
 
-            update_progress(2, "Removing session proxy").await;
+            update_progress(2, "Removing session proxy".to_string()).await;
             // Destroy per-session proxy if it exists
             if backend == BackendType::Docker {
                 if let Some(ref proxy_manager) = self.proxy_manager {
@@ -1076,11 +1076,11 @@ impl SessionManager {
                 }
             }
 
-            update_progress(3, "Removing git worktree").await;
+            update_progress(3, "Removing git worktree".to_string()).await;
             // Delete git worktree
             let _ = self.git.delete_worktree(&repo_path, &worktree_path).await;
 
-            update_progress(4, "Cleaning up database").await;
+            update_progress(4, "Cleaning up database".to_string()).await;
             // Record deletion event
             let event = Event::new(session_id, EventType::SessionDeleted { reason: None });
             self.store.record_event(&event).await?;
