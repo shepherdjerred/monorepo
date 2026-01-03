@@ -5,10 +5,11 @@ const SETTINGS_JSON_CONTENT: &str = r#"{
   "hooks": {
     "UserPromptSubmit": [
       {
+        "matcher": "*",
         "hooks": [
           {
             "type": "command",
-            "command": ["bash", "-c", "/workspace/.clauderon/hooks/send_status.sh UserPromptSubmit"]
+            "command": "bash -c '/workspace/.clauderon/hooks/send_status.sh UserPromptSubmit'"
           }
         ]
       }
@@ -19,7 +20,7 @@ const SETTINGS_JSON_CONTENT: &str = r#"{
         "hooks": [
           {
             "type": "command",
-            "command": ["bash", "-c", "/workspace/.clauderon/hooks/send_status.sh PreToolUse"]
+            "command": "bash -c '/workspace/.clauderon/hooks/send_status.sh PreToolUse'"
           }
         ]
       }
@@ -30,17 +31,18 @@ const SETTINGS_JSON_CONTENT: &str = r#"{
         "hooks": [
           {
             "type": "command",
-            "command": ["bash", "-c", "/workspace/.clauderon/hooks/send_status.sh PermissionRequest"]
+            "command": "bash -c '/workspace/.clauderon/hooks/send_status.sh PermissionRequest'"
           }
         ]
       }
     ],
     "Stop": [
       {
+        "matcher": "*",
         "hooks": [
           {
             "type": "command",
-            "command": ["bash", "-c", "/workspace/.clauderon/hooks/send_status.sh Stop"]
+            "command": "bash -c '/workspace/.clauderon/hooks/send_status.sh Stop'"
           }
         ]
       }
@@ -53,7 +55,7 @@ const SETTINGS_JSON_CONTENT: &str = r#"{
         "hooks": [
           {
             "type": "command",
-            "command": ["bash", "-c", "/workspace/.clauderon/hooks/send_status.sh IdlePrompt"]
+            "command": "bash -c '/workspace/.clauderon/hooks/send_status.sh IdlePrompt'"
           }
         ]
       }
