@@ -948,7 +948,7 @@ fi"#,
                                 match phase.as_str() {
                                     "Running" => return Ok(()),
                                     "Failed" | "Unknown" => {
-                                        let events = self.get_pod_events(pod_name).await?;
+                                        let events = self.get_pod_events(pod_name)?;
                                         anyhow::bail!(
                                             "Pod failed to start (phase: {phase})\nEvents:\n{}",
                                             events.join("\n")
@@ -974,7 +974,7 @@ fi"#,
             Ok(Ok(())) => Ok(()),
             Ok(Err(e)) => Err(e),
             Err(_) => {
-                let events = self.get_pod_events(pod_name).await?;
+                let events = self.get_pod_events(pod_name)?;
                 anyhow::bail!(
                     "Timeout waiting for pod to start\nEvents:\n{}",
                     events.join("\n")
