@@ -132,21 +132,26 @@ async fn call_claude_cli(repo_path: &str, initial_prompt: &str) -> anyhow::Resul
     let json: serde_json::Value = serde_json::from_str(&stdout)
         .map_err(|e| anyhow::anyhow!("Failed to parse JSON output: {}", e))?;
 
+    // Extract the structured_output field (CLI returns wrapper object)
+    let structured_output = json.get("structured_output").ok_or_else(|| {
+        anyhow::anyhow!("Missing 'structured_output' field in Claude CLI response")
+    })?;
+
     // Lenient parsing with fallbacks - only branch_name is required
-    let title = json
+    let title = structured_output
         .get("title")
         .and_then(|v| v.as_str())
         .unwrap_or("New Session")
         .to_string();
 
-    let description = json
+    let description = structured_output
         .get("description")
         .and_then(|v| v.as_str())
         .unwrap_or("AI coding session")
         .to_string();
 
     // branch_name is REQUIRED (only field we can't have a good fallback for)
-    let branch_name_raw = json
+    let branch_name_raw = structured_output
         .get("branch_name")
         .and_then(|v| v.as_str())
         .ok_or_else(|| anyhow::anyhow!("Missing 'branch_name' field (required)"))?;
@@ -222,6 +227,43 @@ mod tests {
         // This test will use fallback if claude CLI is not in PATH
         let name = generate_session_name_ai("/tmp/test-repo", "Test prompt").await;
         // Should return "session" or a valid AI-generated name
-        assert!(!name.is_empty());
+        assert!(!name.branch_name.is_empty());
+    }
+
+    #[test]
+    fn test_parse_structured_output_format() {
+        // Test that we correctly parse the nested structured_output format
+        let json_response = r#"{
+            "type": "result",
+            "subtype": "success",
+            "is_error": false,
+            "structured_output": {
+                "title": "Test Session Title",
+                "description": "Test session description",
+                "branch_name": "test-branch"
+            },
+            "session_id": "test-123",
+            "usage": {}
+        }"#;
+
+        let json: serde_json::Value = serde_json::from_str(json_response).unwrap();
+        let structured_output = json.get("structured_output").unwrap();
+
+        let title = structured_output
+            .get("title")
+            .and_then(|v| v.as_str())
+            .unwrap();
+        let description = structured_output
+            .get("description")
+            .and_then(|v| v.as_str())
+            .unwrap();
+        let branch_name = structured_output
+            .get("branch_name")
+            .and_then(|v| v.as_str())
+            .unwrap();
+
+        assert_eq!(title, "Test Session Title");
+        assert_eq!(description, "Test session description");
+        assert_eq!(branch_name, "test-branch");
     }
 }

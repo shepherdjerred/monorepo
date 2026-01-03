@@ -15,6 +15,7 @@ cat > "$CLAUDE_SETTINGS" <<'EOF'
   "hooks": {
     "UserPromptSubmit": [
       {
+        "matcher": "*",
         "hooks": [
           {
             "type": "command",
@@ -47,6 +48,7 @@ cat > "$CLAUDE_SETTINGS" <<'EOF'
     ],
     "Stop": [
       {
+        "matcher": "*",
         "hooks": [
           {
             "type": "command",
@@ -57,9 +59,7 @@ cat > "$CLAUDE_SETTINGS" <<'EOF'
     ],
     "Notification": [
       {
-        "matcher": {
-          "notification_type": "idle_prompt"
-        },
+        "matcher": "*",
         "hooks": [
           {
             "type": "command",

@@ -7,6 +7,6 @@ pub mod random;
 
 pub use daemon::{ensure_daemon_running, is_daemon_running, wait_for_daemon};
 pub use directory::{expand_tilde, normalize_path, read_directories};
-pub use name_generator::{generate_session_name_ai, SessionMetadata};
+pub use name_generator::{SessionMetadata, generate_session_name_ai};
 pub use paths::{database_path, socket_path, worktree_path};
 pub use random::generate_session_name;
