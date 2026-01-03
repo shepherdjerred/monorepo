@@ -1,0 +1,1 @@
+../../../../web/shared/src/generated/index.ts
