@@ -8,3 +8,6 @@
 // Export all types from the generated directory
 // TypeShare will create index.ts in the generated folder
 export * from './generated/index.js';
+
+// Export auth types (temporary manual types until Rust builds)
+export * from './auth-types.js';

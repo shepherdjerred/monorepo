@@ -276,11 +276,64 @@ async fn run_http_server(
     use crate::api::http_server::create_router;
     use crate::api::ws_console::ws_console_handler;
     use crate::api::ws_events::ws_events_handler;
+    use crate::auth::{AuthState, SessionStore, WebAuthnHandler};
+
+    // Read bind address from environment (default: localhost only)
+    let bind_addr = std::env::var("CLAUDERON_BIND_ADDR").unwrap_or_else(|_| "127.0.0.1".to_string());
+
+    // Determine if authentication is required (only for external binding)
+    let requires_auth = bind_addr == "0.0.0.0";
+
+    tracing::info!(
+        "HTTP server will bind to {} (authentication {})",
+        bind_addr,
+        if requires_auth { "REQUIRED" } else { "NOT required" }
+    );
+
+    // Initialize auth state if needed
+    let auth_state = if requires_auth {
+        // Read WebAuthn configuration from environment
+        let rp_origin = std::env::var("CLAUDERON_ORIGIN")
+            .unwrap_or_else(|_| format!("http://{}:{}", bind_addr, port));
+        let rp_id = std::env::var("CLAUDERON_RP_ID").unwrap_or_else(|_| "localhost".to_string());
+
+        tracing::info!(
+            "WebAuthn configured with origin: {}, RP ID: {}",
+            rp_origin,
+            rp_id
+        );
+
+        // Initialize WebAuthn handler
+        let webauthn = WebAuthnHandler::new(&rp_origin, &rp_id)?;
+
+        // Get SQLite pool from manager's store
+        // Note: This is a bit of a hack - we need access to the pool
+        // In a real implementation, we'd pass the pool more cleanly
+        let db_path = crate::utils::paths::database_path();
+        let pool_options =
+            sqlx::sqlite::SqliteConnectOptions::from_str(&format!("sqlite:{}", db_path.display()))?
+                .create_if_missing(true);
+        let pool = sqlx::SqlitePool::connect_with(pool_options).await?;
+
+        // Create session store
+        let session_store = SessionStore::new(pool.clone());
+
+        Some(AuthState {
+            pool,
+            webauthn,
+            session_store,
+            requires_auth,
+        })
+    } else {
+        tracing::info!("Authentication disabled (binding to localhost only)");
+        None
+    };
 
     // Create state with the provided event broadcaster
     let state = crate::api::http_server::AppState {
         session_manager: Arc::clone(&manager),
         event_broadcaster,
+        auth_state,
     };
 
     // Create the HTTP router with all routes and state
@@ -292,8 +345,8 @@ async fn run_http_server(
         )
         .with_state(state);
 
-    // Bind to localhost only for security - prevents remote code execution
-    let addr = std::net::SocketAddr::from(([127, 0, 0, 1], port));
+    // Parse bind address
+    let addr = format!("{}:{}", bind_addr, port).parse()?;
     let listener = tokio::net::TcpListener::bind(addr).await?;
 
     tracing::info!("HTTP server listening on {}", addr);

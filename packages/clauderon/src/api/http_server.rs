@@ -1,12 +1,14 @@
 use crate::api::protocol::{CreateSessionRequest, Event};
 use crate::api::static_files::serve_static;
 use crate::api::ws_events::{EventBroadcaster, broadcast_event};
+use crate::auth::{self, AuthState};
 use crate::core::manager::SessionManager;
 use crate::core::session::AccessMode;
 use axum::{
     Json, Router,
     extract::{Path, Query, State},
     http::StatusCode,
+    middleware::from_fn_with_state,
     response::{IntoResponse, Response},
     routing::{delete, get, post},
 };
@@ -20,6 +22,7 @@ use tower_http::cors::{Any, CorsLayer};
 pub struct AppState {
     pub session_manager: Arc<SessionManager>,
     pub event_broadcaster: EventBroadcaster,
+    pub auth_state: Option<AuthState>,
 }
 
 /// Create the HTTP router with all endpoints (without state)
@@ -32,7 +35,14 @@ pub fn create_router() -> Router<AppState> {
         .allow_headers(Any);
 
     Router::new()
-        // Session endpoints
+        // Auth endpoints (always public)
+        .route("/api/auth/status", get(auth_status_wrapper))
+        .route("/api/auth/register/start", post(register_start_wrapper))
+        .route("/api/auth/register/finish", post(register_finish_wrapper))
+        .route("/api/auth/login/start", post(login_start_wrapper))
+        .route("/api/auth/login/finish", post(login_finish_wrapper))
+        .route("/api/auth/logout", post(logout_wrapper))
+        // Session endpoints (protected by auth check in handlers when requires_auth is true)
         .route("/api/sessions", get(list_sessions))
         .route("/api/sessions", post(create_session))
         .route("/api/sessions/:id", get(get_session))
@@ -48,6 +58,81 @@ pub fn create_router() -> Router<AppState> {
         // Serve static files for all non-API routes (SPA fallback)
         .fallback(serve_static)
         .layer(cors)
+}
+
+// Wrapper handlers to extract AuthState from AppState
+async fn auth_status_wrapper(
+    State(state): State<AppState>,
+    jar: axum_extra::extract::cookie::CookieJar,
+) -> Result<axum::Json<crate::auth::types::AuthStatus>, axum::http::StatusCode> {
+    let Some(auth_state) = state.auth_state else {
+        return Err(axum::http::StatusCode::NOT_FOUND);
+    };
+    auth::auth_status(State(auth_state), jar)
+        .await
+        .map_err(|_| axum::http::StatusCode::INTERNAL_SERVER_ERROR)
+}
+
+async fn register_start_wrapper(
+    State(state): State<AppState>,
+    Json(request): Json<crate::auth::types::RegistrationStartRequest>,
+) -> Result<axum::Json<crate::auth::types::RegistrationStartResponse>, axum::http::StatusCode> {
+    let Some(auth_state) = state.auth_state else {
+        return Err(axum::http::StatusCode::NOT_FOUND);
+    };
+    auth::register_start(State(auth_state), Json(request))
+        .await
+        .map_err(|_| axum::http::StatusCode::INTERNAL_SERVER_ERROR)
+}
+
+async fn register_finish_wrapper(
+    State(state): State<AppState>,
+    jar: axum_extra::extract::cookie::CookieJar,
+    Json(request): Json<crate::auth::types::RegistrationFinishRequest>,
+) -> Result<(axum_extra::extract::cookie::CookieJar, axum::Json<crate::auth::types::RegistrationFinishResponse>), axum::http::StatusCode> {
+    let Some(auth_state) = state.auth_state else {
+        return Err(axum::http::StatusCode::NOT_FOUND);
+    };
+    auth::register_finish(State(auth_state), jar, Json(request))
+        .await
+        .map_err(|_| axum::http::StatusCode::INTERNAL_SERVER_ERROR)
+}
+
+async fn login_start_wrapper(
+    State(state): State<AppState>,
+    Json(request): Json<crate::auth::types::LoginStartRequest>,
+) -> Result<axum::Json<crate::auth::types::LoginStartResponse>, axum::http::StatusCode> {
+    let Some(auth_state) = state.auth_state else {
+        return Err(axum::http::StatusCode::NOT_FOUND);
+    };
+    auth::login_start(State(auth_state), Json(request))
+        .await
+        .map_err(|_| axum::http::StatusCode::INTERNAL_SERVER_ERROR)
+}
+
+async fn login_finish_wrapper(
+    State(state): State<AppState>,
+    jar: axum_extra::extract::cookie::CookieJar,
+    Json(request): Json<crate::auth::types::LoginFinishRequest>,
+) -> Result<(axum_extra::extract::cookie::CookieJar, axum::Json<crate::auth::types::LoginFinishResponse>), axum::http::StatusCode> {
+    let Some(auth_state) = state.auth_state else {
+        return Err(axum::http::StatusCode::NOT_FOUND);
+    };
+    auth::login_finish(State(auth_state), jar, Json(request))
+        .await
+        .map_err(|_| axum::http::StatusCode::INTERNAL_SERVER_ERROR)
+}
+
+async fn logout_wrapper(
+    State(state): State<AppState>,
+    jar: axum_extra::extract::cookie::CookieJar,
+) -> Result<(axum_extra::extract::cookie::CookieJar, axum::http::StatusCode), axum::http::StatusCode> {
+    let Some(auth_state) = state.auth_state else {
+        return Err(axum::http::StatusCode::NOT_FOUND);
+    };
+    auth::logout(State(auth_state), jar)
+        .await
+        .map_err(|_| axum::http::StatusCode::INTERNAL_SERVER_ERROR)
 }
 
 /// List all sessions

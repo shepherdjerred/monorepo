@@ -91,11 +91,18 @@ time = "0.3"
 
 # HTTP/WebSocket server
 axum = { version = "0.8", features = ["ws"] }
+axum-extra = { version = "0.10", features = ["cookie"] }
 tower = "0.5"
 tower-http = { version = "0.6", features = ["cors", "trace"] }
 hyper = { version = "1", features = ["full"] }
 hyper-util = { version = "0.1", features = ["tokio", "server"] }
 http-body-util = "0.1"
+
+# Authentication
+webauthn-rs = "0.5"
+webauthn-rs-proto = "0.5"
+tower-sessions = { version = "0.13", features = ["sqlite-store"] }
+tower-sessions-core = "0.13"
 
 [dev-dependencies]
 cargo-husky = { version = "1", features = ["precommit-hook", "run-cargo-fmt", "run-cargo-clippy"] }

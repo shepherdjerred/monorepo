@@ -83,6 +83,10 @@ impl SqliteStore {
             Self::migrate_to_v5(pool).await?;
         }
 
+        if current_version < 6 {
+            Self::migrate_to_v6(pool).await?;
+        }
+
         Ok(())
     }
 
@@ -348,6 +352,130 @@ impl SqliteStore {
             .await?;
 
         tracing::info!("Migration v5 complete");
+        Ok(())
+    }
+
+    /// Migration v6: Add passkey authentication tables
+    async fn migrate_to_v6(pool: &SqlitePool) -> anyhow::Result<()> {
+        tracing::info!("Applying migration v6: Passkey authentication");
+
+        // Create users table
+        sqlx::query(
+            r"
+            CREATE TABLE IF NOT EXISTS users (
+                id TEXT PRIMARY KEY,
+                username TEXT NOT NULL UNIQUE,
+                display_name TEXT,
+                created_at TEXT NOT NULL
+            )
+            ",
+        )
+        .execute(pool)
+        .await?;
+
+        // Create passkeys table
+        sqlx::query(
+            r"
+            CREATE TABLE IF NOT EXISTS passkeys (
+                id TEXT PRIMARY KEY,
+                user_id TEXT NOT NULL,
+                credential_id BLOB NOT NULL UNIQUE,
+                public_key BLOB NOT NULL,
+                counter INTEGER NOT NULL,
+                transports TEXT NOT NULL,
+                device_name TEXT,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+            ",
+        )
+        .execute(pool)
+        .await?;
+
+        // Create index on passkeys.user_id
+        sqlx::query(
+            r"
+            CREATE INDEX IF NOT EXISTS idx_passkeys_user_id ON passkeys(user_id)
+            ",
+        )
+        .execute(pool)
+        .await?;
+
+        // Create auth_sessions table
+        sqlx::query(
+            r"
+            CREATE TABLE IF NOT EXISTS auth_sessions (
+                id TEXT PRIMARY KEY,
+                user_id TEXT NOT NULL,
+                expires_at TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+            ",
+        )
+        .execute(pool)
+        .await?;
+
+        // Create index on auth_sessions.user_id
+        sqlx::query(
+            r"
+            CREATE INDEX IF NOT EXISTS idx_auth_sessions_user_id ON auth_sessions(user_id)
+            ",
+        )
+        .execute(pool)
+        .await?;
+
+        // Create index on auth_sessions.expires_at for cleanup
+        sqlx::query(
+            r"
+            CREATE INDEX IF NOT EXISTS idx_auth_sessions_expires_at ON auth_sessions(expires_at)
+            ",
+        )
+        .execute(pool)
+        .await?;
+
+        // Create webauthn_challenges table
+        sqlx::query(
+            r"
+            CREATE TABLE IF NOT EXISTS webauthn_challenges (
+                id TEXT PRIMARY KEY,
+                username TEXT NOT NULL,
+                challenge_json TEXT NOT NULL,
+                expires_at TEXT NOT NULL,
+                created_at TEXT NOT NULL
+            )
+            ",
+        )
+        .execute(pool)
+        .await?;
+
+        // Create index on webauthn_challenges.username
+        sqlx::query(
+            r"
+            CREATE INDEX IF NOT EXISTS idx_webauthn_challenges_username ON webauthn_challenges(username)
+            ",
+        )
+        .execute(pool)
+        .await?;
+
+        // Create index on webauthn_challenges.expires_at for cleanup
+        sqlx::query(
+            r"
+            CREATE INDEX IF NOT EXISTS idx_webauthn_challenges_expires_at ON webauthn_challenges(expires_at)
+            ",
+        )
+        .execute(pool)
+        .await?;
+
+        // Record migration
+        let now = Utc::now();
+        sqlx::query("INSERT OR REPLACE INTO schema_version (version, applied_at) VALUES (?, ?)")
+            .bind(6)
+            .bind(now.to_rfc3339())
+            .execute(pool)
+            .await?;
+
+        tracing::info!("Migration v6 complete");
         Ok(())
     }
 }
