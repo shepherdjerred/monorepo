@@ -136,6 +136,7 @@ impl CIPoller {
     }
 
     /// Check for merge conflicts on all sessions with PRs
+    ///
     async fn check_conflicts(&self) {
         let sessions = self.manager.list_sessions().await;
 
@@ -180,7 +181,7 @@ impl CIPoller {
         // GitHub mergeable values: "MERGEABLE", "CONFLICTING", "UNKNOWN"
         let has_conflict = match data["mergeable"].as_str() {
             Some("CONFLICTING") => true,
-            Some("MERGEABLE") | Some("UNKNOWN") | None => false,
+            Some("MERGEABLE" | "UNKNOWN") | None => false,
             _ => false,
         };
 
@@ -250,13 +251,13 @@ impl CIPoller {
         } else if checks.iter().any(|c| {
             matches!(
                 c["state"].as_str(),
-                Some("FAILURE") | Some("CANCELLED") | Some("ERROR")
+                Some("FAILURE" | "CANCELLED" | "ERROR")
             )
         }) {
             CheckStatus::Failing
         } else if checks
             .iter()
-            .all(|c| matches!(c["state"].as_str(), Some("SUCCESS") | Some("SKIPPED")))
+            .all(|c| matches!(c["state"].as_str(), Some("SUCCESS" | "SKIPPED")))
         {
             CheckStatus::Passing
         } else {
