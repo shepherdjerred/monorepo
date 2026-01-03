@@ -95,7 +95,7 @@ export function Console({ sessionId, sessionName, onClose, onSwitchToChat }: Con
     initializingRef.current = true;
     let cleanup: (() => void) | undefined;
 
-    (async () => {
+    void (async () => {
       const container = terminalRef.current;
       if (!container) return;
 

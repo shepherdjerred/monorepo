@@ -90,9 +90,10 @@ pub fn cleanup_temp_file(path: &PathBuf) {
 mod tests {
     use super::*;
 
-    // NOTE: Tests for environment variable reading are removed because they require
-    // unsafe code (std::env::set_var/remove_var) which is forbidden by -F unsafe-code.
-    // The get_editor() function is simple enough that manual testing is sufficient.
+    // Note: Tests for get_editor() with environment variables are skipped because
+    // std::env::set_var/remove_var are now unsafe in Rust 1.85+ and this crate
+    // has unsafe_code = "forbid". The get_editor() function itself is simple
+    // enough that the implementation is self-documenting.
 
     #[test]
     fn test_temp_file_roundtrip() {

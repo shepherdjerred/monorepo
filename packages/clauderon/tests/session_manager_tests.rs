@@ -29,6 +29,7 @@ async fn create_test_manager() -> (
     let git = Arc::new(MockGitBackend::new());
     let zellij = Arc::new(MockExecutionBackend::zellij());
     let docker = Arc::new(MockExecutionBackend::docker());
+    let kubernetes = Arc::new(MockExecutionBackend::kubernetes());
 
     // Helper functions to coerce Arc<Concrete> to Arc<dyn Trait>
     // The coercion happens at the function return site
@@ -44,6 +45,7 @@ async fn create_test_manager() -> (
         to_git_ops(Arc::clone(&git)),
         to_exec_backend(Arc::clone(&zellij)),
         to_exec_backend(Arc::clone(&docker)),
+        to_exec_backend(Arc::clone(&kubernetes)),
     )
     .await
     .expect("Failed to create manager");
@@ -59,7 +61,6 @@ async fn test_create_session_zellij_success() {
 
     let (session, _warnings) = manager
         .create_session(
-            "test-session".to_string(),
             "/tmp/fake-repo".to_string(),
             "Test prompt".to_string(),
             BackendType::Zellij,
@@ -73,8 +74,8 @@ async fn test_create_session_zellij_success() {
         .await
         .expect("Failed to create session");
 
-    // Session should have a name with suffix
-    assert!(session.name.starts_with("test-session-"));
+    // Session should have a generated name
+    assert!(!session.name.is_empty());
 
     // Session should be running
     assert_eq!(session.status, SessionStatus::Running);
@@ -102,7 +103,6 @@ async fn test_create_session_docker_success() {
 
     let (session, _warnings) = manager
         .create_session(
-            "docker-test".to_string(),
             "/tmp/fake-repo".to_string(),
             "Docker prompt".to_string(),
             BackendType::Docker,
@@ -138,7 +138,6 @@ async fn test_create_session_git_fails() {
 
     let result = manager
         .create_session(
-            "fail-test".to_string(),
             "/tmp/fake-repo".to_string(),
             "Test prompt".to_string(),
             BackendType::Zellij,
@@ -172,7 +171,6 @@ async fn test_create_session_backend_fails() {
 
     let result = manager
         .create_session(
-            "fail-test".to_string(),
             "/tmp/fake-repo".to_string(),
             "Test prompt".to_string(),
             BackendType::Zellij,
@@ -206,7 +204,6 @@ async fn test_get_session_by_name() {
 
     let (created, _) = manager
         .create_session(
-            "named-session".to_string(),
             "/tmp/repo".to_string(),
             "prompt".to_string(),
             BackendType::Zellij,
@@ -232,7 +229,6 @@ async fn test_get_session_by_uuid() {
 
     let (created, _) = manager
         .create_session(
-            "uuid-test".to_string(),
             "/tmp/repo".to_string(),
             "prompt".to_string(),
             BackendType::Zellij,
@@ -268,7 +264,6 @@ async fn test_delete_session_success() {
 
     let (session, _) = manager
         .create_session(
-            "to-delete".to_string(),
             "/tmp/repo".to_string(),
             "prompt".to_string(),
             BackendType::Zellij,
@@ -317,7 +312,6 @@ async fn test_archive_session_success() {
 
     let (session, _) = manager
         .create_session(
-            "to-archive".to_string(),
             "/tmp/repo".to_string(),
             "prompt".to_string(),
             BackendType::Zellij,
@@ -358,7 +352,6 @@ async fn test_get_attach_command_zellij() {
 
     let (session, _) = manager
         .create_session(
-            "attach-test".to_string(),
             "/tmp/repo".to_string(),
             "prompt".to_string(),
             BackendType::Zellij,
@@ -385,7 +378,6 @@ async fn test_get_attach_command_docker() {
 
     let (session, _) = manager
         .create_session(
-            "docker-attach".to_string(),
             "/tmp/repo".to_string(),
             "prompt".to_string(),
             BackendType::Docker,
@@ -422,7 +414,6 @@ async fn test_reconcile_healthy_session() {
 
     let (session, _) = manager
         .create_session(
-            "healthy".to_string(),
             "/tmp/repo".to_string(),
             "prompt".to_string(),
             BackendType::Zellij,
@@ -451,7 +442,6 @@ async fn test_reconcile_missing_backend() {
 
     let (session, _) = manager
         .create_session(
-            "missing-backend".to_string(),
             "/tmp/repo".to_string(),
             "prompt".to_string(),
             BackendType::Zellij,
@@ -489,10 +479,9 @@ async fn test_list_sessions_empty() {
 async fn test_list_sessions_multiple() {
     let (manager, _temp_dir, _git, _zellij, _docker) = create_test_manager().await;
 
-    // Create multiple sessions
+    // Create multiple sessions (names are AI-generated)
     let _ = manager
         .create_session(
-            "session-1".to_string(),
             "/tmp/repo".to_string(),
             "prompt 1".to_string(),
             BackendType::Zellij,
@@ -508,7 +497,6 @@ async fn test_list_sessions_multiple() {
 
     let _ = manager
         .create_session(
-            "session-2".to_string(),
             "/tmp/repo".to_string(),
             "prompt 2".to_string(),
             BackendType::Docker,
@@ -524,7 +512,6 @@ async fn test_list_sessions_multiple() {
 
     let _ = manager
         .create_session(
-            "session-3".to_string(),
             "/tmp/repo".to_string(),
             "prompt 3".to_string(),
             BackendType::Zellij,
@@ -548,10 +535,9 @@ async fn test_list_sessions_multiple() {
 async fn test_session_lifecycle() {
     let (manager, _temp_dir, _git, _zellij, _docker) = create_test_manager().await;
 
-    // Create session - should be Running
+    // Create session - should be Running (name is AI-generated)
     let (session, _) = manager
         .create_session(
-            "lifecycle".to_string(),
             "/tmp/repo".to_string(),
             "prompt".to_string(),
             BackendType::Zellij,

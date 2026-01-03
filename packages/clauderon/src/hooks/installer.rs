@@ -5,10 +5,11 @@ const SETTINGS_JSON_CONTENT: &str = r#"{
   "hooks": {
     "UserPromptSubmit": [
       {
+        "matcher": "*",
         "hooks": [
           {
             "type": "command",
-            "command": ["bash", "-c", "/workspace/.clauderon/hooks/send_status.sh UserPromptSubmit"]
+            "command": "bash -c '/workspace/.clauderon/hooks/send_status.sh UserPromptSubmit'"
           }
         ]
       }
@@ -19,7 +20,7 @@ const SETTINGS_JSON_CONTENT: &str = r#"{
         "hooks": [
           {
             "type": "command",
-            "command": ["bash", "-c", "/workspace/.clauderon/hooks/send_status.sh PreToolUse"]
+            "command": "bash -c '/workspace/.clauderon/hooks/send_status.sh PreToolUse'"
           }
         ]
       }
@@ -30,17 +31,18 @@ const SETTINGS_JSON_CONTENT: &str = r#"{
         "hooks": [
           {
             "type": "command",
-            "command": ["bash", "-c", "/workspace/.clauderon/hooks/send_status.sh PermissionRequest"]
+            "command": "bash -c '/workspace/.clauderon/hooks/send_status.sh PermissionRequest'"
           }
         ]
       }
     ],
     "Stop": [
       {
+        "matcher": "*",
         "hooks": [
           {
             "type": "command",
-            "command": ["bash", "-c", "/workspace/.clauderon/hooks/send_status.sh Stop"]
+            "command": "bash -c '/workspace/.clauderon/hooks/send_status.sh Stop'"
           }
         ]
       }
@@ -53,7 +55,7 @@ const SETTINGS_JSON_CONTENT: &str = r#"{
         "hooks": [
           {
             "type": "command",
-            "command": ["bash", "-c", "/workspace/.clauderon/hooks/send_status.sh IdlePrompt"]
+            "command": "bash -c '/workspace/.clauderon/hooks/send_status.sh IdlePrompt'"
           }
         ]
       }
@@ -182,7 +184,7 @@ pub async fn install_hooks_in_container(container_name: &str) -> Result<()> {
             "bash",
             "-c",
             &format!(
-                "cat > /workspace/.clauderon/hooks/send_status.sh << 'EOF'\n{}\nEOF",
+                "cat > /workspace/.clauderon/hooks/send_status.sh << 'OUTER_EOF'\n{}\nOUTER_EOF",
                 SEND_STATUS_SCRIPT
             ),
         ])

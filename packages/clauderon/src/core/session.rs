@@ -15,6 +15,12 @@ pub struct Session {
     /// Human-friendly name (user-provided + random suffix)
     pub name: String,
 
+    /// AI-generated title for display (optional, falls back to name)
+    pub title: Option<String>,
+
+    /// AI-generated description of the task (optional)
+    pub description: Option<String>,
+
     /// Current status of the session
     pub status: SessionStatus,
 
@@ -83,6 +89,10 @@ pub struct Session {
 pub struct SessionConfig {
     /// Human-friendly name
     pub name: String,
+    /// AI-generated title for display (optional)
+    pub title: Option<String>,
+    /// AI-generated description of the task (optional)
+    pub description: Option<String>,
     /// Path to the source repository
     pub repo_path: PathBuf,
     /// Path to the git worktree
@@ -109,6 +119,8 @@ impl Session {
         Self {
             id: Uuid::new_v4(),
             name: config.name,
+            title: config.title,
+            description: config.description,
             status: SessionStatus::Creating,
             backend: config.backend,
             agent: config.agent,

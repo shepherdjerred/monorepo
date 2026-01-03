@@ -140,6 +140,7 @@ const DOCKER_IMAGE: &str = "ghcr.io/shepherdjerred/dotfiles";
 /// to work. To enable sccache compilation caching, install it in the dotfiles image:
 ///   cargo install sccache
 /// or add it to the Dockerfile.
+
 /// Proxy configuration for Docker containers.
 #[derive(Debug, Clone, Default)]
 pub struct DockerProxyConfig {
@@ -921,8 +922,8 @@ mod tests {
             false, // print mode
             true,  // dangerous_skip_checks
             &[],   // no images
-            None,  // git user name
-            None,  // git user email
+            None,  // git_user_name
+            None,  // git_user_email
         )
         .expect("Failed to build args");
 
@@ -1041,8 +1042,8 @@ mod tests {
             false, // print mode
             true,  // dangerous_skip_checks
             &[],   // no images
-            None,  // git user name
-            None,  // git user email
+            None,  // git_user_name
+            None,  // git_user_email
         )
         .expect("Failed to build args");
 
@@ -1068,8 +1069,8 @@ mod tests {
             false, // print mode
             true,  // dangerous_skip_checks
             &[],   // no images
-            None,  // git user name
-            None,  // git user email
+            None,  // git_user_name
+            None,  // git_user_email
         )
         .expect("Failed to build args");
 
@@ -1111,8 +1112,8 @@ mod tests {
             false, // print mode
             true,  // dangerous_skip_checks
             &[],   // no images
-            None,  // git user name
-            None,  // git user email
+            None,  // git_user_name
+            None,  // git_user_email
         )
         .expect("Failed to build args");
 
@@ -1158,8 +1159,8 @@ mod tests {
             false, // print mode
             true,  // dangerous_skip_checks
             &[],   // no images
-            None,  // git user name
-            None,  // git user email
+            None,  // git_user_name
+            None,  // git_user_email
         )
         .expect("Failed to build args");
 
@@ -1185,8 +1186,8 @@ mod tests {
             false, // print mode
             true,  // dangerous_skip_checks
             &[],   // no images
-            None,  // git user name
-            None,  // git user email
+            None,  // git_user_name
+            None,  // git_user_email
         )
         .expect("Failed to build args");
 
@@ -1217,8 +1218,8 @@ mod tests {
             false, // print mode
             true,  // dangerous_skip_checks
             &[],   // no images
-            None,  // git user name
-            None,  // git user email
+            None,  // git_user_name
+            None,  // git_user_email
         )
         .expect("Failed to build args");
 
@@ -1248,8 +1249,8 @@ mod tests {
             true, // print mode
             true, // dangerous_skip_checks
             &[],  // no images
-            None, // git user name
-            None, // git user email
+            None, // git_user_name
+            None, // git_user_email
         )
         .expect("Failed to build args");
 
@@ -1276,8 +1277,8 @@ mod tests {
             false, // interactive mode
             true,  // dangerous_skip_checks
             &[],   // no images
-            None,  // git user name
-            None,  // git user email
+            None,  // git_user_name
+            None,  // git_user_email
         )
         .expect("Failed to build args");
 
