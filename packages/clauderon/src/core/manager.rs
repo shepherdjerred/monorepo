@@ -1,3 +1,4 @@
+use anyhow::Context;
 use std::path::PathBuf;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -185,6 +186,34 @@ impl SessionManager {
         access_mode: super::session::AccessMode,
         images: Vec<String>,
     ) -> anyhow::Result<(Session, Option<Vec<String>>)> {
+        // Validate and resolve git repository path
+        let repo_path_buf = std::path::PathBuf::from(&repo_path);
+        let git_info = crate::utils::git::find_git_root(&repo_path_buf)
+            .with_context(|| format!("Failed to find git repository for path: {}", repo_path))?;
+
+        // Use git root for worktree creation
+        let repo_path = git_info.git_root.to_string_lossy().to_string();
+        let subdirectory = git_info.subdirectory;
+
+        // Validate subdirectory path for security (defense in depth)
+        if subdirectory.is_absolute()
+            || subdirectory
+                .components()
+                .any(|c| matches!(c, std::path::Component::ParentDir))
+        {
+            anyhow::bail!(
+                "Invalid subdirectory path: must be relative without '..' components. Got: {}",
+                subdirectory.display()
+            );
+        }
+
+        tracing::info!(
+            original_path = %repo_path_buf.display(),
+            git_root = %repo_path,
+            subdirectory = %subdirectory.display(),
+            "Resolved git repository root"
+        );
+
         // Generate metadata using AI (with fallback to defaults)
         let metadata = crate::utils::generate_session_name_ai(&repo_path, &initial_prompt).await;
 
@@ -215,6 +244,7 @@ impl SessionManager {
             description: Some(metadata.description),
             repo_path: repo_path.clone().into(),
             worktree_path: worktree_path.clone(),
+            subdirectory: subdirectory.clone(),
             branch_name: metadata.branch_name, // Use AI branch_name (no suffix)
             initial_prompt: initial_prompt.clone(),
             backend,
@@ -223,7 +253,7 @@ impl SessionManager {
             access_mode,
         });
 
-        // Set history file path
+        // Set history file path (directory created after worktree exists)
         session.history_file_path = Some(super::session::get_history_file_path(
             &worktree_path,
             &session.id,
@@ -247,6 +277,26 @@ impl SessionManager {
             .git
             .create_worktree(&repo_path_buf, &worktree_path, &full_name)
             .await?;
+
+        // Now that worktree exists, create the history directory
+        if let Some(ref history_path) = session.history_file_path {
+            if let Some(parent_dir) = history_path.parent() {
+                if let Err(e) = tokio::fs::create_dir_all(parent_dir).await {
+                    tracing::warn!(
+                        session_id = %session.id,
+                        history_dir = %parent_dir.display(),
+                        error = %e,
+                        "Failed to create history directory"
+                    );
+                } else {
+                    tracing::debug!(
+                        session_id = %session.id,
+                        history_dir = %parent_dir.display(),
+                        "Created history directory"
+                    );
+                }
+            }
+        }
 
         // Create per-session proxy for Docker backends BEFORE creating container
         let proxy_port = if backend == BackendType::Docker {
@@ -300,6 +350,7 @@ impl SessionManager {
             images,
             dangerous_skip_checks,
             session_id: Some(session.id), // Pass session ID for Kubernetes PVC labeling
+            initial_workdir: subdirectory.clone(),
         };
         let backend_id = match backend {
             BackendType::Zellij => {

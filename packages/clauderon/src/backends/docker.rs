@@ -54,78 +54,6 @@ async fn read_git_user_config() -> (Option<String>, Option<String>) {
     (name, email)
 }
 
-/// Detect if a directory is a git worktree and return the parent .git directory path
-///
-/// # Errors
-///
-/// Returns an error if the .git file cannot be read or paths cannot be resolved
-fn detect_git_worktree(path: &Path) -> anyhow::Result<Option<PathBuf>> {
-    let git_file = path.join(".git");
-
-    // Check if .git exists and is a file (not a directory)
-    if !git_file.exists() || !git_file.is_file() {
-        return Ok(None);
-    }
-
-    // Read the gitdir reference
-    let contents = std::fs::read_to_string(&git_file)?;
-    let gitdir_line = contents
-        .lines()
-        .find(|line| line.starts_with("gitdir: "))
-        .ok_or_else(|| anyhow::anyhow!("Invalid .git file format: missing 'gitdir:' line"))?;
-
-    // Extract the path after "gitdir: " and trim whitespace
-    let gitdir = gitdir_line.strip_prefix("gitdir: ").unwrap().trim();
-
-    // Handle both absolute and relative paths
-    // Git can use relative paths like "../.git/worktrees/name"
-    let gitdir_path = if Path::new(gitdir).is_absolute() {
-        PathBuf::from(gitdir)
-    } else {
-        // Resolve relative path from the worktree directory
-        path.join(gitdir)
-    };
-
-    // Canonicalize to resolve symlinks and get absolute path
-    // This also protects against path traversal attacks
-    let canonical_gitdir = gitdir_path.canonicalize().map_err(|e| {
-        anyhow::anyhow!(
-            "Failed to canonicalize gitdir path {}: {}",
-            gitdir_path.display(),
-            e
-        )
-    })?;
-
-    // The gitdir points to something like /path/to/repo/.git/worktrees/name
-    // We need to get the parent .git directory: /path/to/repo/.git
-    if let Some(worktrees) = canonical_gitdir.parent() {
-        if let Some(git_parent) = worktrees.parent() {
-            let parent_git = git_parent.to_path_buf();
-
-            // Validate that the parent .git directory actually exists
-            if !parent_git.exists() {
-                anyhow::bail!(
-                    "Parent .git directory does not exist: {}. \
-                    The worktree may be corrupted or the parent repository may have been moved/deleted.",
-                    parent_git.display()
-                );
-            }
-
-            // Validate that it's actually a git directory
-            if !parent_git.join("HEAD").exists() {
-                anyhow::bail!(
-                    "Parent directory exists but doesn't appear to be a valid git repository: {}",
-                    parent_git.display()
-                );
-            }
-
-            return Ok(Some(parent_git));
-        }
-    }
-
-    Ok(None)
-}
-
 /// Docker container image to use
 const DOCKER_IMAGE: &str = "ghcr.io/shepherdjerred/dotfiles";
 
@@ -265,6 +193,7 @@ impl DockerBackend {
     pub fn build_create_args(
         name: &str,
         workdir: &Path,
+        initial_workdir: &Path,
         initial_prompt: &str,
         uid: u32,
         proxy_config: Option<&DockerProxyConfig>,
@@ -273,6 +202,7 @@ impl DockerBackend {
         images: &[String],
         git_user_name: Option<&str>,
         git_user_email: Option<&str>,
+        session_id: Option<&uuid::Uuid>,
     ) -> anyhow::Result<Vec<String>> {
         let container_name = format!("clauderon-{name}");
         let escaped_prompt = initial_prompt.replace('\'', "'\\''");
@@ -287,7 +217,11 @@ impl DockerBackend {
             "-v".to_string(),
             format!("{}:/workspace", workdir.display()),
             "-w".to_string(),
-            "/workspace".to_string(),
+            if initial_workdir.as_os_str().is_empty() {
+                "/workspace".to_string()
+            } else {
+                format!("/workspace/{}", initial_workdir.display())
+            },
             "-e".to_string(),
             "TERM=xterm-256color".to_string(),
             "-e".to_string(),
@@ -331,7 +265,7 @@ impl DockerBackend {
         ]);
 
         // Detect if workdir is a git worktree and mount parent .git directory
-        match detect_git_worktree(workdir) {
+        match crate::utils::git::detect_worktree_parent_git_dir(workdir) {
             Ok(Some(parent_git_dir)) => {
                 tracing::info!(
                     workdir = %workdir.display(),
@@ -586,7 +520,8 @@ impl DockerBackend {
             use crate::agents::traits::Agent;
 
             let agent = ClaudeCodeAgent::new();
-            let mut cmd_vec = agent.start_command(&escaped_prompt, images, dangerous_skip_checks);
+            let mut cmd_vec =
+                agent.start_command(&escaped_prompt, images, dangerous_skip_checks, session_id);
 
             // Add print mode flags if enabled
             if print_mode {
@@ -686,6 +621,7 @@ impl ExecutionBackend for DockerBackend {
         let args = Self::build_create_args(
             name,
             workdir,
+            &options.initial_workdir,
             initial_prompt,
             uid,
             proxy_config_ref,
@@ -694,6 +630,7 @@ impl ExecutionBackend for DockerBackend {
             &options.images,
             git_user_name.as_deref(),
             git_user_email.as_deref(),
+            options.session_id.as_ref(),
         )?;
         let output = Command::new("docker").args(&args).output().await?;
 
@@ -849,6 +786,7 @@ mod tests {
         let args = DockerBackend::build_create_args(
             "test-session",
             &PathBuf::from("/workspace"),
+            &PathBuf::new(), // initial_workdir (empty = root)
             "test prompt",
             1000,
             None,
@@ -857,6 +795,7 @@ mod tests {
             &[],   // no images
             None,  // git user name
             None,  // git user email
+            None,  // session_id
         )
         .expect("Failed to build args");
 
@@ -916,6 +855,7 @@ mod tests {
         let args = DockerBackend::build_create_args(
             "test-session",
             &PathBuf::from("/workspace"),
+            &PathBuf::new(), // initial_workdir (empty = root)
             "test prompt",
             uid,
             None,
@@ -924,6 +864,7 @@ mod tests {
             &[],   // no images
             None,  // git_user_name
             None,  // git_user_email
+            None,  // session_id
         )
         .expect("Failed to build args");
 
@@ -938,12 +879,77 @@ mod tests {
         );
     }
 
+    /// Test that initial_workdir is correctly set in Docker -w flag when subdirectory is provided
+    #[test]
+    fn test_initial_workdir_subdirectory() {
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            &PathBuf::from("/workspace"),
+            &PathBuf::from("packages/foo"), // subdirectory
+            "test prompt",
+            1000,
+            None,
+            false, // print_mode
+            false, // dangerous_skip_checks
+            &[],   // images
+            None,  // git_user_name
+            None,  // git_user_email
+        )
+        .expect("Failed to build args");
+
+        // Find -w flag and verify it's set to /workspace/packages/foo
+        let w_idx = args.iter().position(|a| a == "-w");
+        assert!(
+            w_idx.is_some(),
+            "Expected -w flag for working directory, got: {args:?}"
+        );
+
+        let workdir = &args[w_idx.unwrap() + 1];
+        assert_eq!(
+            workdir, "/workspace/packages/foo",
+            "Expected working directory to be /workspace/packages/foo, got: {workdir}"
+        );
+    }
+
+    /// Test that initial_workdir with empty path uses /workspace as working directory
+    #[test]
+    fn test_initial_workdir_empty() {
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            &PathBuf::from("/workspace"),
+            &PathBuf::new(), // empty initial_workdir
+            "test prompt",
+            1000,
+            None,
+            false, // print_mode
+            false, // dangerous_skip_checks
+            &[],   // images
+            None,  // git_user_name
+            None,  // git_user_email
+        )
+        .expect("Failed to build args");
+
+        // Find -w flag and verify it's set to /workspace
+        let w_idx = args.iter().position(|a| a == "-w");
+        assert!(
+            w_idx.is_some(),
+            "Expected -w flag for working directory, got: {args:?}"
+        );
+
+        let workdir = &args[w_idx.unwrap() + 1];
+        assert_eq!(
+            workdir, "/workspace",
+            "Expected working directory to be /workspace when initial_workdir is empty, got: {workdir}"
+        );
+    }
+
     /// Test that Rust caching is configured with cargo and sccache volumes
     #[test]
     fn test_rust_caching_configured() {
         let args = DockerBackend::build_create_args(
             "test-session",
             &PathBuf::from("/workspace"),
+            &PathBuf::new(), // initial_workdir (empty = root)
             "test prompt",
             1000,
             None,
@@ -952,6 +958,7 @@ mod tests {
             &[],   // images
             None,  // git_user_name
             None,  // git_user_email
+            None,  // session_id
         )
         .expect("Failed to build args");
 
@@ -1036,6 +1043,7 @@ mod tests {
         let args = DockerBackend::build_create_args(
             "test-session",
             &PathBuf::from("/workspace"),
+            &PathBuf::new(), // initial_workdir (empty = root)
             prompt_with_quotes,
             1000,
             None,
@@ -1044,6 +1052,7 @@ mod tests {
             &[],   // no images
             None,  // git_user_name
             None,  // git_user_email
+            None,  // session_id
         )
         .expect("Failed to build args");
 
@@ -1063,6 +1072,7 @@ mod tests {
         let args = DockerBackend::build_create_args(
             "my-session",
             &PathBuf::from("/workspace"),
+            &PathBuf::new(), // initial_workdir (empty = root)
             "test prompt",
             1000,
             None,
@@ -1071,6 +1081,7 @@ mod tests {
             &[],   // no images
             None,  // git_user_name
             None,  // git_user_email
+            None,  // session_id
         )
         .expect("Failed to build args");
 
@@ -1106,6 +1117,7 @@ mod tests {
         let args = DockerBackend::build_create_args(
             "test-session",
             &PathBuf::from("/workspace"),
+            &PathBuf::new(), // initial_workdir (empty = root)
             "test prompt",
             1000,
             Some(&proxy_config),
@@ -1114,6 +1126,7 @@ mod tests {
             &[],   // no images
             None,  // git_user_name
             None,  // git_user_email
+            None,  // session_id
         )
         .expect("Failed to build args");
 
@@ -1153,6 +1166,7 @@ mod tests {
         let args = DockerBackend::build_create_args(
             "test-session",
             &PathBuf::from("/workspace"),
+            &PathBuf::new(), // initial_workdir (empty = root)
             "test prompt",
             1000,
             Some(&proxy_config),
@@ -1161,6 +1175,7 @@ mod tests {
             &[],   // no images
             None,  // git_user_name
             None,  // git_user_email
+            None,  // session_id
         )
         .expect("Failed to build args");
 
@@ -1180,6 +1195,7 @@ mod tests {
         let args = DockerBackend::build_create_args(
             "test-session",
             &PathBuf::from("/workspace"),
+            &PathBuf::new(), // initial_workdir (empty = root)
             "test prompt",
             1000,
             Some(&proxy_config),
@@ -1188,6 +1204,7 @@ mod tests {
             &[],   // no images
             None,  // git_user_name
             None,  // git_user_email
+            None,  // session_id
         )
         .expect("Failed to build args");
 
@@ -1212,6 +1229,7 @@ mod tests {
         let args = DockerBackend::build_create_args(
             "test-session",
             &PathBuf::from("/workspace"),
+            &PathBuf::new(), // initial_workdir (empty = root)
             "test prompt",
             1000,
             Some(&proxy_config),
@@ -1220,6 +1238,7 @@ mod tests {
             &[],   // no images
             None,  // git_user_name
             None,  // git_user_email
+            None,  // session_id
         )
         .expect("Failed to build args");
 
@@ -1243,6 +1262,7 @@ mod tests {
         let args = DockerBackend::build_create_args(
             "test-session",
             &PathBuf::from("/workspace"),
+            &PathBuf::new(), // initial_workdir (empty = root)
             "test prompt",
             1000,
             None,
@@ -1271,6 +1291,7 @@ mod tests {
         let args = DockerBackend::build_create_args(
             "test-session",
             &PathBuf::from("/workspace"),
+            &PathBuf::new(), // initial_workdir (empty = root)
             "test prompt",
             1000,
             None,
@@ -1279,6 +1300,7 @@ mod tests {
             &[],   // no images
             None,  // git_user_name
             None,  // git_user_email
+            None,  // session_id
         )
         .expect("Failed to build args");
 
@@ -1322,6 +1344,7 @@ mod tests {
             &[],   // images
             None,  // git_user_name
             None,  // git_user_email
+            None,  // session_id
         )
         .expect("Failed to build args");
 
@@ -1347,16 +1370,17 @@ mod tests {
         use tempfile::tempdir;
 
         let temp_dir = tempdir().expect("Failed to create temp dir");
-        let normal_dir = temp_dir.path().join("normal");
-        std::fs::create_dir_all(&normal_dir).expect("Failed to create normal dir");
+        let test_dir = temp_dir.path().join("test-repo");
+        std::fs::create_dir_all(&test_dir).expect("Failed to create test dir");
 
         // Create a normal .git directory (not a worktree)
-        let git_dir = normal_dir.join(".git");
+        let git_dir = test_dir.join(".git");
         std::fs::create_dir_all(&git_dir).expect("Failed to create .git dir");
 
         let args = DockerBackend::build_create_args(
             "test-session",
-            &normal_dir,
+            &test_dir,
+            &PathBuf::new(), // initial_workdir (empty = root)
             "test prompt",
             1000,
             None,
@@ -1365,6 +1389,7 @@ mod tests {
             &[],   // images
             None,  // git_user_name
             None,  // git_user_email
+            None,  // session_id
         )
         .expect("Failed to build args");
 
@@ -1410,6 +1435,7 @@ mod tests {
             &[],   // images
             None,  // git_user_name
             None,  // git_user_email
+            None,  // session_id
         )
         .expect("Failed to build args");
 
@@ -1455,6 +1481,7 @@ mod tests {
             &[],   // images
             None,  // git_user_name
             None,  // git_user_email
+            None,  // session_id
         )
         .expect("Failed to build args");
 
@@ -1493,6 +1520,7 @@ mod tests {
             &[],   // images
             None,  // git_user_name
             None,  // git_user_email
+            None,  // session_id
         )
         .expect("Failed to build args");
 
@@ -1531,6 +1559,7 @@ mod tests {
             &[],   // images
             None,  // git_user_name
             None,  // git_user_email
+            None,  // session_id
         )
         .expect("Failed to build args");
 
@@ -1548,6 +1577,7 @@ mod tests {
         let args = DockerBackend::build_create_args(
             "test-session",
             &PathBuf::from("/workspace"),
+            &PathBuf::new(), // initial_workdir (empty = root)
             "test prompt",
             1000,
             None,  // No proxy config
@@ -1556,6 +1586,7 @@ mod tests {
             &[],   // images
             None,  // git_user_name
             None,  // git_user_email
+            None,  // session_id
         )
         .expect("Failed to build args");
 
@@ -1587,6 +1618,7 @@ mod tests {
         let args = DockerBackend::build_create_args(
             "test-session",
             &PathBuf::from("/workspace"),
+            &PathBuf::new(), // initial_workdir (empty = root)
             "test prompt",
             1000,
             None,  // No proxy config
@@ -1595,6 +1627,7 @@ mod tests {
             &[],   // images
             None,  // git_user_name
             None,  // git_user_email
+            None,  // session_id
         )
         .expect("Failed to build args");
 

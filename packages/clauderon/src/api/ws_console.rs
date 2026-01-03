@@ -13,7 +13,7 @@ use tokio::sync::Mutex;
 
 use super::http_server::AppState;
 
-/// WebSocket handler for /ws/console/:sessionId endpoint
+/// WebSocket handler for /ws/console/{sessionId} endpoint
 /// Clients connect here to stream terminal I/O for a specific session
 pub async fn ws_console_handler(
     ws: WebSocketUpgrade,

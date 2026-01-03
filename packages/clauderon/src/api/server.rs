@@ -340,12 +340,12 @@ async fn run_http_server(
     let app = create_router()
         .route("/ws/events", axum::routing::get(ws_events_handler))
         .route(
-            "/ws/console/:sessionId",
+            "/ws/console/{sessionId}",
             axum::routing::get(ws_console_handler),
         )
         .with_state(state);
 
-    // Parse bind address
+    // Parse bind address (configurable for auth support)
     let addr = format!("{}:{}", bind_addr, port).parse()?;
     let listener = tokio::net::TcpListener::bind(addr).await?;
 
