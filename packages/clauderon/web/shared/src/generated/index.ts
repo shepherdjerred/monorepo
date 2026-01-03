@@ -177,6 +177,11 @@ export interface Session {
 	repo_path: string;
 	/** Path to the git worktree */
 	worktree_path: string;
+	/**
+	 * Subdirectory path relative to git root (empty if at root)
+	 * Example: "packages/clauderon" for a subdirectory session
+	 */
+	subdirectory: string;
 	/** Git branch name */
 	branch_name: string;
 	/** Backend-specific identifier (zellij session name, docker container id, or kubernetes pod name) */

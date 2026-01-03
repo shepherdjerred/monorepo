@@ -115,6 +115,7 @@ pub fn replay_events(events: &[Event]) -> Option<Session> {
         description: None,
         repo_path: repo_path.clone().into(),
         worktree_path,
+        subdirectory: std::path::PathBuf::new(),
         branch_name: name.clone(),
         initial_prompt: initial_prompt.clone(),
         backend: *backend,

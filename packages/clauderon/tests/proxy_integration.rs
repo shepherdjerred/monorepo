@@ -27,6 +27,7 @@ fn test_proxy_config_flows_to_container_args() {
     let args = DockerBackend::build_create_args(
         "test-session",
         &PathBuf::from("/workspace"),
+        &PathBuf::new(),
         "test prompt",
         1000,
         Some(&proxy_config),
@@ -35,6 +36,7 @@ fn test_proxy_config_flows_to_container_args() {
         &[],   // images
         None,  // git user name
         None,  // git user email
+        None,  // session_id
     )
     .expect("Failed to build args");
 
@@ -131,6 +133,7 @@ fn test_disabled_proxy_config_no_args() {
     let args = DockerBackend::build_create_args(
         "test-session",
         &PathBuf::from("/workspace"),
+        &PathBuf::new(),
         "test prompt",
         1000,
         Some(&proxy_config),
@@ -139,6 +142,7 @@ fn test_disabled_proxy_config_no_args() {
         &[],   // images
         None,  // git user name
         None,  // git user email
+        None,  // session_id
     )
     .expect("Failed to build args");
 
@@ -162,6 +166,7 @@ fn test_none_proxy_config_no_args() {
     let args = DockerBackend::build_create_args(
         "test-session",
         &PathBuf::from("/workspace"),
+        &PathBuf::new(),
         "test prompt",
         1000,
         None,  // No proxy config
@@ -170,6 +175,7 @@ fn test_none_proxy_config_no_args() {
         &[],   // images
         None,  // git user name
         None,  // git user email
+        None,  // session_id
     )
     .expect("Failed to build args");
 
@@ -196,6 +202,7 @@ fn test_proxy_port_in_env_vars() {
     let args = DockerBackend::build_create_args(
         "test-session",
         &PathBuf::from("/workspace"),
+        &PathBuf::new(),
         "test prompt",
         1000,
         Some(&proxy_config),
@@ -204,6 +211,7 @@ fn test_proxy_port_in_env_vars() {
         &[],   // images
         None,  // git user name
         None,  // git user email
+        None,  // session_id
     )
     .expect("Failed to build args");
 
@@ -239,6 +247,7 @@ fn test_clauderon_dir_in_volume_mounts() {
     let args = DockerBackend::build_create_args(
         "test-session",
         &PathBuf::from("/workspace"),
+        &PathBuf::new(),
         "test prompt",
         1000,
         Some(&proxy_config),
@@ -247,6 +256,7 @@ fn test_clauderon_dir_in_volume_mounts() {
         &[],   // images
         None,  // git user name
         None,  // git user email
+        None,  // session_id
     )
     .expect("Failed to build args");
 

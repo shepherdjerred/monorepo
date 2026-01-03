@@ -250,6 +250,7 @@ impl ZellijBackend {
                 images: vec![],
                 dangerous_skip_checks: false,
                 session_id: None,
+                initial_workdir: std::path::PathBuf::new(),
             },
         )
         .await
@@ -429,12 +430,13 @@ mod tests {
         );
 
         let cmd_arg = args.last().unwrap();
+        // Image paths without special characters are not quoted
         assert!(
-            cmd_arg.contains("--image '/path/to/image1.png'"),
+            cmd_arg.contains("--image /path/to/image1.png"),
             "Expected first image in command: {cmd_arg}"
         );
         assert!(
-            cmd_arg.contains("--image '/path/to/image2.jpg'"),
+            cmd_arg.contains("--image /path/to/image2.jpg"),
             "Expected second image in command: {cmd_arg}"
         );
     }

@@ -212,13 +212,6 @@ fn parse_worktree_git_file(git_file: &Path, worktree_path: &Path) -> anyhow::Res
         )
     })?;
 
-    let repo_root = git_dir.parent().ok_or_else(|| {
-        anyhow::anyhow!(
-            "Invalid git directory structure: no parent for {}",
-            git_dir.display()
-        )
-    })?;
-
     // Validate that the parent .git directory exists and is valid
     if !git_dir.exists() {
         anyhow::bail!(
@@ -235,7 +228,8 @@ fn parse_worktree_git_file(git_file: &Path, worktree_path: &Path) -> anyhow::Res
         );
     }
 
-    Ok(repo_root.to_path_buf())
+    // Return the .git directory (not the repo root)
+    Ok(git_dir.to_path_buf())
 }
 
 /// Validate that a path is within a git repository

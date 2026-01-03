@@ -213,6 +213,7 @@ fn test_print_mode_flows_to_docker_args() {
     let args = DockerBackend::build_create_args(
         "print-test",
         &PathBuf::from("/workspace"),
+        &PathBuf::new(),
         "Generate a hello world",
         1000,
         None,
@@ -221,6 +222,7 @@ fn test_print_mode_flows_to_docker_args() {
         &[],   // images
         None,  // git user name
         None,  // git user email
+        None,  // session_id
     )
     .expect("Failed to build args");
 
@@ -252,6 +254,7 @@ fn test_interactive_mode_no_print_flag_in_docker_args() {
     let args = DockerBackend::build_create_args(
         "interactive-test",
         &PathBuf::from("/workspace"),
+        &PathBuf::new(),
         "Interactive prompt",
         1000,
         None,
@@ -260,6 +263,7 @@ fn test_interactive_mode_no_print_flag_in_docker_args() {
         &[],   // images
         None,  // git user name
         None,  // git user email
+        None,  // session_id
     )
     .expect("Failed to build args");
 

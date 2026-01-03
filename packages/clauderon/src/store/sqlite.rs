@@ -736,6 +736,7 @@ impl TryFrom<SessionRow> for Session {
             agent,
             repo_path: row.repo_path.into(),
             worktree_path: row.worktree_path.into(),
+            subdirectory: PathBuf::new(), // TODO: Add subdirectory column to database schema
             branch_name: row.branch_name,
             backend_id: row.backend_id,
             initial_prompt: row.initial_prompt,

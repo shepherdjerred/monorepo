@@ -13,6 +13,7 @@ fn test_git_config_env_vars() {
     let args = DockerBackend::build_create_args(
         "test-session",
         &PathBuf::from("/workspace"),
+        &PathBuf::new(), // initial_workdir
         "test prompt",
         1000,
         None,
@@ -21,6 +22,7 @@ fn test_git_config_env_vars() {
         &[],
         Some("John Doe"),
         Some("john@example.com"),
+        None, // session_id
     )
     .expect("Failed to build args");
 
@@ -57,12 +59,14 @@ fn test_git_config_omitted_when_none() {
     let args = DockerBackend::build_create_args(
         "test-session",
         &PathBuf::from("/workspace"),
+        &PathBuf::new(),
         "test prompt",
         1000,
         None,
         false,
         false,
         &[],
+        None,
         None,
         None,
     )
@@ -86,6 +90,7 @@ fn test_docker_run_arg_order() {
     let args = DockerBackend::build_create_args(
         "test-session",
         &PathBuf::from("/workspace"),
+        &PathBuf::new(),
         "test prompt",
         1000,
         None,
@@ -94,6 +99,7 @@ fn test_docker_run_arg_order() {
         &[],   // images
         None,  // git user name
         None,  // git user email
+        None,  // session_id
     )
     .expect("Failed to build args");
 
@@ -126,6 +132,7 @@ fn test_docker_env_vars() {
     let args = DockerBackend::build_create_args(
         "test-session",
         &PathBuf::from("/workspace"),
+        &PathBuf::new(),
         "test prompt",
         1000,
         None,
@@ -134,6 +141,7 @@ fn test_docker_env_vars() {
         &[],   // images
         None,  // git user name
         None,  // git user email
+        None,  // session_id
     )
     .expect("Failed to build args");
 
@@ -214,8 +222,13 @@ fn test_zellij_create_background_schema() {
 /// Validate zellij action schema: zellij action <action> [OPTIONS]
 #[test]
 fn test_zellij_action_schema() {
-    let args =
-        ZellijBackend::build_new_pane_args(&PathBuf::from("/workspace"), "test prompt", false, &[]);
+    let args = ZellijBackend::build_new_pane_args(
+        &PathBuf::from("/workspace"),
+        "test prompt",
+        false,
+        &[],
+        None,
+    );
 
     // Must start with action
     assert_eq!(args[0], "action", "First arg must be 'action'");
@@ -234,6 +247,7 @@ fn test_volume_mount_format() {
     let args = DockerBackend::build_create_args(
         "test-session",
         &PathBuf::from("/my/workspace"),
+        &PathBuf::new(),
         "test prompt",
         1000,
         None,
@@ -242,6 +256,7 @@ fn test_volume_mount_format() {
         &[],   // images
         None,  // git user name
         None,  // git user email
+        None,  // session_id
     )
     .expect("Failed to build args");
 
@@ -287,6 +302,7 @@ fn test_workspace_mount_destination() {
     let args = DockerBackend::build_create_args(
         "test-session",
         &PathBuf::from("/my/source/dir"),
+        &PathBuf::new(),
         "test prompt",
         1000,
         None,
@@ -295,6 +311,7 @@ fn test_workspace_mount_destination() {
         &[],   // images
         None,  // git user name
         None,  // git user email
+        None,  // session_id
     )
     .expect("Failed to build args");
 
@@ -324,6 +341,7 @@ fn test_final_command_format() {
     let args = DockerBackend::build_create_args(
         "test-session",
         &PathBuf::from("/workspace"),
+        &PathBuf::new(),
         prompt,
         1000,
         None,
@@ -332,6 +350,7 @@ fn test_final_command_format() {
         &[],   // images
         None,  // git user name
         None,  // git user email
+        None,  // session_id
     )
     .expect("Failed to build args");
 
