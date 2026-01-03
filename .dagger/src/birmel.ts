@@ -83,8 +83,7 @@ function installWorkspaceDeps(workspaceSource: Directory, useMounts: boolean): C
       .withMountedFile(
         "/workspace/packages/clauderon/web/frontend/package.json",
         workspaceSource.file("packages/clauderon/web/frontend/package.json"),
-      )
-      .withMountedFile("/workspace/packages/mux-site/package.json", workspaceSource.file("packages/mux-site/package.json"));
+      );
   } else {
     container = container
       .withFile("/workspace/package.json", workspaceSource.file("package.json"))
@@ -122,8 +121,7 @@ function installWorkspaceDeps(workspaceSource: Directory, useMounts: boolean): C
       .withFile(
         "/workspace/packages/clauderon/web/frontend/package.json",
         workspaceSource.file("packages/clauderon/web/frontend/package.json"),
-      )
-      .withFile("/workspace/packages/mux-site/package.json", workspaceSource.file("packages/mux-site/package.json"));
+      );
   }
 
   // PHASE 2: Install dependencies (cached if lockfile + package.jsons unchanged)

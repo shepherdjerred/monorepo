@@ -79,8 +79,7 @@ function installWorkspaceDeps(source: Directory): Container {
     .withMountedFile("/workspace/packages/clauderon/web/bun.lock", source.file("packages/clauderon/web/bun.lock"))
     .withMountedFile("/workspace/packages/clauderon/web/shared/package.json", source.file("packages/clauderon/web/shared/package.json"))
     .withMountedFile("/workspace/packages/clauderon/web/client/package.json", source.file("packages/clauderon/web/client/package.json"))
-    .withMountedFile("/workspace/packages/clauderon/web/frontend/package.json", source.file("packages/clauderon/web/frontend/package.json"))
-    .withMountedFile("/workspace/packages/mux-site/package.json", source.file("packages/mux-site/package.json"));
+    .withMountedFile("/workspace/packages/clauderon/web/frontend/package.json", source.file("packages/clauderon/web/frontend/package.json"));
 
   // PHASE 2: Install dependencies (cached if lockfile + package.jsons unchanged)
   container = container.withExec(["bun", "install", "--frozen-lockfile"]);
