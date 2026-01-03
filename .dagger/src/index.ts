@@ -248,7 +248,28 @@ export class Monorepo {
 
     // Clauderon Rust validation (fmt, clippy, test, build)
     outputs.push("\n--- Clauderon Rust Validation ---");
-    outputs.push(await this.clauderonCi(source));
+    // Copy the built frontend dist to the Rust container before validation
+    const frontendDist = container.directory("/workspace/packages/clauderon/web/frontend/dist");
+    rustContainer = rustContainer.withDirectory("/workspace/web/frontend/dist", frontendDist);
+
+    // Run Rust validation with frontend dist available
+    rustContainer = rustContainer.withExec(["cargo", "fmt", "--check"]);
+    await rustContainer.sync();
+    outputs.push("✓ Format check passed");
+
+    rustContainer = rustContainer.withExec([
+      "cargo", "clippy", "--all-targets", "--all-features", "--", "-D", "warnings"
+    ]);
+    await rustContainer.sync();
+    outputs.push("✓ Clippy passed");
+
+    rustContainer = rustContainer.withExec(["cargo", "test"]);
+    await rustContainer.sync();
+    outputs.push("✓ Tests passed");
+
+    rustContainer = rustContainer.withExec(["cargo", "build", "--release"]);
+    await rustContainer.sync();
+    outputs.push("✓ Release build succeeded");
 
     // Now build remaining packages (web packages already built, will be skipped or fast)
     // Note: Skip tests here - bun-decompile tests fail in CI (requires `bun build --compile`)
