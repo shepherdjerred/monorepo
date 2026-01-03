@@ -128,11 +128,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
             const newSessions = new Map(prev);
             const session = newSessions.get(sessionId);
             if (session) {
+              const { progress, ...sessionWithoutProgress } = session;
               newSessions.set(sessionId, {
-                ...session,
+                ...sessionWithoutProgress,
                 status: SessionStatus.Failed,
                 error_message: error,
-                progress: undefined,
               });
             }
             return newSessions;
