@@ -13,6 +13,8 @@ use tempfile::TempDir;
 fn create_test_session(name: &str) -> Session {
     Session::new(SessionConfig {
         name: name.to_string(),
+        title: None,
+        description: None,
         repo_path: "/tmp/test-repo".into(),
         worktree_path: format!("/tmp/worktrees/{name}").into(),
         branch_name: name.to_string(),
