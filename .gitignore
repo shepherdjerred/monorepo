@@ -7,3 +7,19 @@ dist/
 .mastra/
 packages/birmel/data/
 packages/birmel/prisma/data/
+
+# Claude Code local session files (root level only)
+/.claude/
+!/.claude/settings.json
+/.claude.json
+/.claude.json.*
+
+# Clauderon daemon data (root level only)
+/.clauderon/
+
+# Build and tool caches (root level only, from HOME=/workspace)
+/.cache/
+/.cargo/
+/.local/
+/.npm/
+/.rustup/

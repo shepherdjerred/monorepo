@@ -8,10 +8,11 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import type { RootStackScreenProps } from "../types/navigation";
 import { useConsole } from "../hooks/useConsole";
-import { MessageParser } from "../lib/claudeParser";
+import { useSessionHistory } from "../hooks/useSessionHistory";
 import { MessageBubble } from "../components/MessageBubble";
 import { ConnectionStatus } from "../components/ConnectionStatus";
 import { colors } from "../styles/colors";
@@ -23,33 +24,26 @@ type ChatScreenProps = RootStackScreenProps<"Chat">;
 export function ChatScreen({ route, navigation }: ChatScreenProps) {
   const { sessionId, sessionName } = route.params;
   const { client, isConnected } = useConsole(sessionId);
+  const { messages, isLoading, error: historyError, fileExists } = useSessionHistory(sessionId);
   const [input, setInput] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const parserRef = useRef(new MessageParser());
-  const [messages, setMessages] = useState(() => parserRef.current.getMessages());
+  const [wsError, setWsError] = useState<string | null>(null);
   const flatListRef = useRef<FlatList>(null);
 
   useEffect(() => {
     navigation.setOptions({ title: sessionName });
   }, [navigation, sessionName]);
 
-  // Handle incoming terminal data
+  // Handle WebSocket errors
   useEffect(() => {
     if (!client) {
       return;
     }
 
-    const unsubscribe = client.onData((data) => {
-      parserRef.current.addOutput(data);
-      setMessages([...parserRef.current.getMessages()]);
-    });
-
     const unsubscribeError = client.onError((err) => {
-      setError(err.message);
+      setWsError(err.message);
     });
 
     return () => {
-      unsubscribe();
       unsubscribeError();
     };
   }, [client]);
@@ -76,9 +70,10 @@ export function ChatScreen({ route, navigation }: ChatScreenProps) {
       </View>
 
       {/* Error display */}
-      {error && (
+      {(wsError || historyError) && (
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{error}</Text>
+          {wsError && <Text style={styles.errorText}>WebSocket: {wsError}</Text>}
+          {historyError && <Text style={styles.errorText}>History: {historyError}</Text>}
         </View>
       )}
 
@@ -93,14 +88,23 @@ export function ChatScreen({ route, navigation }: ChatScreenProps) {
           flatListRef.current?.scrollToEnd({ animated: true })
         }
         ListEmptyComponent={
-          <View style={commonStyles.emptyState}>
-            <Text style={commonStyles.emptyStateText}>
-              No messages yet
-            </Text>
-            <Text style={styles.emptySubtext}>
-              Start a conversation with the AI
-            </Text>
-          </View>
+          isLoading ? (
+            <View style={commonStyles.emptyState}>
+              <ActivityIndicator size="large" color={colors.primary} />
+              <Text style={styles.emptySubtext}>Loading history...</Text>
+            </View>
+          ) : (
+            <View style={commonStyles.emptyState}>
+              <Text style={commonStyles.emptyStateText}>
+                {fileExists ? "No messages yet" : "No history file"}
+              </Text>
+              <Text style={styles.emptySubtext}>
+                {fileExists
+                  ? "Start a conversation with the AI"
+                  : "Start a conversation to create history"}
+              </Text>
+            </View>
+          )
         }
       />
 
