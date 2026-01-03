@@ -414,7 +414,7 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                                 let _ = tx.try_send(CreateProgress::Step {
                                     step: step.step,
                                     total: step.total,
-                                    message: step.message.clone(),
+                                    message: step.message,
                                 });
                             });
 
