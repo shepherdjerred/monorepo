@@ -992,8 +992,7 @@ impl App {
 
         // Create new PTY session
         let (rows, cols) = self.terminal_size;
-        let pty_session =
-            PtySession::spawn_docker_attach(session_id, container_id, rows, cols)?;
+        let pty_session = PtySession::spawn_docker_attach(session_id, container_id, rows, cols)?;
 
         self.pty_sessions.insert(session_id, pty_session);
         self.attached_session_id = Some(session_id);
@@ -1165,8 +1164,7 @@ impl App {
         // Create PTY session if needed
         if !self.pty_sessions.contains_key(&session_id) {
             let (rows, cols) = self.terminal_size;
-            let pty_session =
-                PtySession::spawn_docker_attach(session_id, container_id, rows, cols)?;
+            let pty_session = PtySession::spawn_docker_attach(session_id, container_id, rows, cols)?;
             self.pty_sessions.insert(session_id, pty_session);
         }
 
@@ -1217,8 +1215,7 @@ impl App {
         // Create PTY session if needed
         if !self.pty_sessions.contains_key(&session_id) {
             let (rows, cols) = self.terminal_size;
-            let pty_session =
-                PtySession::spawn_docker_attach(session_id, container_id, rows, cols)?;
+            let pty_session = PtySession::spawn_docker_attach(session_id, container_id, rows, cols)?;
             self.pty_sessions.insert(session_id, pty_session);
         }
 
