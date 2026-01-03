@@ -74,7 +74,7 @@ fn render_attached_terminal(frame: &mut Frame, app: &App, area: Rect) {
             // Render scroll indicator if not at bottom
             if !buf.is_at_bottom() {
                 let scroll_offset = buf.get_scroll_offset();
-                let indicator_text = format!(" ↑ Scrolled {} lines ", scroll_offset);
+                let indicator_text = format!(" ↑ Scrolled {scroll_offset} lines ");
                 let indicator_width = indicator_text.len() as u16;
 
                 // Position in top-right corner

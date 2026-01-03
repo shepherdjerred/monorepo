@@ -46,7 +46,7 @@ fn render_attached_status(app: &App) -> Line<'static> {
         let buffer = pty_session.terminal_buffer();
         if let Ok(buf) = buffer.try_lock() {
             if !buf.is_at_bottom() {
-                format!(" [SCROLLED - Ctrl+S then {} to bottom]", SCROLL_TO_BOTTOM)
+                format!(" [SCROLLED - Ctrl+S then {SCROLL_TO_BOTTOM} to bottom]")
             } else {
                 String::new()
             }

@@ -819,7 +819,7 @@ impl App {
             let mut status = format!("Created session {}", session.name);
             if let Some(warns) = warnings {
                 for warn in warns {
-                    status.push_str(&format!(" (Warning: {})", warn));
+                    status.push_str(&format!(" (Warning: {warn})"));
                 }
             }
             self.status_message = Some(status);

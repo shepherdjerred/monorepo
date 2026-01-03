@@ -273,7 +273,7 @@ impl ProxyManager {
             // Clean up on failure
             task.abort();
             self.port_allocator.release(port).await;
-            anyhow::bail!("Session proxy failed to bind on port {}", port);
+            anyhow::bail!("Session proxy failed to bind on port {port}");
         }
 
         self.session_proxies.write().await.insert(
@@ -325,7 +325,7 @@ impl ProxyManager {
             );
             Ok(())
         } else {
-            anyhow::bail!("Session proxy not found for session {}", session_id)
+            anyhow::bail!("Session proxy not found for session {session_id}")
         }
     }
 

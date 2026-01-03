@@ -73,7 +73,7 @@ impl GitOperations for MockGitBackend {
     ) -> anyhow::Result<Option<String>> {
         if self.should_fail() {
             let msg = self.error_message.read().await.clone();
-            anyhow::bail!("{}", msg);
+            anyhow::bail!("{msg}");
         }
 
         // Create the actual directory so reconcile() can check existence
@@ -91,7 +91,7 @@ impl GitOperations for MockGitBackend {
     async fn delete_worktree(&self, _repo_path: &Path, worktree_path: &Path) -> anyhow::Result<()> {
         if self.should_fail() {
             let msg = self.error_message.read().await.clone();
-            anyhow::bail!("{}", msg);
+            anyhow::bail!("{msg}");
         }
 
         // Delete the actual directory
@@ -116,7 +116,7 @@ impl GitOperations for MockGitBackend {
     async fn get_branch(&self, _worktree_path: &Path) -> anyhow::Result<String> {
         if self.should_fail() {
             let msg = self.error_message.read().await.clone();
-            anyhow::bail!("{}", msg);
+            anyhow::bail!("{msg}");
         }
 
         // Return a mock branch name
@@ -214,7 +214,7 @@ impl ExecutionBackend for MockExecutionBackend {
     ) -> anyhow::Result<String> {
         if self.should_fail() {
             let msg = self.error_message.read().await.clone();
-            anyhow::bail!("{}", msg);
+            anyhow::bail!("{msg}");
         }
 
         let session_name = format!("{}-{}", self.name_prefix, name);
@@ -225,7 +225,7 @@ impl ExecutionBackend for MockExecutionBackend {
     async fn exists(&self, id: &str) -> anyhow::Result<bool> {
         if self.should_fail() {
             let msg = self.error_message.read().await.clone();
-            anyhow::bail!("{}", msg);
+            anyhow::bail!("{msg}");
         }
 
         Ok(self.sessions.read().await.contains(id))
@@ -234,7 +234,7 @@ impl ExecutionBackend for MockExecutionBackend {
     async fn delete(&self, id: &str) -> anyhow::Result<()> {
         if self.should_fail() {
             let msg = self.error_message.read().await.clone();
-            anyhow::bail!("{}", msg);
+            anyhow::bail!("{msg}");
         }
 
         self.sessions.write().await.remove(id);
@@ -252,7 +252,7 @@ impl ExecutionBackend for MockExecutionBackend {
     async fn get_output(&self, _id: &str, _lines: usize) -> anyhow::Result<String> {
         if self.should_fail() {
             let msg = self.error_message.read().await.clone();
-            anyhow::bail!("{}", msg);
+            anyhow::bail!("{msg}");
         }
 
         Ok("Mock output".to_string())

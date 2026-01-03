@@ -324,10 +324,10 @@ impl DockerBackend {
         // This allows Claude Code hooks inside the container to send status updates
         // to the daemon on the host via shared Unix sockets
         let home_dir = std::env::var("HOME").unwrap_or_else(|_| "/root".to_string());
-        let clauderon_dir = format!("{}/.clauderon", home_dir);
+        let clauderon_dir = format!("{home_dir}/.clauderon");
         args.extend([
             "-v".to_string(),
-            format!("{}:/workspace/.clauderon", clauderon_dir),
+            format!("{clauderon_dir}:/workspace/.clauderon"),
         ]);
 
         // Detect if workdir is a git worktree and mount parent .git directory

@@ -1210,7 +1210,7 @@ impl SessionManager {
             "docker" => Ok("docker_token"),
             "k8s" => Ok("k8s_token"),
             "talos" => Ok("talos_token"),
-            _ => anyhow::bail!("Invalid service ID: {}", service_id),
+            _ => anyhow::bail!("Invalid service ID: {service_id}"),
         }
     }
 
@@ -1226,7 +1226,7 @@ impl SessionManager {
             "docker" => Ok("DOCKER_TOKEN"),
             "k8s" => Ok("K8S_TOKEN"),
             "talos" => Ok("TALOS_TOKEN"),
-            _ => anyhow::bail!("Invalid service ID: {}", service_id),
+            _ => anyhow::bail!("Invalid service ID: {service_id}"),
         }
     }
 }
