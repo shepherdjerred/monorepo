@@ -1,5 +1,6 @@
 use tokio::io::AsyncWriteExt;
 use tokio::net::unix::OwnedWriteHalf;
+use tracing::instrument;
 
 use crate::core::SessionManager;
 
@@ -7,6 +8,7 @@ use super::protocol::{CreateSessionRequest, ProgressStep, Request, Response};
 use super::types::ReconcileReportDto;
 
 /// Handle an API request
+#[instrument(skip(manager), fields(request_type = ?std::mem::discriminant(&request)))]
 pub async fn handle_request(request: Request, manager: &SessionManager) -> Response {
     match request {
         Request::ListSessions => {

@@ -306,6 +306,8 @@ impl HttpHandler for AuthInjector {
                 // Log complete audit entry with timing
                 let entry = AuditEntry {
                     timestamp: pending.timestamp,
+                    correlation_id: Some(pending.request_id),
+                    session_id: None,
                     service: pending.service,
                     method: pending.method,
                     path: pending.path,
@@ -370,6 +372,8 @@ impl HttpHandler for AuthInjector {
                 // Log audit entry for failed request
                 let entry = AuditEntry {
                     timestamp: pending.timestamp,
+                    correlation_id: Some(pending.request_id),
+                    session_id: None,
                     service: pending.service,
                     method: pending.method,
                     path: pending.path,
@@ -555,6 +559,8 @@ impl HttpHandler for FilteringHandler {
                 // Log complete audit entry with timing
                 let entry = AuditEntry {
                     timestamp: pending.timestamp,
+                    correlation_id: Some(pending.request_id),
+                    session_id: None,
                     service: pending.service,
                     method: pending.method,
                     path: pending.path,
@@ -623,6 +629,8 @@ impl HttpHandler for FilteringHandler {
                 // Log audit entry for failed request
                 let entry = AuditEntry {
                     timestamp: pending.timestamp,
+                    correlation_id: Some(pending.request_id),
+                    session_id: None,
                     service: pending.service,
                     method: pending.method,
                     path: pending.path,

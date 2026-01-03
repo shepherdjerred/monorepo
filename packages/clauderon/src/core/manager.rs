@@ -2,6 +2,7 @@ use anyhow::Context;
 use std::path::PathBuf;
 use std::sync::Arc;
 use tokio::sync::RwLock;
+use tracing::instrument;
 use uuid::Uuid;
 
 use crate::backends::{
@@ -139,11 +140,13 @@ impl SessionManager {
     }
 
     /// List all sessions
+    #[instrument(skip(self))]
     pub async fn list_sessions(&self) -> Vec<Session> {
         self.sessions.read().await.clone()
     }
 
     /// Get a session by ID or name
+    #[instrument(skip(self), fields(id_or_name = %id_or_name))]
     pub async fn get_session(&self, id_or_name: &str) -> Option<Session> {
         let sessions = self.sessions.read().await;
 
@@ -161,6 +164,7 @@ impl SessionManager {
     /// # Errors
     ///
     /// Returns an error if the store cannot be read.
+    #[instrument(skip(self))]
     pub async fn get_recent_repos(&self) -> anyhow::Result<Vec<crate::store::RecentRepo>> {
         self.store.get_recent_repos().await
     }
@@ -174,6 +178,16 @@ impl SessionManager {
     ///
     /// Returns the created session and optionally a list of warnings (e.g., if
     /// the post-checkout hook failed but the worktree was created successfully).
+    #[instrument(
+        skip(self, images),
+        fields(
+            repo_path = %repo_path,
+            backend = ?backend,
+            agent = ?agent,
+            access_mode = ?access_mode,
+            image_count = images.len()
+        )
+    )]
     pub async fn create_session(
         &self,
         repo_path: String,
@@ -424,6 +438,7 @@ impl SessionManager {
     /// # Errors
     ///
     /// Returns an error if the session is not found or has no backend ID.
+    #[instrument(skip(self), fields(id_or_name = %id_or_name))]
     pub async fn get_attach_command(&self, id_or_name: &str) -> anyhow::Result<Vec<String>> {
         let session = self
             .get_session(id_or_name)
@@ -447,6 +462,7 @@ impl SessionManager {
     /// # Errors
     ///
     /// Returns an error if the session is not found or the store update fails.
+    #[instrument(skip(self), fields(id_or_name = %id_or_name))]
     pub async fn archive_session(&self, id_or_name: &str) -> anyhow::Result<()> {
         let mut sessions = self.sessions.write().await;
 
@@ -485,6 +501,7 @@ impl SessionManager {
     /// # Errors
     ///
     /// Returns an error if the session is not found or the store delete fails.
+    #[instrument(skip(self), fields(id_or_name = %id_or_name))]
     pub async fn delete_session(&self, id_or_name: &str) -> anyhow::Result<()> {
         let session = self
             .get_session(id_or_name)
@@ -544,6 +561,7 @@ impl SessionManager {
     /// # Errors
     ///
     /// Returns an error if backend existence checks fail.
+    #[instrument(skip(self))]
     pub async fn reconcile(&self) -> anyhow::Result<ReconcileReport> {
         let sessions_snapshot = self.sessions.read().await.clone();
         let mut report = ReconcileReport::default();
@@ -642,6 +660,7 @@ impl SessionManager {
     /// # Errors
     ///
     /// Returns an error if the session is not found or the store update fails.
+    #[instrument(skip(self), fields(id_or_name = %id_or_name, new_mode = ?new_mode))]
     pub async fn update_access_mode(
         &self,
         id_or_name: &str,

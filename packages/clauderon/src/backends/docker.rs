@@ -1,6 +1,7 @@
 use async_trait::async_trait;
 use std::path::{Path, PathBuf};
 use tokio::process::Command;
+use tracing::instrument;
 
 use super::traits::ExecutionBackend;
 
@@ -584,6 +585,7 @@ impl ExecutionBackend for DockerBackend {
     /// # Errors
     ///
     /// Returns an error if the docker command fails.
+    #[instrument(skip(self, initial_prompt, options), fields(name = %name, workdir = %workdir.display()))]
     async fn create(
         &self,
         name: &str,
@@ -671,6 +673,7 @@ impl ExecutionBackend for DockerBackend {
     /// # Errors
     ///
     /// Returns an error if the docker command fails to execute.
+    #[instrument(skip(self), fields(name = %name))]
     async fn exists(&self, name: &str) -> anyhow::Result<bool> {
         let output = Command::new("docker")
             .args(["ps", "-a", "--format", "{{.Names}}"])
@@ -690,6 +693,7 @@ impl ExecutionBackend for DockerBackend {
     /// # Errors
     ///
     /// Returns an error if the docker command fails to execute.
+    #[instrument(skip(self), fields(name = %name))]
     async fn delete(&self, name: &str) -> anyhow::Result<()> {
         // Stop the container first
         let _ = Command::new("docker").args(["stop", name]).output().await;
@@ -721,6 +725,7 @@ impl ExecutionBackend for DockerBackend {
     /// # Errors
     ///
     /// Returns an error if the docker logs command fails.
+    #[instrument(skip(self), fields(name = %name, lines = %lines))]
     async fn get_output(&self, name: &str, lines: usize) -> anyhow::Result<String> {
         let output = Command::new("docker")
             .args(["logs", "--tail", &lines.to_string(), name])

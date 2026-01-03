@@ -34,6 +34,7 @@ impl GitOperations for GitBackend {
     /// # Errors
     ///
     /// Returns an error if the git command fails and the worktree does not exist.
+    #[instrument(skip(self), fields(repo_path = %repo_path.display(), worktree_path = %worktree_path.display(), branch_name = %branch_name))]
     async fn create_worktree(
         &self,
         repo_path: &Path,
@@ -103,6 +104,7 @@ impl GitOperations for GitBackend {
     /// # Errors
     ///
     /// Returns an error if the directory removal fails.
+    #[instrument(skip(self), fields(repo_path = %repo_path.display(), worktree_path = %worktree_path.display()))]
     async fn delete_worktree(&self, repo_path: &Path, worktree_path: &Path) -> anyhow::Result<()> {
         // Remove the worktree using git (must run from within a git repo)
         let output = Command::new("git")
