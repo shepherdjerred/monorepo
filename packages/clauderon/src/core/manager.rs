@@ -368,7 +368,7 @@ impl SessionManager {
         let _permit = self.creation_semaphore.acquire().await.unwrap();
 
         // Helper to update progress
-        let update_progress = |step: u32, message: &str| async {
+        let update_progress = |step: u32, message: &str| async move {
             let progress = crate::api::protocol::ProgressStep {
                 step,
                 total: 5,
@@ -1002,7 +1002,7 @@ impl SessionManager {
         let _permit = self.deletion_semaphore.acquire().await.unwrap();
 
         // Helper to update progress
-        let update_progress = |step: u32, message: &str| async {
+        let update_progress = |step: u32, message: &str| async move {
             let progress = crate::api::protocol::ProgressStep {
                 step,
                 total: 4,
