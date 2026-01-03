@@ -28,5 +28,6 @@ pub trait Agent: Send + Sync {
         prompt: &str,
         images: &[String],
         dangerous_skip_checks: bool,
+        session_id: Option<&uuid::Uuid>,
     ) -> Vec<String>;
 }

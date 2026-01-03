@@ -229,6 +229,26 @@ impl SessionManager {
             &session.id,
         ));
 
+        // Ensure the .claude/projects/-workspace directory exists
+        if let Some(ref history_path) = session.history_file_path {
+            if let Some(parent_dir) = history_path.parent() {
+                if let Err(e) = tokio::fs::create_dir_all(parent_dir).await {
+                    tracing::warn!(
+                        session_id = %session.id,
+                        history_dir = %parent_dir.display(),
+                        error = %e,
+                        "Failed to create history directory"
+                    );
+                } else {
+                    tracing::debug!(
+                        session_id = %session.id,
+                        history_dir = %parent_dir.display(),
+                        "Created history directory"
+                    );
+                }
+            }
+        }
+
         // Record creation event
         let event = Event::new(
             session.id,

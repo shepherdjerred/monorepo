@@ -31,6 +31,7 @@ impl ZellijBackend {
         initial_prompt: &str,
         dangerous_skip_checks: bool,
         images: &[String],
+        session_id: Option<&uuid::Uuid>,
     ) -> Vec<String> {
         use crate::agents::claude_code::ClaudeCodeAgent;
         use crate::agents::traits::Agent;
@@ -39,7 +40,7 @@ impl ZellijBackend {
 
         // Build claude command using the agent
         let agent = ClaudeCodeAgent::new();
-        let cmd_vec = agent.start_command(&escaped_prompt, images, dangerous_skip_checks);
+        let cmd_vec = agent.start_command(&escaped_prompt, images, dangerous_skip_checks, session_id);
 
         // Join all arguments into a shell command, properly quoting each argument
         let claude_cmd = cmd_vec
@@ -126,6 +127,7 @@ impl ExecutionBackend for ZellijBackend {
             initial_prompt,
             options.dangerous_skip_checks,
             &options.images,
+            options.session_id.as_ref(),
         );
         let output = Command::new("zellij")
             .args(&pane_args[..])
@@ -289,7 +291,7 @@ mod tests {
     #[test]
     fn test_new_pane_has_cwd() {
         let workdir = PathBuf::from("/my/work/dir");
-        let args = ZellijBackend::build_new_pane_args(&workdir, "test prompt", true, &[]);
+        let args = ZellijBackend::build_new_pane_args(&workdir, "test prompt", true, &[], None);
 
         assert!(
             args.contains(&"--cwd".to_string()),
@@ -313,6 +315,7 @@ mod tests {
             "test prompt",
             true,
             &[],
+            None,
         );
 
         assert_eq!(args[0], "action", "Expected 'action' as first arg");
@@ -328,6 +331,7 @@ mod tests {
             prompt_with_quotes,
             true,
             &[],
+            None,
         );
 
         // Find the command argument (last one containing the prompt)
@@ -359,6 +363,7 @@ mod tests {
             "test prompt",
             true,
             &[],
+            None,
         );
 
         assert!(
@@ -375,6 +380,7 @@ mod tests {
             "test prompt",
             true,
             &[],
+            None,
         );
 
         assert!(
@@ -396,6 +402,7 @@ mod tests {
             "test prompt",
             true,
             &[],
+            None,
         );
 
         let cmd_arg = args.last().unwrap();
@@ -417,6 +424,7 @@ mod tests {
             "test prompt",
             true,
             &images,
+            None,
         );
 
         let cmd_arg = args.last().unwrap();
@@ -439,6 +447,7 @@ mod tests {
             "test prompt",
             true,
             &images,
+            None,
         );
 
         let cmd_arg = args.last().unwrap();
@@ -457,6 +466,7 @@ mod tests {
             "test prompt",
             true,
             &[],
+            None,
         );
 
         let cmd_arg = args.last().unwrap();

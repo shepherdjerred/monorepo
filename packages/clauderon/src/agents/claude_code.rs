@@ -100,8 +100,15 @@ impl Agent for ClaudeCodeAgent {
         prompt: &str,
         images: &[String],
         dangerous_skip_checks: bool,
+        session_id: Option<&uuid::Uuid>,
     ) -> Vec<String> {
         let mut cmd = vec!["claude".to_string()];
+
+        // Add session ID first if provided
+        if let Some(id) = session_id {
+            cmd.push("--session-id".to_string());
+            cmd.push(id.to_string());
+        }
 
         // Only add flag if dangerous_skip_checks is enabled
         if dangerous_skip_checks {
@@ -344,7 +351,7 @@ mod tests {
     #[test]
     fn test_start_command_basic_with_dangerous_skip() {
         let agent = ClaudeCodeAgent::new();
-        let cmd = agent.start_command("Fix the bug", &[], true);
+        let cmd = agent.start_command("Fix the bug", &[], true, None);
         assert_eq!(cmd.len(), 3);
         assert_eq!(cmd[0], "claude");
         assert_eq!(cmd[1], "--dangerously-skip-permissions");
@@ -354,7 +361,7 @@ mod tests {
     #[test]
     fn test_start_command_basic_without_dangerous_skip() {
         let agent = ClaudeCodeAgent::new();
-        let cmd = agent.start_command("Fix the bug", &[], false);
+        let cmd = agent.start_command("Fix the bug", &[], false, None);
         assert_eq!(cmd.len(), 2);
         assert_eq!(cmd[0], "claude");
         assert_eq!(cmd[1], "Fix the bug");
@@ -363,7 +370,7 @@ mod tests {
     #[test]
     fn test_start_command_empty_prompt_with_dangerous_skip() {
         let agent = ClaudeCodeAgent::new();
-        let cmd = agent.start_command("", &[], true);
+        let cmd = agent.start_command("", &[], true, None);
         assert_eq!(cmd.len(), 3);
         assert_eq!(cmd[0], "claude");
         assert_eq!(cmd[1], "--dangerously-skip-permissions");
@@ -373,7 +380,7 @@ mod tests {
     #[test]
     fn test_start_command_empty_prompt_without_dangerous_skip() {
         let agent = ClaudeCodeAgent::new();
-        let cmd = agent.start_command("", &[], false);
+        let cmd = agent.start_command("", &[], false, None);
         assert_eq!(cmd.len(), 2);
         assert_eq!(cmd[0], "claude");
         assert_eq!(cmd[1], "");
@@ -383,7 +390,7 @@ mod tests {
     fn test_start_command_prompt_with_special_chars() {
         let agent = ClaudeCodeAgent::new();
         let prompt = "Fix the bug in 'login.ts' && run tests";
-        let cmd = agent.start_command(prompt, &[], true);
+        let cmd = agent.start_command(prompt, &[], true, None);
         assert_eq!(cmd[2], prompt);
     }
 
@@ -391,7 +398,7 @@ mod tests {
     fn test_start_command_multiline_prompt() {
         let agent = ClaudeCodeAgent::new();
         let prompt = "Fix the bug\nThen run tests\nAnd update docs";
-        let cmd = agent.start_command(prompt, &[], true);
+        let cmd = agent.start_command(prompt, &[], true, None);
         assert_eq!(cmd[2], prompt);
     }
 
@@ -402,7 +409,7 @@ mod tests {
             "/path/to/image1.png".to_string(),
             "/path/to/image2.jpg".to_string(),
         ];
-        let cmd = agent.start_command("Analyze these images", &images, true);
+        let cmd = agent.start_command("Analyze these images", &images, true, None);
         assert_eq!(cmd.len(), 7); // claude, --dangerously-skip-permissions, --image, path1, --image, path2, prompt
         assert_eq!(cmd[0], "claude");
         assert_eq!(cmd[1], "--dangerously-skip-permissions");
@@ -420,7 +427,7 @@ mod tests {
             "/path/to/image1.png".to_string(),
             "/path/to/image2.jpg".to_string(),
         ];
-        let cmd = agent.start_command("Analyze these images", &images, false);
+        let cmd = agent.start_command("Analyze these images", &images, false, None);
         assert_eq!(cmd.len(), 6); // claude, --image, path1, --image, path2, prompt
         assert_eq!(cmd[0], "claude");
         assert_eq!(cmd[1], "--image");
