@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
 import type { Session, CreateSessionRequest, AccessMode } from "@clauderon/client";
+import { SessionStatus } from "@clauderon/shared";
 import { useClauderonClient } from "../hooks/useClauderonClient";
 import { useSessionEvents } from "../hooks/useSessionEvents";
 import type { ClauderonClient } from "@clauderon/client";
@@ -129,7 +130,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
             if (session) {
               newSessions.set(sessionId, {
                 ...session,
-                status: "Failed" as const,
+                status: SessionStatus.Failed,
                 error_message: error,
                 progress: undefined,
               });
