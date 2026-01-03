@@ -83,6 +83,10 @@ impl SqliteStore {
             Self::migrate_to_v5(pool).await?;
         }
 
+        if current_version < 6 {
+            Self::migrate_to_v6(pool).await?;
+        }
+
         Ok(())
     }
 
@@ -350,6 +354,36 @@ impl SqliteStore {
         tracing::info!("Migration v5 complete");
         Ok(())
     }
+
+    /// Migration v6: Add history_file_path column
+    async fn migrate_to_v6(pool: &SqlitePool) -> anyhow::Result<()> {
+        tracing::info!("Applying migration v6: Add history_file_path column");
+
+        // Check if history_file_path column exists
+        let history_path_exists: bool = sqlx::query_scalar(
+            "SELECT COUNT(*) > 0 FROM pragma_table_info('sessions') WHERE name = 'history_file_path'",
+        )
+        .fetch_one(pool)
+        .await?;
+
+        if !history_path_exists {
+            sqlx::query("ALTER TABLE sessions ADD COLUMN history_file_path TEXT")
+                .execute(pool)
+                .await?;
+            tracing::debug!("Added history_file_path column to sessions table");
+        }
+
+        // Record migration
+        let now = Utc::now();
+        sqlx::query("INSERT OR REPLACE INTO schema_version (version, applied_at) VALUES (?, ?)")
+            .bind(6)
+            .bind(now.to_rfc3339())
+            .execute(pool)
+            .await?;
+
+        tracing::info!("Migration v6 complete");
+        Ok(())
+    }
 }
 
 #[async_trait]
@@ -391,8 +425,8 @@ impl Store for SqliteStore {
                 id, name, title, description, status, backend, agent, repo_path, worktree_path,
                 branch_name, backend_id, initial_prompt, dangerous_skip_checks,
                 pr_url, pr_check_status, claude_status, claude_status_updated_at,
-                merge_conflict, access_mode, proxy_port, created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                merge_conflict, access_mode, proxy_port, history_file_path, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ",
         )
         .bind(session.id.to_string())
@@ -419,6 +453,7 @@ impl Store for SqliteStore {
         .bind(session.merge_conflict)
         .bind(session.access_mode.to_string())
         .bind(session.proxy_port.map(|p| p as i64))
+        .bind(session.history_file_path.as_ref().and_then(|p| p.to_str()).map(String::from))
         .bind(session.created_at.to_rfc3339())
         .bind(session.updated_at.to_rfc3339())
         .execute(&self.pool)
@@ -579,6 +614,7 @@ struct SessionRow {
     merge_conflict: bool,
     access_mode: String,
     proxy_port: Option<i64>,
+    history_file_path: Option<String>,
     created_at: String,
     updated_at: String,
 }
@@ -705,7 +741,7 @@ impl TryFrom<SessionRow> for Session {
             merge_conflict: row.merge_conflict,
             access_mode: row.access_mode.parse().unwrap_or_default(),
             proxy_port: row.proxy_port.map(|p| p as u16),
-            history_file_path: None,
+            history_file_path: row.history_file_path.map(PathBuf::from),
             created_at,
             updated_at,
         })

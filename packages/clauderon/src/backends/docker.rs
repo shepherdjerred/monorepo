@@ -273,6 +273,7 @@ impl DockerBackend {
         images: &[String],
         git_user_name: Option<&str>,
         git_user_email: Option<&str>,
+        session_id: Option<&uuid::Uuid>,
     ) -> anyhow::Result<Vec<String>> {
         let container_name = format!("clauderon-{name}");
         let escaped_prompt = initial_prompt.replace('\'', "'\\''");
@@ -586,7 +587,7 @@ impl DockerBackend {
             use crate::agents::traits::Agent;
 
             let agent = ClaudeCodeAgent::new();
-            let mut cmd_vec = agent.start_command(&escaped_prompt, images, dangerous_skip_checks);
+            let mut cmd_vec = agent.start_command(&escaped_prompt, images, dangerous_skip_checks, session_id);
 
             // Add print mode flags if enabled
             if print_mode {
@@ -694,6 +695,7 @@ impl ExecutionBackend for DockerBackend {
             &options.images,
             git_user_name.as_deref(),
             git_user_email.as_deref(),
+            options.session_id.as_ref(),
         )?;
         let output = Command::new("docker").args(&args).output().await?;
 
@@ -857,6 +859,7 @@ mod tests {
             &[],   // no images
             None,  // git user name
             None,  // git user email
+            None,  // session_id
         )
         .expect("Failed to build args");
 
@@ -924,6 +927,7 @@ mod tests {
             &[],   // no images
             None,  // git_user_name
             None,  // git_user_email
+            None,  // session_id
         )
         .expect("Failed to build args");
 
@@ -952,6 +956,7 @@ mod tests {
             &[],   // images
             None,  // git_user_name
             None,  // git_user_email
+            None,  // session_id
         )
         .expect("Failed to build args");
 
@@ -1044,6 +1049,7 @@ mod tests {
             &[],   // no images
             None,  // git_user_name
             None,  // git_user_email
+            None,  // session_id
         )
         .expect("Failed to build args");
 
@@ -1071,6 +1077,7 @@ mod tests {
             &[],   // no images
             None,  // git_user_name
             None,  // git_user_email
+            None,  // session_id
         )
         .expect("Failed to build args");
 
@@ -1114,6 +1121,7 @@ mod tests {
             &[],   // no images
             None,  // git_user_name
             None,  // git_user_email
+            None,  // session_id
         )
         .expect("Failed to build args");
 
@@ -1161,6 +1169,7 @@ mod tests {
             &[],   // no images
             None,  // git_user_name
             None,  // git_user_email
+            None,  // session_id
         )
         .expect("Failed to build args");
 
@@ -1188,6 +1197,7 @@ mod tests {
             &[],   // no images
             None,  // git_user_name
             None,  // git_user_email
+            None,  // session_id
         )
         .expect("Failed to build args");
 
@@ -1220,6 +1230,7 @@ mod tests {
             &[],   // no images
             None,  // git_user_name
             None,  // git_user_email
+            None,  // session_id
         )
         .expect("Failed to build args");
 
@@ -1279,6 +1290,7 @@ mod tests {
             &[],   // no images
             None,  // git_user_name
             None,  // git_user_email
+            None,  // session_id
         )
         .expect("Failed to build args");
 
@@ -1322,6 +1334,7 @@ mod tests {
             &[],   // images
             None,  // git_user_name
             None,  // git_user_email
+            None,  // session_id
         )
         .expect("Failed to build args");
 
@@ -1365,6 +1378,7 @@ mod tests {
             &[],   // images
             None,  // git_user_name
             None,  // git_user_email
+            None,  // session_id
         )
         .expect("Failed to build args");
 
@@ -1410,6 +1424,7 @@ mod tests {
             &[],   // images
             None,  // git_user_name
             None,  // git_user_email
+            None,  // session_id
         )
         .expect("Failed to build args");
 
@@ -1455,6 +1470,7 @@ mod tests {
             &[],   // images
             None,  // git_user_name
             None,  // git_user_email
+            None,  // session_id
         )
         .expect("Failed to build args");
 
@@ -1493,6 +1509,7 @@ mod tests {
             &[],   // images
             None,  // git_user_name
             None,  // git_user_email
+            None,  // session_id
         )
         .expect("Failed to build args");
 
@@ -1531,6 +1548,7 @@ mod tests {
             &[],   // images
             None,  // git_user_name
             None,  // git_user_email
+            None,  // session_id
         )
         .expect("Failed to build args");
 
@@ -1556,6 +1574,7 @@ mod tests {
             &[],   // images
             None,  // git_user_name
             None,  // git_user_email
+            None,  // session_id
         )
         .expect("Failed to build args");
 
@@ -1595,6 +1614,7 @@ mod tests {
             &[],   // images
             None,  // git_user_name
             None,  // git_user_email
+            None,  // session_id
         )
         .expect("Failed to build args");
 
