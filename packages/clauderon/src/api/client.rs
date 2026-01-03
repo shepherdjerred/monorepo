@@ -70,8 +70,7 @@ impl Client {
         let trimmed = line.trim();
         if trimmed.is_empty() {
             anyhow::bail!(
-                "Daemon returned empty response (read {} bytes, trimmed to empty)",
-                bytes_read
+                "Daemon returned empty response (read {bytes_read} bytes, trimmed to empty)"
             );
         }
 
@@ -339,37 +338,37 @@ impl Client {
 #[async_trait]
 impl ApiClient for Client {
     async fn list_sessions(&mut self) -> anyhow::Result<Vec<Session>> {
-        Client::list_sessions(self).await
+        Self::list_sessions(self).await
     }
 
     async fn get_session(&mut self, id: &str) -> anyhow::Result<Session> {
-        Client::get_session(self, id).await
+        Self::get_session(self, id).await
     }
 
     async fn create_session(
         &mut self,
         request: CreateSessionRequest,
     ) -> anyhow::Result<(Session, Option<Vec<String>>)> {
-        Client::create_session(self, request).await
+        Self::create_session(self, request).await
     }
 
     async fn delete_session(&mut self, id: &str) -> anyhow::Result<()> {
-        Client::delete_session(self, id).await
+        Self::delete_session(self, id).await
     }
 
     async fn archive_session(&mut self, id: &str) -> anyhow::Result<()> {
-        Client::archive_session(self, id).await
+        Self::archive_session(self, id).await
     }
 
     async fn attach_session(&mut self, id: &str) -> anyhow::Result<Vec<String>> {
-        Client::attach_session(self, id).await
+        Self::attach_session(self, id).await
     }
 
     async fn reconcile(&mut self) -> anyhow::Result<ReconcileReportDto> {
-        Client::reconcile(self).await
+        Self::reconcile(self).await
     }
 
     async fn get_recent_repos(&mut self) -> anyhow::Result<Vec<super::protocol::RecentRepoDto>> {
-        Client::get_recent_repos(self).await
+        Self::get_recent_repos(self).await
     }
 }

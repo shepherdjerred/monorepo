@@ -68,7 +68,7 @@ const DOCKER_IMAGE: &str = "ghcr.io/shepherdjerred/dotfiles";
 /// to work. To enable sccache compilation caching, install it in the dotfiles image:
 ///   cargo install sccache
 /// or add it to the Dockerfile.
-
+///
 /// Proxy configuration for Docker containers.
 #[derive(Debug, Clone, Default)]
 pub struct DockerProxyConfig {
@@ -517,7 +517,7 @@ impl DockerBackend {
         // Add image and command
         // Build a wrapper script that handles both initial creation and container restart:
         // - On first run: session file doesn't exist → create new session with prompt
-        // - On restart: session file exists → resume session with --continue --fork-session
+        // - On restart: session file exists → resume session with --resume --fork
         let claude_cmd = {
             use crate::agents::claude_code::ClaudeCodeAgent;
             use crate::agents::traits::Agent;
@@ -564,10 +564,11 @@ impl DockerBackend {
                     .join(" ");
 
                 // Build the resume command (for restart)
-                let resume_cmd_str = format!(
-                    "claude --session-id {} --continue --fork-session",
-                    quote_arg(&session_id_str)
-                );
+                // Use --resume to continue an existing session instead of --session-id
+                // which would try to create a new session with that ID
+                // --fork creates a new branch from the session so we don't modify the original
+                let resume_cmd_str =
+                    format!("claude --resume {} --fork", quote_arg(&session_id_str));
 
                 // Generate wrapper script that detects restart via session history file
                 // Claude Code stores session history at: .claude/projects/-workspace/<session-id>.jsonl

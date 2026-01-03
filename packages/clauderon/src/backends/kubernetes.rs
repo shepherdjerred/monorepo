@@ -670,7 +670,7 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
         // Build claude command
         // Build a wrapper script that handles both initial creation and pod restart:
         // - On first run: session file doesn't exist → create new session with prompt
-        // - On restart: session file exists → resume session with --continue --fork-session
+        // - On restart: session file exists → resume session with --resume --fork
         let claude_cmd = {
             let escaped_prompt = initial_prompt.replace('\'', "'\\''");
 
@@ -698,10 +698,10 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
                 );
 
                 // Build resume command
-                let resume_cmd = format!(
-                    "claude --session-id {} --continue --fork-session",
-                    session_id_str
-                );
+                // Use --resume to continue an existing session instead of --session-id
+                // which would try to create a new session with that ID
+                // --fork creates a new branch from the session so we don't modify the original
+                let resume_cmd = format!("claude --resume {} --fork", session_id_str);
 
                 // Generate wrapper script that detects restart via session history file
                 // Claude Code stores session history at: .claude/projects/-workspace/<session-id>.jsonl
@@ -1141,6 +1141,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_attach_command_format() {
+        // Install crypto provider for rustls (required by kube client)
+        let _ = rustls::crypto::ring::default_provider().install_default();
+
         // Skip if k8s not available
         if Client::try_default().await.is_err() {
             return;

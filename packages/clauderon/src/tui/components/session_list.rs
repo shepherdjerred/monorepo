@@ -159,11 +159,27 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
                 spans.push(Span::raw("  "));
             }
 
+            // Check if session has reconcile errors (container recreation failed)
+            let has_reconcile_error =
+                session.reconcile_attempts > 0 && session.last_reconcile_error.is_some();
+
+            // Format session name with optional warning indicator
+            let name_display = if has_reconcile_error {
+                format!("⚠ {:20}", session.name)
+            } else {
+                format!("{:22}", session.name)
+            };
+
+            let name_style = if has_reconcile_error {
+                Style::default()
+                    .fg(Color::Yellow)
+                    .add_modifier(Modifier::BOLD)
+            } else {
+                Style::default().add_modifier(Modifier::BOLD)
+            };
+
             spans.extend(vec![
-                Span::styled(
-                    format!("{:22}", session.name),
-                    Style::default().add_modifier(Modifier::BOLD),
-                ),
+                Span::styled(name_display, name_style),
                 Span::raw(format!("{repo_name:20}")),
                 Span::styled(format!("{status_text:12}"), status_style),
                 Span::raw(format!("{backend_text:8}")),

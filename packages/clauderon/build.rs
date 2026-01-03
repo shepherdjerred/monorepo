@@ -25,24 +25,22 @@ fn main() {
         }
         Ok(exit_status) => {
             let msg = format!(
-                "TypeShare CLI failed with status: {}. Install typeshare-cli: cargo install typeshare-cli",
-                exit_status
+                "TypeShare CLI failed with status: {exit_status}. Install typeshare-cli: cargo install typeshare-cli"
             );
             if is_ci {
                 panic!("{}", msg);
             } else {
-                println!("cargo:warning={}", msg);
+                println!("cargo:warning={msg}");
             }
         }
         Err(e) => {
             let msg = format!(
-                "Failed to run TypeShare CLI: {}. Install typeshare-cli: cargo install typeshare-cli",
-                e
+                "Failed to run TypeShare CLI: {e}. Install typeshare-cli: cargo install typeshare-cli"
             );
             if is_ci {
                 panic!("{}", msg);
             } else {
-                println!("cargo:warning={}", msg);
+                println!("cargo:warning={msg}");
             }
         }
     }
@@ -55,7 +53,7 @@ fn main() {
         if is_ci {
             panic!("{}", msg);
         } else {
-            println!("cargo:warning={}", msg);
+            println!("cargo:warning={msg}");
         }
     }
 

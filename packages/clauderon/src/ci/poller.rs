@@ -180,7 +180,7 @@ impl CIPoller {
         // GitHub mergeable values: "MERGEABLE", "CONFLICTING", "UNKNOWN"
         let has_conflict = match data["mergeable"].as_str() {
             Some("CONFLICTING") => true,
-            Some("MERGEABLE") | Some("UNKNOWN") | None => false,
+            Some("MERGEABLE" | "UNKNOWN") | None => false,
             _ => false,
         };
 
@@ -247,16 +247,14 @@ impl CIPoller {
         // State values from gh pr checks: SUCCESS, FAILURE, PENDING, SKIPPED, CANCELLED, etc.
         let new_status = if checks.is_empty() {
             CheckStatus::Pending
-        } else if checks.iter().any(|c| {
-            matches!(
-                c["state"].as_str(),
-                Some("FAILURE") | Some("CANCELLED") | Some("ERROR")
-            )
-        }) {
+        } else if checks
+            .iter()
+            .any(|c| matches!(c["state"].as_str(), Some("FAILURE" | "CANCELLED" | "ERROR")))
+        {
             CheckStatus::Failing
         } else if checks
             .iter()
-            .all(|c| matches!(c["state"].as_str(), Some("SUCCESS") | Some("SKIPPED")))
+            .all(|c| matches!(c["state"].as_str(), Some("SUCCESS" | "SKIPPED")))
         {
             CheckStatus::Passing
         } else {
