@@ -164,7 +164,7 @@ impl ProxyManager {
     }
 
     /// Stop all proxy services.
-    pub async fn stop(&mut self) -> anyhow::Result<()> {
+    pub fn stop(&mut self) -> anyhow::Result<()> {
         tracing::info!("Stopping proxy services...");
 
         // Stop kubectl proxy

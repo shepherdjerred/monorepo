@@ -83,7 +83,7 @@ impl PtySession {
     /// # Errors
     ///
     /// Returns an error if the PTY cannot be spawned.
-    pub async fn spawn_docker_attach(
+    pub fn spawn_docker_attach(
         session_id: uuid::Uuid,
         container_id: String,
         rows: u16,
