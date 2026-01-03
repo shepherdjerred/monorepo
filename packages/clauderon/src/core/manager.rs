@@ -964,7 +964,11 @@ impl SessionManager {
                     // Don't reveal any chars for short tokens to avoid leaking info
                     "****".to_string()
                 } else {
-                    format!("{}****...{}", &value[..8], &value[value.len() - 4..])
+                    format!(
+                        "{start}****...{end}",
+                        start = &value[..8],
+                        end = &value[value.len() - 4..]
+                    )
                 }
             };
 

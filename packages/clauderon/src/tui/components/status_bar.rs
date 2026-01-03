@@ -162,7 +162,7 @@ fn render_scroll_status(_app: &App) -> Line<'static> {
 fn render_normal_status(app: &App) -> Line<'static> {
     let status_text = app.status_message.clone().unwrap_or_else(|| {
         if app.is_connected() {
-            format!("{} sessions", app.sessions.len())
+            format!("{count} sessions", count = app.sessions.len())
         } else {
             "Disconnected".to_string()
         }
