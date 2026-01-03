@@ -46,8 +46,8 @@ async fn handle_console_socket(socket: WebSocket, session_id: String, state: App
 
     // Spawn PTY process (docker attach or zellij attach)
     let pty_result = match session.backend {
-        crate::core::session::BackendType::Docker => spawn_docker_attach(&backend_id).await,
-        crate::core::session::BackendType::Zellij => spawn_zellij_attach(&backend_id).await,
+        crate::core::session::BackendType::Docker => spawn_docker_attach(&backend_id),
+        crate::core::session::BackendType::Zellij => spawn_zellij_attach(&backend_id),
         crate::core::session::BackendType::Kubernetes => {
             // TODO: Implement Kubernetes attach
             tracing::error!("Kubernetes attach not yet implemented");
@@ -191,7 +191,7 @@ async fn handle_console_socket(socket: WebSocket, session_id: String, state: App
 type PtyHandle = Arc<Mutex<pty_process::Pty>>;
 
 /// Spawn docker attach command and return reader/writer handles
-async fn spawn_docker_attach(container_id: &str) -> anyhow::Result<(PtyHandle, PtyHandle)> {
+fn spawn_docker_attach(container_id: &str) -> anyhow::Result<(PtyHandle, PtyHandle)> {
     use pty_process::Command;
 
     // Create PTY
@@ -207,7 +207,7 @@ async fn spawn_docker_attach(container_id: &str) -> anyhow::Result<(PtyHandle, P
 }
 
 /// Spawn zellij attach command and return reader/writer handles
-async fn spawn_zellij_attach(session_name: &str) -> anyhow::Result<(PtyHandle, PtyHandle)> {
+fn spawn_zellij_attach(session_name: &str) -> anyhow::Result<(PtyHandle, PtyHandle)> {
     use pty_process::Command;
 
     // Create PTY
