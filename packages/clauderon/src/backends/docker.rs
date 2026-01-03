@@ -285,7 +285,7 @@ impl DockerBackend {
             "--user".to_string(),
             uid.to_string(),
             "-v".to_string(),
-            format!("{}:/workspace", workdir.display()),
+            format!("{display}:/workspace", display = workdir.display()),
             "-w".to_string(),
             "/workspace".to_string(),
             "-e".to_string(),
@@ -351,7 +351,11 @@ impl DockerBackend {
                 // - The worktree and parent repo are in very different directory structures
                 args.extend([
                     "-v".to_string(),
-                    format!("{}:{}", parent_git_dir.display(), parent_git_dir.display()),
+                    format!(
+                        "{display1}:{display2}",
+                        display1 = parent_git_dir.display(),
+                        display2 = parent_git_dir.display()
+                    ),
                 ]);
             }
             Ok(None) => {
@@ -456,14 +460,20 @@ impl DockerBackend {
                 // CA certificate is always mounted (required)
                 args.extend([
                     "-v".to_string(),
-                    format!("{}:/etc/clauderon/proxy-ca.pem:ro", ca_cert_path.display()),
+                    format!(
+                        "{display}:/etc/clauderon/proxy-ca.pem:ro",
+                        display = ca_cert_path.display()
+                    ),
                 ]);
 
                 // Mount and configure Kubernetes if available
                 if has_kube_config {
                     args.extend([
                         "-v".to_string(),
-                        format!("{}:/etc/clauderon/kube:ro", kube_config_dir.display()),
+                        format!(
+                            "{display}:/etc/clauderon/kube:ro",
+                            display = kube_config_dir.display()
+                        ),
                         "-e".to_string(),
                         "KUBECONFIG=/etc/clauderon/kube/config".to_string(),
                     ]);
@@ -473,7 +483,10 @@ impl DockerBackend {
                 if has_talos_config {
                     args.extend([
                         "-v".to_string(),
-                        format!("{}:/etc/clauderon/talos:ro", talos_config_dir.display()),
+                        format!(
+                            "{display}:/etc/clauderon/talos:ro",
+                            display = talos_config_dir.display()
+                        ),
                         "-e".to_string(),
                         "TALOSCONFIG=/etc/clauderon/talos/config".to_string(),
                     ]);
@@ -546,7 +559,10 @@ impl DockerBackend {
                 // Note: NOT read-only because Claude Code writes to it
                 args.extend([
                     "-v".to_string(),
-                    format!("{}:/workspace/.claude.json", claude_json_path.display()),
+                    format!(
+                        "{display}:/workspace/.claude.json",
+                        display = claude_json_path.display()
+                    ),
                 ]);
             }
 
@@ -1306,7 +1322,10 @@ mod tests {
         std::fs::create_dir_all(&worktree_dir).expect("Failed to create worktree dir");
 
         // Create a .git file that points to the parent repo
-        let git_file_content = format!("gitdir: {}/worktrees/test", repo_git.display());
+        let git_file_content = format!(
+            "gitdir: {display}/worktrees/test",
+            display = repo_git.display()
+        );
         std::fs::write(worktree_dir.join(".git"), git_file_content)
             .expect("Failed to write .git file");
 
@@ -1333,7 +1352,11 @@ mod tests {
         );
 
         // Should also have parent .git directory mount (read-write for commits)
-        let expected_git_mount = format!("{}:{}", repo_git.display(), repo_git.display());
+        let expected_git_mount = format!(
+            "{display1}:{display2}",
+            display1 = repo_git.display(),
+            display2 = repo_git.display()
+        );
         let has_git_mount = args.iter().any(|a| a == &expected_git_mount);
         assert!(
             has_git_mount,
@@ -1416,7 +1439,7 @@ mod tests {
         // Should have parent .git directory mount
         let has_git_mount = args
             .iter()
-            .any(|a| a.contains(&format!("{}:", repo_git.display())));
+            .any(|a| a.contains(&format!("{display}:", display = repo_git.display())));
         assert!(
             has_git_mount,
             "Expected parent .git mount for worktree with relative path, got: {args:?}"
@@ -1440,7 +1463,10 @@ mod tests {
             .expect("Failed to write HEAD");
 
         // Create .git file with trailing whitespace (common from manual editing)
-        let git_file_content = format!("gitdir: {}/worktrees/test   \n", repo_git.display());
+        let git_file_content = format!(
+            "gitdir: {display}/worktrees/test   \n",
+            display = repo_git.display()
+        );
         std::fs::write(worktree_dir.join(".git"), git_file_content)
             .expect("Failed to write .git file");
 
@@ -1461,7 +1487,7 @@ mod tests {
         // Should still work despite whitespace
         let has_git_mount = args
             .iter()
-            .any(|a| a.contains(&format!("{}:", repo_git.display())));
+            .any(|a| a.contains(&format!("{display}:", display = repo_git.display())));
         assert!(
             has_git_mount,
             "Expected parent .git mount despite trailing whitespace, got: {args:?}"
@@ -1515,7 +1541,7 @@ mod tests {
 
         // Point to a non-existent parent .git directory
         let fake_git_path = temp_dir.path().join("nonexistent/.git/worktrees/test");
-        let git_file_content = format!("gitdir: {}", fake_git_path.display());
+        let git_file_content = format!("gitdir: {display}", display = fake_git_path.display());
         std::fs::write(worktree_dir.join(".git"), git_file_content)
             .expect("Failed to write .git file");
 

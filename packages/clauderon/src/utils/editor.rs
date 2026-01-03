@@ -64,8 +64,12 @@ pub fn create_temp_file(content: &str) -> Result<PathBuf> {
     let temp_path = temp_dir.join(filename);
 
     // Write content to file
-    std::fs::write(&temp_path, content)
-        .with_context(|| format!("Failed to write temp file: {}", temp_path.display()))?;
+    std::fs::write(&temp_path, content).with_context(|| {
+        format!(
+            "Failed to write temp file: {display}",
+            display = temp_path.display()
+        )
+    })?;
 
     Ok(temp_path)
 }
@@ -73,7 +77,7 @@ pub fn create_temp_file(content: &str) -> Result<PathBuf> {
 /// Read the content from a file
 pub fn read_file_content(path: &PathBuf) -> Result<String> {
     std::fs::read_to_string(path)
-        .with_context(|| format!("Failed to read file: {}", path.display()))
+        .with_context(|| format!("Failed to read file: {display}", display = path.display()))
 }
 
 /// Clean up (delete) a temporary file

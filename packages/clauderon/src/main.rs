@@ -262,7 +262,7 @@ async fn main() -> anyhow::Result<()> {
             let access_mode = mode.parse::<core::session::AccessMode>()?;
             let mut client = api::client::Client::connect().await?;
             client.update_access_mode(&session, access_mode).await?;
-            println!("Updated '{}' to {}", session, access_mode);
+            println!("Updated '{session}' to {access_mode}");
         }
         Commands::Reconcile => {
             let mut client = api::client::Client::connect().await?;
