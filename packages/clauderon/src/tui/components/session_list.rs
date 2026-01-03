@@ -72,6 +72,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         .map(|session| {
             let status_style = match session.status {
                 SessionStatus::Creating => Style::default().fg(Color::Yellow),
+                SessionStatus::Deleting => Style::default().fg(Color::Yellow),
                 SessionStatus::Running => Style::default().fg(Color::Green),
                 SessionStatus::Idle => Style::default().fg(Color::Blue),
                 SessionStatus::Completed => Style::default().fg(Color::Cyan),
@@ -81,6 +82,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
 
             let status_text = match session.status {
                 SessionStatus::Creating => "Creating",
+                SessionStatus::Deleting => "Deleting",
                 SessionStatus::Running => "Running",
                 SessionStatus::Idle => "Idle",
                 SessionStatus::Completed => "Completed",
