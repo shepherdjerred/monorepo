@@ -36,6 +36,11 @@ node_modules/
 npm-debug.log
 yarn-error.log
 
+# Lock files (use bun.lock only)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
 # Bundle artifacts
 *.jsbundle
 

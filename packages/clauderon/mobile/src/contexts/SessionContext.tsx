@@ -20,7 +20,7 @@ import { useSessionEvents } from "../hooks/useSessionEvents";
 type SessionContextValue = {
   sessions: Map<string, Session>;
   isLoading: boolean;
-  error: string | null;
+  error: Error | null;
   client: ClauderonClient | null;
   createSession: (request: CreateSessionRequest) => Promise<string | null>;
   deleteSession: (id: string) => Promise<void>;
@@ -35,7 +35,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const { daemonUrl } = useSettings();
   const [sessions, setSessions] = useState<Map<string, Session>>(new Map());
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Error | null>(null);
 
   // Create clients
   const client = useMemo(() => {
@@ -92,7 +92,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       }
       setSessions(sessionMap);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load sessions");
+      setError(err instanceof Error ? err : new Error("Failed to load sessions"));
     } finally {
       setIsLoading(false);
     }
@@ -114,7 +114,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const createSession = useCallback(
     async (request: CreateSessionRequest): Promise<string | null> => {
       if (!client) {
-        setError("No daemon URL configured");
+        setError(new Error("No daemon URL configured"));
         return null;
       }
 
@@ -122,7 +122,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         const result = await client.createSession(request);
         return result.id;
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to create session");
+        setError(err instanceof Error ? err : new Error("Failed to create session"));
         return null;
       }
     },
@@ -138,7 +138,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       try {
         await client.deleteSession(id);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to delete session");
+        setError(err instanceof Error ? err : new Error("Failed to delete session"));
         throw err;
       }
     },
@@ -155,7 +155,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         await client.archiveSession(id);
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : "Failed to archive session"
+          err instanceof Error ? err : new Error("Failed to archive session")
         );
         throw err;
       }
@@ -173,7 +173,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         await client.updateAccessMode(id, mode);
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : "Failed to update access mode"
+          err instanceof Error ? err : new Error("Failed to update access mode")
         );
         throw err;
       }
