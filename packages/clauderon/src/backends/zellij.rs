@@ -246,6 +246,7 @@ impl ZellijBackend {
                 session_proxy_port: None,
                 images: vec![],
                 dangerous_skip_checks: false,
+                session_id: None,
             },
         )
         .await

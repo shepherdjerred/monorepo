@@ -15,7 +15,8 @@ pub struct TerminalBuffer {
     parser: vt100::Parser,
 
     /// Maximum number of scroll-back lines to keep.
-    scroll_back_limit: usize,
+    /// Note: This is stored for potential future use; the vt100 parser handles scrollback internally.
+    _scroll_back_limit: usize,
 
     /// Buffer for incomplete UTF-8 sequences.
     utf8_buffer: Vec<u8>,
@@ -31,7 +32,7 @@ impl TerminalBuffer {
     pub fn new(rows: u16, cols: u16) -> Self {
         Self {
             parser: vt100::Parser::new(rows, cols, DEFAULT_SCROLLBACK_LIMIT),
-            scroll_back_limit: DEFAULT_SCROLLBACK_LIMIT,
+            _scroll_back_limit: DEFAULT_SCROLLBACK_LIMIT,
             utf8_buffer: Vec::new(),
             user_scrolled: false,
         }
@@ -42,7 +43,7 @@ impl TerminalBuffer {
     pub fn with_scrollback_limit(rows: u16, cols: u16, limit: usize) -> Self {
         Self {
             parser: vt100::Parser::new(rows, cols, limit),
-            scroll_back_limit: limit,
+            _scroll_back_limit: limit,
             utf8_buffer: Vec::new(),
             user_scrolled: false,
         }

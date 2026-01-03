@@ -13,9 +13,8 @@ use std::time::Duration;
 
 use crossterm::{
     event::{
-        DisableBracketedPaste, DisableMouseCapture, EnableBracketedPaste, EnableMouseCapture,
-        Event, KeyCode, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags,
-        PushKeyboardEnhancementFlags,
+        DisableBracketedPaste, EnableBracketedPaste, Event, KeyCode, KeyboardEnhancementFlags,
+        PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags,
     },
     execute,
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
@@ -165,6 +164,10 @@ async fn run_main_loop(
                                 let _ = app.refresh_sessions().await;
                                 continue;
                             }
+                        }
+                        Some(BackendType::Kubernetes) => {
+                            // TODO: Implement Kubernetes PTY attach
+                            app.status_message = Some("Kubernetes attach not yet implemented".to_string());
                         }
                         None => {
                             // No session selected

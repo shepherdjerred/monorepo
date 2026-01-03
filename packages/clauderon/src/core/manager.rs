@@ -3,7 +3,9 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use uuid::Uuid;
 
-use crate::backends::{DockerBackend, ExecutionBackend, GitBackend, GitOperations, KubernetesBackend, ZellijBackend};
+use crate::backends::{
+    DockerBackend, ExecutionBackend, GitBackend, GitOperations, KubernetesBackend, ZellijBackend,
+};
 use crate::store::Store;
 
 use super::events::{Event, EventType};
@@ -83,9 +85,8 @@ impl SessionManager {
     ///
     /// Returns an error if the store cannot be read or Kubernetes client fails.
     pub async fn with_defaults(store: Arc<dyn Store>) -> anyhow::Result<Self> {
-        let kubernetes_backend = KubernetesBackend::new(
-            crate::backends::KubernetesConfig::load_or_default()
-        ).await?;
+        let kubernetes_backend =
+            KubernetesBackend::new(crate::backends::KubernetesConfig::load_or_default()).await?;
 
         Self::new(
             store,
@@ -108,9 +109,8 @@ impl SessionManager {
         store: Arc<dyn Store>,
         docker: DockerBackend,
     ) -> anyhow::Result<Self> {
-        let kubernetes_backend = KubernetesBackend::new(
-            crate::backends::KubernetesConfig::load_or_default()
-        ).await?;
+        let kubernetes_backend =
+            KubernetesBackend::new(crate::backends::KubernetesConfig::load_or_default()).await?;
 
         Self::new(
             store,
@@ -297,6 +297,7 @@ impl SessionManager {
             session_proxy_port: proxy_port,
             images,
             dangerous_skip_checks,
+            session_id: Some(session.id), // Pass session ID for Kubernetes PVC labeling
         };
         let backend_id = match backend {
             BackendType::Zellij => {
@@ -321,7 +322,12 @@ impl SessionManager {
             }
             BackendType::Kubernetes => {
                 self.kubernetes
-                    .create(&full_name, &worktree_path, &transformed_prompt, create_options)
+                    .create(
+                        &full_name,
+                        &worktree_path,
+                        &transformed_prompt,
+                        create_options,
+                    )
                     .await?
             }
         };
@@ -752,7 +758,12 @@ impl SessionManager {
         drop(sessions);
 
         // Record event
-        let event = Event::new(session_id, EventType::PrLinked { pr_url: pr_url.clone() });
+        let event = Event::new(
+            session_id,
+            EventType::PrLinked {
+                pr_url: pr_url.clone(),
+            },
+        );
         self.store.record_event(&event).await?;
 
         // Update in store
@@ -800,7 +811,10 @@ impl SessionManager {
         drop(sessions);
 
         // Record event
-        let event = Event::new(session_id, EventType::ConflictStatusChanged { has_conflict });
+        let event = Event::new(
+            session_id,
+            EventType::ConflictStatusChanged { has_conflict },
+        );
         self.store.record_event(&event).await?;
 
         // Update in store
@@ -875,7 +889,9 @@ impl SessionManager {
                 // Send prompt via kubectl exec with stdin (similar to Docker)
                 let namespace = crate::backends::KubernetesConfig::load_or_default().namespace;
                 let mut child = tokio::process::Command::new("kubectl")
-                    .args(["exec", "-i", "-n", &namespace, backend_id, "-c", "claude", "--", "claude"])
+                    .args([
+                        "exec", "-i", "-n", &namespace, backend_id, "-c", "claude", "--", "claude",
+                    ])
                     .stdin(std::process::Stdio::piped())
                     .stdout(std::process::Stdio::piped())
                     .stderr(std::process::Stdio::piped())

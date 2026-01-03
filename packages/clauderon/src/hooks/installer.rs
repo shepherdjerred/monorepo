@@ -223,13 +223,7 @@ pub async fn install_hooks_in_container(container_name: &str) -> Result<()> {
 
     // Create .claude directory
     let output = Command::new("docker")
-        .args([
-            "exec",
-            container_name,
-            "mkdir",
-            "-p",
-            "/workspace/.claude",
-        ])
+        .args(["exec", container_name, "mkdir", "-p", "/workspace/.claude"])
         .output()
         .await
         .context("Failed to create .claude directory")?;

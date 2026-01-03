@@ -1,6 +1,4 @@
-use crossterm::event::{
-    Event, EventStream, KeyCode, KeyEvent, KeyModifiers, MouseEvent, MouseEventKind,
-};
+use crossterm::event::{Event, EventStream, KeyCode, KeyEvent, KeyModifiers};
 use futures::StreamExt;
 use tokio::sync::mpsc;
 
@@ -10,9 +8,6 @@ use crate::core::{AgentType, BackendType};
 
 use super::app::{App, AppMode, CreateDialogFocus, CreateProgress};
 use super::events_copy_mode::handle_copy_mode_key;
-
-/// Number of lines to scroll per mouse wheel tick
-const SCROLL_LINES_PER_WHEEL_TICK: usize = 3;
 
 /// Number of lines to scroll with PageUp/PageDown
 const SCROLL_LINES_PER_PAGE: usize = 10;
@@ -111,21 +106,6 @@ pub async fn handle_paste_event(app: &mut App, text: &str) -> anyhow::Result<()>
             }
 
             match app.create_dialog.focus {
-                CreateDialogFocus::Name => {
-                    // For name field, replace all line endings with spaces
-                    let normalized_text = text
-                        .replace("\r\n", " ")
-                        .replace('\r', " ")
-                        .replace('\n', " ");
-
-                    // Insert at cursor position
-                    app.create_dialog.name.insert_str(
-                        app.create_dialog.name_cursor,
-                        &normalized_text,
-                    );
-                    // Move cursor to end of pasted content
-                    app.create_dialog.name_cursor += normalized_text.len();
-                }
                 CreateDialogFocus::Prompt => {
                     // For prompt field, normalize line endings to \n
                     let normalized_text = text.replace("\r\n", "\n").replace('\r', "\n");
@@ -133,20 +113,24 @@ pub async fn handle_paste_event(app: &mut App, text: &str) -> anyhow::Result<()>
                     // Insert each character at cursor position
                     for ch in normalized_text.chars() {
                         if ch == '\n' {
-                            (app.create_dialog.prompt_cursor_line, app.create_dialog.prompt_cursor_col) =
-                                super::text_input::insert_newline_at_cursor(
-                                    &mut app.create_dialog.prompt,
-                                    app.create_dialog.prompt_cursor_line,
-                                    app.create_dialog.prompt_cursor_col,
-                                );
+                            (
+                                app.create_dialog.prompt_cursor_line,
+                                app.create_dialog.prompt_cursor_col,
+                            ) = super::text_input::insert_newline_at_cursor(
+                                &mut app.create_dialog.prompt,
+                                app.create_dialog.prompt_cursor_line,
+                                app.create_dialog.prompt_cursor_col,
+                            );
                         } else {
-                            (app.create_dialog.prompt_cursor_line, app.create_dialog.prompt_cursor_col) =
-                                super::text_input::insert_char_at_cursor_multiline(
-                                    &mut app.create_dialog.prompt,
-                                    app.create_dialog.prompt_cursor_line,
-                                    app.create_dialog.prompt_cursor_col,
-                                    ch,
-                                );
+                            (
+                                app.create_dialog.prompt_cursor_line,
+                                app.create_dialog.prompt_cursor_col,
+                            ) = super::text_input::insert_char_at_cursor_multiline(
+                                &mut app.create_dialog.prompt,
+                                app.create_dialog.prompt_cursor_line,
+                                app.create_dialog.prompt_cursor_col,
+                                ch,
+                            );
                         }
                     }
                     app.create_dialog.ensure_cursor_visible();

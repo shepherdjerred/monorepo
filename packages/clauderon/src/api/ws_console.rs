@@ -48,6 +48,11 @@ async fn handle_console_socket(socket: WebSocket, session_id: String, state: App
     let pty_result = match session.backend {
         crate::core::session::BackendType::Docker => spawn_docker_attach(&backend_id).await,
         crate::core::session::BackendType::Zellij => spawn_zellij_attach(&backend_id).await,
+        crate::core::session::BackendType::Kubernetes => {
+            // TODO: Implement Kubernetes attach
+            tracing::error!("Kubernetes attach not yet implemented");
+            return;
+        }
     };
 
     let (pty_reader, pty_writer) = match pty_result {

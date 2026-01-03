@@ -29,10 +29,6 @@ enum Commands {
 
     /// Create a new session
     Create {
-        /// Session name (a random suffix will be added)
-        #[arg(short, long)]
-        name: String,
-
         /// Path to the repository
         #[arg(short, long)]
         repo: String,
@@ -114,6 +110,12 @@ enum Commands {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    // Install the ring crypto provider for rustls before any TLS operations
+    // This is required because multiple dependencies enable conflicting crypto providers
+    rustls::crypto::ring::default_provider()
+        .install_default()
+        .expect("Failed to install rustls crypto provider");
+
     // Ensure log directory exists
     let log_path = utils::paths::log_path();
     if let Some(log_dir) = log_path.parent() {
@@ -155,7 +157,6 @@ async fn main() -> anyhow::Result<()> {
             tui::run().await?;
         }
         Commands::Create {
-            name,
             repo,
             prompt,
             backend,
@@ -175,7 +176,6 @@ async fn main() -> anyhow::Result<()> {
             let mut client = api::client::Client::connect().await?;
             let (session, warnings) = client
                 .create_session(api::protocol::CreateSessionRequest {
-                    name,
                     repo_path: repo,
                     initial_prompt: prompt,
                     backend: backend_type,

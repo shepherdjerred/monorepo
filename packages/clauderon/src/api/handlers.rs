@@ -215,6 +215,7 @@ pub async fn handle_create_session_with_progress(
     let backend_name = match req.backend {
         crate::core::BackendType::Zellij => "Zellij session",
         crate::core::BackendType::Docker => "Docker container",
+        crate::core::BackendType::Kubernetes => "Kubernetes pod",
     };
 
     // Step 1: Creating git worktree
