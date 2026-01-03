@@ -195,6 +195,18 @@ impl SessionManager {
         let repo_path = git_info.git_root.to_string_lossy().to_string();
         let subdirectory = git_info.subdirectory;
 
+        // Validate subdirectory path for security (defense in depth)
+        if subdirectory.is_absolute()
+            || subdirectory
+                .components()
+                .any(|c| matches!(c, std::path::Component::ParentDir))
+        {
+            anyhow::bail!(
+                "Invalid subdirectory path: must be relative without '..' components. Got: {}",
+                subdirectory.display()
+            );
+        }
+
         tracing::info!(
             original_path = %repo_path_buf.display(),
             git_root = %repo_path,

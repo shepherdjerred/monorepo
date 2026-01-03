@@ -71,7 +71,17 @@ pub fn find_git_root(path: &Path) -> anyhow::Result<GitRootInfo> {
                 current.to_path_buf()
             } else if git_path.is_file() {
                 // Worktree - need to find the parent repository
-                find_worktree_parent(&git_path, current)?
+                let parent_git = parse_worktree_git_file(&git_path, current)?;
+                // The parent_git is the .git directory, we need the repo root (its parent)
+                parent_git
+                    .parent()
+                    .ok_or_else(|| {
+                        anyhow::anyhow!(
+                            "Invalid git directory: no parent for {}",
+                            parent_git.display()
+                        )
+                    })?
+                    .to_path_buf()
             } else {
                 // .git exists but is neither file nor directory (symlink, etc.)
                 anyhow::bail!(
@@ -106,7 +116,38 @@ pub fn find_git_root(path: &Path) -> anyhow::Result<GitRootInfo> {
     }
 }
 
-/// Find the parent repository root for a git worktree
+/// Detect if a directory is a git worktree and return the parent .git directory path
+///
+/// This function checks if the given path contains a `.git` file (indicating a worktree)
+/// and returns the parent repository's `.git` directory if found.
+///
+/// # Arguments
+///
+/// * `path` - Path to check for worktree status
+///
+/// # Returns
+///
+/// - `Ok(Some(PathBuf))` - Path to the parent `.git` directory
+/// - `Ok(None)` - Not a worktree (no `.git` file or is a regular repo)
+/// - `Err(_)` - Error reading or parsing the `.git` file
+///
+/// # Errors
+///
+/// Returns an error if the `.git` file exists but cannot be read or is malformed.
+pub fn detect_worktree_parent_git_dir(path: &Path) -> anyhow::Result<Option<PathBuf>> {
+    let git_file = path.join(".git");
+
+    // Check if .git exists and is a file (not a directory)
+    if !git_file.exists() || !git_file.is_file() {
+        return Ok(None);
+    }
+
+    // Parse the worktree .git file to get parent .git directory
+    let parent_git = parse_worktree_git_file(&git_file, path)?;
+    Ok(Some(parent_git))
+}
+
+/// Parse a worktree's `.git` file to find the parent repository's `.git` directory
 ///
 /// Reads the `.git` file which contains a `gitdir:` reference pointing to
 /// `.git/worktrees/<name>` in the parent repository, then traverses up to
@@ -120,7 +161,7 @@ pub fn find_git_root(path: &Path) -> anyhow::Result<GitRootInfo> {
 /// # Errors
 ///
 /// Returns an error if the `.git` file is malformed or the parent repo cannot be found.
-fn find_worktree_parent(git_file: &Path, worktree_path: &Path) -> anyhow::Result<PathBuf> {
+fn parse_worktree_git_file(git_file: &Path, worktree_path: &Path) -> anyhow::Result<PathBuf> {
     // Read the gitdir reference from .git file
     let contents = std::fs::read_to_string(git_file)
         .with_context(|| format!("Failed to read .git file: {}", git_file.display()))?;
