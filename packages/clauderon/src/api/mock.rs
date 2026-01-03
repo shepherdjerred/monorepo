@@ -109,7 +109,7 @@ impl ApiClient for MockApiClient {
     async fn list_sessions(&mut self) -> anyhow::Result<Vec<Session>> {
         if self.should_fail() {
             let msg = self.error_message.read().await.clone();
-            anyhow::bail!("{}", msg);
+            anyhow::bail!("{msg}");
         }
 
         Ok(self.sessions.read().await.values().cloned().collect())
@@ -118,7 +118,7 @@ impl ApiClient for MockApiClient {
     async fn get_session(&mut self, id: &str) -> anyhow::Result<Session> {
         if self.should_fail() {
             let msg = self.error_message.read().await.clone();
-            anyhow::bail!("{}", msg);
+            anyhow::bail!("{msg}");
         }
 
         let sessions = self.sessions.read().await;
@@ -146,7 +146,7 @@ impl ApiClient for MockApiClient {
     ) -> anyhow::Result<(Session, Option<Vec<String>>)> {
         if self.should_fail() {
             let msg = self.error_message.read().await.clone();
-            anyhow::bail!("{}", msg);
+            anyhow::bail!("{msg}");
         }
 
         // Generate a unique session name with counter
@@ -159,8 +159,8 @@ impl ApiClient for MockApiClient {
             title: None,
             description: None,
             repo_path: PathBuf::from(&request.repo_path),
-            worktree_path: PathBuf::from(format!("/mock/worktrees/{}", session_name)),
-            branch_name: format!("feature/{}", session_name),
+            worktree_path: PathBuf::from(format!("/mock/worktrees/{session_name}")),
+            branch_name: format!("feature/{session_name}"),
             initial_prompt: request.initial_prompt,
             backend: request.backend,
             agent: request.agent,
@@ -170,7 +170,7 @@ impl ApiClient for MockApiClient {
 
         let mut session = Session::new(config);
         session.set_status(SessionStatus::Running);
-        session.set_backend_id(format!("mock-backend-{}", session_name));
+        session.set_backend_id(format!("mock-backend-{session_name}"));
 
         self.sessions
             .write()
@@ -183,7 +183,7 @@ impl ApiClient for MockApiClient {
     async fn delete_session(&mut self, id: &str) -> anyhow::Result<()> {
         if self.should_fail() {
             let msg = self.error_message.read().await.clone();
-            anyhow::bail!("{}", msg);
+            anyhow::bail!("{msg}");
         }
 
         let mut sessions = self.sessions.write().await;
@@ -212,7 +212,7 @@ impl ApiClient for MockApiClient {
     async fn archive_session(&mut self, id: &str) -> anyhow::Result<()> {
         if self.should_fail() {
             let msg = self.error_message.read().await.clone();
-            anyhow::bail!("{}", msg);
+            anyhow::bail!("{msg}");
         }
 
         let mut sessions = self.sessions.write().await;
@@ -239,7 +239,7 @@ impl ApiClient for MockApiClient {
     async fn attach_session(&mut self, id: &str) -> anyhow::Result<Vec<String>> {
         if self.should_fail() {
             let msg = self.error_message.read().await.clone();
-            anyhow::bail!("{}", msg);
+            anyhow::bail!("{msg}");
         }
 
         let sessions = self.sessions.read().await;
@@ -266,7 +266,7 @@ impl ApiClient for MockApiClient {
     async fn reconcile(&mut self) -> anyhow::Result<ReconcileReportDto> {
         if self.should_fail() {
             let msg = self.error_message.read().await.clone();
-            anyhow::bail!("{}", msg);
+            anyhow::bail!("{msg}");
         }
 
         // Return an empty report (everything is healthy)
@@ -280,7 +280,7 @@ impl ApiClient for MockApiClient {
     async fn get_recent_repos(&mut self) -> anyhow::Result<Vec<super::protocol::RecentRepoDto>> {
         if self.should_fail() {
             let msg = self.error_message.read().await.clone();
-            anyhow::bail!("{}", msg);
+            anyhow::bail!("{msg}");
         }
 
         // Return mock recent repos with timestamps
