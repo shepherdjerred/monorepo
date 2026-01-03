@@ -110,6 +110,12 @@ enum Commands {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    // Install the ring crypto provider for rustls before any TLS operations
+    // This is required because multiple dependencies enable conflicting crypto providers
+    rustls::crypto::ring::default_provider()
+        .install_default()
+        .expect("Failed to install rustls crypto provider");
+
     // Ensure log directory exists
     let log_path = utils::paths::log_path();
     if let Some(log_dir) = log_path.parent() {

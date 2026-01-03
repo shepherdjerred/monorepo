@@ -66,8 +66,8 @@ http = "1"
 base64 = "0.22"
 
 # TLS
-rustls = { version = "0.23", features = ["ring"] }
-tokio-rustls = "0.26"
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12", "logging"] }
+tokio-rustls = { version = "0.26", default-features = false, features = ["ring", "tls12", "logging"] }
 rcgen = { version = "0.14", features = ["pem", "x509-parser"] }
 rustls-pemfile = "2"
 
