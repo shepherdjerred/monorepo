@@ -34,7 +34,8 @@ async fn handle_events_socket(socket: WebSocket, state: AppState) {
                 "type": "connected",
                 "message": "Subscribed to session events"
             })
-            .to_string(),
+            .to_string()
+            .into(),
         ))
         .await
     {
@@ -57,7 +58,7 @@ async fn handle_events_socket(socket: WebSocket, state: AppState) {
                             "event": event,
                         });
 
-                        if let Err(e) = sender.send(Message::Text(message.to_string())).await {
+                        if let Err(e) = sender.send(Message::Text(message.to_string().into())).await {
                             tracing::error!("Failed to send event to WebSocket: {}", e);
                             break;
                         }

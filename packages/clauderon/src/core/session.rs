@@ -38,6 +38,11 @@ pub struct Session {
     #[typeshare(serialized_as = "String")]
     pub worktree_path: PathBuf,
 
+    /// Subdirectory path relative to git root (empty if at root)
+    /// Example: "packages/clauderon" for a subdirectory session
+    #[typeshare(serialized_as = "String")]
+    pub subdirectory: PathBuf,
+
     /// Git branch name
     pub branch_name: String,
 
@@ -76,6 +81,16 @@ pub struct Session {
     #[typeshare(serialized_as = "String")]
     pub history_file_path: Option<PathBuf>,
 
+    /// Number of times we've attempted to recreate the container
+    pub reconcile_attempts: u32,
+
+    /// Last reconciliation error message
+    pub last_reconcile_error: Option<String>,
+
+    /// When the last reconciliation attempt occurred
+    #[typeshare(serialized_as = "String")]
+    pub last_reconcile_at: Option<DateTime<Utc>>,
+
     /// When the session was created
     #[typeshare(serialized_as = "String")]
     pub created_at: DateTime<Utc>,
@@ -97,6 +112,8 @@ pub struct SessionConfig {
     pub repo_path: PathBuf,
     /// Path to the git worktree
     pub worktree_path: PathBuf,
+    /// Subdirectory path relative to git root (empty if at root)
+    pub subdirectory: PathBuf,
     /// Git branch name
     pub branch_name: String,
     /// Initial prompt given to the AI agent
@@ -126,6 +143,7 @@ impl Session {
             agent: config.agent,
             repo_path: config.repo_path,
             worktree_path: config.worktree_path,
+            subdirectory: config.subdirectory,
             branch_name: config.branch_name,
             backend_id: None,
             initial_prompt: config.initial_prompt,
@@ -138,6 +156,9 @@ impl Session {
             access_mode: config.access_mode,
             proxy_port: None,
             history_file_path: None,
+            reconcile_attempts: 0,
+            last_reconcile_error: None,
+            last_reconcile_at: None,
             created_at: now,
             updated_at: now,
         }
@@ -190,6 +211,51 @@ impl Session {
     pub fn set_merge_conflict(&mut self, has_conflict: bool) {
         self.merge_conflict = has_conflict;
         self.updated_at = Utc::now();
+    }
+
+    /// Record a failed reconciliation attempt
+    pub fn record_reconcile_failure(&mut self, error: String) {
+        self.reconcile_attempts += 1;
+        self.last_reconcile_error = Some(error);
+        self.last_reconcile_at = Some(Utc::now());
+        self.updated_at = Utc::now();
+    }
+
+    /// Reset reconciliation state after successful recreation
+    pub fn reset_reconcile_state(&mut self) {
+        self.reconcile_attempts = 0;
+        self.last_reconcile_error = None;
+        self.last_reconcile_at = None;
+        self.updated_at = Utc::now();
+    }
+
+    /// Check if we should attempt reconciliation based on backoff timing
+    /// Returns true if enough time has passed since last attempt
+    pub fn should_attempt_reconcile(&self) -> bool {
+        use std::time::Duration;
+
+        let Some(last_attempt) = self.last_reconcile_at else {
+            return true; // No previous attempt
+        };
+
+        let delay = match self.reconcile_attempts {
+            0 => Duration::from_secs(30),  // First retry after 30s
+            1 => Duration::from_secs(120), // Second retry after 2min
+            2 => Duration::from_secs(300), // Third retry after 5min
+            _ => return false,             // Max attempts exceeded
+        };
+
+        let elapsed = Utc::now()
+            .signed_duration_since(last_attempt)
+            .to_std()
+            .unwrap_or(Duration::ZERO);
+
+        elapsed >= delay
+    }
+
+    /// Check if we've exceeded maximum reconciliation attempts
+    pub fn exceeded_max_reconcile_attempts(&self) -> bool {
+        self.reconcile_attempts >= 3
     }
 }
 

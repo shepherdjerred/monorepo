@@ -8,15 +8,19 @@ dist/
 packages/birmel/data/
 packages/birmel/prisma/data/
 
-# Development tool caches and installations
-.rustup/
-.cargo/
-.local/
-.bun/
-.cache/
-.npm/
-.clauderon/
+# Claude Code local session files (root level only)
+/.claude/
+!/.claude/settings.json
+/.claude.json
+/.claude.json.*
 
-# Claude Code internal files (keep only settings.local.json ignored above)
-.claude/
-!.claude/.gitkeep
+# Clauderon daemon data (root level only)
+/.clauderon/
+
+# Build and tool caches (root level only, from HOME=/workspace)
+/.bun/
+/.cache/
+/.cargo/
+/.local/
+/.npm/
+/.rustup/

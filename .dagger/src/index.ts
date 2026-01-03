@@ -357,6 +357,10 @@ export class Monorepo {
     await container.sync();
     outputs.push("✓ Web packages built");
 
+    // Clauderon Rust validation (fmt, clippy, test, build)
+    outputs.push("\n--- Clauderon Rust Validation ---");
+    outputs.push(await this.clauderonCi(source));
+
     // Now build remaining packages (web packages already built, will be skipped or fast)
     // Note: Skip tests here - bun-decompile tests fail in CI (requires `bun build --compile`)
     container = container.withExec(["bun", "run", "build"]);

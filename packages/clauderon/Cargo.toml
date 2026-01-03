@@ -2,7 +2,7 @@
 name = "clauderon"
 version = "0.1.0"
 edition = "2024"
-rust-version = "1.85"
+rust-version = "1.88"
 description = "Session management system for AI coding agents"
 license = "MIT"
 
@@ -19,12 +19,12 @@ tokio-util = { version = "0.7", features = ["codec"] }
 clap = { version = "4", features = ["derive"] }
 
 # TUI
-ratatui = "0.29"  # 0.30 requires Rust 1.86
+ratatui = "0.30"
 crossterm = { version = "0.29", features = ["event-stream"] }
 
 # PTY and terminal emulation
 pty-process = { version = "0.5", features = ["async"] }
-vt100 = "0.15"  # 0.16 conflicts with ratatui 0.29's unicode-width pin
+vt100 = "0.16"
 futures = "0.3"
 
 # Database
@@ -49,10 +49,10 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tracing-appender = "0.2"
 
 # Error reporting
-sentry = { version = "0.38", default-features = false, features = ["backtrace", "contexts", "panic", "rustls", "reqwest", "tracing"] }
+sentry = { version = "0.46", default-features = false, features = ["backtrace", "contexts", "panic", "rustls", "reqwest", "tracing"] }
 
 # Utilities
-rand = "0.8"  # 0.9 has breaking API changes
+rand = "0.9"
 dirs = "6"
 exec = "0.3"
 async-trait = "0.1"
@@ -75,22 +75,22 @@ rcgen = { version = "0.14", features = ["pem", "x509-parser"] }
 rustls-pemfile = "2"
 
 # gRPC (for Talos gateway)
-tonic = "0.12"
-prost = "0.13"
+tonic = "0.14"
+prost = "0.14"
 
 # Config files
 toml = "0.9"
 serde_yaml = "0.9"
 
 # Kubernetes client
-kube = { version = "0.94", features = ["runtime", "derive"] }
-k8s-openapi = { version = "0.22", features = ["v1_30"] }
+kube = { version = "2.0", features = ["runtime", "derive"] }
+k8s-openapi = { version = "0.26", features = ["v1_33"] }
 
 # Time handling (for certificate generation)
 time = "0.3"
 
 # HTTP/WebSocket server
-axum = { version = "0.7", features = ["ws"] }
+axum = { version = "0.8", features = ["ws"] }
 tower = "0.5"
 tower-http = { version = "0.6", features = ["cors", "trace"] }
 hyper = { version = "1", features = ["full"] }
@@ -113,5 +113,13 @@ unsafe_code = "forbid"
 all = { level = "warn", priority = -1 }
 pedantic = { level = "warn", priority = -1 }
 nursery = { level = "warn", priority = -1 }
-# Allow only truly noisy lints that don't affect code quality
+# Allow noisy lints that don't meaningfully improve code quality
 module_name_repetitions = "allow"
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"
+must_use_candidate = "allow"
+doc_markdown = "allow"
+similar_names = "allow"
+significant_drop_tightening = "allow"
+missing_const_for_fn = "allow"
+items_after_statements = "allow"

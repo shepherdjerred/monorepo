@@ -50,6 +50,8 @@ pub enum AppMode {
     Locked,
     /// Scroll mode - scroll terminal buffer
     Scroll,
+    /// Showing reconcile error details for a session
+    ReconcileError,
 }
 
 /// Copy mode state for text selection and navigation
@@ -549,6 +551,9 @@ pub struct App {
 
     /// Copy mode state (when in CopyMode)
     pub copy_mode_state: Option<CopyModeState>,
+
+    /// Session ID for reconcile error dialog (when in ReconcileError mode)
+    pub reconcile_error_session_id: Option<Uuid>,
 }
 
 impl App {
@@ -579,6 +584,7 @@ impl App {
             terminal_size: (24, 80), // Default size, updated on resize
             launch_editor: false,
             copy_mode_state: None,
+            reconcile_error_session_id: None,
         }
     }
 
@@ -839,13 +845,44 @@ impl App {
     pub async fn reconcile(&mut self) -> anyhow::Result<()> {
         if let Some(client) = &mut self.client {
             let report = client.reconcile().await?;
-            let msg = format!(
-                "Reconciled: {} missing worktrees, {} missing backends, {} orphaned backends",
-                report.missing_worktrees.len(),
-                report.missing_backends.len(),
-                report.orphaned_backends.len()
-            );
+
+            // Build a detailed status message
+            let mut parts = Vec::new();
+
+            if !report.recreated.is_empty() {
+                parts.push(format!("✓ {} recreated", report.recreated.len()));
+            }
+            if !report.recreation_failed.is_empty() {
+                parts.push(format!("✗ {} failed", report.recreation_failed.len()));
+            }
+            if !report.gave_up.is_empty() {
+                parts.push(format!("⚠ {} gave up", report.gave_up.len()));
+            }
+            if !report.missing_worktrees.is_empty() {
+                parts.push(format!(
+                    "{} missing worktrees",
+                    report.missing_worktrees.len()
+                ));
+            }
+            if !report.missing_backends.is_empty() {
+                parts.push(format!(
+                    "{} missing backends",
+                    report.missing_backends.len()
+                ));
+            }
+            if !report.orphaned_backends.is_empty() {
+                parts.push(format!("{} orphaned", report.orphaned_backends.len()));
+            }
+
+            let msg = if parts.is_empty() {
+                "All sessions healthy".to_string()
+            } else {
+                format!("Reconciled: {}", parts.join(", "))
+            };
             self.status_message = Some(msg);
+
+            // Refresh sessions to get updated state
+            self.refresh_sessions().await?;
         }
         Ok(())
     }
@@ -873,6 +910,39 @@ impl App {
         } else {
             self.mode = AppMode::Help;
         }
+    }
+
+    /// Show reconcile error dialog for a session
+    pub fn show_reconcile_error(&mut self, session_id: Uuid) {
+        self.reconcile_error_session_id = Some(session_id);
+        self.mode = AppMode::ReconcileError;
+    }
+
+    /// Close reconcile error dialog
+    pub fn close_reconcile_error(&mut self) {
+        self.reconcile_error_session_id = None;
+        self.mode = AppMode::SessionList;
+    }
+
+    /// Check if the selected session has a reconcile error and show the dialog if so
+    ///
+    /// Returns true if the dialog was shown, false otherwise
+    pub fn try_show_selected_reconcile_error(&mut self) -> bool {
+        if let Some(session) = self.selected_session() {
+            if session.reconcile_attempts > 0 && session.last_reconcile_error.is_some() {
+                let session_id = session.id;
+                self.show_reconcile_error(session_id);
+                return true;
+            }
+        }
+        false
+    }
+
+    /// Get the session for the current reconcile error dialog
+    #[must_use]
+    pub fn reconcile_error_session(&self) -> Option<&Session> {
+        self.reconcile_error_session_id
+            .and_then(|id| self.sessions.iter().find(|s| s.id == id))
     }
 
     /// Request quit

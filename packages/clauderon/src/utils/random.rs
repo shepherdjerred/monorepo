@@ -104,10 +104,10 @@ pub fn sanitize_branch_name(name: &str) -> String {
 #[must_use]
 pub fn generate_session_name(base_name: &str) -> String {
     let sanitized = sanitize_branch_name(base_name);
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     let suffix: String = (0..SUFFIX_LENGTH)
         .map(|_| {
-            let idx = rng.gen_range(0..CHARSET.len());
+            let idx = rng.random_range(0..CHARSET.len());
             CHARSET[idx] as char
         })
         .collect();

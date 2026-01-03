@@ -83,6 +83,7 @@ impl MockApiClient {
             description: None,
             repo_path: PathBuf::from("/mock/repo"),
             worktree_path: PathBuf::from(format!("/mock/worktrees/{name}")),
+            subdirectory: PathBuf::new(),
             branch_name: format!("feature/{name}"),
             initial_prompt: "Mock prompt".to_string(),
             backend: BackendType::Zellij,
@@ -160,6 +161,7 @@ impl ApiClient for MockApiClient {
             description: None,
             repo_path: PathBuf::from(&request.repo_path),
             worktree_path: PathBuf::from(format!("/mock/worktrees/{session_name}")),
+            subdirectory: PathBuf::new(),
             branch_name: format!("feature/{session_name}"),
             initial_prompt: request.initial_prompt,
             backend: request.backend,
@@ -274,6 +276,9 @@ impl ApiClient for MockApiClient {
             missing_worktrees: vec![],
             missing_backends: vec![],
             orphaned_backends: vec![],
+            recreated: vec![],
+            recreation_failed: vec![],
+            gave_up: vec![],
         })
     }
 

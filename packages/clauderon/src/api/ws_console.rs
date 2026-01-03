@@ -13,7 +13,7 @@ use tokio::sync::Mutex;
 
 use super::http_server::AppState;
 
-/// WebSocket handler for /ws/console/:sessionId endpoint
+/// WebSocket handler for /ws/console/{sessionId} endpoint
 /// Clients connect here to stream terminal I/O for a specific session
 pub async fn ws_console_handler(
     ws: WebSocketUpgrade,
@@ -91,7 +91,7 @@ async fn handle_console_socket(socket: WebSocket, session_id: String, state: App
                             "data": data,
                         });
 
-                        if let Err(e) = ws_sender.send(Message::Text(message.to_string())).await {
+                        if let Err(e) = ws_sender.send(Message::Text(message.to_string().into())).await {
                             tracing::debug!("Failed to send PTY output to WebSocket: {}", e);
                             break;
                         }

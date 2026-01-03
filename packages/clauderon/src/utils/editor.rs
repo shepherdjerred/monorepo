@@ -53,14 +53,15 @@ pub fn create_temp_file(content: &str) -> Result<PathBuf> {
     // Use system temp directory
     let temp_dir = std::env::temp_dir();
 
-    // Create unique filename using timestamp + PID to avoid collisions
+    // Create unique filename using timestamp + PID + random to avoid collisions
     let timestamp = SystemTime::now()
         .duration_since(SystemTime::UNIX_EPOCH)
         .context("Failed to get system time")?
-        .as_millis();
+        .as_nanos();
 
     let pid = std::process::id();
-    let filename = format!("clauderon-prompt-{timestamp}-{pid}.txt");
+    let random: u32 = rand::random();
+    let filename = format!("clauderon-prompt-{timestamp}-{pid}-{random}.txt");
     let temp_path = temp_dir.join(filename);
 
     // Write content to file

@@ -13,8 +13,11 @@ use tempfile::TempDir;
 fn create_test_session(name: &str) -> Session {
     Session::new(SessionConfig {
         name: name.to_string(),
+        title: None,
+        description: None,
         repo_path: "/tmp/test-repo".into(),
         worktree_path: format!("/tmp/worktrees/{name}").into(),
+        subdirectory: std::path::PathBuf::new(),
         branch_name: name.to_string(),
         initial_prompt: "Test prompt".to_string(),
         backend: BackendType::Zellij,

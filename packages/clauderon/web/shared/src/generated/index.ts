@@ -111,6 +111,12 @@ export interface ReconcileReportDto {
 	missing_backends: string[];
 	/** Orphaned backend resources */
 	orphaned_backends: string[];
+	/** Sessions that were successfully recreated */
+	recreated: string[];
+	/** Sessions that failed to be recreated */
+	recreation_failed: string[];
+	/** Sessions that exceeded max reconcile attempts */
+	gave_up: string[];
 }
 
 /** Session lifecycle status */
@@ -177,6 +183,11 @@ export interface Session {
 	repo_path: string;
 	/** Path to the git worktree */
 	worktree_path: string;
+	/**
+	 * Subdirectory path relative to git root (empty if at root)
+	 * Example: "packages/clauderon" for a subdirectory session
+	 */
+	subdirectory: string;
 	/** Git branch name */
 	branch_name: string;
 	/** Backend-specific identifier (zellij session name, docker container id, or kubernetes pod name) */
@@ -201,6 +212,12 @@ export interface Session {
 	proxy_port?: number;
 	/** Path to Claude Code's session history file (.jsonl) */
 	history_file_path: string;
+	/** Number of times we've attempted to recreate the container */
+	reconcile_attempts: number;
+	/** Last reconciliation error message */
+	last_reconcile_error?: string;
+	/** When the last reconciliation attempt occurred */
+	last_reconcile_at: string;
 	/** When the session was created */
 	created_at: string;
 	/** When the session was last updated */

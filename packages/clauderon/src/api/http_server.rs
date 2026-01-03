@@ -23,7 +23,7 @@ pub struct AppState {
 }
 
 /// Create the HTTP router with all endpoints (without state)
-/// The caller should add WebSocket routes and then call with_state()
+/// The caller should add WebSocket routes and then call `with_state()`
 pub fn create_router() -> Router<AppState> {
     // Configure CORS for development
     let cors = CorsLayer::new()
@@ -35,11 +35,11 @@ pub fn create_router() -> Router<AppState> {
         // Session endpoints
         .route("/api/sessions", get(list_sessions))
         .route("/api/sessions", post(create_session))
-        .route("/api/sessions/:id", get(get_session))
-        .route("/api/sessions/:id", delete(delete_session))
-        .route("/api/sessions/:id/archive", post(archive_session))
-        .route("/api/sessions/:id/access-mode", post(update_access_mode))
-        .route("/api/sessions/:id/history", get(get_session_history))
+        .route("/api/sessions/{id}", get(get_session))
+        .route("/api/sessions/{id}", delete(delete_session))
+        .route("/api/sessions/{id}/archive", post(archive_session))
+        .route("/api/sessions/{id}/access-mode", post(update_access_mode))
+        .route("/api/sessions/{id}/history", get(get_session_history))
         // Other endpoints
         .route("/api/recent-repos", get(get_recent_repos))
         .route("/api/status", get(get_system_status))
@@ -188,10 +188,9 @@ async fn get_recent_repos(
     let repos = state.session_manager.get_recent_repos().await?;
 
     // Convert RecentRepo to RecentRepoDto
-    use crate::api::protocol::RecentRepoDto;
-    let repos_dto: Vec<RecentRepoDto> = repos
+    let repos_dto: Vec<crate::api::protocol::RecentRepoDto> = repos
         .iter()
-        .map(|r| RecentRepoDto {
+        .map(|r| crate::api::protocol::RecentRepoDto {
             repo_path: r.repo_path.to_string_lossy().to_string(),
             last_used: r.last_used.to_rfc3339(),
         })
@@ -225,8 +224,8 @@ async fn update_credential(
 /// Get session history from Claude Code's JSONL file
 ///
 /// Query parameters:
-/// - since_line: Optional line number to start from (for incremental updates)
-/// - limit: Optional max number of lines to return (default: all)
+/// - `since_line`: Optional line number to start from (for incremental updates)
+/// - `limit`: Optional max number of lines to return (default: all)
 async fn get_session_history(
     State(state): State<AppState>,
     Path(id): Path<String>,
@@ -275,8 +274,7 @@ async fn get_session_history(
         .map_err(|e| AppError::BadRequest(format!("Failed to read history: {e}")))?;
 
     let reader = tokio::io::BufReader::new(file);
-    use tokio::io::AsyncBufReadExt;
-    let mut lines_stream = reader.lines();
+    let mut lines_stream = tokio::io::AsyncBufReadExt::lines(reader);
 
     let mut lines = Vec::new();
     let mut line_num = 0u64;
@@ -336,7 +334,7 @@ fn validate_session_id(id: &str) -> Result<(), AppError> {
     }
 
     // Check for control characters
-    if id.chars().any(|c| c.is_control()) {
+    if id.chars().any(char::is_control) {
         return Err(AppError::BadRequest(
             "Invalid session ID format".to_string(),
         ));
@@ -366,23 +364,23 @@ pub enum AppError {
 
 impl From<anyhow::Error> for AppError {
     fn from(err: anyhow::Error) -> Self {
-        AppError::SessionManager(err)
+        Self::SessionManager(err)
     }
 }
 
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
         let (status, error_message) = match self {
-            AppError::SessionManager(err) => {
-                tracing::error!("Session manager error: {}", err);
+            Self::SessionManager(err) => {
+                tracing::error!("Session manager error: {err}");
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
                     format!("Internal error: {err}"),
                 )
             }
-            AppError::NotFound(msg) => (StatusCode::NOT_FOUND, msg),
-            AppError::NotImplemented(msg) => (StatusCode::NOT_IMPLEMENTED, msg),
-            AppError::BadRequest(msg) => (StatusCode::BAD_REQUEST, msg),
+            Self::NotFound(msg) => (StatusCode::NOT_FOUND, msg),
+            Self::NotImplemented(msg) => (StatusCode::NOT_IMPLEMENTED, msg),
+            Self::BadRequest(msg) => (StatusCode::BAD_REQUEST, msg),
         };
 
         let body = Json(json!({
