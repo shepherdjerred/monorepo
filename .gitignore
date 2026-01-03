@@ -7,3 +7,16 @@ dist/
 .mastra/
 packages/birmel/data/
 packages/birmel/prisma/data/
+
+# Development tool caches and installations
+.rustup/
+.cargo/
+.local/
+.bun/
+.cache/
+.npm/
+.clauderon/
+
+# Claude Code internal files (keep only settings.local.json ignored above)
+.claude/
+!.claude/.gitkeep
