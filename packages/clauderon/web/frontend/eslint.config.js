@@ -17,7 +17,12 @@ export default tseslint.config(
   {
     languageOptions: {
       parserOptions: {
-        projectService: true,
+        projectService: {
+          allowDefaultProject: [
+            "src/components/ThemeToggle.test.tsx",
+            "src/lib/claudeParser.test.ts",
+          ],
+        },
         tsconfigRootDir: import.meta.dirname,
       },
     },
@@ -46,6 +51,15 @@ export default tseslint.config(
       // React hooks rules
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": "warn",
+    },
+  },
+  {
+    files: ["**/*.test.ts", "**/*.test.tsx"],
+    rules: {
+      "@typescript-eslint/no-empty-function": "off",
+      "@typescript-eslint/no-unused-vars": "off",
+      "@typescript-eslint/ban-ts-comment": "off",
+      "@typescript-eslint/no-dynamic-delete": "off",
     },
   },
 );

@@ -922,6 +922,8 @@ mod tests {
             false, // print mode
             true,  // dangerous_skip_checks
             &[],   // no images
+            None,  // git_user_name
+            None,  // git_user_email
         )
         .expect("Failed to build args");
 
@@ -1040,6 +1042,8 @@ mod tests {
             false, // print mode
             true,  // dangerous_skip_checks
             &[],   // no images
+            None,  // git_user_name
+            None,  // git_user_email
         )
         .expect("Failed to build args");
 
@@ -1065,6 +1069,8 @@ mod tests {
             false, // print mode
             true,  // dangerous_skip_checks
             &[],   // no images
+            None,  // git_user_name
+            None,  // git_user_email
         )
         .expect("Failed to build args");
 
@@ -1106,6 +1112,8 @@ mod tests {
             false, // print mode
             true,  // dangerous_skip_checks
             &[],   // no images
+            None,  // git_user_name
+            None,  // git_user_email
         )
         .expect("Failed to build args");
 
@@ -1151,6 +1159,8 @@ mod tests {
             false, // print mode
             true,  // dangerous_skip_checks
             &[],   // no images
+            None,  // git_user_name
+            None,  // git_user_email
         )
         .expect("Failed to build args");
 
@@ -1176,6 +1186,8 @@ mod tests {
             false, // print mode
             true,  // dangerous_skip_checks
             &[],   // no images
+            None,  // git_user_name
+            None,  // git_user_email
         )
         .expect("Failed to build args");
 
@@ -1206,6 +1218,8 @@ mod tests {
             false, // print mode
             true,  // dangerous_skip_checks
             &[],   // no images
+            None,  // git_user_name
+            None,  // git_user_email
         )
         .expect("Failed to build args");
 
@@ -1233,7 +1247,10 @@ mod tests {
             1000,
             None,
             true, // print mode
+            true, // dangerous_skip_checks
             &[],  // no images
+            None, // git_user_name
+            None, // git_user_email
         )
         .expect("Failed to build args");
 
@@ -1258,7 +1275,10 @@ mod tests {
             1000,
             None,
             false, // interactive mode
+            true,  // dangerous_skip_checks
             &[],   // no images
+            None,  // git_user_name
+            None,  // git_user_email
         )
         .expect("Failed to build args");
 

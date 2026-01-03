@@ -30,6 +30,7 @@ async fn create_test_manager() -> (SessionManager, TempDir, TempDir) {
     let git = Arc::new(MockGitBackend::new());
     let zellij = Arc::new(MockExecutionBackend::zellij());
     let docker = Arc::new(MockExecutionBackend::docker());
+    let kubernetes = Arc::new(MockExecutionBackend::kubernetes());
 
     fn to_git_ops(arc: Arc<MockGitBackend>) -> Arc<dyn GitOperations> {
         arc
@@ -43,6 +44,7 @@ async fn create_test_manager() -> (SessionManager, TempDir, TempDir) {
         to_git_ops(git),
         to_exec_backend(zellij),
         to_exec_backend(docker),
+        to_exec_backend(kubernetes),
     )
     .await
     .expect("Failed to create manager");
@@ -61,14 +63,15 @@ async fn test_recent_repo_tracked_on_session_create() {
     // Create a session - this should track the repo
     let (_session, _warnings) = manager
         .create_session(
-            "test-session".to_string(),
             repo_path.to_string_lossy().to_string(),
             "Test prompt".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
-            true,  // dangerous_skip_checks
-            false, // print_mode
-            false, // plan_mode
+            true,               // dangerous_skip_checks
+            false,              // print_mode
+            false,              // plan_mode
+            Default::default(), // access_mode
+            vec![],             // images
         )
         .await
         .expect("Failed to create session");
@@ -102,7 +105,6 @@ async fn test_path_canonicalization_prevents_duplicates() {
     // Session 1: Use canonical path
     manager
         .create_session(
-            "session-1".to_string(),
             canonical.to_string_lossy().to_string(),
             "Prompt 1".to_string(),
             BackendType::Zellij,
@@ -110,6 +112,8 @@ async fn test_path_canonicalization_prevents_duplicates() {
             true,
             false,
             false,
+            Default::default(),
+            vec![],
         )
         .await
         .expect("Failed to create session 1");
@@ -118,7 +122,6 @@ async fn test_path_canonicalization_prevents_duplicates() {
     let path_with_dot = format!("{}/.", canonical.to_string_lossy());
     manager
         .create_session(
-            "session-2".to_string(),
             path_with_dot,
             "Prompt 2".to_string(),
             BackendType::Zellij,
@@ -126,6 +129,8 @@ async fn test_path_canonicalization_prevents_duplicates() {
             true,
             false,
             false,
+            Default::default(),
+            vec![],
         )
         .await
         .expect("Failed to create session 2");
@@ -150,7 +155,6 @@ async fn test_limit_enforcement_removes_oldest() {
 
         manager
             .create_session(
-                format!("session-{i}"),
                 repo_path.to_string_lossy().to_string(),
                 format!("Prompt {i}"),
                 BackendType::Zellij,
@@ -158,6 +162,8 @@ async fn test_limit_enforcement_removes_oldest() {
                 true,
                 false,
                 false,
+                Default::default(),
+                vec![],
             )
             .await
             .expect("Failed to create session");
@@ -195,7 +201,6 @@ async fn test_upsert_behavior_updates_timestamp() {
     // Create first session
     manager
         .create_session(
-            "session-1".to_string(),
             repo_path.to_string_lossy().to_string(),
             "Prompt 1".to_string(),
             BackendType::Zellij,
@@ -203,6 +208,8 @@ async fn test_upsert_behavior_updates_timestamp() {
             true,
             false,
             false,
+            Default::default(),
+            vec![],
         )
         .await
         .expect("Failed to create session 1");
@@ -220,7 +227,6 @@ async fn test_upsert_behavior_updates_timestamp() {
     // Create second session with same repo
     manager
         .create_session(
-            "session-2".to_string(),
             repo_path.to_string_lossy().to_string(),
             "Prompt 2".to_string(),
             BackendType::Zellij,
@@ -228,6 +234,8 @@ async fn test_upsert_behavior_updates_timestamp() {
             true,
             false,
             false,
+            Default::default(),
+            vec![],
         )
         .await
         .expect("Failed to create session 2");
@@ -257,7 +265,6 @@ async fn test_recent_repos_ordered_by_most_recent() {
 
         manager
             .create_session(
-                format!("session-{i}"),
                 repo_path.to_string_lossy().to_string(),
                 format!("Prompt {i}"),
                 BackendType::Zellij,
@@ -265,6 +272,8 @@ async fn test_recent_repos_ordered_by_most_recent() {
                 true,
                 false,
                 false,
+                Default::default(),
+                vec![],
             )
             .await
             .expect("Failed to create session");
@@ -297,7 +306,6 @@ async fn test_nonexistent_repo_handles_gracefully() {
     // The manager shouldn't fail, it should just store the path
     let result = manager
         .create_session(
-            "session".to_string(),
             "/nonexistent/repo/path".to_string(),
             "Prompt".to_string(),
             BackendType::Zellij,
@@ -305,6 +313,8 @@ async fn test_nonexistent_repo_handles_gracefully() {
             true,
             false,
             false,
+            Default::default(),
+            vec![],
         )
         .await;
 

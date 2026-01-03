@@ -355,6 +355,8 @@ async fn test_claude_print_mode_e2e() {
         plan_mode: false, // Don't need plan mode for this test
         session_proxy_port: None,
         images: vec![],
+        dangerous_skip_checks: true,
+        session_id: None,
     };
 
     // Simple prompt that should produce predictable-ish output
