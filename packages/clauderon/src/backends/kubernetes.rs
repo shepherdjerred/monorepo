@@ -671,9 +671,10 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
         let mut claude_args = vec![];
 
         // Add session ID first if provided
-        if let Some(session_id) = options.session_id {
+        let session_id_str = options.session_id.map(|id| id.to_string());
+        if let Some(ref session_id) = session_id_str {
             claude_args.push("--session-id");
-            claude_args.push(&session_id.to_string());
+            claude_args.push(session_id);
         }
 
         if options.print_mode {

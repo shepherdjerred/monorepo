@@ -453,7 +453,13 @@ impl Store for SqliteStore {
         .bind(session.merge_conflict)
         .bind(session.access_mode.to_string())
         .bind(session.proxy_port.map(|p| p as i64))
-        .bind(session.history_file_path.as_ref().and_then(|p| p.to_str()).map(String::from))
+        .bind(
+            session
+                .history_file_path
+                .as_ref()
+                .and_then(|p| p.to_str())
+                .map(String::from),
+        )
         .bind(session.created_at.to_rfc3339())
         .bind(session.updated_at.to_rfc3339())
         .execute(&self.pool)

@@ -40,7 +40,8 @@ impl ZellijBackend {
 
         // Build claude command using the agent
         let agent = ClaudeCodeAgent::new();
-        let cmd_vec = agent.start_command(&escaped_prompt, images, dangerous_skip_checks, session_id);
+        let cmd_vec =
+            agent.start_command(&escaped_prompt, images, dangerous_skip_checks, session_id);
 
         // Join all arguments into a shell command, properly quoting each argument
         let claude_cmd = cmd_vec

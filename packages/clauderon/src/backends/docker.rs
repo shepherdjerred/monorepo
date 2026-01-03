@@ -520,7 +520,8 @@ impl DockerBackend {
             use crate::agents::traits::Agent;
 
             let agent = ClaudeCodeAgent::new();
-            let mut cmd_vec = agent.start_command(&escaped_prompt, images, dangerous_skip_checks, session_id);
+            let mut cmd_vec =
+                agent.start_command(&escaped_prompt, images, dangerous_skip_checks, session_id);
 
             // Add print mode flags if enabled
             if print_mode {
