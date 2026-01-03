@@ -88,6 +88,10 @@ impl SqliteStore {
             Self::migrate_to_v6(pool).await?;
         }
 
+        if current_version < 7 {
+            Self::migrate_to_v7(pool).await?;
+        }
+
         Ok(())
     }
 
@@ -385,6 +389,66 @@ impl SqliteStore {
         tracing::info!("Migration v6 complete");
         Ok(())
     }
+
+    /// Migration v7: Add reconcile tracking columns
+    async fn migrate_to_v7(pool: &SqlitePool) -> anyhow::Result<()> {
+        tracing::info!("Applying migration v7: Add reconcile tracking columns");
+
+        // Add reconcile_attempts column
+        let reconcile_attempts_exists: bool = sqlx::query_scalar(
+            "SELECT COUNT(*) > 0 FROM pragma_table_info('sessions') WHERE name = 'reconcile_attempts'",
+        )
+        .fetch_one(pool)
+        .await?;
+
+        if !reconcile_attempts_exists {
+            sqlx::query(
+                "ALTER TABLE sessions ADD COLUMN reconcile_attempts INTEGER NOT NULL DEFAULT 0",
+            )
+            .execute(pool)
+            .await?;
+            tracing::debug!("Added reconcile_attempts column to sessions table");
+        }
+
+        // Add last_reconcile_error column
+        let last_reconcile_error_exists: bool = sqlx::query_scalar(
+            "SELECT COUNT(*) > 0 FROM pragma_table_info('sessions') WHERE name = 'last_reconcile_error'",
+        )
+        .fetch_one(pool)
+        .await?;
+
+        if !last_reconcile_error_exists {
+            sqlx::query("ALTER TABLE sessions ADD COLUMN last_reconcile_error TEXT")
+                .execute(pool)
+                .await?;
+            tracing::debug!("Added last_reconcile_error column to sessions table");
+        }
+
+        // Add last_reconcile_at column
+        let last_reconcile_at_exists: bool = sqlx::query_scalar(
+            "SELECT COUNT(*) > 0 FROM pragma_table_info('sessions') WHERE name = 'last_reconcile_at'",
+        )
+        .fetch_one(pool)
+        .await?;
+
+        if !last_reconcile_at_exists {
+            sqlx::query("ALTER TABLE sessions ADD COLUMN last_reconcile_at TEXT")
+                .execute(pool)
+                .await?;
+            tracing::debug!("Added last_reconcile_at column to sessions table");
+        }
+
+        // Record migration
+        let now = Utc::now();
+        sqlx::query("INSERT OR REPLACE INTO schema_version (version, applied_at) VALUES (?, ?)")
+            .bind(7)
+            .bind(now.to_rfc3339())
+            .execute(pool)
+            .await?;
+
+        tracing::info!("Migration v7 complete");
+        Ok(())
+    }
 }
 
 #[async_trait]
@@ -429,8 +493,10 @@ impl Store for SqliteStore {
                 id, name, title, description, status, backend, agent, repo_path, worktree_path,
                 branch_name, backend_id, initial_prompt, dangerous_skip_checks,
                 pr_url, pr_check_status, claude_status, claude_status_updated_at,
-                merge_conflict, access_mode, proxy_port, history_file_path, created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                merge_conflict, access_mode, proxy_port, history_file_path,
+                reconcile_attempts, last_reconcile_error, last_reconcile_at,
+                created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ",
         )
         .bind(session.id.to_string())
@@ -464,6 +530,9 @@ impl Store for SqliteStore {
                 .and_then(|p| p.to_str())
                 .map(String::from),
         )
+        .bind(session.reconcile_attempts as i64)
+        .bind(&session.last_reconcile_error)
+        .bind(session.last_reconcile_at.map(|t| t.to_rfc3339()))
         .bind(session.created_at.to_rfc3339())
         .bind(session.updated_at.to_rfc3339())
         .execute(&self.pool)
@@ -629,6 +698,9 @@ struct SessionRow {
     access_mode: String,
     proxy_port: Option<i64>,
     history_file_path: Option<String>,
+    reconcile_attempts: i64,
+    last_reconcile_error: Option<String>,
+    last_reconcile_at: Option<String>,
     created_at: String,
     updated_at: String,
 }
@@ -734,6 +806,22 @@ impl TryFrom<SessionRow> for Session {
                 )
             })?;
 
+        let last_reconcile_at = row
+            .last_reconcile_at
+            .map(|s| {
+                chrono::DateTime::parse_from_rfc3339(&s)
+                    .map(Into::into)
+                    .map_err(|e| {
+                        anyhow::anyhow!(
+                            "session '{}': invalid last_reconcile_at '{}': {}",
+                            row.name,
+                            s,
+                            e
+                        )
+                    })
+            })
+            .transpose()?;
+
         Ok(Self {
             id,
             name: row.name,
@@ -744,6 +832,7 @@ impl TryFrom<SessionRow> for Session {
             agent,
             repo_path: row.repo_path.into(),
             worktree_path: row.worktree_path.into(),
+            subdirectory: PathBuf::new(), // TODO: Add subdirectory column to database schema
             branch_name: row.branch_name,
             backend_id: row.backend_id,
             initial_prompt: row.initial_prompt,
@@ -756,6 +845,9 @@ impl TryFrom<SessionRow> for Session {
             access_mode: row.access_mode.parse().unwrap_or_default(),
             proxy_port: row.proxy_port.map(|p| p as u16),
             history_file_path: row.history_file_path.map(PathBuf::from),
+            reconcile_attempts: row.reconcile_attempts as u32,
+            last_reconcile_error: row.last_reconcile_error,
+            last_reconcile_at,
             created_at,
             updated_at,
         })

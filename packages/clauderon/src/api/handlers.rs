@@ -8,6 +8,7 @@ use super::protocol::{CreateSessionRequest, ProgressStep, Request, Response};
 use super::types::ReconcileReportDto;
 
 /// Handle an API request
+#[allow(clippy::too_many_lines)]
 #[instrument(skip(manager), fields(request_type = ?std::mem::discriminant(&request)))]
 pub async fn handle_request(request: Request, manager: &SessionManager) -> Response {
     match request {
@@ -208,7 +209,11 @@ async fn send_response(writer: &mut OwnedWriteHalf, response: &Response) -> anyh
     Ok(())
 }
 
-/// Handle CreateSession with progress streaming
+/// Handle `CreateSession` with progress streaming
+///
+/// # Errors
+///
+/// Returns an error if writing to the stream fails or session creation fails.
 pub async fn handle_create_session_with_progress(
     req: CreateSessionRequest,
     manager: &SessionManager,

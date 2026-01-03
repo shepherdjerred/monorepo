@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 /// Trait for git worktree operations
 #[async_trait]

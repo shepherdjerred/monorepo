@@ -20,6 +20,7 @@ fn create_test_session(name: &str, worktree_path: &std::path::Path) -> Session {
         description: None,
         repo_path: "/tmp/test-repo".into(),
         worktree_path: worktree_path.to_path_buf(),
+        subdirectory: std::path::PathBuf::new(),
         branch_name: name.to_string(),
         initial_prompt: "Test prompt".to_string(),
         backend: BackendType::Docker,

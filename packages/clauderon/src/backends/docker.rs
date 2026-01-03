@@ -69,7 +69,7 @@ const DOCKER_IMAGE: &str = "ghcr.io/shepherdjerred/dotfiles";
 /// to work. To enable sccache compilation caching, install it in the dotfiles image:
 ///   cargo install sccache
 /// or add it to the Dockerfile.
-
+///
 /// Proxy configuration for Docker containers.
 #[derive(Debug, Clone, Default)]
 pub struct DockerProxyConfig {
@@ -516,13 +516,16 @@ impl DockerBackend {
         }
 
         // Add image and command
+        // Build a wrapper script that handles both initial creation and container restart:
+        // - On first run: session file doesn't exist → create new session with prompt
+        // - On restart: session file exists → resume session with --resume --fork
         let claude_cmd = {
             use crate::agents::claude_code::ClaudeCodeAgent;
             use crate::agents::traits::Agent;
 
             let agent = ClaudeCodeAgent::new();
             let mut cmd_vec =
-                agent.start_command(&escaped_prompt, images, dangerous_skip_checks, session_id);
+                agent.start_command(&escaped_prompt, images, dangerous_skip_checks, None); // Don't pass session_id here, we handle it in the wrapper
 
             // Add print mode flags if enabled
             if print_mode {
@@ -531,24 +534,67 @@ impl DockerBackend {
                 cmd_vec.insert(2, "--verbose".to_string());
             }
 
-            // Join all arguments into a shell command, properly quoting each argument
-            cmd_vec
-                .iter()
-                .map(|arg| {
-                    // Always quote arguments that contain special characters or spaces
-                    if arg.contains('\'')
-                        || arg.contains(' ')
-                        || arg.contains('\n')
-                        || arg.contains('&')
-                        || arg.contains('|')
-                    {
-                        format!("'{}'", arg.replace('\'', "'\\''"))
-                    } else {
-                        arg.clone()
-                    }
-                })
-                .collect::<Vec<_>>()
-                .join(" ")
+            // Helper to quote shell arguments
+            let quote_arg = |arg: &str| -> String {
+                if arg.contains('\'')
+                    || arg.contains(' ')
+                    || arg.contains('\n')
+                    || arg.contains('&')
+                    || arg.contains('|')
+                {
+                    format!("'{}'", arg.replace('\'', "'\\''"))
+                } else {
+                    arg.to_string()
+                }
+            };
+
+            // If we have a session ID, generate a wrapper script that handles restart
+            if let Some(sid) = session_id {
+                let session_id_str = sid.to_string();
+
+                // Build the create command (for first run)
+                let mut create_cmd = vec!["claude".to_string()];
+                create_cmd.push("--session-id".to_string());
+                create_cmd.push(session_id_str.clone());
+                // Add remaining args (skip "claude" at index 0)
+                create_cmd.extend(cmd_vec.iter().skip(1).cloned());
+                let create_cmd_str = create_cmd
+                    .iter()
+                    .map(|a| quote_arg(a))
+                    .collect::<Vec<_>>()
+                    .join(" ");
+
+                // Build the resume command (for restart)
+                // Use --resume to continue an existing session instead of --session-id
+                // which would try to create a new session with that ID
+                // --fork creates a new branch from the session so we don't modify the original
+                let resume_cmd_str =
+                    format!("claude --resume {} --fork", quote_arg(&session_id_str));
+
+                // Generate wrapper script that detects restart via session history file
+                // Claude Code stores session history at: .claude/projects/-workspace/<session-id>.jsonl
+                format!(
+                    r#"SESSION_ID="{session_id}"
+HISTORY_FILE="/workspace/.claude/projects/-workspace/${{SESSION_ID}}.jsonl"
+if [ -f "$HISTORY_FILE" ]; then
+    echo "Resuming existing session $SESSION_ID"
+    exec {resume_cmd}
+else
+    echo "Creating new session $SESSION_ID"
+    exec {create_cmd}
+fi"#,
+                    session_id = session_id_str,
+                    resume_cmd = resume_cmd_str,
+                    create_cmd = create_cmd_str,
+                )
+            } else {
+                // No session ID - just run the command directly
+                cmd_vec
+                    .iter()
+                    .map(|arg| quote_arg(arg))
+                    .collect::<Vec<_>>()
+                    .join(" ")
+            }
         };
 
         args.extend([
@@ -762,6 +808,7 @@ impl DockerBackend {
                 images: vec![],
                 dangerous_skip_checks: false,
                 session_id: None,
+                initial_workdir: std::path::PathBuf::new(),
             },
         )
         .await
@@ -899,6 +946,7 @@ mod tests {
             &[],   // images
             None,  // git_user_name
             None,  // git_user_email
+            None,  // session_id
         )
         .expect("Failed to build args");
 
@@ -931,6 +979,7 @@ mod tests {
             &[],   // images
             None,  // git_user_name
             None,  // git_user_email
+            None,  // session_id
         )
         .expect("Failed to build args");
 
@@ -1276,6 +1325,7 @@ mod tests {
             &[],  // no images
             None, // git_user_name
             None, // git_user_email
+            None, // session_id
         )
         .expect("Failed to build args");
 
@@ -1332,6 +1382,10 @@ mod tests {
             .expect("Failed to create worktrees dir");
         std::fs::create_dir_all(&worktree_dir).expect("Failed to create worktree dir");
 
+        // Create HEAD file in .git directory (required for validation)
+        std::fs::write(repo_git.join("HEAD"), "ref: refs/heads/main")
+            .expect("Failed to write HEAD");
+
         // Create a .git file that points to the parent repo
         let git_file_content = format!("gitdir: {}/worktrees/test", repo_git.display());
         std::fs::write(worktree_dir.join(".git"), git_file_content)
@@ -1341,6 +1395,7 @@ mod tests {
         let args = DockerBackend::build_create_args(
             "test-session",
             &worktree_dir,
+            &PathBuf::new(), // initial_workdir
             "test prompt",
             1000,
             None,
@@ -1361,7 +1416,9 @@ mod tests {
         );
 
         // Should also have parent .git directory mount (read-write for commits)
-        let expected_git_mount = format!("{}:{}", repo_git.display(), repo_git.display());
+        // Use canonicalized path since the function resolves symlinks (e.g. /var -> /private/var on macOS)
+        let canonical_git = repo_git.canonicalize().expect("Failed to canonicalize");
+        let expected_git_mount = format!("{}:{}", canonical_git.display(), canonical_git.display());
         let has_git_mount = args.iter().any(|a| a == &expected_git_mount);
         assert!(
             has_git_mount,
@@ -1398,11 +1455,11 @@ mod tests {
         )
         .expect("Failed to build args");
 
-        // Count volume mounts (should have workspace + 3 cargo/sccache cache mounts)
+        // Count volume mounts (should have workspace + 3 cargo/sccache cache mounts + clauderon dir + claude.json)
         let mount_count = args.iter().filter(|a| *a == "-v").count();
         assert_eq!(
-            mount_count, 4,
-            "Normal git repo should have workspace + 3 cache mounts, got {mount_count} mounts"
+            mount_count, 6,
+            "Normal git repo should have workspace + 3 cache mounts + clauderon dir + claude.json, got {mount_count} mounts"
         );
     }
 
@@ -1432,6 +1489,7 @@ mod tests {
         let args = DockerBackend::build_create_args(
             "test-session",
             &worktree_dir,
+            &PathBuf::new(), // initial_workdir
             "test prompt",
             1000,
             None,
@@ -1478,6 +1536,7 @@ mod tests {
         let args = DockerBackend::build_create_args(
             "test-session",
             &worktree_dir,
+            &PathBuf::new(), // initial_workdir
             "test prompt",
             1000,
             None,
@@ -1517,6 +1576,7 @@ mod tests {
         let args = DockerBackend::build_create_args(
             "test-session",
             &worktree_dir,
+            &PathBuf::new(), // initial_workdir
             "test prompt",
             1000,
             None,
@@ -1529,11 +1589,11 @@ mod tests {
         )
         .expect("Failed to build args");
 
-        // Should have workspace + 3 cache mounts (no git parent mount)
+        // Should have workspace + 3 cache mounts + clauderon dir + claude.json (no git parent mount)
         let mount_count = args.iter().filter(|a| *a == "-v").count();
         assert_eq!(
-            mount_count, 4,
-            "Malformed worktree should have workspace + 3 cache mounts, got {mount_count} mounts"
+            mount_count, 6,
+            "Malformed worktree should have workspace + 3 cache mounts + clauderon dir + claude.json, got {mount_count} mounts"
         );
     }
 
@@ -1556,6 +1616,7 @@ mod tests {
         let args = DockerBackend::build_create_args(
             "test-session",
             &worktree_dir,
+            &PathBuf::new(), // initial_workdir
             "test prompt",
             1000,
             None,
@@ -1568,11 +1629,11 @@ mod tests {
         )
         .expect("Failed to build args");
 
-        // Should have workspace + 3 cache mounts (no git parent mount due to validation failure)
+        // Should have workspace + 3 cache mounts + clauderon dir + claude.json (no git parent mount due to validation failure)
         let mount_count = args.iter().filter(|a| *a == "-v").count();
         assert_eq!(
-            mount_count, 4,
-            "Worktree with missing parent should have workspace + 3 cache mounts, got {mount_count} mounts"
+            mount_count, 6,
+            "Worktree with missing parent should have workspace + 3 cache mounts + clauderon dir + claude.json, got {mount_count} mounts"
         );
     }
 
