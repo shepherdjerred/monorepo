@@ -1,6 +1,6 @@
 //! HTTP middleware for API requests.
 
-use axum::{body::Body, extract::Request, http::HeaderValue, middleware::Next, response::Response};
+use axum::{extract::Request, http::HeaderValue, middleware::Next, response::Response};
 use uuid::Uuid;
 
 use crate::observability::CorrelationId;
