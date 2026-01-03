@@ -7,7 +7,7 @@ use ratatui::{
 };
 
 use super::app::{App, AppMode};
-use super::components::{create_dialog, session_list, status_bar};
+use super::components::{create_dialog, reconcile_error_dialog, session_list, status_bar};
 use crate::core::BackendType;
 
 /// Render the entire UI
@@ -42,6 +42,9 @@ pub fn render(frame: &mut Frame, app: &App) {
             let dialog_area = centered_rect(60, 60, frame.area());
             frame.render_widget(Clear, dialog_area);
             render_help(frame, app, dialog_area);
+        }
+        AppMode::ReconcileError => {
+            reconcile_error_dialog::render(frame, app, frame.area());
         }
         AppMode::SessionList
         | AppMode::Attached

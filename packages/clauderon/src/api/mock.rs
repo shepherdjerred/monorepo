@@ -276,6 +276,9 @@ impl ApiClient for MockApiClient {
             missing_worktrees: vec![],
             missing_backends: vec![],
             orphaned_backends: vec![],
+            recreated: vec![],
+            recreation_failed: vec![],
+            gave_up: vec![],
         })
     }
 

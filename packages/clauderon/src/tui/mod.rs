@@ -80,6 +80,11 @@ async fn run_main_loop(
     // Tick interval for animations
     let mut tick_interval = tokio::time::interval(Duration::from_millis(50));
 
+    // Background reconcile interval (30 seconds)
+    let mut reconcile_interval = tokio::time::interval(Duration::from_secs(30));
+    // Skip the first tick (fires immediately)
+    reconcile_interval.tick().await;
+
     // Set initial terminal size
     let size = terminal.size()?;
     app.terminal_size = (size.height, size.width);
@@ -118,6 +123,11 @@ async fn run_main_loop(
 
                 // Handle Enter in session list to attach
                 if app.mode == AppMode::SessionList && key.code == KeyCode::Enter {
+                    // Check if session has a reconcile error - show dialog instead of attaching
+                    if app.try_show_selected_reconcile_error() {
+                        continue;
+                    }
+
                     // Get backend type before borrowing for attach command
                     let backend_type = app.selected_session().map(|s| s.backend);
 
@@ -275,6 +285,23 @@ async fn run_main_loop(
             // Handle tick for animations
             _ = tick_interval.tick() => {
                 app.tick();
+            }
+
+            // Handle background reconcile (silent - no status message unless errors)
+            _ = reconcile_interval.tick() => {
+                if app.is_connected() && app.mode == AppMode::SessionList {
+                    // Only run background reconcile when in session list mode
+                    // and not during other operations
+                    if app.create_task.is_none() && app.delete_task.is_none() {
+                        if let Err(e) = app.reconcile().await {
+                            tracing::warn!(error = %e, "Background reconcile failed");
+                        } else {
+                            // Clear the status message from reconcile (it's silent background)
+                            // unless there were recreation results
+                            app.status_message = None;
+                        }
+                    }
+                }
             }
         }
 

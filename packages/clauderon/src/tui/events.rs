@@ -171,6 +171,7 @@ pub async fn handle_key_event(app: &mut App, key: KeyEvent) -> anyhow::Result<()
         AppMode::CopyMode => handle_copy_mode_key(app, key).await?,
         AppMode::Locked => handle_locked_key(app, key).await?,
         AppMode::Scroll => handle_scroll_mode_key(app, key).await?,
+        AppMode::ReconcileError => handle_reconcile_error_key(app, key).await?,
     }
     Ok(())
 }
@@ -744,6 +745,38 @@ fn handle_help_key(app: &mut App, key: KeyEvent) {
         }
         _ => {}
     }
+}
+
+/// Handle key events in the reconcile error dialog.
+///
+/// Keys:
+/// - R: Retry container recreation
+/// - D: Delete the session
+/// - Esc/q: Close the dialog
+async fn handle_reconcile_error_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
+    match key.code {
+        KeyCode::Esc | KeyCode::Char('q') => {
+            app.close_reconcile_error();
+        }
+        KeyCode::Char('R' | 'r') => {
+            // Retry reconciliation for this session
+            app.status_message = Some("Retrying container recreation...".to_string());
+            app.close_reconcile_error();
+            if let Err(e) = app.reconcile().await {
+                app.status_message = Some(format!("Retry failed: {e}"));
+            }
+        }
+        KeyCode::Char('D' | 'd') => {
+            // Delete the session
+            if let Some(session_id) = app.reconcile_error_session_id {
+                app.pending_delete = Some(session_id.to_string());
+                app.reconcile_error_session_id = None;
+                app.mode = AppMode::ConfirmDelete;
+            }
+        }
+        _ => {}
+    }
+    Ok(())
 }
 
 /// Handle key events when attached to a session via PTY.
