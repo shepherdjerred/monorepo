@@ -60,13 +60,19 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     setSessions((prev) => {
       const next = new Map(prev);
       switch (event.type) {
-        case "session_created":
-        case "session_updated":
-          next.set(event.session.id, event.session);
+        case "SessionCreated":
+        case "SessionUpdated": {
+          // Event payload contains the full session object
+          const session = event.payload;
+          next.set(session.id, session);
           break;
-        case "session_deleted":
-          next.delete(event.sessionId);
+        }
+        case "SessionDeleted": {
+          // Event payload contains { id: string }
+          const payload = event.payload;
+          next.delete(payload.id);
           break;
+        }
       }
       return next;
     });
