@@ -111,6 +111,8 @@ pub fn replay_events(events: &[Event]) -> Option<Session> {
     let worktree_path = crate::utils::paths::worktree_path(name);
     let mut session = Session::new(super::session::SessionConfig {
         name: name.clone(),
+        title: None,
+        description: None,
         repo_path: repo_path.clone().into(),
         worktree_path,
         branch_name: name.clone(),

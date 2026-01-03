@@ -163,6 +163,10 @@ export interface Session {
 	id: string;
 	/** Human-friendly name (user-provided + random suffix) */
 	name: string;
+	/** AI-generated title for display (optional, falls back to name) */
+	title?: string;
+	/** AI-generated description of the task (optional) */
+	description?: string;
 	/** Current status of the session */
 	status: SessionStatus;
 	/** Execution backend */

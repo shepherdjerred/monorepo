@@ -79,6 +79,8 @@ impl MockApiClient {
     pub fn create_mock_session(name: &str, status: SessionStatus) -> Session {
         let config = SessionConfig {
             name: name.to_string(),
+            title: None,
+            description: None,
             repo_path: PathBuf::from("/mock/repo"),
             worktree_path: PathBuf::from(format!("/mock/worktrees/{name}")),
             branch_name: format!("feature/{name}"),
@@ -154,6 +156,8 @@ impl ApiClient for MockApiClient {
 
         let config = SessionConfig {
             name: session_name.clone(),
+            title: None,
+            description: None,
             repo_path: PathBuf::from(&request.repo_path),
             worktree_path: PathBuf::from(format!("/mock/worktrees/{}", session_name)),
             branch_name: format!("feature/{}", session_name),

@@ -215,7 +215,7 @@ impl SessionManager {
             description: Some(metadata.description),
             repo_path: repo_path.clone().into(),
             worktree_path: worktree_path.clone(),
-            branch_name: metadata.branch_name,  // Use AI branch_name (no suffix)
+            branch_name: metadata.branch_name, // Use AI branch_name (no suffix)
             initial_prompt: initial_prompt.clone(),
             backend,
             agent,
