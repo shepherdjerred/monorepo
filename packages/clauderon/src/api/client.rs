@@ -69,7 +69,10 @@ impl Client {
 
         let trimmed = line.trim();
         if trimmed.is_empty() {
-            anyhow::bail!("Daemon returned empty response (read {} bytes, trimmed to empty)", bytes_read);
+            anyhow::bail!(
+                "Daemon returned empty response (read {} bytes, trimmed to empty)",
+                bytes_read
+            );
         }
 
         let response: Response = serde_json::from_str(trimmed).map_err(|e| {
@@ -77,7 +80,11 @@ impl Client {
                 "Failed to parse daemon response: {}. Raw response ({} bytes): {:?}",
                 e,
                 trimmed.len(),
-                if trimmed.len() > 200 { &trimmed[..200] } else { trimmed }
+                if trimmed.len() > 200 {
+                    &trimmed[..200]
+                } else {
+                    trimmed
+                }
             )
         })?;
         Ok(response)
@@ -266,7 +273,9 @@ impl Client {
     /// # Errors
     ///
     /// Returns an error if the request fails.
-    pub async fn get_recent_repos(&mut self) -> anyhow::Result<Vec<super::protocol::RecentRepoDto>> {
+    pub async fn get_recent_repos(
+        &mut self,
+    ) -> anyhow::Result<Vec<super::protocol::RecentRepoDto>> {
         let response = self.send_request(Request::GetRecentRepos).await?;
 
         match response {
@@ -319,7 +328,7 @@ impl Client {
 
         match response {
             Response::Ok => Ok(()),
-            Response::Error { code, message} => {
+            Response::Error { code, message } => {
                 anyhow::bail!("[{code}] {message}")
             }
             _ => anyhow::bail!("Unexpected response"),

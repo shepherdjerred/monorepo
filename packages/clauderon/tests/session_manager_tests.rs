@@ -11,10 +11,20 @@ use clauderon::store::SqliteStore;
 use tempfile::TempDir;
 
 /// Helper to create a test environment
-async fn create_test_manager() -> (SessionManager, TempDir, Arc<MockGitBackend>, Arc<MockExecutionBackend>, Arc<MockExecutionBackend>) {
+async fn create_test_manager() -> (
+    SessionManager,
+    TempDir,
+    Arc<MockGitBackend>,
+    Arc<MockExecutionBackend>,
+    Arc<MockExecutionBackend>,
+) {
     let temp_dir = TempDir::new().expect("Failed to create temp dir");
     let db_path = temp_dir.path().join("test.db");
-    let store = Arc::new(SqliteStore::new(&db_path).await.expect("Failed to create store"));
+    let store = Arc::new(
+        SqliteStore::new(&db_path)
+            .await
+            .expect("Failed to create store"),
+    );
 
     let git = Arc::new(MockGitBackend::new());
     let zellij = Arc::new(MockExecutionBackend::zellij());
@@ -55,10 +65,10 @@ async fn test_create_session_zellij_success() {
             BackendType::Zellij,
             AgentType::ClaudeCode,
             true,
-            false, // print_mode
-            true,  // plan_mode
+            false,              // print_mode
+            true,               // plan_mode
             Default::default(), // access_mode
-            vec![], // images
+            vec![],             // images
         )
         .await
         .expect("Failed to create session");
@@ -98,10 +108,10 @@ async fn test_create_session_docker_success() {
             BackendType::Docker,
             AgentType::ClaudeCode,
             false,
-            false, // print_mode
-            true,  // plan_mode
+            false,              // print_mode
+            true,               // plan_mode
             Default::default(), // access_mode
-            vec![], // images
+            vec![],             // images
         )
         .await
         .expect("Failed to create session");
@@ -134,10 +144,10 @@ async fn test_create_session_git_fails() {
             BackendType::Zellij,
             AgentType::ClaudeCode,
             true,
-            false, // print_mode
-            true,  // plan_mode
+            false,              // print_mode
+            true,               // plan_mode
             Default::default(), // access_mode
-            vec![], // images
+            vec![],             // images
         )
         .await;
 
@@ -156,7 +166,9 @@ async fn test_create_session_backend_fails() {
 
     // Configure zellij to fail
     zellij.set_should_fail(true);
-    zellij.set_error_message("Zellij session creation failed").await;
+    zellij
+        .set_error_message("Zellij session creation failed")
+        .await;
 
     let result = manager
         .create_session(
@@ -166,10 +178,10 @@ async fn test_create_session_backend_fails() {
             BackendType::Zellij,
             AgentType::ClaudeCode,
             true,
-            false, // print_mode
-            true,  // plan_mode
+            false,              // print_mode
+            true,               // plan_mode
             Default::default(), // access_mode
-            vec![], // images
+            vec![],             // images
         )
         .await;
 
@@ -200,10 +212,10 @@ async fn test_get_session_by_name() {
             BackendType::Zellij,
             AgentType::ClaudeCode,
             true,
-            false, // print_mode
-            true,  // plan_mode
+            false,              // print_mode
+            true,               // plan_mode
             Default::default(), // access_mode
-            vec![], // images
+            vec![],             // images
         )
         .await
         .unwrap();
@@ -226,10 +238,10 @@ async fn test_get_session_by_uuid() {
             BackendType::Zellij,
             AgentType::ClaudeCode,
             true,
-            false, // print_mode
-            true,  // plan_mode
+            false,              // print_mode
+            true,               // plan_mode
             Default::default(), // access_mode
-            vec![], // images
+            vec![],             // images
         )
         .await
         .unwrap();
@@ -262,10 +274,10 @@ async fn test_delete_session_success() {
             BackendType::Zellij,
             AgentType::ClaudeCode,
             true,
-            false, // print_mode
-            true,  // plan_mode
+            false,              // print_mode
+            true,               // plan_mode
             Default::default(), // access_mode
-            vec![], // images
+            vec![],             // images
         )
         .await
         .unwrap();
@@ -311,10 +323,10 @@ async fn test_archive_session_success() {
             BackendType::Zellij,
             AgentType::ClaudeCode,
             true,
-            false, // print_mode
-            true,  // plan_mode
+            false,              // print_mode
+            true,               // plan_mode
             Default::default(), // access_mode
-            vec![], // images
+            vec![],             // images
         )
         .await
         .unwrap();
@@ -352,10 +364,10 @@ async fn test_get_attach_command_zellij() {
             BackendType::Zellij,
             AgentType::ClaudeCode,
             true,
-            false, // print_mode
-            true,  // plan_mode
+            false,              // print_mode
+            true,               // plan_mode
             Default::default(), // access_mode
-            vec![], // images
+            vec![],             // images
         )
         .await
         .unwrap();
@@ -379,10 +391,10 @@ async fn test_get_attach_command_docker() {
             BackendType::Docker,
             AgentType::ClaudeCode,
             true,
-            false, // print_mode
-            true,  // plan_mode
+            false,              // print_mode
+            true,               // plan_mode
             Default::default(), // access_mode
-            vec![], // images
+            vec![],             // images
         )
         .await
         .unwrap();
@@ -416,10 +428,10 @@ async fn test_reconcile_healthy_session() {
             BackendType::Zellij,
             AgentType::ClaudeCode,
             true,
-            false, // print_mode
-            true,  // plan_mode
+            false,              // print_mode
+            true,               // plan_mode
             Default::default(), // access_mode
-            vec![], // images
+            vec![],             // images
         )
         .await
         .unwrap();
@@ -445,10 +457,10 @@ async fn test_reconcile_missing_backend() {
             BackendType::Zellij,
             AgentType::ClaudeCode,
             true,
-            false, // print_mode
-            true,  // plan_mode
+            false,              // print_mode
+            true,               // plan_mode
             Default::default(), // access_mode
-            vec![], // images
+            vec![],             // images
         )
         .await
         .unwrap();
@@ -486,10 +498,10 @@ async fn test_list_sessions_multiple() {
             BackendType::Zellij,
             AgentType::ClaudeCode,
             true,
-            false, // print_mode
-            true,  // plan_mode
+            false,              // print_mode
+            true,               // plan_mode
             Default::default(), // access_mode
-            vec![], // images
+            vec![],             // images
         )
         .await
         .unwrap();
@@ -502,10 +514,10 @@ async fn test_list_sessions_multiple() {
             BackendType::Docker,
             AgentType::ClaudeCode,
             true,
-            false, // print_mode
-            true,  // plan_mode
+            false,              // print_mode
+            true,               // plan_mode
             Default::default(), // access_mode
-            vec![], // images
+            vec![],             // images
         )
         .await
         .unwrap();
@@ -518,10 +530,10 @@ async fn test_list_sessions_multiple() {
             BackendType::Zellij,
             AgentType::ClaudeCode,
             true,
-            false, // print_mode
-            true,  // plan_mode
+            false,              // print_mode
+            true,               // plan_mode
             Default::default(), // access_mode
-            vec![], // images
+            vec![],             // images
         )
         .await
         .unwrap();
@@ -545,10 +557,10 @@ async fn test_session_lifecycle() {
             BackendType::Zellij,
             AgentType::ClaudeCode,
             true,
-            false, // print_mode
-            true,  // plan_mode
+            false,              // print_mode
+            true,               // plan_mode
             Default::default(), // access_mode
-            vec![], // images
+            vec![],             // images
         )
         .await
         .unwrap();

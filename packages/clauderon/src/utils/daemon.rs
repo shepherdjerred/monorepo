@@ -71,9 +71,8 @@ fn acquire_spawn_lock() -> anyhow::Result<SpawnLockGuard> {
 
     // Try to acquire exclusive lock (non-blocking)
     // fs2 provides safe cross-platform file locking
-    file.try_lock_exclusive().map_err(|_| {
-        anyhow::anyhow!("Another process is already spawning the daemon")
-    })?;
+    file.try_lock_exclusive()
+        .map_err(|_| anyhow::anyhow!("Another process is already spawning the daemon"))?;
 
     // Write our PID to the lock file for debugging
     let mut file = file;
@@ -127,10 +126,7 @@ pub fn spawn_daemon() -> anyhow::Result<()> {
     match child.try_wait()? {
         Some(status) => {
             // Process exited - this is a failure
-            anyhow::bail!(
-                "Daemon process exited immediately with status: {}",
-                status
-            );
+            anyhow::bail!("Daemon process exited immediately with status: {}", status);
         }
         None => {
             // Process still running - success
@@ -200,8 +196,5 @@ pub async fn wait_for_daemon(timeout: Duration) -> anyhow::Result<()> {
         tokio::time::sleep(POLL_INTERVAL).await;
     }
 
-    anyhow::bail!(
-        "Daemon not ready after {}ms",
-        timeout.as_millis()
-    )
+    anyhow::bail!("Daemon not ready after {}ms", timeout.as_millis())
 }

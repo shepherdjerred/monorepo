@@ -26,15 +26,13 @@ fn test_git_config_env_vars() {
 
     // Verify GIT_AUTHOR_NAME is set
     assert!(
-        args.iter()
-            .any(|a| a == "GIT_AUTHOR_NAME=John Doe"),
+        args.iter().any(|a| a == "GIT_AUTHOR_NAME=John Doe"),
         "Expected GIT_AUTHOR_NAME env var"
     );
 
     // Verify GIT_COMMITTER_NAME is set
     assert!(
-        args.iter()
-            .any(|a| a == "GIT_COMMITTER_NAME=John Doe"),
+        args.iter().any(|a| a == "GIT_COMMITTER_NAME=John Doe"),
         "Expected GIT_COMMITTER_NAME env var"
     );
 
@@ -96,7 +94,8 @@ fn test_docker_run_arg_order() {
         &[],   // images
         None,  // git user name
         None,  // git user email
-    ).expect("Failed to build args");
+    )
+    .expect("Failed to build args");
 
     // First arg must be "run"
     assert_eq!(args[0], "run", "First arg must be 'run'");
@@ -112,25 +111,13 @@ fn test_docker_run_arg_order() {
     let user_idx = args.iter().position(|a| a == "--user").unwrap();
     let workdir_idx = args.iter().position(|a| a == "-w").unwrap();
 
-    assert!(
-        name_idx < image_idx,
-        "--name must come before image"
-    );
-    assert!(
-        user_idx < image_idx,
-        "--user must come before image"
-    );
-    assert!(
-        workdir_idx < image_idx,
-        "-w must come before image"
-    );
+    assert!(name_idx < image_idx, "--name must come before image");
+    assert!(user_idx < image_idx, "--user must come before image");
+    assert!(workdir_idx < image_idx, "-w must come before image");
 
     // Verify command comes after image
     let bash_idx = args.iter().position(|a| a == "bash").unwrap();
-    assert!(
-        bash_idx > image_idx,
-        "bash command must come after image"
-    );
+    assert!(bash_idx > image_idx, "bash command must come after image");
 }
 
 /// Validate environment variables are set correctly
@@ -147,7 +134,8 @@ fn test_docker_env_vars() {
         &[],   // images
         None,  // git user name
         None,  // git user email
-    ).expect("Failed to build args");
+    )
+    .expect("Failed to build args");
 
     // Find all -e flags and their values
     let env_vars: Vec<&str> = args
@@ -226,7 +214,8 @@ fn test_zellij_create_background_schema() {
 /// Validate zellij action schema: zellij action <action> [OPTIONS]
 #[test]
 fn test_zellij_action_schema() {
-    let args = ZellijBackend::build_new_pane_args(&PathBuf::from("/workspace"), "test prompt", false, &[]);
+    let args =
+        ZellijBackend::build_new_pane_args(&PathBuf::from("/workspace"), "test prompt", false, &[]);
 
     // Must start with action
     assert_eq!(args[0], "action", "First arg must be 'action'");
@@ -253,7 +242,8 @@ fn test_volume_mount_format() {
         &[],   // images
         None,  // git user name
         None,  // git user email
-    ).expect("Failed to build args");
+    )
+    .expect("Failed to build args");
 
     // Find all -v flags and their values
     let volume_mounts: Vec<&str> = args
@@ -305,7 +295,8 @@ fn test_workspace_mount_destination() {
         &[],   // images
         None,  // git user name
         None,  // git user email
-    ).expect("Failed to build args");
+    )
+    .expect("Failed to build args");
 
     // Find workspace volume mount
     let volume_mounts: Vec<&str> = args
@@ -341,7 +332,8 @@ fn test_final_command_format() {
         &[],   // images
         None,  // git user name
         None,  // git user email
-    ).expect("Failed to build args");
+    )
+    .expect("Failed to build args");
 
     let final_cmd = args.last().unwrap();
 

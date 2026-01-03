@@ -12,7 +12,9 @@
 
 mod common;
 
-use clauderon::backends::{CreateOptions, DockerBackend, ExecutionBackend, GitBackend, GitOperations};
+use clauderon::backends::{
+    CreateOptions, DockerBackend, ExecutionBackend, GitBackend, GitOperations,
+};
 use tempfile::TempDir;
 use tokio::process::Command;
 
@@ -27,15 +29,17 @@ async fn test_docker_full_lifecycle_with_attach() {
 
     let docker = DockerBackend::new();
     let temp_dir = TempDir::new().expect("Failed to create temp dir");
-    let container_name = format!(
-        "lifecycle-test-{}",
-        &uuid::Uuid::new_v4().to_string()[..8]
-    );
+    let container_name = format!("lifecycle-test-{}", &uuid::Uuid::new_v4().to_string()[..8]);
 
     // Step 1: Create container
     println!("Step 1: Creating container...");
     let result = docker
-        .create(&container_name, temp_dir.path(), "echo ready", CreateOptions::default())
+        .create(
+            &container_name,
+            temp_dir.path(),
+            "echo ready",
+            CreateOptions::default(),
+        )
         .await;
 
     let name = match result {
@@ -71,10 +75,7 @@ async fn test_docker_full_lifecycle_with_attach() {
     // Step 5: Stop container and verify re-attach command works
     println!("Step 5: Testing re-attach to stopped container...");
     // Stop the container
-    let _ = Command::new("docker")
-        .args(["stop", &name])
-        .output()
-        .await;
+    let _ = Command::new("docker").args(["stop", &name]).output().await;
 
     // Verify it's stopped
     let is_running = docker.is_running(&name).await.expect("is_running failed");
@@ -136,7 +137,12 @@ async fn test_worktree_and_container_together() {
     println!("Step 2: Creating container with worktree as workdir...");
 
     let result = docker
-        .create(&container_name, &worktree_path, "echo 'worktree test'", CreateOptions::default())
+        .create(
+            &container_name,
+            &worktree_path,
+            "echo 'worktree test'",
+            CreateOptions::default(),
+        )
         .await;
 
     match result {
@@ -251,14 +257,19 @@ async fn test_reattach_stopped_container() {
 
     let docker = DockerBackend::new();
     let temp_dir = TempDir::new().expect("Failed to create temp dir");
-    let session_name = format!(
-        "reattach-test-{}",
-        &uuid::Uuid::new_v4().to_string()[..8]
-    );
+    let session_name = format!("reattach-test-{}", &uuid::Uuid::new_v4().to_string()[..8]);
 
     // Step 1: Create container using OUR backend
     println!("Step 1: Creating container via DockerBackend...");
-    let name = match docker.create(&session_name, temp_dir.path(), "echo ready", CreateOptions::default()).await {
+    let name = match docker
+        .create(
+            &session_name,
+            temp_dir.path(),
+            "echo ready",
+            CreateOptions::default(),
+        )
+        .await
+    {
         Ok(n) => n,
         Err(e) => {
             eprintln!("Container creation failed (may need image): {e}");
@@ -272,10 +283,7 @@ async fn test_reattach_stopped_container() {
 
     // Step 2: Stop the container (raw docker - testing our re-attach handling)
     println!("Step 2: Stopping container...");
-    let _ = Command::new("docker")
-        .args(["stop", &name])
-        .output()
-        .await;
+    let _ = Command::new("docker").args(["stop", &name]).output().await;
 
     // Verify stopped using OUR is_running method
     let is_running = docker.is_running(&name).await.expect("is_running failed");
@@ -319,4 +327,3 @@ async fn test_reattach_stopped_container() {
 
     println!("\n✓ Re-attach test passed!");
 }
-

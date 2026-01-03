@@ -29,11 +29,19 @@ async fn test_docker_container_lifecycle() {
     // Create a test file in the workdir
     std::fs::write(workdir.join("test.txt"), "Hello from test").unwrap();
 
-    let container_name = format!("clauderon-test-{}", uuid::Uuid::new_v4().to_string()[..8].to_string());
+    let container_name = format!(
+        "clauderon-test-{}",
+        uuid::Uuid::new_v4().to_string()[..8].to_string()
+    );
 
     // Create container (using ExecutionBackend trait method)
     let result = docker
-        .create(&container_name, workdir, "echo 'Test container'", CreateOptions::default())
+        .create(
+            &container_name,
+            workdir,
+            "echo 'Test container'",
+            CreateOptions::default(),
+        )
         .await;
 
     match result {
@@ -77,7 +85,10 @@ async fn test_docker_container_lifecycle() {
         }
         Err(e) => {
             // If container creation failed (e.g., image not available), skip
-            eprintln!("Container creation failed (image may not be available): {}", e);
+            eprintln!(
+                "Container creation failed (image may not be available): {}",
+                e
+            );
             return;
         }
     }

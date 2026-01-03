@@ -47,10 +47,7 @@ impl AuditLogger {
             std::fs::create_dir_all(parent)?;
         }
 
-        let file = OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(&path)?;
+        let file = OpenOptions::new().create(true).append(true).open(&path)?;
 
         Ok(Self {
             file: Mutex::new(Some(file)),
@@ -68,7 +65,10 @@ impl AuditLogger {
 
     /// Log an audit entry.
     pub fn log(&self, entry: &AuditEntry) -> anyhow::Result<()> {
-        let mut guard = self.file.lock().map_err(|e| anyhow::anyhow!("lock error: {e}"))?;
+        let mut guard = self
+            .file
+            .lock()
+            .map_err(|e| anyhow::anyhow!("lock error: {e}"))?;
 
         if let Some(file) = guard.as_mut() {
             let json = serde_json::to_string(entry)?;
@@ -80,7 +80,10 @@ impl AuditLogger {
 
     /// Flush the audit log to disk.
     pub fn flush(&self) -> anyhow::Result<()> {
-        let mut guard = self.file.lock().map_err(|e| anyhow::anyhow!("lock error: {e}"))?;
+        let mut guard = self
+            .file
+            .lock()
+            .map_err(|e| anyhow::anyhow!("lock error: {e}"))?;
 
         if let Some(file) = guard.as_mut() {
             file.flush()?;

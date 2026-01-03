@@ -9,7 +9,8 @@ const SCROLL_LINES_PER_PAGE: usize = 10;
 /// Handle keyboard input in copy mode
 pub async fn handle_copy_mode_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
     // Get terminal bounds from the buffer first, before mutably borrowing copy_mode_state
-    let (max_rows, max_cols) = app.attached_pty_session()
+    let (max_rows, max_cols) = app
+        .attached_pty_session()
         .and_then(|pty_session| {
             let buffer = pty_session.terminal_buffer();
             buffer.try_lock().ok().map(|buf| {
@@ -35,7 +36,10 @@ pub async fn handle_copy_mode_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
             }
         }
         KeyCode::Char('j') | KeyCode::Down => {
-            state.cursor_row = state.cursor_row.saturating_add(1).min(max_rows.saturating_sub(1));
+            state.cursor_row = state
+                .cursor_row
+                .saturating_add(1)
+                .min(max_rows.saturating_sub(1));
             if state.visual_mode {
                 state.selection_end = Some((state.cursor_row, state.cursor_col));
             }
@@ -47,7 +51,10 @@ pub async fn handle_copy_mode_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
             }
         }
         KeyCode::Char('l') | KeyCode::Right => {
-            state.cursor_col = state.cursor_col.saturating_add(1).min(max_cols.saturating_sub(1));
+            state.cursor_col = state
+                .cursor_col
+                .saturating_add(1)
+                .min(max_cols.saturating_sub(1));
             if state.visual_mode {
                 state.selection_end = Some((state.cursor_row, state.cursor_col));
             }
@@ -139,11 +146,7 @@ async fn copy_selection_to_clipboard(app: &App) -> anyhow::Result<()> {
 }
 
 /// Extract text between two positions from the screen
-fn extract_text_between(
-    screen: &vt100::Screen,
-    start: (u16, u16),
-    end: (u16, u16),
-) -> String {
+fn extract_text_between(screen: &vt100::Screen, start: (u16, u16), end: (u16, u16)) -> String {
     // Normalize start/end (ensure start is before end)
     let (start, end) = if start.0 < end.0 || (start.0 == end.0 && start.1 <= end.1) {
         (start, end)
@@ -156,8 +159,14 @@ fn extract_text_between(
     let max_col = screen.size().1;
 
     // Clamp coordinates to screen bounds
-    let start = (start.0.min(max_row.saturating_sub(1)), start.1.min(max_col.saturating_sub(1)));
-    let end = (end.0.min(max_row.saturating_sub(1)), end.1.min(max_col.saturating_sub(1)));
+    let start = (
+        start.0.min(max_row.saturating_sub(1)),
+        start.1.min(max_col.saturating_sub(1)),
+    );
+    let end = (
+        end.0.min(max_row.saturating_sub(1)),
+        end.1.min(max_col.saturating_sub(1)),
+    );
 
     // Single line selection
     if start.0 == end.0 {

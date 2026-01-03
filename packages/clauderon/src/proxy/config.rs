@@ -93,7 +93,9 @@ impl Credentials {
     pub fn load_from_files(secrets_dir: &PathBuf) -> Self {
         let read_secret = |name: &str| -> Option<String> {
             let path = secrets_dir.join(name);
-            std::fs::read_to_string(&path).ok().map(|s| s.trim().to_string())
+            std::fs::read_to_string(&path)
+                .ok()
+                .map(|s| s.trim().to_string())
         };
 
         Self {
@@ -116,7 +118,9 @@ impl Credentials {
 
         let credentials = Self {
             github_token: from_env.github_token.or(from_files.github_token),
-            anthropic_oauth_token: from_env.anthropic_oauth_token.or(from_files.anthropic_oauth_token),
+            anthropic_oauth_token: from_env
+                .anthropic_oauth_token
+                .or(from_files.anthropic_oauth_token),
             pagerduty_token: from_env.pagerduty_token.or(from_files.pagerduty_token),
             sentry_auth_token: from_env.sentry_auth_token.or(from_files.sentry_auth_token),
             grafana_api_key: from_env.grafana_api_key.or(from_files.grafana_api_key),

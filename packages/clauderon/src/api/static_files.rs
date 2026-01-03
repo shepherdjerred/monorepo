@@ -1,8 +1,8 @@
 use axum::{
-    http::{header, StatusCode, Uri},
+    http::{StatusCode, Uri, header},
     response::{Html, IntoResponse, Response},
 };
-use include_dir::{include_dir, Dir};
+use include_dir::{Dir, include_dir};
 
 /// Embedded frontend build directory
 static DIST_DIR: Dir = include_dir!("$CARGO_MANIFEST_DIR/web/frontend/dist");

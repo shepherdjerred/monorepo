@@ -40,14 +40,29 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
     // Render header row
     // Account for highlight symbol "▶ " (2 chars) + deletion spinner space (2 chars)
     let header = Line::from(vec![
-        Span::styled("    ", Style::default()),                                      // highlight symbol + spinner space
-        Span::styled(format!("{:22}", "Name"), Style::default().fg(Color::DarkGray)),
-        Span::styled(format!("{:20}", "Repository"), Style::default().fg(Color::DarkGray)),
-        Span::styled(format!("{:12}", "Status"), Style::default().fg(Color::DarkGray)),
-        Span::styled(format!("{:8}", "Backend"), Style::default().fg(Color::DarkGray)),
-        Span::styled(format!("{:12}", "Branch/PR"), Style::default().fg(Color::DarkGray)),
-        Span::styled("◎ ", Style::default().fg(Color::DarkGray)),  // Claude status header
-        Span::styled("CI", Style::default().fg(Color::DarkGray)),  // Check status header
+        Span::styled("    ", Style::default()), // highlight symbol + spinner space
+        Span::styled(
+            format!("{:22}", "Name"),
+            Style::default().fg(Color::DarkGray),
+        ),
+        Span::styled(
+            format!("{:20}", "Repository"),
+            Style::default().fg(Color::DarkGray),
+        ),
+        Span::styled(
+            format!("{:12}", "Status"),
+            Style::default().fg(Color::DarkGray),
+        ),
+        Span::styled(
+            format!("{:8}", "Backend"),
+            Style::default().fg(Color::DarkGray),
+        ),
+        Span::styled(
+            format!("{:12}", "Branch/PR"),
+            Style::default().fg(Color::DarkGray),
+        ),
+        Span::styled("◎ ", Style::default().fg(Color::DarkGray)), // Claude status header
+        Span::styled("CI", Style::default().fg(Color::DarkGray)), // Check status header
     ]);
     frame.render_widget(Paragraph::new(header), header_area);
 

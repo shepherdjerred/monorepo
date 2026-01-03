@@ -24,7 +24,10 @@ fn main() {
             println!("cargo:warning=TypeShare generation completed successfully");
         }
         Ok(exit_status) => {
-            let msg = format!("TypeShare CLI failed with status: {}. Install typeshare-cli: cargo install typeshare-cli", exit_status);
+            let msg = format!(
+                "TypeShare CLI failed with status: {}. Install typeshare-cli: cargo install typeshare-cli",
+                exit_status
+            );
             if is_ci {
                 panic!("{}", msg);
             } else {
@@ -32,7 +35,10 @@ fn main() {
             }
         }
         Err(e) => {
-            let msg = format!("Failed to run TypeShare CLI: {}. Install typeshare-cli: cargo install typeshare-cli", e);
+            let msg = format!(
+                "Failed to run TypeShare CLI: {}. Install typeshare-cli: cargo install typeshare-cli",
+                e
+            );
             if is_ci {
                 panic!("{}", msg);
             } else {

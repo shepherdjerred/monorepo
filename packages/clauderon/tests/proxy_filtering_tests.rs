@@ -15,7 +15,9 @@ use std::time::Duration;
 
 use clauderon::backends::{ExecutionBackend, GitOperations, MockExecutionBackend, MockGitBackend};
 use clauderon::core::{AccessMode, AgentType, BackendType, SessionManager, SessionStatus};
-use clauderon::proxy::{AuditLogger, Credentials, HttpAuthProxy, ProxyCa, ProxyConfig, ProxyManager};
+use clauderon::proxy::{
+    AuditLogger, Credentials, HttpAuthProxy, ProxyCa, ProxyConfig, ProxyManager,
+};
 use clauderon::store::{SqliteStore, Store};
 use tempfile::TempDir;
 
@@ -30,7 +32,11 @@ async fn create_test_manager_with_proxy() -> (
 ) {
     let temp_dir = TempDir::new().expect("Failed to create temp dir");
     let db_path = temp_dir.path().join("test.db");
-    let store = Arc::new(SqliteStore::new(&db_path).await.expect("Failed to create store"));
+    let store = Arc::new(
+        SqliteStore::new(&db_path)
+            .await
+            .expect("Failed to create store"),
+    );
 
     let git = Arc::new(MockGitBackend::new());
     let zellij = Arc::new(MockExecutionBackend::zellij());
@@ -57,7 +63,8 @@ async fn create_test_manager_with_proxy() -> (
     let mut proxy_config = ProxyConfig::default();
     // Use random port to avoid conflicts
     proxy_config.http_proxy_port = 18080 + (rand::random::<u16>() % 1000);
-    let proxy_manager = Arc::new(ProxyManager::new(proxy_config).expect("Failed to create proxy manager"));
+    let proxy_manager =
+        Arc::new(ProxyManager::new(proxy_config).expect("Failed to create proxy manager"));
 
     // Wire up proxy manager
     manager.set_proxy_manager(Arc::clone(&proxy_manager));
@@ -85,7 +92,8 @@ fn create_proxy_client(proxy_port: u16, ca_cert_path: &Path) -> anyhow::Result<r
 
 #[tokio::test]
 async fn test_create_session_with_read_only_mode() {
-    let (manager, _proxy_manager, _temp_dir, _git, _zellij, _docker) = create_test_manager_with_proxy().await;
+    let (manager, _proxy_manager, _temp_dir, _git, _zellij, _docker) =
+        create_test_manager_with_proxy().await;
 
     let (session, _warnings) = manager
         .create_session(
@@ -114,7 +122,8 @@ async fn test_create_session_with_read_only_mode() {
 
 #[tokio::test]
 async fn test_create_session_with_read_write_mode() {
-    let (manager, _proxy_manager, _temp_dir, _git, _zellij, _docker) = create_test_manager_with_proxy().await;
+    let (manager, _proxy_manager, _temp_dir, _git, _zellij, _docker) =
+        create_test_manager_with_proxy().await;
 
     let (session, _warnings) = manager
         .create_session(
@@ -139,7 +148,8 @@ async fn test_create_session_with_read_write_mode() {
 
 #[tokio::test]
 async fn test_zellij_backend_ignores_proxy_port() {
-    let (manager, _proxy_manager, _temp_dir, _git, _zellij, _docker) = create_test_manager_with_proxy().await;
+    let (manager, _proxy_manager, _temp_dir, _git, _zellij, _docker) =
+        create_test_manager_with_proxy().await;
 
     let (session, _warnings) = manager
         .create_session(
@@ -166,7 +176,8 @@ async fn test_zellij_backend_ignores_proxy_port() {
 
 #[tokio::test]
 async fn test_update_access_mode_by_name() {
-    let (manager, _proxy_manager, _temp_dir, _git, _zellij, _docker) = create_test_manager_with_proxy().await;
+    let (manager, _proxy_manager, _temp_dir, _git, _zellij, _docker) =
+        create_test_manager_with_proxy().await;
 
     let (session, _warnings) = manager
         .create_session(
@@ -203,7 +214,8 @@ async fn test_update_access_mode_by_name() {
 
 #[tokio::test]
 async fn test_update_access_mode_by_id() {
-    let (manager, _proxy_manager, _temp_dir, _git, _zellij, _docker) = create_test_manager_with_proxy().await;
+    let (manager, _proxy_manager, _temp_dir, _git, _zellij, _docker) =
+        create_test_manager_with_proxy().await;
 
     let (session, _warnings) = manager
         .create_session(
@@ -238,17 +250,20 @@ async fn test_update_access_mode_by_id() {
 
 #[tokio::test]
 async fn test_update_nonexistent_session_fails() {
-    let (manager, _proxy_manager, _temp_dir, _git, _zellij, _docker) = create_test_manager_with_proxy().await;
+    let (manager, _proxy_manager, _temp_dir, _git, _zellij, _docker) =
+        create_test_manager_with_proxy().await;
 
     let result = manager
         .update_access_mode("nonexistent-session", AccessMode::ReadOnly)
         .await;
 
     assert!(result.is_err());
-    assert!(result
-        .unwrap_err()
-        .to_string()
-        .contains("Session not found"));
+    assert!(
+        result
+            .unwrap_err()
+            .to_string()
+            .contains("Session not found")
+    );
 }
 
 // ========== Port Allocation Tests ==========
@@ -326,7 +341,11 @@ async fn test_access_mode_persists_across_restarts() {
 
     // Create session with read-only mode
     let session_name = {
-        let store = Arc::new(SqliteStore::new(&db_path).await.expect("Failed to create store"));
+        let store = Arc::new(
+            SqliteStore::new(&db_path)
+                .await
+                .expect("Failed to create store"),
+        );
         let git = Arc::new(MockGitBackend::new());
         let zellij = Arc::new(MockExecutionBackend::zellij());
         let docker = Arc::new(MockExecutionBackend::docker());
@@ -368,7 +387,11 @@ async fn test_access_mode_persists_across_restarts() {
 
     // Reconnect to same database
     {
-        let store = Arc::new(SqliteStore::new(&db_path).await.expect("Failed to reconnect to store"));
+        let store = Arc::new(
+            SqliteStore::new(&db_path)
+                .await
+                .expect("Failed to reconnect to store"),
+        );
         let git = Arc::new(MockGitBackend::new());
         let zellij = Arc::new(MockExecutionBackend::zellij());
         let docker = Arc::new(MockExecutionBackend::docker());
@@ -406,7 +429,11 @@ async fn test_proxy_port_persists_in_database() {
 
     // Create session and store proxy port
     let session_name = {
-        let store = Arc::new(SqliteStore::new(&db_path).await.expect("Failed to create store"));
+        let store = Arc::new(
+            SqliteStore::new(&db_path)
+                .await
+                .expect("Failed to create store"),
+        );
 
         // Manually create and update a session to set proxy_port
         let mut session = clauderon::core::Session::new(clauderon::core::SessionConfig {
@@ -435,7 +462,11 @@ async fn test_proxy_port_persists_in_database() {
 
     // Reconnect and verify proxy_port was persisted
     {
-        let store = Arc::new(SqliteStore::new(&db_path).await.expect("Failed to reconnect"));
+        let store = Arc::new(
+            SqliteStore::new(&db_path)
+                .await
+                .expect("Failed to reconnect"),
+        );
         let loaded_session = store
             .get_session(
                 clauderon::core::Session::new(clauderon::core::SessionConfig {
@@ -457,7 +488,10 @@ async fn test_proxy_port_persists_in_database() {
 
         // Note: This test is a bit tricky because we need to know the session ID
         // Let's just verify the session can be retrieved by listing all sessions
-        let all_sessions = store.list_sessions().await.expect("Failed to list sessions");
+        let all_sessions = store
+            .list_sessions()
+            .await
+            .expect("Failed to list sessions");
         let restored = all_sessions
             .iter()
             .find(|s| s.name == session_name)
@@ -471,7 +505,8 @@ async fn test_proxy_port_persists_in_database() {
 
 #[tokio::test]
 async fn test_delete_session_cleans_up_proxy() {
-    let (manager, proxy_manager, _temp_dir, _git, _zellij, _docker) = create_test_manager_with_proxy().await;
+    let (manager, proxy_manager, _temp_dir, _git, _zellij, _docker) =
+        create_test_manager_with_proxy().await;
 
     let (session, _warnings) = manager
         .create_session(
@@ -563,8 +598,8 @@ fn test_access_mode_default() {
 
 #[test]
 fn test_is_write_operation() {
-    use http::Method;
     use clauderon::proxy::{is_read_operation, is_write_operation};
+    use http::Method;
 
     // Write operations (should be blocked in read-only mode)
     assert!(is_write_operation(&Method::POST));
@@ -584,8 +619,8 @@ fn test_is_write_operation() {
 
 #[test]
 fn test_is_read_operation() {
-    use http::Method;
     use clauderon::proxy::is_read_operation;
+    use http::Method;
 
     // Only these methods are considered safe read operations
     assert!(is_read_operation(&Method::GET));

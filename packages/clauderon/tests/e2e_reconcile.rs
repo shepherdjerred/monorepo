@@ -79,7 +79,9 @@ async fn test_worktree_cleanup_detection() {
     assert!(detected_exists, "Should detect existing worktree");
 
     // Delete worktree to simulate a crash that left the database stale
-    git.delete_worktree(temp_repo.path(), &worktree_path).await.unwrap();
+    git.delete_worktree(temp_repo.path(), &worktree_path)
+        .await
+        .unwrap();
 
     // Now reconciliation should detect it's missing
     let detected_after_delete = git.worktree_exists(&worktree_path);
@@ -107,10 +109,7 @@ async fn test_docker_container_cleanup_detection() {
         .await
         .expect("Failed to check container");
 
-    assert!(
-        !exists,
-        "Should detect that container doesn't exist"
-    );
+    assert!(!exists, "Should detect that container doesn't exist");
 }
 
 /// Test full reconciliation scenario: session in DB but resources are gone
@@ -124,7 +123,11 @@ async fn test_reconcile_stale_session() {
     // Create store
     let temp_db = TempDir::new().expect("Failed to create temp db dir");
     let db_path = temp_db.path().join("reconcile-test.db");
-    let store = Arc::new(SqliteStore::new(&db_path).await.expect("Failed to create store"));
+    let store = Arc::new(
+        SqliteStore::new(&db_path)
+            .await
+            .expect("Failed to create store"),
+    );
 
     // Create a real worktree
     let temp_repo = TempDir::new().expect("Failed to create temp repo dir");
@@ -140,10 +143,16 @@ async fn test_reconcile_stale_session() {
 
     // Create a session that references this worktree
     let session = create_test_session("stale-session", &worktree_path);
-    store.save_session(&session).await.expect("Failed to save session");
+    store
+        .save_session(&session)
+        .await
+        .expect("Failed to save session");
 
     // Verify session is in store
-    let sessions = store.list_sessions().await.expect("Failed to list sessions");
+    let sessions = store
+        .list_sessions()
+        .await
+        .expect("Failed to list sessions");
     assert_eq!(sessions.len(), 1);
     assert_eq!(sessions[0].name, "stale-session");
 
@@ -151,10 +160,15 @@ async fn test_reconcile_stale_session() {
     assert!(worktree_path.exists());
 
     // Simulate a crash: delete the worktree but leave session in DB
-    git.delete_worktree(temp_repo.path(), &worktree_path).await.expect("Failed to delete worktree");
+    git.delete_worktree(temp_repo.path(), &worktree_path)
+        .await
+        .expect("Failed to delete worktree");
 
     // Session is still in DB
-    let session_in_db = store.get_session(session.id).await.expect("Failed to get session");
+    let session_in_db = store
+        .get_session(session.id)
+        .await
+        .expect("Failed to get session");
     assert!(session_in_db.is_some(), "Session should still be in DB");
 
     // But worktree is gone
@@ -197,8 +211,13 @@ async fn test_reconcile_healthy_session() {
 
     // Reconciliation should NOT flag this as missing
     let worktree_exists = session.worktree_path.exists();
-    assert!(worktree_exists, "Healthy session should have existing worktree");
+    assert!(
+        worktree_exists,
+        "Healthy session should have existing worktree"
+    );
 
     // Cleanup
-    git.delete_worktree(temp_repo.path(), &worktree_path).await.unwrap();
+    git.delete_worktree(temp_repo.path(), &worktree_path)
+        .await
+        .unwrap();
 }

@@ -81,7 +81,10 @@ impl GitOperations for MockGitBackend {
             tracing::warn!("Mock failed to create worktree directory: {}", e);
         }
 
-        self.worktrees.write().await.insert(worktree_path.to_path_buf());
+        self.worktrees
+            .write()
+            .await
+            .insert(worktree_path.to_path_buf());
         Ok(None)
     }
 
@@ -233,7 +236,11 @@ impl ExecutionBackend for MockExecutionBackend {
     }
 
     fn attach_command(&self, id: &str) -> Vec<String> {
-        vec![self.name_prefix.clone(), "attach".to_string(), id.to_string()]
+        vec![
+            self.name_prefix.clone(),
+            "attach".to_string(),
+            id.to_string(),
+        ]
     }
 
     async fn get_output(&self, _id: &str, _lines: usize) -> anyhow::Result<String> {
@@ -288,7 +295,12 @@ mod tests {
             .await;
 
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Simulated failure"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Simulated failure")
+        );
     }
 
     #[tokio::test]
@@ -297,7 +309,12 @@ mod tests {
         let backend = MockExecutionBackend::zellij();
 
         let name = backend
-            .create("test-session", Path::new("/workdir"), "prompt", CreateOptions::default())
+            .create(
+                "test-session",
+                Path::new("/workdir"),
+                "prompt",
+                CreateOptions::default(),
+            )
             .await
             .unwrap();
 
@@ -311,7 +328,12 @@ mod tests {
         let backend = MockExecutionBackend::docker();
 
         let name = backend
-            .create("test-container", Path::new("/workdir"), "prompt", CreateOptions::default())
+            .create(
+                "test-container",
+                Path::new("/workdir"),
+                "prompt",
+                CreateOptions::default(),
+            )
             .await
             .unwrap();
         assert!(backend.exists(&name).await.unwrap());
@@ -336,7 +358,12 @@ mod tests {
         backend.set_error_message("Docker error").await;
 
         let result = backend
-            .create("session", Path::new("/workdir"), "prompt", CreateOptions::default())
+            .create(
+                "session",
+                Path::new("/workdir"),
+                "prompt",
+                CreateOptions::default(),
+            )
             .await;
 
         assert!(result.is_err());

@@ -7,7 +7,7 @@
 //! - Integration with MockApiClient
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
-use ratatui::{backend::TestBackend, Terminal};
+use ratatui::{Terminal, backend::TestBackend};
 
 use clauderon::api::MockApiClient;
 use clauderon::core::SessionStatus;
@@ -257,7 +257,9 @@ async fn test_session_list_navigation() {
     app.refresh_sessions().await.unwrap();
 
     // Test Down arrow
-    handle_key_event(&mut app, key(KeyCode::Down)).await.unwrap();
+    handle_key_event(&mut app, key(KeyCode::Down))
+        .await
+        .unwrap();
     assert_eq!(app.selected_index, 1);
 
     // Test j key
@@ -296,10 +298,14 @@ async fn test_create_dialog_backtab_navigation() {
     app.open_create_dialog();
     app.create_dialog.focus = CreateDialogFocus::Backend;
 
-    handle_key_event(&mut app, key(KeyCode::BackTab)).await.unwrap();
+    handle_key_event(&mut app, key(KeyCode::BackTab))
+        .await
+        .unwrap();
     assert_eq!(app.create_dialog.focus, CreateDialogFocus::RepoPath);
 
-    handle_key_event(&mut app, key(KeyCode::BackTab)).await.unwrap();
+    handle_key_event(&mut app, key(KeyCode::BackTab))
+        .await
+        .unwrap();
     assert_eq!(app.create_dialog.focus, CreateDialogFocus::Prompt);
 }
 
@@ -323,7 +329,9 @@ async fn test_create_dialog_backspace() {
     app.open_create_dialog();
     app.create_dialog.name = "test".to_string();
 
-    handle_key_event(&mut app, key(KeyCode::Backspace)).await.unwrap();
+    handle_key_event(&mut app, key(KeyCode::Backspace))
+        .await
+        .unwrap();
 
     assert_eq!(app.create_dialog.name, "tes");
 }
@@ -346,10 +354,14 @@ async fn test_create_dialog_toggle_backend() {
 
     assert!(app.create_dialog.backend_zellij); // Default is Zellij
 
-    handle_key_event(&mut app, key(KeyCode::Left)).await.unwrap();
+    handle_key_event(&mut app, key(KeyCode::Left))
+        .await
+        .unwrap();
     assert!(!app.create_dialog.backend_zellij);
 
-    handle_key_event(&mut app, key(KeyCode::Right)).await.unwrap();
+    handle_key_event(&mut app, key(KeyCode::Right))
+        .await
+        .unwrap();
     assert!(app.create_dialog.backend_zellij);
 }
 
@@ -545,7 +557,9 @@ fn test_render_connection_error() {
     let content = buffer_to_string(buffer);
 
     // Should show error indicator or message
-    assert!(content.contains("Connection") || content.contains("refused") || content.contains("Error"));
+    assert!(
+        content.contains("Connection") || content.contains("refused") || content.contains("Error")
+    );
 }
 
 #[test]
@@ -605,7 +619,15 @@ fn buffer_to_string(buffer: &ratatui::buffer::Buffer) -> String {
     let mut content = String::new();
     for y in 0..buffer.area.height {
         for x in 0..buffer.area.width {
-            content.push(buffer.cell((x, y)).unwrap().symbol().chars().next().unwrap_or(' '));
+            content.push(
+                buffer
+                    .cell((x, y))
+                    .unwrap()
+                    .symbol()
+                    .chars()
+                    .next()
+                    .unwrap_or(' '),
+            );
         }
         content.push('\n');
     }
@@ -686,7 +708,12 @@ async fn test_create_session_shows_loading_indicator() {
 
     // Verify loading message is set
     assert!(app.loading_message.is_some());
-    assert!(app.loading_message.as_ref().unwrap().contains("Creating session"));
+    assert!(
+        app.loading_message
+            .as_ref()
+            .unwrap()
+            .contains("Creating session")
+    );
 
     app.create_session_from_dialog().await.unwrap();
 
@@ -734,7 +761,10 @@ async fn test_delete_session_success() {
     app.confirm_delete();
 
     // Poll for deletion completion (since deletion is now async)
-    let mut rx = app.delete_progress_rx.take().expect("delete progress receiver should be set");
+    let mut rx = app
+        .delete_progress_rx
+        .take()
+        .expect("delete progress receiver should be set");
     let progress = rx.recv().await.expect("should receive deletion progress");
 
     match progress {
@@ -778,7 +808,12 @@ async fn test_delete_blocked_during_create() {
     // Deletion should be blocked
     assert!(app.delete_task.is_none());
     assert!(app.status_message.is_some());
-    assert!(app.status_message.as_ref().unwrap().contains("Cannot delete while creating"));
+    assert!(
+        app.status_message
+            .as_ref()
+            .unwrap()
+            .contains("Cannot delete while creating")
+    );
 
     // Cleanup
     if let Some(task) = app.create_task.take() {
@@ -838,11 +873,17 @@ async fn test_delete_error_handling() {
     app.confirm_delete();
 
     // Poll for deletion error
-    let mut rx = app.delete_progress_rx.take().expect("delete progress receiver should be set");
+    let mut rx = app
+        .delete_progress_rx
+        .take()
+        .expect("delete progress receiver should be set");
     let progress = rx.recv().await.expect("should receive deletion progress");
 
     match progress {
-        DeleteProgress::Error { session_id, message } => {
+        DeleteProgress::Error {
+            session_id,
+            message,
+        } => {
             assert_eq!(session_id, "nonexistent-session");
             assert!(message.contains("Failed to connect to daemon"));
             app.status_message = Some(format!("Delete failed: {message}"));
@@ -854,7 +895,12 @@ async fn test_delete_error_handling() {
 
     // Verify UI state
     assert!(app.status_message.is_some());
-    assert!(app.status_message.as_ref().unwrap().contains("Delete failed"));
+    assert!(
+        app.status_message
+            .as_ref()
+            .unwrap()
+            .contains("Delete failed")
+    );
     assert!(app.deleting_session_id.is_none());
 }
 
@@ -1052,7 +1098,9 @@ async fn test_directory_picker_open_with_enter() {
     app.create_dialog.focus = CreateDialogFocus::RepoPath;
 
     // Press Enter to open picker
-    handle_key_event(&mut app, key(KeyCode::Enter)).await.unwrap();
+    handle_key_event(&mut app, key(KeyCode::Enter))
+        .await
+        .unwrap();
 
     assert!(app.create_dialog.directory_picker.is_active);
 }
@@ -1101,8 +1149,14 @@ async fn test_directory_picker_navigation_keys() {
     let initial_index = app.create_dialog.directory_picker.selected_index;
 
     // Test Down arrow
-    handle_key_event(&mut app, key(KeyCode::Down)).await.unwrap();
-    if !app.create_dialog.directory_picker.filtered_entries.is_empty()
+    handle_key_event(&mut app, key(KeyCode::Down))
+        .await
+        .unwrap();
+    if !app
+        .create_dialog
+        .directory_picker
+        .filtered_entries
+        .is_empty()
         && app.create_dialog.directory_picker.filtered_entries.len() > 1
     {
         assert!(app.create_dialog.directory_picker.selected_index > initial_index);
@@ -1110,14 +1164,17 @@ async fn test_directory_picker_navigation_keys() {
 
     // Test Up arrow
     handle_key_event(&mut app, key(KeyCode::Up)).await.unwrap();
-    assert_eq!(app.create_dialog.directory_picker.selected_index, initial_index);
+    assert_eq!(
+        app.create_dialog.directory_picker.selected_index,
+        initial_index
+    );
 }
 
 #[test]
 fn test_render_directory_picker_without_panic() {
-    use ratatui::backend::TestBackend;
-    use ratatui::Terminal;
     use clauderon::tui::ui;
+    use ratatui::Terminal;
+    use ratatui::backend::TestBackend;
 
     let backend = TestBackend::new(80, 24);
     let mut terminal = Terminal::new(backend).unwrap();

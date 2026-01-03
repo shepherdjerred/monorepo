@@ -121,8 +121,8 @@ impl TalosGateway {
 
         // Parse CA certificate
         let ca_pem_decoded = base64_decode(ca_pem)?;
-        let ca_certs = rustls_pemfile::certs(&mut ca_pem_decoded.as_slice())
-            .collect::<Result<Vec<_>, _>>()?;
+        let ca_certs =
+            rustls_pemfile::certs(&mut ca_pem_decoded.as_slice()).collect::<Result<Vec<_>, _>>()?;
 
         // Build root cert store
         let mut root_store = rustls::RootCertStore::empty();
@@ -150,8 +150,7 @@ impl TalosGateway {
                 use rustls_pemfile::Item;
 
                 let mut cursor = client_key_decoded.as_slice();
-                let items = rustls_pemfile::read_all(&mut cursor)
-                    .collect::<Result<Vec<_>, _>>()?;
+                let items = rustls_pemfile::read_all(&mut cursor).collect::<Result<Vec<_>, _>>()?;
 
                 // Find the first private key item
                 items
@@ -214,7 +213,8 @@ impl TalosGateway {
             let connector = Arc::clone(&tls_connector);
 
             tokio::spawn(async move {
-                if let Err(e) = handle_talos_connection(stream, client_addr, gateway, acceptor, connector).await
+                if let Err(e) =
+                    handle_talos_connection(stream, client_addr, gateway, acceptor, connector).await
                 {
                     tracing::error!("Talos connection error from {}: {}", client_addr, e);
                 }
@@ -266,7 +266,10 @@ fn parse_ed25519_key(pem_bytes: &[u8]) -> anyhow::Result<PrivateKeyDer<'static>>
         anyhow::bail!("Ed25519 key too short to be valid PKCS#8");
     }
     if der_bytes[0] != 0x30 {
-        anyhow::bail!("Ed25519 key does not start with SEQUENCE tag (expected 0x30, got 0x{:02x})", der_bytes[0]);
+        anyhow::bail!(
+            "Ed25519 key does not start with SEQUENCE tag (expected 0x30, got 0x{:02x})",
+            der_bytes[0]
+        );
     }
     // Check for Ed25519 OID (1.3.101.112 = 0x2B 0x65 0x70)
     let has_ed25519_oid = der_bytes.windows(3).any(|w| w == [0x2B, 0x65, 0x70]);
@@ -277,9 +280,7 @@ fn parse_ed25519_key(pem_bytes: &[u8]) -> anyhow::Result<PrivateKeyDer<'static>>
     // The OpenSSL Ed25519 format (-----BEGIN ED25519 PRIVATE KEY-----) uses
     // the same DER encoding as PKCS#8, just with a different PEM label.
     // RFC 8410 specifies PKCS#8 for Ed25519, and OpenSSL's format is compatible.
-    Ok(PrivateKeyDer::Pkcs8(PrivatePkcs8KeyDer::from(
-        der_bytes,
-    )))
+    Ok(PrivateKeyDer::Pkcs8(PrivatePkcs8KeyDer::from(der_bytes)))
 }
 
 /// Simple base64 decoder (without PEM detection).
@@ -400,7 +401,10 @@ async fn handle_talos_connection(
         }
     };
 
-    tracing::debug!("TLS accepted from {}, establishing mTLS to Talos", client_addr);
+    tracing::debug!(
+        "TLS accepted from {}, establishing mTLS to Talos",
+        client_addr
+    );
 
     // Step 2: Connect to Talos node with mTLS
     let upstream_tcp = tokio::net::TcpStream::connect(format!("{}:{}", host, port)).await?;

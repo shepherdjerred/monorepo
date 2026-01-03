@@ -40,7 +40,12 @@ async fn test_kubernetes_pod_lifecycle() {
 
     // Create pod (using ExecutionBackend trait method)
     let result = kubernetes
-        .create(&pod_name, workdir, "echo 'Test pod'", CreateOptions::default())
+        .create(
+            &pod_name,
+            workdir,
+            "echo 'Test pod'",
+            CreateOptions::default(),
+        )
         .await;
 
     match result {
@@ -79,10 +84,7 @@ async fn test_kubernetes_pod_lifecycle() {
                 .exists(&returned_name)
                 .await
                 .expect("Failed to check pod existence after delete");
-            assert!(
-                !exists_after_delete,
-                "Pod should not exist after deletion"
-            );
+            assert!(!exists_after_delete, "Pod should not exist after deletion");
         }
         Err(e) => {
             // If pod creation failed (e.g., namespace doesn't exist, image not available), skip
@@ -178,8 +180,5 @@ async fn test_kubernetes_delete_nonexistent() {
     let result = kubernetes.delete("clauderon-nonexistent-pod-xyz").await;
 
     // Should complete without error (just logs a warning)
-    assert!(
-        result.is_ok(),
-        "Deleting non-existent pod should not fail"
-    );
+    assert!(result.is_ok(), "Deleting non-existent pod should not fail");
 }

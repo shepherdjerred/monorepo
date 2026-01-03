@@ -38,7 +38,10 @@ pub async fn run_daemon_with_options(enable_proxy: bool) -> anyhow::Result<()> {
 ///
 /// Returns an error if the database cannot be opened, the socket cannot be
 /// bound, or other I/O errors occur.
-pub async fn run_daemon_with_http(enable_proxy: bool, http_port: Option<u16>) -> anyhow::Result<()> {
+pub async fn run_daemon_with_http(
+    enable_proxy: bool,
+    http_port: Option<u16>,
+) -> anyhow::Result<()> {
     // Initialize the store
     tracing::debug!("Initializing database store...");
     let db_path = paths::database_path();
@@ -74,10 +77,8 @@ pub async fn run_daemon_with_http(enable_proxy: bool, http_port: Option<u16>) ->
     // Initialize the session manager with proxy support if available
     tracing::debug!("Initializing session manager...");
     let mut session_manager = if let Some(ref pm) = proxy_manager {
-        let docker_proxy_config = DockerProxyConfig::new(
-            pm.http_proxy_port(),
-            pm.clauderon_dir().clone(),
-        );
+        let docker_proxy_config =
+            DockerProxyConfig::new(pm.http_proxy_port(), pm.clauderon_dir().clone());
         let docker_backend = DockerBackend::with_proxy(docker_proxy_config);
         let mut sm = SessionManager::with_docker_backend(Arc::clone(&store), docker_backend)
             .await
@@ -90,10 +91,12 @@ pub async fn run_daemon_with_http(enable_proxy: bool, http_port: Option<u16>) ->
         sm.set_proxy_manager(Arc::clone(pm));
         sm
     } else {
-        SessionManager::with_defaults(Arc::clone(&store)).await.map_err(|e| {
-            tracing::error!("Failed to initialize session manager (no proxy): {}", e);
-            e
-        })?
+        SessionManager::with_defaults(Arc::clone(&store))
+            .await
+            .map_err(|e| {
+                tracing::error!("Failed to initialize session manager (no proxy): {}", e);
+                e
+            })?
     };
 
     // Create event broadcaster and wire it up if HTTP server is enabled
@@ -125,11 +128,17 @@ pub async fn run_daemon_with_http(enable_proxy: bool, http_port: Option<u16>) ->
             // Restore port allocations in PortAllocator
             // This must succeed before we attempt to restore session proxies to avoid state inconsistency
             let port_allocation_success = if !port_allocations.is_empty() {
-                match pm.port_allocator().restore_allocations(port_allocations).await {
+                match pm
+                    .port_allocator()
+                    .restore_allocations(port_allocations)
+                    .await
+                {
                     Ok(()) => true,
                     Err(e) => {
                         tracing::error!("Failed to restore port allocations: {}", e);
-                        tracing::warn!("Skipping session proxy restoration to avoid port conflicts");
+                        tracing::warn!(
+                            "Skipping session proxy restoration to avoid port conflicts"
+                        );
                         false
                     }
                 }
@@ -150,7 +159,10 @@ pub async fn run_daemon_with_http(enable_proxy: bool, http_port: Option<u16>) ->
         let unix_socket_future = run_unix_socket_server(Arc::clone(&manager));
         let http_future = run_http_server(Arc::clone(&manager), port, event_broadcaster);
 
-        tracing::info!("Starting daemon with Unix socket and HTTP server on port {}", port);
+        tracing::info!(
+            "Starting daemon with Unix socket and HTTP server on port {}",
+            port
+        );
 
         tokio::select! {
             result = unix_socket_future => {
@@ -274,7 +286,10 @@ async fn run_http_server(
     // Create the HTTP router with all routes and state
     let app = create_router()
         .route("/ws/events", axum::routing::get(ws_events_handler))
-        .route("/ws/console/:sessionId", axum::routing::get(ws_console_handler))
+        .route(
+            "/ws/console/:sessionId",
+            axum::routing::get(ws_console_handler),
+        )
         .with_state(state);
 
     // Bind to localhost only for security - prevents remote code execution

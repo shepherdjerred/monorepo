@@ -48,7 +48,12 @@ async fn test_claude_starts_in_docker() {
 
     // Create container with a simple prompt
     let result = docker
-        .create(&container_name, temp_dir.path(), "echo 'smoke test' && exit", CreateOptions::default())
+        .create(
+            &container_name,
+            temp_dir.path(),
+            "echo 'smoke test' && exit",
+            CreateOptions::default(),
+        )
         .await;
 
     match result {
@@ -163,7 +168,12 @@ async fn test_container_runs_as_non_root() {
 
     // Create container - the command isn't important, we'll check the UID
     let result = docker
-        .create(&container_name, temp_dir.path(), "id -u", CreateOptions::default())
+        .create(
+            &container_name,
+            temp_dir.path(),
+            "id -u",
+            CreateOptions::default(),
+        )
         .await;
 
     match result {
@@ -216,8 +226,11 @@ async fn test_initial_prompt_executed() {
     );
 
     // Create a file for Claude to read
-    std::fs::write(temp_dir.path().join("test-file.txt"), "Hello from smoke test!")
-        .expect("Failed to write test file");
+    std::fs::write(
+        temp_dir.path().join("test-file.txt"),
+        "Hello from smoke test!",
+    )
+    .expect("Failed to write test file");
 
     // Use a simple prompt that should produce recognizable output
     let result = docker
@@ -299,7 +312,8 @@ async fn test_claude_print_mode_e2e() {
     println!("OAuth token loaded: {}...", &oauth_token[..20]);
 
     // Use a random available port for the proxy (to avoid conflicts with running daemon)
-    let listener = std::net::TcpListener::bind("127.0.0.1:0").expect("Failed to bind to random port");
+    let listener =
+        std::net::TcpListener::bind("127.0.0.1:0").expect("Failed to bind to random port");
     let proxy_port = listener.local_addr().unwrap().port();
     drop(listener); // Release the port so the proxy can use it
     println!("Using port {} for test proxy", proxy_port);
@@ -307,13 +321,10 @@ async fn test_claude_print_mode_e2e() {
     // Create and start the proxy
     println!("Starting proxy on port {}...", proxy_port);
     let audit_logger = Arc::new(AuditLogger::noop());
-    let rcgen_ca = proxy_ca.to_rcgen_authority().expect("Failed to create rcgen authority");
-    let proxy = HttpAuthProxy::new(
-        proxy_port,
-        rcgen_ca,
-        Arc::new(credentials),
-        audit_logger,
-    );
+    let rcgen_ca = proxy_ca
+        .to_rcgen_authority()
+        .expect("Failed to create rcgen authority");
+    let proxy = HttpAuthProxy::new(proxy_port, rcgen_ca, Arc::new(credentials), audit_logger);
 
     // Start proxy in background
     let proxy_handle = tokio::spawn(async move {
@@ -381,7 +392,10 @@ async fn test_claude_print_mode_e2e() {
 
                     // Container exited - print mode complete
                     if !running {
-                        println!("Container exited. Output length: {} chars", final_output.len());
+                        println!(
+                            "Container exited. Output length: {} chars",
+                            final_output.len()
+                        );
                         break;
                     }
                 }
@@ -396,10 +410,7 @@ async fn test_claude_print_mode_e2e() {
             println!("=================================");
 
             // Verify we got some output (Claude responded)
-            assert!(
-                !final_output.is_empty(),
-                "Print mode should produce output"
-            );
+            assert!(!final_output.is_empty(), "Print mode should produce output");
 
             // Check for error indicators
             assert!(

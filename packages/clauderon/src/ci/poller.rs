@@ -19,7 +19,7 @@ impl CIPoller {
     pub fn new(manager: Arc<SessionManager>) -> Self {
         Self {
             manager,
-            ci_poll_interval: Duration::from_secs(30),  // Poll CI checks every 30 seconds
+            ci_poll_interval: Duration::from_secs(30), // Poll CI checks every 30 seconds
             pr_discovery_interval: Duration::from_secs(60), // Discover PRs every 60 seconds
             conflict_check_interval: Duration::from_secs(60), // Check for conflicts every 60 seconds
         }
@@ -72,7 +72,10 @@ impl CIPoller {
         for session in sessions {
             // Only discover PRs for sessions without pr_url
             if session.pr_url.is_none() {
-                if let Err(e) = self.discover_pr_for_session(&session.id, &session.branch_name).await {
+                if let Err(e) = self
+                    .discover_pr_for_session(&session.id, &session.branch_name)
+                    .await
+                {
                     tracing::debug!(
                         session_id = %session.id,
                         branch = %session.branch_name,
@@ -85,7 +88,11 @@ impl CIPoller {
     }
 
     /// Discover PR for a specific session by branch name
-    async fn discover_pr_for_session(&self, session_id: &Uuid, branch_name: &str) -> anyhow::Result<()> {
+    async fn discover_pr_for_session(
+        &self,
+        session_id: &Uuid,
+        branch_name: &str,
+    ) -> anyhow::Result<()> {
         // Use gh CLI to find PRs for this branch
         let output = tokio::process::Command::new("gh")
             .args([
@@ -158,13 +165,7 @@ impl CIPoller {
 
         // Use gh CLI to check if PR is mergeable
         let output = tokio::process::Command::new("gh")
-            .args([
-                "pr",
-                "view",
-                &pr_number.to_string(),
-                "--json",
-                "mergeable",
-            ])
+            .args(["pr", "view", &pr_number.to_string(), "--json", "mergeable"])
             .output()
             .await?;
 
@@ -240,7 +241,11 @@ impl CIPoller {
             anyhow::anyhow!(
                 "Failed to parse gh pr checks output: {}. Raw output: {:?}",
                 e,
-                if json_output.len() > 200 { &json_output[..200] } else { &json_output }
+                if json_output.len() > 200 {
+                    &json_output[..200]
+                } else {
+                    &json_output
+                }
             )
         })?;
 

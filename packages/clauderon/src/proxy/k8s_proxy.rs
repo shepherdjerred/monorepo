@@ -28,7 +28,12 @@ impl KubernetesProxy {
         }
 
         // Check if kubectl is available
-        if Command::new("kubectl").arg("version").arg("--client").output().is_err() {
+        if Command::new("kubectl")
+            .arg("version")
+            .arg("--client")
+            .output()
+            .is_err()
+        {
             tracing::warn!("kubectl not found, skipping Kubernetes proxy");
             return Ok(());
         }
@@ -64,7 +69,10 @@ impl KubernetesProxy {
 
         // Final check - process might have died
         if self.is_running() {
-            tracing::info!("kubectl proxy started on port {} (health check unavailable)", self.port);
+            tracing::info!(
+                "kubectl proxy started on port {} (health check unavailable)",
+                self.port
+            );
         } else {
             tracing::error!("kubectl proxy failed to start");
         }
@@ -97,7 +105,7 @@ impl KubernetesProxy {
     pub fn is_running(&mut self) -> bool {
         if let Some(ref mut child) = self.process {
             match child.try_wait() {
-                Ok(None) => true,  // Still running
+                Ok(None) => true, // Still running
                 Ok(Some(_)) => {
                     self.process = None;
                     false
@@ -142,8 +150,8 @@ impl Drop for KubernetesProxy {
 
 /// Simple health check without pulling in reqwest.
 async fn reqwest_lite_health_check(url: &str) -> anyhow::Result<bool> {
-    use tokio::net::TcpStream;
     use tokio::io::{AsyncReadExt, AsyncWriteExt};
+    use tokio::net::TcpStream;
 
     let addr = url
         .strip_prefix("http://")

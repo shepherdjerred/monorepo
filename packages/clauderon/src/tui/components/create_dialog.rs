@@ -137,38 +137,6 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
     }
 }
 
-fn render_text_field(
-    frame: &mut Frame,
-    label: &str,
-    value: &str,
-    focused: bool,
-    cursor_pos: usize,
-    area: Rect,
-) {
-    let style = if focused {
-        Style::default().fg(Color::Yellow)
-    } else {
-        Style::default()
-    };
-
-    let block = Block::default()
-        .title(format!(" {label} "))
-        .borders(Borders::ALL)
-        .border_style(style);
-
-    let display_value = if focused {
-        // Split text at cursor position and insert cursor character
-        use crate::tui::text_input::split_at_char_boundary;
-        let (before, after) = split_at_char_boundary(value, cursor_pos);
-        format!("{before}▏{after}")
-    } else {
-        value.to_string()
-    };
-
-    let paragraph = Paragraph::new(display_value).block(block);
-    frame.render_widget(paragraph, area);
-}
-
 fn render_repo_path_field(frame: &mut Frame, label: &str, value: &str, focused: bool, area: Rect) {
     let style = if focused {
         Style::default().fg(Color::Yellow)

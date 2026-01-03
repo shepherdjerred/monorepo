@@ -150,13 +150,13 @@ impl ApiClient for MockApiClient {
         // Generate a unique session name with counter
         let mut counter = self.session_counter.write().await;
         *counter += 1;
-        let session_name = format!("{}-{:04}", request.name, *counter);
+        let session_name = format!("mock-session-{:04}", *counter);
 
         let config = SessionConfig {
-            name: session_name,
+            name: session_name.clone(),
             repo_path: PathBuf::from(&request.repo_path),
-            worktree_path: PathBuf::from(format!("/mock/worktrees/{}", request.name)),
-            branch_name: format!("feature/{}", request.name),
+            worktree_path: PathBuf::from(format!("/mock/worktrees/{}", session_name)),
+            branch_name: format!("feature/{}", session_name),
             initial_prompt: request.initial_prompt,
             backend: request.backend,
             agent: request.agent,
@@ -166,9 +166,12 @@ impl ApiClient for MockApiClient {
 
         let mut session = Session::new(config);
         session.set_status(SessionStatus::Running);
-        session.set_backend_id(format!("mock-backend-{}", request.name));
+        session.set_backend_id(format!("mock-backend-{}", session_name));
 
-        self.sessions.write().await.insert(session.id, session.clone());
+        self.sessions
+            .write()
+            .await
+            .insert(session.id, session.clone());
 
         Ok((session, None))
     }
@@ -246,7 +249,10 @@ impl ApiClient for MockApiClient {
 
         match session {
             Some(s) => {
-                let backend_id = s.backend_id.clone().unwrap_or_else(|| "mock-session".to_string());
+                let backend_id = s
+                    .backend_id
+                    .clone()
+                    .unwrap_or_else(|| "mock-session".to_string());
                 Ok(vec!["zellij".to_string(), "attach".to_string(), backend_id])
             }
             None => anyhow::bail!("Session not found: {id}"),
@@ -416,7 +422,12 @@ mod tests {
 
         let result = client.list_sessions().await;
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Connection refused"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Connection refused")
+        );
     }
 
     #[tokio::test]
