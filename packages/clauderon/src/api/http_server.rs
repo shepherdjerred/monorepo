@@ -211,16 +211,12 @@ async fn browse_directory(
     let requested_path = PathBuf::from(&request.path);
 
     // Try to canonicalize the path, or use home directory as fallback
-    let current_path = match requested_path.canonicalize() {
-        Ok(p) => p,
-        Err(_) => {
-            // If path doesn't exist, try home directory or root as fallback
-            match std::env::var("HOME") {
-                Ok(home) => PathBuf::from(home),
-                Err(_) => PathBuf::from("/"),
-            }
-        }
-    };
+    let current_path = requested_path.canonicalize().unwrap_or_else(|_| {
+        // If path doesn't exist, try home directory or root as fallback
+        std::env::var("HOME")
+            .map(PathBuf::from)
+            .unwrap_or_else(|_| PathBuf::from("/"))
+    });
 
     // Get parent directory if not at root
     let parent_path = current_path
@@ -232,24 +228,22 @@ async fn browse_directory(
         Ok(read_dir) => {
             let mut dirs: Vec<DirectoryEntryDto> = Vec::new();
 
-            for entry_result in read_dir {
-                if let Ok(entry) = entry_result {
-                    let entry_path = entry.path();
+            for entry in read_dir.flatten() {
+                let entry_path = entry.path();
 
-                    // Only include directories, skip files
-                    if entry_path.is_dir() {
-                        let name = entry.file_name().to_string_lossy().to_string();
-                        let path = entry_path.to_string_lossy().to_string();
+                // Only include directories, skip files
+                if entry_path.is_dir() {
+                    let name = entry.file_name().to_string_lossy().to_string();
+                    let path = entry_path.to_string_lossy().to_string();
 
-                        // Check if directory is accessible
-                        let is_accessible = std::fs::read_dir(&entry_path).is_ok();
+                    // Check if directory is accessible
+                    let is_accessible = std::fs::read_dir(&entry_path).is_ok();
 
-                        dirs.push(DirectoryEntryDto {
-                            name,
-                            path,
-                            is_accessible,
-                        });
-                    }
+                    dirs.push(DirectoryEntryDto {
+                        name,
+                        path,
+                        is_accessible,
+                    });
                 }
             }
 
@@ -260,7 +254,7 @@ async fn browse_directory(
         }
         Err(e) => {
             // Return error message if can't read directory
-            (Vec::new(), Some(format!("Cannot read directory: {}", e)))
+            (Vec::new(), Some(format!("Cannot read directory: {e}")))
         }
     };
 
