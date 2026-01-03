@@ -73,9 +73,9 @@ async fn handle_console_socket(socket: WebSocket, session_id: String, state: App
     loop {
         tokio::select! {
             // Read from PTY and send to WebSocket
-            read_result = {
+            read_result = async {
                 let mut reader = pty_reader.lock().await;
-                reader.read(&mut pty_buffer)
+                reader.read(&mut pty_buffer).await
             } => {
                 match read_result {
                     Ok(0) => {
