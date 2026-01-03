@@ -205,7 +205,7 @@ async fn browse_directory(
     Json(request): Json<crate::api::protocol::BrowseDirectoryRequest>,
 ) -> Result<Json<crate::api::protocol::BrowseDirectoryResponse>, AppError> {
     use crate::api::protocol::{BrowseDirectoryResponse, DirectoryEntryDto};
-    use std::path::{Path, PathBuf};
+    use std::path::PathBuf;
 
     // Parse and canonicalize the requested path
     let requested_path = PathBuf::from(&request.path);
