@@ -97,8 +97,8 @@ function installWorkspaceDeps(source: Directory): Container {
 /**
  * Get a Rust container with caching enabled for clauderon builds
  */
-function getRustContainer(source: Directory): Container {
-  return dag
+function getRustContainer(source: Directory, builtFrontend?: Directory): Container {
+  let container = dag
     .container()
     .from(`rust:${RUST_VERSION}-bookworm`)
     .withWorkdir("/workspace")
@@ -107,6 +107,13 @@ function getRustContainer(source: Directory): Container {
     .withMountedCache("/workspace/target", dag.cacheVolume("clauderon-target"))
     .withMountedDirectory("/workspace", source.directory("packages/clauderon"))
     .withExec(["rustup", "component", "add", "rustfmt", "clippy"]);
+
+  // Mount built frontend if provided
+  if (builtFrontend) {
+    container = container.withMountedDirectory("/workspace/web/frontend/dist", builtFrontend);
+  }
+
+  return container;
 }
 
 /**
@@ -245,6 +252,13 @@ export class Monorepo {
       .withWorkdir("/workspace");
     await container.sync();
     outputs.push("✓ Web packages built");
+
+    // Extract built frontend for Rust build
+    const builtFrontend = container.directory("/workspace/packages/clauderon/web/frontend/dist");
+
+    // Clauderon Rust validation (fmt, clippy, test, build)
+    outputs.push("\n--- Clauderon Rust Validation ---");
+    outputs.push(await this.clauderonCi(source, builtFrontend));
 
     // Now build remaining packages (web packages already built, will be skipped or fast)
     // Note: Skip tests here - bun-decompile tests fail in CI (requires `bun build --compile`)
@@ -461,10 +475,10 @@ export class Monorepo {
    * Run Clauderon CI: fmt check, clippy, test, build
    */
   @func()
-  async clauderonCi(source: Directory): Promise<string> {
+  async clauderonCi(source: Directory, builtFrontend?: Directory): Promise<string> {
     const outputs: string[] = [];
 
-    let container = getRustContainer(source);
+    let container = getRustContainer(source, builtFrontend);
 
     // Format check
     container = container.withExec(["cargo", "fmt", "--check"]);
