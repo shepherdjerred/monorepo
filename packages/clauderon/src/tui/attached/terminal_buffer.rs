@@ -69,7 +69,7 @@ impl TerminalBuffer {
 
             // Auto-scroll to bottom on new output, but only if user hasn't manually scrolled up
             if !self.user_scrolled {
-                self.parser.set_scrollback(0);
+                self.parser.screen_mut().set_scrollback(0);
             }
         }
     }
@@ -114,7 +114,7 @@ impl TerminalBuffer {
 
     /// Resize the terminal buffer.
     pub fn resize(&mut self, rows: u16, cols: u16) {
-        self.parser.set_size(rows, cols);
+        self.parser.screen_mut().set_size(rows, cols);
     }
 
     /// Get the current vt100 screen.
@@ -135,7 +135,7 @@ impl TerminalBuffer {
         let current = self.parser.screen().scrollback();
         let new_offset = current + lines;
         // Let vt100 parser clamp to actual scrollback content
-        self.parser.set_scrollback(new_offset);
+        self.parser.screen_mut().set_scrollback(new_offset);
         // Mark that user has manually scrolled
         self.user_scrolled = true;
     }
@@ -144,14 +144,14 @@ impl TerminalBuffer {
     pub fn scroll_down(&mut self, lines: usize) {
         let current = self.parser.screen().scrollback();
         let new_offset = current.saturating_sub(lines);
-        self.parser.set_scrollback(new_offset);
+        self.parser.screen_mut().set_scrollback(new_offset);
         // Still mark as user scrolled - they're manually controlling position
         self.user_scrolled = true;
     }
 
     /// Scroll to the bottom (live output).
     pub fn scroll_to_bottom(&mut self) {
-        self.parser.set_scrollback(0);
+        self.parser.screen_mut().set_scrollback(0);
         // Resume auto-scroll behavior when user returns to bottom
         self.user_scrolled = false;
     }
