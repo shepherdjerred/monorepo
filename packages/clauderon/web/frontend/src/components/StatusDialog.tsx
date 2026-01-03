@@ -194,7 +194,7 @@ export function StatusDialog({ onClose }: StatusDialogProps) {
                                   <div className="relative flex-1">
                                     <input
                                       type={showCredentials.get(cred.service_id) ? "text" : "password"}
-                                      value={credentialInputs.get(cred.service_id) || ""}
+                                      value={credentialInputs.get(cred.service_id) ?? ""}
                                       onChange={(e) => { handleCredentialChange(cred.service_id, e.target.value); }}
                                       placeholder={`Enter ${cred.name} credential`}
                                       className="w-full px-3 py-2 bg-background border border-input rounded-md pr-10"

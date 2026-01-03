@@ -15,9 +15,7 @@ use std::time::Duration;
 
 use clauderon::backends::{ExecutionBackend, GitOperations, MockExecutionBackend, MockGitBackend};
 use clauderon::core::{AccessMode, AgentType, BackendType, SessionManager, SessionStatus};
-use clauderon::proxy::{
-    AuditLogger, Credentials, HttpAuthProxy, ProxyCa, ProxyConfig, ProxyManager,
-};
+use clauderon::proxy::{ProxyConfig, ProxyManager};
 use clauderon::store::{SqliteStore, Store};
 use tempfile::TempDir;
 
@@ -41,6 +39,7 @@ async fn create_test_manager_with_proxy() -> (
     let git = Arc::new(MockGitBackend::new());
     let zellij = Arc::new(MockExecutionBackend::zellij());
     let docker = Arc::new(MockExecutionBackend::docker());
+    let kubernetes = Arc::new(MockExecutionBackend::kubernetes());
 
     // Helper functions to coerce Arc<Concrete> to Arc<dyn Trait>
     fn to_git_ops(arc: Arc<MockGitBackend>) -> Arc<dyn GitOperations> {
@@ -55,6 +54,7 @@ async fn create_test_manager_with_proxy() -> (
         to_git_ops(Arc::clone(&git)),
         to_exec_backend(Arc::clone(&zellij)),
         to_exec_backend(Arc::clone(&docker)),
+        to_exec_backend(Arc::clone(&kubernetes)),
     )
     .await
     .expect("Failed to create manager");
@@ -97,7 +97,6 @@ async fn test_create_session_with_read_only_mode() {
 
     let (session, _warnings) = manager
         .create_session(
-            "readonly-test".to_string(),
             "/tmp/fake-repo".to_string(),
             "Test prompt".to_string(),
             BackendType::Docker,
@@ -127,7 +126,6 @@ async fn test_create_session_with_read_write_mode() {
 
     let (session, _warnings) = manager
         .create_session(
-            "readwrite-test".to_string(),
             "/tmp/fake-repo".to_string(),
             "Test prompt".to_string(),
             BackendType::Docker,
@@ -153,7 +151,6 @@ async fn test_zellij_backend_ignores_proxy_port() {
 
     let (session, _warnings) = manager
         .create_session(
-            "zellij-test".to_string(),
             "/tmp/fake-repo".to_string(),
             "Test prompt".to_string(),
             BackendType::Zellij,
@@ -181,7 +178,6 @@ async fn test_update_access_mode_by_name() {
 
     let (session, _warnings) = manager
         .create_session(
-            "mode-update".to_string(),
             "/tmp/fake-repo".to_string(),
             "Test prompt".to_string(),
             BackendType::Docker,
@@ -219,7 +215,6 @@ async fn test_update_access_mode_by_id() {
 
     let (session, _warnings) = manager
         .create_session(
-            "id-update".to_string(),
             "/tmp/fake-repo".to_string(),
             "Test prompt".to_string(),
             BackendType::Docker,
@@ -349,6 +344,7 @@ async fn test_access_mode_persists_across_restarts() {
         let git = Arc::new(MockGitBackend::new());
         let zellij = Arc::new(MockExecutionBackend::zellij());
         let docker = Arc::new(MockExecutionBackend::docker());
+        let kubernetes = Arc::new(MockExecutionBackend::kubernetes());
 
         fn to_git_ops(arc: Arc<MockGitBackend>) -> Arc<dyn GitOperations> {
             arc
@@ -362,13 +358,13 @@ async fn test_access_mode_persists_across_restarts() {
             to_git_ops(git),
             to_exec_backend(zellij),
             to_exec_backend(docker),
+            to_exec_backend(kubernetes),
         )
         .await
         .expect("Failed to create manager");
 
         let (session, _) = manager
             .create_session(
-                "persist-test".to_string(),
                 "/tmp/fake-repo".to_string(),
                 "Test".to_string(),
                 BackendType::Docker,
@@ -395,6 +391,7 @@ async fn test_access_mode_persists_across_restarts() {
         let git = Arc::new(MockGitBackend::new());
         let zellij = Arc::new(MockExecutionBackend::zellij());
         let docker = Arc::new(MockExecutionBackend::docker());
+        let kubernetes = Arc::new(MockExecutionBackend::kubernetes());
 
         fn to_git_ops(arc: Arc<MockGitBackend>) -> Arc<dyn GitOperations> {
             arc
@@ -408,6 +405,7 @@ async fn test_access_mode_persists_across_restarts() {
             to_git_ops(git),
             to_exec_backend(zellij),
             to_exec_backend(docker),
+            to_exec_backend(kubernetes),
         )
         .await
         .expect("Failed to create manager");
@@ -510,7 +508,6 @@ async fn test_delete_session_cleans_up_proxy() {
 
     let (session, _warnings) = manager
         .create_session(
-            "delete-test".to_string(),
             "/tmp/fake-repo".to_string(),
             "Test prompt".to_string(),
             BackendType::Docker,
@@ -598,7 +595,7 @@ fn test_access_mode_default() {
 
 #[test]
 fn test_is_write_operation() {
-    use clauderon::proxy::{is_read_operation, is_write_operation};
+    use clauderon::proxy::is_write_operation;
     use http::Method;
 
     // Write operations (should be blocked in read-only mode)

@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useCallback, useEffect, type React
 import type { Session, CreateSessionRequest, AccessMode } from "@clauderon/client";
 import { useClauderonClient } from "../hooks/useClauderonClient";
 import { useSessionEvents } from "../hooks/useSessionEvents";
-import { ClauderonClient } from "@clauderon/client";
+import type { ClauderonClient } from "@clauderon/client";
 
 type SessionContextValue = {
   sessions: Map<string, Session>;

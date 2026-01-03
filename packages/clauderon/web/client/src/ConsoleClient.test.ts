@@ -134,14 +134,14 @@ describe("ConsoleClient", () => {
 
     test("handles disconnect when not connected", () => {
       const client = new ConsoleClient();
-      expect(() => client.disconnect()).not.toThrow();
+      expect(() => { client.disconnect(); }).not.toThrow();
     });
   });
 
   describe("write", () => {
     test("throws when not connected", () => {
       const client = new ConsoleClient();
-      expect(() => client.write("test")).toThrow(WebSocketError);
+      expect(() => { client.write("test"); }).toThrow(WebSocketError);
     });
 
     test("sends base64-encoded input message", async () => {
@@ -167,7 +167,7 @@ describe("ConsoleClient", () => {
   describe("resize", () => {
     test("throws when not connected", () => {
       const client = new ConsoleClient();
-      expect(() => client.resize(24, 80)).toThrow(WebSocketError);
+      expect(() => { client.resize(24, 80); }).toThrow(WebSocketError);
     });
 
     test("sends resize message", async () => {

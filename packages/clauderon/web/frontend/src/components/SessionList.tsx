@@ -59,7 +59,7 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
 
     if (confirmDialog.type === "archive") {
       void archiveSession(confirmDialog.session.id);
-    } else if (confirmDialog.type === "delete") {
+    } else {
       void deleteSession(confirmDialog.session.id);
     }
   };

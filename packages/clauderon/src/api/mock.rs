@@ -310,7 +310,6 @@ mod tests {
         let mut client = MockApiClient::new();
 
         let request = CreateSessionRequest {
-            name: "test-session".to_string(),
             repo_path: "/tmp/repo".to_string(),
             initial_prompt: "Test prompt".to_string(),
             backend: BackendType::Zellij,
@@ -323,7 +322,7 @@ mod tests {
         };
 
         let (session, warnings) = client.create_session(request).await.unwrap();
-        assert!(session.name.starts_with("test-session-"));
+        assert!(session.name.starts_with("mock-session-"));
         assert_eq!(session.status, SessionStatus::Running);
         assert!(warnings.is_none());
 

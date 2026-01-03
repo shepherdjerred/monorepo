@@ -37,7 +37,7 @@ export function ConfirmDialog({
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="flex gap-3 pt-4 border-t-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => { onOpenChange(false); }}>
             {cancelLabel}
           </Button>
           <Button

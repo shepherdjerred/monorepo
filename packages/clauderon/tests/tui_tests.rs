@@ -104,15 +104,15 @@ fn test_open_create_dialog() {
     app.open_create_dialog();
 
     assert_eq!(app.mode, AppMode::CreateDialog);
-    assert_eq!(app.create_dialog.focus, CreateDialogFocus::Name);
-    assert!(app.create_dialog.name.is_empty());
+    assert_eq!(app.create_dialog.focus, CreateDialogFocus::Prompt);
+    assert!(app.create_dialog.prompt.is_empty());
 }
 
 #[test]
 fn test_close_create_dialog() {
     let mut app = App::new();
     app.mode = AppMode::CreateDialog;
-    app.create_dialog.name = "test".to_string();
+    app.create_dialog.prompt = "test".to_string();
 
     app.close_create_dialog();
 
@@ -154,30 +154,28 @@ fn test_create_dialog_focus_cycle() {
     let mut app = App::new();
     app.open_create_dialog();
 
-    assert_eq!(app.create_dialog.focus, CreateDialogFocus::Name);
+    assert_eq!(app.create_dialog.focus, CreateDialogFocus::Prompt);
 
     // Simulate Tab cycling
     let focuses = [
-        CreateDialogFocus::Prompt,
         CreateDialogFocus::RepoPath,
         CreateDialogFocus::Backend,
         CreateDialogFocus::AccessMode,
         CreateDialogFocus::SkipChecks,
         CreateDialogFocus::PlanMode,
         CreateDialogFocus::Buttons,
-        CreateDialogFocus::Name, // Back to start
+        CreateDialogFocus::Prompt, // Back to start
     ];
 
     for expected_focus in focuses {
         app.create_dialog.focus = match app.create_dialog.focus {
-            CreateDialogFocus::Name => CreateDialogFocus::Prompt,
             CreateDialogFocus::Prompt => CreateDialogFocus::RepoPath,
             CreateDialogFocus::RepoPath => CreateDialogFocus::Backend,
             CreateDialogFocus::Backend => CreateDialogFocus::AccessMode,
             CreateDialogFocus::AccessMode => CreateDialogFocus::SkipChecks,
             CreateDialogFocus::SkipChecks => CreateDialogFocus::PlanMode,
             CreateDialogFocus::PlanMode => CreateDialogFocus::Buttons,
-            CreateDialogFocus::Buttons => CreateDialogFocus::Name,
+            CreateDialogFocus::Buttons => CreateDialogFocus::Prompt,
         };
         assert_eq!(app.create_dialog.focus, expected_focus);
     }
@@ -280,9 +278,6 @@ async fn test_create_dialog_tab_navigation() {
     let mut app = App::new();
     app.open_create_dialog();
 
-    assert_eq!(app.create_dialog.focus, CreateDialogFocus::Name);
-
-    handle_key_event(&mut app, key(KeyCode::Tab)).await.unwrap();
     assert_eq!(app.create_dialog.focus, CreateDialogFocus::Prompt);
 
     handle_key_event(&mut app, key(KeyCode::Tab)).await.unwrap();
@@ -290,6 +285,9 @@ async fn test_create_dialog_tab_navigation() {
 
     handle_key_event(&mut app, key(KeyCode::Tab)).await.unwrap();
     assert_eq!(app.create_dialog.focus, CreateDialogFocus::Backend);
+
+    handle_key_event(&mut app, key(KeyCode::Tab)).await.unwrap();
+    assert_eq!(app.create_dialog.focus, CreateDialogFocus::AccessMode);
 }
 
 #[tokio::test]
@@ -314,26 +312,27 @@ async fn test_create_dialog_text_input() {
     let mut app = App::new();
     app.open_create_dialog();
 
-    // Type into name field
+    // Type into prompt field (default focus)
     handle_key_event(&mut app, char_key('t')).await.unwrap();
     handle_key_event(&mut app, char_key('e')).await.unwrap();
     handle_key_event(&mut app, char_key('s')).await.unwrap();
     handle_key_event(&mut app, char_key('t')).await.unwrap();
 
-    assert_eq!(app.create_dialog.name, "test");
+    assert_eq!(app.create_dialog.prompt, "test");
 }
 
 #[tokio::test]
 async fn test_create_dialog_backspace() {
     let mut app = App::new();
     app.open_create_dialog();
-    app.create_dialog.name = "test".to_string();
+    app.create_dialog.prompt = "test".to_string();
+    app.create_dialog.prompt_cursor_col = 4; // Cursor at end
 
     handle_key_event(&mut app, key(KeyCode::Backspace))
         .await
         .unwrap();
 
-    assert_eq!(app.create_dialog.name, "tes");
+    assert_eq!(app.create_dialog.prompt, "tes");
 }
 
 #[tokio::test]
@@ -378,23 +377,25 @@ async fn test_create_dialog_toggle_skip_checks() {
 }
 
 #[tokio::test]
-async fn test_create_dialog_space_in_name_field() {
+async fn test_create_dialog_space_in_prompt_field_multiword() {
     let mut app = App::new();
     app.open_create_dialog();
-    app.create_dialog.focus = CreateDialogFocus::Name;
+    app.create_dialog.focus = CreateDialogFocus::Prompt;
 
-    // Type "test name" with space
+    // Type "test prompt" with space
     handle_key_event(&mut app, char_key('t')).await.unwrap();
     handle_key_event(&mut app, char_key('e')).await.unwrap();
     handle_key_event(&mut app, char_key('s')).await.unwrap();
     handle_key_event(&mut app, char_key('t')).await.unwrap();
     handle_key_event(&mut app, char_key(' ')).await.unwrap();
-    handle_key_event(&mut app, char_key('n')).await.unwrap();
-    handle_key_event(&mut app, char_key('a')).await.unwrap();
+    handle_key_event(&mut app, char_key('p')).await.unwrap();
+    handle_key_event(&mut app, char_key('r')).await.unwrap();
+    handle_key_event(&mut app, char_key('o')).await.unwrap();
     handle_key_event(&mut app, char_key('m')).await.unwrap();
-    handle_key_event(&mut app, char_key('e')).await.unwrap();
+    handle_key_event(&mut app, char_key('p')).await.unwrap();
+    handle_key_event(&mut app, char_key('t')).await.unwrap();
 
-    assert_eq!(app.create_dialog.name, "test name");
+    assert_eq!(app.create_dialog.prompt, "test prompt");
 }
 
 #[tokio::test]
@@ -678,7 +679,6 @@ async fn test_create_session_success() {
     app.set_client(Box::new(mock));
     app.open_create_dialog();
 
-    app.create_dialog.name = "new-session".to_string();
     app.create_dialog.repo_path = "/tmp/repo".to_string();
     app.create_dialog.prompt = "Test prompt".to_string();
 
@@ -699,7 +699,6 @@ async fn test_create_session_shows_loading_indicator() {
     app.set_client(Box::new(mock));
     app.open_create_dialog();
 
-    app.create_dialog.name = "new-session".to_string();
     app.create_dialog.repo_path = "/tmp/repo".to_string();
     app.create_dialog.prompt = "Test prompt".to_string();
 
@@ -731,7 +730,6 @@ async fn test_create_session_failure() {
     app.set_client(Box::new(mock));
     app.open_create_dialog();
 
-    app.create_dialog.name = "fail-session".to_string();
     app.create_dialog.repo_path = "/tmp/repo".to_string();
     app.create_dialog.prompt = "Test prompt".to_string();
 
@@ -845,7 +843,6 @@ async fn test_create_blocked_during_delete() {
 
     // Try to create while delete is in progress
     app.mode = clauderon::tui::app::AppMode::CreateDialog;
-    app.create_dialog.name = "new-session".to_string();
     app.create_dialog.repo_path = "/tmp/repo".to_string();
     app.create_dialog.prompt = "test".to_string();
     app.create_dialog.focus = CreateDialogFocus::Buttons;

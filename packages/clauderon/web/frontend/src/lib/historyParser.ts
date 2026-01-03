@@ -19,16 +19,16 @@ type HistoryEntry = {
     role: "user" | "assistant";
     content:
       | string
-      | Array<{
+      | {
           type: "text" | "tool_use" | "tool_result";
           text?: string;
           id?: string; // for tool_use
           name?: string; // for tool_use
           input?: Record<string, unknown>; // for tool_use
           tool_use_id?: string; // for tool_result
-          content?: string | Array<unknown>; // for tool_result
+          content?: string | unknown[]; // for tool_result
           is_error?: boolean; // for tool_result
-        }>;
+        }[];
   };
 };
 
@@ -40,7 +40,7 @@ type HistoryEntry = {
  */
 export function parseHistoryEntry(line: string): Message | null {
   try {
-    const entry: HistoryEntry = JSON.parse(line);
+    const entry = JSON.parse(line) as HistoryEntry;
 
     // Skip non-message entries
     if (entry.type !== "user" && entry.type !== "assistant") {
@@ -108,7 +108,7 @@ export function parseHistoryEntry(line: string): Message | null {
  */
 export function parseHistoryLines(lines: string[]): Message[] {
   const toolUseMap = new Map<string, ToolUse>(); // Map of tool_use_id -> ToolUse
-  const parsedEntries: Array<{ entry: HistoryEntry; message: Message | null }> = [];
+  const parsedEntries: { entry: HistoryEntry; message: Message | null }[] = [];
 
   // First pass: Parse all entries and collect tool uses
   for (const line of lines) {
@@ -117,7 +117,7 @@ export function parseHistoryLines(lines: string[]): Message[] {
     }
 
     try {
-      const entry: HistoryEntry = JSON.parse(line);
+      const entry = JSON.parse(line) as HistoryEntry;
       const message = parseHistoryEntry(line);
 
       // Collect tool uses from assistant messages

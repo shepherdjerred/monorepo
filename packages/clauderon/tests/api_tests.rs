@@ -18,7 +18,6 @@ fn test_request_serialization() {
 #[test]
 fn test_create_session_request_serialization() {
     let request = Request::CreateSession(CreateSessionRequest {
-        name: "test-session".to_string(),
         repo_path: "/home/user/project".to_string(),
         initial_prompt: "Fix the bug".to_string(),
         backend: BackendType::Zellij,
@@ -32,14 +31,13 @@ fn test_create_session_request_serialization() {
 
     let json = serde_json::to_string(&request).unwrap();
     assert!(json.contains("CreateSession"));
-    assert!(json.contains("test-session"));
     assert!(json.contains("Zellij"));
 
     let parsed: Request = serde_json::from_str(&json).unwrap();
     match parsed {
         Request::CreateSession(req) => {
-            assert_eq!(req.name, "test-session");
             assert_eq!(req.backend, BackendType::Zellij);
+            assert_eq!(req.repo_path, "/home/user/project");
         }
         _ => panic!("Expected CreateSession"),
     }
@@ -156,7 +154,6 @@ fn test_agent_type_serialization() {
 fn test_print_mode_serialization() {
     // Test with print_mode = true
     let request = Request::CreateSession(CreateSessionRequest {
-        name: "print-test".to_string(),
         repo_path: "/tmp/repo".to_string(),
         initial_prompt: "Generate a hello world".to_string(),
         backend: BackendType::Docker,
@@ -191,7 +188,7 @@ fn test_print_mode_serialization() {
 #[test]
 fn test_print_mode_default_false() {
     // JSON without print_mode field - should default to false
-    let json = r#"{"type":"CreateSession","payload":{"name":"test","repo_path":"/tmp","initial_prompt":"test","backend":"Docker","agent":"ClaudeCode","dangerous_skip_checks":false}}"#;
+    let json = r#"{"type":"CreateSession","payload":{"repo_path":"/tmp","initial_prompt":"test","backend":"Docker","agent":"ClaudeCode","dangerous_skip_checks":false}}"#;
 
     let parsed: Request = serde_json::from_str(json).unwrap();
     match parsed {
