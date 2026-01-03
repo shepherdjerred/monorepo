@@ -49,9 +49,7 @@ const SETTINGS_JSON_CONTENT: &str = r#"{
     ],
     "Notification": [
       {
-        "matcher": {
-          "notification_type": "idle_prompt"
-        },
+        "matcher": "*",
         "hooks": [
           {
             "type": "command",
