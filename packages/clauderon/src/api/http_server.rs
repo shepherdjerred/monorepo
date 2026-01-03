@@ -35,11 +35,11 @@ pub fn create_router() -> Router<AppState> {
         // Session endpoints
         .route("/api/sessions", get(list_sessions))
         .route("/api/sessions", post(create_session))
-        .route("/api/sessions/:id", get(get_session))
-        .route("/api/sessions/:id", delete(delete_session))
-        .route("/api/sessions/:id/archive", post(archive_session))
-        .route("/api/sessions/:id/access-mode", post(update_access_mode))
-        .route("/api/sessions/:id/history", get(get_session_history))
+        .route("/api/sessions/{id}", get(get_session))
+        .route("/api/sessions/{id}", delete(delete_session))
+        .route("/api/sessions/{id}/archive", post(archive_session))
+        .route("/api/sessions/{id}/access-mode", post(update_access_mode))
+        .route("/api/sessions/{id}/history", get(get_session_history))
         // Other endpoints
         .route("/api/recent-repos", get(get_recent_repos))
         .route("/api/status", get(get_system_status))
