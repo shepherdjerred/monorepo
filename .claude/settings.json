@@ -1,11 +1,56 @@
 {
   "hooks": {
-    "SessionStart": [
+    "UserPromptSubmit": [
       {
+        "matcher": "*",
         "hooks": [
           {
             "type": "command",
-            "command": "[ \"$CLAUDE_CODE_REMOTE\" != \"true\" ] && exit 0; command -v mise >/dev/null 2>&1 || curl -fsSL https://mise.run | sh; mise trust && mise run dev"
+            "command": "bash -c '/workspace/.clauderon/hooks/send_status.sh UserPromptSubmit'"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c '/workspace/.clauderon/hooks/send_status.sh PreToolUse'"
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c '/workspace/.clauderon/hooks/send_status.sh PermissionRequest'"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c '/workspace/.clauderon/hooks/send_status.sh Stop'"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c '/workspace/.clauderon/hooks/send_status.sh IdlePrompt'"
           }
         ]
       }

@@ -38,6 +38,11 @@ pub struct Session {
     #[typeshare(serialized_as = "String")]
     pub worktree_path: PathBuf,
 
+    /// Subdirectory path relative to git root (empty if at root)
+    /// Example: "packages/clauderon" for a subdirectory session
+    #[typeshare(serialized_as = "String")]
+    pub subdirectory: PathBuf,
+
     /// Git branch name
     pub branch_name: String,
 
@@ -97,6 +102,8 @@ pub struct SessionConfig {
     pub repo_path: PathBuf,
     /// Path to the git worktree
     pub worktree_path: PathBuf,
+    /// Subdirectory path relative to git root (empty if at root)
+    pub subdirectory: PathBuf,
     /// Git branch name
     pub branch_name: String,
     /// Initial prompt given to the AI agent
@@ -126,6 +133,7 @@ impl Session {
             agent: config.agent,
             repo_path: config.repo_path,
             worktree_path: config.worktree_path,
+            subdirectory: config.subdirectory,
             branch_name: config.branch_name,
             backend_id: None,
             initial_prompt: config.initial_prompt,
