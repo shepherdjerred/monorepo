@@ -20,6 +20,9 @@ use tokio::sync::broadcast;
 /// Event broadcaster for WebSocket real-time updates
 pub type EventBroadcaster = broadcast::Sender<WsEvent>;
 
+/// Maximum number of container recreation attempts before giving up
+pub const MAX_RECONCILE_ATTEMPTS: u32 = 3;
+
 /// Report of reconciliation between expected and actual state
 #[derive(Debug, Default, Clone)]
 pub struct ReconcileReport {
@@ -31,6 +34,15 @@ pub struct ReconcileReport {
 
     /// Orphaned backend resources (exist but no session)
     pub orphaned_backends: Vec<String>,
+
+    /// Sessions that were successfully recreated
+    pub recreated: Vec<Uuid>,
+
+    /// Sessions that failed to be recreated
+    pub recreation_failed: Vec<Uuid>,
+
+    /// Sessions that exceeded max reconcile attempts
+    pub gave_up: Vec<Uuid>,
 }
 
 /// Manages session lifecycle and state
@@ -541,6 +553,12 @@ impl SessionManager {
 
     /// Reconcile expected state with reality
     ///
+    /// This method:
+    /// - Detects missing worktrees and backends
+    /// - Attempts to auto-recreate containers for Running sessions with missing backends
+    /// - Uses exponential backoff between retry attempts
+    /// - Gives up after MAX_RECONCILE_ATTEMPTS
+    ///
     /// # Errors
     ///
     /// Returns an error if backend existence checks fail.
@@ -565,15 +583,95 @@ impl SessionManager {
                 if !exists {
                     report.missing_backends.push(session.id);
 
-                    // Clean up orphaned session proxy
-                    if session.backend == BackendType::Docker {
-                        if let Some(ref proxy_manager) = self.proxy_manager {
-                            tracing::info!(
+                    // Only attempt auto-recreation for Running sessions
+                    if session.status == SessionStatus::Running
+                        && session.backend != BackendType::Zellij
+                    {
+                        // Check if we've exceeded max attempts
+                        if session.exceeded_max_reconcile_attempts() {
+                            report.gave_up.push(session.id);
+                            tracing::warn!(
                                 session_id = %session.id,
                                 name = %session.name,
-                                "Destroying proxy for session with missing container"
+                                attempts = session.reconcile_attempts,
+                                "Giving up on session after max reconciliation attempts"
                             );
-                            let _ = proxy_manager.destroy_session_proxy(session.id).await;
+                            continue;
+                        }
+
+                        // Check backoff timing
+                        if !session.should_attempt_reconcile() {
+                            tracing::debug!(
+                                session_id = %session.id,
+                                name = %session.name,
+                                attempts = session.reconcile_attempts,
+                                "Skipping reconciliation attempt - backoff timer not expired"
+                            );
+                            continue;
+                        }
+
+                        tracing::info!(
+                            session_id = %session.id,
+                            name = %session.name,
+                            attempt = session.reconcile_attempts + 1,
+                            max_attempts = MAX_RECONCILE_ATTEMPTS,
+                            "Attempting container recreation"
+                        );
+
+                        // Attempt recreation
+                        match self.recreate_container(session.id).await {
+                            Ok(()) => {
+                                report.recreated.push(session.id);
+                                tracing::info!(
+                                    session_id = %session.id,
+                                    name = %session.name,
+                                    "Container recreated successfully"
+                                );
+                            }
+                            Err(e) => {
+                                // Record failure with updated attempt count
+                                let mut sessions_mut = self.sessions.write().await;
+                                if let Some(sess) =
+                                    sessions_mut.iter_mut().find(|s| s.id == session.id)
+                                {
+                                    sess.record_reconcile_failure(e.to_string());
+                                    let sess_clone = sess.clone();
+                                    drop(sessions_mut);
+
+                                    // Save updated session to store
+                                    if let Err(save_err) =
+                                        self.store.save_session(&sess_clone).await
+                                    {
+                                        tracing::error!(
+                                            session_id = %session.id,
+                                            error = %save_err,
+                                            "Failed to save session after reconcile failure"
+                                        );
+                                    }
+                                } else {
+                                    drop(sessions_mut);
+                                }
+
+                                report.recreation_failed.push(session.id);
+                                tracing::error!(
+                                    session_id = %session.id,
+                                    name = %session.name,
+                                    error = %e,
+                                    "Failed to recreate container"
+                                );
+                            }
+                        }
+                    } else {
+                        // Clean up orphaned session proxy for non-running sessions
+                        if session.backend == BackendType::Docker {
+                            if let Some(ref proxy_manager) = self.proxy_manager {
+                                tracing::info!(
+                                    session_id = %session.id,
+                                    name = %session.name,
+                                    "Destroying proxy for session with missing container"
+                                );
+                                let _ = proxy_manager.destroy_session_proxy(session.id).await;
+                            }
                         }
                     }
                 } else {
@@ -635,6 +733,112 @@ impl SessionManager {
         }
 
         Ok(report)
+    }
+
+    /// Recreate a container for a session with a missing backend
+    ///
+    /// This method:
+    /// 1. Deletes the old container if it exists (ignoring errors)
+    /// 2. Recreates the container with the same settings
+    /// 3. Updates the session with the new backend ID
+    /// 4. Resets the reconcile state on success
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the session is not found or container creation fails.
+    pub async fn recreate_container(&self, session_id: Uuid) -> anyhow::Result<()> {
+        let mut sessions = self.sessions.write().await;
+        let session = sessions
+            .iter_mut()
+            .find(|s| s.id == session_id)
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {}", session_id))?;
+
+        // Only Docker and Kubernetes backends support recreation
+        if session.backend == BackendType::Zellij {
+            anyhow::bail!("Zellij sessions cannot be recreated automatically");
+        }
+
+        tracing::info!(
+            session_id = %session.id,
+            name = %session.name,
+            backend = ?session.backend,
+            "Attempting to recreate container"
+        );
+
+        // Delete old container if it exists (ignore errors)
+        if let Some(ref backend_id) = session.backend_id {
+            match session.backend {
+                BackendType::Docker => {
+                    let _ = self.docker.delete(backend_id).await;
+                }
+                BackendType::Kubernetes => {
+                    let _ = self.kubernetes.delete(backend_id).await;
+                }
+                BackendType::Zellij => {} // Already checked above
+            }
+        }
+
+        // Build creation options from session state
+        let create_options = crate::backends::CreateOptions {
+            print_mode: false, // Never use print mode for recreation
+            plan_mode: false,  // Don't enter plan mode - session already has context
+            session_proxy_port: session.proxy_port,
+            images: vec![], // No images for recreation
+            dangerous_skip_checks: session.dangerous_skip_checks,
+            session_id: Some(session.id),
+            initial_workdir: session.subdirectory.clone(),
+        };
+
+        // Recreate container
+        let backend_id = match session.backend {
+            BackendType::Docker => {
+                self.docker
+                    .create(
+                        &session.name,
+                        &session.worktree_path,
+                        &session.initial_prompt,
+                        create_options,
+                    )
+                    .await?
+            }
+            BackendType::Kubernetes => {
+                self.kubernetes
+                    .create(
+                        &session.name,
+                        &session.worktree_path,
+                        &session.initial_prompt,
+                        create_options,
+                    )
+                    .await?
+            }
+            BackendType::Zellij => unreachable!(),
+        };
+
+        // Update session with new backend ID and reset reconcile state
+        session.set_backend_id(backend_id.clone());
+        session.reset_reconcile_state();
+        let session_clone = session.clone();
+        drop(sessions);
+
+        // Record backend ID event
+        let event = Event::new(session_id, EventType::BackendIdSet { backend_id });
+        self.store.record_event(&event).await?;
+
+        // Save to store
+        self.store.save_session(&session_clone).await?;
+
+        tracing::info!(
+            session_id = %session_id,
+            name = %session_clone.name,
+            "Successfully recreated container"
+        );
+
+        // Broadcast event to WebSocket clients if broadcaster available
+        if let Some(ref broadcaster) = self.event_broadcaster {
+            broadcast_event(broadcaster, WsEvent::SessionUpdated(session_clone)).await;
+        }
+
+        Ok(())
     }
 
     /// Update the access mode for a session

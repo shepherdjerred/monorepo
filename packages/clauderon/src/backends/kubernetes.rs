@@ -668,30 +668,62 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
         }
 
         // Build claude command
-        let mut claude_args = vec![];
+        // Build a wrapper script that handles both initial creation and pod restart:
+        // - On first run: session file doesn't exist → create new session with prompt
+        // - On restart: session file exists → resume session with --resume --fork
+        let claude_cmd = {
+            let escaped_prompt = initial_prompt.replace('\'', "'\\''");
 
-        // Add session ID first if provided
-        let session_id_str = options.session_id.map(|id| id.to_string());
-        if let Some(ref session_id) = session_id_str {
-            claude_args.push("--session-id");
-            claude_args.push(session_id);
-        }
+            // Build args for create command (without session-id, we add it in wrapper)
+            let mut create_args = vec![];
+            if options.print_mode {
+                create_args.push("--print");
+            }
+            if options.plan_mode {
+                create_args.push("--plan");
+            }
+            if options.dangerous_skip_checks {
+                create_args.push("--dangerous-skip-checks");
+            }
 
-        if options.print_mode {
-            claude_args.push("--print");
-        }
-        if options.plan_mode {
-            claude_args.push("--plan");
-        }
-        if options.dangerous_skip_checks {
-            claude_args.push("--dangerous-skip-checks");
-        }
+            if let Some(session_id) = options.session_id {
+                let session_id_str = session_id.to_string();
 
-        let claude_cmd = format!(
-            "claude {} '{}'",
-            claude_args.join(" "),
-            initial_prompt.replace('\'', "'\\''")
-        );
+                // Build create command with all args
+                let create_cmd = format!(
+                    "claude --session-id {} {} '{}'",
+                    session_id_str,
+                    create_args.join(" "),
+                    escaped_prompt
+                );
+
+                // Build resume command
+                // Use --resume to continue an existing session instead of --session-id
+                // which would try to create a new session with that ID
+                // --fork creates a new branch from the session so we don't modify the original
+                let resume_cmd = format!("claude --resume {} --fork", session_id_str);
+
+                // Generate wrapper script that detects restart via session history file
+                // Claude Code stores session history at: .claude/projects/-workspace/<session-id>.jsonl
+                format!(
+                    r#"SESSION_ID="{session_id}"
+HISTORY_FILE="/workspace/.claude/projects/-workspace/${{SESSION_ID}}.jsonl"
+if [ -f "$HISTORY_FILE" ]; then
+    echo "Resuming existing session $SESSION_ID"
+    exec {resume_cmd}
+else
+    echo "Creating new session $SESSION_ID"
+    exec {create_cmd}
+fi"#,
+                    session_id = session_id_str,
+                    resume_cmd = resume_cmd,
+                    create_cmd = create_cmd,
+                )
+            } else {
+                // No session ID - just run the command directly
+                format!("claude {} '{}'", create_args.join(" "), escaped_prompt)
+            }
+        };
 
         // Volume mounts
         let mut volume_mounts = vec![
@@ -1109,6 +1141,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_attach_command_format() {
+        // Install crypto provider for rustls (required by kube client)
+        let _ = rustls::crypto::ring::default_provider().install_default();
+
         // Skip if k8s not available
         if Client::try_default().await.is_err() {
             return;

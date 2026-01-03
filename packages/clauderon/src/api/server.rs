@@ -279,7 +279,8 @@ async fn run_http_server(
     use crate::auth::{AuthState, SessionStore, WebAuthnHandler};
 
     // Read bind address from environment (default: localhost only)
-    let bind_addr = std::env::var("CLAUDERON_BIND_ADDR").unwrap_or_else(|_| "127.0.0.1".to_string());
+    let bind_addr =
+        std::env::var("CLAUDERON_BIND_ADDR").unwrap_or_else(|_| "127.0.0.1".to_string());
 
     // Determine if authentication is required (only for external binding)
     let requires_auth = bind_addr == "0.0.0.0";
@@ -287,7 +288,11 @@ async fn run_http_server(
     tracing::info!(
         "HTTP server will bind to {} (authentication {})",
         bind_addr,
-        if requires_auth { "REQUIRED" } else { "NOT required" }
+        if requires_auth {
+            "REQUIRED"
+        } else {
+            "NOT required"
+        }
     );
 
     // Initialize auth state if needed

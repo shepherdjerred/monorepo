@@ -57,7 +57,9 @@ pub async fn auth_middleware(
         })?;
 
     // Insert user ID into request extensions
-    request.extensions_mut().insert(AuthenticatedUserId(session.user_id));
+    request
+        .extensions_mut()
+        .insert(AuthenticatedUserId(session.user_id));
 
     Ok(next.run(request).await)
 }

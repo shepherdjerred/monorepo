@@ -91,6 +91,10 @@ impl SqliteStore {
             Self::migrate_to_v7(pool).await?;
         }
 
+        if current_version < 8 {
+            Self::migrate_to_v8(pool).await?;
+        }
+
         Ok(())
     }
 
@@ -389,9 +393,69 @@ impl SqliteStore {
         Ok(())
     }
 
-    /// Migration v7: Add passkey authentication tables
+    /// Migration v7: Add reconcile tracking columns
     async fn migrate_to_v7(pool: &SqlitePool) -> anyhow::Result<()> {
-        tracing::info!("Applying migration v7: Passkey authentication");
+        tracing::info!("Applying migration v7: Add reconcile tracking columns");
+
+        // Add reconcile_attempts column
+        let reconcile_attempts_exists: bool = sqlx::query_scalar(
+            "SELECT COUNT(*) > 0 FROM pragma_table_info('sessions') WHERE name = 'reconcile_attempts'",
+        )
+        .fetch_one(pool)
+        .await?;
+
+        if !reconcile_attempts_exists {
+            sqlx::query(
+                "ALTER TABLE sessions ADD COLUMN reconcile_attempts INTEGER NOT NULL DEFAULT 0",
+            )
+            .execute(pool)
+            .await?;
+            tracing::debug!("Added reconcile_attempts column to sessions table");
+        }
+
+        // Add last_reconcile_error column
+        let last_reconcile_error_exists: bool = sqlx::query_scalar(
+            "SELECT COUNT(*) > 0 FROM pragma_table_info('sessions') WHERE name = 'last_reconcile_error'",
+        )
+        .fetch_one(pool)
+        .await?;
+
+        if !last_reconcile_error_exists {
+            sqlx::query("ALTER TABLE sessions ADD COLUMN last_reconcile_error TEXT")
+                .execute(pool)
+                .await?;
+            tracing::debug!("Added last_reconcile_error column to sessions table");
+        }
+
+        // Add last_reconcile_at column
+        let last_reconcile_at_exists: bool = sqlx::query_scalar(
+            "SELECT COUNT(*) > 0 FROM pragma_table_info('sessions') WHERE name = 'last_reconcile_at'",
+        )
+        .fetch_one(pool)
+        .await?;
+
+        if !last_reconcile_at_exists {
+            sqlx::query("ALTER TABLE sessions ADD COLUMN last_reconcile_at TEXT")
+                .execute(pool)
+                .await?;
+            tracing::debug!("Added last_reconcile_at column to sessions table");
+        }
+
+        // Record migration
+        let now = Utc::now();
+        sqlx::query("INSERT OR REPLACE INTO schema_version (version, applied_at) VALUES (?, ?)")
+            .bind(7)
+            .bind(now.to_rfc3339())
+            .execute(pool)
+            .await?;
+
+        tracing::info!("Migration v7 complete");
+        Ok(())
+    }
+
+    /// Migration v8: Add passkey authentication tables
+    async fn migrate_to_v8(pool: &SqlitePool) -> anyhow::Result<()> {
+        tracing::info!("Applying migration v8: Passkey authentication");
 
         // Create users table
         sqlx::query(
@@ -504,12 +568,12 @@ impl SqliteStore {
         // Record migration
         let now = Utc::now();
         sqlx::query("INSERT OR REPLACE INTO schema_version (version, applied_at) VALUES (?, ?)")
-            .bind(7)
+            .bind(8)
             .bind(now.to_rfc3339())
             .execute(pool)
             .await?;
 
-        tracing::info!("Migration v7 complete");
+        tracing::info!("Migration v8 complete");
         Ok(())
     }
 }

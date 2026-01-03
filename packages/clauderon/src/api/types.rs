@@ -16,6 +16,15 @@ pub struct ReconcileReportDto {
 
     /// Orphaned backend resources
     pub orphaned_backends: Vec<String>,
+
+    /// Sessions that were successfully recreated
+    pub recreated: Vec<String>,
+
+    /// Sessions that failed to be recreated
+    pub recreation_failed: Vec<String>,
+
+    /// Sessions that exceeded max reconcile attempts
+    pub gave_up: Vec<String>,
 }
 
 impl From<ReconcileReport> for ReconcileReportDto {
@@ -32,6 +41,13 @@ impl From<ReconcileReport> for ReconcileReportDto {
                 .map(Uuid::to_string)
                 .collect(),
             orphaned_backends: report.orphaned_backends,
+            recreated: report.recreated.iter().map(Uuid::to_string).collect(),
+            recreation_failed: report
+                .recreation_failed
+                .iter()
+                .map(Uuid::to_string)
+                .collect(),
+            gave_up: report.gave_up.iter().map(Uuid::to_string).collect(),
         }
     }
 }

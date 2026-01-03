@@ -1,8 +1,8 @@
 use axum::{
+    Json,
     extract::State,
     http::StatusCode,
     response::{IntoResponse, Response},
-    Json,
 };
 use axum_extra::extract::cookie::{Cookie, CookieJar, SameSite};
 use chrono::{Duration, Utc};
@@ -11,11 +11,7 @@ use sqlx::SqlitePool;
 use uuid::Uuid;
 use webauthn_rs::prelude::*;
 
-use super::{
-    session::SessionStore,
-    types::*,
-    webauthn::WebAuthnHandler,
-};
+use super::{session::SessionStore, types::*, webauthn::WebAuthnHandler};
 
 /// Shared state for auth handlers
 #[derive(Clone)]
@@ -52,7 +48,10 @@ impl IntoResponse for AuthError {
         let (status, error_message) = match self {
             AuthError::Database(err) => {
                 tracing::error!("Database error: {}", err);
-                (StatusCode::INTERNAL_SERVER_ERROR, format!("Internal error: {}", err))
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    format!("Internal error: {}", err),
+                )
             }
             AuthError::NotFound(msg) => (StatusCode::NOT_FOUND, msg),
             AuthError::BadRequest(msg) => (StatusCode::BAD_REQUEST, msg),
@@ -179,7 +178,9 @@ pub async fn register_finish(
     .await?;
 
     let Some(challenge_row) = challenge_row else {
-        return Err(AuthError::BadRequest("No registration challenge found".to_string()));
+        return Err(AuthError::BadRequest(
+            "No registration challenge found".to_string(),
+        ));
     };
 
     // Check if expired
@@ -190,7 +191,9 @@ pub async fn register_finish(
             .bind(&challenge_row.id)
             .execute(&state.pool)
             .await?;
-        return Err(AuthError::BadRequest("Registration challenge expired".to_string()));
+        return Err(AuthError::BadRequest(
+            "Registration challenge expired".to_string(),
+        ));
     }
 
     // Parse challenge state
@@ -366,7 +369,9 @@ pub async fn login_finish(
     .await?;
 
     let Some(challenge_row) = challenge_row else {
-        return Err(AuthError::BadRequest("No authentication challenge found".to_string()));
+        return Err(AuthError::BadRequest(
+            "No authentication challenge found".to_string(),
+        ));
     };
 
     // Check if expired
@@ -377,7 +382,9 @@ pub async fn login_finish(
             .bind(&challenge_row.id)
             .execute(&state.pool)
             .await?;
-        return Err(AuthError::BadRequest("Authentication challenge expired".to_string()));
+        return Err(AuthError::BadRequest(
+            "Authentication challenge expired".to_string(),
+        ));
     }
 
     // Parse challenge state
