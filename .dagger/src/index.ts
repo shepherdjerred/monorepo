@@ -615,11 +615,11 @@ export class Monorepo {
   async clauderonCi(source: Directory): Promise<string> {
     const outputs: string[] = [];
 
-    // Build frontend first (required for static file embedding)
+    // Build web packages first (shared → client → frontend, required for static file embedding)
     // Use the already-configured workspace container from installWorkspaceDeps
     const frontendBuildContainer = installWorkspaceDeps(source)
-      .withWorkdir("/workspace/packages/clauderon/web/frontend")
-      .withExec(["bun", "run", "build"]);
+      .withWorkdir("/workspace/packages/clauderon/web")
+      .withExec(["bun", "run", "build"]); // Builds shared, client, then frontend in correct order
     const builtFrontend = frontendBuildContainer.directory("/workspace/packages/clauderon/web/frontend/dist");
 
     let container = getRustContainer(source)
