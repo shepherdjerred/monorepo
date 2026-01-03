@@ -251,7 +251,7 @@ impl HttpHandler for AuthInjector {
                         }
                     }
                 } else {
-                    tracing::warn!(
+                    tracing::debug!(
                         "Rule matched for {} but credential '{}' is missing",
                         host,
                         rule.credential_key
@@ -498,7 +498,7 @@ impl HttpHandler for FilteringHandler {
                         }
                     }
                 } else {
-                    tracing::warn!(
+                    tracing::debug!(
                         "Rule matched for {} but credential '{}' is missing",
                         host,
                         rule.credential_key

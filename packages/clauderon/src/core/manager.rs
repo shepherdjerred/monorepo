@@ -185,15 +185,15 @@ impl SessionManager {
         access_mode: super::session::AccessMode,
         images: Vec<String>,
     ) -> anyhow::Result<(Session, Option<Vec<String>>)> {
-        // Generate base name using AI (with fallback to "session")
-        let base_name = crate::utils::generate_session_name_ai(&repo_path, &initial_prompt).await;
+        // Generate metadata using AI (with fallback to defaults)
+        let metadata = crate::utils::generate_session_name_ai(&repo_path, &initial_prompt).await;
 
-        // Generate unique session name with random suffix and retry logic
+        // Generate unique session name with random suffix using branch_name as base
         const MAX_ATTEMPTS: usize = 3;
         let full_name = {
             let mut attempts = 0;
             loop {
-                let candidate = crate::utils::random::generate_session_name(&base_name);
+                let candidate = crate::utils::random::generate_session_name(&metadata.branch_name);
                 let sessions = self.sessions.read().await;
                 if !sessions.iter().any(|s| s.name == candidate) {
                     break candidate;
@@ -208,12 +208,14 @@ impl SessionManager {
         };
         let worktree_path = crate::utils::paths::worktree_path(&full_name);
 
-        // Create session object
+        // Create session object with AI-generated metadata
         let mut session = Session::new(super::session::SessionConfig {
             name: full_name.clone(),
+            title: Some(metadata.title),
+            description: Some(metadata.description),
             repo_path: repo_path.clone().into(),
             worktree_path: worktree_path.clone(),
-            branch_name: full_name.clone(),
+            branch_name: metadata.branch_name,  // Use AI branch_name (no suffix)
             initial_prompt: initial_prompt.clone(),
             backend,
             agent,

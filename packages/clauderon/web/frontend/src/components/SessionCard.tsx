@@ -31,16 +31,23 @@ export function SessionCard({ session, onAttach, onArchive, onDelete }: SessionC
       <CardHeader className="pb-3">
         <div className="flex items-center gap-2">
           <div className={`w-4 h-4 border-2 border-foreground ${statusColor}`} />
-          <h3 className="font-bold text-lg flex-1">{session.name}</h3>
+          <h3 className="font-bold text-lg flex-1">{session.title || session.name}</h3>
           <Badge variant="outline" className="border-2 font-mono text-xs">
             {session.backend}
           </Badge>
         </div>
       </CardHeader>
       <CardContent>
-        <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-          {session.initial_prompt}
-        </p>
+        {session.description && (
+          <p className="text-sm text-muted-foreground mb-2">
+            {session.description}
+          </p>
+        )}
+        {!session.description && (
+          <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+            {session.initial_prompt}
+          </p>
+        )}
 
         {/* Status Indicators */}
         <div className="flex flex-col gap-1 mb-3">

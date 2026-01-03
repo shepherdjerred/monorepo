@@ -184,7 +184,7 @@ pub async fn install_hooks_in_container(container_name: &str) -> Result<()> {
             "bash",
             "-c",
             &format!(
-                "cat > /workspace/.clauderon/hooks/send_status.sh << 'EOF'\n{}\nEOF",
+                "cat > /workspace/.clauderon/hooks/send_status.sh << 'OUTER_EOF'\n{}\nOUTER_EOF",
                 SEND_STATUS_SCRIPT
             ),
         ])
