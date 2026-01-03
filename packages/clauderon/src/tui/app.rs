@@ -964,7 +964,7 @@ impl App {
     /// # Errors
     ///
     /// Returns an error if the session cannot be attached.
-    pub async fn attach_selected_session(&mut self) -> anyhow::Result<()> {
+    pub fn attach_selected_session(&mut self) -> anyhow::Result<()> {
         let session = self
             .selected_session()
             .ok_or_else(|| anyhow::anyhow!("No session selected"))?;
@@ -1129,7 +1129,7 @@ impl App {
 
     /// Switch to the next Docker session while attached.
     /// Returns true if switched, false if no next session.
-    pub async fn switch_to_next_session(&mut self) -> anyhow::Result<bool> {
+    pub fn switch_to_next_session(&mut self) -> anyhow::Result<bool> {
         use crate::core::{BackendType, SessionStatus};
 
         // Get list of Docker sessions (only those support PTY)
@@ -1180,7 +1180,7 @@ impl App {
 
     /// Switch to the previous Docker session while attached.
     /// Returns true if switched, false if no previous session.
-    pub async fn switch_to_previous_session(&mut self) -> anyhow::Result<bool> {
+    pub fn switch_to_previous_session(&mut self) -> anyhow::Result<bool> {
         use crate::core::{BackendType, SessionStatus};
 
         // Get list of Docker sessions (only those support PTY)
