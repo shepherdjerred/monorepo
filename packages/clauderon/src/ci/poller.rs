@@ -248,12 +248,10 @@ impl CIPoller {
         // State values from gh pr checks: SUCCESS, FAILURE, PENDING, SKIPPED, CANCELLED, etc.
         let new_status = if checks.is_empty() {
             CheckStatus::Pending
-        } else if checks.iter().any(|c| {
-            matches!(
-                c["state"].as_str(),
-                Some("FAILURE" | "CANCELLED" | "ERROR")
-            )
-        }) {
+        } else if checks
+            .iter()
+            .any(|c| matches!(c["state"].as_str(), Some("FAILURE" | "CANCELLED" | "ERROR")))
+        {
             CheckStatus::Failing
         } else if checks
             .iter()
