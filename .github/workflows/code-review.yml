@@ -79,13 +79,14 @@ jobs:
       - name: Validate structured output
         id: validate-output
         if: steps.claude-review.outputs.structured_output != ''
+        env:
+          STRUCTURED_OUTPUT: ${{ steps.claude-review.outputs.structured_output }}
         run: |
           # Attempt to parse JSON and validate required fields exist
-          OUTPUT='${{ steps.claude-review.outputs.structured_output }}'
-          if echo "$OUTPUT" | jq -e '.should_approve' > /dev/null 2>&1 && \
-             echo "$OUTPUT" | jq -e '.confidence' > /dev/null 2>&1 && \
-             echo "$OUTPUT" | jq -e '.issue_count' > /dev/null 2>&1 && \
-             echo "$OUTPUT" | jq -e '.reasoning' > /dev/null 2>&1; then
+          if echo "$STRUCTURED_OUTPUT" | jq -e '.should_approve' > /dev/null 2>&1 && \
+             echo "$STRUCTURED_OUTPUT" | jq -e '.confidence' > /dev/null 2>&1 && \
+             echo "$STRUCTURED_OUTPUT" | jq -e '.issue_count' > /dev/null 2>&1 && \
+             echo "$STRUCTURED_OUTPUT" | jq -e '.reasoning' > /dev/null 2>&1; then
             echo "valid=true" >> $GITHUB_OUTPUT
           else
             echo "valid=false" >> $GITHUB_OUTPUT
@@ -98,11 +99,12 @@ jobs:
           fromJSON(steps.claude-review.outputs.structured_output).should_approve == true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          STRUCTURED_OUTPUT: ${{ steps.claude-review.outputs.structured_output }}
         run: |
           # Extract data from structured output with default values
-          REASONING=$(echo '${{ steps.claude-review.outputs.structured_output }}' | jq -r '.reasoning // "No issues found"')
-          NITPICK_COUNT=$(echo '${{ steps.claude-review.outputs.structured_output }}' | jq -r '.issue_count.nitpick // 0')
-          CONFIDENCE=$(echo '${{ steps.claude-review.outputs.structured_output }}' | jq -r '.confidence // 0')
+          REASONING=$(echo "$STRUCTURED_OUTPUT" | jq -r '.reasoning // "No issues found"')
+          NITPICK_COUNT=$(echo "$STRUCTURED_OUTPUT" | jq -r '.issue_count.nitpick // 0')
+          CONFIDENCE=$(echo "$STRUCTURED_OUTPUT" | jq -r '.confidence // 0')
 
           # Validate numeric fields
           if ! [[ "$CONFIDENCE" =~ ^[0-9]+$ ]]; then CONFIDENCE=0; fi
