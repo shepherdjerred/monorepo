@@ -72,7 +72,7 @@ fn render_attached_status(app: &App) -> Line<'static> {
         Span::raw(" switch │ "),
         Span::styled("Ctrl+S", Style::default().fg(Color::Cyan)),
         Span::raw(" scroll │ "),
-        Span::styled("Ctrl+Space", Style::default().fg(Color::Cyan)),
+        Span::styled("Ctrl+L", Style::default().fg(Color::Cyan)),
         Span::raw(" lock │ "),
         Span::styled("?", Style::default().fg(Color::Cyan)),
         Span::raw(" help"),
@@ -132,7 +132,7 @@ fn render_locked_status(_app: &App) -> Line<'static> {
         Span::raw(" "),
         Span::styled("LOCKED", Style::default().fg(Color::Red)),
         Span::raw(" - All keys forwarded to application │ "),
-        Span::styled("Ctrl+Space", Style::default().fg(Color::Cyan)),
+        Span::styled("Ctrl+L", Style::default().fg(Color::Cyan)),
         Span::raw(" to unlock"),
     ])
 }

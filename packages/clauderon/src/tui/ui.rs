@@ -54,7 +54,11 @@ pub fn render(frame: &mut Frame, app: &App) {
 fn render_main_content(frame: &mut Frame, app: &App, area: Rect) {
     if let Some(error) = &app.connection_error {
         render_connection_error(frame, error, area);
-    } else if app.mode == AppMode::Attached || app.mode == AppMode::CopyMode {
+    } else if app.mode == AppMode::Attached
+        || app.mode == AppMode::CopyMode
+        || app.mode == AppMode::Locked
+        || app.mode == AppMode::Scroll
+    {
         render_attached_terminal(frame, app, area);
     } else {
         session_list::render(frame, app, area);
@@ -196,7 +200,7 @@ fn render_help(frame: &mut Frame, app: &App, area: Rect) {
                 ("Ctrl+Q", "Detach"),
                 ("Ctrl+P/N", "Switch session (Prev/Next)"),
                 ("Ctrl+S", "Enter scroll mode"),
-                ("Ctrl+Space", "Toggle locked mode"),
+                ("Ctrl+L", "Toggle locked mode"),
                 ("?", "Show help"),
             ]
         },
@@ -206,7 +210,7 @@ fn render_help(frame: &mut Frame, app: &App, area: Rect) {
                 ("Ctrl+Q", "Detach"),
                 ("Ctrl+P/N", "Switch session (Prev/Next)"),
                 ("Ctrl+S", "Enter scroll mode"),
-                ("Ctrl+Space", "Toggle locked mode"),
+                ("Ctrl+L", "Toggle locked mode"),
                 ("?", "Show help"),
             ],
         },
@@ -242,7 +246,7 @@ fn render_help(frame: &mut Frame, app: &App, area: Rect) {
         (
             "Locked Mode",
             vec![
-                ("Ctrl+Space", "Unlock and return to attached"),
+                ("Ctrl+L", "Unlock and return to attached"),
                 ("All keys", "Forwarded to application"),
             ],
         ),
