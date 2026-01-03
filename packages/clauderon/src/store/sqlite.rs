@@ -79,6 +79,10 @@ impl SqliteStore {
             Self::migrate_to_v4(pool).await?;
         }
 
+        if current_version < 5 {
+            Self::migrate_to_v5(pool).await?;
+        }
+
         Ok(())
     }
 
@@ -302,6 +306,50 @@ impl SqliteStore {
         tracing::info!("Migration v4 complete");
         Ok(())
     }
+
+    /// Migration v5: Add title and description to sessions table
+    async fn migrate_to_v5(pool: &SqlitePool) -> anyhow::Result<()> {
+        tracing::info!("Applying migration v5: Add session title and description");
+
+        // Check if title column exists
+        let title_exists: bool = sqlx::query_scalar(
+            "SELECT COUNT(*) > 0 FROM pragma_table_info('sessions') WHERE name = 'title'",
+        )
+        .fetch_one(pool)
+        .await?;
+
+        if !title_exists {
+            sqlx::query("ALTER TABLE sessions ADD COLUMN title TEXT")
+                .execute(pool)
+                .await?;
+            tracing::debug!("Added title column to sessions table");
+        }
+
+        // Check if description column exists
+        let description_exists: bool = sqlx::query_scalar(
+            "SELECT COUNT(*) > 0 FROM pragma_table_info('sessions') WHERE name = 'description'",
+        )
+        .fetch_one(pool)
+        .await?;
+
+        if !description_exists {
+            sqlx::query("ALTER TABLE sessions ADD COLUMN description TEXT")
+                .execute(pool)
+                .await?;
+            tracing::debug!("Added description column to sessions table");
+        }
+
+        // Record migration
+        let now = Utc::now();
+        sqlx::query("INSERT OR REPLACE INTO schema_version (version, applied_at) VALUES (?, ?)")
+            .bind(5)
+            .bind(now.to_rfc3339())
+            .execute(pool)
+            .await?;
+
+        tracing::info!("Migration v5 complete");
+        Ok(())
+    }
 }
 
 #[async_trait]
@@ -340,15 +388,17 @@ impl Store for SqliteStore {
         sqlx::query(
             r"
             INSERT OR REPLACE INTO sessions (
-                id, name, status, backend, agent, repo_path, worktree_path,
+                id, name, title, description, status, backend, agent, repo_path, worktree_path,
                 branch_name, backend_id, initial_prompt, dangerous_skip_checks,
                 pr_url, pr_check_status, claude_status, claude_status_updated_at,
                 merge_conflict, access_mode, proxy_port, created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ",
         )
         .bind(session.id.to_string())
         .bind(&session.name)
+        .bind(&session.title)
+        .bind(&session.description)
         .bind(serde_json::to_string(&session.status)?)
         .bind(serde_json::to_string(&session.backend)?)
         .bind(serde_json::to_string(&session.agent)?)
@@ -511,6 +561,8 @@ const fn event_type_name(event_type: &crate::core::events::EventType) -> &'stati
 struct SessionRow {
     id: String,
     name: String,
+    title: Option<String>,
+    description: Option<String>,
     status: String,
     backend: String,
     agent: String,
@@ -635,6 +687,8 @@ impl TryFrom<SessionRow> for Session {
         Ok(Self {
             id,
             name: row.name,
+            title: row.title,
+            description: row.description,
             status,
             backend,
             agent,

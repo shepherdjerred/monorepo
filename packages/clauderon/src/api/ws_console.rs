@@ -66,119 +66,115 @@ async fn handle_console_socket(socket: WebSocket, session_id: String, state: App
     // PTY handles are already wrapped in Arc<Mutex<>> from spawn functions
     let (mut ws_sender, mut ws_receiver) = socket.split();
 
-    // Task 1: Read from PTY and send to WebSocket
-    let pty_reader_clone = Arc::clone(&pty_reader);
-    let session_id_clone = session_id.clone();
-    let pty_to_ws = tokio::spawn(async move {
-        let mut buffer = vec![0u8; 4096];
-        loop {
-            let mut reader = pty_reader_clone.lock().await;
-            match reader.read(&mut buffer).await {
-                Ok(0) => {
-                    // EOF - PTY closed
-                    tracing::debug!("PTY EOF for session {}", session_id_clone);
-                    break;
-                }
-                Ok(n) => {
-                    // Convert bytes to base64 for binary-safe transmission
-                    let data = base64::prelude::BASE64_STANDARD.encode(&buffer[..n]);
-                    let message = json!({
-                        "type": "output",
-                        "data": data,
-                    });
+    // Create buffer for PTY reading
+    let mut pty_buffer = vec![0u8; 4096];
 
-                    if let Err(e) = ws_sender.send(Message::Text(message.to_string())).await {
-                        tracing::error!("Failed to send PTY output to WebSocket: {}", e);
+    // Main event loop - handles both directions in single loop to avoid race conditions
+    loop {
+        tokio::select! {
+            // Read from PTY and send to WebSocket
+            read_result = {
+                let mut reader = pty_reader.lock().await;
+                reader.read(&mut pty_buffer)
+            } => {
+                match read_result {
+                    Ok(0) => {
+                        // EOF - PTY closed
+                        tracing::debug!("PTY EOF for session {}", session_id);
+                        break;
+                    }
+                    Ok(n) => {
+                        // Convert bytes to base64 for binary-safe transmission
+                        let data = base64::prelude::BASE64_STANDARD.encode(&pty_buffer[..n]);
+                        let message = json!({
+                            "type": "output",
+                            "data": data,
+                        });
+
+                        if let Err(e) = ws_sender.send(Message::Text(message.to_string())).await {
+                            tracing::debug!("Failed to send PTY output to WebSocket: {}", e);
+                            break;
+                        }
+                    }
+                    Err(e) => {
+                        tracing::error!("PTY read error: {}", e);
                         break;
                     }
                 }
-                Err(e) => {
-                    tracing::error!("PTY read error: {}", e);
-                    break;
-                }
             }
-        }
-    });
 
-    // Task 2: Read from WebSocket and send to PTY
-    let pty_writer_clone = Arc::clone(&pty_writer);
-    let ws_to_pty = tokio::spawn(async move {
-        while let Some(msg) = ws_receiver.next().await {
-            match msg {
-                Ok(Message::Text(text)) => {
-                    // Parse JSON message
-                    let message: serde_json::Value = match serde_json::from_str(&text) {
-                        Ok(m) => m,
-                        Err(e) => {
-                            tracing::error!("Invalid JSON from WebSocket: {}", e);
-                            continue;
-                        }
-                    };
+            // Read from WebSocket and send to PTY
+            ws_msg = ws_receiver.next() => {
+                match ws_msg {
+                    Some(Ok(Message::Text(text))) => {
+                        // Parse JSON message
+                        let message: serde_json::Value = match serde_json::from_str(&text) {
+                            Ok(m) => m,
+                            Err(e) => {
+                                tracing::error!("Invalid JSON from WebSocket: {}", e);
+                                continue;
+                            }
+                        };
 
-                    match message["type"].as_str() {
-                        Some("input") => {
-                            // Client is sending input to PTY
-                            if let Some(data) = message["data"].as_str() {
-                                // Data is base64-encoded
-                                if let Ok(bytes) = base64::prelude::BASE64_STANDARD.decode(data) {
-                                    let mut writer = pty_writer_clone.lock().await;
-                                    if let Err(e) = writer.write_all(&bytes).await {
-                                        tracing::error!("Failed to write to PTY: {}", e);
-                                        break;
-                                    }
-                                    // Flush immediately to ensure data is sent to PTY
-                                    if let Err(e) = writer.flush().await {
-                                        tracing::error!("Failed to flush PTY: {}", e);
-                                        break;
+                        match message["type"].as_str() {
+                            Some("input") => {
+                                // Client is sending input to PTY
+                                if let Some(data) = message["data"].as_str() {
+                                    // Data is base64-encoded
+                                    if let Ok(bytes) = base64::prelude::BASE64_STANDARD.decode(data) {
+                                        let mut writer = pty_writer.lock().await;
+                                        if let Err(e) = writer.write_all(&bytes).await {
+                                            tracing::error!("Failed to write to PTY: {}", e);
+                                            break;
+                                        }
+                                        // Flush immediately to ensure data is sent to PTY
+                                        if let Err(e) = writer.flush().await {
+                                            tracing::error!("Failed to flush PTY: {}", e);
+                                            break;
+                                        }
                                     }
                                 }
                             }
-                        }
-                        Some("resize") => {
-                            // Client is resizing terminal
-                            if let (Some(rows), Some(cols)) =
-                                (message["rows"].as_u64(), message["cols"].as_u64())
-                            {
-                                let size = pty_process::Size::new(rows as u16, cols as u16);
-                                let writer = pty_writer_clone.lock().await;
-                                if let Err(e) = writer.resize(size) {
-                                    tracing::error!("Failed to resize PTY: {}", e);
+                            Some("resize") => {
+                                // Client is resizing terminal
+                                if let (Some(rows), Some(cols)) =
+                                    (message["rows"].as_u64(), message["cols"].as_u64())
+                                {
+                                    let size = pty_process::Size::new(rows as u16, cols as u16);
+                                    let writer = pty_writer.lock().await;
+                                    if let Err(e) = writer.resize(size) {
+                                        tracing::error!("Failed to resize PTY: {}", e);
+                                    } else {
+                                        tracing::debug!("Resized PTY to {}x{}", rows, cols);
+                                    }
                                 } else {
-                                    tracing::debug!("Resized PTY to {}x{}", rows, cols);
+                                    tracing::warn!("Invalid resize message: {:?}", message);
                                 }
-                            } else {
-                                tracing::warn!("Invalid resize message: {:?}", message);
                             }
-                        }
-                        _ => {
-                            tracing::warn!("Unknown message type from WebSocket: {:?}", message);
+                            _ => {
+                                tracing::warn!("Unknown message type from WebSocket: {:?}", message);
+                            }
                         }
                     }
+                    Some(Ok(Message::Close(_))) => {
+                        tracing::debug!("WebSocket closed by client");
+                        break;
+                    }
+                    Some(Ok(Message::Ping(data))) => {
+                        // WebSocket will auto-respond to pings
+                        tracing::trace!("Received ping: {} bytes", data.len());
+                    }
+                    Some(Err(e)) => {
+                        tracing::error!("WebSocket error: {}", e);
+                        break;
+                    }
+                    None => {
+                        tracing::debug!("WebSocket stream ended");
+                        break;
+                    }
+                    _ => {}
                 }
-                Ok(Message::Close(_)) => {
-                    tracing::debug!("WebSocket closed by client");
-                    break;
-                }
-                Ok(Message::Ping(data)) => {
-                    // WebSocket will auto-respond to pings
-                    tracing::trace!("Received ping: {} bytes", data.len());
-                }
-                Err(e) => {
-                    tracing::error!("WebSocket error: {}", e);
-                    break;
-                }
-                _ => {}
             }
-        }
-    });
-
-    // Wait for either task to complete
-    tokio::select! {
-        _ = pty_to_ws => {
-            tracing::debug!("PTY->WS task completed");
-        }
-        _ = ws_to_pty => {
-            tracing::debug!("WS->PTY task completed");
         }
     }
 
