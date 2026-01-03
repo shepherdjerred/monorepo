@@ -265,6 +265,7 @@ impl DockerBackend {
     pub fn build_create_args(
         name: &str,
         workdir: &Path,
+        initial_workdir: &Path,
         initial_prompt: &str,
         uid: u32,
         proxy_config: Option<&DockerProxyConfig>,
@@ -287,7 +288,11 @@ impl DockerBackend {
             "-v".to_string(),
             format!("{}:/workspace", workdir.display()),
             "-w".to_string(),
-            "/workspace".to_string(),
+            if initial_workdir.as_os_str().is_empty() {
+                "/workspace".to_string()
+            } else {
+                format!("/workspace/{}", initial_workdir.display())
+            },
             "-e".to_string(),
             "TERM=xterm-256color".to_string(),
             "-e".to_string(),
@@ -686,6 +691,7 @@ impl ExecutionBackend for DockerBackend {
         let args = Self::build_create_args(
             name,
             workdir,
+            &options.initial_workdir,
             initial_prompt,
             uid,
             proxy_config_ref,
@@ -849,6 +855,7 @@ mod tests {
         let args = DockerBackend::build_create_args(
             "test-session",
             &PathBuf::from("/workspace"),
+            &PathBuf::new(), // initial_workdir (empty = root)
             "test prompt",
             1000,
             None,
@@ -916,6 +923,7 @@ mod tests {
         let args = DockerBackend::build_create_args(
             "test-session",
             &PathBuf::from("/workspace"),
+            &PathBuf::new(), // initial_workdir (empty = root)
             "test prompt",
             uid,
             None,
@@ -944,6 +952,7 @@ mod tests {
         let args = DockerBackend::build_create_args(
             "test-session",
             &PathBuf::from("/workspace"),
+            &PathBuf::new(), // initial_workdir (empty = root)
             "test prompt",
             1000,
             None,
@@ -1036,6 +1045,7 @@ mod tests {
         let args = DockerBackend::build_create_args(
             "test-session",
             &PathBuf::from("/workspace"),
+            &PathBuf::new(), // initial_workdir (empty = root)
             prompt_with_quotes,
             1000,
             None,
@@ -1063,6 +1073,7 @@ mod tests {
         let args = DockerBackend::build_create_args(
             "my-session",
             &PathBuf::from("/workspace"),
+            &PathBuf::new(), // initial_workdir (empty = root)
             "test prompt",
             1000,
             None,
@@ -1106,6 +1117,7 @@ mod tests {
         let args = DockerBackend::build_create_args(
             "test-session",
             &PathBuf::from("/workspace"),
+            &PathBuf::new(), // initial_workdir (empty = root)
             "test prompt",
             1000,
             Some(&proxy_config),
@@ -1153,6 +1165,7 @@ mod tests {
         let args = DockerBackend::build_create_args(
             "test-session",
             &PathBuf::from("/workspace"),
+            &PathBuf::new(), // initial_workdir (empty = root)
             "test prompt",
             1000,
             Some(&proxy_config),
@@ -1180,6 +1193,7 @@ mod tests {
         let args = DockerBackend::build_create_args(
             "test-session",
             &PathBuf::from("/workspace"),
+            &PathBuf::new(), // initial_workdir (empty = root)
             "test prompt",
             1000,
             Some(&proxy_config),
@@ -1212,6 +1226,7 @@ mod tests {
         let args = DockerBackend::build_create_args(
             "test-session",
             &PathBuf::from("/workspace"),
+            &PathBuf::new(), // initial_workdir (empty = root)
             "test prompt",
             1000,
             Some(&proxy_config),
@@ -1243,6 +1258,7 @@ mod tests {
         let args = DockerBackend::build_create_args(
             "test-session",
             &PathBuf::from("/workspace"),
+            &PathBuf::new(), // initial_workdir (empty = root)
             "test prompt",
             1000,
             None,
@@ -1271,6 +1287,7 @@ mod tests {
         let args = DockerBackend::build_create_args(
             "test-session",
             &PathBuf::from("/workspace"),
+            &PathBuf::new(), // initial_workdir (empty = root)
             "test prompt",
             1000,
             None,
@@ -1548,6 +1565,7 @@ mod tests {
         let args = DockerBackend::build_create_args(
             "test-session",
             &PathBuf::from("/workspace"),
+            &PathBuf::new(), // initial_workdir (empty = root)
             "test prompt",
             1000,
             None,  // No proxy config
@@ -1587,6 +1605,7 @@ mod tests {
         let args = DockerBackend::build_create_args(
             "test-session",
             &PathBuf::from("/workspace"),
+            &PathBuf::new(), // initial_workdir (empty = root)
             "test prompt",
             1000,
             None,  // No proxy config

@@ -55,6 +55,10 @@ pub struct CreateOptions {
     /// Session UUID (for Kubernetes PVC labeling and tracking)
     /// Only applicable to Kubernetes backend.
     pub session_id: Option<uuid::Uuid>,
+
+    /// Initial working directory relative to worktree root
+    /// Empty PathBuf means start at worktree root
+    pub initial_workdir: PathBuf,
 }
 
 /// Trait for execution backends (Zellij, Docker, etc.)
