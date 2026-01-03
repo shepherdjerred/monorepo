@@ -389,9 +389,9 @@ impl SqliteStore {
         Ok(())
     }
 
-    /// Migration v7: Add reconcile tracking columns
+    /// Migration v7: Add reconcile tracking and async operation error tracking columns
     async fn migrate_to_v7(pool: &SqlitePool) -> anyhow::Result<()> {
-        tracing::info!("Applying migration v7: Add reconcile tracking columns");
+        tracing::info!("Applying migration v7: Add reconcile tracking and error_message columns");
 
         // Add reconcile_attempts column
         let reconcile_attempts_exists: bool = sqlx::query_scalar(
@@ -435,6 +435,20 @@ impl SqliteStore {
                 .execute(pool)
                 .await?;
             tracing::debug!("Added last_reconcile_at column to sessions table");
+        }
+
+        // Add error_message column
+        let error_message_exists: bool = sqlx::query_scalar(
+            "SELECT COUNT(*) > 0 FROM pragma_table_info('sessions') WHERE name = 'error_message'",
+        )
+        .fetch_one(pool)
+        .await?;
+
+        if !error_message_exists {
+            sqlx::query("ALTER TABLE sessions ADD COLUMN error_message TEXT")
+                .execute(pool)
+                .await?;
+            tracing::debug!("Added error_message column to sessions table");
         }
 
         // Record migration
@@ -490,9 +504,9 @@ impl Store for SqliteStore {
                 branch_name, backend_id, initial_prompt, dangerous_skip_checks,
                 pr_url, pr_check_status, claude_status, claude_status_updated_at,
                 merge_conflict, access_mode, proxy_port, history_file_path,
-                reconcile_attempts, last_reconcile_error, last_reconcile_at,
+                reconcile_attempts, last_reconcile_error, last_reconcile_at, error_message,
                 created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ",
         )
         .bind(session.id.to_string())
@@ -529,6 +543,7 @@ impl Store for SqliteStore {
         .bind(session.reconcile_attempts as i64)
         .bind(&session.last_reconcile_error)
         .bind(session.last_reconcile_at.map(|t| t.to_rfc3339()))
+        .bind(&session.error_message)
         .bind(session.created_at.to_rfc3339())
         .bind(session.updated_at.to_rfc3339())
         .execute(&self.pool)
@@ -693,6 +708,7 @@ struct SessionRow {
     reconcile_attempts: i64,
     last_reconcile_error: Option<String>,
     last_reconcile_at: Option<String>,
+    error_message: Option<String>,
     created_at: String,
     updated_at: String,
 }
@@ -840,6 +856,8 @@ impl TryFrom<SessionRow> for Session {
             reconcile_attempts: row.reconcile_attempts as u32,
             last_reconcile_error: row.last_reconcile_error,
             last_reconcile_at,
+            error_message: row.error_message,
+            progress: None, // Progress is transient and not persisted to database
             created_at,
             updated_at,
         })

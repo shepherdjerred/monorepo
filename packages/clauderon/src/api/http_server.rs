@@ -72,14 +72,15 @@ async fn get_session(
     Ok(Json(json!({ "session": session })))
 }
 
-/// Create a new session
+/// Create a new session (async - returns immediately)
 async fn create_session(
     State(state): State<AppState>,
     Json(request): Json<CreateSessionRequest>,
 ) -> Result<Json<serde_json::Value>, AppError> {
-    let (session, warnings) = state
+    // Start async creation (returns immediately with session ID)
+    let session_id = state
         .session_manager
-        .create_session(
+        .start_session_creation(
             request.repo_path,
             request.initial_prompt,
             request.backend,
@@ -92,31 +93,31 @@ async fn create_session(
         )
         .await?;
 
-    // Broadcast session created event
-    broadcast_event(
-        &state.event_broadcaster,
-        Event::SessionCreated(session.clone()),
-    )
-    .await;
+    // Session is created with "Creating" status and event is already broadcasted
+    // Background task will complete the creation and broadcast progress updates
 
     Ok(Json(json!({
-        "id": session.id.to_string(),
-        "warnings": warnings,
+        "id": session_id.to_string(),
+        "status": "creating",
+        "message": "Session creation started. Subscribe to /ws/events for progress updates."
     })))
 }
 
-/// Delete a session
+/// Delete a session (async - returns immediately)
 async fn delete_session(
     State(state): State<AppState>,
     Path(id): Path<String>,
 ) -> Result<StatusCode, AppError> {
     validate_session_id(&id)?;
-    state.session_manager.delete_session(&id).await?;
 
-    // Broadcast session deleted event
-    broadcast_event(&state.event_broadcaster, Event::SessionDeleted { id }).await;
+    // Start async deletion (returns immediately)
+    state.session_manager.start_session_deletion(&id).await?;
 
-    Ok(StatusCode::NO_CONTENT)
+    // Session is marked as "Deleting" and event is already broadcasted
+    // Background task will complete the deletion and broadcast progress updates
+
+    // Return 202 Accepted (operation in progress)
+    Ok(StatusCode::ACCEPTED)
 }
 
 /// Archive a session

@@ -67,6 +67,33 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         case "session_deleted":
           next.delete(event.sessionId);
           break;
+        case "session_progress": {
+          const session = next.get(event.sessionId);
+          if (session) {
+            next.set(event.sessionId, {
+              ...session,
+              progress: event.progress,
+            });
+          }
+          break;
+        }
+        case "session_failed": {
+          const session = next.get(event.sessionId);
+          if (session) {
+            next.set(event.sessionId, {
+              ...session,
+              status: "Failed" as const,
+              error_message: event.error,
+              progress: undefined,
+            });
+          }
+          // Optional: Show error notification
+          console.error(`Session ${event.sessionId} failed:`, event.error);
+          break;
+        }
+        case "status_changed":
+          // Optionally refresh to get latest status
+          break;
       }
       return next;
     });

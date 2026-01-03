@@ -1,23 +1,60 @@
-import type { Session } from "@clauderon/shared";
+import type { Session, ProgressStep, Event as RustEvent } from "@clauderon/shared";
 import { WebSocketError } from "./errors.js";
 
 /**
- * Event types emitted by the events WebSocket
+ * Event types emitted by the events WebSocket (transformed from Rust Event type)
  */
 export type SessionEvent =
   | { type: "session_created"; session: Session }
   | { type: "session_updated"; session: Session }
   | { type: "session_deleted"; sessionId: string }
-  | { type: "status_changed"; sessionId: string; oldStatus: string; newStatus: string };
+  | { type: "status_changed"; sessionId: string; oldStatus: string; newStatus: string }
+  | { type: "session_progress"; sessionId: string; progress: ProgressStep }
+  | { type: "session_failed"; sessionId: string; error: string };
 
 /**
  * Message received from the events WebSocket
  */
 type EventsMessage = {
   type: string;
-  event?: SessionEvent;
+  event?: RustEvent;
   message?: string;
 };
+
+/**
+ * Transform Rust Event type to JavaScript SessionEvent type
+ */
+function transformEvent(event: RustEvent): SessionEvent | null {
+  switch (event.type) {
+    case "SessionCreated":
+      return { type: "session_created", session: event.payload };
+    case "SessionUpdated":
+      return { type: "session_updated", session: event.payload };
+    case "SessionDeleted":
+      return { type: "session_deleted", sessionId: event.payload.id };
+    case "StatusChanged":
+      return {
+        type: "status_changed",
+        sessionId: event.payload.id,
+        oldStatus: event.payload.old,
+        newStatus: event.payload.new,
+      };
+    case "SessionProgress":
+      return {
+        type: "session_progress",
+        sessionId: event.payload.id,
+        progress: event.payload.progress,
+      };
+    case "SessionFailed":
+      return {
+        type: "session_failed",
+        sessionId: event.payload.id,
+        error: event.payload.error,
+      };
+    default:
+      return null;
+  }
+}
 
 /**
  * Configuration for EventsClient
@@ -112,7 +149,10 @@ export class EventsClient {
 
           // Handle session events
           if (data.type === "event" && data.event) {
-            this.emit("event", data.event);
+            const transformedEvent = transformEvent(data.event);
+            if (transformedEvent) {
+              this.emit("event", transformedEvent);
+            }
           }
         } catch (error) {
           this.emit(

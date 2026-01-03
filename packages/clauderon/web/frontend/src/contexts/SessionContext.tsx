@@ -76,7 +76,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   );
 
   // Handle real-time events
-  const handleEvent = useCallback((event: { type: string; session?: Session; sessionId?: string }) => {
+  const handleEvent = useCallback((event: { type: string; session?: Session; sessionId?: string; progress?: { step: number; total: number; message: string }; error?: string }) => {
     switch (event.type) {
       case "session_created":
       case "session_updated": {
@@ -101,8 +101,54 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         }
         break;
       }
+      case "session_progress": {
+        const sessionId = event.sessionId;
+        const progress = event.progress;
+        if (sessionId && progress) {
+          setSessions((prev) => {
+            const newSessions = new Map(prev);
+            const session = newSessions.get(sessionId);
+            if (session) {
+              newSessions.set(sessionId, {
+                ...session,
+                progress,
+              });
+            }
+            return newSessions;
+          });
+        }
+        break;
+      }
+      case "session_failed": {
+        const sessionId = event.sessionId;
+        const error = event.error;
+        if (sessionId && error) {
+          setSessions((prev) => {
+            const newSessions = new Map(prev);
+            const session = newSessions.get(sessionId);
+            if (session) {
+              newSessions.set(sessionId, {
+                ...session,
+                status: "Failed" as const,
+                error_message: error,
+                progress: undefined,
+              });
+            }
+            return newSessions;
+          });
+
+          // Optional: Show error notification (if you have a toast/notification system)
+          console.error(`Session ${sessionId} failed:`, error);
+        }
+        break;
+      }
+      case "status_changed": {
+        // Trigger refresh to get updated session
+        void refreshSessions();
+        break;
+      }
     }
-  }, []);
+  }, [refreshSessions]);
 
   useSessionEvents(handleEvent);
 
