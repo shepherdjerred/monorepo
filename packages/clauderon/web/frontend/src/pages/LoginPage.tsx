@@ -17,7 +17,7 @@ export function LoginPage() {
 
     try {
       // Start login flow
-      const { options } = await client.loginStart({ username });
+      const { challenge_id, options } = await client.loginStart({ username });
 
       // Trigger passkey authentication
       const credential = await get(options);
@@ -25,6 +25,7 @@ export function LoginPage() {
       // Finish login flow
       await client.loginFinish({
         username,
+        challenge_id,
         credential: credential as any,
       });
 

@@ -19,7 +19,7 @@ export function RegistrationPage() {
 
     try {
       // Start registration flow
-      const { options } = await client.registerStart({
+      const { challenge_id, options } = await client.registerStart({
         username,
         display_name: displayName.trim() || null,
       });
@@ -30,6 +30,7 @@ export function RegistrationPage() {
       // Finish registration flow
       await client.registerFinish({
         username,
+        challenge_id,
         credential: credential as any,
         device_name: deviceName.trim() || null,
       });

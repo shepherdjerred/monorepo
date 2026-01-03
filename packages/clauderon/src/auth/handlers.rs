@@ -158,7 +158,10 @@ pub async fn register_start(
     // Convert challenge to JSON
     let options = serde_json::to_value(&challenge)?;
 
-    Ok(Json(RegistrationStartResponse { options }))
+    Ok(Json(RegistrationStartResponse {
+        challenge_id: challenge_id.to_string(),
+        options,
+    }))
 }
 
 /// POST /api/auth/register/finish
@@ -169,10 +172,11 @@ pub async fn register_finish(
     jar: CookieJar,
     Json(request): Json<RegistrationFinishRequest>,
 ) -> Result<(CookieJar, Json<RegistrationFinishResponse>), AuthError> {
-    // Get challenge from database
+    // Get challenge from database using the specific challenge ID
     let challenge_row: Option<WebAuthnChallengeRow> = sqlx::query_as::<_, WebAuthnChallengeRow>(
-        "SELECT id, username, challenge_json, expires_at, created_at FROM webauthn_challenges WHERE username = ? ORDER BY created_at DESC LIMIT 1",
+        "SELECT id, username, challenge_json, expires_at, created_at FROM webauthn_challenges WHERE id = ? AND username = ?",
     )
+    .bind(&request.challenge_id)
     .bind(&request.username)
     .fetch_optional(&state.pool)
     .await?;
@@ -349,7 +353,10 @@ pub async fn login_start(
     // Convert challenge to JSON
     let options = serde_json::to_value(&challenge)?;
 
-    Ok(Json(LoginStartResponse { options }))
+    Ok(Json(LoginStartResponse {
+        challenge_id: challenge_id.to_string(),
+        options,
+    }))
 }
 
 /// POST /api/auth/login/finish
@@ -360,10 +367,11 @@ pub async fn login_finish(
     jar: CookieJar,
     Json(request): Json<LoginFinishRequest>,
 ) -> Result<(CookieJar, Json<LoginFinishResponse>), AuthError> {
-    // Get challenge from database
+    // Get challenge from database using the specific challenge ID
     let challenge_row: Option<WebAuthnChallengeRow> = sqlx::query_as::<_, WebAuthnChallengeRow>(
-        "SELECT id, username, challenge_json, expires_at, created_at FROM webauthn_challenges WHERE username = ? ORDER BY created_at DESC LIMIT 1",
+        "SELECT id, username, challenge_json, expires_at, created_at FROM webauthn_challenges WHERE id = ? AND username = ?",
     )
+    .bind(&request.challenge_id)
     .bind(&request.username)
     .fetch_optional(&state.pool)
     .await?;
@@ -395,7 +403,7 @@ pub async fn login_finish(
     let credential: PublicKeyCredential = serde_json::from_value(request.credential)?;
 
     // Verify and finish authentication
-    let _result = state
+    let result = state
         .webauthn
         .finish_authentication(&credential, &passkey_authentication)?;
 
@@ -418,6 +426,15 @@ pub async fn login_finish(
     };
 
     let user_id = Uuid::parse_str(&user_row.id)?;
+
+    // Update passkey counter to prevent replay attacks
+    // The counter should increment with each use
+    sqlx::query("UPDATE passkeys SET counter = ? WHERE credential_id = ? AND user_id = ?")
+        .bind(result.counter() as i64)
+        .bind(result.cred_id().0.as_slice())
+        .bind(user_id.to_string())
+        .execute(&state.pool)
+        .await?;
 
     // Create session
     let session_id = state.session_store.create_session(user_id).await?;

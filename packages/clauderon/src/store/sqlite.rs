@@ -499,6 +499,15 @@ impl SqliteStore {
         .execute(pool)
         .await?;
 
+        // Create index on passkeys.credential_id for authentication lookups
+        sqlx::query(
+            r"
+            CREATE INDEX IF NOT EXISTS idx_passkeys_credential_id ON passkeys(credential_id)
+            ",
+        )
+        .execute(pool)
+        .await?;
+
         // Create auth_sessions table
         sqlx::query(
             r"

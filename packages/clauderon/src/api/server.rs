@@ -342,7 +342,7 @@ async fn run_http_server(
     };
 
     // Create the HTTP router with all routes and state
-    let app = create_router()
+    let app = create_router(&auth_state)
         .route("/ws/events", axum::routing::get(ws_events_handler))
         .route(
             "/ws/console/{sessionId}",

@@ -47,6 +47,7 @@ pub struct RegistrationStartRequest {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[typeshare]
 pub struct RegistrationStartResponse {
+    pub challenge_id: String,
     pub options: serde_json::Value, // PublicKeyCredentialCreationOptions
 }
 
@@ -55,6 +56,7 @@ pub struct RegistrationStartResponse {
 #[typeshare]
 pub struct RegistrationFinishRequest {
     pub username: String,
+    pub challenge_id: String,
     pub credential: serde_json::Value, // PublicKeyCredential
     pub device_name: Option<String>,
 }
@@ -77,6 +79,7 @@ pub struct LoginStartRequest {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[typeshare]
 pub struct LoginStartResponse {
+    pub challenge_id: String,
     pub options: serde_json::Value, // PublicKeyCredentialRequestOptions
 }
 
@@ -85,6 +88,7 @@ pub struct LoginStartResponse {
 #[typeshare]
 pub struct LoginFinishRequest {
     pub username: String,
+    pub challenge_id: String,
     pub credential: serde_json::Value, // PublicKeyCredential
 }
 
