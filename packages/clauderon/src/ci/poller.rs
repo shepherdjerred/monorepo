@@ -203,13 +203,7 @@ impl CIPoller {
 
         // Use gh CLI to check PR status
         let output = tokio::process::Command::new("gh")
-            .args([
-                "pr",
-                "checks",
-                &pr_number.to_string(),
-                "--json",
-                "state,conclusion",
-            ])
+            .args(["pr", "checks", &pr_number.to_string(), "--json", "state"])
             .output()
             .await?;
 
@@ -250,16 +244,19 @@ impl CIPoller {
         })?;
 
         // Determine overall status
+        // State values from gh pr checks: SUCCESS, FAILURE, PENDING, SKIPPED, CANCELLED, etc.
         let new_status = if checks.is_empty() {
             CheckStatus::Pending
         } else if checks.iter().any(|c| {
-            c["conclusion"].as_str() == Some("failure")
-                || c["conclusion"].as_str() == Some("cancelled")
+            matches!(
+                c["state"].as_str(),
+                Some("FAILURE") | Some("CANCELLED") | Some("ERROR")
+            )
         }) {
             CheckStatus::Failing
         } else if checks
             .iter()
-            .all(|c| c["conclusion"].as_str() == Some("success"))
+            .all(|c| matches!(c["state"].as_str(), Some("SUCCESS") | Some("SKIPPED")))
         {
             CheckStatus::Passing
         } else {
