@@ -561,7 +561,7 @@ impl SessionManager {
                         if let Some(ref proxy_manager) = self.proxy_manager {
                             if let Some(port) = session.proxy_port {
                                 // Check if proxy is actually listening
-                                if tokio::net::TcpStream::connect(format!("127.0.0.1:{}", port))
+                                if tokio::net::TcpStream::connect(format!("127.0.0.1:{port}"))
                                     .await
                                     .is_err()
                                 {
@@ -862,7 +862,7 @@ impl SessionManager {
         match session.backend {
             BackendType::Docker => {
                 // Send prompt via docker exec with stdin (avoids shell injection)
-                let container_name = format!("clauderon-{}", backend_id);
+                let container_name = format!("clauderon-{backend_id}");
                 let mut child = tokio::process::Command::new("docker")
                     .args(["exec", "-i", &container_name, "claude"])
                     .stdin(std::process::Stdio::piped())

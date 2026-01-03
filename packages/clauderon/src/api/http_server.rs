@@ -68,7 +68,7 @@ async fn get_session(
         .session_manager
         .get_session(&id)
         .await
-        .ok_or_else(|| AppError::NotFound(format!("Session not found: {}", id)))?;
+        .ok_or_else(|| AppError::NotFound(format!("Session not found: {id}")))?;
     Ok(Json(json!({ "session": session })))
 }
 
@@ -238,7 +238,7 @@ async fn get_session_history(
         .session_manager
         .get_session(&id)
         .await
-        .ok_or_else(|| AppError::NotFound(format!("Session not found: {}", id)))?;
+        .ok_or_else(|| AppError::NotFound(format!("Session not found: {id}")))?;
 
     let history_path = session
         .history_file_path
@@ -272,7 +272,7 @@ async fn get_session_history(
     // Read file with optional offset
     let file = tokio::fs::File::open(&history_path)
         .await
-        .map_err(|e| AppError::BadRequest(format!("Failed to read history: {}", e)))?;
+        .map_err(|e| AppError::BadRequest(format!("Failed to read history: {e}")))?;
 
     let reader = tokio::io::BufReader::new(file);
     use tokio::io::AsyncBufReadExt;
@@ -286,7 +286,7 @@ async fn get_session_history(
     while let Some(line) = lines_stream
         .next_line()
         .await
-        .map_err(|e| AppError::BadRequest(format!("Failed to read line: {}", e)))?
+        .map_err(|e| AppError::BadRequest(format!("Failed to read line: {e}")))?
     {
         line_num += 1;
 
@@ -377,7 +377,7 @@ impl IntoResponse for AppError {
                 tracing::error!("Session manager error: {}", err);
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
-                    format!("Internal error: {}", err),
+                    format!("Internal error: {err}"),
                 )
             }
             AppError::NotFound(msg) => (StatusCode::NOT_FOUND, msg),

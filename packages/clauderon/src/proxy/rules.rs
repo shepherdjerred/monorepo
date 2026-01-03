@@ -87,9 +87,9 @@ impl Rule {
             AuthEncoding::Simple => self.format.replace("{}", token),
             AuthEncoding::BasicAuthWithToken => {
                 // HTTP Basic Auth: base64("x-access-token:{token}")
-                let credentials = format!("x-access-token:{}", token);
+                let credentials = format!("x-access-token:{token}");
                 let encoded = BASE64.encode(credentials.as_bytes());
-                format!("Basic {}", encoded)
+                format!("Basic {encoded}")
             }
         }
     }

@@ -486,17 +486,17 @@ impl DockerBackend {
         if let Some(name) = git_user_name {
             args.extend([
                 "-e".to_string(),
-                format!("GIT_AUTHOR_NAME={}", name),
+                format!("GIT_AUTHOR_NAME={name}"),
                 "-e".to_string(),
-                format!("GIT_COMMITTER_NAME={}", name),
+                format!("GIT_COMMITTER_NAME={name}"),
             ]);
         }
         if let Some(email) = git_user_email {
             args.extend([
                 "-e".to_string(),
-                format!("GIT_AUTHOR_EMAIL={}", email),
+                format!("GIT_AUTHOR_EMAIL={email}"),
                 "-e".to_string(),
-                format!("GIT_COMMITTER_EMAIL={}", email),
+                format!("GIT_COMMITTER_EMAIL={email}"),
             ]);
         }
 
@@ -513,7 +513,7 @@ impl DockerBackend {
             proxy.clauderon_dir.clone()
         } else {
             // Create a temp directory for Claude config when proxy is disabled
-            let temp_dir = std::env::temp_dir().join(format!("clauderon-{}", name));
+            let temp_dir = std::env::temp_dir().join(format!("clauderon-{name}"));
             temp_dir
         };
 
