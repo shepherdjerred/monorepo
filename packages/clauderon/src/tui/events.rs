@@ -1,6 +1,4 @@
-use crossterm::event::{
-    Event, EventStream, KeyCode, KeyEvent, KeyModifiers, MouseEvent, MouseEventKind,
-};
+use crossterm::event::{Event, EventStream, KeyCode, KeyEvent, KeyModifiers};
 use futures::StreamExt;
 use tokio::sync::mpsc;
 
@@ -10,9 +8,6 @@ use crate::core::{AgentType, BackendType};
 
 use super::app::{App, AppMode, CreateDialogFocus, CreateProgress};
 use super::events_copy_mode::handle_copy_mode_key;
-
-/// Number of lines to scroll per mouse wheel tick
-const SCROLL_LINES_PER_WHEEL_TICK: usize = 3;
 
 /// Number of lines to scroll with PageUp/PageDown
 const SCROLL_LINES_PER_PAGE: usize = 10;

@@ -1,13 +1,13 @@
 use async_trait::async_trait;
 use k8s_openapi::api::core::v1::{
-    ConfigMap, Container, EnvVar, HostAlias, Pod, PodSpec, PersistentVolumeClaim, PersistentVolumeClaimSpec,
-    ResourceRequirements, Volume, VolumeMount, PodSecurityContext, SecurityContext,
-    VolumeResourceRequirements, Namespace,
+    ConfigMap, Container, EnvVar, HostAlias, Namespace, PersistentVolumeClaim,
+    PersistentVolumeClaimSpec, Pod, PodSecurityContext, PodSpec, ResourceRequirements,
+    SecurityContext, Volume, VolumeMount, VolumeResourceRequirements,
 };
 use k8s_openapi::apimachinery::pkg::api::resource::Quantity;
-use k8s_openapi::apimachinery::pkg::apis::meta::v1::{LabelSelector, ObjectMeta};
-use kube::api::{Api, DeleteParams, ListParams, LogParams, PostParams};
-use kube::{Client, ResourceExt};
+use k8s_openapi::apimachinery::pkg::apis::meta::v1::ObjectMeta;
+use kube::Client;
+use kube::api::{Api, DeleteParams, LogParams, PostParams};
 use std::collections::BTreeMap;
 use std::path::Path;
 use std::time::Duration;
@@ -21,10 +21,7 @@ use super::traits::{CreateOptions, ExecutionBackend};
 ///
 /// Removes all control characters (including newlines, tabs, etc.) that could be used for injection attacks
 fn sanitize_git_config_value(value: &str) -> String {
-    value
-        .chars()
-        .filter(|c| !c.is_control())
-        .collect()
+    value.chars().filter(|c| !c.is_control()).collect()
 }
 
 /// Kubernetes backend for running Claude Code sessions in pods
@@ -264,7 +261,10 @@ impl KubernetesBackend {
                 let mut rwo_labels = BTreeMap::new();
                 rwo_labels.insert("clauderon.io/managed".to_string(), "true".to_string());
                 rwo_labels.insert("clauderon.io/type".to_string(), "cache".to_string());
-                rwo_labels.insert("clauderon.io/access-mode".to_string(), "rwo-fallback".to_string());
+                rwo_labels.insert(
+                    "clauderon.io/access-mode".to_string(),
+                    "rwo-fallback".to_string(),
+                );
 
                 let rwo_pvc = PersistentVolumeClaim {
                     metadata: ObjectMeta {
@@ -306,13 +306,13 @@ impl KubernetesBackend {
             kube::Error::Api(api_err) => {
                 // Check error message for access mode issues
                 let msg = api_err.message.to_lowercase();
-                (msg.contains("access mode") ||
-                 msg.contains("accessmode") ||
-                 msg.contains("readwritemany") ||
-                 msg.contains("rwx")) &&
-                (msg.contains("not supported") ||
-                 msg.contains("unsupported") ||
-                 msg.contains("invalid"))
+                (msg.contains("access mode")
+                    || msg.contains("accessmode")
+                    || msg.contains("readwritemany")
+                    || msg.contains("rwx"))
+                    && (msg.contains("not supported")
+                        || msg.contains("unsupported")
+                        || msg.contains("invalid"))
             }
             _ => false,
         }
@@ -338,7 +338,10 @@ impl KubernetesBackend {
                     let mut labels = BTreeMap::new();
                     labels.insert("clauderon.io/managed".to_string(), "true".to_string());
                     labels.insert("clauderon.io/type".to_string(), "workspace".to_string());
-                    labels.insert("clauderon.io/session-id".to_string(), session_id.to_string());
+                    labels.insert(
+                        "clauderon.io/session-id".to_string(),
+                        session_id.to_string(),
+                    );
                     labels
                 }),
                 ..Default::default()
@@ -410,7 +413,10 @@ impl KubernetesBackend {
 
         let ca_cert_path = proxy_config.clauderon_dir.join("proxy-ca.pem");
         if !ca_cert_path.exists() {
-            anyhow::bail!("Proxy CA certificate not found at {}", ca_cert_path.display());
+            anyhow::bail!(
+                "Proxy CA certificate not found at {}",
+                ca_cert_path.display()
+            );
         }
 
         let ca_cert = std::fs::read_to_string(&ca_cert_path)?;
@@ -521,7 +527,7 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
     #[allow(clippy::too_many_arguments)]
     fn build_main_container(
         &self,
-        pod_name: &str,
+        _pod_name: &str,
         initial_prompt: &str,
         git_user_name: Option<&str>,
         git_user_email: Option<&str>,
@@ -584,13 +590,13 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
 
         // Add proxy configuration if enabled
         if let Some(ref proxy_config) = self.proxy_config {
-            if proxy_config.enabled && self.config.proxy_mode != "disabled" {
+            use crate::backends::kubernetes_config::ProxyMode;
+            if proxy_config.enabled && self.config.proxy_mode != ProxyMode::Disabled {
                 let proxy_port = proxy_config
                     .session_proxy_port
                     .unwrap_or(proxy_config.http_proxy_port);
 
                 // Build proxy URL based on configured mode
-                use crate::backends::kubernetes_config::ProxyMode;
                 let proxy_url = match self.config.proxy_mode {
                     ProxyMode::ClusterIp => {
                         // Use ClusterIP service - requires service to be created separately
@@ -611,51 +617,51 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
 
                 if let Some(proxy_url) = proxy_url {
                     env.extend_from_slice(&[
-                    EnvVar {
-                        name: "HTTP_PROXY".to_string(),
-                        value: Some(proxy_url.clone()),
-                        ..Default::default()
-                    },
-                    EnvVar {
-                        name: "HTTPS_PROXY".to_string(),
-                        value: Some(proxy_url),
-                        ..Default::default()
-                    },
-                    EnvVar {
-                        name: "NO_PROXY".to_string(),
-                        value: Some("localhost,127.0.0.1,kubernetes.default.svc".to_string()),
-                        ..Default::default()
-                    },
-                    EnvVar {
-                        name: "SSL_CERT_FILE".to_string(),
-                        value: Some("/etc/clauderon/proxy-ca.pem".to_string()),
-                        ..Default::default()
-                    },
-                    EnvVar {
-                        name: "NODE_EXTRA_CA_CERTS".to_string(),
-                        value: Some("/etc/clauderon/proxy-ca.pem".to_string()),
-                        ..Default::default()
-                    },
-                    EnvVar {
-                        name: "REQUESTS_CA_BUNDLE".to_string(),
-                        value: Some("/etc/clauderon/proxy-ca.pem".to_string()),
-                        ..Default::default()
-                    },
-                    EnvVar {
-                        name: "GH_TOKEN".to_string(),
-                        value: Some("clauderon-proxy".to_string()),
-                        ..Default::default()
-                    },
-                    EnvVar {
-                        name: "GITHUB_TOKEN".to_string(),
-                        value: Some("clauderon-proxy".to_string()),
-                        ..Default::default()
-                    },
-                    EnvVar {
-                        name: "CLAUDE_CODE_OAUTH_TOKEN".to_string(),
-                        value: Some("sk-ant-oat01-clauderon-proxy-placeholder".to_string()),
-                        ..Default::default()
-                    },
+                        EnvVar {
+                            name: "HTTP_PROXY".to_string(),
+                            value: Some(proxy_url.clone()),
+                            ..Default::default()
+                        },
+                        EnvVar {
+                            name: "HTTPS_PROXY".to_string(),
+                            value: Some(proxy_url),
+                            ..Default::default()
+                        },
+                        EnvVar {
+                            name: "NO_PROXY".to_string(),
+                            value: Some("localhost,127.0.0.1,kubernetes.default.svc".to_string()),
+                            ..Default::default()
+                        },
+                        EnvVar {
+                            name: "SSL_CERT_FILE".to_string(),
+                            value: Some("/etc/clauderon/proxy-ca.pem".to_string()),
+                            ..Default::default()
+                        },
+                        EnvVar {
+                            name: "NODE_EXTRA_CA_CERTS".to_string(),
+                            value: Some("/etc/clauderon/proxy-ca.pem".to_string()),
+                            ..Default::default()
+                        },
+                        EnvVar {
+                            name: "REQUESTS_CA_BUNDLE".to_string(),
+                            value: Some("/etc/clauderon/proxy-ca.pem".to_string()),
+                            ..Default::default()
+                        },
+                        EnvVar {
+                            name: "GH_TOKEN".to_string(),
+                            value: Some("clauderon-proxy".to_string()),
+                            ..Default::default()
+                        },
+                        EnvVar {
+                            name: "GITHUB_TOKEN".to_string(),
+                            value: Some("clauderon-proxy".to_string()),
+                            ..Default::default()
+                        },
+                        EnvVar {
+                            name: "CLAUDE_CODE_OAUTH_TOKEN".to_string(),
+                            value: Some("sk-ant-oat01-clauderon-proxy-placeholder".to_string()),
+                            ..Default::default()
+                        },
                     ]);
                 }
             }
@@ -773,33 +779,44 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
     ) -> Pod {
         let init_container =
             self.build_init_container(git_remote_url, branch_name, git_user_name, git_user_email);
-        let main_container =
-            self.build_main_container(pod_name, initial_prompt, git_user_name, git_user_email, options);
+        let main_container = self.build_main_container(
+            pod_name,
+            initial_prompt,
+            git_user_name,
+            git_user_email,
+            options,
+        );
 
         // Build volumes
         let mut volumes = vec![
             Volume {
                 name: "workspace".to_string(),
-                persistent_volume_claim: Some(k8s_openapi::api::core::v1::PersistentVolumeClaimVolumeSource {
-                    claim_name: format!("{pod_name}-workspace"),
-                    ..Default::default()
-                }),
+                persistent_volume_claim: Some(
+                    k8s_openapi::api::core::v1::PersistentVolumeClaimVolumeSource {
+                        claim_name: format!("{pod_name}-workspace"),
+                        ..Default::default()
+                    },
+                ),
                 ..Default::default()
             },
             Volume {
                 name: "cargo-cache".to_string(),
-                persistent_volume_claim: Some(k8s_openapi::api::core::v1::PersistentVolumeClaimVolumeSource {
-                    claim_name: "clauderon-cargo-cache".to_string(),
-                    ..Default::default()
-                }),
+                persistent_volume_claim: Some(
+                    k8s_openapi::api::core::v1::PersistentVolumeClaimVolumeSource {
+                        claim_name: "clauderon-cargo-cache".to_string(),
+                        ..Default::default()
+                    },
+                ),
                 ..Default::default()
             },
             Volume {
                 name: "sccache-cache".to_string(),
-                persistent_volume_claim: Some(k8s_openapi::api::core::v1::PersistentVolumeClaimVolumeSource {
-                    claim_name: "clauderon-sccache".to_string(),
-                    ..Default::default()
-                }),
+                persistent_volume_claim: Some(
+                    k8s_openapi::api::core::v1::PersistentVolumeClaimVolumeSource {
+                        claim_name: "clauderon-sccache".to_string(),
+                        ..Default::default()
+                    },
+                ),
                 ..Default::default()
             },
             Volume {
@@ -828,8 +845,14 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
 
         let mut labels = BTreeMap::new();
         labels.insert("clauderon.io/managed".to_string(), "true".to_string());
-        labels.insert("clauderon.io/session-id".to_string(), session_id.to_string());
-        labels.insert("clauderon.io/session-name".to_string(), session_name.to_string());
+        labels.insert(
+            "clauderon.io/session-id".to_string(),
+            session_id.to_string(),
+        );
+        labels.insert(
+            "clauderon.io/session-name".to_string(),
+            session_name.to_string(),
+        );
         labels.insert("clauderon.io/backend".to_string(), "kubernetes".to_string());
 
         // Add host aliases for host-gateway mode

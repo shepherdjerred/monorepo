@@ -46,7 +46,10 @@ impl PortAllocator {
             state.next_port = state.next_port.wrapping_add(1);
         }
 
-        anyhow::bail!("No available proxy ports (all {} in use)", Self::MAX_SESSIONS)
+        anyhow::bail!(
+            "No available proxy ports (all {} in use)",
+            Self::MAX_SESSIONS
+        )
     }
 
     /// Release a port

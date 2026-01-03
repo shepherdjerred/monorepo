@@ -21,7 +21,11 @@ async fn create_test_manager() -> (SessionManager, TempDir, TempDir) {
     let repos_dir = TempDir::new().expect("Failed to create temp dir for repos");
 
     let db_path = temp_dir.path().join("test.db");
-    let store = Arc::new(SqliteStore::new(&db_path).await.expect("Failed to create store"));
+    let store = Arc::new(
+        SqliteStore::new(&db_path)
+            .await
+            .expect("Failed to create store"),
+    );
 
     let git = Arc::new(MockGitBackend::new());
     let zellij = Arc::new(MockExecutionBackend::zellij());
@@ -70,12 +74,18 @@ async fn test_recent_repo_tracked_on_session_create() {
         .expect("Failed to create session");
 
     // Verify repo was tracked
-    let recent = manager.get_recent_repos().await.expect("Failed to get recent repos");
+    let recent = manager
+        .get_recent_repos()
+        .await
+        .expect("Failed to get recent repos");
     assert_eq!(recent.len(), 1, "Should have tracked 1 repo");
 
     // Path should be canonicalized
     let canonical = repo_path.canonicalize().expect("Failed to canonicalize");
-    assert_eq!(recent[0].repo_path, canonical, "Should store canonical path");
+    assert_eq!(
+        recent[0].repo_path, canonical,
+        "Should store canonical path"
+    );
 }
 
 #[tokio::test]
@@ -121,7 +131,10 @@ async fn test_path_canonicalization_prevents_duplicates() {
         .expect("Failed to create session 2");
 
     // Should only have 1 recent repo (same path)
-    let recent = manager.get_recent_repos().await.expect("Failed to get recent repos");
+    let recent = manager
+        .get_recent_repos()
+        .await
+        .expect("Failed to get recent repos");
     assert_eq!(recent.len(), 1, "Should deduplicate canonicalized paths");
     assert_eq!(recent[0].repo_path, canonical);
 }
@@ -151,7 +164,10 @@ async fn test_limit_enforcement_removes_oldest() {
     }
 
     // Should only have 10 repos (the limit)
-    let recent = manager.get_recent_repos().await.expect("Failed to get recent repos");
+    let recent = manager
+        .get_recent_repos()
+        .await
+        .expect("Failed to get recent repos");
     assert_eq!(recent.len(), 10, "Should enforce limit of 10 repos");
 
     // The first repo (repo-0) should not be in the list
@@ -191,7 +207,10 @@ async fn test_upsert_behavior_updates_timestamp() {
         .await
         .expect("Failed to create session 1");
 
-    let recent1 = manager.get_recent_repos().await.expect("Failed to get recent repos");
+    let recent1 = manager
+        .get_recent_repos()
+        .await
+        .expect("Failed to get recent repos");
     assert_eq!(recent1.len(), 1);
     let timestamp1 = recent1[0].last_used;
 
@@ -214,7 +233,10 @@ async fn test_upsert_behavior_updates_timestamp() {
         .expect("Failed to create session 2");
 
     // Should still have only 1 repo, but timestamp should be updated
-    let recent2 = manager.get_recent_repos().await.expect("Failed to get recent repos");
+    let recent2 = manager
+        .get_recent_repos()
+        .await
+        .expect("Failed to get recent repos");
     assert_eq!(recent2.len(), 1, "Should still have only 1 repo");
 
     let timestamp2 = recent2[0].last_used;
@@ -251,7 +273,10 @@ async fn test_recent_repos_ordered_by_most_recent() {
         tokio::time::sleep(std::time::Duration::from_millis(50)).await;
     }
 
-    let recent = manager.get_recent_repos().await.expect("Failed to get recent repos");
+    let recent = manager
+        .get_recent_repos()
+        .await
+        .expect("Failed to get recent repos");
     assert_eq!(recent.len(), 3);
 
     // Should be ordered newest to oldest
@@ -292,7 +317,7 @@ async fn test_nonexistent_repo_handles_gracefully() {
     let store = Arc::new(
         SqliteStore::new(&_temp_dir.path().join("test2.db"))
             .await
-            .expect("Failed to create store")
+            .expect("Failed to create store"),
     );
 
     // Directly add a nonexistent repo to the store
@@ -302,7 +327,10 @@ async fn test_nonexistent_repo_handles_gracefully() {
         .await
         .expect("Should handle nonexistent paths gracefully");
 
-    let recent = store.get_recent_repos().await.expect("Failed to get recent repos");
+    let recent = store
+        .get_recent_repos()
+        .await
+        .expect("Failed to get recent repos");
     assert_eq!(recent.len(), 1);
     // The path won't be canonicalized since it doesn't exist, but that's OK
 }

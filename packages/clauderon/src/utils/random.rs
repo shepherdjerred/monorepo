@@ -134,7 +134,10 @@ mod tests {
     #[test]
     fn test_sanitize_spaces() {
         assert_eq!(sanitize_branch_name("my feature"), "my-feature");
-        assert_eq!(sanitize_branch_name("clauderon automatic daemon"), "clauderon-automatic-daemon");
+        assert_eq!(
+            sanitize_branch_name("clauderon automatic daemon"),
+            "clauderon-automatic-daemon"
+        );
     }
 
     #[test]

@@ -8,6 +8,8 @@ export enum BackendType {
 	Zellij = "Zellij",
 	/** Docker container */
 	Docker = "Docker",
+	/** Kubernetes pod */
+	Kubernetes = "Kubernetes",
 }
 
 /** AI agent type */
@@ -28,8 +30,6 @@ export enum AccessMode {
 
 /** Request to create a new session */
 export interface CreateSessionRequest {
-	/** Session name (a random suffix will be added) */
-	name: string;
 	/** Path to the repository */
 	repo_path: string;
 	/** Initial prompt for the AI agent */
@@ -175,7 +175,7 @@ export interface Session {
 	worktree_path: string;
 	/** Git branch name */
 	branch_name: string;
-	/** Backend-specific identifier (zellij session name or docker container id) */
+	/** Backend-specific identifier (zellij session name, docker container id, or kubernetes pod name) */
 	backend_id?: string;
 	/** Initial prompt given to the AI agent */
 	initial_prompt: string;
@@ -189,10 +189,14 @@ export interface Session {
 	claude_status: ClaudeWorkingStatus;
 	/** Timestamp of last Claude status update */
 	claude_status_updated_at: string;
+	/** Whether the session branch has merge conflicts with main */
+	merge_conflict: boolean;
 	/** Access mode for proxy filtering */
 	access_mode: AccessMode;
 	/** Port for session-specific HTTP proxy (Docker only) */
 	proxy_port?: number;
+	/** Path to Claude Code's session history file (.jsonl) */
+	history_file_path: string;
 	/** When the session was created */
 	created_at: string;
 	/** When the session was last updated */
@@ -275,6 +279,10 @@ export type EventType =
 	| { type: "ClaudeStatusChanged", payload: {
 	old_status: ClaudeWorkingStatus;
 	new_status: ClaudeWorkingStatus;
+}}
+	/** Merge conflict status changed */
+	| { type: "ConflictStatusChanged", payload: {
+	has_conflict: boolean;
 }}
 	/** Session was archived */
 	| { type: "SessionArchived", payload?: undefined }

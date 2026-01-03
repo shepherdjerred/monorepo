@@ -1,7 +1,7 @@
 use axum::{
     extract::{
-        ws::{Message, WebSocket},
         State, WebSocketUpgrade,
+        ws::{Message, WebSocket},
     },
     response::Response,
 };
@@ -19,10 +19,7 @@ pub type EventBroadcaster = broadcast::Sender<Event>;
 
 /// WebSocket handler for /ws/events endpoint
 /// Clients connect here to receive real-time session updates
-pub async fn ws_events_handler(
-    ws: WebSocketUpgrade,
-    State(state): State<AppState>,
-) -> Response {
+pub async fn ws_events_handler(ws: WebSocketUpgrade, State(state): State<AppState>) -> Response {
     ws.on_upgrade(|socket| handle_events_socket(socket, state))
 }
 

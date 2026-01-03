@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
-use std::time::Instant;
 
 use nucleo_matcher::Utf32String;
 use tokio::sync::mpsc;
@@ -796,7 +795,6 @@ impl App {
         use crate::core::{AgentType, BackendType};
 
         let request = CreateSessionRequest {
-            name: self.create_dialog.name.clone(),
             repo_path: self.create_dialog.repo_path.clone(),
             initial_prompt: self.create_dialog.prompt.clone(),
             backend: if self.create_dialog.backend_zellij {
@@ -1006,7 +1004,8 @@ impl App {
     pub fn enter_scroll_mode(&mut self) {
         if self.mode == AppMode::Attached {
             self.mode = AppMode::Scroll;
-            self.status_message = Some("📜 SCROLL MODE - arrows/PgUp/PgDn to scroll, ESC to exit".to_string());
+            self.status_message =
+                Some("📜 SCROLL MODE - arrows/PgUp/PgDn to scroll, ESC to exit".to_string());
         }
     }
 

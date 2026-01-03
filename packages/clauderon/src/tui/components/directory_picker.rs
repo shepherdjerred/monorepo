@@ -61,10 +61,7 @@ fn render_search_query(frame: &mut Frame, state: &DirectoryPickerState, area: Re
     let text = if state.search_query.is_empty() {
         Line::from(vec![
             Span::styled("Search: ", Style::default().add_modifier(Modifier::BOLD)),
-            Span::styled(
-                "(type to filter)",
-                Style::default().fg(Color::DarkGray),
-            ),
+            Span::styled("(type to filter)", Style::default().fg(Color::DarkGray)),
         ])
     } else {
         Line::from(vec![
@@ -106,10 +103,7 @@ fn render_directory_list(frame: &mut Frame, state: &DirectoryPickerState, area: 
     // Pre-compute section boundaries for cleaner logic
     let show_section_headers = state.search_query.is_empty();
     let first_recent_idx = if show_section_headers {
-        state
-            .filtered_entries
-            .iter()
-            .position(|e| e.is_recent)
+        state.filtered_entries.iter().position(|e| e.is_recent)
     } else {
         None
     };
@@ -138,7 +132,9 @@ fn render_directory_list(frame: &mut Frame, state: &DirectoryPickerState, area: 
             let name_style = if entry.is_parent {
                 Style::default().fg(Color::Yellow)
             } else if entry.is_recent {
-                Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)
+                Style::default()
+                    .fg(Color::Cyan)
+                    .add_modifier(Modifier::BOLD)
             } else {
                 Style::default().fg(Color::White)
             };

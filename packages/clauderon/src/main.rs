@@ -29,10 +29,6 @@ enum Commands {
 
     /// Create a new session
     Create {
-        /// Session name (a random suffix will be added)
-        #[arg(short, long)]
-        name: String,
-
         /// Path to the repository
         #[arg(short, long)]
         repo: String,
@@ -121,10 +117,8 @@ async fn main() -> anyhow::Result<()> {
     }
 
     // Set up file appender
-    let file_appender = tracing_appender::rolling::daily(
-        log_path.parent().unwrap(),
-        log_path.file_name().unwrap(),
-    );
+    let file_appender =
+        tracing_appender::rolling::daily(log_path.parent().unwrap(), log_path.file_name().unwrap());
 
     // Initialize tracing with both console and file output
     let env_filter = tracing_subscriber::EnvFilter::new(
@@ -144,7 +138,10 @@ async fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Daemon { no_proxy, http_port } => {
+        Commands::Daemon {
+            no_proxy,
+            http_port,
+        } => {
             tracing::info!("Starting clauderon daemon");
             let port = if http_port > 0 { Some(http_port) } else { None };
             api::server::run_daemon_with_http(!no_proxy, port).await?;
@@ -154,7 +151,6 @@ async fn main() -> anyhow::Result<()> {
             tui::run().await?;
         }
         Commands::Create {
-            name,
             repo,
             prompt,
             backend,
@@ -174,7 +170,6 @@ async fn main() -> anyhow::Result<()> {
             let mut client = api::client::Client::connect().await?;
             let (session, warnings) = client
                 .create_session(api::protocol::CreateSessionRequest {
-                    name,
                     repo_path: repo,
                     initial_prompt: prompt,
                     backend: backend_type,
@@ -283,7 +278,11 @@ async fn main() -> anyhow::Result<()> {
                 }
             }
 
-            for volume in ["clauderon-cargo-registry", "clauderon-cargo-git", "clauderon-sccache"] {
+            for volume in [
+                "clauderon-cargo-registry",
+                "clauderon-cargo-git",
+                "clauderon-sccache",
+            ] {
                 let output = tokio::process::Command::new("docker")
                     .args(["volume", "rm", volume])
                     .output()

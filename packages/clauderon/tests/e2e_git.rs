@@ -140,9 +140,15 @@ async fn test_multiple_worktrees() {
     assert_eq!(git.get_branch(&worktree3).await.unwrap(), "branch-3");
 
     // Delete all
-    git.delete_worktree(temp_repo.path(), &worktree1).await.unwrap();
-    git.delete_worktree(temp_repo.path(), &worktree2).await.unwrap();
-    git.delete_worktree(temp_repo.path(), &worktree3).await.unwrap();
+    git.delete_worktree(temp_repo.path(), &worktree1)
+        .await
+        .unwrap();
+    git.delete_worktree(temp_repo.path(), &worktree2)
+        .await
+        .unwrap();
+    git.delete_worktree(temp_repo.path(), &worktree3)
+        .await
+        .unwrap();
 
     assert!(!worktree1.exists());
     assert!(!worktree2.exists());
@@ -181,7 +187,9 @@ async fn test_worktree_exists_check() {
         "Created worktree should exist"
     );
 
-    git.delete_worktree(temp_repo.path(), &worktree_path).await.unwrap();
+    git.delete_worktree(temp_repo.path(), &worktree_path)
+        .await
+        .unwrap();
 
     assert!(
         !git.worktree_exists(&worktree_path),
@@ -208,5 +216,8 @@ async fn test_worktree_delete_nonexistent() {
     let result = git.delete_worktree(temp_repo.path(), nonexistent).await;
 
     // Should not error (it handles missing worktrees gracefully)
-    assert!(result.is_ok(), "Deleting non-existent worktree should not fail");
+    assert!(
+        result.is_ok(),
+        "Deleting non-existent worktree should not fail"
+    );
 }
