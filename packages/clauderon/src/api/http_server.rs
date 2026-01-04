@@ -2,6 +2,7 @@ use crate::api::middleware::correlation_id_middleware;
 use crate::api::protocol::{CreateSessionRequest, Event};
 use crate::api::static_files::serve_static;
 use crate::api::ws_events::{EventBroadcaster, broadcast_event};
+use crate::auth::{self, AuthState};
 use crate::core::manager::SessionManager;
 use crate::core::session::AccessMode;
 use axum::{
@@ -9,6 +10,7 @@ use axum::{
     extract::{Path, Query, State},
     http::StatusCode,
     middleware,
+    middleware::from_fn_with_state,
     response::{IntoResponse, Response},
     routing::{delete, get, post},
 };
@@ -22,19 +24,22 @@ use tower_http::cors::{Any, CorsLayer};
 pub struct AppState {
     pub session_manager: Arc<SessionManager>,
     pub event_broadcaster: EventBroadcaster,
+    pub auth_state: Option<AuthState>,
 }
 
 /// Create the HTTP router with all endpoints (without state)
 /// The caller should add WebSocket routes and then call `with_state()`
-pub fn create_router() -> Router<AppState> {
+///
+/// If `auth_state` is provided, protected routes will require authentication
+pub fn create_router(auth_state: &Option<AuthState>) -> Router<AppState> {
     // Configure CORS for development
     let cors = CorsLayer::new()
         .allow_origin(Any)
         .allow_methods(Any)
         .allow_headers(Any);
 
-    Router::new()
-        // Session endpoints
+    // Create protected routes (sessions and related endpoints)
+    let mut protected_routes = Router::new()
         .route("/api/sessions", get(list_sessions))
         .route("/api/sessions", post(create_session))
         .route("/api/sessions/{id}", get(get_session))
@@ -42,16 +47,142 @@ pub fn create_router() -> Router<AppState> {
         .route("/api/sessions/{id}/archive", post(archive_session))
         .route("/api/sessions/{id}/access-mode", post(update_access_mode))
         .route("/api/sessions/{id}/history", get(get_session_history))
-        // Other endpoints
         .route("/api/recent-repos", get(get_recent_repos))
         .route("/api/browse-directory", post(browse_directory))
         .route("/api/status", get(get_system_status))
-        .route("/api/credentials", post(update_credential))
+        .route("/api/credentials", post(update_credential));
+
+    // Apply auth middleware to protected routes if authentication is enabled
+    if let Some(auth_state) = auth_state {
+        protected_routes = protected_routes.route_layer(from_fn_with_state(
+            crate::auth::AuthMiddlewareState {
+                session_store: auth_state.session_store.clone(),
+            },
+            crate::auth::auth_middleware,
+        ));
+    }
+
+    Router::new()
+        // Auth endpoints (always public)
+        .route("/api/auth/status", get(auth_status_wrapper))
+        .route("/api/auth/register/start", post(register_start_wrapper))
+        .route("/api/auth/register/finish", post(register_finish_wrapper))
+        .route("/api/auth/login/start", post(login_start_wrapper))
+        .route("/api/auth/login/finish", post(login_finish_wrapper))
+        .route("/api/auth/logout", post(logout_wrapper))
+        // Merge protected routes
+        .merge(protected_routes)
         // WebSocket endpoints will be added by caller
         // Serve static files for all non-API routes (SPA fallback)
         .fallback(serve_static)
         .layer(middleware::from_fn(correlation_id_middleware))
         .layer(cors)
+}
+
+// Wrapper handlers to extract AuthState from AppState
+// These wrappers preserve error context by using AuthError's IntoResponse implementation
+async fn auth_status_wrapper(
+    State(state): State<AppState>,
+    jar: axum_extra::extract::cookie::CookieJar,
+) -> Response {
+    let Some(auth_state) = state.auth_state else {
+        return (
+            StatusCode::NOT_FOUND,
+            Json(json!({"error": "Authentication not enabled"})),
+        )
+            .into_response();
+    };
+    match auth::auth_status(State(auth_state), jar).await {
+        Ok(response) => response.into_response(),
+        Err(e) => e.into_response(),
+    }
+}
+
+async fn register_start_wrapper(
+    State(state): State<AppState>,
+    Json(request): Json<crate::auth::types::RegistrationStartRequest>,
+) -> Response {
+    let Some(auth_state) = state.auth_state else {
+        return (
+            StatusCode::NOT_FOUND,
+            Json(json!({"error": "Authentication not enabled"})),
+        )
+            .into_response();
+    };
+    match auth::register_start(State(auth_state), Json(request)).await {
+        Ok(response) => response.into_response(),
+        Err(e) => e.into_response(),
+    }
+}
+
+async fn register_finish_wrapper(
+    State(state): State<AppState>,
+    jar: axum_extra::extract::cookie::CookieJar,
+    Json(request): Json<crate::auth::types::RegistrationFinishRequest>,
+) -> Response {
+    let Some(auth_state) = state.auth_state else {
+        return (
+            StatusCode::NOT_FOUND,
+            Json(json!({"error": "Authentication not enabled"})),
+        )
+            .into_response();
+    };
+    match auth::register_finish(State(auth_state), jar, Json(request)).await {
+        Ok(response) => response.into_response(),
+        Err(e) => e.into_response(),
+    }
+}
+
+async fn login_start_wrapper(
+    State(state): State<AppState>,
+    Json(request): Json<crate::auth::types::LoginStartRequest>,
+) -> Response {
+    let Some(auth_state) = state.auth_state else {
+        return (
+            StatusCode::NOT_FOUND,
+            Json(json!({"error": "Authentication not enabled"})),
+        )
+            .into_response();
+    };
+    match auth::login_start(State(auth_state), Json(request)).await {
+        Ok(response) => response.into_response(),
+        Err(e) => e.into_response(),
+    }
+}
+
+async fn login_finish_wrapper(
+    State(state): State<AppState>,
+    jar: axum_extra::extract::cookie::CookieJar,
+    Json(request): Json<crate::auth::types::LoginFinishRequest>,
+) -> Response {
+    let Some(auth_state) = state.auth_state else {
+        return (
+            StatusCode::NOT_FOUND,
+            Json(json!({"error": "Authentication not enabled"})),
+        )
+            .into_response();
+    };
+    match auth::login_finish(State(auth_state), jar, Json(request)).await {
+        Ok(response) => response.into_response(),
+        Err(e) => e.into_response(),
+    }
+}
+
+async fn logout_wrapper(
+    State(state): State<AppState>,
+    jar: axum_extra::extract::cookie::CookieJar,
+) -> Response {
+    let Some(auth_state) = state.auth_state else {
+        return (
+            StatusCode::NOT_FOUND,
+            Json(json!({"error": "Authentication not enabled"})),
+        )
+            .into_response();
+    };
+    match auth::logout(State(auth_state), jar).await {
+        Ok(response) => response.into_response(),
+        Err(e) => e.into_response(),
+    }
 }
 
 /// List all sessions

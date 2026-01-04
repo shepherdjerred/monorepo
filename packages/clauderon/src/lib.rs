@@ -1,5 +1,6 @@
 pub mod agents;
 pub mod api;
+pub mod auth;
 pub mod backends;
 pub mod ci;
 pub mod config;

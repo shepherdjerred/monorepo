@@ -5,6 +5,15 @@ import type {
   AccessMode,
   SystemStatus,
   UpdateCredentialRequest,
+  AuthStatus,
+  RegistrationStartRequest,
+  RegistrationStartResponse,
+  RegistrationFinishRequest,
+  RegistrationFinishResponse,
+  LoginStartRequest,
+  LoginStartResponse,
+  LoginFinishRequest,
+  LoginFinishResponse,
   BrowseDirectoryRequest,
   BrowseDirectoryResponse,
 } from "@clauderon/shared";
@@ -177,6 +186,55 @@ export class ClauderonClient {
       totalLines: response.total_lines,
       fileExists: response.file_exists,
     };
+  }
+
+  // Authentication methods
+
+  /**
+   * Get authentication status
+   */
+  async getAuthStatus(): Promise<AuthStatus> {
+    const response = await this.request<AuthStatus>("GET", "/api/auth/status");
+    return response;
+  }
+
+  /**
+   * Start passkey registration
+   */
+  async registerStart(request: RegistrationStartRequest): Promise<RegistrationStartResponse> {
+    const response = await this.request<RegistrationStartResponse>("POST", "/api/auth/register/start", request);
+    return response;
+  }
+
+  /**
+   * Finish passkey registration
+   */
+  async registerFinish(request: RegistrationFinishRequest): Promise<RegistrationFinishResponse> {
+    const response = await this.request<RegistrationFinishResponse>("POST", "/api/auth/register/finish", request);
+    return response;
+  }
+
+  /**
+   * Start passkey login
+   */
+  async loginStart(request: LoginStartRequest): Promise<LoginStartResponse> {
+    const response = await this.request<LoginStartResponse>("POST", "/api/auth/login/start", request);
+    return response;
+  }
+
+  /**
+   * Finish passkey login
+   */
+  async loginFinish(request: LoginFinishRequest): Promise<LoginFinishResponse> {
+    const response = await this.request<LoginFinishResponse>("POST", "/api/auth/login/finish", request);
+    return response;
+  }
+
+  /**
+   * Logout (delete current session)
+   */
+  async logout(): Promise<void> {
+    await this.request("POST", "/api/auth/logout");
   }
 
   /**
