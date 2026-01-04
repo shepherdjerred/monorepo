@@ -1049,7 +1049,7 @@ impl App {
     pub fn enter_locked_mode(&mut self) {
         if self.mode == AppMode::Attached {
             self.mode = AppMode::Locked;
-            self.status_message = Some("🔒 LOCKED - Ctrl+Space to unlock".to_string());
+            self.status_message = Some("🔒 LOCKED - Ctrl+L to unlock".to_string());
         }
     }
 
