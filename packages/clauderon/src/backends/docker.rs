@@ -323,9 +323,9 @@ impl DockerBackend {
                 // CA certificate is required - fail fast if missing
                 if !ca_cert_path.exists() {
                     anyhow::bail!(
-                        "Proxy CA certificate not found at {:?}. \
+                        "Proxy CA certificate not found at {}. \
                         Ensure the clauderon daemon is running and initialized.",
-                        ca_cert_path
+                        ca_cert_path.display()
                     );
                 }
 
@@ -567,9 +567,18 @@ impl DockerBackend {
                 // Build the resume command (for restart)
                 // Use --resume to continue an existing session instead of --session-id
                 // which would try to create a new session with that ID
-                // --fork creates a new branch from the session so we don't modify the original
-                let resume_cmd_str =
-                    format!("claude --resume {} --fork", quote_arg(&session_id_str));
+                // --fork-session creates a new session ID from the session so we don't modify the original
+                let resume_cmd_str = if dangerous_skip_checks {
+                    format!(
+                        "claude --dangerously-skip-permissions --resume {} --fork-session",
+                        quote_arg(&session_id_str)
+                    )
+                } else {
+                    format!(
+                        "claude --resume {} --fork-session",
+                        quote_arg(&session_id_str)
+                    )
+                };
 
                 // Generate wrapper script that detects restart via session history file
                 // Claude Code stores session history at: .claude/projects/-workspace/<session-id>.jsonl

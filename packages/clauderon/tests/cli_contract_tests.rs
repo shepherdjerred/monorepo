@@ -167,13 +167,13 @@ fn test_docker_env_vars() {
 
     // TERM should be xterm-256color for proper terminal support
     assert!(
-        env_vars.iter().any(|v| *v == "TERM=xterm-256color"),
+        env_vars.contains(&"TERM=xterm-256color"),
         "TERM should be xterm-256color: {env_vars:?}"
     );
 
     // HOME should be /workspace
     assert!(
-        env_vars.iter().any(|v| *v == "HOME=/workspace"),
+        env_vars.contains(&"HOME=/workspace"),
         "HOME should be /workspace: {env_vars:?}"
     );
 }
@@ -282,10 +282,12 @@ fn test_volume_mount_format() {
             "Volume mount must have format host:container[:mode]: {mount}"
         );
 
-        // Host path should be absolute
+        // Host path should be absolute or a named volume
+        let is_absolute = parts[0].starts_with('/');
+        let is_named_volume = parts[0].starts_with("clauderon-");
         assert!(
-            parts[0].starts_with('/'),
-            "Host path should be absolute: {mount}"
+            is_absolute || is_named_volume,
+            "Host path should be absolute or a named volume: {mount}"
         );
 
         // Container path should be absolute
@@ -346,7 +348,7 @@ fn test_final_command_format() {
         1000,
         None,
         false, // print mode
-        false, // plan mode
+        true,  // dangerous_skip_checks - pass true to get --dangerously-skip-permissions
         &[],   // images
         None,  // git user name
         None,  // git user email
