@@ -152,24 +152,12 @@ async fn main() -> anyhow::Result<()> {
         std::env::var("RUST_LOG").unwrap_or_else(|_| "clauderon=info".into()),
     );
 
-    // Configure console output based on build type
-    let console_layer = if cfg!(debug_assertions) {
-        // Development: pretty formatting with more context
-        tracing_subscriber::fmt::layer()
-            .with_writer(std::io::stdout)
-            .with_target(true)
-            .with_thread_ids(true)
-            .with_line_number(true)
-            .with_file(false)
-            .pretty()
-    } else {
-        // Production: compact formatting
-        tracing_subscriber::fmt::layer()
-            .with_writer(std::io::stdout)
-            .with_target(false)
-            .with_thread_ids(false)
-            .with_line_number(false)
-    };
+    // Configure console output with structured logging
+    let console_layer = tracing_subscriber::fmt::layer()
+        .with_writer(std::io::stdout)
+        .with_target(cfg!(debug_assertions))
+        .with_thread_ids(cfg!(debug_assertions))
+        .with_line_number(cfg!(debug_assertions));
 
     tracing_subscriber::registry()
         .with(env_filter)
