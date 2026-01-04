@@ -1,6 +1,7 @@
 pub mod client;
 pub mod handlers;
 pub mod http_server;
+pub mod middleware;
 pub mod mock;
 pub mod protocol;
 pub mod server;

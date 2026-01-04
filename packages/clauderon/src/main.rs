@@ -152,9 +152,16 @@ async fn main() -> anyhow::Result<()> {
         std::env::var("RUST_LOG").unwrap_or_else(|_| "clauderon=info".into()),
     );
 
+    // Configure console output with structured logging
+    let console_layer = tracing_subscriber::fmt::layer()
+        .with_writer(std::io::stdout)
+        .with_target(cfg!(debug_assertions))
+        .with_thread_ids(cfg!(debug_assertions))
+        .with_line_number(cfg!(debug_assertions));
+
     tracing_subscriber::registry()
         .with(env_filter)
-        .with(tracing_subscriber::fmt::layer().with_writer(std::io::stdout))
+        .with(console_layer)
         .with(
             tracing_subscriber::fmt::layer()
                 .with_writer(file_appender)
