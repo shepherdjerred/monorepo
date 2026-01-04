@@ -1,6 +1,6 @@
 {
   "name": "@shepherdjerred/bun-decompile",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Extract and de-minify source code from Bun-compiled executables using AI (Bun runtime required)",
   "type": "module",
   "bin": {
