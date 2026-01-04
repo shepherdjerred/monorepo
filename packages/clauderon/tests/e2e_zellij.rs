@@ -72,7 +72,7 @@ async fn test_zellij_session_lifecycle() {
         }
         Err(e) => {
             // If session creation failed, log and continue
-            eprintln!("Session creation failed: {}", e);
+            eprintln!("Session creation failed: {e}");
             // Still try to clean up in case it was partially created
             let _ = zellij.delete_session(&session_name).await;
         }

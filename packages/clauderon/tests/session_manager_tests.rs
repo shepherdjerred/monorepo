@@ -3,12 +3,55 @@
 //! These tests verify SessionManager behavior using mock implementations
 //! of GitOperations and ExecutionBackend.
 
+use std::path::Path;
 use std::sync::Arc;
 
 use clauderon::backends::{ExecutionBackend, GitOperations, MockExecutionBackend, MockGitBackend};
 use clauderon::core::{AgentType, BackendType, SessionManager, SessionStatus};
 use clauderon::store::SqliteStore;
 use tempfile::TempDir;
+
+/// Create a temporary directory initialized as a git repository.
+fn create_temp_git_repo() -> TempDir {
+    let temp_dir = TempDir::new().expect("Failed to create temp dir");
+    init_git_repo(temp_dir.path());
+    temp_dir
+}
+
+/// Initialize a directory as a git repository with an initial commit.
+fn init_git_repo(path: &Path) {
+    std::process::Command::new("git")
+        .args(["init"])
+        .current_dir(path)
+        .output()
+        .expect("Failed to run git init");
+
+    std::process::Command::new("git")
+        .args(["config", "user.email", "test@test.com"])
+        .current_dir(path)
+        .output()
+        .expect("Failed to configure git email");
+
+    std::process::Command::new("git")
+        .args(["config", "user.name", "Test User"])
+        .current_dir(path)
+        .output()
+        .expect("Failed to configure git name");
+
+    std::fs::write(path.join("README.md"), "# Test Repo").expect("Failed to create README");
+
+    std::process::Command::new("git")
+        .args(["add", "."])
+        .current_dir(path)
+        .output()
+        .expect("Failed to run git add");
+
+    std::process::Command::new("git")
+        .args(["commit", "-m", "Initial commit"])
+        .current_dir(path)
+        .output()
+        .expect("Failed to run git commit");
+}
 
 /// Helper to create a test environment
 async fn create_test_manager() -> (
@@ -57,11 +100,12 @@ async fn create_test_manager() -> (
 
 #[tokio::test]
 async fn test_create_session_zellij_success() {
+    let repo_dir = create_temp_git_repo();
     let (manager, _temp_dir, git, zellij, _docker) = create_test_manager().await;
 
     let (session, _warnings) = manager
         .create_session(
-            "/tmp/fake-repo".to_string(),
+            repo_dir.path().to_string_lossy().to_string(),
             "Test prompt".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
@@ -99,11 +143,12 @@ async fn test_create_session_zellij_success() {
 
 #[tokio::test]
 async fn test_create_session_docker_success() {
+    let repo_dir = create_temp_git_repo();
     let (manager, _temp_dir, git, _zellij, docker) = create_test_manager().await;
 
     let (session, _warnings) = manager
         .create_session(
-            "/tmp/fake-repo".to_string(),
+            repo_dir.path().to_string_lossy().to_string(),
             "Docker prompt".to_string(),
             BackendType::Docker,
             AgentType::ClaudeCode,
@@ -130,6 +175,7 @@ async fn test_create_session_docker_success() {
 
 #[tokio::test]
 async fn test_create_session_git_fails() {
+    let repo_dir = create_temp_git_repo();
     let (manager, _temp_dir, git, _zellij, _docker) = create_test_manager().await;
 
     // Configure git to fail
@@ -138,7 +184,7 @@ async fn test_create_session_git_fails() {
 
     let result = manager
         .create_session(
-            "/tmp/fake-repo".to_string(),
+            repo_dir.path().to_string_lossy().to_string(),
             "Test prompt".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
@@ -161,6 +207,7 @@ async fn test_create_session_git_fails() {
 
 #[tokio::test]
 async fn test_create_session_backend_fails() {
+    let repo_dir = create_temp_git_repo();
     let (manager, _temp_dir, git, zellij, _docker) = create_test_manager().await;
 
     // Configure zellij to fail
@@ -171,7 +218,7 @@ async fn test_create_session_backend_fails() {
 
     let result = manager
         .create_session(
-            "/tmp/fake-repo".to_string(),
+            repo_dir.path().to_string_lossy().to_string(),
             "Test prompt".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
@@ -200,11 +247,12 @@ async fn test_create_session_backend_fails() {
 
 #[tokio::test]
 async fn test_get_session_by_name() {
+    let repo_dir = create_temp_git_repo();
     let (manager, _temp_dir, _git, _zellij, _docker) = create_test_manager().await;
 
     let (created, _) = manager
         .create_session(
-            "/tmp/repo".to_string(),
+            repo_dir.path().to_string_lossy().to_string(),
             "prompt".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
@@ -225,11 +273,12 @@ async fn test_get_session_by_name() {
 
 #[tokio::test]
 async fn test_get_session_by_uuid() {
+    let repo_dir = create_temp_git_repo();
     let (manager, _temp_dir, _git, _zellij, _docker) = create_test_manager().await;
 
     let (created, _) = manager
         .create_session(
-            "/tmp/repo".to_string(),
+            repo_dir.path().to_string_lossy().to_string(),
             "prompt".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
@@ -260,11 +309,12 @@ async fn test_get_session_not_found() {
 
 #[tokio::test]
 async fn test_delete_session_success() {
+    let repo_dir = create_temp_git_repo();
     let (manager, _temp_dir, git, zellij, _docker) = create_test_manager().await;
 
     let (session, _) = manager
         .create_session(
-            "/tmp/repo".to_string(),
+            repo_dir.path().to_string_lossy().to_string(),
             "prompt".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
@@ -308,11 +358,12 @@ async fn test_delete_session_not_found() {
 
 #[tokio::test]
 async fn test_archive_session_success() {
+    let repo_dir = create_temp_git_repo();
     let (manager, _temp_dir, _git, _zellij, _docker) = create_test_manager().await;
 
     let (session, _) = manager
         .create_session(
-            "/tmp/repo".to_string(),
+            repo_dir.path().to_string_lossy().to_string(),
             "prompt".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
@@ -348,11 +399,12 @@ async fn test_archive_session_not_found() {
 
 #[tokio::test]
 async fn test_get_attach_command_zellij() {
+    let repo_dir = create_temp_git_repo();
     let (manager, _temp_dir, _git, _zellij, _docker) = create_test_manager().await;
 
     let (session, _) = manager
         .create_session(
-            "/tmp/repo".to_string(),
+            repo_dir.path().to_string_lossy().to_string(),
             "prompt".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
@@ -374,11 +426,12 @@ async fn test_get_attach_command_zellij() {
 
 #[tokio::test]
 async fn test_get_attach_command_docker() {
+    let repo_dir = create_temp_git_repo();
     let (manager, _temp_dir, _git, _zellij, _docker) = create_test_manager().await;
 
     let (session, _) = manager
         .create_session(
-            "/tmp/repo".to_string(),
+            repo_dir.path().to_string_lossy().to_string(),
             "prompt".to_string(),
             BackendType::Docker,
             AgentType::ClaudeCode,
@@ -410,11 +463,12 @@ async fn test_get_attach_command_session_not_found() {
 
 #[tokio::test]
 async fn test_reconcile_healthy_session() {
+    let repo_dir = create_temp_git_repo();
     let (manager, _temp_dir, _git, zellij, _docker) = create_test_manager().await;
 
     let (session, _) = manager
         .create_session(
-            "/tmp/repo".to_string(),
+            repo_dir.path().to_string_lossy().to_string(),
             "prompt".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
@@ -438,11 +492,12 @@ async fn test_reconcile_healthy_session() {
 
 #[tokio::test]
 async fn test_reconcile_missing_backend() {
+    let repo_dir = create_temp_git_repo();
     let (manager, _temp_dir, _git, zellij, _docker) = create_test_manager().await;
 
     let (session, _) = manager
         .create_session(
-            "/tmp/repo".to_string(),
+            repo_dir.path().to_string_lossy().to_string(),
             "prompt".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
@@ -477,12 +532,13 @@ async fn test_list_sessions_empty() {
 
 #[tokio::test]
 async fn test_list_sessions_multiple() {
+    let repo_dir = create_temp_git_repo();
     let (manager, _temp_dir, _git, _zellij, _docker) = create_test_manager().await;
 
     // Create multiple sessions (names are AI-generated)
     let _ = manager
         .create_session(
-            "/tmp/repo".to_string(),
+            repo_dir.path().to_string_lossy().to_string(),
             "prompt 1".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
@@ -497,7 +553,7 @@ async fn test_list_sessions_multiple() {
 
     let _ = manager
         .create_session(
-            "/tmp/repo".to_string(),
+            repo_dir.path().to_string_lossy().to_string(),
             "prompt 2".to_string(),
             BackendType::Docker,
             AgentType::ClaudeCode,
@@ -512,7 +568,7 @@ async fn test_list_sessions_multiple() {
 
     let _ = manager
         .create_session(
-            "/tmp/repo".to_string(),
+            repo_dir.path().to_string_lossy().to_string(),
             "prompt 3".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
@@ -533,12 +589,13 @@ async fn test_list_sessions_multiple() {
 
 #[tokio::test]
 async fn test_session_lifecycle() {
+    let repo_dir = create_temp_git_repo();
     let (manager, _temp_dir, _git, _zellij, _docker) = create_test_manager().await;
 
     // Create session - should be Running (name is AI-generated)
     let (session, _) = manager
         .create_session(
-            "/tmp/repo".to_string(),
+            repo_dir.path().to_string_lossy().to_string(),
             "prompt".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,

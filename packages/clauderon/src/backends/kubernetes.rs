@@ -683,7 +683,7 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
                 create_args.push("--plan");
             }
             if options.dangerous_skip_checks {
-                create_args.push("--dangerous-skip-checks");
+                create_args.push("--dangerously-skip-permissions");
             }
 
             if let Some(session_id) = options.session_id {
@@ -700,8 +700,15 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
                 // Build resume command
                 // Use --resume to continue an existing session instead of --session-id
                 // which would try to create a new session with that ID
-                // --fork creates a new branch from the session so we don't modify the original
-                let resume_cmd = format!("claude --resume {} --fork", session_id_str);
+                // --fork-session creates a new session ID from the session so we don't modify the original
+                let resume_cmd = if options.dangerous_skip_checks {
+                    format!(
+                        "claude --dangerously-skip-permissions --resume {} --fork-session",
+                        session_id_str
+                    )
+                } else {
+                    format!("claude --resume {} --fork-session", session_id_str)
+                };
 
                 // Generate wrapper script that detects restart via session history file
                 // Claude Code stores session history at: .claude/projects/-workspace/<session-id>.jsonl

@@ -41,10 +41,7 @@ async fn test_claude_starts_in_docker() {
 
     let docker = DockerBackend::new();
     let temp_dir = TempDir::new().expect("Failed to create temp dir");
-    let container_name = format!(
-        "smoke-test-{}",
-        uuid::Uuid::new_v4().to_string()[..8].to_string()
-    );
+    let container_name = format!("smoke-test-{}", &uuid::Uuid::new_v4().to_string()[..8]);
 
     // Create container with a simple prompt
     let result = docker
@@ -108,10 +105,7 @@ async fn test_claude_writes_debug_files() {
 
     let docker = DockerBackend::new();
     let temp_dir = TempDir::new().expect("Failed to create temp dir");
-    let container_name = format!(
-        "smoke-debug-{}",
-        uuid::Uuid::new_v4().to_string()[..8].to_string()
-    );
+    let container_name = format!("smoke-debug-{}", &uuid::Uuid::new_v4().to_string()[..8]);
 
     let result = docker
         .create(
@@ -161,10 +155,7 @@ async fn test_container_runs_as_non_root() {
 
     let docker = DockerBackend::new();
     let temp_dir = TempDir::new().expect("Failed to create temp dir");
-    let container_name = format!(
-        "smoke-uid-{}",
-        uuid::Uuid::new_v4().to_string()[..8].to_string()
-    );
+    let container_name = format!("smoke-uid-{}", &uuid::Uuid::new_v4().to_string()[..8]);
 
     // Create container - the command isn't important, we'll check the UID
     let result = docker
@@ -220,10 +211,7 @@ async fn test_initial_prompt_executed() {
 
     let docker = DockerBackend::new();
     let temp_dir = TempDir::new().expect("Failed to create temp dir");
-    let container_name = format!(
-        "smoke-prompt-{}",
-        uuid::Uuid::new_v4().to_string()[..8].to_string()
-    );
+    let container_name = format!("smoke-prompt-{}", &uuid::Uuid::new_v4().to_string()[..8]);
 
     // Create a file for Claude to read
     std::fs::write(
@@ -316,10 +304,10 @@ async fn test_claude_print_mode_e2e() {
         std::net::TcpListener::bind("127.0.0.1:0").expect("Failed to bind to random port");
     let proxy_port = listener.local_addr().unwrap().port();
     drop(listener); // Release the port so the proxy can use it
-    println!("Using port {} for test proxy", proxy_port);
+    println!("Using port {proxy_port} for test proxy");
 
     // Create and start the proxy
-    println!("Starting proxy on port {}...", proxy_port);
+    println!("Starting proxy on port {proxy_port}...");
     let audit_logger = Arc::new(AuditLogger::noop());
     let rcgen_ca = proxy_ca
         .to_rcgen_authority()
@@ -340,10 +328,7 @@ async fn test_claude_print_mode_e2e() {
     let proxy_config = DockerProxyConfig::new(proxy_port, clauderon_dir.clone());
     let docker = DockerBackend::with_proxy(proxy_config);
 
-    let container_name = format!(
-        "print-mode-e2e-{}",
-        uuid::Uuid::new_v4().to_string()[..8].to_string()
-    );
+    let container_name = format!("print-mode-e2e-{}", &uuid::Uuid::new_v4().to_string()[..8]);
 
     // Create a simple file for Claude to read (deterministic test)
     std::fs::write(temp_dir.path().join("test.txt"), "Hello, World!")
@@ -409,7 +394,7 @@ async fn test_claude_print_mode_e2e() {
             }
 
             println!("=== Claude Print Mode Output ===");
-            println!("{}", final_output);
+            println!("{final_output}");
             println!("=================================");
 
             // Verify we got some output (Claude responded)
