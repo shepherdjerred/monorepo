@@ -267,7 +267,7 @@ pub async fn register_finish(
     )
     .bind(passkey_id.to_string())
     .bind(user_id.to_string())
-    .bind(&credential_id)
+    .bind(credential_id.as_ref() as &[u8])
     .bind(&public_key)
     .bind(0i64)
     .bind(&transports)
