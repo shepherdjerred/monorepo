@@ -227,6 +227,12 @@ pub enum Event {
         old: SessionStatus,
         new: SessionStatus,
     },
+
+    /// Progress update during async operation
+    SessionProgress { id: String, progress: ProgressStep },
+
+    /// Session operation failed
+    SessionFailed { id: String, error: String },
 }
 
 /// Credential availability status

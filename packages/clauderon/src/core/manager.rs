@@ -1,7 +1,7 @@
 use anyhow::Context;
 use std::path::PathBuf;
 use std::sync::Arc;
-use tokio::sync::RwLock;
+use tokio::sync::{RwLock, Semaphore};
 use uuid::Uuid;
 
 use crate::backends::{
@@ -57,6 +57,12 @@ pub struct SessionManager {
     proxy_manager: Option<Arc<crate::proxy::ProxyManager>>,
     /// Optional event broadcaster for real-time WebSocket updates
     event_broadcaster: Option<EventBroadcaster>,
+    /// Semaphore to limit concurrent creations (max 3)
+    creation_semaphore: Arc<Semaphore>,
+    /// Semaphore to limit concurrent deletions (max 3)
+    deletion_semaphore: Arc<Semaphore>,
+    /// Maximum total sessions allowed
+    max_sessions: usize,
 }
 
 impl SessionManager {
@@ -86,6 +92,9 @@ impl SessionManager {
             sessions: RwLock::new(sessions),
             proxy_manager: None,
             event_broadcaster: None,
+            creation_semaphore: Arc::new(Semaphore::new(3)),
+            deletion_semaphore: Arc::new(Semaphore::new(3)),
+            max_sessions: 15,
         })
     }
 
@@ -177,7 +186,483 @@ impl SessionManager {
         self.store.get_recent_repos().await
     }
 
-    /// Create a new session
+    /// Start session creation asynchronously (returns immediately)
+    ///
+    /// Creates a session in "Creating" status and spawns a background task to complete
+    /// the creation process. Progress updates are broadcast via WebSocket events.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - Maximum session limit (15) is reached
+    /// - Git repository path is invalid
+    /// - Session name generation fails
+    /// - Database save fails
+    ///
+    /// # Returns
+    ///
+    /// Returns the UUID of the newly created session (in Creating status)
+    pub async fn start_session_creation(
+        self: &Arc<Self>,
+        repo_path: String,
+        initial_prompt: String,
+        backend: BackendType,
+        agent: super::session::AgentType,
+        dangerous_skip_checks: bool,
+        print_mode: bool,
+        plan_mode: bool,
+        access_mode: super::session::AccessMode,
+        images: Vec<String>,
+    ) -> anyhow::Result<Uuid> {
+        // Validate session count limit
+        let session_count = self.sessions.read().await.len();
+        if session_count >= self.max_sessions {
+            anyhow::bail!(
+                "Maximum session limit reached ({}/{}). Delete or archive sessions before creating new ones.",
+                session_count,
+                self.max_sessions
+            );
+        }
+
+        // Validate and resolve git repository path
+        let repo_path_buf = std::path::PathBuf::from(&repo_path);
+        let git_info = crate::utils::git::find_git_root(&repo_path_buf)
+            .with_context(|| format!("Failed to find git repository for path: {}", repo_path))?;
+
+        // Use git root for worktree creation
+        let repo_path = git_info.git_root.to_string_lossy().to_string();
+        let subdirectory = git_info.subdirectory;
+
+        // Validate subdirectory path for security
+        if subdirectory.is_absolute()
+            || subdirectory
+                .components()
+                .any(|c| matches!(c, std::path::Component::ParentDir))
+        {
+            anyhow::bail!(
+                "Invalid subdirectory path: must be relative without '..' components. Got: {}",
+                subdirectory.display()
+            );
+        }
+
+        // Generate metadata using AI (with fallback to defaults)
+        let metadata = crate::utils::generate_session_name_ai(&repo_path, &initial_prompt).await;
+
+        // Generate unique session name
+        const MAX_ATTEMPTS: usize = 3;
+        let full_name = {
+            let mut attempts = 0;
+            loop {
+                let candidate = crate::utils::random::generate_session_name(&metadata.branch_name);
+                let sessions = self.sessions.read().await;
+                if !sessions.iter().any(|s| s.name == candidate) {
+                    break candidate;
+                }
+                attempts += 1;
+                if attempts >= MAX_ATTEMPTS {
+                    anyhow::bail!(
+                        "Failed to generate unique session name after {MAX_ATTEMPTS} attempts"
+                    );
+                }
+            }
+        };
+        let worktree_path = crate::utils::paths::worktree_path(&full_name);
+
+        // Create session object with AI-generated metadata
+        let mut session = Session::new(super::session::SessionConfig {
+            name: full_name.clone(),
+            title: Some(metadata.title),
+            description: Some(metadata.description),
+            repo_path: repo_path.clone().into(),
+            worktree_path: worktree_path.clone(),
+            subdirectory: subdirectory.clone(),
+            branch_name: metadata.branch_name,
+            initial_prompt: initial_prompt.clone(),
+            backend,
+            agent,
+            dangerous_skip_checks,
+            access_mode,
+        });
+
+        // Set history file path
+        session.history_file_path = Some(super::session::get_history_file_path(
+            &worktree_path,
+            &session.id,
+        ));
+
+        // Set initial progress
+        session.set_progress(crate::api::protocol::ProgressStep {
+            step: 0,
+            total: 5,
+            message: "Queued for creation".to_string(),
+        });
+
+        let session_id = session.id;
+
+        // Record creation event
+        let event = Event::new(
+            session.id,
+            EventType::SessionCreated {
+                name: full_name.clone(),
+                repo_path: repo_path.clone(),
+                backend,
+                initial_prompt: initial_prompt.clone(),
+            },
+        );
+        self.store.record_event(&event).await?;
+
+        // Save session to store
+        self.store.save_session(&session).await?;
+
+        // Add to in-memory list with atomic check-and-add
+        {
+            let mut sessions = self.sessions.write().await;
+
+            // Re-check limit with lock held (defense against race)
+            if sessions.len() >= self.max_sessions {
+                // Rollback database save
+                let _ = self.store.delete_session(session.id).await;
+                anyhow::bail!("Maximum session limit reached (prevented race condition)");
+            }
+
+            sessions.push(session.clone());
+        }
+
+        // Broadcast session created event
+        if let Some(ref broadcaster) = self.event_broadcaster {
+            let _ = broadcaster.send(WsEvent::SessionCreated(session.clone()));
+        }
+
+        // Spawn background task for actual creation
+        let manager_clone = Arc::clone(self);
+        tokio::spawn(async move {
+            manager_clone
+                .complete_session_creation(
+                    session_id,
+                    repo_path,
+                    full_name,
+                    worktree_path,
+                    subdirectory,
+                    initial_prompt,
+                    backend,
+                    print_mode,
+                    plan_mode,
+                    access_mode,
+                    images,
+                    dangerous_skip_checks,
+                )
+                .await;
+        });
+
+        Ok(session_id)
+    }
+
+    /// Complete session creation in background (spawned by start_session_creation)
+    ///
+    /// This method should not be called directly - it's spawned as a background task.
+    async fn complete_session_creation(
+        &self,
+        session_id: Uuid,
+        repo_path: String,
+        full_name: String,
+        worktree_path: PathBuf,
+        subdirectory: PathBuf,
+        initial_prompt: String,
+        backend: BackendType,
+        print_mode: bool,
+        plan_mode: bool,
+        access_mode: super::session::AccessMode,
+        images: Vec<String>,
+        dangerous_skip_checks: bool,
+    ) {
+        // Acquire semaphore to limit concurrent creations
+        let Ok(_permit) = self.creation_semaphore.acquire().await else {
+            tracing::error!(session_id = %session_id, "Semaphore closed during operation");
+            // Mark session as failed
+            let mut sessions = self.sessions.write().await;
+            if let Some(session) = sessions.iter_mut().find(|s| s.id == session_id) {
+                session.set_error(SessionStatus::Failed, "System is shutting down".to_string());
+                if let Err(e) = self.store.save_session(session).await {
+                    tracing::error!("Failed to save shutdown error: {}", e);
+                }
+            }
+            return;
+        };
+
+        // Helper to update progress
+        let update_progress = |step: u32, message: String| async move {
+            let progress = crate::api::protocol::ProgressStep {
+                step,
+                total: 5,
+                message,
+            };
+
+            // Update session progress
+            if let Some(session) = self
+                .sessions
+                .write()
+                .await
+                .iter_mut()
+                .find(|s| s.id == session_id)
+            {
+                session.set_progress(progress.clone());
+            }
+
+            // Broadcast progress event
+            if let Some(ref broadcaster) = self.event_broadcaster {
+                let _ = broadcaster.send(WsEvent::SessionProgress {
+                    id: session_id.to_string(),
+                    progress,
+                });
+            }
+        };
+
+        // Execute creation steps
+        let result: anyhow::Result<()> = async {
+            update_progress(1, "Creating git worktree".to_string()).await;
+            let repo_path_buf = PathBuf::from(&repo_path);
+            let _worktree_warning = self
+                .git
+                .create_worktree(&repo_path_buf, &worktree_path, &full_name)
+                .await?;
+
+            // Create history directory
+            let history_path = super::session::get_history_file_path(&worktree_path, &session_id);
+            if let Some(parent_dir) = history_path.parent() {
+                if let Err(e) = tokio::fs::create_dir_all(parent_dir).await {
+                    tracing::warn!(
+                        session_id = %session_id,
+                        history_dir = %parent_dir.display(),
+                        error = %e,
+                        "Failed to create history directory"
+                    );
+                }
+            }
+
+            update_progress(2, "Setting up session proxy".to_string()).await;
+            // Create per-session proxy for Docker backends
+            let proxy_port = if backend == BackendType::Docker {
+                if let Some(ref proxy_manager) = self.proxy_manager {
+                    match proxy_manager
+                        .create_session_proxy(session_id, access_mode)
+                        .await
+                    {
+                        Ok(proxy_port) => {
+                            if let Some(session) = self
+                                .sessions
+                                .write()
+                                .await
+                                .iter_mut()
+                                .find(|s| s.id == session_id)
+                            {
+                                session.set_proxy_port(proxy_port);
+                            }
+                            tracing::info!(
+                                session_id = %session_id,
+                                name = %full_name,
+                                port = proxy_port,
+                                "Created session proxy"
+                            );
+                            Some(proxy_port)
+                        }
+                        Err(e) => {
+                            tracing::warn!(
+                                session_id = %session_id,
+                                name = %full_name,
+                                error = %e,
+                                "Failed to create session proxy, using global proxy"
+                            );
+                            None
+                        }
+                    }
+                } else {
+                    None
+                }
+            } else {
+                None
+            };
+
+            update_progress(3, "Preparing agent environment".to_string()).await;
+            // Prepend plan mode instruction if enabled
+            let transformed_prompt = if plan_mode {
+                format!(
+                    "Enter plan mode and create a plan before doing anything.\n\n{}",
+                    initial_prompt.trim()
+                )
+            } else {
+                initial_prompt.clone()
+            };
+
+            update_progress(4, "Starting backend resource".to_string()).await;
+            // Create backend resource
+            let create_options = crate::backends::CreateOptions {
+                print_mode,
+                plan_mode,
+                session_proxy_port: proxy_port,
+                images,
+                dangerous_skip_checks,
+                session_id: Some(session_id),
+                initial_workdir: subdirectory.clone(),
+            };
+            let backend_id = match backend {
+                BackendType::Zellij => {
+                    self.zellij
+                        .create(
+                            &full_name,
+                            &worktree_path,
+                            &transformed_prompt,
+                            create_options,
+                        )
+                        .await?
+                }
+                BackendType::Docker => {
+                    self.docker
+                        .create(
+                            &full_name,
+                            &worktree_path,
+                            &transformed_prompt,
+                            create_options,
+                        )
+                        .await?
+                }
+                BackendType::Kubernetes => {
+                    self.kubernetes
+                        .create(
+                            &full_name,
+                            &worktree_path,
+                            &transformed_prompt,
+                            create_options,
+                        )
+                        .await?
+                }
+            };
+
+            update_progress(5, "Finalizing session".to_string()).await;
+
+            // Update session with backend ID and Running status
+            {
+                let mut sessions = self.sessions.write().await;
+                if let Some(session) = sessions.iter_mut().find(|s| s.id == session_id) {
+                    session.set_backend_id(backend_id.clone());
+                    session.set_status(SessionStatus::Running);
+                    session.clear_progress();
+
+                    // Save to database
+                    if let Err(e) = self.store.save_session(session).await {
+                        tracing::error!("Failed to save session after creation: {}", e);
+                    }
+                }
+            }
+
+            // Record backend ID event
+            let event = Event::new(session_id, EventType::BackendIdSet { backend_id });
+            self.store.record_event(&event).await?;
+
+            // Record status change event
+            let event = Event::new(
+                session_id,
+                EventType::StatusChanged {
+                    old_status: SessionStatus::Creating,
+                    new_status: SessionStatus::Running,
+                },
+            );
+            self.store.record_event(&event).await?;
+
+            // Track this repo in recent repos
+            let repo_path_buf = PathBuf::from(&repo_path);
+            if let Err(e) = self.store.add_recent_repo(repo_path_buf).await {
+                tracing::warn!("Failed to add repo to recent list: {e}");
+            }
+
+            Ok(())
+        }
+        .await;
+
+        // Handle completion or failure
+        match result {
+            Ok(()) => {
+                // Get the updated session for broadcast
+                let session = self
+                    .sessions
+                    .read()
+                    .await
+                    .iter()
+                    .find(|s| s.id == session_id)
+                    .cloned();
+
+                if let Some(session) = session {
+                    // Broadcast status changed event
+                    if let Some(ref broadcaster) = self.event_broadcaster {
+                        let _ = broadcaster.send(WsEvent::StatusChanged {
+                            id: session_id.to_string(),
+                            old: SessionStatus::Creating,
+                            new: SessionStatus::Running,
+                        });
+                        let _ = broadcaster.send(WsEvent::SessionUpdated(session));
+                    }
+                }
+
+                tracing::info!(session_id = %session_id, "Session creation completed successfully");
+            }
+            Err(e) => {
+                // Mark session as failed
+                let error_msg = format!("{:#}", e);
+                let mut sessions = self.sessions.write().await;
+                if let Some(session) = sessions.iter_mut().find(|s| s.id == session_id) {
+                    session.set_error(SessionStatus::Failed, error_msg.clone());
+                    session.clear_progress();
+
+                    // Save failed state to database
+                    if let Err(save_err) = self.store.save_session(session).await {
+                        tracing::error!("Failed to save failed session state: {}", save_err);
+                    }
+
+                    // Broadcast failure event
+                    if let Some(ref broadcaster) = self.event_broadcaster {
+                        let _ = broadcaster.send(WsEvent::SessionFailed {
+                            id: session_id.to_string(),
+                            error: error_msg.clone(),
+                        });
+                    }
+                }
+                drop(sessions); // Release lock before cleanup
+
+                // CLEANUP: Remove partially created resources
+                tracing::warn!(session_id = %session_id, "Cleaning up after failed creation");
+
+                // Remove proxy if created
+                if backend == BackendType::Docker {
+                    if let Some(ref proxy_manager) = self.proxy_manager {
+                        let _ = proxy_manager.destroy_session_proxy(session_id).await;
+                    }
+                }
+
+                // Remove worktree if created
+                let repo_path_buf = PathBuf::from(&repo_path);
+                let _ = self
+                    .git
+                    .delete_worktree(&repo_path_buf, &worktree_path)
+                    .await;
+
+                // Remove from database
+                let _ = self.store.delete_session(session_id).await;
+
+                // Remove from in-memory list
+                self.sessions.write().await.retain(|s| s.id != session_id);
+
+                // Broadcast deletion event so UI updates
+                if let Some(ref broadcaster) = self.event_broadcaster {
+                    let _ = broadcaster.send(WsEvent::SessionDeleted {
+                        id: session_id.to_string(),
+                    });
+                }
+
+                tracing::error!(session_id = %session_id, error = %e, "Session creation failed");
+            }
+        }
+    }
+
+    /// Create a new session (synchronous version - blocks until complete)
     ///
     /// # Errors
     ///
@@ -497,6 +982,230 @@ impl SessionManager {
     /// # Errors
     ///
     /// Returns an error if the session is not found or the store delete fails.
+    /// Start session deletion asynchronously (returns immediately)
+    ///
+    /// Marks the session as "Deleting" and spawns a background task to complete
+    /// the deletion process. Progress updates are broadcast via WebSocket events.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - Session not found
+    /// - Session is already being deleted
+    /// - Database update fails
+    pub async fn start_session_deletion(self: &Arc<Self>, id_or_name: &str) -> anyhow::Result<()> {
+        // Get session and validate
+        let (session_id, session_name) = {
+            let session = self
+                .get_session(id_or_name)
+                .await
+                .ok_or_else(|| anyhow::anyhow!("Session not found: {id_or_name}"))?;
+
+            // Don't allow deleting if already deleting
+            if session.status == SessionStatus::Deleting {
+                anyhow::bail!("Session is already being deleted");
+            }
+
+            (session.id, session.name.clone())
+        };
+
+        // Update to Deleting status
+        {
+            let mut sessions = self.sessions.write().await;
+            if let Some(session) = sessions.iter_mut().find(|s| s.id == session_id) {
+                session.set_status(SessionStatus::Deleting);
+                session.set_progress(crate::api::protocol::ProgressStep {
+                    step: 0,
+                    total: 4,
+                    message: "Queued for deletion".to_string(),
+                });
+
+                // Save to database
+                if let Err(e) = self.store.save_session(session).await {
+                    tracing::error!("Failed to save deleting session state: {}", e);
+                }
+
+                // Broadcast status change
+                if let Some(ref broadcaster) = self.event_broadcaster {
+                    let _ = broadcaster.send(WsEvent::StatusChanged {
+                        id: session_id.to_string(),
+                        old: session.status,
+                        new: SessionStatus::Deleting,
+                    });
+                    let _ = broadcaster.send(WsEvent::SessionUpdated(session.clone()));
+                }
+            }
+        }
+
+        // Spawn background deletion task
+        let manager_clone = Arc::clone(self);
+        tokio::spawn(async move {
+            manager_clone
+                .complete_session_deletion(session_id, session_name)
+                .await;
+        });
+
+        Ok(())
+    }
+
+    /// Complete session deletion in background (spawned by start_session_deletion)
+    ///
+    /// This method should not be called directly - it's spawned as a background task.
+    async fn complete_session_deletion(&self, session_id: Uuid, session_name: String) {
+        let Ok(_permit) = self.deletion_semaphore.acquire().await else {
+            tracing::error!(session_id = %session_id, "Semaphore closed during deletion");
+            // Mark session as failed instead of panicking
+            let mut sessions = self.sessions.write().await;
+            if let Some(session) = sessions.iter_mut().find(|s| s.id == session_id) {
+                session.set_error(
+                    SessionStatus::Failed,
+                    "System is shutting down during deletion".to_string(),
+                );
+                if let Err(e) = self.store.save_session(session).await {
+                    tracing::error!("Failed to save shutdown error: {}", e);
+                }
+            }
+            return;
+        };
+
+        // Helper to update progress
+        let update_progress = |step: u32, message: String| async move {
+            let progress = crate::api::protocol::ProgressStep {
+                step,
+                total: 4,
+                message,
+            };
+
+            if let Some(session) = self
+                .sessions
+                .write()
+                .await
+                .iter_mut()
+                .find(|s| s.id == session_id)
+            {
+                session.set_progress(progress.clone());
+            }
+
+            if let Some(ref broadcaster) = self.event_broadcaster {
+                let _ = broadcaster.send(WsEvent::SessionProgress {
+                    id: session_id.to_string(),
+                    progress,
+                });
+            }
+        };
+
+        // Get session details before deletion
+        let (backend, backend_id, repo_path, worktree_path) = {
+            let sessions = self.sessions.read().await;
+            if let Some(session) = sessions.iter().find(|s| s.id == session_id) {
+                (
+                    session.backend,
+                    session.backend_id.clone(),
+                    session.repo_path.clone(),
+                    session.worktree_path.clone(),
+                )
+            } else {
+                tracing::error!("Session {} disappeared during deletion", session_id);
+                return;
+            }
+        };
+
+        // Execute deletion steps
+        let result: anyhow::Result<()> = async {
+            update_progress(1, "Destroying backend resources".to_string()).await;
+            // Delete backend resources
+            if let Some(ref backend_id) = backend_id {
+                match backend {
+                    BackendType::Zellij => {
+                        let _ = self.zellij.delete(backend_id).await;
+                    }
+                    BackendType::Docker => {
+                        let _ = self.docker.delete(backend_id).await;
+                    }
+                    BackendType::Kubernetes => {
+                        let _ = self.kubernetes.delete(backend_id).await;
+                    }
+                }
+            }
+
+            update_progress(2, "Removing session proxy".to_string()).await;
+            // Destroy per-session proxy if it exists
+            if backend == BackendType::Docker {
+                if let Some(ref proxy_manager) = self.proxy_manager {
+                    if let Err(e) = proxy_manager.destroy_session_proxy(session_id).await {
+                        tracing::warn!(
+                            session_id = %session_id,
+                            name = %session_name,
+                            error = %e,
+                            "Failed to destroy session proxy"
+                        );
+                    }
+                }
+            }
+
+            update_progress(3, "Removing git worktree".to_string()).await;
+            // Delete git worktree
+            let _ = self.git.delete_worktree(&repo_path, &worktree_path).await;
+
+            update_progress(4, "Cleaning up database".to_string()).await;
+            // Record deletion event
+            let event = Event::new(session_id, EventType::SessionDeleted { reason: None });
+            self.store.record_event(&event).await?;
+
+            // Remove from store
+            self.store.delete_session(session_id).await?;
+
+            Ok(())
+        }
+        .await;
+
+        // Handle completion or failure
+        match result {
+            Ok(()) => {
+                // Remove from in-memory list
+                self.sessions.write().await.retain(|s| s.id != session_id);
+
+                // Broadcast deletion event
+                if let Some(ref broadcaster) = self.event_broadcaster {
+                    let _ = broadcaster.send(WsEvent::SessionDeleted {
+                        id: session_id.to_string(),
+                    });
+                }
+
+                tracing::info!(session_id = %session_id, "Session deletion completed successfully");
+            }
+            Err(e) => {
+                // Mark session as failed but keep in list for inspection
+                let error_msg = format!("{:#}", e);
+                let mut sessions = self.sessions.write().await;
+                if let Some(session) = sessions.iter_mut().find(|s| s.id == session_id) {
+                    session.set_error(SessionStatus::Failed, error_msg.clone());
+                    session.clear_progress();
+
+                    // Save failed state to database
+                    if let Err(save_err) = self.store.save_session(session).await {
+                        tracing::error!("Failed to save failed session state: {}", save_err);
+                    }
+
+                    // Broadcast failure event
+                    if let Some(ref broadcaster) = self.event_broadcaster {
+                        let _ = broadcaster.send(WsEvent::SessionFailed {
+                            id: session_id.to_string(),
+                            error: error_msg,
+                        });
+                    }
+                }
+
+                tracing::error!(session_id = %session_id, error = %e, "Session deletion failed");
+            }
+        }
+    }
+
+    /// Delete a session (synchronous version - blocks until complete)
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the session cannot be deleted.
     pub async fn delete_session(&self, id_or_name: &str) -> anyhow::Result<()> {
         let session = self
             .get_session(id_or_name)
