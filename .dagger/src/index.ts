@@ -634,6 +634,11 @@ export class Monorepo {
 
     let container = getRustContainer(source, frontendDist);
 
+    // Mount the built frontend if provided (required for Rust build - it embeds static files)
+    if (frontendDist) {
+      container = container.withMountedDirectory("/workspace/web/frontend/dist", frontendDist);
+    }
+
     // Format check
     container = container.withExec(["cargo", "fmt", "--check"]);
     await container.sync();
