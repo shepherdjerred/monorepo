@@ -50,24 +50,16 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
           # Check if there are changes
-          git add -A
-          if git diff --staged --quiet; then
+          if git diff --quiet; then
             echo "No changes to commit"
             exit 0
           fi
 
           BRANCH="auto/update-readmes"
 
-          # Check if branch exists on remote
-          if git ls-remote --exit-code --heads origin "$BRANCH" > /dev/null 2>&1; then
-            git fetch origin "$BRANCH"
-            git checkout "$BRANCH"
-            git reset --hard origin/main
-            git add -A
-          else
-            git checkout -b "$BRANCH"
-          fi
-
+          # Create or reset branch to current HEAD (preserves working tree changes)
+          git checkout -B "$BRANCH"
+          git add -A
           git commit -m "docs: auto-update READMEs"
           git push --force origin "$BRANCH"
 
