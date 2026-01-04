@@ -339,7 +339,7 @@ async fn run_http_server(
     let state = crate::api::http_server::AppState {
         session_manager: Arc::clone(&manager),
         event_broadcaster,
-        auth_state,
+        auth_state: auth_state.clone(),
     };
 
     // Create the HTTP router with all routes and state
