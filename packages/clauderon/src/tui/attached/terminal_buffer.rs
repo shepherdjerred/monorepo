@@ -231,7 +231,7 @@ mod tests {
         // Add some content to create scrollback history
         // Print more lines than the screen height to create scrollback
         for i in 0..100 {
-            buf.process(format!("Line {}\n", i).as_bytes());
+            buf.process(format!("Line {i}\n").as_bytes());
         }
 
         // Scroll up should work now
