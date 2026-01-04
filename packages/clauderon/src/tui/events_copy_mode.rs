@@ -100,7 +100,7 @@ pub async fn handle_copy_mode_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
         // Yank (copy) selection
         KeyCode::Char('y') => {
             if state.visual_mode {
-                if let Err(e) = copy_selection_to_clipboard(app).await {
+                if let Err(e) = copy_selection_to_clipboard(app) {
                     app.status_message = Some(format!(
                         "Copy failed: {}. Press v to cancel selection or q to exit.",
                         e
@@ -120,7 +120,7 @@ pub async fn handle_copy_mode_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
 }
 
 /// Copy the selected text to system clipboard
-async fn copy_selection_to_clipboard(app: &App) -> anyhow::Result<()> {
+fn copy_selection_to_clipboard(app: &App) -> anyhow::Result<()> {
     use arboard::Clipboard;
 
     let state = app.copy_mode_state.as_ref().expect("copy mode state");
