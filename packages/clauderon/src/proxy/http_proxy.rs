@@ -560,7 +560,7 @@ impl HttpHandler for FilteringHandler {
                 let entry = AuditEntry {
                     timestamp: pending.timestamp,
                     correlation_id: Some(pending.request_id),
-                    session_id: None,
+                    session_id: Some(session_id),
                     service: pending.service,
                     method: pending.method,
                     path: pending.path,
@@ -630,7 +630,7 @@ impl HttpHandler for FilteringHandler {
                 let entry = AuditEntry {
                     timestamp: pending.timestamp,
                     correlation_id: Some(pending.request_id),
-                    session_id: None,
+                    session_id: Some(session_id),
                     service: pending.service,
                     method: pending.method,
                     path: pending.path,
