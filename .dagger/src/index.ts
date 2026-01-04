@@ -171,7 +171,7 @@ async function buildMuxBinary(
   ]);
 
   // Get the binary
-  const binaryPath = `/workspace/target-cross/${target}/release/clauderon`;
+  const binaryPath = `/workspace/target-cross/${target}/release/mux`;
   const binary = await buildContainer.file(binaryPath).contents();
 
   const filename = `mux-${os}-${arch}`;
@@ -684,7 +684,7 @@ export class Monorepo {
       ]);
 
       // Get the binary and add to output directory
-      const binaryPath = `/workspace/target-cross/${target}/release/clauderon`;
+      const binaryPath = `/workspace/target-cross/${target}/release/mux`;
       const filename = `mux-${os}-${arch}`;
       outputContainer = outputContainer.withFile(filename, buildContainer.file(binaryPath));
     }
