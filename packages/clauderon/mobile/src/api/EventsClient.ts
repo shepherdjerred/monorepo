@@ -1,21 +1,13 @@
 import { AppState } from "react-native";
 import type { AppStateStatus } from "react-native";
-import type { Session } from "../types/generated";
+import type { Session, Event as WsEvent } from "../types/generated";
 import { WebSocketError } from "./errors";
 
 /**
  * Event types emitted by the events WebSocket
+ * Re-export the Event type from shared generated types
  */
-export type SessionEvent =
-  | { type: "session_created"; session: Session }
-  | { type: "session_updated"; session: Session }
-  | { type: "session_deleted"; sessionId: string }
-  | {
-      type: "status_changed";
-      sessionId: string;
-      oldStatus: string;
-      newStatus: string;
-    };
+export type SessionEvent = WsEvent;
 
 /**
  * Message received from the events WebSocket

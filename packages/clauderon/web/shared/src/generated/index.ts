@@ -103,6 +103,34 @@ export interface RecentRepoDto {
 	last_used: string;
 }
 
+/** Request to browse a directory on the daemon's filesystem */
+export interface BrowseDirectoryRequest {
+	/** Path to the directory to browse */
+	path: string;
+}
+
+/** A single directory entry */
+export interface DirectoryEntryDto {
+	/** Directory name */
+	name: string;
+	/** Absolute path to the directory */
+	path: string;
+	/** Whether the directory can be read */
+	is_accessible: boolean;
+}
+
+/** Response from browsing a directory */
+export interface BrowseDirectoryResponse {
+	/** Current directory path (normalized absolute path) */
+	current_path: string;
+	/** Parent directory path (None if at filesystem root) */
+	parent_path?: string;
+	/** List of subdirectories in the current directory */
+	entries: DirectoryEntryDto[];
+	/** Error message if path doesn't exist or permission denied */
+	error?: string;
+}
+
 /** Serializable reconcile report for API responses */
 export interface ReconcileReportDto {
 	/** Sessions with missing git worktrees */
@@ -123,6 +151,8 @@ export interface ReconcileReportDto {
 export enum SessionStatus {
 	/** Session is being created */
 	Creating = "Creating",
+	/** Session is being deleted */
+	Deleting = "Deleting",
 	/** Agent is actively working */
 	Running = "Running",
 	/** Agent is waiting for input */
@@ -218,6 +248,10 @@ export interface Session {
 	last_reconcile_error?: string;
 	/** When the last reconciliation attempt occurred */
 	last_reconcile_at: string;
+	/** Error message if status is Failed (None otherwise) */
+	error_message?: string;
+	/** Current operation progress (for Creating/Deleting states) */
+	progress?: ProgressStep;
 	/** When the session was created */
 	created_at: string;
 	/** When the session was last updated */
@@ -253,7 +287,7 @@ export enum AgentState {
 }
 
 /** Real-time events from the server */
-export type Event = 
+export type Event =
 	/** A new session was created */
 	| { type: "SessionCreated", payload: Session }
 	/** A session was updated */
@@ -267,6 +301,16 @@ export type Event =
 	id: string;
 	old: SessionStatus;
 	new: SessionStatus;
+}}
+	/** Progress update during async operation */
+	| { type: "SessionProgress", payload: {
+	id: string;
+	progress: ProgressStep;
+}}
+	/** Session operation failed */
+	| { type: "SessionFailed", payload: {
+	id: string;
+	error: string;
 }};
 
 /** Types of events that can occur */

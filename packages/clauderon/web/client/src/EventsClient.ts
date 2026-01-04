@@ -1,14 +1,11 @@
-import type { Session } from "@clauderon/shared";
+import type { Event as WsEvent } from "@clauderon/shared";
 import { WebSocketError } from "./errors.js";
 
 /**
  * Event types emitted by the events WebSocket
+ * Re-export the Event type from shared generated types
  */
-export type SessionEvent =
-  | { type: "session_created"; session: Session }
-  | { type: "session_updated"; session: Session }
-  | { type: "session_deleted"; sessionId: string }
-  | { type: "status_changed"; sessionId: string; oldStatus: string; newStatus: string };
+export type SessionEvent = WsEvent;
 
 /**
  * Message received from the events WebSocket
@@ -110,7 +107,7 @@ export class EventsClient {
             return;
           }
 
-          // Handle session events
+          // Handle session events (backend sends with type "event" and nested event object)
           if (data.type === "event" && data.event) {
             this.emit("event", data.event);
           }

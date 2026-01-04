@@ -58,6 +58,45 @@ pub struct RecentRepoDto {
     pub last_used: String,
 }
 
+/// Request to browse a directory on the daemon's filesystem
+#[typeshare]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BrowseDirectoryRequest {
+    /// Path to the directory to browse
+    pub path: String,
+}
+
+/// A single directory entry
+#[typeshare]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DirectoryEntryDto {
+    /// Directory name
+    pub name: String,
+
+    /// Absolute path to the directory
+    pub path: String,
+
+    /// Whether the directory can be read
+    pub is_accessible: bool,
+}
+
+/// Response from browsing a directory
+#[typeshare]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BrowseDirectoryResponse {
+    /// Current directory path (normalized absolute path)
+    pub current_path: String,
+
+    /// Parent directory path (None if at filesystem root)
+    pub parent_path: Option<String>,
+
+    /// List of subdirectories in the current directory
+    pub entries: Vec<DirectoryEntryDto>,
+
+    /// Error message if path doesn't exist or permission denied
+    pub error: Option<String>,
+}
+
 /// Request to create a new session
 #[typeshare]
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -188,6 +227,12 @@ pub enum Event {
         old: SessionStatus,
         new: SessionStatus,
     },
+
+    /// Progress update during async operation
+    SessionProgress { id: String, progress: ProgressStep },
+
+    /// Session operation failed
+    SessionFailed { id: String, error: String },
 }
 
 /// Credential availability status

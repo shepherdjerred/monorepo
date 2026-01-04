@@ -1,7 +1,7 @@
 import type { Session } from "@clauderon/client";
 import { SessionStatus, CheckStatus, ClaudeWorkingStatus } from "@clauderon/shared";
 import { formatRelativeTime } from "../lib/utils";
-import { Archive, Trash2, Terminal, CheckCircle2, XCircle, Clock, Loader2, User, Circle } from "lucide-react";
+import { Archive, Trash2, Terminal, CheckCircle2, XCircle, Clock, Loader2, User, Circle, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ type SessionCardProps = {
 export function SessionCard({ session, onAttach, onArchive, onDelete }: SessionCardProps) {
   const statusColors: Record<SessionStatus, string> = {
     [SessionStatus.Creating]: "bg-status-creating",
+    [SessionStatus.Deleting]: "bg-status-creating",
     [SessionStatus.Running]: "bg-status-running",
     [SessionStatus.Idle]: "bg-status-idle",
     [SessionStatus.Completed]: "bg-status-completed",
@@ -81,6 +82,14 @@ export function SessionCard({ session, onAttach, onArchive, onDelete }: SessionC
                   ({formatRelativeTime(session.claude_status_updated_at)})
                 </span>
               )}
+            </div>
+          )}
+
+          {/* Merge Conflict Warning */}
+          {session.merge_conflict && (
+            <div className="flex items-center gap-1 text-xs text-red-500">
+              <AlertTriangle className="w-3 h-3" />
+              <span className="font-mono font-semibold">Merge conflict with main</span>
             </div>
           )}
         </div>

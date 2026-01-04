@@ -92,6 +92,10 @@ impl SqliteStore {
             Self::migrate_to_v7(pool).await?;
         }
 
+        if current_version < 8 {
+            Self::migrate_to_v8(pool).await?;
+        }
+
         Ok(())
     }
 
@@ -390,9 +394,9 @@ impl SqliteStore {
         Ok(())
     }
 
-    /// Migration v7: Add reconcile tracking columns
+    /// Migration v7: Add reconcile tracking and async operation error tracking columns
     async fn migrate_to_v7(pool: &SqlitePool) -> anyhow::Result<()> {
-        tracing::info!("Applying migration v7: Add reconcile tracking columns");
+        tracing::info!("Applying migration v7: Add reconcile tracking and error_message columns");
 
         // Add reconcile_attempts column
         let reconcile_attempts_exists: bool = sqlx::query_scalar(
@@ -438,6 +442,20 @@ impl SqliteStore {
             tracing::debug!("Added last_reconcile_at column to sessions table");
         }
 
+        // Add error_message column
+        let error_message_exists: bool = sqlx::query_scalar(
+            "SELECT COUNT(*) > 0 FROM pragma_table_info('sessions') WHERE name = 'error_message'",
+        )
+        .fetch_one(pool)
+        .await?;
+
+        if !error_message_exists {
+            sqlx::query("ALTER TABLE sessions ADD COLUMN error_message TEXT")
+                .execute(pool)
+                .await?;
+            tracing::debug!("Added error_message column to sessions table");
+        }
+
         // Record migration
         let now = Utc::now();
         sqlx::query("INSERT OR REPLACE INTO schema_version (version, applied_at) VALUES (?, ?)")
@@ -447,6 +465,36 @@ impl SqliteStore {
             .await?;
 
         tracing::info!("Migration v7 complete");
+        Ok(())
+    }
+
+    /// Migration v8: Add subdirectory column for persisting session subdirectory path
+    async fn migrate_to_v8(pool: &SqlitePool) -> anyhow::Result<()> {
+        tracing::info!("Applying migration v8: Add subdirectory column");
+
+        // Add subdirectory column
+        let subdirectory_exists: bool = sqlx::query_scalar(
+            "SELECT COUNT(*) > 0 FROM pragma_table_info('sessions') WHERE name = 'subdirectory'",
+        )
+        .fetch_one(pool)
+        .await?;
+
+        if !subdirectory_exists {
+            sqlx::query("ALTER TABLE sessions ADD COLUMN subdirectory TEXT NOT NULL DEFAULT ''")
+                .execute(pool)
+                .await?;
+            tracing::debug!("Added subdirectory column to sessions table");
+        }
+
+        // Record migration
+        let now = Utc::now();
+        sqlx::query("INSERT OR REPLACE INTO schema_version (version, applied_at) VALUES (?, ?)")
+            .bind(8)
+            .bind(now.to_rfc3339())
+            .execute(pool)
+            .await?;
+
+        tracing::info!("Migration v8 complete");
         Ok(())
     }
 }
@@ -491,12 +539,12 @@ impl Store for SqliteStore {
             r"
             INSERT OR REPLACE INTO sessions (
                 id, name, title, description, status, backend, agent, repo_path, worktree_path,
-                branch_name, backend_id, initial_prompt, dangerous_skip_checks,
+                subdirectory, branch_name, backend_id, initial_prompt, dangerous_skip_checks,
                 pr_url, pr_check_status, claude_status, claude_status_updated_at,
                 merge_conflict, access_mode, proxy_port, history_file_path,
-                reconcile_attempts, last_reconcile_error, last_reconcile_at,
+                reconcile_attempts, last_reconcile_error, last_reconcile_at, error_message,
                 created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ",
         )
         .bind(session.id.to_string())
@@ -508,6 +556,7 @@ impl Store for SqliteStore {
         .bind(serde_json::to_string(&session.agent)?)
         .bind(session.repo_path.to_string_lossy().to_string())
         .bind(session.worktree_path.to_string_lossy().to_string())
+        .bind(session.subdirectory.to_string_lossy().to_string())
         .bind(&session.branch_name)
         .bind(&session.backend_id)
         .bind(&session.initial_prompt)
@@ -533,6 +582,7 @@ impl Store for SqliteStore {
         .bind(session.reconcile_attempts as i64)
         .bind(&session.last_reconcile_error)
         .bind(session.last_reconcile_at.map(|t| t.to_rfc3339()))
+        .bind(&session.error_message)
         .bind(session.created_at.to_rfc3339())
         .bind(session.updated_at.to_rfc3339())
         .execute(&self.pool)
@@ -686,6 +736,7 @@ struct SessionRow {
     agent: String,
     repo_path: String,
     worktree_path: String,
+    subdirectory: String,
     branch_name: String,
     backend_id: Option<String>,
     initial_prompt: String,
@@ -701,6 +752,7 @@ struct SessionRow {
     reconcile_attempts: i64,
     last_reconcile_error: Option<String>,
     last_reconcile_at: Option<String>,
+    error_message: Option<String>,
     created_at: String,
     updated_at: String,
 }
@@ -832,7 +884,7 @@ impl TryFrom<SessionRow> for Session {
             agent,
             repo_path: row.repo_path.into(),
             worktree_path: row.worktree_path.into(),
-            subdirectory: PathBuf::new(), // TODO: Add subdirectory column to database schema
+            subdirectory: row.subdirectory.into(),
             branch_name: row.branch_name,
             backend_id: row.backend_id,
             initial_prompt: row.initial_prompt,
@@ -848,6 +900,8 @@ impl TryFrom<SessionRow> for Session {
             reconcile_attempts: row.reconcile_attempts as u32,
             last_reconcile_error: row.last_reconcile_error,
             last_reconcile_at,
+            error_message: row.error_message,
+            progress: None, // Progress is transient and not persisted to database
             created_at,
             updated_at,
         })

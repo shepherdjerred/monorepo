@@ -62,7 +62,8 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
             Style::default().fg(Color::DarkGray),
         ),
         Span::styled("◎ ", Style::default().fg(Color::DarkGray)), // Claude status header
-        Span::styled("CI", Style::default().fg(Color::DarkGray)), // Check status header
+        Span::styled("CI ", Style::default().fg(Color::DarkGray)), // Check status header
+        Span::styled("⚠", Style::default().fg(Color::DarkGray)),  // Merge conflict header
     ]);
     frame.render_widget(Paragraph::new(header), header_area);
 
@@ -72,6 +73,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         .map(|session| {
             let status_style = match session.status {
                 SessionStatus::Creating => Style::default().fg(Color::Yellow),
+                SessionStatus::Deleting => Style::default().fg(Color::Yellow),
                 SessionStatus::Running => Style::default().fg(Color::Green),
                 SessionStatus::Idle => Style::default().fg(Color::Blue),
                 SessionStatus::Completed => Style::default().fg(Color::Cyan),
@@ -81,6 +83,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
 
             let status_text = match session.status {
                 SessionStatus::Creating => "Creating",
+                SessionStatus::Deleting => "Deleting",
                 SessionStatus::Running => "Running",
                 SessionStatus::Idle => "Idle",
                 SessionStatus::Completed => "Completed",
@@ -121,6 +124,13 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
                 }
                 Some(CheckStatus::Merged) => Span::styled("✓", Style::default().fg(Color::Cyan)),
                 None => Span::raw(" "),
+            };
+
+            // Merge conflict indicator
+            let conflict_indicator = if session.merge_conflict {
+                Span::styled("⚠", Style::default().fg(Color::Red))
+            } else {
+                Span::raw(" ")
             };
 
             let backend_text = format!("{:?}", session.backend);
@@ -187,6 +197,8 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
                 claude_indicator,
                 Span::raw(" "),
                 check_indicator,
+                Span::raw(" "),
+                conflict_indicator,
             ]);
 
             let line = Line::from(spans);
