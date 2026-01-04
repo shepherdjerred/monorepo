@@ -44,84 +44,73 @@ fn test_proxy_config_flows_to_container_args() {
     assert!(
         args.iter()
             .any(|a| a.contains("HTTP_PROXY=http://host.docker.internal:18080")),
-        "Expected HTTP_PROXY env var, got: {:?}",
-        args
+        "Expected HTTP_PROXY env var, got: {args:?}"
     );
 
     // Verify HTTPS_PROXY is set
     assert!(
         args.iter()
             .any(|a| a.contains("HTTPS_PROXY=http://host.docker.internal:18080")),
-        "Expected HTTPS_PROXY env var, got: {:?}",
-        args
+        "Expected HTTPS_PROXY env var, got: {args:?}"
     );
 
     // Verify NO_PROXY is set
     assert!(
         args.iter().any(|a| a.contains("NO_PROXY=localhost")),
-        "Expected NO_PROXY env var, got: {:?}",
-        args
+        "Expected NO_PROXY env var, got: {args:?}"
     );
 
     // Verify CA cert is mounted
     assert!(
         args.iter().any(|a| a.contains("proxy-ca.pem")),
-        "Expected CA cert volume mount, got: {:?}",
-        args
+        "Expected CA cert volume mount, got: {args:?}"
     );
 
     // Verify SSL_CERT_FILE points to mounted cert
     assert!(
         args.iter()
             .any(|a| a.contains("SSL_CERT_FILE=/etc/clauderon/proxy-ca.pem")),
-        "Expected SSL_CERT_FILE env var, got: {:?}",
-        args
+        "Expected SSL_CERT_FILE env var, got: {args:?}"
     );
 
     // Verify NODE_EXTRA_CA_CERTS for Node.js
     assert!(
         args.iter()
             .any(|a| a.contains("NODE_EXTRA_CA_CERTS=/etc/clauderon/proxy-ca.pem")),
-        "Expected NODE_EXTRA_CA_CERTS env var, got: {:?}",
-        args
+        "Expected NODE_EXTRA_CA_CERTS env var, got: {args:?}"
     );
 
     // Verify REQUESTS_CA_BUNDLE for Python
     assert!(
         args.iter()
             .any(|a| a.contains("REQUESTS_CA_BUNDLE=/etc/clauderon/proxy-ca.pem")),
-        "Expected REQUESTS_CA_BUNDLE env var, got: {:?}",
-        args
+        "Expected REQUESTS_CA_BUNDLE env var, got: {args:?}"
     );
 
     // Verify kubeconfig path
     assert!(
         args.iter()
             .any(|a| a.contains("KUBECONFIG=/etc/clauderon/kube/config")),
-        "Expected KUBECONFIG env var, got: {:?}",
-        args
+        "Expected KUBECONFIG env var, got: {args:?}"
     );
 
     // Verify talosconfig path
     assert!(
         args.iter()
             .any(|a| a.contains("TALOSCONFIG=/etc/clauderon/talos/config")),
-        "Expected TALOSCONFIG env var, got: {:?}",
-        args
+        "Expected TALOSCONFIG env var, got: {args:?}"
     );
 
     // Verify kube config volume mount (read-only)
     assert!(
         args.iter().any(|a| a.contains("/etc/clauderon/kube:ro")),
-        "Expected kube config volume mount, got: {:?}",
-        args
+        "Expected kube config volume mount, got: {args:?}"
     );
 
     // Verify talos config volume mount (read-only)
     assert!(
         args.iter().any(|a| a.contains("/etc/clauderon/talos:ro")),
-        "Expected talos config volume mount, got: {:?}",
-        args
+        "Expected talos config volume mount, got: {args:?}"
     );
 }
 
@@ -219,14 +208,12 @@ fn test_proxy_port_in_env_vars() {
     assert!(
         args.iter()
             .any(|a| a.contains("HTTP_PROXY=http://host.docker.internal:9999")),
-        "Expected HTTP_PROXY with port 9999, got: {:?}",
-        args
+        "Expected HTTP_PROXY with port 9999, got: {args:?}"
     );
     assert!(
         args.iter()
             .any(|a| a.contains("HTTPS_PROXY=http://host.docker.internal:9999")),
-        "Expected HTTPS_PROXY with port 9999, got: {:?}",
-        args
+        "Expected HTTPS_PROXY with port 9999, got: {args:?}"
     );
 }
 
@@ -264,14 +251,12 @@ fn test_clauderon_dir_in_volume_mounts() {
     let clauderon_path = clauderon_dir.path().to_string_lossy();
     assert!(
         args.iter()
-            .any(|a| a.contains(&format!("{}/proxy-ca.pem", clauderon_path))),
-        "Expected clauderon dir in CA cert mount, got: {:?}",
-        args
+            .any(|a| a.contains(&format!("{clauderon_path}/proxy-ca.pem"))),
+        "Expected clauderon dir in CA cert mount, got: {args:?}"
     );
     assert!(
         args.iter()
-            .any(|a| a.contains(&format!("{}/kube", clauderon_path))),
-        "Expected clauderon dir in kube mount, got: {:?}",
-        args
+            .any(|a| a.contains(&format!("{clauderon_path}/kube"))),
+        "Expected clauderon dir in kube mount, got: {args:?}"
     );
 }

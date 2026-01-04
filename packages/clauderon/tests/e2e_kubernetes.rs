@@ -24,7 +24,7 @@ async fn test_kubernetes_pod_lifecycle() {
     let kubernetes = match KubernetesBackend::new(config).await {
         Ok(k) => k,
         Err(e) => {
-            eprintln!("Failed to create Kubernetes backend: {}", e);
+            eprintln!("Failed to create Kubernetes backend: {e}");
             return;
         }
     };
@@ -36,7 +36,7 @@ async fn test_kubernetes_pod_lifecycle() {
     // Initialize a git repository in the temp directory
     common::init_git_repo(workdir);
 
-    let pod_name = format!("test-{}", uuid::Uuid::new_v4().to_string()[..8].to_string());
+    let pod_name = format!("test-{}", &uuid::Uuid::new_v4().to_string()[..8]);
 
     // Create pod (using ExecutionBackend trait method)
     let result = kubernetes
@@ -68,7 +68,7 @@ async fn test_kubernetes_pod_lifecycle() {
             let logs = kubernetes.get_output(&returned_name, 10).await;
 
             if let Ok(log_output) = logs {
-                println!("Pod logs: {}", log_output);
+                println!("Pod logs: {log_output}");
             }
 
             // Delete pod (using ExecutionBackend trait method)
@@ -88,7 +88,7 @@ async fn test_kubernetes_pod_lifecycle() {
         }
         Err(e) => {
             // If pod creation failed (e.g., namespace doesn't exist, image not available), skip
-            eprintln!("Pod creation failed: {}", e);
+            eprintln!("Pod creation failed: {e}");
             return;
         }
     }
@@ -107,7 +107,7 @@ async fn test_kubernetes_pod_exists_check() {
     let kubernetes = match KubernetesBackend::new(config).await {
         Ok(k) => k,
         Err(e) => {
-            eprintln!("Failed to create Kubernetes backend: {}", e);
+            eprintln!("Failed to create Kubernetes backend: {e}");
             return;
         }
     };
@@ -125,6 +125,9 @@ async fn test_kubernetes_pod_exists_check() {
 /// The attach command should use kubectl attach with the correct flags
 #[tokio::test]
 async fn test_kubernetes_attach_command() {
+    // Install crypto provider for rustls (required by kube client)
+    let _ = rustls::crypto::ring::default_provider().install_default();
+
     // Skip if k8s not available
     if kube::Client::try_default().await.is_err() {
         eprintln!("Skipping test: Kubernetes not available");
@@ -171,7 +174,7 @@ async fn test_kubernetes_delete_nonexistent() {
     let kubernetes = match KubernetesBackend::new(config).await {
         Ok(k) => k,
         Err(e) => {
-            eprintln!("Failed to create Kubernetes backend: {}", e);
+            eprintln!("Failed to create Kubernetes backend: {e}");
             return;
         }
     };

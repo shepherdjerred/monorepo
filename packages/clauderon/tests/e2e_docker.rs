@@ -29,10 +29,7 @@ async fn test_docker_container_lifecycle() {
     // Create a test file in the workdir
     std::fs::write(workdir.join("test.txt"), "Hello from test").unwrap();
 
-    let container_name = format!(
-        "clauderon-test-{}",
-        uuid::Uuid::new_v4().to_string()[..8].to_string()
-    );
+    let container_name = format!("clauderon-test-{}", &uuid::Uuid::new_v4().to_string()[..8]);
 
     // Create container (using ExecutionBackend trait method)
     let result = docker
@@ -64,7 +61,7 @@ async fn test_docker_container_lifecycle() {
             // Logs might fail if container exited, that's OK for this test
 
             if let Ok(log_output) = logs {
-                println!("Container logs: {}", log_output);
+                println!("Container logs: {log_output}");
             }
 
             // Delete container (using ExecutionBackend trait method)
@@ -85,10 +82,7 @@ async fn test_docker_container_lifecycle() {
         }
         Err(e) => {
             // If container creation failed (e.g., image not available), skip
-            eprintln!(
-                "Container creation failed (image may not be available): {}",
-                e
-            );
+            eprintln!("Container creation failed (image may not be available): {e}");
             return;
         }
     }

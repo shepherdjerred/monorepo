@@ -78,7 +78,7 @@ async fn setup_proxy_with_env_credentials()
 
 /// Helper to create an HTTP client configured to use the test proxy.
 fn create_proxy_client(proxy_port: u16, ca_cert_path: &Path) -> anyhow::Result<reqwest::Client> {
-    let proxy = reqwest::Proxy::all(format!("http://127.0.0.1:{}", proxy_port))?;
+    let proxy = reqwest::Proxy::all(format!("http://127.0.0.1:{proxy_port}"))?;
 
     // Load CA cert for HTTPS
     let cert_pem = std::fs::read(ca_cert_path)?;
@@ -269,13 +269,12 @@ async fn test_anthropic_oauth_integration() {
     } else {
         let status = response.status();
         let body = response.text().await.unwrap_or_default();
-        println!("✗ OAuth token failed: {} - {}", status, body);
+        println!("✗ OAuth token failed: {status} - {body}");
 
         // OAuth is expected to fail with Messages API
         assert!(
             body.contains("OAuth authentication is currently not supported"),
-            "Unexpected error message: {}",
-            body
+            "Unexpected error message: {body}"
         );
     }
 }
@@ -559,7 +558,7 @@ async fn test_k8s_proxy_integration() {
             println!("✓ K8s proxy is accessible on port 18081");
         }
         Err(e) => {
-            eprintln!("K8s proxy not accessible: {}", e);
+            eprintln!("K8s proxy not accessible: {e}");
             eprintln!("Make sure the clauderon daemon is running");
             eprintln!("The daemon starts kubectl proxy on port 18081");
         }
@@ -605,7 +604,7 @@ async fn test_talos_gateway_integration() {
     let home = dirs::home_dir().expect("No home directory");
     let talos_config_path = home.join(".talos/config");
     if !talos_config_path.exists() {
-        eprintln!("Skipping: No Talos config found at {:?}", talos_config_path);
+        eprintln!("Skipping: No Talos config found at {talos_config_path:?}");
         eprintln!("This test requires a Talos cluster to be configured on the host");
         return;
     }
@@ -625,19 +624,15 @@ async fn test_talos_gateway_integration() {
         }
         Err(e) if e.is_connect() => {
             panic!(
-                "Talos gateway not accessible on port 18082: {}\n\
+                "Talos gateway not accessible on port 18082: {e}\n\
                 Make sure the clauderon daemon is running with Talos configuration.\n\
-                Check daemon logs for: 'Talos mTLS gateway listening on 127.0.0.1:18082'",
-                e
+                Check daemon logs for: 'Talos mTLS gateway listening on 127.0.0.1:18082'"
             );
         }
         Err(e) => {
             // Other errors (timeout, protocol error) are acceptable - port is listening
             // The gateway expects TLS, so HTTP requests will fail at protocol level
-            println!(
-                "✓ Talos gateway is listening (HTTP request failed as expected: {})",
-                e
-            );
+            println!("✓ Talos gateway is listening (HTTP request failed as expected: {e})");
         }
     }
 }
@@ -692,7 +687,7 @@ async fn test_audit_logging_multiple_services() {
     // Verify audit log has multiple entries
     let audit_entries = read_audit_log(&audit_path).expect("Failed to read audit log");
     assert!(
-        audit_entries.len() >= 1,
+        !audit_entries.is_empty(),
         "Expected at least 1 audit entry, got {}",
         audit_entries.len()
     );
@@ -701,8 +696,8 @@ async fn test_audit_logging_multiple_services() {
     for entry in &audit_entries {
         assert!(!entry.service.is_empty(), "Service should not be empty");
         assert!(!entry.method.is_empty(), "Method should not be empty");
-        // Duration can be 0 for very fast requests, just check it's present
-        assert!(entry.duration_ms >= 0, "Duration should be non-negative");
+        // Duration is u64, so always non-negative - just verify it's accessible
+        let _ = entry.duration_ms;
     }
 
     // Verify GitHub was logged
@@ -823,21 +818,16 @@ async fn test_talos_gateway_tls_termination() {
     // Check if proxy CA exists
     let home = dirs::home_dir().expect("No home directory");
     let proxy_ca_path = home.join(".clauderon/proxy-ca.pem");
-    if !proxy_ca_path.exists() {
-        panic!(
-            "Proxy CA not found at {:?}. Is the daemon running?",
-            proxy_ca_path
-        );
-    }
-    println!("✓ Proxy CA found at {:?}", proxy_ca_path);
+    assert!(
+        proxy_ca_path.exists(),
+        "Proxy CA not found at {proxy_ca_path:?}. Is the daemon running?"
+    );
+    println!("✓ Proxy CA found at {proxy_ca_path:?}");
 
     // Check if Talos config exists
     let talos_config_path = home.join(".talos/config");
     if !talos_config_path.exists() {
-        eprintln!(
-            "Skipping test: No Talos config found at {:?}",
-            talos_config_path
-        );
+        eprintln!("Skipping test: No Talos config found at {talos_config_path:?}");
         return;
     }
     println!("✓ Talos config found");
@@ -848,16 +838,15 @@ async fn test_talos_gateway_tls_termination() {
     let ca_base64 = base64::engine::general_purpose::STANDARD.encode(ca_pem.as_bytes());
 
     let test_config = format!(
-        r#"context: test
+        r"context: test
 contexts:
   test:
     endpoints:
       - 127.0.0.1:18082
     nodes:
       - 127.0.0.1:18082
-    ca: {}
-"#,
-        ca_base64
+    ca: {ca_base64}
+"
     );
 
     let mut temp_config = NamedTempFile::new().expect("Failed to create temp file");
@@ -880,21 +869,19 @@ contexts:
 
     if !output.status.success() {
         eprintln!("talosctl version failed!");
-        eprintln!("stdout: {}", stdout);
-        eprintln!("stderr: {}", stderr);
+        eprintln!("stdout: {stdout}");
+        eprintln!("stderr: {stderr}");
         panic!("talosctl version failed");
     }
 
     // Verify response contains server version (proves connection worked)
     assert!(
         stdout.contains("Server:"),
-        "Expected 'Server:' in output, got: {}",
-        stdout
+        "Expected 'Server:' in output, got: {stdout}"
     );
     assert!(
         stdout.contains("NODE:"),
-        "Expected 'NODE:' in output, got: {}",
-        stdout
+        "Expected 'NODE:' in output, got: {stdout}"
     );
 
     println!("✓ talosctl version succeeded through TLS-terminating gateway");

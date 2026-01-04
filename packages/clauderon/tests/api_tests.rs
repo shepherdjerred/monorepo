@@ -218,11 +218,11 @@ fn test_print_mode_flows_to_docker_args() {
         1000,
         None,
         print_mode,
-        false, // plan_mode
-        &[],   // images
-        None,  // git user name
-        None,  // git user email
-        None,  // session_id
+        true, // dangerous_skip_checks - pass true to get --dangerously-skip-permissions
+        &[],  // images
+        None, // git user name
+        None, // git user email
+        None, // session_id
     )
     .expect("Failed to build args");
 

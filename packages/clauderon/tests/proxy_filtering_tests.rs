@@ -19,6 +19,49 @@ use clauderon::proxy::{ProxyConfig, ProxyManager};
 use clauderon::store::{SqliteStore, Store};
 use tempfile::TempDir;
 
+/// Create a temporary directory initialized as a git repository.
+fn create_temp_git_repo() -> TempDir {
+    let temp_dir = TempDir::new().expect("Failed to create temp dir");
+
+    // Initialize git repo
+    std::process::Command::new("git")
+        .args(["init"])
+        .current_dir(temp_dir.path())
+        .output()
+        .expect("Failed to run git init");
+
+    // Configure git user (required for commits)
+    std::process::Command::new("git")
+        .args(["config", "user.email", "test@test.com"])
+        .current_dir(temp_dir.path())
+        .output()
+        .expect("Failed to configure git email");
+
+    std::process::Command::new("git")
+        .args(["config", "user.name", "Test User"])
+        .current_dir(temp_dir.path())
+        .output()
+        .expect("Failed to configure git name");
+
+    // Create initial commit (required for a valid repo)
+    std::fs::write(temp_dir.path().join("README.md"), "# Test Repo")
+        .expect("Failed to create README");
+
+    std::process::Command::new("git")
+        .args(["add", "."])
+        .current_dir(temp_dir.path())
+        .output()
+        .expect("Failed to run git add");
+
+    std::process::Command::new("git")
+        .args(["commit", "-m", "Initial commit"])
+        .current_dir(temp_dir.path())
+        .output()
+        .expect("Failed to run git commit");
+
+    temp_dir
+}
+
 /// Helper to create a test environment with proxy support.
 async fn create_test_manager_with_proxy() -> (
     SessionManager,
@@ -74,7 +117,7 @@ async fn create_test_manager_with_proxy() -> (
 
 /// Helper to create an HTTP client configured to use a specific proxy port.
 fn create_proxy_client(proxy_port: u16, ca_cert_path: &Path) -> anyhow::Result<reqwest::Client> {
-    let proxy = reqwest::Proxy::all(format!("http://127.0.0.1:{}", proxy_port))?;
+    let proxy = reqwest::Proxy::all(format!("http://127.0.0.1:{proxy_port}"))?;
 
     // Load CA cert for HTTPS
     let cert_pem = std::fs::read(ca_cert_path)?;
@@ -92,12 +135,13 @@ fn create_proxy_client(proxy_port: u16, ca_cert_path: &Path) -> anyhow::Result<r
 
 #[tokio::test]
 async fn test_create_session_with_read_only_mode() {
+    let repo_dir = create_temp_git_repo();
     let (manager, _proxy_manager, _temp_dir, _git, _zellij, _docker) =
         create_test_manager_with_proxy().await;
 
     let (session, _warnings) = manager
         .create_session(
-            "/tmp/fake-repo".to_string(),
+            repo_dir.path().to_string_lossy().to_string(),
             "Test prompt".to_string(),
             BackendType::Docker,
             AgentType::ClaudeCode,
@@ -121,12 +165,13 @@ async fn test_create_session_with_read_only_mode() {
 
 #[tokio::test]
 async fn test_create_session_with_read_write_mode() {
+    let repo_dir = create_temp_git_repo();
     let (manager, _proxy_manager, _temp_dir, _git, _zellij, _docker) =
         create_test_manager_with_proxy().await;
 
     let (session, _warnings) = manager
         .create_session(
-            "/tmp/fake-repo".to_string(),
+            repo_dir.path().to_string_lossy().to_string(),
             "Test prompt".to_string(),
             BackendType::Docker,
             AgentType::ClaudeCode,
@@ -139,19 +184,20 @@ async fn test_create_session_with_read_write_mode() {
         .await
         .expect("Failed to create session");
 
-    // Verify session has read-write mode (default)
+    // Verify session has read-write mode
     assert_eq!(session.access_mode, AccessMode::ReadWrite);
     assert_eq!(session.status, SessionStatus::Running);
 }
 
 #[tokio::test]
 async fn test_zellij_backend_ignores_proxy_port() {
+    let repo_dir = create_temp_git_repo();
     let (manager, _proxy_manager, _temp_dir, _git, _zellij, _docker) =
         create_test_manager_with_proxy().await;
 
     let (session, _warnings) = manager
         .create_session(
-            "/tmp/fake-repo".to_string(),
+            repo_dir.path().to_string_lossy().to_string(),
             "Test prompt".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
@@ -173,12 +219,13 @@ async fn test_zellij_backend_ignores_proxy_port() {
 
 #[tokio::test]
 async fn test_update_access_mode_by_name() {
+    let repo_dir = create_temp_git_repo();
     let (manager, _proxy_manager, _temp_dir, _git, _zellij, _docker) =
         create_test_manager_with_proxy().await;
 
     let (session, _warnings) = manager
         .create_session(
-            "/tmp/fake-repo".to_string(),
+            repo_dir.path().to_string_lossy().to_string(),
             "Test prompt".to_string(),
             BackendType::Docker,
             AgentType::ClaudeCode,
@@ -210,12 +257,13 @@ async fn test_update_access_mode_by_name() {
 
 #[tokio::test]
 async fn test_update_access_mode_by_id() {
+    let repo_dir = create_temp_git_repo();
     let (manager, _proxy_manager, _temp_dir, _git, _zellij, _docker) =
         create_test_manager_with_proxy().await;
 
     let (session, _warnings) = manager
         .create_session(
-            "/tmp/fake-repo".to_string(),
+            repo_dir.path().to_string_lossy().to_string(),
             "Test prompt".to_string(),
             BackendType::Docker,
             AgentType::ClaudeCode,
@@ -226,7 +274,7 @@ async fn test_update_access_mode_by_id() {
             vec![], // images
         )
         .await
-        .expect("Failed to create session");
+        .expect("Failed to update access mode");
 
     // Update to read-only using UUID
     manager
@@ -277,7 +325,7 @@ async fn test_port_allocator_basic() {
         .await
         .expect("Failed to allocate port");
 
-    assert!(port1 >= 18100 && port1 < 18600);
+    assert!((18100..18600).contains(&port1));
 
     // Allocate another port
     let session2 = Uuid::new_v4();
@@ -331,6 +379,7 @@ async fn test_port_allocator_wraparound() {
 
 #[tokio::test]
 async fn test_access_mode_persists_across_restarts() {
+    let repo_dir = create_temp_git_repo();
     let temp_dir = TempDir::new().expect("Failed to create temp dir");
     let db_path = temp_dir.path().join("test.db");
 
@@ -365,7 +414,7 @@ async fn test_access_mode_persists_across_restarts() {
 
         let (session, _) = manager
             .create_session(
-                "/tmp/fake-repo".to_string(),
+                repo_dir.path().to_string_lossy().to_string(),
                 "Test".to_string(),
                 BackendType::Docker,
                 AgentType::ClaudeCode,
@@ -468,30 +517,8 @@ async fn test_proxy_port_persists_in_database() {
                 .await
                 .expect("Failed to reconnect"),
         );
-        let loaded_session = store
-            .get_session(
-                clauderon::core::Session::new(clauderon::core::SessionConfig {
-                    name: session_name.clone(),
-                    title: None,
-                    description: None,
-                    repo_path: "/tmp".into(),
-                    worktree_path: "/tmp".into(),
-                    subdirectory: std::path::PathBuf::new(),
-                    branch_name: "test".to_string(),
-                    initial_prompt: "test".to_string(),
-                    backend: BackendType::Docker,
-                    agent: AgentType::ClaudeCode,
-                    dangerous_skip_checks: true,
-                    access_mode: AccessMode::ReadWrite,
-                })
-                .id,
-            )
-            .await
-            .expect("Failed to load session")
-            .expect("Session not found");
 
-        // Note: This test is a bit tricky because we need to know the session ID
-        // Let's just verify the session can be retrieved by listing all sessions
+        // Retrieve session by listing all and finding by name
         let all_sessions = store
             .list_sessions()
             .await
@@ -509,12 +536,13 @@ async fn test_proxy_port_persists_in_database() {
 
 #[tokio::test]
 async fn test_delete_session_cleans_up_proxy() {
-    let (manager, proxy_manager, _temp_dir, _git, _zellij, _docker) =
+    let repo_dir = create_temp_git_repo();
+    let (manager, _proxy_manager, _temp_dir, _git, _zellij, _docker) =
         create_test_manager_with_proxy().await;
 
     let (session, _warnings) = manager
         .create_session(
-            "/tmp/fake-repo".to_string(),
+            repo_dir.path().to_string_lossy().to_string(),
             "Test prompt".to_string(),
             BackendType::Docker,
             AgentType::ClaudeCode,
@@ -527,7 +555,7 @@ async fn test_delete_session_cleans_up_proxy() {
         .await
         .expect("Failed to create session");
 
-    let session_id = session.id;
+    let _session_id = session.id;
     let session_name = session.name.clone();
 
     // Delete the session
@@ -594,7 +622,8 @@ fn test_access_mode_display() {
 
 #[test]
 fn test_access_mode_default() {
-    assert_eq!(AccessMode::default(), AccessMode::ReadWrite);
+    // ReadOnly is the secure default (principle of least privilege)
+    assert_eq!(AccessMode::default(), AccessMode::ReadOnly);
 }
 
 // ========== HTTP Method Filtering Tests ==========
