@@ -1,0 +1,1 @@
+This project is an AWS Lambda application written in Python, orchestrated using AWS SAM as defined in the template.yml file. It leverages AWS services such as Lambda and API Gateway, and the source code resides in the src directory. The setup and deployment instructions, as well as usage information, are detailed in the README.md.
