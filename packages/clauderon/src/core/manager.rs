@@ -1433,7 +1433,7 @@ impl SessionManager {
                         if let Some(ref proxy_manager) = self.proxy_manager {
                             if let Some(port) = session.proxy_port {
                                 // Check if proxy is actually listening
-                                if tokio::net::TcpStream::connect(format!("127.0.0.1:{}", port))
+                                if tokio::net::TcpStream::connect(format!("127.0.0.1:{port}"))
                                     .await
                                     .is_err()
                                 {
@@ -1845,7 +1845,7 @@ impl SessionManager {
         match session.backend {
             BackendType::Docker => {
                 // Send prompt via docker exec with stdin (avoids shell injection)
-                let container_name = format!("clauderon-{}", backend_id);
+                let container_name = format!("clauderon-{backend_id}");
                 let mut child = tokio::process::Command::new("docker")
                     .args(["exec", "-i", &container_name, "claude"])
                     .stdin(std::process::Stdio::piped())
@@ -1947,7 +1947,11 @@ impl SessionManager {
                     // Don't reveal any chars for short tokens to avoid leaking info
                     "****".to_string()
                 } else {
-                    format!("{}****...{}", &value[..8], &value[value.len() - 4..])
+                    format!(
+                        "{start}****...{end}",
+                        start = &value[..8],
+                        end = &value[value.len() - 4..]
+                    )
                 }
             };
 
@@ -2193,7 +2197,7 @@ impl SessionManager {
             "docker" => Ok("docker_token"),
             "k8s" => Ok("k8s_token"),
             "talos" => Ok("talos_token"),
-            _ => anyhow::bail!("Invalid service ID: {}", service_id),
+            _ => anyhow::bail!("Invalid service ID: {service_id}"),
         }
     }
 
@@ -2209,7 +2213,7 @@ impl SessionManager {
             "docker" => Ok("DOCKER_TOKEN"),
             "k8s" => Ok("K8S_TOKEN"),
             "talos" => Ok("TALOS_TOKEN"),
-            _ => anyhow::bail!("Invalid service ID: {}", service_id),
+            _ => anyhow::bail!("Invalid service ID: {service_id}"),
         }
     }
 }

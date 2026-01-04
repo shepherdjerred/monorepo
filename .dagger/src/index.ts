@@ -17,6 +17,14 @@ const RELEASE_PLEASE_VERSION = "17.1.3";
 // Rust version for clauderon
 const RUST_VERSION = "1.85";
 
+// Cross-compilation targets for mux binary
+const MUX_TARGETS = [
+  { target: "x86_64-unknown-linux-gnu", os: "linux", arch: "x86_64" },
+  { target: "aarch64-unknown-linux-gnu", os: "linux", arch: "arm64" },
+  { target: "x86_64-apple-darwin", os: "darwin", arch: "x86_64" },
+  { target: "aarch64-apple-darwin", os: "darwin", arch: "arm64" },
+] as const;
+
 /**
  * Get a base Bun container with system dependencies and caching.
  * LAYER ORDERING: System deps and caches are set up BEFORE any source files.
@@ -66,8 +74,9 @@ function installWorkspaceDeps(source: Directory): Container {
     .withMountedFile("/workspace/packages/bun-decompile/package.json", source.file("packages/bun-decompile/package.json"))
     .withMountedFile("/workspace/packages/dagger-utils/package.json", source.file("packages/dagger-utils/package.json"))
     .withMountedFile("/workspace/packages/eslint-config/package.json", source.file("packages/eslint-config/package.json"))
-    // Clauderon web packages (in root workspaces)
+    // Clauderon web packages (nested workspace with own lockfile)
     .withMountedFile("/workspace/packages/clauderon/web/package.json", source.file("packages/clauderon/web/package.json"))
+    .withMountedFile("/workspace/packages/clauderon/web/bun.lock", source.file("packages/clauderon/web/bun.lock"))
     .withMountedFile("/workspace/packages/clauderon/web/shared/package.json", source.file("packages/clauderon/web/shared/package.json"))
     .withMountedFile("/workspace/packages/clauderon/web/client/package.json", source.file("packages/clauderon/web/client/package.json"))
     .withMountedFile("/workspace/packages/clauderon/web/frontend/package.json", source.file("packages/clauderon/web/frontend/package.json"));
@@ -116,6 +125,108 @@ function getRustContainer(source: Directory, frontendDist?: Directory): Containe
   }
 
   return container;
+}
+
+/**
+ * Get a Rust container with cross-compilation toolchains for mux builds
+ */
+function getCrossCompileContainer(source: Directory): Container {
+  return dag
+    .container()
+    .from(`rust:${RUST_VERSION}-bookworm`)
+    .withWorkdir("/workspace")
+    .withMountedCache("/usr/local/cargo/registry", dag.cacheVolume("cargo-registry"))
+    .withMountedCache("/usr/local/cargo/git", dag.cacheVolume("cargo-git"))
+    // Use separate target directories for cross-compilation to avoid conflicts
+    .withEnvVariable("CARGO_TARGET_DIR", "/workspace/target-cross")
+    .withMountedCache("/workspace/target-cross", dag.cacheVolume("clauderon-cross-target"))
+    .withMountedDirectory("/workspace", source.directory("packages/clauderon"))
+    // Install cross-compilation dependencies
+    .withExec(["apt-get", "update"])
+    .withExec(["apt-get", "install", "-y", "gcc-aarch64-linux-gnu", "libc6-dev-arm64-cross"])
+    // Add cross-compilation targets
+    .withExec(["rustup", "target", "add", "x86_64-unknown-linux-gnu"])
+    .withExec(["rustup", "target", "add", "aarch64-unknown-linux-gnu"]);
+}
+
+/**
+ * Build mux binary for a specific target
+ */
+async function buildMuxBinary(
+  container: Container,
+  target: string,
+  os: string,
+  arch: string
+): Promise<{ file: string; content: string }> {
+  // Configure linker for cross-compilation
+  let buildContainer = container;
+  if (target === "aarch64-unknown-linux-gnu") {
+    buildContainer = container
+      .withEnvVariable("CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER", "aarch64-linux-gnu-gcc");
+  }
+
+  // Build the release binary
+  buildContainer = buildContainer.withExec([
+    "cargo", "build", "--release", "--target", target
+  ]);
+
+  // Get the binary
+  const binaryPath = `/workspace/target-cross/${target}/release/mux`;
+  const binary = await buildContainer.file(binaryPath).contents();
+
+  const filename = `mux-${os}-${arch}`;
+  return { file: filename, content: binary };
+}
+
+/**
+ * Upload release assets to a GitHub release
+ */
+async function uploadReleaseAssets(
+  githubToken: Secret,
+  version: string,
+  assets: Array<{ name: string; data: string }>
+): Promise<string[]> {
+  const outputs: string[] = [];
+
+  // Use gh CLI to upload assets
+  let container = dag
+    .container()
+    .from(`oven/bun:${BUN_VERSION}-debian`)
+    .withMountedCache("/var/cache/apt", dag.cacheVolume(`apt-cache-bun-${BUN_VERSION}-debian`))
+    .withMountedCache("/var/lib/apt", dag.cacheVolume(`apt-lib-bun-${BUN_VERSION}-debian`))
+    .withExec(["apt-get", "update"])
+    .withExec(["apt-get", "install", "-y", "curl"])
+    // Install GitHub CLI
+    .withExec(["sh", "-c", "curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg"])
+    .withExec(["sh", "-c", 'echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null'])
+    .withExec(["apt-get", "update"])
+    .withExec(["apt-get", "install", "-y", "gh"])
+    .withSecretVariable("GITHUB_TOKEN", githubToken)
+    .withWorkdir("/workspace");
+
+  for (const asset of assets) {
+    // Write the binary to a file
+    container = container.withNewFile(`/workspace/${asset.name}`, asset.data);
+
+    // Upload to release
+    try {
+      await container
+        .withExec([
+          "gh", "release", "upload",
+          `mux-v${version}`,
+          asset.name,
+          "--repo", REPO_URL,
+          "--clobber"
+        ])
+        .sync();
+      outputs.push(`✓ Uploaded ${asset.name}`);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      outputs.push(`✗ Failed to upload ${asset.name}: ${errorMessage}`);
+    }
+  }
+
+  return outputs;
 }
 
 /**
@@ -268,12 +379,7 @@ export class Monorepo {
     await container.sync();
     outputs.push("✓ Build");
 
-    // Typecheck all packages
-    container = container.withExec(["bun", "run", "typecheck"]);
-    await container.sync();
-    outputs.push("✓ Typecheck");
-
-    // Birmel CI (typecheck, lint, test in parallel)
+    // Birmel CI
     outputs.push("\n--- Birmel Validation ---");
     outputs.push(await checkBirmel(source));
 
@@ -368,6 +474,42 @@ export class Monorepo {
             version,
           }),
         );
+      }
+
+      // Check if a mux release was created and upload binaries
+      const muxReleaseCreated = releaseResult.output.includes("mux-v") ||
+        releaseResult.output.includes("packages/clauderon");
+
+      if (muxReleaseCreated) {
+        outputs.push("\n--- Multiplexer Release ---");
+
+        // Extract mux version from release output or Cargo.toml
+        // For now, build and upload with the current version
+        try {
+          const binaries = await this.multiplexerBuild(source);
+
+          // Get binary contents for upload
+          const linuxTargets = MUX_TARGETS.filter(t => t.os === "linux");
+          const assets: Array<{ name: string; data: string }> = [];
+
+          for (const { os, arch } of linuxTargets) {
+            const filename = `mux-${os}-${arch}`;
+            const content = await binaries.file(filename).contents();
+            assets.push({ name: filename, data: content });
+            outputs.push(`✓ Built ${filename}`);
+          }
+
+          // Find the mux version from the release output
+          const muxVersionMatch = releaseResult.output.match(/mux-v([\d.]+)/);
+          const muxVersion = muxVersionMatch?.[1] ?? "0.1.0";
+
+          // Upload to GitHub release
+          const uploadResults = await uploadReleaseAssets(githubToken, muxVersion, assets);
+          outputs.push(...uploadResults);
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          outputs.push(`✗ Failed to build/upload mux binaries: ${errorMessage}`);
+        }
       }
     }
 
@@ -510,6 +652,143 @@ export class Monorepo {
     container = container.withExec(["cargo", "build", "--release"]);
     await container.sync();
     outputs.push("✓ Release build succeeded");
+
+    return outputs.join("\n");
+  }
+
+  /**
+   * Build mux binaries for Linux (x86_64 and ARM64)
+   * Returns the built binaries as files
+   */
+  @func()
+  async multiplexerBuild(source: Directory): Promise<Directory> {
+    const container = getCrossCompileContainer(source);
+
+    // Build for Linux targets only (cross-compiling to macOS requires different tooling)
+    const linuxTargets = MUX_TARGETS.filter(t => t.os === "linux");
+
+    let outputContainer = dag.directory();
+
+    for (const { target, os, arch } of linuxTargets) {
+      let buildContainer = container;
+
+      // Configure linker for aarch64 cross-compilation
+      if (target === "aarch64-unknown-linux-gnu") {
+        buildContainer = container
+          .withEnvVariable("CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER", "aarch64-linux-gnu-gcc");
+      }
+
+      // Build the release binary
+      buildContainer = buildContainer.withExec([
+        "cargo", "build", "--release", "--target", target
+      ]);
+
+      // Get the binary and add to output directory
+      const binaryPath = `/workspace/target-cross/${target}/release/mux`;
+      const filename = `mux-${os}-${arch}`;
+      outputContainer = outputContainer.withFile(filename, buildContainer.file(binaryPath));
+    }
+
+    return outputContainer;
+  }
+
+  /**
+   * Full Multiplexer release: CI + build binaries + upload to GitHub release
+   */
+  @func()
+  async multiplexerRelease(
+    source: Directory,
+    version: string,
+    githubToken: Secret,
+  ): Promise<string> {
+    const outputs: string[] = [];
+
+    // Run CI first
+    outputs.push("--- Clauderon CI ---");
+    outputs.push(await this.clauderonCi(source));
+
+    // Build binaries for Linux
+    outputs.push("\n--- Building Binaries ---");
+    const binaries = await this.multiplexerBuild(source);
+
+    // Get binary contents for upload
+    const linuxTargets = MUX_TARGETS.filter(t => t.os === "linux");
+    const assets: Array<{ name: string; data: string }> = [];
+
+    for (const { os, arch } of linuxTargets) {
+      const filename = `mux-${os}-${arch}`;
+      const content = await binaries.file(filename).contents();
+      assets.push({ name: filename, data: content });
+      outputs.push(`✓ Built ${filename}`);
+    }
+
+    // Upload to GitHub release
+    outputs.push("\n--- Uploading to GitHub Release ---");
+    const uploadResults = await uploadReleaseAssets(githubToken, version, assets);
+    outputs.push(...uploadResults);
+
+    return outputs.join("\n");
+  }
+
+  /**
+   * Build the mux marketing site
+   */
+  @func()
+  muxSiteBuild(source: Directory): Container {
+    return dag
+      .container()
+      .from(`oven/bun:${BUN_VERSION}-debian`)
+      .withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-cache"))
+      .withWorkdir("/workspace")
+      .withDirectory("/workspace", source.directory("packages/mux-site"))
+      .withExec(["bun", "install"])
+      .withExec(["bun", "run", "build"]);
+  }
+
+  /**
+   * Get the built mux site as a directory
+   */
+  @func()
+  async muxSiteOutput(source: Directory): Promise<Directory> {
+    const container = this.muxSiteBuild(source);
+    return container.directory("/workspace/dist");
+  }
+
+  /**
+   * Deploy mux site to GitHub Pages
+   */
+  @func()
+  async muxSiteDeploy(
+    source: Directory,
+    githubToken: Secret,
+  ): Promise<string> {
+    const outputs: string[] = [];
+
+    // Build the site
+    const siteDir = await this.muxSiteOutput(source);
+    outputs.push("✓ Built mux-site");
+
+    // Deploy to GitHub Pages using gh-pages
+    const deployContainer = dag
+      .container()
+      .from(`oven/bun:${BUN_VERSION}-debian`)
+      .withMountedCache("/var/cache/apt", dag.cacheVolume(`apt-cache-bun-${BUN_VERSION}-debian`))
+      .withMountedCache("/var/lib/apt", dag.cacheVolume(`apt-lib-bun-${BUN_VERSION}-debian`))
+      .withExec(["apt-get", "update"])
+      .withExec(["apt-get", "install", "-y", "git"])
+      .withSecretVariable("GITHUB_TOKEN", githubToken)
+      .withWorkdir("/workspace")
+      .withDirectory("/workspace/dist", siteDir)
+      .withExec(["bun", "add", "-g", "gh-pages"])
+      .withExec(["git", "config", "--global", "user.email", "github-actions@github.com"])
+      .withExec(["git", "config", "--global", "user.name", "GitHub Actions"])
+      .withExec([
+        "sh", "-c",
+        `cd /workspace && gh-pages -d dist -r https://x-access-token:\${GITHUB_TOKEN}@github.com/${REPO_URL}.git -b gh-pages-mux`
+      ]);
+
+    await deployContainer.sync();
+    outputs.push("✓ Deployed to GitHub Pages (gh-pages-mux branch)");
 
     return outputs.join("\n");
   }

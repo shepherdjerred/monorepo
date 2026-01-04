@@ -119,7 +119,7 @@ impl KubernetesProxy {
 
     /// Health check - try to reach the proxy.
     pub async fn health_check(&self) -> bool {
-        let url = format!("http://127.0.0.1:{}/healthz", self.port);
+        let url = format!("http://127.0.0.1:{port}/healthz", port = self.port);
 
         match reqwest_lite_health_check(&url).await {
             Ok(true) => true,

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40" fill="none">
+  <rect x="2" y="8" width="24" height="24" rx="4" stroke="#e2e8f0" stroke-width="2"/>
+  <rect x="8" y="14" width="12" height="4" rx="1" fill="#e2e8f0"/>
+  <rect x="8" y="22" width="8" height="4" rx="1" fill="#e2e8f0"/>
+  <text x="34" y="27" font-family="system-ui, sans-serif" font-size="20" font-weight="600" fill="#e2e8f0">mux</text>
+</svg>

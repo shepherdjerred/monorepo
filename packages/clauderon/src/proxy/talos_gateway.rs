@@ -407,7 +407,7 @@ async fn handle_talos_connection(
     );
 
     // Step 2: Connect to Talos node with mTLS
-    let upstream_tcp = tokio::net::TcpStream::connect(format!("{}:{}", host, port)).await?;
+    let upstream_tcp = tokio::net::TcpStream::connect(format!("{host}:{port}")).await?;
 
     // Establish TLS with mTLS client auth (using host's cert with O=os:admin)
     let server_name = rustls::pki_types::ServerName::try_from(host.clone())?;

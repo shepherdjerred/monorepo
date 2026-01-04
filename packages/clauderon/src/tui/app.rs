@@ -822,10 +822,10 @@ impl App {
             self.progress_step = None;
 
             // Build status message, including any warnings
-            let mut status = format!("Created session {}", session.name);
+            let mut status = format!("Created session {name}", name = session.name);
             if let Some(warns) = warnings {
                 for warn in warns {
-                    status.push_str(&format!(" (Warning: {})", warn));
+                    status.push_str(&format!(" (Warning: {warn})"));
                 }
             }
             self.status_message = Some(status);
@@ -964,7 +964,7 @@ impl App {
     /// # Errors
     ///
     /// Returns an error if the session cannot be attached.
-    pub async fn attach_selected_session(&mut self) -> anyhow::Result<()> {
+    pub fn attach_selected_session(&mut self) -> anyhow::Result<()> {
         let session = self
             .selected_session()
             .ok_or_else(|| anyhow::anyhow!("No session selected"))?;
@@ -1129,7 +1129,7 @@ impl App {
 
     /// Switch to the next Docker session while attached.
     /// Returns true if switched, false if no next session.
-    pub async fn switch_to_next_session(&mut self) -> anyhow::Result<bool> {
+    pub fn switch_to_next_session(&mut self) -> anyhow::Result<bool> {
         use crate::core::{BackendType, SessionStatus};
 
         // Get list of Docker sessions (only those support PTY)
@@ -1180,7 +1180,7 @@ impl App {
 
     /// Switch to the previous Docker session while attached.
     /// Returns true if switched, false if no previous session.
-    pub async fn switch_to_previous_session(&mut self) -> anyhow::Result<bool> {
+    pub fn switch_to_previous_session(&mut self) -> anyhow::Result<bool> {
         use crate::core::{BackendType, SessionStatus};
 
         // Get list of Docker sessions (only those support PTY)

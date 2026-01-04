@@ -111,7 +111,7 @@ async fn call_claude_cli(repo_path: &str, initial_prompt: &str) -> anyhow::Resul
         if e.kind() == std::io::ErrorKind::NotFound {
             anyhow::anyhow!("Claude CLI not found in PATH")
         } else {
-            anyhow::anyhow!("Failed to execute Claude CLI: {}", e)
+            anyhow::anyhow!("Failed to execute Claude CLI: {e}")
         }
     })?;
 
@@ -130,7 +130,7 @@ async fn call_claude_cli(repo_path: &str, initial_prompt: &str) -> anyhow::Resul
     tracing::debug!("Claude CLI raw output: {}", stdout);
 
     let json: serde_json::Value = serde_json::from_str(&stdout)
-        .map_err(|e| anyhow::anyhow!("Failed to parse JSON output: {}", e))?;
+        .map_err(|e| anyhow::anyhow!("Failed to parse JSON output: {e}"))?;
 
     // Extract the structured_output field (CLI returns wrapper object)
     let structured_output = json.get("structured_output").ok_or_else(|| {

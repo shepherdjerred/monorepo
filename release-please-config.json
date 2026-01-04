@@ -12,6 +12,11 @@
     "packages/eslint-config": {
       "release-type": "node",
       "package-name": "@shepherdjerred/eslint-config"
+    },
+    "packages/clauderon": {
+      "release-type": "rust",
+      "package-name": "mux",
+      "component": "mux"
     }
   }
 }

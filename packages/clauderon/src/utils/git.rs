@@ -93,7 +93,7 @@ pub fn find_git_root(path: &Path) -> anyhow::Result<GitRootInfo> {
             // Calculate relative path from git root to original path
             let subdirectory = canonical_path
                 .strip_prefix(&git_root)
-                .map(|p| p.to_path_buf())
+                .map(std::path::Path::to_path_buf)
                 .unwrap_or_else(|_| PathBuf::new());
 
             return Ok(GitRootInfo {

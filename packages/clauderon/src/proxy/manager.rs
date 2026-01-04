@@ -132,7 +132,7 @@ impl ProxyManager {
         // Wait for HTTP proxy to be ready
         for attempt in 1..=10 {
             tokio::time::sleep(std::time::Duration::from_millis(50)).await;
-            if tokio::net::TcpStream::connect(format!("127.0.0.1:{}", http_port))
+            if tokio::net::TcpStream::connect(format!("127.0.0.1:{http_port}"))
                 .await
                 .is_ok()
             {
@@ -252,7 +252,7 @@ impl ProxyManager {
         let mut bound = false;
         for attempt in 1..=10 {
             tokio::time::sleep(std::time::Duration::from_millis(50)).await;
-            if tokio::net::TcpStream::connect(format!("127.0.0.1:{}", port))
+            if tokio::net::TcpStream::connect(format!("127.0.0.1:{port}"))
                 .await
                 .is_ok()
             {
@@ -273,7 +273,7 @@ impl ProxyManager {
             // Clean up on failure
             task.abort();
             self.port_allocator.release(port).await;
-            anyhow::bail!("Session proxy failed to bind on port {}", port);
+            anyhow::bail!("Session proxy failed to bind on port {port}");
         }
 
         self.session_proxies.write().await.insert(
@@ -325,7 +325,7 @@ impl ProxyManager {
             );
             Ok(())
         } else {
-            anyhow::bail!("Session proxy not found for session {}", session_id)
+            anyhow::bail!("Session proxy not found for session {session_id}")
         }
     }
 
@@ -442,7 +442,7 @@ impl ProxyManager {
             let mut bound = false;
             for attempt in 1..=10 {
                 tokio::time::sleep(std::time::Duration::from_millis(50)).await;
-                if tokio::net::TcpStream::connect(format!("127.0.0.1:{}", port))
+                if tokio::net::TcpStream::connect(format!("127.0.0.1:{port}"))
                     .await
                     .is_ok()
                 {

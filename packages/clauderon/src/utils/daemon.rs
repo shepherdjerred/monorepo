@@ -126,7 +126,7 @@ pub fn spawn_daemon() -> anyhow::Result<()> {
     match child.try_wait()? {
         Some(status) => {
             // Process exited - this is a failure
-            anyhow::bail!("Daemon process exited immediately with status: {}", status);
+            anyhow::bail!("Daemon process exited immediately with status: {status}");
         }
         None => {
             // Process still running - success
