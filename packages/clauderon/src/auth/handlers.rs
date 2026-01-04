@@ -49,6 +49,18 @@ impl From<serde_json::Error> for AuthError {
     }
 }
 
+impl From<chrono::ParseError> for AuthError {
+    fn from(err: chrono::ParseError) -> Self {
+        AuthError::Database(err.into())
+    }
+}
+
+impl From<uuid::Error> for AuthError {
+    fn from(err: uuid::Error) -> Self {
+        AuthError::Database(err.into())
+    }
+}
+
 impl IntoResponse for AuthError {
     fn into_response(self) -> Response {
         let (status, error_message) = match self {
