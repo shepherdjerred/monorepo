@@ -1,0 +1,35 @@
+name: Update README
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  update-readme:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Full history for git log dates
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Configure LLM
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          mkdir -p ~/.config/io.datasette.llm
+          echo "{\"openai_api_key\": \"$OPENAI_API_KEY\"}" > ~/.config/io.datasette.llm/keys.json
+
+      - name: Run cog
+        run: uvx --from cogapp cog -r README.md practice/README.md archive/README.md
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --staged --quiet || git commit -m "docs: auto-update READMEs [skip ci]"
+          git push
