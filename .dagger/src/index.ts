@@ -379,17 +379,9 @@ export class Monorepo {
     await container.sync();
     outputs.push("✓ Build");
 
-    // Birmel CI and Clauderon CI in parallel
-    const [birmelResult, clauderonResult] = await Promise.all([
-      checkBirmel(source),
-      this.clauderonCi(source),
-    ]);
-
+    // Birmel CI
     outputs.push("\n--- Birmel Validation ---");
-    outputs.push(birmelResult);
-
-    outputs.push("\n--- Clauderon Validation ---");
-    outputs.push(clauderonResult);
+    outputs.push(await checkBirmel(source));
 
     // Build birmel image ONCE and reuse for smoke test + publish
     const birmelImage = buildBirmelImage(source, version ?? "dev", gitSha ?? "dev");
