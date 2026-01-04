@@ -352,7 +352,7 @@ async fn run_http_server(
         .with_state(state);
 
     // Parse bind address (configurable for auth support)
-    let addr = format!("{}:{}", bind_addr, port).parse()?;
+    let addr: std::net::SocketAddr = format!("{}:{}", bind_addr, port).parse()?;
     let listener = tokio::net::TcpListener::bind(addr).await?;
 
     tracing::info!("HTTP server listening on {}", addr);
