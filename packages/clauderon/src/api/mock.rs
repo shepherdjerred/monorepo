@@ -89,7 +89,7 @@ impl MockApiClient {
             backend: BackendType::Zellij,
             agent: AgentType::ClaudeCode,
             dangerous_skip_checks: false,
-            access_mode: AccessMode::default(),
+            access_mode: crate::core::AccessMode::default(),
         };
 
         let mut session = Session::new(config);
@@ -153,7 +153,8 @@ impl ApiClient for MockApiClient {
         // Generate a unique session name with counter
         let mut counter = self.session_counter.write().await;
         *counter += 1;
-        let session_name = format!("mock-session-{:04}", *counter);
+        let counter_val = *counter;
+        let session_name = format!("mock-session-{counter_val:04}");
 
         let config = SessionConfig {
             name: session_name.clone(),
@@ -268,7 +269,7 @@ impl ApiClient for MockApiClient {
     async fn reconcile(&mut self) -> anyhow::Result<ReconcileReportDto> {
         if self.should_fail() {
             let msg = self.error_message.read().await.clone();
-            anyhow::bail!("{}", msg);
+            anyhow::bail!("{msg}");
         }
 
         // Return an empty report (everything is healthy)
@@ -285,7 +286,7 @@ impl ApiClient for MockApiClient {
     async fn get_recent_repos(&mut self) -> anyhow::Result<Vec<super::protocol::RecentRepoDto>> {
         if self.should_fail() {
             let msg = self.error_message.read().await.clone();
-            anyhow::bail!("{}", msg);
+            anyhow::bail!("{msg}");
         }
 
         // Return mock recent repos with timestamps
@@ -326,7 +327,7 @@ mod tests {
             dangerous_skip_checks: false,
             print_mode: false,
             plan_mode: true,
-            access_mode: Default::default(),
+            access_mode: crate::core::AccessMode::default(),
             images: vec![],
         };
 

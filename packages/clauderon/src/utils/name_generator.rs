@@ -38,7 +38,7 @@ impl Default for SessionMetadata {
 /// Falls back to defaults if the CLI is not available, fails to execute, or returns invalid output.
 ///
 /// # Example
-/// ```
+/// ```ignore
 /// let metadata = generate_session_name_ai("/home/user/my-repo", "Fix login bug").await;
 /// // Returns SessionMetadata { title: "Fix login bug", description: "...", branch_name: "fix-login-bug" }
 /// ```
@@ -216,11 +216,12 @@ mod tests {
 
     #[test]
     fn test_build_prompt_truncates_long_input() {
-        let long_prompt = "a".repeat(500);
+        // Use '@' which doesn't appear anywhere in the template
+        let long_prompt = "@".repeat(500);
         let prompt = build_prompt("/path/to/repo", &long_prompt);
         // The input should be truncated to 200 chars, not the whole output
         // Verify that the 500-char input was truncated
-        let char_count = prompt.chars().filter(|&c| c == 'a').count();
+        let char_count = prompt.chars().filter(|&c| c == '@').count();
         assert_eq!(char_count, 200, "Input should be truncated to 200 chars");
     }
 
