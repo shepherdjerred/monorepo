@@ -2101,7 +2101,7 @@ impl SessionManager {
     /// - The credential is readonly (from environment variable)
     /// - The service ID is invalid
     /// - File I/O fails
-    pub async fn update_credential(&self, service_id: &str, value: &str) -> anyhow::Result<()> {
+    pub fn update_credential(&self, service_id: &str, value: &str) -> anyhow::Result<()> {
         // Validate service_id format to prevent path traversal
         if !service_id
             .chars()

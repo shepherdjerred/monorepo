@@ -103,6 +103,34 @@ export interface RecentRepoDto {
 	last_used: string;
 }
 
+/** Request to browse a directory on the daemon's filesystem */
+export interface BrowseDirectoryRequest {
+	/** Path to the directory to browse */
+	path: string;
+}
+
+/** A single directory entry */
+export interface DirectoryEntryDto {
+	/** Directory name */
+	name: string;
+	/** Absolute path to the directory */
+	path: string;
+	/** Whether the directory can be read */
+	is_accessible: boolean;
+}
+
+/** Response from browsing a directory */
+export interface BrowseDirectoryResponse {
+	/** Current directory path (normalized absolute path) */
+	current_path: string;
+	/** Parent directory path (None if at filesystem root) */
+	parent_path?: string;
+	/** List of subdirectories in the current directory */
+	entries: DirectoryEntryDto[];
+	/** Error message if path doesn't exist or permission denied */
+	error?: string;
+}
+
 /** Serializable reconcile report for API responses */
 export interface ReconcileReportDto {
 	/** Sessions with missing git worktrees */

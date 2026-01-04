@@ -1,6 +1,5 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
 import type { Session, CreateSessionRequest, AccessMode } from "@clauderon/client";
-import { SessionStatus } from "@clauderon/shared";
 import { useClauderonClient } from "../hooks/useClauderonClient";
 import { useSessionEvents } from "../hooks/useSessionEvents";
 import type { ClauderonClient } from "@clauderon/client";
@@ -77,11 +76,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   );
 
   // Handle real-time events
-  const handleEvent = useCallback((event: { type: string; session?: Session; sessionId?: string; progress?: { step: number; total: number; message: string }; error?: string }) => {
+  const handleEvent = useCallback((event: { type: string; payload?: Session | { id: string } }) => {
     switch (event.type) {
-      case "session_created":
-      case "session_updated": {
-        const session = event.session;
+      case "SessionCreated":
+      case "SessionUpdated": {
+        // Event payload contains the full session object
+        const session = event.payload as Session;
         if (session) {
           setSessions((prev) => {
             const newSessions = new Map(prev);
@@ -91,65 +91,20 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         }
         break;
       }
-      case "session_deleted": {
-        const sessionId = event.sessionId;
-        if (sessionId) {
+      case "SessionDeleted": {
+        // Event payload contains { id: string }
+        const payload = event.payload as { id: string };
+        if (payload?.id) {
           setSessions((prev) => {
             const newSessions = new Map(prev);
-            newSessions.delete(sessionId);
+            newSessions.delete(payload.id);
             return newSessions;
           });
         }
-        break;
-      }
-      case "session_progress": {
-        const sessionId = event.sessionId;
-        const progress = event.progress;
-        if (sessionId && progress) {
-          setSessions((prev) => {
-            const newSessions = new Map(prev);
-            const session = newSessions.get(sessionId);
-            if (session) {
-              newSessions.set(sessionId, {
-                ...session,
-                progress,
-              });
-            }
-            return newSessions;
-          });
-        }
-        break;
-      }
-      case "session_failed": {
-        const sessionId = event.sessionId;
-        const error = event.error;
-        if (sessionId && error) {
-          setSessions((prev) => {
-            const newSessions = new Map(prev);
-            const session = newSessions.get(sessionId);
-            if (session) {
-              const { progress, ...sessionWithoutProgress } = session;
-              newSessions.set(sessionId, {
-                ...sessionWithoutProgress,
-                status: SessionStatus.Failed,
-                error_message: error,
-              });
-            }
-            return newSessions;
-          });
-
-          // Optional: Show error notification (if you have a toast/notification system)
-          console.error(`Session ${sessionId} failed:`, error);
-        }
-        break;
-      }
-      case "status_changed": {
-        // Trigger refresh to get updated session
-        void refreshSessions();
         break;
       }
     }
-  }, [refreshSessions]);
+  }, []);
 
   useSessionEvents(handleEvent);
 

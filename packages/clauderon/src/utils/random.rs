@@ -66,7 +66,10 @@ pub fn sanitize_branch_name(name: &str) -> String {
         .to_string();
 
     // Remove .lock suffix (reserved by git)
-    while sanitized.ends_with(".lock") {
+    while std::path::Path::new(&sanitized)
+        .extension()
+        .is_some_and(|ext| ext.eq_ignore_ascii_case("lock"))
+    {
         sanitized = sanitized.trim_end_matches(".lock").to_string();
     }
 

@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { CreateSessionRequest, BackendType, AgentType, AccessMode } from "@clauderon/client";
 import { useSessionContext } from "../contexts/SessionContext";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { X } from "lucide-react";
+import { RepositoryPathSelector } from "./RepositoryPathSelector";
 
 type CreateSessionDialogProps = {
   onClose: () => void;
@@ -22,8 +22,16 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
     agent: "ClaudeCode" as AgentType,
     access_mode: "ReadWrite" as AccessMode,
     plan_mode: true,
-    dangerous_skip_checks: false,
+    dangerous_skip_checks: true, // Docker default
   });
+
+  // Auto-check dangerous_skip_checks for Docker, uncheck for Zellij
+  useEffect(() => {
+    setFormData(prev => ({
+      ...prev,
+      dangerous_skip_checks: prev.backend === "Docker"
+    }));
+  }, [formData.backend]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,13 +96,9 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
 
           <div className="space-y-2">
             <Label htmlFor="repo_path" className="font-semibold">Repository Path</Label>
-            <Input
-              id="repo_path"
-              type="text"
+            <RepositoryPathSelector
               value={formData.repo_path}
-              onChange={(e) => { setFormData({ ...formData, repo_path: e.target.value }); }}
-              className="border-2"
-              placeholder="/path/to/repo"
+              onChange={(path) => { setFormData({ ...formData, repo_path: path }); }}
               required
             />
           </div>

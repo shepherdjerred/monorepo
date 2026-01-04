@@ -60,40 +60,19 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     setSessions((prev) => {
       const next = new Map(prev);
       switch (event.type) {
-        case "session_created":
-        case "session_updated":
-          next.set(event.session.id, event.session);
-          break;
-        case "session_deleted":
-          next.delete(event.sessionId);
-          break;
-        case "session_progress": {
-          const session = next.get(event.sessionId);
-          if (session) {
-            next.set(event.sessionId, {
-              ...session,
-              progress: event.progress,
-            });
-          }
+        case "SessionCreated":
+        case "SessionUpdated": {
+          // Event payload contains the full session object
+          const session = event.payload;
+          next.set(session.id, session);
           break;
         }
-        case "session_failed": {
-          const session = next.get(event.sessionId);
-          if (session) {
-            next.set(event.sessionId, {
-              ...session,
-              status: "Failed" as const,
-              error_message: event.error,
-              progress: undefined,
-            });
-          }
-          // Optional: Show error notification
-          console.error(`Session ${event.sessionId} failed:`, event.error);
+        case "SessionDeleted": {
+          // Event payload contains { id: string }
+          const payload = event.payload;
+          next.delete(payload.id);
           break;
         }
-        case "status_changed":
-          // Optionally refresh to get latest status
-          break;
       }
       return next;
     });

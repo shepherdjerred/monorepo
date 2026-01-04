@@ -201,8 +201,7 @@ mod tests {
             assert_eq!(
                 agent.detect_state(pattern),
                 AgentState::Working,
-                "Pattern '{}' should be detected as Working",
-                pattern
+                "Pattern '{pattern}' should be detected as Working"
             );
         }
     }
@@ -259,8 +258,7 @@ mod tests {
             assert_eq!(
                 agent.detect_state(pattern),
                 AgentState::Idle,
-                "Pattern '{}' should be detected as Idle",
-                pattern
+                "Pattern '{pattern}' should be detected as Idle"
             );
         }
     }
