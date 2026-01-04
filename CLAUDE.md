@@ -195,3 +195,66 @@ bun run lint             # Lint web packages
 2. `cd packages/clauderon && cargo build`
 
 **Nested Workspace Exception**: The web packages (`packages/clauderon/web/*`) use standalone ESLint configs instead of `@shepherdjerred/eslint-config` due to Bun workspace resolution limitations with deeply nested packages. These configs follow the same patterns and rules as the shared config.
+
+## Observability & Debugging Guidelines
+
+All code must be observable and debuggable. Follow these practices:
+
+### Logging
+
+- **Structured Logging**: Use `#[instrument]` macro on public functions for automatic span tracking
+- **Log Levels**:
+  - `error!` - Unrecoverable failures
+  - `warn!` - Recoverable issues, degraded functionality
+  - `info!` - Important state changes, lifecycle events
+  - `debug!` - Detailed operation information
+  - `trace!` - Very verbose, function entry/exit
+- **Context**: Include relevant IDs (session_id, correlation_id) in all log statements
+- **Error Context**: Use `.context()` to add context to errors with specific details
+
+### Error Handling
+
+- **Custom Error Types**: Use `thiserror` for domain-specific errors (SessionError, BackendError)
+- **Rich Context**: Errors must include:
+  - What operation was being attempted
+  - Relevant resource IDs
+  - Paths, URLs, or configuration values
+  - Source errors (use `#[source]`)
+- **Never Swallow Errors**: Log errors even if they're handled
+
+### Testing Observability
+
+- **Test Logging**: Initialize logging in test setup
+- **Mock Logging**: Mock implementations should log operations
+- **Assertion Context**: Include expected vs actual in assertion messages
+- **Integration Tests**: Verify logs contain expected information
+
+### Example
+
+```rust
+use tracing::instrument;
+use anyhow::Context;
+
+#[instrument(skip(self), fields(session_id = %session_id))]
+pub async fn delete_session(&self, session_id: Uuid) -> anyhow::Result<()> {
+    let session = self.get_session(session_id)
+        .await
+        .context("Failed to fetch session for deletion")?;
+
+    self.backend.delete(&session.backend_id)
+        .await
+        .with_context(|| format!(
+            "Failed to delete backend {} for session {}",
+            session.backend_id,
+            session_id
+        ))?;
+
+    tracing::info!(
+        session_id = %session_id,
+        session_name = %session.name,
+        "Successfully deleted session"
+    );
+
+    Ok(())
+}
+```

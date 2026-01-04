@@ -7,12 +7,21 @@ use std::sync::Mutex;
 
 use chrono::{DateTime, Utc};
 use serde::Serialize;
+use uuid::Uuid;
 
 /// An audit log entry for a proxied request.
 #[derive(Debug, Clone, Serialize, serde::Deserialize)]
 pub struct AuditEntry {
     /// Timestamp of the request.
     pub timestamp: DateTime<Utc>,
+
+    /// Correlation ID for tracking this request.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub correlation_id: Option<Uuid>,
+
+    /// Session ID if this request is associated with a session.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub session_id: Option<Uuid>,
 
     /// Service name (e.g., "github", "anthropic").
     pub service: String,
@@ -107,6 +116,8 @@ mod tests {
     fn test_audit_entry_serializes() {
         let entry = AuditEntry {
             timestamp: Utc::now(),
+            correlation_id: Some(Uuid::new_v4()),
+            session_id: None,
             service: "github".to_string(),
             method: "GET".to_string(),
             path: "/user".to_string(),
@@ -118,6 +129,7 @@ mod tests {
         let json = serde_json::to_string(&entry).unwrap();
         assert!(json.contains("\"service\":\"github\""));
         assert!(json.contains("\"auth_injected\":true"));
+        assert!(json.contains("correlation_id"));
     }
 
     #[test]
@@ -129,6 +141,8 @@ mod tests {
 
         let entry = AuditEntry {
             timestamp: Utc::now(),
+            correlation_id: Some(Uuid::new_v4()),
+            session_id: Some(Uuid::new_v4()),
             service: "anthropic".to_string(),
             method: "POST".to_string(),
             path: "/v1/messages".to_string(),
