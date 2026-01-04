@@ -96,6 +96,10 @@ impl SqliteStore {
             Self::migrate_to_v8(pool).await?;
         }
 
+        if current_version < 9 {
+            Self::migrate_to_v9(pool).await?;
+        }
+
         Ok(())
     }
 
@@ -468,9 +472,142 @@ impl SqliteStore {
         Ok(())
     }
 
-    /// Migration v8: Add subdirectory column for persisting session subdirectory path
+    /// Migration v8: Add passkey authentication tables
     async fn migrate_to_v8(pool: &SqlitePool) -> anyhow::Result<()> {
-        tracing::info!("Applying migration v8: Add subdirectory column");
+        tracing::info!("Applying migration v8: Passkey authentication");
+
+        // Create users table
+        sqlx::query(
+            r"
+            CREATE TABLE IF NOT EXISTS users (
+                id TEXT PRIMARY KEY,
+                username TEXT NOT NULL UNIQUE,
+                display_name TEXT,
+                created_at TEXT NOT NULL
+            )
+            ",
+        )
+        .execute(pool)
+        .await?;
+
+        // Create passkeys table
+        sqlx::query(
+            r"
+            CREATE TABLE IF NOT EXISTS passkeys (
+                id TEXT PRIMARY KEY,
+                user_id TEXT NOT NULL,
+                credential_id BLOB NOT NULL UNIQUE,
+                public_key BLOB NOT NULL,
+                counter INTEGER NOT NULL,
+                transports TEXT NOT NULL,
+                device_name TEXT,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+            ",
+        )
+        .execute(pool)
+        .await?;
+
+        // Create index on passkeys.user_id
+        sqlx::query(
+            r"
+            CREATE INDEX IF NOT EXISTS idx_passkeys_user_id ON passkeys(user_id)
+            ",
+        )
+        .execute(pool)
+        .await?;
+
+        // Create index on passkeys.credential_id for authentication lookups
+        sqlx::query(
+            r"
+            CREATE INDEX IF NOT EXISTS idx_passkeys_credential_id ON passkeys(credential_id)
+            ",
+        )
+        .execute(pool)
+        .await?;
+
+        // Create auth_sessions table
+        sqlx::query(
+            r"
+            CREATE TABLE IF NOT EXISTS auth_sessions (
+                id TEXT PRIMARY KEY,
+                user_id TEXT NOT NULL,
+                expires_at TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+            ",
+        )
+        .execute(pool)
+        .await?;
+
+        // Create index on auth_sessions.user_id
+        sqlx::query(
+            r"
+            CREATE INDEX IF NOT EXISTS idx_auth_sessions_user_id ON auth_sessions(user_id)
+            ",
+        )
+        .execute(pool)
+        .await?;
+
+        // Create index on auth_sessions.expires_at for cleanup
+        sqlx::query(
+            r"
+            CREATE INDEX IF NOT EXISTS idx_auth_sessions_expires_at ON auth_sessions(expires_at)
+            ",
+        )
+        .execute(pool)
+        .await?;
+
+        // Create webauthn_challenges table
+        sqlx::query(
+            r"
+            CREATE TABLE IF NOT EXISTS webauthn_challenges (
+                id TEXT PRIMARY KEY,
+                username TEXT NOT NULL,
+                challenge_json TEXT NOT NULL,
+                expires_at TEXT NOT NULL,
+                created_at TEXT NOT NULL
+            )
+            ",
+        )
+        .execute(pool)
+        .await?;
+
+        // Create index on webauthn_challenges.username
+        sqlx::query(
+            r"
+            CREATE INDEX IF NOT EXISTS idx_webauthn_challenges_username ON webauthn_challenges(username)
+            ",
+        )
+        .execute(pool)
+        .await?;
+
+        // Create index on webauthn_challenges.expires_at for cleanup
+        sqlx::query(
+            r"
+            CREATE INDEX IF NOT EXISTS idx_webauthn_challenges_expires_at ON webauthn_challenges(expires_at)
+            ",
+        )
+        .execute(pool)
+        .await?;
+
+        // Record migration
+        let now = Utc::now();
+        sqlx::query("INSERT OR REPLACE INTO schema_version (version, applied_at) VALUES (?, ?)")
+            .bind(8)
+            .bind(now.to_rfc3339())
+            .execute(pool)
+            .await?;
+
+        tracing::info!("Migration v8 complete");
+        Ok(())
+    }
+
+    /// Migration v9: Add subdirectory column for persisting session subdirectory path
+    async fn migrate_to_v9(pool: &SqlitePool) -> anyhow::Result<()> {
+        tracing::info!("Applying migration v9: Add subdirectory column");
 
         // Add subdirectory column
         let subdirectory_exists: bool = sqlx::query_scalar(
@@ -489,12 +626,12 @@ impl SqliteStore {
         // Record migration
         let now = Utc::now();
         sqlx::query("INSERT OR REPLACE INTO schema_version (version, applied_at) VALUES (?, ?)")
-            .bind(8)
+            .bind(9)
             .bind(now.to_rfc3339())
             .execute(pool)
             .await?;
 
-        tracing::info!("Migration v8 complete");
+        tracing::info!("Migration v9 complete");
         Ok(())
     }
 }
