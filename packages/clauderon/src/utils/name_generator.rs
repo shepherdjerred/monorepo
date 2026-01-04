@@ -38,7 +38,7 @@ impl Default for SessionMetadata {
 /// Falls back to defaults if the CLI is not available, fails to execute, or returns invalid output.
 ///
 /// # Example
-/// ```
+/// ```ignore
 /// let metadata = generate_session_name_ai("/home/user/my-repo", "Fix login bug").await;
 /// // Returns SessionMetadata { title: "Fix login bug", description: "...", branch_name: "fix-login-bug" }
 /// ```
