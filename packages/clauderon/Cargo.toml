@@ -101,8 +101,6 @@ http-body-util = "0.1"
 # Authentication
 webauthn-rs = "0.5"
 webauthn-rs-proto = "0.5"
-tower-sessions = { version = "0.13", features = ["sqlite-store"] }
-tower-sessions-core = "0.13"
 
 [dev-dependencies]
 cargo-husky = { version = "1", features = ["precommit-hook", "run-cargo-fmt", "run-cargo-clippy"] }
