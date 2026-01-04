@@ -28,12 +28,6 @@ impl CorrelationId {
     pub const fn as_uuid(&self) -> &Uuid {
         &self.0
     }
-
-    /// Convert to string representation.
-    #[must_use]
-    pub fn to_string(&self) -> String {
-        self.0.to_string()
-    }
 }
 
 impl Default for CorrelationId {
