@@ -26,8 +26,11 @@ impl SqliteStore {
             tokio::fs::create_dir_all(parent).await?;
         }
 
-        let options = SqliteConnectOptions::from_str(&format!("sqlite:{}", db_path.display()))?
-            .create_if_missing(true);
+        let options = SqliteConnectOptions::from_str(&format!(
+            "sqlite:{display}",
+            display = db_path.display()
+        ))?
+        .create_if_missing(true);
 
         let pool = SqlitePoolOptions::new()
             .max_connections(5)

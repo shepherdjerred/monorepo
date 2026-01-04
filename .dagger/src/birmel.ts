@@ -63,10 +63,14 @@ function installWorkspaceDeps(workspaceSource: Directory, useMounts: boolean): C
         "/workspace/packages/eslint-config/package.json",
         workspaceSource.file("packages/eslint-config/package.json"),
       )
-      // Clauderon web packages (in root workspaces)
+      // Clauderon web packages (nested workspace with own lockfile)
       .withMountedFile(
         "/workspace/packages/clauderon/web/package.json",
         workspaceSource.file("packages/clauderon/web/package.json"),
+      )
+      .withMountedFile(
+        "/workspace/packages/clauderon/web/bun.lock",
+        workspaceSource.file("packages/clauderon/web/bun.lock"),
       )
       .withMountedFile(
         "/workspace/packages/clauderon/web/shared/package.json",
@@ -97,10 +101,14 @@ function installWorkspaceDeps(workspaceSource: Directory, useMounts: boolean): C
         "/workspace/packages/eslint-config/package.json",
         workspaceSource.file("packages/eslint-config/package.json"),
       )
-      // Clauderon web packages (in root workspaces)
+      // Clauderon web packages (nested workspace with own lockfile)
       .withFile(
         "/workspace/packages/clauderon/web/package.json",
         workspaceSource.file("packages/clauderon/web/package.json"),
+      )
+      .withFile(
+        "/workspace/packages/clauderon/web/bun.lock",
+        workspaceSource.file("packages/clauderon/web/bun.lock"),
       )
       .withFile(
         "/workspace/packages/clauderon/web/shared/package.json",

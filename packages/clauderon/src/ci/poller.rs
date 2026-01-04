@@ -136,6 +136,7 @@ impl CIPoller {
     }
 
     /// Check for merge conflicts on all sessions with PRs
+    ///
     async fn check_conflicts(&self) {
         let sessions = self.manager.list_sessions().await;
 

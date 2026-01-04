@@ -18,6 +18,7 @@ packages/birmel/prisma/data/
 /.clauderon/
 
 # Build and tool caches (root level only, from HOME=/workspace)
+/.bun/
 /.cache/
 /.cargo/
 /.local/

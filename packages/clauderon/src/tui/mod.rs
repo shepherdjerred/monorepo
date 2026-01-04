@@ -134,7 +134,7 @@ async fn run_main_loop(
                     match backend_type {
                         Some(BackendType::Docker) => {
                             // Use PTY-based attachment for Docker
-                            match app.attach_selected_session().await {
+                            match app.attach_selected_session() {
                                 Ok(()) => {
                                     app.status_message = Some("Attached - Press Ctrl+Q to detach, Ctrl+Left/Right to switch sessions".to_string());
                                 }
