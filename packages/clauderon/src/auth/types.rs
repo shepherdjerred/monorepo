@@ -158,7 +158,7 @@ pub(super) struct WebAuthnChallengeRow {
 
 /// Internal auth session (parsed from database)
 #[derive(Debug, Clone)]
-pub(super) struct AuthSession {
+pub struct AuthSession {
     pub id: Uuid,
     pub user_id: Uuid,
     pub expires_at: DateTime<Utc>,

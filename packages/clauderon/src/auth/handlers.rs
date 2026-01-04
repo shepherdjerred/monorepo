@@ -11,7 +11,15 @@ use sqlx::SqlitePool;
 use uuid::Uuid;
 use webauthn_rs::prelude::*;
 
-use super::{session::SessionStore, types::*, webauthn::WebAuthnHandler};
+use super::{
+    session::SessionStore,
+    types::{
+        AuthStatus, AuthUser, LoginFinishRequest, LoginFinishResponse, LoginStartRequest,
+        LoginStartResponse, PasskeyRow, RegistrationFinishRequest, RegistrationFinishResponse,
+        RegistrationStartRequest, RegistrationStartResponse, UserRow, WebAuthnChallengeRow,
+    },
+    webauthn::WebAuthnHandler,
+};
 
 /// Shared state for auth handlers
 #[derive(Clone)]
@@ -346,7 +354,7 @@ pub async fn login_start(
     }
 
     // Start WebAuthn authentication
-    let (challenge, passkey_authentication) = state.webauthn.start_authentication(passkeys)?;
+    let (challenge, passkey_authentication) = state.webauthn.start_authentication(&passkeys)?;
 
     // Store challenge in database (expires in 5 minutes)
     let challenge_id = Uuid::new_v4();

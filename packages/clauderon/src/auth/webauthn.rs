@@ -87,9 +87,9 @@ impl WebAuthnHandler {
     /// Returns an error if the authentication start fails
     pub fn start_authentication(
         &self,
-        passkeys: Vec<Passkey>,
+        passkeys: &[Passkey],
     ) -> anyhow::Result<(RequestChallengeResponse, PasskeyAuthentication)> {
-        let (challenge, state) = self.webauthn.start_passkey_authentication(&passkeys)?;
+        let (challenge, state) = self.webauthn.start_passkey_authentication(passkeys)?;
 
         Ok((challenge, state))
     }
