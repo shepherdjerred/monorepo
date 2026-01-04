@@ -7,7 +7,7 @@ on:
 
 jobs:
   update-readme:
-    runs-on: ubuntu-latest
+    runs-on: [monorepo-runner-set]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -16,9 +16,18 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v4
 
-      - name: Configure LLM
+      - uses: 1password/load-secrets-action/configure@v2
+        with:
+          connect-host: http://onepassword-connect.1password.svc.cluster.local:8080
+          connect-token: ${{ secrets.OP_CONNECT_TOKEN }}
+
+      - uses: 1password/load-secrets-action@v2
+        with:
+          export-env: true
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_API_KEY: op://bic45kuflnwsnxnd67dzcnxjze/5p65mbzr237yyzt2sfnfao3a5a/OPENAI_API_KEY
+
+      - name: Configure LLM
         run: |
           mkdir -p ~/.config/io.datasette.llm
           echo "{\"openai_api_key\": \"$OPENAI_API_KEY\"}" > ~/.config/io.datasette.llm/keys.json
