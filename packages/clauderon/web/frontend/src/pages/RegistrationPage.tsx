@@ -19,20 +19,22 @@ export function RegistrationPage() {
 
     try {
       // Start registration flow
+      const trimmedDisplayName = displayName.trim();
       const { challenge_id, options } = await client.registerStart({
         username,
-        display_name: displayName.trim() || undefined,
+        ...(trimmedDisplayName && { display_name: trimmedDisplayName }),
       });
 
       // Trigger passkey creation
       const credential = await create(options);
 
       // Finish registration flow
+      const trimmedDeviceName = deviceName.trim();
       await client.registerFinish({
         username,
         challenge_id,
         credential: credential as any,
-        device_name: deviceName.trim() || undefined,
+        ...(trimmedDeviceName && { device_name: trimmedDeviceName }),
       });
 
       // Refresh auth status
