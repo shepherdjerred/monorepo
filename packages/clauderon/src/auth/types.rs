@@ -104,7 +104,6 @@ pub struct LoginFinishResponse {
 }
 
 /// Internal database models (not exposed to TypeScript)
-
 /// User row from database
 #[derive(Debug, Clone)]
 pub(super) struct UserRow {

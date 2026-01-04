@@ -255,7 +255,7 @@ pub async fn register_finish(
 
     // Store passkey
     let passkey_id = Uuid::new_v4();
-    let credential_id = passkey.cred_id().0.clone();
+    let credential_id = passkey.cred_id().clone();
     let public_key = serde_json::to_vec(&passkey)?;
     let transports = serde_json::to_string(&Vec::<String>::new())?; // Empty transports for now
 
