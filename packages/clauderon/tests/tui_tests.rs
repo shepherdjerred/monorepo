@@ -792,7 +792,7 @@ async fn test_delete_blocked_during_create() {
     app.refresh_sessions().await.unwrap();
 
     // Simulate starting a create operation
-    let (tx, rx) = tokio::sync::mpsc::channel::<clauderon::tui::app::CreateProgress>(16);
+    let (tx, _rx) = tokio::sync::mpsc::channel::<clauderon::tui::app::CreateProgress>(16);
     app.create_task = Some(tokio::spawn(async move {
         // Simulate long-running create
         tokio::time::sleep(std::time::Duration::from_secs(10)).await;
@@ -833,7 +833,7 @@ async fn test_create_blocked_during_delete() {
     app.refresh_sessions().await.unwrap();
 
     // Simulate starting a delete operation
-    let (tx, rx) = tokio::sync::mpsc::channel::<clauderon::tui::app::DeleteProgress>(4);
+    let (tx, _rx) = tokio::sync::mpsc::channel::<clauderon::tui::app::DeleteProgress>(4);
     app.delete_task = Some(tokio::spawn(async move {
         // Simulate long-running delete
         tokio::time::sleep(std::time::Duration::from_secs(10)).await;
