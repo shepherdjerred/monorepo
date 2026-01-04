@@ -466,7 +466,7 @@ mod tests {
         let proxy_ca = Arc::new(ProxyCa::load_or_generate(&dir.path().to_path_buf()).unwrap());
 
         let gateway = TalosGateway::new(18082, proxy_ca);
-        let _cloned = gateway.clone();
+        let _cloned = gateway;
     }
 
     #[test]

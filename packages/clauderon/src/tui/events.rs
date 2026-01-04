@@ -165,12 +165,12 @@ pub async fn handle_key_event(app: &mut App, key: KeyEvent) -> anyhow::Result<()
     match app.mode {
         AppMode::SessionList => handle_session_list_key(app, key).await?,
         AppMode::CreateDialog => handle_create_dialog_key(app, key).await?,
-        AppMode::ConfirmDelete => handle_confirm_delete_key(app, key).await?,
+        AppMode::ConfirmDelete => handle_confirm_delete_key(app, key)?,
         AppMode::Help => handle_help_key(app, key),
         AppMode::Attached => handle_attached_key(app, key).await?,
         AppMode::CopyMode => handle_copy_mode_key(app, key).await?,
         AppMode::Locked => handle_locked_key(app, key).await?,
-        AppMode::Scroll => handle_scroll_mode_key(app, key).await?,
+        AppMode::Scroll => handle_scroll_mode_key(app, key)?,
         AppMode::ReconcileError => handle_reconcile_error_key(app, key).await?,
     }
     Ok(())
@@ -265,7 +265,7 @@ async fn handle_session_list_key(app: &mut App, key: KeyEvent) -> anyhow::Result
 async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
     // If directory picker is active, handle its events first
     if app.create_dialog.directory_picker.is_active {
-        return handle_directory_picker_key(app, key).await;
+        return handle_directory_picker_key(app, key);
     }
 
     // Handle Ctrl+E for opening external editor when Prompt is focused
@@ -649,7 +649,7 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
     Ok(())
 }
 
-async fn handle_directory_picker_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
+fn handle_directory_picker_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
     let picker = &mut app.create_dialog.directory_picker;
 
     match key.code {
@@ -725,7 +725,7 @@ async fn handle_directory_picker_key(app: &mut App, key: KeyEvent) -> anyhow::Re
     Ok(())
 }
 
-async fn handle_confirm_delete_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
+fn handle_confirm_delete_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
     match key.code {
         KeyCode::Char('y' | 'Y') => {
             app.confirm_delete();
@@ -903,7 +903,7 @@ async fn handle_locked_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
 ///
 /// In Scroll mode, arrow keys and page keys scroll the terminal buffer.
 /// ESC, q, or Ctrl+S exits scroll mode.
-async fn handle_scroll_mode_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
+fn handle_scroll_mode_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
     match key.code {
         KeyCode::Esc | KeyCode::Char('q') => {
             app.exit_scroll_mode();
