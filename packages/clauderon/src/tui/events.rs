@@ -783,7 +783,7 @@ async fn handle_reconcile_error_key(app: &mut App, key: KeyEvent) -> anyhow::Res
 ///
 /// Most keys are encoded and sent to the PTY. Special keys:
 /// - Ctrl+Q: Detach instantly
-/// - Ctrl+Space: Toggle locked mode (forwards all keys to app)
+/// - Ctrl+L: Toggle locked mode (forwards all keys to app)
 /// - Ctrl+S: Enter scroll mode
 /// - Ctrl+P/N: Switch between Docker sessions
 async fn handle_attached_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
@@ -817,9 +817,9 @@ async fn handle_attached_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()>
     //     }
     // }
 
-    // Toggle locked mode with Ctrl+Space
+    // Toggle locked mode with Ctrl+L
     if key.modifiers.contains(KeyModifiers::CONTROL) {
-        if let KeyCode::Char(' ') = key.code {
+        if let KeyCode::Char('l') = key.code {
             app.toggle_locked_mode();
             return Ok(());
         }
@@ -877,14 +877,14 @@ async fn handle_attached_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()>
 
 /// Handle key events when in Locked mode.
 ///
-/// In Locked mode, all keys are forwarded to the application except Ctrl+Space which unlocks.
+/// In Locked mode, all keys are forwarded to the application except Ctrl+L which unlocks.
 /// This provides an "escape hatch" when clauderon keybindings conflict with applications.
 async fn handle_locked_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
     use crate::tui::attached::encode_key;
 
-    // Ctrl+Space: unlock and return to Attached mode
+    // Ctrl+L: unlock and return to Attached mode
     if key.modifiers.contains(KeyModifiers::CONTROL) {
-        if let KeyCode::Char(' ') = key.code {
+        if let KeyCode::Char('l') = key.code {
             app.exit_locked_mode();
             return Ok(());
         }
