@@ -10,5 +10,5 @@ pub use handlers::{
 };
 pub use middleware::{AuthMiddlewareState, auth_middleware};
 pub use session::SessionStore;
-pub use types::{AuthStatus, AuthUser, Passkey};
+pub use types::{AuthStatus, AuthUser, UserPasskey};
 pub use webauthn::WebAuthnHandler;

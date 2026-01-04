@@ -43,6 +43,12 @@ impl From<sqlx::Error> for AuthError {
     }
 }
 
+impl From<serde_json::Error> for AuthError {
+    fn from(err: serde_json::Error) -> Self {
+        AuthError::Database(err.into())
+    }
+}
+
 impl IntoResponse for AuthError {
     fn into_response(self) -> Response {
         let (status, error_message) = match self {

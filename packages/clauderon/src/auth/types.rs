@@ -13,10 +13,10 @@ pub struct AuthUser {
     pub created_at: String,
 }
 
-/// Passkey credential
+/// User's passkey credential
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[typeshare]
-pub struct Passkey {
+pub struct UserPasskey {
     pub id: String,
     pub user_id: String,
     pub device_name: Option<String>,
