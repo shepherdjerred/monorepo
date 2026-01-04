@@ -15,8 +15,8 @@
     },
     "packages/clauderon": {
       "release-type": "rust",
-      "package-name": "mux",
-      "component": "mux"
+      "package-name": "clauderon",
+      "component": "clauderon"
     }
   }
 }
