@@ -96,8 +96,10 @@ function installWorkspaceDeps(source: Directory): Container {
 
 /**
  * Get a Rust container with caching enabled for clauderon builds
+ * @param source The full workspace source directory
+ * @param frontendDist Optional pre-built frontend dist directory (from Bun container)
  */
-function getRustContainer(source: Directory, builtFrontend?: Directory): Container {
+function getRustContainer(source: Directory, frontendDist?: Directory): Container {
   let container = dag
     .container()
     .from(`rust:${RUST_VERSION}-bookworm`)
@@ -108,9 +110,9 @@ function getRustContainer(source: Directory, builtFrontend?: Directory): Contain
     .withMountedDirectory("/workspace", source.directory("packages/clauderon"))
     .withExec(["rustup", "component", "add", "rustfmt", "clippy"]);
 
-  // Mount built frontend if provided
-  if (builtFrontend) {
-    container = container.withMountedDirectory("/workspace/web/frontend/dist", builtFrontend);
+  // Mount the pre-built frontend dist if provided
+  if (frontendDist) {
+    container = container.withDirectory("/workspace/web/frontend/dist", frontendDist);
   }
 
   return container;
@@ -253,12 +255,12 @@ export class Monorepo {
     await container.sync();
     outputs.push("✓ Web packages built");
 
-    // Extract built frontend for Rust build
-    const builtFrontend = container.directory("/workspace/packages/clauderon/web/frontend/dist");
+    // Extract the built frontend dist directory to pass to Rust build
+    const frontendDist = container.directory("/workspace/packages/clauderon/web/frontend/dist");
 
     // Clauderon Rust validation (fmt, clippy, test, build)
     outputs.push("\n--- Clauderon Rust Validation ---");
-    outputs.push(await this.clauderonCi(source, builtFrontend));
+    outputs.push(await this.clauderonCi(source, frontendDist));
 
     // Now build remaining packages (web packages already built, will be skipped or fast)
     // Note: Skip tests here - bun-decompile tests fail in CI (requires `bun build --compile`)
@@ -473,12 +475,14 @@ export class Monorepo {
 
   /**
    * Run Clauderon CI: fmt check, clippy, test, build
+   * @param source The full workspace source directory
+   * @param frontendDist Optional pre-built frontend dist directory (required for cargo build)
    */
   @func()
-  async clauderonCi(source: Directory, builtFrontend?: Directory): Promise<string> {
+  async clauderonCi(source: Directory, frontendDist?: Directory): Promise<string> {
     const outputs: string[] = [];
 
-    let container = getRustContainer(source, builtFrontend);
+    let container = getRustContainer(source, frontendDist);
 
     // Format check
     container = container.withExec(["cargo", "fmt", "--check"]);
