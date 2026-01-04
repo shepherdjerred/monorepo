@@ -76,11 +76,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   );
 
   // Handle real-time events
-  const handleEvent = useCallback((event: { type: string; session?: Session; sessionId?: string }) => {
+  const handleEvent = useCallback((event: { type: string; payload?: Session | { id: string } }) => {
     switch (event.type) {
-      case "session_created":
-      case "session_updated": {
-        const session = event.session;
+      case "SessionCreated":
+      case "SessionUpdated": {
+        // Event payload contains the full session object
+        const session = event.payload as Session;
         if (session) {
           setSessions((prev) => {
             const newSessions = new Map(prev);
@@ -90,12 +91,13 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         }
         break;
       }
-      case "session_deleted": {
-        const sessionId = event.sessionId;
-        if (sessionId) {
+      case "SessionDeleted": {
+        // Event payload contains { id: string }
+        const payload = event.payload as { id: string };
+        if (payload?.id) {
           setSessions((prev) => {
             const newSessions = new Map(prev);
-            newSessions.delete(sessionId);
+            newSessions.delete(payload.id);
             return newSessions;
           });
         }

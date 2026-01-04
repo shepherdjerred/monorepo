@@ -282,7 +282,6 @@ async fn update_credential(
     state
         .session_manager
         .update_credential(&request.service_id, &request.value)
-        .await
         .map_err(|e| AppError::BadRequest(e.to_string()))?;
 
     Ok(StatusCode::NO_CONTENT)

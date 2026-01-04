@@ -191,14 +191,13 @@ fn build_prompt(repo_path: &str, initial_prompt: &str) -> String {
 
     format!(
         "Analyze this task and generate session metadata:\n\
-        Task: {}\n\
-        Repository: {}\n\n\
+        Task: {truncated_prompt}\n\
+        Repository: {repo_name}\n\n\
         Generate three fields:\n\
         - title: A short title under 10 words describing what will be done\n\
         - description: A brief description in 1-2 sentences explaining the task\n\
         - branch_name: A git branch name with 2-4 words in kebab-case\n\n\
-        Be concise and specific.",
-        truncated_prompt, repo_name
+        Be concise and specific."
     )
 }
 
