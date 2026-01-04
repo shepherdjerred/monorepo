@@ -437,7 +437,7 @@ pub async fn login_finish(
     // The counter should increment with each use
     sqlx::query("UPDATE passkeys SET counter = ? WHERE credential_id = ? AND user_id = ?")
         .bind(result.counter() as i64)
-        .bind(result.cred_id().0.as_slice())
+        .bind(result.cred_id().as_slice())
         .bind(user_id.to_string())
         .execute(&state.pool)
         .await?;

@@ -99,7 +99,7 @@ hyper-util = { version = "0.1", features = ["tokio", "server"] }
 http-body-util = "0.1"
 
 # Authentication
-webauthn-rs = "0.5"
+webauthn-rs = { version = "0.5", features = ["danger-allow-state-serialisation"] }
 webauthn-rs-proto = "0.5"
 
 [dev-dependencies]

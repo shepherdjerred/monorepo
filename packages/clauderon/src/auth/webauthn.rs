@@ -45,11 +45,9 @@ impl WebAuthnHandler {
         username: &str,
         user_id: &Uuid,
     ) -> anyhow::Result<(CreationChallengeResponse, PasskeyRegistration)> {
-        let user_unique_id = user_id.as_bytes();
-
-        let (challenge, state) =
-            self.webauthn
-                .start_passkey_registration(*user_unique_id, username, username, None)?;
+        let (challenge, state) = self
+            .webauthn
+            .start_passkey_registration(*user_id, username, username, None)?;
 
         Ok((challenge, state))
     }
