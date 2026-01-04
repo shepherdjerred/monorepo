@@ -1,3 +1,4 @@
+use crate::api::middleware::correlation_id_middleware;
 use crate::api::protocol::{CreateSessionRequest, Event};
 use crate::api::static_files::serve_static;
 use crate::api::ws_events::{EventBroadcaster, broadcast_event};
@@ -8,6 +9,7 @@ use axum::{
     Json, Router,
     extract::{Path, Query, State},
     http::StatusCode,
+    middleware,
     middleware::from_fn_with_state,
     response::{IntoResponse, Response},
     routing::{delete, get, post},
@@ -73,6 +75,7 @@ pub fn create_router(auth_state: &Option<AuthState>) -> Router<AppState> {
         // WebSocket endpoints will be added by caller
         // Serve static files for all non-API routes (SPA fallback)
         .fallback(serve_static)
+        .layer(middleware::from_fn(correlation_id_middleware))
         .layer(cors)
 }
 

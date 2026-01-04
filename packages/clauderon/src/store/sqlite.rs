@@ -3,6 +3,7 @@ use chrono::Utc;
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePool, SqlitePoolOptions};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
+use tracing::instrument;
 use uuid::Uuid;
 
 use super::{RecentRepo, Store};
@@ -637,6 +638,7 @@ impl SqliteStore {
 
 #[async_trait]
 impl Store for SqliteStore {
+    #[instrument(skip(self))]
     async fn list_sessions(&self) -> anyhow::Result<Vec<Session>> {
         let rows = sqlx::query_as::<_, SessionRow>("SELECT * FROM sessions")
             .fetch_all(&self.pool)
@@ -655,6 +657,7 @@ impl Store for SqliteStore {
             .collect()
     }
 
+    #[instrument(skip(self), fields(session_id = %id))]
     async fn get_session(&self, id: Uuid) -> anyhow::Result<Option<Session>> {
         let row = sqlx::query_as::<_, SessionRow>("SELECT * FROM sessions WHERE id = ?")
             .bind(id.to_string())
@@ -667,6 +670,7 @@ impl Store for SqliteStore {
         }
     }
 
+    #[instrument(skip(self, session), fields(session_id = %session.id, session_name = %session.name))]
     async fn save_session(&self, session: &Session) -> anyhow::Result<()> {
         sqlx::query(
             r"
@@ -724,6 +728,7 @@ impl Store for SqliteStore {
         Ok(())
     }
 
+    #[instrument(skip(self), fields(session_id = %id))]
     async fn delete_session(&self, id: Uuid) -> anyhow::Result<()> {
         sqlx::query("DELETE FROM sessions WHERE id = ?")
             .bind(id.to_string())
@@ -733,6 +738,7 @@ impl Store for SqliteStore {
         Ok(())
     }
 
+    #[instrument(skip(self, event), fields(session_id = %event.session_id, event_type = ?event.event_type))]
     async fn record_event(&self, event: &Event) -> anyhow::Result<()> {
         let payload = serde_json::to_string(&event.event_type)?;
 
@@ -771,6 +777,7 @@ impl Store for SqliteStore {
         rows.into_iter().map(TryInto::try_into).collect()
     }
 
+    #[instrument(skip(self), fields(repo_path = %repo_path.display()))]
     async fn add_recent_repo(&self, repo_path: PathBuf) -> anyhow::Result<()> {
         // Canonicalize the path to prevent duplicates from different representations
         // (e.g., /home/user/repo vs /home/user/./repo vs ~/repo)
@@ -793,6 +800,7 @@ impl Store for SqliteStore {
         Ok(())
     }
 
+    #[instrument(skip(self))]
     async fn get_recent_repos(&self) -> anyhow::Result<Vec<RecentRepo>> {
         // Use compile-time constant instead of format!() for cleaner SQL
         const QUERY: &str = "SELECT * FROM recent_repos ORDER BY last_used DESC LIMIT 10";
