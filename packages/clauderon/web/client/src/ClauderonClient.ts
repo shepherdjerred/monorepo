@@ -5,6 +5,8 @@ import type {
   AccessMode,
   SystemStatus,
   UpdateCredentialRequest,
+  BrowseDirectoryRequest,
+  BrowseDirectoryResponse,
 } from "@clauderon/shared";
 import { ApiError, NetworkError, SessionNotFoundError } from "./errors.js";
 
@@ -103,6 +105,16 @@ export class ClauderonClient {
   async getRecentRepos(): Promise<RecentRepoDto[]> {
     const response = await this.request<{ repos: RecentRepoDto[] }>("GET", "/api/recent-repos");
     return response.repos;
+  }
+
+  /**
+   * Browse a directory on the daemon's filesystem
+   * @param path Path to the directory to browse
+   */
+  async browseDirectory(path: string): Promise<BrowseDirectoryResponse> {
+    const request: BrowseDirectoryRequest = { path };
+    const response = await this.request<BrowseDirectoryResponse>("POST", "/api/browse-directory", request);
+    return response;
   }
 
   /**

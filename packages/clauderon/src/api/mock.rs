@@ -89,7 +89,7 @@ impl MockApiClient {
             backend: BackendType::Zellij,
             agent: AgentType::ClaudeCode,
             dangerous_skip_checks: false,
-            access_mode: Default::default(),
+            access_mode: crate::core::AccessMode::default(),
         };
 
         let mut session = Session::new(config);
@@ -125,10 +125,10 @@ impl ApiClient for MockApiClient {
         let sessions = self.sessions.read().await;
 
         // Try to find by UUID first
-        if let Ok(uuid) = Uuid::parse_str(id) {
-            if let Some(session) = sessions.get(&uuid) {
-                return Ok(session.clone());
-            }
+        if let Ok(uuid) = Uuid::parse_str(id)
+            && let Some(session) = sessions.get(&uuid)
+        {
+            return Ok(session.clone());
         }
 
         // Try to find by name
@@ -153,7 +153,8 @@ impl ApiClient for MockApiClient {
         // Generate a unique session name with counter
         let mut counter = self.session_counter.write().await;
         *counter += 1;
-        let session_name = format!("mock-session-{:04}", *counter);
+        let counter_val = *counter;
+        let session_name = format!("mock-session-{counter_val:04}");
 
         let config = SessionConfig {
             name: session_name.clone(),
@@ -191,10 +192,10 @@ impl ApiClient for MockApiClient {
         let mut sessions = self.sessions.write().await;
 
         // Try to find by UUID first
-        if let Ok(uuid) = Uuid::parse_str(id) {
-            if sessions.remove(&uuid).is_some() {
-                return Ok(());
-            }
+        if let Ok(uuid) = Uuid::parse_str(id)
+            && sessions.remove(&uuid).is_some()
+        {
+            return Ok(());
         }
 
         // Try to find by name
@@ -220,11 +221,11 @@ impl ApiClient for MockApiClient {
         let mut sessions = self.sessions.write().await;
 
         // Try to find by UUID first
-        if let Ok(uuid) = Uuid::parse_str(id) {
-            if let Some(session) = sessions.get_mut(&uuid) {
-                session.set_status(SessionStatus::Archived);
-                return Ok(());
-            }
+        if let Ok(uuid) = Uuid::parse_str(id)
+            && let Some(session) = sessions.get_mut(&uuid)
+        {
+            session.set_status(SessionStatus::Archived);
+            return Ok(());
         }
 
         // Try to find by name
@@ -326,7 +327,7 @@ mod tests {
             dangerous_skip_checks: false,
             print_mode: false,
             plan_mode: true,
-            access_mode: Default::default(),
+            access_mode: crate::core::AccessMode::default(),
             images: vec![],
         };
 

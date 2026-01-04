@@ -111,7 +111,9 @@ enum Commands {
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     // Initialize Sentry for error reporting (guard must outlive main to flush events)
-    let _sentry_guard = if !clauderon::config::SENTRY_DSN.is_empty() {
+    let _sentry_guard = if clauderon::config::SENTRY_DSN.is_empty() {
+        None
+    } else {
         Some(sentry::init((
             clauderon::config::SENTRY_DSN,
             sentry::ClientOptions {
@@ -127,8 +129,6 @@ async fn main() -> anyhow::Result<()> {
                 ..Default::default()
             },
         )))
-    } else {
-        None
     };
 
     // Install the ring crypto provider for rustls before any TLS operations

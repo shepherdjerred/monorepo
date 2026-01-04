@@ -105,9 +105,11 @@ function installWorkspaceDeps(source: Directory): Container {
 
 /**
  * Get a Rust container with caching enabled for clauderon builds
+ * @param source The full workspace source directory
+ * @param frontendDist Optional pre-built frontend dist directory (from Bun container)
  */
-function getRustContainer(source: Directory): Container {
-  return dag
+function getRustContainer(source: Directory, frontendDist?: Directory): Container {
+  let container = dag
     .container()
     .from(`rust:${RUST_VERSION}-bookworm`)
     .withWorkdir("/workspace")
@@ -116,6 +118,13 @@ function getRustContainer(source: Directory): Container {
     .withMountedCache("/workspace/target", dag.cacheVolume("clauderon-target"))
     .withMountedDirectory("/workspace", source.directory("packages/clauderon"))
     .withExec(["rustup", "component", "add", "rustfmt", "clippy"]);
+
+  // Mount the pre-built frontend dist if provided
+  if (frontendDist) {
+    container = container.withDirectory("/workspace/web/frontend/dist", frontendDist);
+  }
+
+  return container;
 }
 
 /**
@@ -357,9 +366,12 @@ export class Monorepo {
     await container.sync();
     outputs.push("✓ Web packages built");
 
+    // Extract the built frontend dist directory to pass to Rust build
+    const frontendDist = container.directory("/workspace/packages/clauderon/web/frontend/dist");
+
     // Clauderon Rust validation (fmt, clippy, test, build)
     outputs.push("\n--- Clauderon Rust Validation ---");
-    outputs.push(await this.clauderonCi(source));
+    outputs.push(await this.clauderonCi(source, frontendDist));
 
     // Now build remaining packages (web packages already built, will be skipped or fast)
     // Note: Skip tests here - bun-decompile tests fail in CI (requires `bun build --compile`)
@@ -613,20 +625,14 @@ export class Monorepo {
 
   /**
    * Run Clauderon CI: fmt check, clippy, test, build
+   * @param source The full workspace source directory
+   * @param frontendDist Optional pre-built frontend dist directory (required for cargo build)
    */
   @func()
-  async clauderonCi(source: Directory): Promise<string> {
+  async clauderonCi(source: Directory, frontendDist?: Directory): Promise<string> {
     const outputs: string[] = [];
 
-    // Build web packages first (shared → client → frontend, required for static file embedding)
-    // Use the already-configured workspace container from installWorkspaceDeps
-    const frontendBuildContainer = installWorkspaceDeps(source)
-      .withWorkdir("/workspace/packages/clauderon/web")
-      .withExec(["bun", "run", "build"]); // Builds shared, client, then frontend in correct order
-    const builtFrontend = frontendBuildContainer.directory("/workspace/packages/clauderon/web/frontend/dist");
-
-    let container = getRustContainer(source)
-      .withDirectory("/workspace/web/frontend/dist", builtFrontend);
+    let container = getRustContainer(source, frontendDist);
 
     // Format check
     container = container.withExec(["cargo", "fmt", "--check"]);
