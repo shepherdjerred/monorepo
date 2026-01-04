@@ -314,8 +314,19 @@ impl SessionManager {
         // Save session to store
         self.store.save_session(&session).await?;
 
-        // Add to in-memory list
-        self.sessions.write().await.push(session.clone());
+        // Add to in-memory list with atomic check-and-add
+        {
+            let mut sessions = self.sessions.write().await;
+
+            // Re-check limit with lock held (defense against race)
+            if sessions.len() >= self.max_sessions {
+                // Rollback database save
+                let _ = self.store.delete_session(session.id).await;
+                anyhow::bail!("Maximum session limit reached (prevented race condition)");
+            }
+
+            sessions.push(session.clone());
+        }
 
         // Broadcast session created event
         if let Some(ref broadcaster) = self.event_broadcaster {
@@ -365,7 +376,18 @@ impl SessionManager {
         dangerous_skip_checks: bool,
     ) {
         // Acquire semaphore to limit concurrent creations
-        let _permit = self.creation_semaphore.acquire().await.unwrap();
+        let Ok(_permit) = self.creation_semaphore.acquire().await else {
+            tracing::error!(session_id = %session_id, "Semaphore closed during operation");
+            // Mark session as failed
+            let mut sessions = self.sessions.write().await;
+            if let Some(session) = sessions.iter_mut().find(|s| s.id == session_id) {
+                session.set_error(SessionStatus::Failed, "System is shutting down".to_string());
+                if let Err(e) = self.store.save_session(session).await {
+                    tracing::error!("Failed to save shutdown error: {}", e);
+                }
+            }
+            return;
+        };
 
         // Helper to update progress
         let update_progress = |step: u32, message: String| async move {
@@ -599,9 +621,40 @@ impl SessionManager {
                     if let Some(ref broadcaster) = self.event_broadcaster {
                         let _ = broadcaster.send(WsEvent::SessionFailed {
                             id: session_id.to_string(),
-                            error: error_msg,
+                            error: error_msg.clone(),
                         });
                     }
+                }
+                drop(sessions); // Release lock before cleanup
+
+                // CLEANUP: Remove partially created resources
+                tracing::warn!(session_id = %session_id, "Cleaning up after failed creation");
+
+                // Remove proxy if created
+                if backend == BackendType::Docker {
+                    if let Some(ref proxy_manager) = self.proxy_manager {
+                        let _ = proxy_manager.destroy_session_proxy(session_id).await;
+                    }
+                }
+
+                // Remove worktree if created
+                let repo_path_buf = PathBuf::from(&repo_path);
+                let _ = self
+                    .git
+                    .delete_worktree(&repo_path_buf, &worktree_path)
+                    .await;
+
+                // Remove from database
+                let _ = self.store.delete_session(session_id).await;
+
+                // Remove from in-memory list
+                self.sessions.write().await.retain(|s| s.id != session_id);
+
+                // Broadcast deletion event so UI updates
+                if let Some(ref broadcaster) = self.event_broadcaster {
+                    let _ = broadcaster.send(WsEvent::SessionDeleted {
+                        id: session_id.to_string(),
+                    });
                 }
 
                 tracing::error!(session_id = %session_id, error = %e, "Session creation failed");
@@ -999,7 +1052,21 @@ impl SessionManager {
     ///
     /// This method should not be called directly - it's spawned as a background task.
     async fn complete_session_deletion(&self, session_id: Uuid, session_name: String) {
-        let _permit = self.deletion_semaphore.acquire().await.unwrap();
+        let Ok(_permit) = self.deletion_semaphore.acquire().await else {
+            tracing::error!(session_id = %session_id, "Semaphore closed during deletion");
+            // Mark session as failed instead of panicking
+            let mut sessions = self.sessions.write().await;
+            if let Some(session) = sessions.iter_mut().find(|s| s.id == session_id) {
+                session.set_error(
+                    SessionStatus::Failed,
+                    "System is shutting down during deletion".to_string(),
+                );
+                if let Err(e) = self.store.save_session(session).await {
+                    tracing::error!("Failed to save shutdown error: {}", e);
+                }
+            }
+            return;
+        };
 
         // Helper to update progress
         let update_progress = |step: u32, message: String| async move {
