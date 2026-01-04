@@ -21,7 +21,7 @@ export function RegistrationPage() {
       // Start registration flow
       const { challenge_id, options } = await client.registerStart({
         username,
-        display_name: displayName.trim() || null,
+        display_name: displayName.trim() || undefined,
       });
 
       // Trigger passkey creation
@@ -32,7 +32,7 @@ export function RegistrationPage() {
         username,
         challenge_id,
         credential: credential as any,
-        device_name: deviceName.trim() || null,
+        device_name: deviceName.trim() || undefined,
       });
 
       // Refresh auth status
