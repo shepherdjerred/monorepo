@@ -1,6 +1,54 @@
 # Clauderon
 
-A Rust-based session manager for managing Claude Code sessions with both CLI/TUI and web interfaces.
+A Rust-based session manager for running isolated Claude Code sessions in Docker containers or Kubernetes pods.
+
+## Features
+
+- **Session Isolation**: Run Claude Code in isolated Docker containers or K8s pods with Git worktrees
+- **Zero-Credential Proxy**: Containers have access to zero credentials (even Claude Code creds), enabling safer use of bypass-all-permissions mode
+- **Multiple Interfaces**: Manage sessions via CLI, TUI, web UI, or mobile app
+- **Direct Terminal Access**: Attach to sessions directly via Docker attach or through the web browser
+- **Full Environment Control**: Use any Docker image, connect to local networks, and customize the runtime environment
+
+## Screenshots
+
+### CLI
+
+![CLI](assets/cli.png)
+
+### TUI (Terminal UI)
+
+| Session List | Create Session |
+|:---:|:---:|
+| ![TUI Session List](assets/tui%20session%20list.png) | ![TUI Create](assets/tui%20create.png) |
+
+| Terminal | File System |
+|:---:|:---:|
+| ![TUI Terminal](assets/tui%20terminal.png) | ![TUI File System](assets/tui%20fs.png) |
+
+### Web Interface
+
+| Session List | Create Session |
+|:---:|:---:|
+| ![Web Session List](assets/web%20session%20list.png) | ![Web Create](assets/web%20create.png) |
+
+| Chat | Terminal |
+|:---:|:---:|
+| ![Web Chat](assets/web%20chat.png) | ![Web Terminal](assets/web%20terminal.png) |
+
+| File System | File System (Detail) |
+|:---:|:---:|
+| ![Web File System 1](assets/web%20fs%201.png) | ![Web File System 2](assets/web%20fs%202.png) |
+
+| Session Info |
+|:---:|
+| ![Web Info](assets/web%20info.png) |
+
+### iOS App
+
+| Session List | Chat | Settings |
+|:---:|:---:|:---:|
+| ![iOS Session List](assets/ios%20session%20list.jpeg) | ![iOS Chat](assets/ios%20chat.jpeg) | ![iOS Settings](assets/ios%20settings.jpeg) |
 
 ## Prerequisites
 
