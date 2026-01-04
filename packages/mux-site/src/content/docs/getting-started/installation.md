@@ -30,7 +30,7 @@ If you prefer to build from source, you'll need Rust 1.85 or later.
 ```bash
 # Clone the repository
 git clone https://github.com/shepherdjerred/monorepo.git
-cd monorepo/packages/multiplexer
+cd monorepo/packages/clauderon
 
 # Build in release mode
 cargo build --release

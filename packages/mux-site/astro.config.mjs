@@ -8,7 +8,7 @@ export default defineConfig({
       title: "mux",
       description: "Session management for AI coding agents",
       social: {
-        github: "https://github.com/shepherdjerred/monorepo/tree/main/packages/multiplexer",
+        github: "https://github.com/shepherdjerred/monorepo/tree/main/packages/clauderon",
       },
       logo: {
         light: "./src/assets/logo-light.svg",
