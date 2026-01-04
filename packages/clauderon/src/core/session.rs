@@ -4,6 +4,8 @@ use std::path::PathBuf;
 use typeshare::typeshare;
 use uuid::Uuid;
 
+use crate::api::protocol::ProgressStep;
+
 /// Represents a single AI coding session
 #[typeshare]
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -91,6 +93,12 @@ pub struct Session {
     #[typeshare(serialized_as = "String")]
     pub last_reconcile_at: Option<DateTime<Utc>>,
 
+    /// Error message if status is Failed (None otherwise)
+    pub error_message: Option<String>,
+
+    /// Current operation progress (for Creating/Deleting states)
+    pub progress: Option<ProgressStep>,
+
     /// When the session was created
     #[typeshare(serialized_as = "String")]
     pub created_at: DateTime<Utc>,
@@ -159,6 +167,8 @@ impl Session {
             reconcile_attempts: 0,
             last_reconcile_error: None,
             last_reconcile_at: None,
+            error_message: None,
+            progress: None,
             created_at: now,
             updated_at: now,
         }
@@ -257,6 +267,25 @@ impl Session {
     pub fn exceeded_max_reconcile_attempts(&self) -> bool {
         self.reconcile_attempts >= 3
     }
+
+    /// Set the error status and message
+    pub fn set_error(&mut self, status: SessionStatus, error: String) {
+        self.status = status;
+        self.error_message = Some(error);
+        self.updated_at = Utc::now();
+    }
+
+    /// Update the operation progress
+    pub fn set_progress(&mut self, progress: ProgressStep) {
+        self.progress = Some(progress);
+        self.updated_at = Utc::now();
+    }
+
+    /// Clear the operation progress
+    pub fn clear_progress(&mut self) {
+        self.progress = None;
+        self.updated_at = Utc::now();
+    }
 }
 
 /// Session lifecycle status
@@ -265,6 +294,9 @@ impl Session {
 pub enum SessionStatus {
     /// Session is being created
     Creating,
+
+    /// Session is being deleted
+    Deleting,
 
     /// Agent is actively working
     Running,
