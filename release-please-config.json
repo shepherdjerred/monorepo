@@ -13,7 +13,7 @@
       "release-type": "node",
       "package-name": "@shepherdjerred/eslint-config"
     },
-    "packages/multiplexer": {
+    "packages/clauderon": {
       "release-type": "rust",
       "package-name": "mux",
       "component": "mux"
