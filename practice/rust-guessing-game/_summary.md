@@ -1,0 +1,1 @@
+This project is a simple command-line number guessing game written in Rust. It uses the rand crate to generate a random target number between 0 and 20, and prompts the user via standard input to guess the number. The project is managed by Cargo with Rust 2018 edition settings.
