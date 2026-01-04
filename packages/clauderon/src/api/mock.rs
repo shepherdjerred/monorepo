@@ -125,10 +125,10 @@ impl ApiClient for MockApiClient {
         let sessions = self.sessions.read().await;
 
         // Try to find by UUID first
-        if let Ok(uuid) = Uuid::parse_str(id) {
-            if let Some(session) = sessions.get(&uuid) {
-                return Ok(session.clone());
-            }
+        if let Ok(uuid) = Uuid::parse_str(id)
+            && let Some(session) = sessions.get(&uuid)
+        {
+            return Ok(session.clone());
         }
 
         // Try to find by name
@@ -192,10 +192,10 @@ impl ApiClient for MockApiClient {
         let mut sessions = self.sessions.write().await;
 
         // Try to find by UUID first
-        if let Ok(uuid) = Uuid::parse_str(id) {
-            if sessions.remove(&uuid).is_some() {
-                return Ok(());
-            }
+        if let Ok(uuid) = Uuid::parse_str(id)
+            && sessions.remove(&uuid).is_some()
+        {
+            return Ok(());
         }
 
         // Try to find by name
@@ -221,11 +221,11 @@ impl ApiClient for MockApiClient {
         let mut sessions = self.sessions.write().await;
 
         // Try to find by UUID first
-        if let Ok(uuid) = Uuid::parse_str(id) {
-            if let Some(session) = sessions.get_mut(&uuid) {
-                session.set_status(SessionStatus::Archived);
-                return Ok(());
-            }
+        if let Ok(uuid) = Uuid::parse_str(id)
+            && let Some(session) = sessions.get_mut(&uuid)
+        {
+            session.set_status(SessionStatus::Archived);
+            return Ok(());
         }
 
         // Try to find by name

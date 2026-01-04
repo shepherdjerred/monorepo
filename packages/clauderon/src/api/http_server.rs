@@ -42,6 +42,7 @@ pub fn create_router() -> Router<AppState> {
         .route("/api/sessions/{id}/history", get(get_session_history))
         // Other endpoints
         .route("/api/recent-repos", get(get_recent_repos))
+        .route("/api/browse-directory", post(browse_directory))
         .route("/api/status", get(get_system_status))
         .route("/api/credentials", post(update_credential))
         // WebSocket endpoints will be added by caller
@@ -197,6 +198,72 @@ async fn get_recent_repos(
         .collect();
 
     Ok(Json(json!({ "repos": repos_dto })))
+}
+
+/// Browse a directory on the daemon's filesystem
+async fn browse_directory(
+    Json(request): Json<crate::api::protocol::BrowseDirectoryRequest>,
+) -> Result<Json<crate::api::protocol::BrowseDirectoryResponse>, AppError> {
+    use crate::api::protocol::{BrowseDirectoryResponse, DirectoryEntryDto};
+    use std::path::PathBuf;
+
+    // Parse and canonicalize the requested path
+    let requested_path = PathBuf::from(&request.path);
+
+    // Try to canonicalize the path, or use home directory as fallback
+    let current_path = requested_path.canonicalize().unwrap_or_else(|_| {
+        // If path doesn't exist, try home directory or root as fallback
+        std::env::var("HOME")
+            .map(PathBuf::from)
+            .unwrap_or_else(|_| PathBuf::from("/"))
+    });
+
+    // Get parent directory if not at root
+    let parent_path = current_path
+        .parent()
+        .map(|p| p.to_string_lossy().to_string());
+
+    // Read directory contents
+    let (entries, error) = match std::fs::read_dir(&current_path) {
+        Ok(read_dir) => {
+            let mut dirs: Vec<DirectoryEntryDto> = Vec::new();
+
+            for entry in read_dir.flatten() {
+                let entry_path = entry.path();
+
+                // Only include directories, skip files
+                if entry_path.is_dir() {
+                    let name = entry.file_name().to_string_lossy().to_string();
+                    let path = entry_path.to_string_lossy().to_string();
+
+                    // Check if directory is accessible
+                    let is_accessible = std::fs::read_dir(&entry_path).is_ok();
+
+                    dirs.push(DirectoryEntryDto {
+                        name,
+                        path,
+                        is_accessible,
+                    });
+                }
+            }
+
+            // Sort directories alphabetically
+            dirs.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+
+            (dirs, None)
+        }
+        Err(e) => {
+            // Return error message if can't read directory
+            (Vec::new(), Some(format!("Cannot read directory: {e}")))
+        }
+    };
+
+    Ok(Json(BrowseDirectoryResponse {
+        current_path: current_path.to_string_lossy().to_string(),
+        parent_path,
+        entries,
+        error,
+    }))
 }
 
 /// Get system status (credentials and proxies)
