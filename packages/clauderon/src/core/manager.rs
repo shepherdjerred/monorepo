@@ -1364,7 +1364,7 @@ impl SessionManager {
                                     );
                                     // Attempt auto-recreation
                                     let _ = proxy_manager
-                                        .restore_session_proxies(&[session.clone()])
+                                        .restore_session_proxies(std::slice::from_ref(&session))
                                         .await;
                                 }
                             }
@@ -1508,9 +1508,13 @@ impl SessionManager {
         // Update runtime proxy if session has one
         if backend == BackendType::Docker {
             if let Some(ref proxy_manager) = self.proxy_manager {
-                proxy_manager
-                    .update_session_access_mode(session_id, new_mode)
-                    .await?;
+                // Only update proxy if session actually has a proxy port allocated
+                // (proxy creation can fail gracefully, leaving session without proxy)
+                if session_clone.proxy_port.is_some() {
+                    proxy_manager
+                        .update_session_access_mode(session_id, new_mode)
+                        .await?;
+                }
             }
         }
 

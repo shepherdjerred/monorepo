@@ -60,7 +60,7 @@ async fn test_docker_full_lifecycle_with_attach() {
     // Step 3: Get attach command and verify it's valid
     println!("Step 3: Getting attach command...");
     let attach_cmd = docker.attach_command(&name);
-    println!("  Command: {:?}", attach_cmd);
+    println!("  Command: {attach_cmd:?}");
     assert!(!attach_cmd.is_empty(), "Attach command should not be empty");
     assert_eq!(attach_cmd[0], "bash", "Should use bash wrapper");
 

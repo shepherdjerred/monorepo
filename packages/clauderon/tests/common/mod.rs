@@ -128,9 +128,7 @@ macro_rules! skip_if_no_kubernetes {
 /// Claude Code requires ~/.claude directory with credentials for authentication.
 #[must_use]
 pub fn claude_config_available() -> bool {
-    dirs::home_dir()
-        .map(|h| h.join(".claude").exists())
-        .unwrap_or(false)
+    dirs::home_dir().is_some_and(|h| h.join(".claude").exists())
 }
 
 /// Skip the test if Claude config is not available

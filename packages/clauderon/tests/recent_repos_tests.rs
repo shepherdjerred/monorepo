@@ -7,13 +7,48 @@
 //! - Non-existent paths are filtered
 //! - UPSERT behavior updates timestamps correctly
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use clauderon::backends::{ExecutionBackend, GitOperations, MockExecutionBackend, MockGitBackend};
 use clauderon::core::{AgentType, BackendType, SessionManager};
 use clauderon::store::{SqliteStore, Store};
 use tempfile::TempDir;
+
+/// Initialize a directory as a git repository with an initial commit.
+fn init_git_repo(path: &Path) {
+    std::process::Command::new("git")
+        .args(["init"])
+        .current_dir(path)
+        .output()
+        .expect("Failed to run git init");
+
+    std::process::Command::new("git")
+        .args(["config", "user.email", "test@test.com"])
+        .current_dir(path)
+        .output()
+        .expect("Failed to configure git email");
+
+    std::process::Command::new("git")
+        .args(["config", "user.name", "Test User"])
+        .current_dir(path)
+        .output()
+        .expect("Failed to configure git name");
+
+    std::fs::write(path.join("README.md"), "# Test Repo").expect("Failed to create README");
+
+    std::process::Command::new("git")
+        .args(["add", "."])
+        .current_dir(path)
+        .output()
+        .expect("Failed to run git add");
+
+    std::process::Command::new("git")
+        .args(["commit", "-m", "Initial commit"])
+        .current_dir(path)
+        .output()
+        .expect("Failed to run git commit");
+}
 
 /// Helper to create a test environment with a real temp directory for repos
 async fn create_test_manager() -> (SessionManager, TempDir, TempDir) {
@@ -56,9 +91,10 @@ async fn create_test_manager() -> (SessionManager, TempDir, TempDir) {
 async fn test_recent_repo_tracked_on_session_create() {
     let (manager, _temp_dir, repos_dir) = create_test_manager().await;
 
-    // Create a real repo directory
+    // Create a real repo directory with git initialized
     let repo_path = repos_dir.path().join("test-repo");
     std::fs::create_dir_all(&repo_path).expect("Failed to create repo dir");
+    init_git_repo(&repo_path);
 
     // Create a session - this should track the repo
     let (_session, _warnings) = manager
@@ -95,9 +131,10 @@ async fn test_recent_repo_tracked_on_session_create() {
 async fn test_path_canonicalization_prevents_duplicates() {
     let (manager, _temp_dir, repos_dir) = create_test_manager().await;
 
-    // Create a repo directory
+    // Create a repo directory with git initialized
     let repo_path = repos_dir.path().join("test-repo");
     std::fs::create_dir_all(&repo_path).expect("Failed to create repo dir");
+    init_git_repo(&repo_path);
 
     // Create sessions with different representations of the same path
     let canonical = repo_path.canonicalize().expect("Failed to canonicalize");
@@ -152,6 +189,7 @@ async fn test_limit_enforcement_removes_oldest() {
     for i in 0..11 {
         let repo_path = repos_dir.path().join(format!("repo-{i}"));
         std::fs::create_dir_all(&repo_path).expect("Failed to create repo dir");
+        init_git_repo(&repo_path);
 
         manager
             .create_session(
@@ -197,6 +235,7 @@ async fn test_upsert_behavior_updates_timestamp() {
 
     let repo_path = repos_dir.path().join("test-repo");
     std::fs::create_dir_all(&repo_path).expect("Failed to create repo dir");
+    init_git_repo(&repo_path);
 
     // Create first session
     manager
@@ -262,6 +301,7 @@ async fn test_recent_repos_ordered_by_most_recent() {
     for i in 0..3 {
         let repo_path = repos_dir.path().join(format!("repo-{i}"));
         std::fs::create_dir_all(&repo_path).expect("Failed to create repo dir");
+        init_git_repo(&repo_path);
 
         manager
             .create_session(
@@ -303,7 +343,7 @@ async fn test_nonexistent_repo_handles_gracefully() {
     let (manager, _temp_dir, _repos_dir) = create_test_manager().await;
 
     // Try to create session with non-existent repo
-    // The manager shouldn't fail, it should just store the path
+    // The manager should fail since the path doesn't exist
     let result = manager
         .create_session(
             "/nonexistent/repo/path".to_string(),
@@ -318,10 +358,8 @@ async fn test_nonexistent_repo_handles_gracefully() {
         )
         .await;
 
-    // Session creation itself might fail due to git operations,
-    // but recent repos tracking shouldn't cause the failure
-    // Let's just verify that if we manually add a nonexistent path,
-    // it gets stored (the TUI will filter it out later)
+    // Session creation should fail for non-existent path
+    assert!(result.is_err(), "Should fail for non-existent repo path");
 
     // This test verifies the store layer doesn't crash on nonexistent paths
     let store = Arc::new(
@@ -330,17 +368,18 @@ async fn test_nonexistent_repo_handles_gracefully() {
             .expect("Failed to create store"),
     );
 
-    // Directly add a nonexistent repo to the store
+    // Directly add a nonexistent repo to the store - this should not crash
+    // but will not store the path since it can't be canonicalized
     let nonexistent = PathBuf::from("/definitely/does/not/exist");
     store
         .add_recent_repo(nonexistent.clone())
         .await
         .expect("Should handle nonexistent paths gracefully");
 
+    // Non-existent paths are filtered out (can't be canonicalized)
     let recent = store
         .get_recent_repos()
         .await
         .expect("Failed to get recent repos");
-    assert_eq!(recent.len(), 1);
-    // The path won't be canonicalized since it doesn't exist, but that's OK
+    assert_eq!(recent.len(), 0, "Non-existent paths should not be stored");
 }
