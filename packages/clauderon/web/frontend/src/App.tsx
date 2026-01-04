@@ -1,5 +1,7 @@
 import { useState } from "react";
 import type { Session } from "@clauderon/client";
+import { AuthProvider } from "./contexts/AuthContext";
+import { AuthGuard } from "./components/AuthGuard";
 import { SessionProvider } from "./contexts/SessionContext";
 import { SessionList } from "./components/SessionList";
 import { CreateSessionDialog } from "./components/CreateSessionDialog";
@@ -8,7 +10,7 @@ import { ChatInterface } from "./components/ChatInterface";
 
 type View = "list" | "console" | "chat";
 
-export function App() {
+function AppContent() {
   const [view, setView] = useState<View>("list");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [attachedSession, setAttachedSession] = useState<Session | null>(null);
@@ -67,5 +69,15 @@ export function App() {
         )}
       </div>
     </SessionProvider>
+  );
+}
+
+export function App() {
+  return (
+    <AuthProvider>
+      <AuthGuard>
+        <AppContent />
+      </AuthGuard>
+    </AuthProvider>
   );
 }

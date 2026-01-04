@@ -390,7 +390,7 @@ impl std::str::FromStr for ClaudeWorkingStatus {
             "WaitingApproval" => Ok(Self::WaitingApproval),
             "WaitingInput" => Ok(Self::WaitingInput),
             "Idle" => Ok(Self::Idle),
-            _ => anyhow::bail!("unknown ClaudeWorkingStatus: {}", s),
+            _ => anyhow::bail!("unknown ClaudeWorkingStatus: {s}"),
         }
     }
 }
@@ -448,5 +448,5 @@ pub fn get_history_file_path(worktree_path: &PathBuf, session_id: &Uuid) -> Path
         .join(".claude")
         .join("projects")
         .join("-workspace")
-        .join(format!("{}.jsonl", session_id))
+        .join(format!("{session_id}.jsonl"))
 }

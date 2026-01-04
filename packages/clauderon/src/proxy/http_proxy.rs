@@ -237,7 +237,7 @@ impl HttpHandler for AuthInjector {
                                 &token[..token.len().min(12)]
                             );
                             // Don't inject - let the request fail clearly without auth
-                        } else if let Ok(value) = format!("Bearer {}", token).parse() {
+                        } else if let Ok(value) = format!("Bearer {token}").parse() {
                             req.headers_mut().insert("authorization", value);
                             auth_injected = true;
                             tracing::debug!("Injected authorization header for {}", host);
@@ -488,7 +488,7 @@ impl HttpHandler for FilteringHandler {
                                  (sk-ant-oat01-*), got token starting with: {}... - request will fail with 401",
                                 &token[..token.len().min(12)]
                             );
-                        } else if let Ok(value) = format!("Bearer {}", token).parse() {
+                        } else if let Ok(value) = format!("Bearer {token}").parse() {
                             req.headers_mut().insert("authorization", value);
                             auth_injected = true;
                             tracing::debug!(session_id = %session_id, "Injected authorization header for {}", host);
