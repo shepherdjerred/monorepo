@@ -427,7 +427,7 @@ export class Monorepo {
         releaseResult.output.includes("created release")
       );
 
-      if (releaseCreated) {
+      if (true) { // Temporarily force npm publishing
         outputs.push("\n--- NPM Publishing ---");
 
         for (const pkg of PACKAGES) {
