@@ -223,6 +223,7 @@ fn test_print_mode_flows_to_docker_args() {
         None, // git user name
         None, // git user email
         None, // session_id
+        None, // http_port
     )
     .expect("Failed to build args");
 
@@ -264,6 +265,7 @@ fn test_interactive_mode_no_print_flag_in_docker_args() {
         None,  // git user name
         None,  // git user email
         None,  // session_id
+        None,  // http_port
     )
     .expect("Failed to build args");
 

@@ -69,6 +69,30 @@ set -euo pipefail
 
 EVENT_TYPE="$1"
 
+# Check if running in Docker mode (HTTP transport)
+# These env vars are set by clauderon when creating Docker containers
+if [ -n "${CLAUDERON_SESSION_ID:-}" ] && [ -n "${CLAUDERON_HTTP_PORT:-}" ]; then
+    # Docker mode: use HTTP to reach host via host.docker.internal
+    MESSAGE=$(cat <<EOF
+{
+  "session_id": "$CLAUDERON_SESSION_ID",
+  "event": {"type": "$EVENT_TYPE"},
+  "timestamp": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+}
+EOF
+)
+    # Send via HTTP (curl is available in our container images)
+    curl -s -X POST \
+        -H "Content-Type: application/json" \
+        -d "$MESSAGE" \
+        "http://host.docker.internal:${CLAUDERON_HTTP_PORT}/api/hooks" \
+        --connect-timeout 2 \
+        --max-time 5 \
+        >/dev/null 2>&1 || true
+    exit 0
+fi
+
+# Zellij mode: use Unix sockets (only works on same host, not through VM)
 # Validate HOME is set
 if [ -z "${HOME:-}" ]; then
     exit 0
