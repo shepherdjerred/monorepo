@@ -294,7 +294,9 @@ export class Monorepo {
     version?: string,
     gitSha?: string,
     registryUsername?: string,
-    registryPassword?: Secret
+    registryPassword?: Secret,
+    s3AccessKeyId?: Secret,
+    s3SecretAccessKey?: Secret
   ): Promise<string> {
     const outputs: string[] = [];
     const isRelease = branch === "main";
@@ -474,6 +476,18 @@ export class Monorepo {
             version,
           }),
         );
+      }
+
+      // Deploy mux-site to S3
+      if (s3AccessKeyId && s3SecretAccessKey) {
+        outputs.push("\n--- Mux Site Deployment ---");
+        try {
+          const deployOutput = await this.muxSiteDeploy(source, s3AccessKeyId, s3SecretAccessKey);
+          outputs.push(deployOutput);
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          outputs.push(`✗ Failed to deploy mux-site: ${errorMessage}`);
+        }
       }
 
       // Check if a mux release was created and upload binaries
