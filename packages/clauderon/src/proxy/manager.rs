@@ -427,16 +427,7 @@ impl ProxyManager {
 
 impl Drop for ProxyManager {
     fn drop(&mut self) {
-        // Best-effort cleanup.
-        //
-        // WARNING: k8s_proxy.stop() performs blocking I/O (child.wait()).
-        // In async contexts, call stop() explicitly before dropping to avoid
-        // blocking the tokio runtime. This Drop is for safety in non-async
-        // contexts or when stop() wasn't called.
-        let _ = self.k8s_proxy.stop();
-        if let Some(task) = self.http_task.take() {
-            task.abort();
-        }
+        // Best-effort cleanup of Talos gateway task
         if let Some(task) = self.talos_task.take() {
             task.abort();
         }

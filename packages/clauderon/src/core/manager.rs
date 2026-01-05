@@ -464,9 +464,9 @@ impl SessionManager {
                     port = port,
                     "Created required session proxy"
                 );
-                port
+                Some(port)
             } else {
-                0  // Non-Docker backends don't need proxy
+                None  // Non-Docker backends don't need proxy
             };
 
             update_progress(3, "Preparing agent environment".to_string()).await;
@@ -792,38 +792,26 @@ impl SessionManager {
             }
         }
 
-        // Create per-session proxy for Docker backends BEFORE creating container
+        // Create per-session proxy for Docker backends BEFORE creating container (required, no fallback)
         let proxy_port = if backend == BackendType::Docker {
-            if let Some(ref proxy_manager) = self.proxy_manager {
-                match proxy_manager
-                    .create_session_proxy(session.id, access_mode)
-                    .await
-                {
-                    Ok(proxy_port) => {
-                        session.set_proxy_port(proxy_port);
-                        tracing::info!(
-                            session_id = %session.id,
-                            name = %session.name,
-                            port = proxy_port,
-                            "Created session proxy"
-                        );
-                        Some(proxy_port)
-                    }
-                    Err(e) => {
-                        tracing::warn!(
-                            session_id = %session.id,
-                            name = %session.name,
-                            error = %e,
-                            "Failed to create session proxy, using global proxy"
-                        );
-                        None
-                    }
-                }
-            } else {
-                None
-            }
+            let proxy_manager = self.proxy_manager.as_ref()
+                .ok_or_else(|| anyhow::anyhow!("Proxy manager required for Docker backend"))?;
+
+            let port = proxy_manager
+                .create_session_proxy(session.id, access_mode)
+                .await
+                .context("Session proxy creation failed - cannot create session")?;
+
+            session.set_proxy_port(port);
+            tracing::info!(
+                session_id = %session.id,
+                name = %session.name,
+                port = port,
+                "Created required session proxy"
+            );
+            Some(port)
         } else {
-            None
+            None  // Non-Docker backends don't need proxy
         };
 
         // Prepend plan mode instruction if enabled
