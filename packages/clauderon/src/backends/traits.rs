@@ -59,6 +59,10 @@ pub struct CreateOptions {
     /// Initial working directory relative to worktree root
     /// Empty PathBuf means start at worktree root
     pub initial_workdir: PathBuf,
+
+    /// HTTP server port for hook communication.
+    /// Required for Docker containers to send status updates via HTTP.
+    pub http_port: Option<u16>,
 }
 
 /// Trait for execution backends (Zellij, Docker, etc.)

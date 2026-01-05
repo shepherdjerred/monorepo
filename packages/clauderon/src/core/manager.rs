@@ -64,6 +64,8 @@ pub struct SessionManager {
     deletion_semaphore: Arc<Semaphore>,
     /// Maximum total sessions allowed
     max_sessions: usize,
+    /// HTTP server port for hook communication (Docker only)
+    http_port: Option<u16>,
 }
 
 impl SessionManager {
@@ -96,6 +98,7 @@ impl SessionManager {
             creation_semaphore: Arc::new(Semaphore::new(3)),
             deletion_semaphore: Arc::new(Semaphore::new(3)),
             max_sessions: 15,
+            http_port: None,
         })
     }
 
@@ -158,6 +161,15 @@ impl SessionManager {
     /// to WebSocket clients when session status changes occur.
     pub fn set_event_broadcaster(&mut self, broadcaster: EventBroadcaster) {
         self.event_broadcaster = Some(broadcaster);
+    }
+
+    /// Set the HTTP server port for hook communication
+    ///
+    /// This should be called after construction to enable HTTP-based hook communication
+    /// for Docker and Kubernetes containers (required since Unix sockets don't work
+    /// across VM/network boundaries).
+    pub fn set_http_port(&mut self, port: u16) {
+        self.http_port = Some(port);
     }
 
     /// List all sessions
@@ -498,6 +510,7 @@ impl SessionManager {
                 dangerous_skip_checks,
                 session_id: Some(session_id),
                 initial_workdir: subdirectory.clone(),
+                http_port: self.http_port,
             };
             let backend_id = match backend {
                 BackendType::Zellij => {
@@ -843,6 +856,7 @@ impl SessionManager {
             dangerous_skip_checks,
             session_id: Some(session.id), // Pass session ID for Kubernetes PVC labeling
             initial_workdir: subdirectory.clone(),
+            http_port: self.http_port,
         };
         let backend_id = match backend {
             BackendType::Zellij => {
@@ -1500,6 +1514,7 @@ impl SessionManager {
             dangerous_skip_checks: session.dangerous_skip_checks,
             session_id: Some(session.id),
             initial_workdir: session.subdirectory.clone(),
+            http_port: self.http_port,
         };
 
         // Recreate container
