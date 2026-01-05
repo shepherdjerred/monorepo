@@ -1,5 +1,5 @@
 {
-  "packages/bun-decompile": "0.2.0",
+  "packages/bun-decompile": "0.2.1",
   "packages/dagger-utils": "0.6.0",
   "packages/eslint-config": "0.2.0",
   "packages/clauderon": "0.1.0"
