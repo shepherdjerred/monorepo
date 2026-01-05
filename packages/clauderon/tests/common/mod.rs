@@ -160,6 +160,16 @@ pub fn pagerduty_credentials_available() -> bool {
     std::env::var("PAGERDUTY_TOKEN").is_ok() || std::env::var("PAGERDUTY_API_KEY").is_ok()
 }
 
+/// Check if gh CLI is installed and authenticated
+#[must_use]
+pub fn gh_authenticated() -> bool {
+    Command::new("gh")
+        .args(["auth", "status"])
+        .output()
+        .map(|o| o.status.success())
+        .unwrap_or(false)
+}
+
 /// Check if any proxy-testable credentials are available
 #[must_use]
 pub fn any_credentials_available() -> bool {

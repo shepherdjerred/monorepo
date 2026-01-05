@@ -251,6 +251,7 @@ impl ZellijBackend {
                 dangerous_skip_checks: false,
                 session_id: None,
                 initial_workdir: std::path::PathBuf::new(),
+                http_port: None,
             },
         )
         .await

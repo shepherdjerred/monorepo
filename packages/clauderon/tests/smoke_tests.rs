@@ -342,6 +342,7 @@ async fn test_claude_print_mode_e2e() {
         dangerous_skip_checks: true,
         session_id: None,
         initial_workdir: std::path::PathBuf::new(),
+        http_port: None,
     };
 
     // Simple prompt that should produce predictable-ish output
