@@ -1,5 +1,7 @@
 # monorepo
 
+## About
+
 Personal monorepo for active projects, learning, and archived work.
 
 ## Packages
