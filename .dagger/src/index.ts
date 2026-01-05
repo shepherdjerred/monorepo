@@ -1,5 +1,5 @@
 import { dag, object, func, Secret, Directory, Container } from "@dagger.io/dagger";
-import { updateHomelabVersion } from "@shepherdjerred/dagger-utils/containers";
+import { updateHomelabVersion, syncToS3 } from "@shepherdjerred/dagger-utils/containers";
 import {
   checkBirmel,
   buildBirmelImage,
@@ -293,8 +293,10 @@ export class Monorepo {
     npmToken?: Secret,
     version?: string,
     gitSha?: string,
-    registryUsername?: string,
-    registryPassword?: Secret
+    registryUsername?: Secret,
+    registryPassword?: Secret,
+    s3AccessKeyId?: Secret,
+    s3SecretAccessKey?: Secret
   ): Promise<string> {
     const outputs: string[] = [];
     const isRelease = branch === "main";
@@ -474,6 +476,18 @@ export class Monorepo {
             version,
           }),
         );
+      }
+
+      // Deploy mux-site to S3
+      if (s3AccessKeyId && s3SecretAccessKey) {
+        outputs.push("\n--- Mux Site Deployment ---");
+        try {
+          const deployOutput = await this.muxSiteDeploy(source, s3AccessKeyId, s3SecretAccessKey);
+          outputs.push(deployOutput);
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          outputs.push(`✗ Failed to deploy mux-site: ${errorMessage}`);
+        }
       }
 
       // Check if a mux release was created and upload binaries
@@ -755,12 +769,13 @@ export class Monorepo {
   }
 
   /**
-   * Deploy mux site to GitHub Pages
+   * Deploy mux site to SeaweedFS S3
    */
   @func()
   async muxSiteDeploy(
     source: Directory,
-    githubToken: Secret,
+    s3AccessKeyId: Secret,
+    s3SecretAccessKey: Secret,
   ): Promise<string> {
     const outputs: string[] = [];
 
@@ -768,27 +783,19 @@ export class Monorepo {
     const siteDir = await this.muxSiteOutput(source);
     outputs.push("✓ Built mux-site");
 
-    // Deploy to GitHub Pages using gh-pages
-    const deployContainer = dag
-      .container()
-      .from(`oven/bun:${BUN_VERSION}-debian`)
-      .withMountedCache("/var/cache/apt", dag.cacheVolume(`apt-cache-bun-${BUN_VERSION}-debian`))
-      .withMountedCache("/var/lib/apt", dag.cacheVolume(`apt-lib-bun-${BUN_VERSION}-debian`))
-      .withExec(["apt-get", "update"])
-      .withExec(["apt-get", "install", "-y", "git"])
-      .withSecretVariable("GITHUB_TOKEN", githubToken)
-      .withWorkdir("/workspace")
-      .withDirectory("/workspace/dist", siteDir)
-      .withExec(["bun", "add", "-g", "gh-pages"])
-      .withExec(["git", "config", "--global", "user.email", "github-actions@github.com"])
-      .withExec(["git", "config", "--global", "user.name", "GitHub Actions"])
-      .withExec([
-        "sh", "-c",
-        `cd /workspace && gh-pages -d dist -r https://x-access-token:\${GITHUB_TOKEN}@github.com/${REPO_URL}.git -b gh-pages-mux`
-      ]);
+    // Deploy to SeaweedFS S3
+    const syncOutput = await syncToS3({
+      sourceDir: siteDir,
+      bucketName: "clauderon",
+      endpointUrl: "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
+      accessKeyId: s3AccessKeyId,
+      secretAccessKey: s3SecretAccessKey,
+      region: "us-east-1",
+      deleteRemoved: true,
+    });
 
-    await deployContainer.sync();
-    outputs.push("✓ Deployed to GitHub Pages (gh-pages-mux branch)");
+    outputs.push("✓ Deployed to SeaweedFS S3 (bucket: clauderon)");
+    outputs.push(syncOutput);
 
     return outputs.join("\n");
   }
