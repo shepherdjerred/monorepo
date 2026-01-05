@@ -18,16 +18,10 @@ pub fn database_path() -> PathBuf {
     base_dir().join("db.sqlite")
 }
 
-/// Get the path to the Unix socket
+/// Get the path to the Unix socket (for CLI client communication)
 #[must_use]
 pub fn socket_path() -> PathBuf {
     base_dir().join("clauderon.sock")
-}
-
-/// Get the path to the hooks Unix socket
-#[must_use]
-pub fn hooks_socket_path() -> PathBuf {
-    base_dir().join("hooks.sock")
 }
 
 /// Get the directory for worktrees
