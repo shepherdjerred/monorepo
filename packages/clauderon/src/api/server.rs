@@ -201,43 +201,8 @@ async fn run_unix_socket_server(manager: Arc<SessionManager>) -> anyhow::Result<
 
     tracing::info!(socket = %socket_path.display(), "Unix socket daemon listening");
 
-    // Start hook listener for Claude status updates
-    let hook_socket_path = paths::hooks_socket_path();
-    let (hook_listener, mut hook_rx) = crate::hooks::HookListener::new(hook_socket_path);
-
-    tokio::spawn(async move {
-        if let Err(e) = hook_listener.start().await {
-            tracing::error!("Hook listener failed: {}", e);
-        }
-    });
-
-    // Process hook messages
-    let process_manager = Arc::clone(&manager);
-    tokio::spawn(async move {
-        use crate::core::ClaudeWorkingStatus;
-        use crate::hooks::HookEvent;
-
-        while let Some(msg) = hook_rx.recv().await {
-            let new_status = match msg.event {
-                HookEvent::UserPromptSubmit => ClaudeWorkingStatus::Working,
-                HookEvent::PreToolUse { .. } => ClaudeWorkingStatus::Working,
-                HookEvent::PermissionRequest => ClaudeWorkingStatus::WaitingApproval,
-                HookEvent::Stop => ClaudeWorkingStatus::WaitingInput,
-                HookEvent::IdlePrompt => ClaudeWorkingStatus::Idle,
-            };
-
-            if let Err(e) = process_manager
-                .update_claude_status(msg.session_id, new_status)
-                .await
-            {
-                tracing::error!(
-                    session_id = %msg.session_id,
-                    error = %e,
-                    "Failed to update Claude status from hook"
-                );
-            }
-        }
-    });
+    // Note: Hook messages are now received via HTTP endpoint (/api/hooks)
+    // for Docker/K8s backends. Zellij uses the same HTTP endpoint.
 
     // Start CI status poller for GitHub PR checks
     let ci_poller = crate::ci::CIPoller::new(Arc::clone(&manager));
