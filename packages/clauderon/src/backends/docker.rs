@@ -4,6 +4,7 @@ use tokio::process::Command;
 use tracing::instrument;
 
 use super::traits::ExecutionBackend;
+use crate::core::AgentType;
 
 /// Sanitize git config value to prevent environment variable injection
 ///
@@ -184,7 +185,8 @@ impl DockerBackend {
     ///
     /// # Arguments
     ///
-    /// * `print_mode` - If true, run in non-interactive mode with `--print --verbose` flags.
+    /// * `print_mode` - If true, run in non-interactive mode.
+    ///                  Claude Code uses `--print --verbose`, Codex uses `codex exec`.
     ///                  The container will output the response and exit.
     ///                  If false, run interactively for `docker attach`.
     ///
@@ -198,6 +200,7 @@ impl DockerBackend {
         initial_prompt: &str,
         uid: u32,
         proxy_config: Option<&DockerProxyConfig>,
+        agent: AgentType,
         print_mode: bool,
         dangerous_skip_checks: bool,
         images: &[String],
@@ -375,11 +378,28 @@ impl DockerBackend {
                     "GH_TOKEN=clauderon-proxy".to_string(),
                     "-e".to_string(),
                     "GITHUB_TOKEN=clauderon-proxy".to_string(),
-                    // Set placeholder OAuth token - Claude Code uses this for auth
-                    // The proxy will intercept API requests and inject the real OAuth token
-                    "-e".to_string(),
-                    "CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-clauderon-proxy-placeholder".to_string(),
                 ]);
+
+                match agent {
+                    AgentType::ClaudeCode => {
+                        // Set placeholder OAuth token - Claude Code uses this for auth
+                        // The proxy will intercept API requests and inject the real OAuth token
+                        args.extend([
+                            "-e".to_string(),
+                            "CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-clauderon-proxy-placeholder"
+                                .to_string(),
+                        ]);
+                    }
+                    AgentType::Codex => {
+                        // Codex uses OpenAI API keys (exec supports CODEX_API_KEY, CLI generally uses OPENAI_API_KEY)
+                        args.extend([
+                            "-e".to_string(),
+                            "OPENAI_API_KEY=sk-openai-clauderon-proxy-placeholder".to_string(),
+                            "-e".to_string(),
+                            "CODEX_API_KEY=sk-openai-clauderon-proxy-placeholder".to_string(),
+                        ]);
+                    }
+                }
 
                 // SSL/TLS environment variables for CA trust
                 args.extend([
@@ -453,80 +473,82 @@ impl DockerBackend {
         // When a credentials file exists, Claude Code validates it against the API,
         // which would fail with our fake tokens. The env var path skips this validation.
 
-        // Determine config directory - use proxy clauderon_dir if available, otherwise create temp dir
-        // Note: When proxy is disabled, we create a temp directory for the session config.
-        // These temp directories persist after container deletion and are cleaned up by the OS.
-        // This is acceptable since the files are tiny (just .claude.json) and sessions are infrequent.
-        let config_dir = if let Some(proxy) = proxy_config {
-            proxy.clauderon_dir.clone()
-        } else {
-            // Create a temp directory for Claude config when proxy is disabled
-            let temp_dir = std::env::temp_dir().join(format!("clauderon-{name}"));
-            temp_dir
-        };
-
-        // Create the config directory if it doesn't exist
-        if let Err(e) = std::fs::create_dir_all(&config_dir) {
-            tracing::warn!(
-                "Failed to create config directory at {:?}: {}",
-                config_dir,
-                e
-            );
-        } else {
-            // Write claude.json to skip onboarding and optionally suppress bypass permissions warning
-            // This tells Claude Code we've already completed the setup wizard
-            // Note: Claude Code writes to this file, so we can't mount it read-only
-            let claude_json_path = config_dir.join("claude.json");
-            let claude_json = if dangerous_skip_checks {
-                // If bypass permissions is enabled, also suppress the warning
-                r#"{"hasCompletedOnboarding": true, "bypassPermissionsModeAccepted": true}"#
+        if agent == AgentType::ClaudeCode {
+            // Determine config directory - use proxy clauderon_dir if available, otherwise create temp dir
+            // Note: When proxy is disabled, we create a temp directory for the session config.
+            // These temp directories persist after container deletion and are cleaned up by the OS.
+            // This is acceptable since the files are tiny (just .claude.json) and sessions are infrequent.
+            let config_dir = if let Some(proxy) = proxy_config {
+                proxy.clauderon_dir.clone()
             } else {
-                r#"{"hasCompletedOnboarding": true}"#
+                // Create a temp directory for Claude config when proxy is disabled
+                let temp_dir = std::env::temp_dir().join(format!("clauderon-{name}"));
+                temp_dir
             };
-            if let Err(e) = std::fs::write(&claude_json_path, claude_json) {
+
+            // Create the config directory if it doesn't exist
+            if let Err(e) = std::fs::create_dir_all(&config_dir) {
                 tracing::warn!(
-                    "Failed to write claude.json file at {:?}: {}",
-                    claude_json_path,
+                    "Failed to create config directory at {:?}: {}",
+                    config_dir,
                     e
                 );
             } else {
-                // Mount to /workspace/.claude.json since HOME=/workspace in container
-                // Note: NOT read-only because Claude Code writes to it
-                args.extend([
-                    "-v".to_string(),
-                    format!(
-                        "{display}:/workspace/.claude.json",
-                        display = claude_json_path.display()
-                    ),
-                ]);
-            }
+                // Write claude.json to skip onboarding and optionally suppress bypass permissions warning
+                // This tells Claude Code we've already completed the setup wizard
+                // Note: Claude Code writes to this file, so we can't mount it read-only
+                let claude_json_path = config_dir.join("claude.json");
+                let claude_json = if dangerous_skip_checks {
+                    // If bypass permissions is enabled, also suppress the warning
+                    r#"{"hasCompletedOnboarding": true, "bypassPermissionsModeAccepted": true}"#
+                } else {
+                    r#"{"hasCompletedOnboarding": true}"#
+                };
+                if let Err(e) = std::fs::write(&claude_json_path, claude_json) {
+                    tracing::warn!(
+                        "Failed to write claude.json file at {:?}: {}",
+                        claude_json_path,
+                        e
+                    );
+                } else {
+                    // Mount to /workspace/.claude.json since HOME=/workspace in container
+                    // Note: NOT read-only because Claude Code writes to it
+                    args.extend([
+                        "-v".to_string(),
+                        format!(
+                            "{display}:/workspace/.claude.json",
+                            display = claude_json_path.display()
+                        ),
+                    ]);
+                }
 
-            // Proxy-specific configuration (only when proxy is enabled)
-            if let Some(_proxy) = proxy_config {
-                // Write managed settings file for proxy environments
-                // Note: managed-settings.json is only created when proxy is enabled because it's
-                // part of the proxy infrastructure that requires elevated permissions.
-                // For non-proxy users, .claude.json with bypassPermissionsModeAccepted is sufficient.
-                let managed_settings_path = config_dir.join("managed-settings.json");
-                let managed_settings = r#"{
+                // Proxy-specific configuration (only when proxy is enabled)
+                if let Some(_proxy) = proxy_config {
+                    // Write managed settings file for proxy environments
+                    // Note: managed-settings.json is only created when proxy is enabled because it's
+                    // part of the proxy infrastructure that requires elevated permissions.
+                    // For non-proxy users, .claude.json with bypassPermissionsModeAccepted is sufficient.
+                    let managed_settings_path = config_dir.join("managed-settings.json");
+                    let managed_settings = r#"{
   "permissions": {
     "defaultMode": "bypassPermissions"
   }
 }"#;
-                if let Err(e) = std::fs::write(&managed_settings_path, managed_settings) {
-                    tracing::warn!(
-                        "Failed to write managed settings file at {:?}: {}",
-                        managed_settings_path,
-                        e
-                    );
-                } else {
-                    args.extend([
-                        "-v".to_string(),
-                        format!(
-                            "{}:/etc/claude-code/managed-settings.json:ro",
-                            managed_settings_path.display()
-                        ),
-                    ]);
+                    if let Err(e) = std::fs::write(&managed_settings_path, managed_settings) {
+                        tracing::warn!(
+                            "Failed to write managed settings file at {:?}: {}",
+                            managed_settings_path,
+                            e
+                        );
+                    } else {
+                        args.extend([
+                            "-v".to_string(),
+                            format!(
+                                "{}:/etc/claude-code/managed-settings.json:ro",
+                                managed_settings_path.display()
+                            ),
+                        ]);
+                    }
                 }
             }
         }
@@ -534,21 +556,10 @@ impl DockerBackend {
         // Add image and command
         // Build a wrapper script that handles both initial creation and container restart:
         // - On first run: session file doesn't exist → create new session with prompt
-        // - On restart: session file exists → resume session with --resume --fork
-        let claude_cmd = {
-            use crate::agents::claude_code::ClaudeCodeAgent;
+        // - On restart: session file exists → resume session
+        let agent_cmd = {
             use crate::agents::traits::Agent;
-
-            let agent = ClaudeCodeAgent::new();
-            let mut cmd_vec =
-                agent.start_command(&escaped_prompt, images, dangerous_skip_checks, None); // Don't pass session_id here, we handle it in the wrapper
-
-            // Add print mode flags if enabled
-            if print_mode {
-                // Insert after "claude" but before other args
-                cmd_vec.insert(1, "--print".to_string());
-                cmd_vec.insert(2, "--verbose".to_string());
-            }
+            use crate::agents::{ClaudeCodeAgent, CodexAgent};
 
             // Helper to quote shell arguments
             let quote_arg = |arg: &str| -> String {
@@ -565,42 +576,58 @@ impl DockerBackend {
                 }
             };
 
-            // If we have a session ID, generate a wrapper script that handles restart
-            if let Some(sid) = session_id {
-                let session_id_str = sid.to_string();
+            match agent {
+                AgentType::ClaudeCode => {
+                    let mut cmd_vec = ClaudeCodeAgent::new().start_command(
+                        &escaped_prompt,
+                        images,
+                        dangerous_skip_checks,
+                        None,
+                    ); // Don't pass session_id here, we handle it in the wrapper
 
-                // Build the create command (for first run)
-                let mut create_cmd = vec!["claude".to_string()];
-                create_cmd.push("--session-id".to_string());
-                create_cmd.push(session_id_str.clone());
-                // Add remaining args (skip "claude" at index 0)
-                create_cmd.extend(cmd_vec.iter().skip(1).cloned());
-                let create_cmd_str = create_cmd
-                    .iter()
-                    .map(|a| quote_arg(a))
-                    .collect::<Vec<_>>()
-                    .join(" ");
+                    // Add print mode flags if enabled
+                    if print_mode {
+                        // Insert after "claude" but before other args
+                        cmd_vec.insert(1, "--print".to_string());
+                        cmd_vec.insert(2, "--verbose".to_string());
+                    }
 
-                // Build the resume command (for restart)
-                // Use --resume to continue an existing session instead of --session-id
-                // which would try to create a new session with that ID
-                // --fork-session creates a new session ID from the session so we don't modify the original
-                let resume_cmd_str = if dangerous_skip_checks {
-                    format!(
-                        "claude --dangerously-skip-permissions --resume {} --fork-session",
-                        quote_arg(&session_id_str)
-                    )
-                } else {
-                    format!(
-                        "claude --resume {} --fork-session",
-                        quote_arg(&session_id_str)
-                    )
-                };
+                    // If we have a session ID, generate a wrapper script that handles restart
+                    if let Some(sid) = session_id {
+                        let session_id_str = sid.to_string();
 
-                // Generate wrapper script that detects restart via session history file
-                // Claude Code stores session history at: .claude/projects/-workspace/<session-id>.jsonl
-                format!(
-                    r#"SESSION_ID="{session_id}"
+                        // Build the create command (for first run)
+                        let mut create_cmd = vec!["claude".to_string()];
+                        create_cmd.push("--session-id".to_string());
+                        create_cmd.push(session_id_str.clone());
+                        // Add remaining args (skip "claude" at index 0)
+                        create_cmd.extend(cmd_vec.iter().skip(1).cloned());
+                        let create_cmd_str = create_cmd
+                            .iter()
+                            .map(|a| quote_arg(a))
+                            .collect::<Vec<_>>()
+                            .join(" ");
+
+                        // Build the resume command (for restart)
+                        // Use --resume to continue an existing session instead of --session-id
+                        // which would try to create a new session with that ID
+                        // --fork-session creates a new session ID from the session so we don't modify the original
+                        let resume_cmd_str = if dangerous_skip_checks {
+                            format!(
+                                "claude --dangerously-skip-permissions --resume {} --fork-session",
+                                quote_arg(&session_id_str)
+                            )
+                        } else {
+                            format!(
+                                "claude --resume {} --fork-session",
+                                quote_arg(&session_id_str)
+                            )
+                        };
+
+                        // Generate wrapper script that detects restart via session history file
+                        // Claude Code stores session history at: .claude/projects/-workspace/<session-id>.jsonl
+                        format!(
+                            r#"SESSION_ID="{session_id}"
 HISTORY_FILE="/workspace/.claude/projects/-workspace/${{SESSION_ID}}.jsonl"
 if [ -f "$HISTORY_FILE" ]; then
     echo "Resuming existing session $SESSION_ID"
@@ -609,17 +636,77 @@ else
     echo "Creating new session $SESSION_ID"
     exec {create_cmd}
 fi"#,
-                    session_id = session_id_str,
-                    resume_cmd = resume_cmd_str,
-                    create_cmd = create_cmd_str,
-                )
-            } else {
-                // No session ID - just run the command directly
-                cmd_vec
-                    .iter()
-                    .map(|arg| quote_arg(arg))
-                    .collect::<Vec<_>>()
-                    .join(" ")
+                            session_id = session_id_str,
+                            resume_cmd = resume_cmd_str,
+                            create_cmd = create_cmd_str,
+                        )
+                    } else {
+                        // No session ID - just run the command directly
+                        cmd_vec
+                            .iter()
+                            .map(|arg| quote_arg(arg))
+                            .collect::<Vec<_>>()
+                            .join(" ")
+                    }
+                }
+                AgentType::Codex => {
+                    if print_mode {
+                        let mut cmd_vec = vec!["codex".to_string()];
+                        if dangerous_skip_checks {
+                            cmd_vec.push("--full-auto".to_string());
+                        }
+                        cmd_vec.push("exec".to_string());
+                        for image in images {
+                            cmd_vec.push("--image".to_string());
+                            cmd_vec.push(image.clone());
+                        }
+                        if !escaped_prompt.is_empty() {
+                            cmd_vec.push(escaped_prompt.clone());
+                        }
+                        cmd_vec
+                            .iter()
+                            .map(|arg| quote_arg(arg))
+                            .collect::<Vec<_>>()
+                            .join(" ")
+                    } else {
+                        let create_cmd_vec = CodexAgent::new().start_command(
+                            &escaped_prompt,
+                            images,
+                            dangerous_skip_checks,
+                            None,
+                        );
+                        let create_cmd_str = create_cmd_vec
+                            .iter()
+                            .map(|a| quote_arg(a))
+                            .collect::<Vec<_>>()
+                            .join(" ");
+
+                        let mut resume_cmd_vec = vec!["codex".to_string()];
+                        if dangerous_skip_checks {
+                            resume_cmd_vec.push("--full-auto".to_string());
+                        }
+                        resume_cmd_vec.push("resume".to_string());
+                        resume_cmd_vec.push("--last".to_string());
+                        let resume_cmd_str = resume_cmd_vec
+                            .iter()
+                            .map(|a| quote_arg(a))
+                            .collect::<Vec<_>>()
+                            .join(" ");
+
+                        format!(
+                            r#"CODEX_DIR="/workspace/.codex/sessions"
+if [ -d "$CODEX_DIR" ] && [ "$(ls -A "$CODEX_DIR" 2>/dev/null)" ]; then
+    echo "Resuming last Codex session"
+    exec {resume_cmd}
+else
+    echo "Creating new Codex session"
+    exec {create_cmd}
+fi"#,
+                            resume_cmd = resume_cmd_str,
+                            create_cmd = create_cmd_str,
+                        )
+                    }
+                }
             }
         };
 
@@ -627,7 +714,7 @@ fi"#,
             DOCKER_IMAGE.to_string(),
             "bash".to_string(),
             "-c".to_string(),
-            claude_cmd,
+            agent_cmd,
         ]);
 
         Ok(args)
@@ -699,6 +786,7 @@ impl ExecutionBackend for DockerBackend {
             initial_prompt,
             uid,
             proxy_config_ref,
+            options.agent,
             options.print_mode,
             options.dangerous_skip_checks,
             &options.images,
@@ -729,12 +817,14 @@ impl ExecutionBackend for DockerBackend {
         );
 
         // Install Claude Code hooks inside the container for status tracking
-        if let Err(e) = crate::hooks::install_hooks_in_container(&container_name).await {
-            tracing::warn!(
-                container_name = %container_name,
-                error = %e,
-                "Failed to install hooks in container (non-fatal), status tracking may not work"
-            );
+        if options.agent == AgentType::ClaudeCode {
+            if let Err(e) = crate::hooks::install_hooks_in_container(&container_name).await {
+                tracing::warn!(
+                    container_name = %container_name,
+                    error = %e,
+                    "Failed to install hooks in container (non-fatal), status tracking may not work"
+                );
+            }
         }
 
         Ok(container_name)
@@ -828,6 +918,7 @@ impl DockerBackend {
             workdir,
             initial_prompt,
             super::traits::CreateOptions {
+                agent: AgentType::ClaudeCode,
                 print_mode: false,
                 plan_mode: true, // Default to plan mode
                 session_proxy_port: None,
@@ -868,6 +959,7 @@ mod tests {
             "test prompt",
             1000,
             None,
+            AgentType::ClaudeCode,
             false, // interactive mode
             true,  // dangerous_skip_checks
             &[],   // no images
@@ -937,6 +1029,7 @@ mod tests {
             "test prompt",
             uid,
             None,
+            AgentType::ClaudeCode,
             false, // print mode
             true,  // dangerous_skip_checks
             &[],   // no images
@@ -967,6 +1060,7 @@ mod tests {
             "test prompt",
             1000,
             None,
+            AgentType::ClaudeCode,
             false, // print_mode
             false, // dangerous_skip_checks
             &[],   // images
@@ -1000,6 +1094,7 @@ mod tests {
             "test prompt",
             1000,
             None,
+            AgentType::ClaudeCode,
             false, // print_mode
             false, // dangerous_skip_checks
             &[],   // images
@@ -1033,6 +1128,7 @@ mod tests {
             "test prompt",
             1000,
             None,
+            AgentType::ClaudeCode,
             false, // print_mode
             true,  // dangerous_skip_checks
             &[],   // images
@@ -1127,6 +1223,7 @@ mod tests {
             prompt_with_quotes,
             1000,
             None,
+            AgentType::ClaudeCode,
             false, // print mode
             true,  // dangerous_skip_checks
             &[],   // no images
@@ -1156,6 +1253,7 @@ mod tests {
             "test prompt",
             1000,
             None,
+            AgentType::ClaudeCode,
             false, // print mode
             true,  // dangerous_skip_checks
             &[],   // no images
@@ -1201,6 +1299,7 @@ mod tests {
             "test prompt",
             1000,
             Some(&proxy_config),
+            AgentType::ClaudeCode,
             false, // print mode
             true,  // dangerous_skip_checks
             &[],   // no images
@@ -1250,6 +1349,7 @@ mod tests {
             "test prompt",
             1000,
             Some(&proxy_config),
+            AgentType::ClaudeCode,
             false, // print mode
             true,  // dangerous_skip_checks
             &[],   // no images
@@ -1279,6 +1379,7 @@ mod tests {
             "test prompt",
             1000,
             Some(&proxy_config),
+            AgentType::ClaudeCode,
             false, // print mode
             true,  // dangerous_skip_checks
             &[],   // no images
@@ -1313,6 +1414,7 @@ mod tests {
             "test prompt",
             1000,
             Some(&proxy_config),
+            AgentType::ClaudeCode,
             false, // print mode
             true,  // dangerous_skip_checks
             &[],   // no images
@@ -1346,6 +1448,7 @@ mod tests {
             "test prompt",
             1000,
             None,
+            AgentType::ClaudeCode,
             true, // print mode
             true, // dangerous_skip_checks
             &[],  // no images
@@ -1376,6 +1479,7 @@ mod tests {
             "test prompt",
             1000,
             None,
+            AgentType::ClaudeCode,
             false, // interactive mode
             true,  // dangerous_skip_checks
             &[],   // no images
@@ -1428,6 +1532,7 @@ mod tests {
             "test prompt",
             1000,
             None,
+            AgentType::ClaudeCode,
             false, // print_mode
             true,  // dangerous_skip_checks
             &[],   // images
@@ -1479,6 +1584,7 @@ mod tests {
             "test prompt",
             1000,
             None,
+            AgentType::ClaudeCode,
             false, // print_mode
             true,  // dangerous_skip_checks
             &[],   // images
@@ -1526,6 +1632,7 @@ mod tests {
             "test prompt",
             1000,
             None,
+            AgentType::ClaudeCode,
             false, // print_mode
             true,  // dangerous_skip_checks
             &[],   // images
@@ -1576,6 +1683,7 @@ mod tests {
             "test prompt",
             1000,
             None,
+            AgentType::ClaudeCode,
             false, // print_mode
             true,  // dangerous_skip_checks
             &[],   // images
@@ -1616,6 +1724,7 @@ mod tests {
             "test prompt",
             1000,
             None,
+            AgentType::ClaudeCode,
             false, // print_mode
             true,  // dangerous_skip_checks
             &[],   // images
@@ -1656,6 +1765,7 @@ mod tests {
             "test prompt",
             1000,
             None,
+            AgentType::ClaudeCode,
             false, // print_mode
             true,  // dangerous_skip_checks
             &[],   // images
@@ -1682,7 +1792,8 @@ mod tests {
             &PathBuf::new(), // initial_workdir (empty = root)
             "test prompt",
             1000,
-            None,  // No proxy config
+            None, // No proxy config
+            AgentType::ClaudeCode,
             false, // print_mode
             true,  // dangerous_skip_checks = true
             &[],   // images
@@ -1723,7 +1834,8 @@ mod tests {
             &PathBuf::new(), // initial_workdir (empty = root)
             "test prompt",
             1000,
-            None,  // No proxy config
+            None, // No proxy config
+            AgentType::ClaudeCode,
             false, // print_mode
             false, // dangerous_skip_checks = false
             &[],   // images

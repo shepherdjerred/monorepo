@@ -267,7 +267,8 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
             app.create_dialog.focus = match app.create_dialog.focus {
                 CreateDialogFocus::Prompt => CreateDialogFocus::RepoPath,
                 CreateDialogFocus::RepoPath => CreateDialogFocus::Backend,
-                CreateDialogFocus::Backend => CreateDialogFocus::AccessMode,
+                CreateDialogFocus::Backend => CreateDialogFocus::Agent,
+                CreateDialogFocus::Agent => CreateDialogFocus::AccessMode,
                 CreateDialogFocus::AccessMode => CreateDialogFocus::SkipChecks,
                 CreateDialogFocus::SkipChecks => CreateDialogFocus::PlanMode,
                 CreateDialogFocus::PlanMode => CreateDialogFocus::Buttons,
@@ -280,7 +281,8 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                 CreateDialogFocus::Prompt => CreateDialogFocus::Buttons,
                 CreateDialogFocus::RepoPath => CreateDialogFocus::Prompt,
                 CreateDialogFocus::Backend => CreateDialogFocus::RepoPath,
-                CreateDialogFocus::AccessMode => CreateDialogFocus::Backend,
+                CreateDialogFocus::Agent => CreateDialogFocus::Backend,
+                CreateDialogFocus::AccessMode => CreateDialogFocus::Agent,
                 CreateDialogFocus::SkipChecks => CreateDialogFocus::AccessMode,
                 CreateDialogFocus::PlanMode => CreateDialogFocus::SkipChecks,
                 CreateDialogFocus::Buttons => CreateDialogFocus::PlanMode,
@@ -322,7 +324,7 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                         repo_path: app.create_dialog.repo_path.clone(),
                         initial_prompt: app.create_dialog.prompt.clone(),
                         backend: app.create_dialog.backend,
-                        agent: AgentType::ClaudeCode,
+                        agent: app.create_dialog.agent,
                         dangerous_skip_checks: app.create_dialog.skip_checks,
                         print_mode: false, // TUI always uses interactive mode
                         plan_mode: app.create_dialog.plan_mode,
@@ -424,7 +426,8 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                     CreateDialogFocus::Prompt => CreateDialogFocus::Buttons,
                     CreateDialogFocus::RepoPath => CreateDialogFocus::Prompt,
                     CreateDialogFocus::Backend => CreateDialogFocus::RepoPath,
-                    CreateDialogFocus::AccessMode => CreateDialogFocus::Backend,
+                    CreateDialogFocus::Agent => CreateDialogFocus::Backend,
+                    CreateDialogFocus::AccessMode => CreateDialogFocus::Agent,
                     CreateDialogFocus::SkipChecks => CreateDialogFocus::AccessMode,
                     CreateDialogFocus::PlanMode => CreateDialogFocus::SkipChecks,
                     CreateDialogFocus::Buttons => CreateDialogFocus::PlanMode,
@@ -455,7 +458,8 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                 app.create_dialog.focus = match app.create_dialog.focus {
                     CreateDialogFocus::Prompt => CreateDialogFocus::RepoPath,
                     CreateDialogFocus::RepoPath => CreateDialogFocus::Backend,
-                    CreateDialogFocus::Backend => CreateDialogFocus::AccessMode,
+                    CreateDialogFocus::Backend => CreateDialogFocus::Agent,
+                    CreateDialogFocus::Agent => CreateDialogFocus::AccessMode,
                     CreateDialogFocus::AccessMode => CreateDialogFocus::SkipChecks,
                     CreateDialogFocus::SkipChecks => CreateDialogFocus::PlanMode,
                     CreateDialogFocus::PlanMode => CreateDialogFocus::Buttons,
@@ -486,6 +490,9 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
             CreateDialogFocus::Backend => {
                 app.create_dialog.toggle_backend();
             }
+            CreateDialogFocus::Agent => {
+                app.create_dialog.toggle_agent();
+            }
             CreateDialogFocus::AccessMode => {
                 app.create_dialog.toggle_access_mode();
             }
@@ -503,6 +510,9 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
         KeyCode::Char(' ') => match app.create_dialog.focus {
             CreateDialogFocus::Backend => {
                 app.create_dialog.toggle_backend();
+            }
+            CreateDialogFocus::Agent => {
+                app.create_dialog.toggle_agent();
             }
             CreateDialogFocus::AccessMode => {
                 app.create_dialog.toggle_access_mode();

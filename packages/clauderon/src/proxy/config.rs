@@ -61,6 +61,7 @@ impl ProxyConfig {
 pub struct Credentials {
     pub github_token: Option<String>,
     pub anthropic_oauth_token: Option<String>,
+    pub openai_api_key: Option<String>,
     pub pagerduty_token: Option<String>,
     pub sentry_auth_token: Option<String>,
     pub grafana_api_key: Option<String>,
@@ -76,6 +77,9 @@ impl Credentials {
         Self {
             github_token: std::env::var("GITHUB_TOKEN").ok(),
             anthropic_oauth_token: std::env::var("CLAUDE_CODE_OAUTH_TOKEN").ok(),
+            openai_api_key: std::env::var("OPENAI_API_KEY")
+                .or_else(|_| std::env::var("CODEX_API_KEY"))
+                .ok(),
             // Support both PAGERDUTY_TOKEN and PAGERDUTY_API_KEY for compatibility
             pagerduty_token: std::env::var("PAGERDUTY_TOKEN")
                 .or_else(|_| std::env::var("PAGERDUTY_API_KEY"))
@@ -101,6 +105,7 @@ impl Credentials {
         Self {
             github_token: read_secret("github_token"),
             anthropic_oauth_token: read_secret("anthropic_oauth_token"),
+            openai_api_key: read_secret("openai_api_key"),
             pagerduty_token: read_secret("pagerduty_token"),
             sentry_auth_token: read_secret("sentry_auth_token"),
             grafana_api_key: read_secret("grafana_api_key"),
@@ -121,6 +126,7 @@ impl Credentials {
             anthropic_oauth_token: from_env
                 .anthropic_oauth_token
                 .or(from_files.anthropic_oauth_token),
+            openai_api_key: from_env.openai_api_key.or(from_files.openai_api_key),
             pagerduty_token: from_env.pagerduty_token.or(from_files.pagerduty_token),
             sentry_auth_token: from_env.sentry_auth_token.or(from_files.sentry_auth_token),
             grafana_api_key: from_env.grafana_api_key.or(from_files.grafana_api_key),
@@ -137,6 +143,9 @@ impl Credentials {
         }
         if credentials.anthropic_oauth_token.is_some() {
             tracing::info!("  ✓ Anthropic OAuth token");
+        }
+        if credentials.openai_api_key.is_some() {
+            tracing::info!("  ✓ OpenAI API key");
         }
         if credentials.pagerduty_token.is_some() {
             tracing::info!("  ✓ PagerDuty token");
@@ -162,6 +171,7 @@ impl Credentials {
         match service {
             "github" => self.github_token.as_deref(),
             "anthropic" => self.anthropic_oauth_token.as_deref(),
+            "openai" => self.openai_api_key.as_deref(),
             "pagerduty" => self.pagerduty_token.as_deref(),
             "sentry" => self.sentry_auth_token.as_deref(),
             "grafana" => self.grafana_api_key.as_deref(),
