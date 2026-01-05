@@ -632,9 +632,9 @@ impl ExecutionBackend for DockerBackend {
         let uid = std::process::id();
 
         // Build proxy config dynamically from session-specific port
-        let proxy_config = options.session_proxy_port.map(|session_port| {
-            DockerProxyConfig::new(session_port, self.clauderon_dir.clone())
-        });
+        let proxy_config = options
+            .session_proxy_port
+            .map(|session_port| DockerProxyConfig::new(session_port, self.clauderon_dir.clone()));
 
         let proxy_config_ref = proxy_config.as_ref();
 
