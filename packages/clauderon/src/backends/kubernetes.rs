@@ -524,7 +524,10 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
     }
 
     /// Build main container for Claude Code
-    #[allow(clippy::too_many_arguments)]
+    #[allow(
+        clippy::too_many_arguments,
+        reason = "Kubernetes API surface requires many configuration parameters"
+    )]
     fn build_main_container(
         &self,
         _pod_name: &str,
@@ -811,7 +814,10 @@ fi"#,
     }
 
     /// Build pod specification
-    #[allow(clippy::too_many_arguments)]
+    #[allow(
+        clippy::too_many_arguments,
+        reason = "Kubernetes pod spec requires many configuration parameters"
+    )]
     fn build_pod_spec(
         &self,
         pod_name: &str,
