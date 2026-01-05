@@ -142,7 +142,7 @@ async fn test_create_session_with_read_only_mode() {
             repo_dir.path().to_string_lossy().to_string(),
             "Test prompt".to_string(),
             BackendType::Docker,
-            AgentType::ClaudeCode,
+            AgentType::Claude,
             true,
             false, // print_mode
             false, // plan_mode
@@ -172,7 +172,7 @@ async fn test_create_session_with_read_write_mode() {
             repo_dir.path().to_string_lossy().to_string(),
             "Test prompt".to_string(),
             BackendType::Docker,
-            AgentType::ClaudeCode,
+            AgentType::Claude,
             true,
             false, // print_mode
             false, // plan_mode
@@ -198,7 +198,7 @@ async fn test_zellij_backend_ignores_proxy_port() {
             repo_dir.path().to_string_lossy().to_string(),
             "Test prompt".to_string(),
             BackendType::Zellij,
-            AgentType::ClaudeCode,
+            AgentType::Claude,
             true,
             false, // print_mode
             false, // plan_mode
@@ -226,7 +226,7 @@ async fn test_update_access_mode_by_name() {
             repo_dir.path().to_string_lossy().to_string(),
             "Test prompt".to_string(),
             BackendType::Docker,
-            AgentType::ClaudeCode,
+            AgentType::Claude,
             true,
             false, // print_mode
             false, // plan_mode
@@ -264,7 +264,7 @@ async fn test_update_access_mode_by_id() {
             repo_dir.path().to_string_lossy().to_string(),
             "Test prompt".to_string(),
             BackendType::Docker,
-            AgentType::ClaudeCode,
+            AgentType::Claude,
             true,
             false, // print_mode
             false, // plan_mode
@@ -415,7 +415,7 @@ async fn test_access_mode_persists_across_restarts() {
                 repo_dir.path().to_string_lossy().to_string(),
                 "Test".to_string(),
                 BackendType::Zellij, // Changed from Docker to avoid proxy requirement
-                AgentType::ClaudeCode,
+                AgentType::Claude,
                 true,
                 false, // print_mode
                 false, // plan_mode
@@ -491,7 +491,7 @@ async fn test_proxy_port_persists_in_database() {
             branch_name: "test-branch".to_string(),
             initial_prompt: "test".to_string(),
             backend: BackendType::Docker,
-            agent: AgentType::ClaudeCode,
+            agent: AgentType::Claude,
             dangerous_skip_checks: true,
             access_mode: AccessMode::ReadWrite,
         });
@@ -543,7 +543,7 @@ async fn test_delete_session_cleans_up_proxy() {
             repo_dir.path().to_string_lossy().to_string(),
             "Test prompt".to_string(),
             BackendType::Docker,
-            AgentType::ClaudeCode,
+            AgentType::Claude,
             true,
             false, // print_mode
             false, // plan_mode

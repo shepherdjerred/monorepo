@@ -21,7 +21,7 @@ fn create_test_session(name: &str) -> Session {
         branch_name: name.to_string(),
         initial_prompt: "Test prompt".to_string(),
         backend: BackendType::Zellij,
-        agent: AgentType::ClaudeCode,
+        agent: AgentType::Claude,
         dangerous_skip_checks: false,
         access_mode: Default::default(),
     })

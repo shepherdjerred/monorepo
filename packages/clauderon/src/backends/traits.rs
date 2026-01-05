@@ -1,3 +1,4 @@
+use crate::core::session::AgentType;
 use async_trait::async_trait;
 use std::path::{Path, PathBuf};
 
@@ -34,6 +35,9 @@ pub trait GitOperations: Send + Sync {
 /// Options for creating an execution backend session.
 #[derive(Debug, Clone, Default)]
 pub struct CreateOptions {
+    /// The type of agent to use.
+    pub agent_type: AgentType,
+
     /// Run in print mode (non-interactive, outputs response and exits).
     /// Only applicable to Docker backend.
     pub print_mode: bool,

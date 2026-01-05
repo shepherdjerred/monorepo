@@ -189,6 +189,7 @@ impl DockerBackend {
         git_user_email: Option<&str>,
         session_id: Option<&uuid::Uuid>,
         http_port: Option<u16>,
+        agent_type: crate::core::AgentType,
     ) -> anyhow::Result<Vec<String>> {
         let container_name = format!("clauderon-{name}");
         let escaped_prompt = initial_prompt.replace('\'', "'\\''");
@@ -505,13 +506,22 @@ impl DockerBackend {
         // Build a wrapper script that handles both initial creation and container restart:
         // - On first run: session file doesn't exist → create new session with prompt
         // - On restart: session file exists → resume session with --resume --fork
-        let claude_cmd = {
-            use crate::agents::claude_code::ClaudeCodeAgent;
-            use crate::agents::traits::Agent;
+        let agent_cmd = {
+            use crate::agents::{
+                claude_code::ClaudeCodeAgent, gemini_code::GeminiCodeAgent, traits::Agent,
+            };
+            use crate::core::AgentType;
 
-            let agent = ClaudeCodeAgent::new();
-            let mut cmd_vec =
-                agent.start_command(&escaped_prompt, images, dangerous_skip_checks, None); // Don't pass session_id here, we handle it in the wrapper
+            let mut cmd_vec: Vec<String> = match agent_type {
+                AgentType::Claude => {
+                    let agent = ClaudeCodeAgent::new();
+                    agent.start_command(&escaped_prompt, images, dangerous_skip_checks, None)
+                }
+                AgentType::Gemini => {
+                    let agent = GeminiCodeAgent::new();
+                    agent.start_command(&escaped_prompt, images, dangerous_skip_checks, None)
+                }
+            };
 
             // Add print mode flags if enabled
             if print_mode {
@@ -540,7 +550,10 @@ impl DockerBackend {
                 let session_id_str = sid.to_string();
 
                 // Build the create command (for first run)
-                let mut create_cmd = vec!["claude".to_string()];
+                let mut create_cmd = match agent_type {
+                    AgentType::Claude => vec!["claude".to_string()],
+                    AgentType::Gemini => vec!["gemini".to_string()],
+                };
                 create_cmd.push("--session-id".to_string());
                 create_cmd.push(session_id_str.clone());
                 // Add remaining args (skip "claude" at index 0)
@@ -557,12 +570,20 @@ impl DockerBackend {
                 // --fork-session creates a new session ID from the session so we don't modify the original
                 let resume_cmd_str = if dangerous_skip_checks {
                     format!(
-                        "claude --dangerously-skip-permissions --resume {} --fork-session",
+                        "{} --dangerously-skip-permissions --resume {} --fork-session",
+                        match agent_type {
+                            AgentType::Claude => "claude",
+                            AgentType::Gemini => "gemini",
+                        },
                         quote_arg(&session_id_str)
                     )
                 } else {
                     format!(
-                        "claude --resume {} --fork-session",
+                        "{} --resume {} --fork-session",
+                        match agent_type {
+                            AgentType::Claude => "claude",
+                            AgentType::Gemini => "gemini",
+                        },
                         quote_arg(&session_id_str)
                     )
                 };
@@ -597,7 +618,7 @@ fi"#,
             DOCKER_IMAGE.to_string(),
             "bash".to_string(),
             "-c".to_string(),
-            claude_cmd,
+            agent_cmd,
         ]);
 
         Ok(args)
@@ -670,6 +691,7 @@ impl ExecutionBackend for DockerBackend {
             git_user_email.as_deref(),
             options.session_id.as_ref(),
             options.http_port,
+            options.agent_type,
         )?;
         let output = Command::new("docker").args(&args).output().await?;
 
@@ -793,6 +815,7 @@ impl DockerBackend {
             workdir,
             initial_prompt,
             super::traits::CreateOptions {
+                agent_type: crate::core::AgentType::Claude,
                 print_mode: false,
                 plan_mode: true, // Default to plan mode
                 session_proxy_port: None,

@@ -32,19 +32,29 @@ impl ZellijBackend {
         dangerous_skip_checks: bool,
         images: &[String],
         session_id: Option<&uuid::Uuid>,
+        agent_type: crate::core::AgentType,
     ) -> Vec<String> {
-        use crate::agents::claude_code::ClaudeCodeAgent;
-        use crate::agents::traits::Agent;
+        use crate::agents::{
+            claude_code::ClaudeCodeAgent, gemini_code::GeminiCodeAgent, traits::Agent,
+        };
+        use crate::core::AgentType;
 
         let escaped_prompt = initial_prompt.replace('\'', "'\\''");
 
-        // Build claude command using the agent
-        let agent = ClaudeCodeAgent::new();
-        let cmd_vec =
-            agent.start_command(&escaped_prompt, images, dangerous_skip_checks, session_id);
+        // Build command using the selected agent
+        let cmd_vec = match agent_type {
+            AgentType::Claude => {
+                let agent = ClaudeCodeAgent::new();
+                agent.start_command(&escaped_prompt, images, dangerous_skip_checks, session_id)
+            }
+            AgentType::Gemini => {
+                let agent = GeminiCodeAgent::new();
+                agent.start_command(&escaped_prompt, images, dangerous_skip_checks, session_id)
+            }
+        };
 
         // Join all arguments into a shell command, properly quoting each argument
-        let claude_cmd = cmd_vec
+        let agent_cmd = cmd_vec
             .iter()
             .map(|arg| {
                 // Always quote arguments that contain special characters or spaces
@@ -70,7 +80,7 @@ impl ZellijBackend {
             "--".to_string(),
             "bash".to_string(),
             "-c".to_string(),
-            claude_cmd,
+            agent_cmd,
         ]
     }
 
@@ -129,6 +139,7 @@ impl ExecutionBackend for ZellijBackend {
             options.dangerous_skip_checks,
             &options.images,
             options.session_id.as_ref(),
+            options.agent_type,
         );
         let output = Command::new("zellij")
             .args(&pane_args[..])
@@ -244,6 +255,7 @@ impl ZellijBackend {
             workdir,
             initial_prompt,
             super::traits::CreateOptions {
+                agent_type: crate::core::AgentType::Claude,
                 print_mode: false,
                 plan_mode: true, // Default to plan mode
                 session_proxy_port: None,

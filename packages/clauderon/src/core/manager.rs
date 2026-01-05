@@ -361,6 +361,7 @@ impl SessionManager {
                     subdirectory,
                     initial_prompt,
                     backend,
+                    agent,
                     print_mode,
                     plan_mode,
                     access_mode,
@@ -385,6 +386,7 @@ impl SessionManager {
         subdirectory: PathBuf,
         initial_prompt: String,
         backend: BackendType,
+        agent: super::session::AgentType,
         print_mode: bool,
         plan_mode: bool,
         access_mode: super::session::AccessMode,
@@ -510,6 +512,7 @@ impl SessionManager {
                 dangerous_skip_checks,
                 session_id: Some(session_id),
                 initial_workdir: subdirectory.clone(),
+                agent_type: agent,
                 http_port: self.http_port,
             };
             let backend_id = match backend {
@@ -856,6 +859,7 @@ impl SessionManager {
             dangerous_skip_checks,
             session_id: Some(session.id), // Pass session ID for Kubernetes PVC labeling
             initial_workdir: subdirectory.clone(),
+            agent_type: agent,
             http_port: self.http_port,
         };
         let backend_id = match backend {
@@ -1514,7 +1518,12 @@ impl SessionManager {
             dangerous_skip_checks: session.dangerous_skip_checks,
             session_id: Some(session.id),
             initial_workdir: session.subdirectory.clone(),
+<<<<<<< HEAD
             http_port: self.http_port,
+||||||| parent of 887d2fec7 (feat: add support for gemini to clauderon)
+=======
+            agent_type: session.agent,
+>>>>>>> 887d2fec7 (feat: add support for gemini to clauderon)
         };
 
         // Recreate container
