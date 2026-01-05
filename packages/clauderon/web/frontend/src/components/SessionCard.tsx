@@ -60,7 +60,7 @@ export function SessionCard({ session, onAttach, onEdit, onArchive, onDelete }: 
                 href={session.pr_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-500 hover:underline font-mono"
+                className="cursor-pointer text-blue-500 hover:underline font-mono transition-colors duration-200"
               >
                 PR #{session.pr_url.split('/').pop()}
               </a>
@@ -115,6 +115,7 @@ export function SessionCard({ session, onAttach, onEdit, onArchive, onDelete }: 
                   size="icon"
                   onClick={() => { onAttach(session); }}
                   aria-label="Attach to console"
+                  className="cursor-pointer transition-all duration-200 hover:scale-110 hover:shadow-md"
                 >
                   <Terminal className="w-4 h-4" />
                 </Button>
@@ -144,6 +145,7 @@ export function SessionCard({ session, onAttach, onEdit, onArchive, onDelete }: 
                 size="icon"
                 onClick={() => { onArchive(session); }}
                 aria-label="Archive session"
+                className="cursor-pointer transition-all duration-200 hover:scale-110 hover:shadow-md"
               >
                 <Archive className="w-4 h-4" />
               </Button>
@@ -158,7 +160,7 @@ export function SessionCard({ session, onAttach, onEdit, onArchive, onDelete }: 
                 size="icon"
                 onClick={() => { onDelete(session); }}
                 aria-label="Delete session"
-                className="text-destructive hover:bg-destructive/10"
+                className="cursor-pointer text-destructive hover:bg-destructive/10 transition-all duration-200 hover:scale-110 hover:shadow-md"
               >
                 <Trash2 className="w-4 h-4" />
               </Button>

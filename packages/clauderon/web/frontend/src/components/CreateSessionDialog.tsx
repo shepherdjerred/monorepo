@@ -82,7 +82,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
             </h2>
             <button
               onClick={onClose}
-              className="p-2 border-2 border-white bg-white/10 hover:bg-red-600 hover:text-white transition-all font-bold text-white"
+              className="cursor-pointer p-2 border-2 border-white bg-white/10 hover:bg-red-600 hover:text-white transition-all duration-200 font-bold text-white"
               title="Close dialog"
               aria-label="Close dialog"
             >
@@ -130,7 +130,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                 onChange={(e) =>
                   { setFormData({ ...formData, backend: e.target.value as BackendType }); }
                 }
-                className="flex h-10 w-full rounded-md border-2 border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className="cursor-pointer flex h-10 w-full rounded-md border-2 border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <option value="Docker">Docker</option>
                 <option value="Zellij">Zellij</option>
@@ -148,7 +148,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                     access_mode: e.target.value as AccessMode,
                   }); }
                 }
-                className="flex h-10 w-full rounded-md border-2 border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className="cursor-pointer flex h-10 w-full rounded-md border-2 border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <option value="ReadWrite">Read-Write</option>
                 <option value="ReadOnly">Read-Only</option>
@@ -164,7 +164,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
               onChange={(e) =>
                 { setFormData({ ...formData, plan_mode: e.target.checked }); }
               }
-              className="w-4 h-4 rounded border-2 border-input"
+              className="cursor-pointer w-4 h-4 rounded border-2 border-input"
             />
             <Label htmlFor="plan-mode" className="cursor-pointer">
               Start in plan mode (read-only)
@@ -179,9 +179,9 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
               onChange={(e) =>
                 { setFormData({ ...formData, dangerous_skip_checks: e.target.checked }); }
               }
-              className="w-4 h-4"
+              className="cursor-pointer w-4 h-4"
             />
-            <label htmlFor="dangerous-skip-checks" className="text-sm text-destructive font-medium">
+            <label htmlFor="dangerous-skip-checks" className="cursor-pointer text-sm text-destructive font-medium">
               Dangerously skip safety checks (bypass permissions)
             </label>
           </div>
