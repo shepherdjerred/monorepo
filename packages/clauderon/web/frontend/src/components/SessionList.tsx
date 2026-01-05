@@ -19,6 +19,8 @@ type SessionListProps = {
 
 type FilterStatus = "all" | "running" | "idle" | "completed" | "archived";
 
+const TAB_TRIGGER_CLASS = "cursor-pointer transition-all duration-200 hover:bg-primary/20 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-b-4 data-[state=active]:border-foreground";
+
 export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
   const { sessions, isLoading, error, refreshSessions, archiveSession, deleteSession } =
     useSessionContext();
@@ -40,6 +42,7 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
   } | null>(null);
   const [showStatusDialog, setShowStatusDialog] = useState(false);
   const [lastRefreshTime, setLastRefreshTime] = useState<Date>(new Date());
+  const [, setTickCounter] = useState(0); // Force re-render for time display
 
   const filteredSessions = useMemo(() => {
     const sessionArray = Array.from(sessions.values());
@@ -77,6 +80,15 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
     return () => { clearInterval(interval); };
   }, [refreshSessions]);
 
+  // Update time display every second
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTickCounter(prev => prev + 1);
+    }, 1000);
+
+    return () => { clearInterval(interval); };
+  }, []);
+
   // Format last refresh time for display
   const getTimeSinceRefresh = (): string => {
     const seconds = Math.floor((Date.now() - lastRefreshTime.getTime()) / 1000);
@@ -84,11 +96,6 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
     if (seconds < 60) return `${seconds}s ago`;
     const minutes = Math.floor(seconds / 60);
     return `${minutes}m ago`;
-  };
-
-  // Handle tab change with URL update
-  const handleFilterChange = (newFilter: FilterStatus) => {
-    setFilter(newFilter);
   };
 
   const handleArchive = (session: Session) => {
@@ -157,35 +164,35 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
 
       {/* Filters */}
       <nav className="p-4 border-b-2" aria-label="Session filters">
-        <Tabs value={filter} onValueChange={(v) => { handleFilterChange(v as FilterStatus); }}>
+        <Tabs value={filter} onValueChange={(v) => { setFilter(v as FilterStatus); }}>
           <TabsList className="grid w-full grid-cols-5 border-2">
             <TabsTrigger
               value="all"
-              className="font-semibold cursor-pointer transition-all duration-200 hover:bg-primary/20 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-b-4 data-[state=active]:border-foreground"
+              className={`font-semibold ${TAB_TRIGGER_CLASS}`}
             >
               All
             </TabsTrigger>
             <TabsTrigger
               value="running"
-              className="cursor-pointer transition-all duration-200 hover:bg-primary/20 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-b-4 data-[state=active]:border-foreground"
+              className={TAB_TRIGGER_CLASS}
             >
               Running
             </TabsTrigger>
             <TabsTrigger
               value="idle"
-              className="cursor-pointer transition-all duration-200 hover:bg-primary/20 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-b-4 data-[state=active]:border-foreground"
+              className={TAB_TRIGGER_CLASS}
             >
               Idle
             </TabsTrigger>
             <TabsTrigger
               value="completed"
-              className="cursor-pointer transition-all duration-200 hover:bg-primary/20 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-b-4 data-[state=active]:border-foreground"
+              className={TAB_TRIGGER_CLASS}
             >
               Completed
             </TabsTrigger>
             <TabsTrigger
               value="archived"
-              className="cursor-pointer transition-all duration-200 hover:bg-primary/20 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-b-4 data-[state=active]:border-foreground"
+              className={TAB_TRIGGER_CLASS}
             >
               Archived
             </TabsTrigger>
