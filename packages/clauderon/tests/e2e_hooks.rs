@@ -1,14 +1,8 @@
-//! End-to-end tests for Docker hook socket communication
+//! End-to-end tests for Docker hook HTTP communication
 //!
 //! These tests verify that:
-//! 1. Unix sockets on the host are accessible from inside Docker containers
-//! 2. The hook installer correctly creates files inside containers
-//! 3. Hook messages can be sent from container to host
-//!
-//! NOTE: Unix socket tests (test_hook_socket_accessible_from_container,
-//! test_socket_bidirectional_communication) only work on Linux hosts.
-//! On macOS, Docker runs in a VM and Unix sockets cannot be shared
-//! between host and container via volume mounts.
+//! 1. The hook installer correctly creates files inside containers
+//! 2. Hook messages can be sent from container to host via HTTP
 //!
 //! Run with: cargo test --test e2e_hooks -- --include-ignored
 
@@ -17,13 +11,7 @@ mod common;
 use std::time::Duration;
 use tempfile::TempDir;
 use tokio::io::AsyncReadExt;
-use tokio::net::UnixListener;
 use tokio::process::Command;
-
-/// Check if running on Linux (required for socket tests)
-fn is_linux() -> bool {
-    cfg!(target_os = "linux")
-}
 
 /// Generate a unique container name for tests
 fn test_container_name(prefix: &str) -> String {
@@ -43,133 +31,8 @@ async fn cleanup_container(name: &str) {
 }
 
 // =============================================================================
-// Docker socket communication tests
+// Hook installer tests
 // =============================================================================
-
-#[tokio::test]
-#[ignore] // Requires Docker on Linux
-async fn test_hook_socket_accessible_from_container() {
-    if !common::docker_available() {
-        eprintln!("Skipping test: Docker not available");
-        return;
-    }
-
-    if !is_linux() {
-        eprintln!("Skipping test: Unix socket sharing only works on Linux, not macOS");
-        return;
-    }
-
-    let temp_dir = TempDir::new().expect("Failed to create temp dir");
-    let socket_path = temp_dir.path().join("hooks.sock");
-
-    // 1. Create Unix socket listener on host
-    let listener = UnixListener::bind(&socket_path).expect("Failed to bind socket");
-
-    // 2. Start Docker container with temp dir mounted
-    let container_name = test_container_name("socket");
-    let mount_arg = format!("{}:/workspace/.clauderon", temp_dir.path().display());
-
-    let create_output = Command::new("docker")
-        .args([
-            "run",
-            "-d",
-            "--rm",
-            "--name",
-            &container_name,
-            "-v",
-            &mount_arg,
-            "alpine:latest",
-            "sleep",
-            "30",
-        ])
-        .output()
-        .await
-        .expect("Failed to start container");
-
-    if !create_output.status.success() {
-        eprintln!(
-            "Failed to create container: {}",
-            String::from_utf8_lossy(&create_output.stderr)
-        );
-        return;
-    }
-
-    // 3. Install netcat in the container (alpine doesn't have it by default)
-    let install_output = Command::new("docker")
-        .args([
-            "exec",
-            &container_name,
-            "apk",
-            "add",
-            "--no-cache",
-            "netcat-openbsd",
-        ])
-        .output()
-        .await
-        .expect("Failed to install netcat");
-
-    if !install_output.status.success() {
-        cleanup_container(&container_name).await;
-        eprintln!(
-            "Failed to install netcat: {}",
-            String::from_utf8_lossy(&install_output.stderr)
-        );
-        return;
-    }
-
-    // 4. Spawn a task to accept the connection
-    let accept_handle = tokio::spawn(async move {
-        tokio::time::timeout(Duration::from_secs(10), async {
-            let (mut stream, _) = listener.accept().await.expect("Failed to accept");
-            let mut buf = String::new();
-            stream
-                .read_to_string(&mut buf)
-                .await
-                .expect("Failed to read");
-            buf
-        })
-        .await
-    });
-
-    // Give the listener time to start
-    tokio::time::sleep(Duration::from_millis(100)).await;
-
-    // 5. From inside container, send message to socket
-    let exec_output = Command::new("docker")
-        .args([
-            "exec",
-            &container_name,
-            "sh",
-            "-c",
-            "echo 'test message from container' | nc -U /workspace/.clauderon/hooks.sock",
-        ])
-        .output()
-        .await
-        .expect("Failed to exec in container");
-
-    // 6. Verify message received on host
-    let received = accept_handle
-        .await
-        .expect("Accept task panicked")
-        .expect("Timeout waiting for message");
-
-    assert!(
-        received.contains("test message from container"),
-        "Should receive message from container. Got: {}",
-        received
-    );
-
-    // Cleanup
-    cleanup_container(&container_name).await;
-
-    // Verify exec succeeded (after we've checked the message)
-    if !exec_output.status.success() {
-        eprintln!(
-            "Note: nc command returned non-zero (expected): {}",
-            String::from_utf8_lossy(&exec_output.stderr)
-        );
-    }
-}
 
 #[tokio::test]
 #[ignore]
@@ -310,136 +173,12 @@ async fn test_hook_installer_creates_files() {
     cleanup_container(&container_name).await;
 }
 
-#[tokio::test]
-#[ignore] // Requires Docker on Linux
-async fn test_socket_bidirectional_communication() {
-    if !common::docker_available() {
-        eprintln!("Skipping test: Docker not available");
-        return;
-    }
-
-    if !is_linux() {
-        eprintln!("Skipping test: Unix socket sharing only works on Linux, not macOS");
-        return;
-    }
-
-    let temp_dir = TempDir::new().expect("Failed to create temp dir");
-    let socket_path = temp_dir.path().join("test.sock");
-
-    // Create a simple echo server on the socket
-    let listener = UnixListener::bind(&socket_path).expect("Failed to bind socket");
-
-    let container_name = test_container_name("bidir");
-    let mount_arg = format!("{}:/workspace/.clauderon", temp_dir.path().display());
-
-    // Start container
-    let create_output = Command::new("docker")
-        .args([
-            "run",
-            "-d",
-            "--rm",
-            "--name",
-            &container_name,
-            "-v",
-            &mount_arg,
-            "alpine:latest",
-            "sleep",
-            "30",
-        ])
-        .output()
-        .await
-        .expect("Failed to start container");
-
-    if !create_output.status.success() {
-        eprintln!(
-            "Failed to create container: {}",
-            String::from_utf8_lossy(&create_output.stderr)
-        );
-        return;
-    }
-
-    // Install netcat
-    let install_output = Command::new("docker")
-        .args([
-            "exec",
-            &container_name,
-            "apk",
-            "add",
-            "--no-cache",
-            "netcat-openbsd",
-        ])
-        .output()
-        .await
-        .expect("Failed to install netcat");
-
-    if !install_output.status.success() {
-        cleanup_container(&container_name).await;
-        return;
-    }
-
-    // Spawn echo server
-    let server_handle = tokio::spawn(async move {
-        tokio::time::timeout(Duration::from_secs(10), async {
-            let (stream, _) = listener.accept().await.expect("Failed to accept");
-            let mut buf = [0u8; 1024];
-            let n = stream.readable().await.ok();
-            if n.is_some() {
-                let _ = stream.try_read(&mut buf);
-            }
-            String::from_utf8_lossy(&buf)
-                .trim_end_matches('\0')
-                .to_string()
-        })
-        .await
-    });
-
-    tokio::time::sleep(Duration::from_millis(100)).await;
-
-    // Send JSON message from container (like the hook script would)
-    let json_message = r#"{"session_id":"test-123","event":{"type":"PreToolUse"}}"#;
-    let exec_output = Command::new("docker")
-        .args([
-            "exec",
-            &container_name,
-            "sh",
-            "-c",
-            &format!(
-                "echo '{}' | nc -U /workspace/.clauderon/test.sock",
-                json_message
-            ),
-        ])
-        .output()
-        .await
-        .expect("Failed to send message");
-
-    let received = server_handle
-        .await
-        .expect("Server panicked")
-        .expect("Timeout");
-
-    assert!(
-        received.contains("session_id"),
-        "Should receive JSON message. Got: {}",
-        received
-    );
-
-    cleanup_container(&container_name).await;
-
-    // Check exec output for debugging
-    if !exec_output.status.success() {
-        eprintln!(
-            "nc stderr: {}",
-            String::from_utf8_lossy(&exec_output.stderr)
-        );
-    }
-}
-
 // =============================================================================
-// HTTP hook communication tests (works on macOS and Linux)
+// HTTP hook communication tests
 // =============================================================================
 
 /// Test that hooks can send messages via HTTP to the host
-/// This is the primary hook communication method for Docker containers
+/// This is the primary hook communication method for Docker/K8s containers
 #[tokio::test]
 #[ignore] // Requires Docker
 async fn test_http_hook_communication() {
@@ -471,7 +210,6 @@ async fn test_http_hook_communication() {
             let mut reader = BufReader::new(reader);
 
             // Read HTTP request
-            let mut headers = Vec::new();
             let mut content_length = 0usize;
             loop {
                 let mut line = String::new();
@@ -488,7 +226,6 @@ async fn test_http_hook_communication() {
                         .and_then(|s| s.trim().parse().ok())
                         .unwrap_or(0);
                 }
-                headers.push(line);
             }
 
             // Read body
