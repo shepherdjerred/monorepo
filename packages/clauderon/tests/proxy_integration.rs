@@ -123,7 +123,7 @@ fn test_disabled_proxy_config_no_args() {
         &PathBuf::new(),
         "test prompt",
         1000,
-        None, // No proxy config
+        None,  // No proxy config
         false, // print mode
         false, // plan mode
         &[],   // images
