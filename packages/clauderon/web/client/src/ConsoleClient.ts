@@ -39,6 +39,7 @@ export class ConsoleClient {
   private ws: WebSocket | null = null;
   private readonly baseUrl: string;
   private sessionId: string | null = null;
+  private decoder: TextDecoder | null = null;
 
   private listeners: {
     connected: (() => void)[];
@@ -70,6 +71,9 @@ export class ConsoleClient {
     try {
       this.ws = new WebSocket(url);
 
+      // Create decoder instance with fatal=false for graceful error handling
+      this.decoder = new TextDecoder('utf-8', { fatal: false });
+
       this.ws.onopen = () => {
         this.emit("connected");
       };
@@ -93,8 +97,11 @@ export class ConsoleClient {
               const binaryString = atob(message.data);
               // Convert binary string to Uint8Array
               const bytes = Uint8Array.from(binaryString, (char) => char.charCodeAt(0));
-              // Decode UTF-8 bytes to proper string
-              const decoded = new TextDecoder('utf-8').decode(bytes);
+
+              // Use stream mode to handle incomplete UTF-8 sequences at chunk boundaries
+              // fatal: false means replace invalid bytes with � instead of throwing
+              // stream: true means buffer incomplete sequences for next chunk
+              const decoded = this.decoder!.decode(bytes, { stream: true });
               this.emit("data", decoded);
             } catch (decodeError) {
               this.emit(
@@ -134,6 +141,7 @@ export class ConsoleClient {
       this.ws = null;
     }
     this.sessionId = null;
+    this.decoder = null;
   }
 
   /**
