@@ -85,10 +85,7 @@ impl ProxyManager {
 
     /// Generate container configuration files.
     pub fn generate_configs(&self) -> anyhow::Result<()> {
-        generate_container_configs(
-            &self.clauderon_dir,
-            self.config.talos_gateway_port,
-        )?;
+        generate_container_configs(&self.clauderon_dir, self.config.talos_gateway_port)?;
         Ok(())
     }
 

@@ -24,10 +24,10 @@ use crate::core::session::AccessMode;
 /// Check if a request is to a Kubernetes API based on host pattern.
 fn is_k8s_request(host: &str) -> bool {
     // Match kubernetes API hosts
-    host.contains("kubernetes") ||
-    host.contains("k8s.io") ||
-    host == "kubernetes.default.svc" ||
-    host.ends_with(".svc.cluster.local")
+    host.contains("kubernetes")
+        || host.contains("k8s.io")
+        || host == "kubernetes.default.svc"
+        || host.ends_with(".svc.cluster.local")
 }
 
 /// Check if a K8s API request is a write operation based on HTTP method.
@@ -475,7 +475,9 @@ impl HttpHandler for FilteringHandler {
                     return RequestOrResponse::Response(
                         Response::builder()
                             .status(403)
-                            .body(Body::from("Kubernetes write operations not allowed in read-only mode"))
+                            .body(Body::from(
+                                "Kubernetes write operations not allowed in read-only mode",
+                            ))
                             .unwrap(),
                     );
                 }
