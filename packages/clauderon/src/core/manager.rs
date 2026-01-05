@@ -446,7 +446,9 @@ impl SessionManager {
             update_progress(2, "Setting up session proxy".to_string()).await;
             // Create per-session proxy for Docker backends (required, no fallback)
             let proxy_port = if backend == BackendType::Docker {
-                let proxy_manager = self.proxy_manager.as_ref()
+                let proxy_manager = self
+                    .proxy_manager
+                    .as_ref()
                     .ok_or_else(|| anyhow::anyhow!("Proxy manager required for Docker backend"))?;
 
                 let port = proxy_manager
@@ -454,7 +456,13 @@ impl SessionManager {
                     .await
                     .context("Session proxy creation failed - cannot create session")?;
 
-                if let Some(session) = self.sessions.write().await.iter_mut().find(|s| s.id == session_id) {
+                if let Some(session) = self
+                    .sessions
+                    .write()
+                    .await
+                    .iter_mut()
+                    .find(|s| s.id == session_id)
+                {
                     session.set_proxy_port(port);
                 }
 
@@ -466,7 +474,7 @@ impl SessionManager {
                 );
                 Some(port)
             } else {
-                None  // Non-Docker backends don't need proxy
+                None // Non-Docker backends don't need proxy
             };
 
             update_progress(3, "Preparing agent environment".to_string()).await;
@@ -794,7 +802,9 @@ impl SessionManager {
 
         // Create per-session proxy for Docker backends BEFORE creating container (required, no fallback)
         let proxy_port = if backend == BackendType::Docker {
-            let proxy_manager = self.proxy_manager.as_ref()
+            let proxy_manager = self
+                .proxy_manager
+                .as_ref()
                 .ok_or_else(|| anyhow::anyhow!("Proxy manager required for Docker backend"))?;
 
             let port = proxy_manager
@@ -811,7 +821,7 @@ impl SessionManager {
             );
             Some(port)
         } else {
-            None  // Non-Docker backends don't need proxy
+            None // Non-Docker backends don't need proxy
         };
 
         // Prepend plan mode instruction if enabled
