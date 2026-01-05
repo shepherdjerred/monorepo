@@ -87,13 +87,7 @@ fn test_proxy_config_flows_to_container_args() {
         "Expected REQUESTS_CA_BUNDLE env var, got: {args:?}"
     );
 
-    // Verify kubeconfig path
-    assert!(
-        args.iter()
-            .any(|a| a.contains("KUBECONFIG=/etc/clauderon/kube/config")),
-        "Expected KUBECONFIG env var, got: {args:?}"
-    );
-
+    // Kubeconfig is no longer mounted (K8s traffic goes through HTTP proxy)
     // Verify talosconfig path
     assert!(
         args.iter()
@@ -101,12 +95,7 @@ fn test_proxy_config_flows_to_container_args() {
         "Expected TALOSCONFIG env var, got: {args:?}"
     );
 
-    // Verify kube config volume mount (read-only)
-    assert!(
-        args.iter().any(|a| a.contains("/etc/clauderon/kube:ro")),
-        "Expected kube config volume mount, got: {args:?}"
-    );
-
+    // Kubeconfig volume mount removed (K8s traffic goes through HTTP proxy)
     // Verify talos config volume mount (read-only)
     assert!(
         args.iter().any(|a| a.contains("/etc/clauderon/talos:ro")),
@@ -252,9 +241,5 @@ fn test_clauderon_dir_in_volume_mounts() {
             .any(|a| a.contains(&format!("{clauderon_path}/proxy-ca.pem"))),
         "Expected clauderon dir in CA cert mount, got: {args:?}"
     );
-    assert!(
-        args.iter()
-            .any(|a| a.contains(&format!("{clauderon_path}/kube"))),
-        "Expected clauderon dir in kube mount, got: {args:?}"
-    );
+    // Kubeconfig mount removed - K8s traffic goes through HTTP proxy instead
 }
