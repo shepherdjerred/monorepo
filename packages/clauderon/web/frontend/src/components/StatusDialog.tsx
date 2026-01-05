@@ -115,7 +115,7 @@ export function StatusDialog({ onClose }: StatusDialogProps) {
             <h2 className="text-2xl font-bold font-mono uppercase tracking-wider text-white">System Status</h2>
             <button
               onClick={onClose}
-              className="p-2 border-2 border-white bg-white/10 hover:bg-red-600 hover:text-white transition-all font-bold text-white"
+              className="cursor-pointer p-2 border-2 border-white bg-white/10 hover:bg-red-600 hover:text-white transition-all duration-200 font-bold text-white"
               title="Close"
             >
               <X className="w-5 h-5" />
@@ -204,7 +204,7 @@ export function StatusDialog({ onClose }: StatusDialogProps) {
                                     <button
                                       type="button"
                                       onClick={() => { toggleShowCredential(cred.service_id); }}
-                                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-secondary rounded"
+                                      className="cursor-pointer absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-secondary rounded transition-colors duration-200"
                                       disabled={savingCredential === cred.service_id}
                                     >
                                       {showCredentials.get(cred.service_id) ? (
@@ -217,7 +217,7 @@ export function StatusDialog({ onClose }: StatusDialogProps) {
                                   <button
                                     onClick={() => { void handleSaveCredential(cred.service_id); }}
                                     disabled={savingCredential === cred.service_id}
-                                    className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                    className="cursor-pointer px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                   >
                                     {savingCredential === cred.service_id ? (
                                       <>
@@ -335,7 +335,7 @@ export function StatusDialog({ onClose }: StatusDialogProps) {
         <div className="flex justify-end gap-3 p-6 border-t-4 border-primary" style={{ backgroundColor: 'hsl(220, 15%, 90%)' }}>
           <button
             onClick={onClose}
-            className="px-4 py-2 border-2 font-bold transition-colors"
+            className="cursor-pointer px-4 py-2 border-2 font-bold transition-colors duration-200 hover:opacity-90"
             style={{ backgroundColor: 'hsl(220, 85%, 25%)', color: 'white', borderColor: 'hsl(220, 85%, 25%)' }}
           >
             Close
