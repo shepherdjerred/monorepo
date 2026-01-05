@@ -6,7 +6,7 @@ use ratatui::{
     widgets::{Block, Borders, Clear, Paragraph, Wrap},
 };
 
-use crate::core::{AccessMode, BackendType};
+use crate::core::{AccessMode, AgentType, BackendType};
 use crate::tui::app::{App, CreateDialogFocus};
 
 /// Render the create session dialog
@@ -44,6 +44,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
             Constraint::Length(prompt_height as u16 + 2), // Prompt (dynamic + borders)
             Constraint::Length(3),                        // Repo path
             Constraint::Length(2),                        // Backend
+            Constraint::Length(2),                        // Agent
             Constraint::Length(2),                        // Access mode
             Constraint::Length(2),                        // Skip checks
             Constraint::Length(2),                        // Plan mode
@@ -87,6 +88,18 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         inner[2],
     );
 
+    // Agent selection
+    render_radio_field(
+        frame,
+        "Agent",
+        &[
+            ("Claude Code", dialog.agent == AgentType::ClaudeCode),
+            ("Codex", dialog.agent == AgentType::Codex),
+        ],
+        dialog.focus == CreateDialogFocus::Agent,
+        inner[3],
+    );
+
     // Access mode selection
     render_radio_field(
         frame,
@@ -96,7 +109,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
             ("Read-Write", dialog.access_mode == AccessMode::ReadWrite),
         ],
         dialog.focus == CreateDialogFocus::AccessMode,
-        inner[3],
+        inner[4],
     );
 
     // Skip checks checkbox
@@ -105,7 +118,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         "Dangerously skip checks",
         dialog.skip_checks,
         dialog.focus == CreateDialogFocus::SkipChecks,
-        inner[4],
+        inner[5],
     );
 
     // Plan mode checkbox
@@ -114,7 +127,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         "Start in plan mode",
         dialog.plan_mode,
         dialog.focus == CreateDialogFocus::PlanMode,
-        inner[5],
+        inner[6],
     );
 
     // Buttons
@@ -122,7 +135,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         frame,
         dialog.focus == CreateDialogFocus::Buttons,
         dialog.button_create_focused,
-        inner[7],
+        inner[8],
     );
 
     // Render directory picker overlay if active
