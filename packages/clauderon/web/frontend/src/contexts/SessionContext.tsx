@@ -13,6 +13,7 @@ type SessionContextValue = {
   deleteSession: (id: string) => Promise<void>;
   archiveSession: (id: string) => Promise<void>;
   updateAccessMode: (id: string, mode: AccessMode) => Promise<void>;
+  updateSession: (id: string, title?: string, description?: string) => Promise<void>;
   client: ClauderonClient;
 }
 
@@ -75,6 +76,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     [client, refreshSessions]
   );
 
+  const updateSession = useCallback(
+    async (id: string, title?: string, description?: string) => {
+      await client.updateSessionMetadata(id, title, description);
+      // WebSocket event will update state
+    },
+    [client]
+  );
+
   // Handle real-time events
   const handleEvent = useCallback((event: { type: string; payload?: Session | { id: string } }) => {
     switch (event.type) {
@@ -124,6 +133,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         deleteSession,
         archiveSession,
         updateAccessMode,
+        updateSession,
         client,
       }}
     >
