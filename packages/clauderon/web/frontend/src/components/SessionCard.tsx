@@ -131,6 +131,7 @@ export function SessionCard({ session, onAttach, onEdit, onArchive, onDelete }: 
                 size="icon"
                 onClick={() => { onEdit(session); }}
                 aria-label="Edit session"
+                className="cursor-pointer transition-all duration-200 hover:scale-110 hover:shadow-md"
               >
                 <Edit className="w-4 h-4" />
               </Button>
