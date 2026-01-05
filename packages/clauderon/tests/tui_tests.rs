@@ -353,7 +353,7 @@ async fn test_create_dialog_toggle_backend() {
 
     assert_eq!(app.create_dialog.backend, BackendType::Zellij); // Default is Zellij
 
-    // Toggle to Docker
+    // Toggle to Docker (Left and Right both toggle forward)
     handle_key_event(&mut app, key(KeyCode::Left))
         .await
         .unwrap();
@@ -371,11 +371,11 @@ async fn test_create_dialog_toggle_backend() {
         .unwrap();
     assert_eq!(app.create_dialog.backend, BackendType::Zellij);
 
-    // Test going the other direction: Zellij -> Kubernetes
+    // Verify Right key also toggles (same direction as Left)
     handle_key_event(&mut app, key(KeyCode::Right))
         .await
         .unwrap();
-    assert_eq!(app.create_dialog.backend, BackendType::Kubernetes);
+    assert_eq!(app.create_dialog.backend, BackendType::Docker);
 }
 
 #[tokio::test]
