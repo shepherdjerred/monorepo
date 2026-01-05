@@ -22,14 +22,14 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
     agent: "ClaudeCode" as AgentType,
     access_mode: "ReadWrite" as AccessMode,
     plan_mode: true,
-    dangerous_skip_checks: true, // Docker default
+    dangerous_skip_checks: true, // Docker/Kubernetes default
   });
 
-  // Auto-check dangerous_skip_checks for Docker, uncheck for Zellij
+  // Auto-check dangerous_skip_checks for Docker and Kubernetes, uncheck for Zellij
   useEffect(() => {
     setFormData(prev => ({
       ...prev,
-      dangerous_skip_checks: prev.backend === "Docker"
+      dangerous_skip_checks: prev.backend === "Docker" || prev.backend === "Kubernetes"
     }));
   }, [formData.backend]);
 
@@ -130,6 +130,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
               >
                 <option value="Docker">Docker</option>
                 <option value="Zellij">Zellij</option>
+                <option value="Kubernetes">Kubernetes</option>
               </select>
             </div>
 
@@ -151,6 +152,17 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
               </select>
             </div>
           </div>
+
+          {formData.backend === "Kubernetes" && (
+            <div className="mt-2 p-3 border-2 text-sm font-mono" style={{
+              backgroundColor: 'hsl(220, 15%, 90%)',
+              borderColor: 'hsl(220, 85%, 65%)',
+              color: 'hsl(220, 85%, 25%)'
+            }}>
+              <strong>Note:</strong> Requires kubectl access and the <code>clauderon</code> namespace.
+              Configuration: <code>~/.clauderon/k8s-config.toml</code>
+            </div>
+          )}
 
           <div className="flex items-center gap-2">
             <input
