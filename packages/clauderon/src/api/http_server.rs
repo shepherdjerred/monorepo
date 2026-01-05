@@ -5,6 +5,8 @@ use crate::api::ws_events::{EventBroadcaster, broadcast_event};
 use crate::auth::{self, AuthState};
 use crate::core::manager::SessionManager;
 use crate::core::session::AccessMode;
+use crate::core::session::ClaudeWorkingStatus;
+use crate::hooks::{HookEvent, HookMessage};
 use axum::{
     Json, Router,
     extract::{Path, Query, State},
@@ -76,6 +78,8 @@ pub fn create_router(auth_state: &Option<AuthState>, dev_mode: bool) -> Router<A
         .route("/api/auth/login/start", post(login_start_wrapper))
         .route("/api/auth/login/finish", post(login_finish_wrapper))
         .route("/api/auth/logout", post(logout_wrapper))
+        // Hook endpoint (public - used by containers without auth)
+        .route("/api/hooks", post(receive_hook))
         // Merge protected routes
         .merge(protected_routes);
 
@@ -699,4 +703,34 @@ impl IntoResponse for AppError {
 
         (status, body).into_response()
     }
+}
+
+/// Receive hook messages from containers via HTTP
+///
+/// This endpoint is used by Docker containers to send Claude status updates
+/// since Unix sockets don't work across the macOS VM boundary.
+async fn receive_hook(
+    State(state): State<AppState>,
+    Json(msg): Json<HookMessage>,
+) -> Result<Json<serde_json::Value>, AppError> {
+    tracing::debug!(
+        session_id = %msg.session_id,
+        event = ?msg.event,
+        "Received hook message via HTTP"
+    );
+
+    let new_status = match msg.event {
+        HookEvent::UserPromptSubmit => ClaudeWorkingStatus::Working,
+        HookEvent::PreToolUse { .. } => ClaudeWorkingStatus::Working,
+        HookEvent::PermissionRequest => ClaudeWorkingStatus::WaitingApproval,
+        HookEvent::Stop => ClaudeWorkingStatus::WaitingInput,
+        HookEvent::IdlePrompt => ClaudeWorkingStatus::Idle,
+    };
+
+    state
+        .session_manager
+        .update_claude_status(msg.session_id, new_status)
+        .await?;
+
+    Ok(Json(json!({ "status": "ok" })))
 }

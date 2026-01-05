@@ -1,3 +1,4 @@
+use std::path::Path;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::time::interval;
@@ -53,7 +54,10 @@ impl CIPoller {
         for session in sessions {
             // Only poll sessions with PRs
             if let Some(ref pr_url) = session.pr_url {
-                if let Err(e) = self.poll_pr_status(&session.id, pr_url).await {
+                if let Err(e) = self
+                    .poll_pr_status(&session.id, pr_url, &session.repo_path)
+                    .await
+                {
                     tracing::debug!(
                         session_id = %session.id,
                         pr_url = %pr_url,
@@ -73,7 +77,7 @@ impl CIPoller {
             // Only discover PRs for sessions without pr_url
             if session.pr_url.is_none() {
                 if let Err(e) = self
-                    .discover_pr_for_session(&session.id, &session.branch_name)
+                    .discover_pr_for_session(&session.id, &session.branch_name, &session.repo_path)
                     .await
                 {
                     tracing::debug!(
@@ -92,9 +96,12 @@ impl CIPoller {
         &self,
         session_id: &Uuid,
         branch_name: &str,
+        repo_path: &Path,
     ) -> anyhow::Result<()> {
         // Use gh CLI to find PRs for this branch
+        // gh infers the repo from the git remote in the working directory
         let output = tokio::process::Command::new("gh")
+            .current_dir(repo_path)
             .args([
                 "pr",
                 "list",
@@ -136,14 +143,16 @@ impl CIPoller {
     }
 
     /// Check for merge conflicts on all sessions with PRs
-    ///
     async fn check_conflicts(&self) {
         let sessions = self.manager.list_sessions().await;
 
         for session in sessions {
             // Only check sessions with PRs
             if let Some(ref pr_url) = session.pr_url {
-                if let Err(e) = self.check_pr_conflicts(&session.id, pr_url).await {
+                if let Err(e) = self
+                    .check_pr_conflicts(&session.id, pr_url, &session.repo_path)
+                    .await
+                {
                     tracing::debug!(
                         session_id = %session.id,
                         pr_url = %pr_url,
@@ -156,7 +165,12 @@ impl CIPoller {
     }
 
     /// Check for merge conflicts on a specific PR
-    async fn check_pr_conflicts(&self, session_id: &Uuid, pr_url: &str) -> anyhow::Result<()> {
+    async fn check_pr_conflicts(
+        &self,
+        session_id: &Uuid,
+        pr_url: &str,
+        repo_path: &Path,
+    ) -> anyhow::Result<()> {
         // Parse PR number from URL
         let pr_number = pr_url
             .split('/')
@@ -165,7 +179,9 @@ impl CIPoller {
             .ok_or_else(|| anyhow::anyhow!("Invalid PR URL: {}", pr_url))?;
 
         // Use gh CLI to check if PR is mergeable
+        // gh infers the repo from the git remote in the working directory
         let output = tokio::process::Command::new("gh")
+            .current_dir(repo_path)
             .args(["pr", "view", &pr_number.to_string(), "--json", "mergeable"])
             .output()
             .await?;
@@ -194,7 +210,12 @@ impl CIPoller {
     }
 
     /// Poll CI status for a specific PR
-    async fn poll_pr_status(&self, session_id: &Uuid, pr_url: &str) -> anyhow::Result<()> {
+    async fn poll_pr_status(
+        &self,
+        session_id: &Uuid,
+        pr_url: &str,
+        repo_path: &Path,
+    ) -> anyhow::Result<()> {
         // Parse PR number from URL
         let pr_number = pr_url
             .split('/')
@@ -203,7 +224,9 @@ impl CIPoller {
             .ok_or_else(|| anyhow::anyhow!("Invalid PR URL: {}", pr_url))?;
 
         // Use gh CLI to check PR status
+        // gh infers the repo from the git remote in the working directory
         let output = tokio::process::Command::new("gh")
+            .current_dir(repo_path)
             .args(["pr", "checks", &pr_number.to_string(), "--json", "state"])
             .output()
             .await?;
