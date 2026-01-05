@@ -252,7 +252,7 @@ export function Console({ sessionId, sessionName, onClose, onSwitchToChat }: Con
             {onSwitchToChat && (
               <button
                 onClick={onSwitchToChat}
-                className="p-2 border-2 border-white bg-white/10 hover:bg-blue-600 hover:text-white transition-all font-bold text-white"
+                className="cursor-pointer p-2 border-2 border-white bg-white/10 hover:bg-blue-600 hover:text-white transition-all duration-200 font-bold text-white"
                 title="Switch to chat view"
                 aria-label="Switch to chat view"
               >
@@ -261,7 +261,7 @@ export function Console({ sessionId, sessionName, onClose, onSwitchToChat }: Con
             )}
             <button
               onClick={onClose}
-              className="p-2 border-2 border-white bg-white/10 hover:bg-red-600 hover:text-white transition-all font-bold text-white"
+              className="cursor-pointer p-2 border-2 border-white bg-white/10 hover:bg-red-600 hover:text-white transition-all duration-200 font-bold text-white"
               title="Close console"
               aria-label="Close console"
             >
