@@ -414,7 +414,7 @@ async fn test_access_mode_persists_across_restarts() {
             .create_session(
                 repo_dir.path().to_string_lossy().to_string(),
                 "Test".to_string(),
-                BackendType::Docker,
+                BackendType::Zellij, // Changed from Docker to avoid proxy requirement
                 AgentType::ClaudeCode,
                 true,
                 false, // print_mode
