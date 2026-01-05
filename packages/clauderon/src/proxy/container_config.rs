@@ -8,41 +8,9 @@ use std::path::PathBuf;
 /// Generate all container configuration files.
 pub fn generate_container_configs(
     clauderon_dir: &PathBuf,
-    k8s_proxy_port: u16,
     talos_gateway_port: u16,
 ) -> anyhow::Result<()> {
-    generate_kubeconfig(clauderon_dir, k8s_proxy_port)?;
     generate_talosconfig(clauderon_dir, talos_gateway_port)?;
-    Ok(())
-}
-
-/// Generate kubeconfig for containers.
-///
-/// This kubeconfig points to the kubectl proxy running on the host,
-/// so containers don't need any Kubernetes credentials.
-fn generate_kubeconfig(clauderon_dir: &PathBuf, port: u16) -> anyhow::Result<()> {
-    let kube_dir = clauderon_dir.join("kube");
-    std::fs::create_dir_all(&kube_dir)?;
-
-    let config = format!(
-        r"apiVersion: v1
-kind: Config
-clusters:
-- cluster:
-    server: http://host.docker.internal:{port}
-  name: clauderon-proxied
-contexts:
-- context:
-    cluster: clauderon-proxied
-  name: default
-current-context: default
-"
-    );
-
-    let config_path = kube_dir.join("config");
-    std::fs::write(&config_path, config)?;
-
-    tracing::info!("Generated container kubeconfig at {:?}", config_path);
     Ok(())
 }
 
@@ -81,21 +49,6 @@ contexts:
 mod tests {
     use super::*;
     use tempfile::tempdir;
-
-    #[test]
-    fn test_generate_kubeconfig() {
-        let dir = tempdir().unwrap();
-        let clauderon_dir = dir.path().to_path_buf();
-
-        generate_kubeconfig(&clauderon_dir, 18081).unwrap();
-
-        let config_path = clauderon_dir.join("kube/config");
-        assert!(config_path.exists());
-
-        let content = std::fs::read_to_string(&config_path).unwrap();
-        assert!(content.contains("host.docker.internal:18081"));
-        assert!(content.contains("clauderon-proxied"));
-    }
 
     #[test]
     fn test_generate_talosconfig() {

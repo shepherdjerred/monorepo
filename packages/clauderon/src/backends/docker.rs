@@ -71,61 +71,45 @@ const DOCKER_IMAGE: &str = "ghcr.io/shepherdjerred/dotfiles";
 /// or add it to the Dockerfile.
 ///
 /// Proxy configuration for Docker containers.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct DockerProxyConfig {
-    /// Enable proxy support.
-    pub enabled: bool,
-    /// HTTP proxy port.
-    pub http_proxy_port: u16,
-    /// Path to the clauderon config directory (contains CA cert, kubeconfig, talosconfig).
+    /// Session-specific proxy port (required).
+    pub session_proxy_port: u16,
+    /// Path to the clauderon config directory (contains CA cert, talosconfig).
     pub clauderon_dir: PathBuf,
-    /// Session-specific proxy port (overrides http_proxy_port if set).
-    pub session_proxy_port: Option<u16>,
 }
 
 impl DockerProxyConfig {
     /// Create a new proxy configuration.
     #[must_use]
-    pub fn new(http_proxy_port: u16, clauderon_dir: PathBuf) -> Self {
+    pub fn new(session_proxy_port: u16, clauderon_dir: PathBuf) -> Self {
         Self {
-            enabled: true,
-            http_proxy_port,
+            session_proxy_port,
             clauderon_dir,
-            session_proxy_port: None,
         }
-    }
-
-    /// Create a disabled proxy configuration.
-    #[must_use]
-    pub fn disabled() -> Self {
-        Self::default()
     }
 }
 
 /// Docker container backend
 pub struct DockerBackend {
-    /// Proxy configuration.
-    proxy_config: DockerProxyConfig,
+    /// Path to clauderon directory for proxy CA and configs.
+    clauderon_dir: PathBuf,
 }
 
 impl DockerBackend {
-    /// Create a new Docker backend without proxy support.
+    /// Create a new Docker backend.
     #[must_use]
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
+        let home = dirs::home_dir().unwrap_or_else(|| PathBuf::from("/tmp"));
         Self {
-            proxy_config: DockerProxyConfig {
-                enabled: false,
-                http_proxy_port: 0,
-                clauderon_dir: PathBuf::new(),
-                session_proxy_port: None,
-            },
+            clauderon_dir: home.join(".clauderon"),
         }
     }
 
-    /// Create a new Docker backend with proxy support.
+    /// Create a Docker backend with a specific clauderon directory.
     #[must_use]
-    pub const fn with_proxy(proxy_config: DockerProxyConfig) -> Self {
-        Self { proxy_config }
+    pub fn with_clauderon_dir(clauderon_dir: PathBuf) -> Self {
+        Self { clauderon_dir }
     }
 
     /// Check if a container is running
@@ -312,120 +296,95 @@ impl DockerBackend {
             }
         }
 
-        // Add proxy configuration if enabled
+        // Add proxy configuration
         if let Some(proxy) = proxy_config {
-            if proxy.enabled {
-                // Use session-specific port if available, otherwise use global port
-                let port = proxy.session_proxy_port.unwrap_or(proxy.http_proxy_port);
-                let clauderon_dir = &proxy.clauderon_dir;
+            let port = proxy.session_proxy_port;
+            let clauderon_dir = &proxy.clauderon_dir;
 
-                // Validate required files exist before attempting to mount them
-                let ca_cert_path = clauderon_dir.join("proxy-ca.pem");
-                let kube_config_dir = clauderon_dir.join("kube");
-                let talos_config_dir = clauderon_dir.join("talos");
+            // Validate required files exist before attempting to mount them
+            let ca_cert_path = clauderon_dir.join("proxy-ca.pem");
+            let talos_config_dir = clauderon_dir.join("talos");
 
-                // CA certificate is required - fail fast if missing
-                if !ca_cert_path.exists() {
-                    anyhow::bail!(
-                        "Proxy CA certificate not found at {}. \
-                        Ensure the clauderon daemon is running and initialized.",
-                        ca_cert_path.display()
-                    );
-                }
+            // CA certificate is required - fail fast if missing
+            if !ca_cert_path.exists() {
+                anyhow::bail!(
+                    "Proxy CA certificate not found at {}. \
+                    Ensure the clauderon daemon is running and initialized.",
+                    ca_cert_path.display()
+                );
+            }
 
-                // Check optional configs
-                let has_kube_config = kube_config_dir.exists();
-                let has_talos_config = talos_config_dir.exists();
+            // Check optional configs
+            let has_talos_config = talos_config_dir.exists();
 
-                if !has_kube_config {
-                    tracing::debug!(
-                        "Kubeconfig not found at {:?}, skipping mount",
-                        kube_config_dir
-                    );
-                }
+            if !has_talos_config {
+                tracing::debug!(
+                    "Talosconfig not found at {:?}, skipping mount",
+                    talos_config_dir
+                );
+            }
 
-                if !has_talos_config {
-                    tracing::debug!(
-                        "Talosconfig not found at {:?}, skipping mount",
-                        talos_config_dir
-                    );
-                }
+            // Add host.docker.internal resolution
+            // Required for Linux and macOS with OrbStack
+            // Harmless on Docker Desktop (flag is ignored if host already exists)
+            args.extend([
+                "--add-host".to_string(),
+                "host.docker.internal:host-gateway".to_string(),
+            ]);
 
-                // Add host.docker.internal resolution
-                // Required for Linux and macOS with OrbStack
-                // Harmless on Docker Desktop (flag is ignored if host already exists)
-                args.extend([
-                    "--add-host".to_string(),
-                    "host.docker.internal:host-gateway".to_string(),
-                ]);
+            // Proxy environment variables
+            args.extend([
+                "-e".to_string(),
+                format!("HTTP_PROXY=http://host.docker.internal:{port}"),
+                "-e".to_string(),
+                format!("HTTPS_PROXY=http://host.docker.internal:{port}"),
+                "-e".to_string(),
+                "NO_PROXY=localhost,127.0.0.1,host.docker.internal".to_string(),
+            ]);
 
-                // Proxy environment variables
-                args.extend([
-                    "-e".to_string(),
-                    format!("HTTP_PROXY=http://host.docker.internal:{port}"),
-                    "-e".to_string(),
-                    format!("HTTPS_PROXY=http://host.docker.internal:{port}"),
-                    "-e".to_string(),
-                    "NO_PROXY=localhost,127.0.0.1,host.docker.internal".to_string(),
-                ]);
+            // Set dummy tokens so CLI tools will make requests (proxy replaces with real tokens)
+            args.extend([
+                "-e".to_string(),
+                "GH_TOKEN=clauderon-proxy".to_string(),
+                "-e".to_string(),
+                "GITHUB_TOKEN=clauderon-proxy".to_string(),
+                // Set placeholder OAuth token - Claude Code uses this for auth
+                // The proxy will intercept API requests and inject the real OAuth token
+                "-e".to_string(),
+                "CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-clauderon-proxy-placeholder".to_string(),
+            ]);
 
-                // Set dummy tokens so CLI tools will make requests (proxy replaces with real tokens)
-                args.extend([
-                    "-e".to_string(),
-                    "GH_TOKEN=clauderon-proxy".to_string(),
-                    "-e".to_string(),
-                    "GITHUB_TOKEN=clauderon-proxy".to_string(),
-                    // Set placeholder OAuth token - Claude Code uses this for auth
-                    // The proxy will intercept API requests and inject the real OAuth token
-                    "-e".to_string(),
-                    "CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-clauderon-proxy-placeholder".to_string(),
-                ]);
+            // SSL/TLS environment variables for CA trust
+            args.extend([
+                "-e".to_string(),
+                "NODE_EXTRA_CA_CERTS=/etc/clauderon/proxy-ca.pem".to_string(),
+                "-e".to_string(),
+                "SSL_CERT_FILE=/etc/clauderon/proxy-ca.pem".to_string(),
+                "-e".to_string(),
+                "REQUESTS_CA_BUNDLE=/etc/clauderon/proxy-ca.pem".to_string(),
+            ]);
 
-                // SSL/TLS environment variables for CA trust
-                args.extend([
-                    "-e".to_string(),
-                    "NODE_EXTRA_CA_CERTS=/etc/clauderon/proxy-ca.pem".to_string(),
-                    "-e".to_string(),
-                    "SSL_CERT_FILE=/etc/clauderon/proxy-ca.pem".to_string(),
-                    "-e".to_string(),
-                    "REQUESTS_CA_BUNDLE=/etc/clauderon/proxy-ca.pem".to_string(),
-                ]);
+            // Volume mounts for proxy configs (read-only)
+            // CA certificate is always mounted (required)
+            args.extend([
+                "-v".to_string(),
+                format!(
+                    "{display}:/etc/clauderon/proxy-ca.pem:ro",
+                    display = ca_cert_path.display()
+                ),
+            ]);
 
-                // Volume mounts for proxy configs (read-only)
-                // CA certificate is always mounted (required)
+            // Mount and configure Talos if available
+            if has_talos_config {
                 args.extend([
                     "-v".to_string(),
                     format!(
-                        "{display}:/etc/clauderon/proxy-ca.pem:ro",
-                        display = ca_cert_path.display()
+                        "{display}:/etc/clauderon/talos:ro",
+                        display = talos_config_dir.display()
                     ),
+                    "-e".to_string(),
+                    "TALOSCONFIG=/etc/clauderon/talos/config".to_string(),
                 ]);
-
-                // Mount and configure Kubernetes if available
-                if has_kube_config {
-                    args.extend([
-                        "-v".to_string(),
-                        format!(
-                            "{display}:/etc/clauderon/kube:ro",
-                            display = kube_config_dir.display()
-                        ),
-                        "-e".to_string(),
-                        "KUBECONFIG=/etc/clauderon/kube/config".to_string(),
-                    ]);
-                }
-
-                // Mount and configure Talos if available
-                if has_talos_config {
-                    args.extend([
-                        "-v".to_string(),
-                        format!(
-                            "{display}:/etc/clauderon/talos:ro",
-                            display = talos_config_dir.display()
-                        ),
-                        "-e".to_string(),
-                        "TALOSCONFIG=/etc/clauderon/talos/config".to_string(),
-                    ]);
-                }
             }
         }
 
@@ -672,18 +631,12 @@ impl ExecutionBackend for DockerBackend {
         // Run as current user to avoid root privileges (claude refuses --dangerously-skip-permissions as root)
         let uid = std::process::id();
 
-        let mut proxy_config = self.proxy_config.clone();
+        // Build proxy config dynamically from session-specific port
+        let proxy_config = options.session_proxy_port.map(|session_port| {
+            DockerProxyConfig::new(session_port, self.clauderon_dir.clone())
+        });
 
-        // Override with session-specific proxy port if provided
-        if let Some(session_port) = options.session_proxy_port {
-            proxy_config.session_proxy_port = Some(session_port);
-        }
-
-        let proxy_config_ref = if proxy_config.enabled {
-            Some(&proxy_config)
-        } else {
-            None
-        };
+        let proxy_config_ref = proxy_config.as_ref();
 
         // Read git user configuration from the host
         let (git_user_name, git_user_email) = read_git_user_config().await;
@@ -1185,15 +1138,12 @@ mod tests {
         let ca_cert_path = clauderon_dir.path().join("proxy-ca.pem");
         std::fs::write(&ca_cert_path, "dummy cert").expect("Failed to write cert");
 
-        // Create kube and talos directories so they get mounted
-        let kube_dir = clauderon_dir.path().join("kube");
+        // Create talos directory so it gets mounted
         let talos_dir = clauderon_dir.path().join("talos");
-        std::fs::create_dir(&kube_dir).expect("Failed to create kube dir");
         std::fs::create_dir(&talos_dir).expect("Failed to create talos dir");
-        std::fs::write(kube_dir.join("config"), "dummy").expect("Failed to write kube config");
         std::fs::write(talos_dir.join("config"), "dummy").expect("Failed to write talos config");
 
-        let proxy_config = DockerProxyConfig::new(18080, clauderon_dir.path().to_path_buf());
+        let proxy_config = DockerProxyConfig::new(18100, clauderon_dir.path().to_path_buf());
         let args = DockerBackend::build_create_args(
             "test-session",
             &PathBuf::from("/workspace"),
@@ -1223,10 +1173,6 @@ mod tests {
             has_ssl_cert,
             "Expected SSL_CERT_FILE env var, got: {args:?}"
         );
-
-        // Should have KUBECONFIG
-        let has_kubeconfig = args.iter().any(|a| a.contains("KUBECONFIG"));
-        assert!(has_kubeconfig, "Expected KUBECONFIG env var, got: {args:?}");
     }
 
     /// Test that proxy config adds volume mounts for configs
@@ -1237,12 +1183,7 @@ mod tests {
         let ca_cert_path = clauderon_dir.path().join("proxy-ca.pem");
         std::fs::write(&ca_cert_path, "dummy cert").expect("Failed to write cert");
 
-        // Create kube directory so it gets mounted
-        let kube_dir = clauderon_dir.path().join("kube");
-        std::fs::create_dir(&kube_dir).expect("Failed to create kube dir");
-        std::fs::write(kube_dir.join("config"), "dummy").expect("Failed to write kube config");
-
-        let proxy_config = DockerProxyConfig::new(18080, clauderon_dir.path().to_path_buf());
+        let proxy_config = DockerProxyConfig::new(18100, clauderon_dir.path().to_path_buf());
         let args = DockerBackend::build_create_args(
             "test-session",
             &PathBuf::from("/workspace"),
@@ -1262,23 +1203,18 @@ mod tests {
         // Should have proxy-ca.pem mount
         let has_ca_mount = args.iter().any(|a| a.contains("proxy-ca.pem"));
         assert!(has_ca_mount, "Expected proxy-ca.pem mount, got: {args:?}");
-
-        // Should have kube config mount
-        let has_kube_mount = args.iter().any(|a| a.contains("/etc/clauderon/kube:ro"));
-        assert!(has_kube_mount, "Expected kube config mount, got: {args:?}");
     }
 
-    /// Test that disabled proxy config doesn't add env vars
+    /// Test that no proxy config doesn't add env vars
     #[test]
-    fn test_disabled_proxy_config() {
-        let proxy_config = DockerProxyConfig::disabled();
+    fn test_no_proxy_config() {
         let args = DockerBackend::build_create_args(
             "test-session",
             &PathBuf::from("/workspace"),
             &PathBuf::new(), // initial_workdir (empty = root)
             "test prompt",
             1000,
-            Some(&proxy_config),
+            None,  // No proxy config
             false, // print mode
             true,  // dangerous_skip_checks
             &[],   // no images
@@ -1292,7 +1228,7 @@ mod tests {
         let has_https_proxy = args.iter().any(|a| a.contains("HTTPS_PROXY"));
         assert!(
             !has_https_proxy,
-            "Disabled proxy should not add HTTPS_PROXY"
+            "No proxy config should not add HTTPS_PROXY"
         );
     }
 
@@ -1305,7 +1241,7 @@ mod tests {
         let ca_cert_path = clauderon_dir.path().join("proxy-ca.pem");
         std::fs::write(&ca_cert_path, "dummy cert").expect("Failed to write cert");
 
-        let proxy_config = DockerProxyConfig::new(18080, clauderon_dir.path().to_path_buf());
+        let proxy_config = DockerProxyConfig::new(18100, clauderon_dir.path().to_path_buf());
         let args = DockerBackend::build_create_args(
             "test-session",
             &PathBuf::from("/workspace"),

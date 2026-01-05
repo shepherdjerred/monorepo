@@ -75,30 +75,21 @@ pub async fn run_daemon_with_http(
         None
     };
 
-    // Initialize the session manager with proxy support if available
+    // Initialize the session manager
+    // Note: Proxy config is now provided per-session, not at backend initialization
     tracing::debug!("Initializing session manager...");
-    let mut session_manager = if let Some(ref pm) = proxy_manager {
-        let docker_proxy_config =
-            DockerProxyConfig::new(pm.http_proxy_port(), pm.clauderon_dir().clone());
-        let docker_backend = DockerBackend::with_proxy(docker_proxy_config);
-        let mut sm = SessionManager::with_docker_backend(Arc::clone(&store), docker_backend)
-            .await
-            .map_err(|e| {
-                tracing::error!("Failed to initialize session manager: {}", e);
-                e
-            })?;
+    let docker_backend = DockerBackend::new();
+    let mut session_manager = SessionManager::with_docker_backend(Arc::clone(&store), docker_backend)
+        .await
+        .map_err(|e| {
+            tracing::error!("Failed to initialize session manager: {}", e);
+            e
+        })?;
 
-        // Wire up proxy manager for per-session filtering
-        sm.set_proxy_manager(Arc::clone(pm));
-        sm
-    } else {
-        SessionManager::with_defaults(Arc::clone(&store))
-            .await
-            .map_err(|e| {
-                tracing::error!("Failed to initialize session manager (no proxy): {}", e);
-                e
-            })?
-    };
+    // Wire up proxy manager for per-session filtering (if available)
+    if let Some(ref pm) = proxy_manager {
+        session_manager.set_proxy_manager(Arc::clone(pm));
+    }
 
     // Create event broadcaster and wire it up if HTTP server is enabled
     if let Some(port) = http_port {

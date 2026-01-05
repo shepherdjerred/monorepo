@@ -444,46 +444,29 @@ impl SessionManager {
             }
 
             update_progress(2, "Setting up session proxy".to_string()).await;
-            // Create per-session proxy for Docker backends
+            // Create per-session proxy for Docker backends (required, no fallback)
             let proxy_port = if backend == BackendType::Docker {
-                if let Some(ref proxy_manager) = self.proxy_manager {
-                    match proxy_manager
-                        .create_session_proxy(session_id, access_mode)
-                        .await
-                    {
-                        Ok(proxy_port) => {
-                            if let Some(session) = self
-                                .sessions
-                                .write()
-                                .await
-                                .iter_mut()
-                                .find(|s| s.id == session_id)
-                            {
-                                session.set_proxy_port(proxy_port);
-                            }
-                            tracing::info!(
-                                session_id = %session_id,
-                                name = %full_name,
-                                port = proxy_port,
-                                "Created session proxy"
-                            );
-                            Some(proxy_port)
-                        }
-                        Err(e) => {
-                            tracing::warn!(
-                                session_id = %session_id,
-                                name = %full_name,
-                                error = %e,
-                                "Failed to create session proxy, using global proxy"
-                            );
-                            None
-                        }
-                    }
-                } else {
-                    None
+                let proxy_manager = self.proxy_manager.as_ref()
+                    .ok_or_else(|| anyhow::anyhow!("Proxy manager required for Docker backend"))?;
+
+                let port = proxy_manager
+                    .create_session_proxy(session_id, access_mode)
+                    .await
+                    .context("Session proxy creation failed - cannot create session")?;
+
+                if let Some(session) = self.sessions.write().await.iter_mut().find(|s| s.id == session_id) {
+                    session.set_proxy_port(port);
                 }
+
+                tracing::info!(
+                    session_id = %session_id,
+                    name = %full_name,
+                    port = port,
+                    "Created required session proxy"
+                );
+                port
             } else {
-                None
+                0  // Non-Docker backends don't need proxy
             };
 
             update_progress(3, "Preparing agent environment".to_string()).await;
@@ -2064,21 +2047,7 @@ impl SessionManager {
                 masked_value: creds.talos_token.as_ref().map(|v| mask_credential(v)),
             });
 
-            // Collect proxy status
-            proxies.push(ProxyStatus {
-                name: "HTTP Auth Proxy".to_string(),
-                port: pm.http_proxy_port(),
-                active: true,
-                proxy_type: "global".to_string(),
-            });
-
-            proxies.push(ProxyStatus {
-                name: "Kubernetes Proxy".to_string(),
-                port: pm.k8s_proxy_port(),
-                active: pm.is_k8s_proxy_running(),
-                proxy_type: "global".to_string(),
-            });
-
+            // Collect proxy status (only Talos gateway is global)
             if pm.is_talos_configured() {
                 proxies.push(ProxyStatus {
                     name: "Talos mTLS Gateway".to_string(),
