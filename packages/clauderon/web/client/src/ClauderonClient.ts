@@ -134,6 +134,20 @@ export class ClauderonClient {
   }
 
   /**
+   * Update session metadata (title and/or description)
+   */
+  async updateSessionMetadata(
+    id: string,
+    title?: string,
+    description?: string
+  ): Promise<void> {
+    await this.request("POST", `/api/sessions/${encodeURIComponent(id)}/metadata`, {
+      title,
+      description,
+    });
+  }
+
+  /**
    * Get system status including credentials and proxies
    */
   async getSystemStatus(): Promise<SystemStatus> {

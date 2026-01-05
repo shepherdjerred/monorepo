@@ -1,7 +1,7 @@
 import type { Session } from "@clauderon/client";
 import { SessionStatus, CheckStatus, ClaudeWorkingStatus } from "@clauderon/shared";
 import { formatRelativeTime } from "../lib/utils";
-import { Archive, Trash2, Terminal, CheckCircle2, XCircle, Clock, Loader2, User, Circle, AlertTriangle } from "lucide-react";
+import { Archive, Trash2, Terminal, CheckCircle2, XCircle, Clock, Loader2, User, Circle, AlertTriangle, Edit } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,11 +10,12 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 type SessionCardProps = {
   session: Session;
   onAttach: (session: Session) => void;
+  onEdit: (session: Session) => void;
   onArchive: (session: Session) => void;
   onDelete: (session: Session) => void;
 }
 
-export function SessionCard({ session, onAttach, onArchive, onDelete }: SessionCardProps) {
+export function SessionCard({ session, onAttach, onEdit, onArchive, onDelete }: SessionCardProps) {
   const statusColors: Record<SessionStatus, string> = {
     [SessionStatus.Creating]: "bg-status-creating",
     [SessionStatus.Deleting]: "bg-status-creating",
@@ -122,6 +123,21 @@ export function SessionCard({ session, onAttach, onArchive, onDelete }: SessionC
               <TooltipContent>Attach to console</TooltipContent>
             </Tooltip>
           )}
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => { onEdit(session); }}
+                aria-label="Edit session"
+                className="cursor-pointer transition-all duration-200 hover:scale-110 hover:shadow-md"
+              >
+                <Edit className="w-4 h-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Edit title/description</TooltipContent>
+          </Tooltip>
 
           <Tooltip>
             <TooltipTrigger asChild>
