@@ -151,7 +151,7 @@ pub struct DirectoryPickerState {
 pub struct CreateDialogState {
     pub prompt: String,
     pub repo_path: String,
-    pub backend_zellij: bool, // true = Zellij, false = Docker
+    pub backend: BackendType,
     pub skip_checks: bool,
     pub plan_mode: bool,
     pub access_mode: AccessMode,
@@ -378,7 +378,7 @@ impl CreateDialogState {
         Self {
             prompt: String::new(),
             repo_path: String::new(),
-            backend_zellij: true, // Default to Zellij
+            backend: BackendType::Zellij, // Default to Zellij
             skip_checks: false,
             plan_mode: true,                 // Default to plan mode ON
             access_mode: Default::default(), // ReadOnly by default (secure)
@@ -396,15 +396,18 @@ impl CreateDialogState {
         *self = Self::new();
     }
 
-    /// Toggle between Zellij and Docker backends, auto-adjusting skip_checks
+    /// Cycle through backends: Zellij → Docker → Kubernetes → Zellij, auto-adjusting skip_checks
     pub fn toggle_backend(&mut self) {
-        let was_zellij = self.backend_zellij;
-        self.backend_zellij = !was_zellij;
+        self.backend = match self.backend {
+            BackendType::Zellij => BackendType::Docker,
+            BackendType::Docker => BackendType::Kubernetes,
+            BackendType::Kubernetes => BackendType::Zellij,
+        };
 
         // Auto-toggle skip_checks based on backend:
-        // Docker benefits from skipping checks (isolated environment)
+        // Docker and Kubernetes benefit from skipping checks (isolated environments)
         // Zellij runs locally so checks are more important
-        self.skip_checks = !self.backend_zellij;
+        self.skip_checks = matches!(self.backend, BackendType::Docker | BackendType::Kubernetes);
     }
 
     /// Toggle between ReadOnly and ReadWrite access modes
@@ -803,11 +806,7 @@ impl App {
         let request = CreateSessionRequest {
             repo_path: self.create_dialog.repo_path.clone(),
             initial_prompt: self.create_dialog.prompt.clone(),
-            backend: if self.create_dialog.backend_zellij {
-                BackendType::Zellij
-            } else {
-                BackendType::Docker
-            },
+            backend: self.create_dialog.backend,
             agent: AgentType::ClaudeCode,
             dangerous_skip_checks: self.create_dialog.skip_checks,
             print_mode: false, // TUI always uses interactive mode

@@ -6,7 +6,7 @@ use ratatui::{
     widgets::{Block, Borders, Clear, Paragraph, Wrap},
 };
 
-use crate::core::AccessMode;
+use crate::core::{AccessMode, BackendType};
 use crate::tui::app::{App, CreateDialogFocus};
 
 /// Render the create session dialog
@@ -79,8 +79,9 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         frame,
         "Backend",
         &[
-            ("Zellij", dialog.backend_zellij),
-            ("Docker", !dialog.backend_zellij),
+            ("Zellij", dialog.backend == BackendType::Zellij),
+            ("Docker", dialog.backend == BackendType::Docker),
+            ("Kubernetes", dialog.backend == BackendType::Kubernetes),
         ],
         dialog.focus == CreateDialogFocus::Backend,
         inner[2],
