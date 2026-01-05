@@ -5,7 +5,9 @@ import { SessionCard } from "./SessionCard";
 import { ThemeToggle } from "./ThemeToggle";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { StatusDialog } from "./StatusDialog";
+import { EditSessionDialog } from "./EditSessionDialog";
 import { useSessionContext } from "../contexts/SessionContext";
+import { toast } from "sonner";
 import { Plus, RefreshCw, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -40,6 +42,7 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
     type: "archive" | "delete";
     session: Session;
   } | null>(null);
+  const [editingSession, setEditingSession] = useState<Session | null>(null);
   const [showStatusDialog, setShowStatusDialog] = useState(false);
   const [lastRefreshTime, setLastRefreshTime] = useState<Date>(new Date());
   const [, setTickCounter] = useState(0); // Force re-render for time display
@@ -98,6 +101,10 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
     return `${minutes}m ago`;
   };
 
+  const handleEdit = (session: Session) => {
+    setEditingSession(session);
+  };
+
   const handleArchive = (session: Session) => {
     setConfirmDialog({ type: "archive", session });
   };
@@ -110,9 +117,17 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
     if (!confirmDialog) return;
 
     if (confirmDialog.type === "archive") {
-      void archiveSession(confirmDialog.session.id);
+      void archiveSession(confirmDialog.session.id).then(() => {
+        toast.success(`Session "${confirmDialog.session.name}" archived`);
+      }).catch((err) => {
+        toast.error(`Failed to archive: ${err instanceof Error ? err.message : String(err)}`);
+      });
     } else {
-      void deleteSession(confirmDialog.session.id);
+      void deleteSession(confirmDialog.session.id).then(() => {
+        toast.info(`Deleting session "${confirmDialog.session.name}"...`);
+      }).catch((err) => {
+        toast.error(`Failed to delete: ${err instanceof Error ? err.message : String(err)}`);
+      });
     }
   };
 
@@ -249,6 +264,7 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
                 key={session.id}
                 session={session}
                 onAttach={onAttach}
+                onEdit={handleEdit}
                 onArchive={handleArchive}
                 onDelete={handleDelete}
               />
@@ -275,6 +291,14 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
           confirmLabel={confirmDialog.type === "archive" ? "Archive" : "Delete"}
           variant={confirmDialog.type === "delete" ? "destructive" : "default"}
           onConfirm={handleConfirm}
+        />
+      )}
+
+      {/* Edit Dialog */}
+      {editingSession && (
+        <EditSessionDialog
+          session={editingSession}
+          onClose={() => { setEditingSession(null); }}
         />
       )}
 
