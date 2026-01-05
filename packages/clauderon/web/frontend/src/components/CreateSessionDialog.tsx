@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { X } from "lucide-react";
 import { RepositoryPathSelector } from "./RepositoryPathSelector";
+import { toast } from "sonner";
 
 type CreateSessionDialogProps = {
   onClose: () => void;
@@ -52,9 +53,12 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
       };
 
       await createSession(request);
+      toast.success("Session created successfully");
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      setError(errorMsg);
+      toast.error(`Failed to create session: ${errorMsg}`);
     } finally {
       setIsSubmitting(false);
     }
