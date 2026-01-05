@@ -102,6 +102,9 @@ pub async fn run_daemon_with_http(
         // Set broadcaster on manager before Arc wrapping
         session_manager.set_event_broadcaster(event_broadcaster.clone());
 
+        // Set HTTP port for Docker/K8s hook communication
+        session_manager.set_http_port(port);
+
         let manager = Arc::new(session_manager);
         tracing::info!("Session manager initialized with event broadcasting");
 
