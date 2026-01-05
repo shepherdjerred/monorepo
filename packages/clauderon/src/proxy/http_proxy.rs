@@ -21,6 +21,24 @@ use super::filter::is_write_operation;
 use super::rules::find_matching_rule;
 use crate::core::session::AccessMode;
 
+/// Check if a request is to a Kubernetes API based on host pattern.
+fn is_k8s_request(host: &str) -> bool {
+    // Match kubernetes API hosts
+    host.contains("kubernetes") ||
+    host.contains("k8s.io") ||
+    host == "kubernetes.default.svc" ||
+    host.ends_with(".svc.cluster.local")
+}
+
+/// Check if a K8s API request is a write operation based on HTTP method.
+/// K8s write operations include POST, PUT, PATCH, DELETE.
+fn is_k8s_write_operation(method: &hyper::Method) -> bool {
+    matches!(
+        *method,
+        hyper::Method::POST | hyper::Method::PUT | hyper::Method::PATCH | hyper::Method::DELETE
+    )
+}
+
 /// HTTP auth proxy that intercepts HTTPS and injects auth headers.
 pub struct HttpAuthProxy {
     /// Listen address.
@@ -428,25 +446,7 @@ impl HttpHandler for FilteringHandler {
             let start_time = Instant::now();
             let timestamp = Utc::now();
 
-            // Check access mode and filter write operations
-            let current_mode = *access_mode.read().await;
-            if current_mode == AccessMode::ReadOnly && is_write_operation(req.method()) {
-                tracing::warn!(
-                    session_id = %session_id,
-                    method = %req.method(),
-                    uri = %req.uri(),
-                    "Blocked write operation in read-only mode"
-                );
-
-                return RequestOrResponse::Response(
-                    Response::builder()
-                        .status(403)
-                        .body(Body::from("Write operations not allowed in read-only mode"))
-                        .unwrap(),
-                );
-            }
-
-            // Continue with auth injection (same logic as AuthInjector)
+            // Get host early for both filtering and auth injection
             let host = req
                 .uri()
                 .host()
@@ -458,6 +458,45 @@ impl HttpHandler for FilteringHandler {
                         .map(String::from)
                 })
                 .unwrap_or_default();
+
+            // Check access mode and filter write operations
+            let current_mode = *access_mode.read().await;
+            if current_mode == AccessMode::ReadOnly {
+                // Check for K8s API write operations
+                if is_k8s_request(&host) && is_k8s_write_operation(req.method()) {
+                    tracing::warn!(
+                        session_id = %session_id,
+                        method = %req.method(),
+                        uri = %req.uri(),
+                        host = %host,
+                        "Blocked Kubernetes API write operation in read-only mode"
+                    );
+
+                    return RequestOrResponse::Response(
+                        Response::builder()
+                            .status(403)
+                            .body(Body::from("Kubernetes write operations not allowed in read-only mode"))
+                            .unwrap(),
+                    );
+                }
+
+                // Check for general HTTP write operations
+                if is_write_operation(req.method()) {
+                    tracing::warn!(
+                        session_id = %session_id,
+                        method = %req.method(),
+                        uri = %req.uri(),
+                        "Blocked write operation in read-only mode"
+                    );
+
+                    return RequestOrResponse::Response(
+                        Response::builder()
+                            .status(403)
+                            .body(Body::from("Write operations not allowed in read-only mode"))
+                            .unwrap(),
+                    );
+                }
+            }
 
             let method = req.method().to_string();
             let path = req.uri().path().to_string();

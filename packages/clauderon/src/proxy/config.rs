@@ -10,12 +10,6 @@ pub struct ProxyConfig {
     /// Directory containing credential files.
     pub secrets_dir: PathBuf,
 
-    /// HTTP auth proxy port (default: 18080).
-    pub http_proxy_port: u16,
-
-    /// Kubernetes proxy port (default: 18081).
-    pub k8s_proxy_port: u16,
-
     /// Talos mTLS gateway port (default: 18082).
     pub talos_gateway_port: u16,
 
@@ -31,8 +25,6 @@ impl Default for ProxyConfig {
         let home = dirs::home_dir().unwrap_or_else(|| PathBuf::from("/tmp"));
         Self {
             secrets_dir: home.join(".secrets"),
-            http_proxy_port: 18080,
-            k8s_proxy_port: 18081,
             talos_gateway_port: 18082,
             audit_enabled: true,
             audit_log_path: home.join(".clauderon/audit.jsonl"),
@@ -181,8 +173,6 @@ mod tests {
     #[test]
     fn test_default_config() {
         let config = ProxyConfig::default();
-        assert_eq!(config.http_proxy_port, 18080);
-        assert_eq!(config.k8s_proxy_port, 18081);
         assert_eq!(config.talos_gateway_port, 18082);
     }
 
