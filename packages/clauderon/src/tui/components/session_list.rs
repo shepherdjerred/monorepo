@@ -13,7 +13,7 @@ use crate::tui::app::App;
 pub fn render(frame: &mut Frame, app: &App, area: Rect) {
     let block = Block::default()
         .title(" Clauderon - Sessions ")
-        .title_bottom(" [n]ew  [d]elete  [a]rchive  [p]r  [f]ix-ci  [?]help  [q]uit ")
+        .title_bottom(" [n]ew  [d]elete  [a]rchive  [?]help  [q]uit ")
         .borders(Borders::ALL)
         .border_style(Style::default().fg(Color::Cyan));
 

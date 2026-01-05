@@ -199,61 +199,6 @@ async fn handle_session_list_key(app: &mut App, key: KeyEvent) -> anyhow::Result
                 app.status_message = Some("Refreshed session list".to_string());
             }
         }
-        KeyCode::Char('p') => {
-            // Create PR hotkey
-            if let Some(session) = app.sessions.get(app.selected_index) {
-                let session_name = session.name.clone();
-                match Client::connect().await {
-                    Ok(mut client) => {
-                        if let Err(e) = client
-                            .send_prompt(&session_name, "Create a pull request")
-                            .await
-                        {
-                            app.status_message = Some(format!("Failed to send prompt: {e}"));
-                        } else {
-                            app.status_message =
-                                Some(format!("Sent 'Create PR' prompt to {session_name}"));
-                        }
-                    }
-                    Err(e) => {
-                        app.status_message = Some(format!("Failed to connect: {e}"));
-                    }
-                }
-            }
-        }
-        KeyCode::Char('f') => {
-            // Fix CI failures hotkey
-            if let Some(session) = app.sessions.get(app.selected_index) {
-                let session_name = session.name.clone();
-
-                // Warn if CI is not failing, but still allow sending the prompt
-                let warning = if !matches!(
-                    session.pr_check_status,
-                    Some(crate::core::CheckStatus::Failing)
-                ) {
-                    " (Warning: CI is not currently failing)"
-                } else {
-                    ""
-                };
-
-                match Client::connect().await {
-                    Ok(mut client) => {
-                        if let Err(e) = client
-                            .send_prompt(&session_name, "Fix the CI failures")
-                            .await
-                        {
-                            app.status_message = Some(format!("Failed to send prompt: {e}"));
-                        } else {
-                            app.status_message =
-                                Some(format!("Sent 'Fix CI' prompt to {session_name}{warning}"));
-                        }
-                    }
-                    Err(e) => {
-                        app.status_message = Some(format!("Failed to connect: {e}"));
-                    }
-                }
-            }
-        }
         KeyCode::Up | KeyCode::Char('k') => app.select_previous(),
         KeyCode::Down | KeyCode::Char('j') => app.select_next(),
         // Note: Enter is handled specially by the main loop since it needs to suspend the TUI
