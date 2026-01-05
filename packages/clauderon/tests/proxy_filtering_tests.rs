@@ -103,9 +103,7 @@ async fn create_test_manager_with_proxy() -> (
     .expect("Failed to create manager");
 
     // Create proxy manager
-    let mut proxy_config = ProxyConfig::default();
-    // Use random port to avoid conflicts
-    proxy_config.http_proxy_port = 18080 + (rand::random::<u16>() % 1000);
+    let proxy_config = ProxyConfig::default();
     let proxy_manager =
         Arc::new(ProxyManager::new(proxy_config).expect("Failed to create proxy manager"));
 
