@@ -376,11 +376,7 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                     let request = CreateSessionRequest {
                         repo_path: app.create_dialog.repo_path.clone(),
                         initial_prompt: app.create_dialog.prompt.clone(),
-                        backend: if app.create_dialog.backend_zellij {
-                            BackendType::Zellij
-                        } else {
-                            BackendType::Docker
-                        },
+                        backend: app.create_dialog.backend,
                         agent: AgentType::ClaudeCode,
                         dangerous_skip_checks: app.create_dialog.skip_checks,
                         print_mode: false, // TUI always uses interactive mode
