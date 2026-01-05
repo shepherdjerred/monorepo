@@ -119,7 +119,7 @@ pub fn replay_events(events: &[Event]) -> Option<Session> {
         branch_name: name.clone(),
         initial_prompt: initial_prompt.clone(),
         backend: *backend,
-        agent: super::session::AgentType::ClaudeCode,
+        agent: super::session::AgentType::Claude,
         dangerous_skip_checks: false,
         access_mode: Default::default(),
     });

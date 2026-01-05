@@ -21,7 +21,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
     repo_path: "",
     initial_prompt: "",
     backend: "Docker" as BackendType,
-    agent: "ClaudeCode" as AgentType,
+    agent: "Claude" as AgentType,
     access_mode: "ReadWrite" as AccessMode,
     plan_mode: true,
     dangerous_skip_checks: true, // Docker/Kubernetes default
@@ -136,7 +136,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="backend" className="font-semibold">Backend</Label>
               <select
@@ -150,6 +150,21 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                 <option value="Docker">Docker</option>
                 <option value="Zellij">Zellij</option>
                 <option value="Kubernetes">Kubernetes</option>
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="agent" className="font-semibold">Agent</Label>
+              <select
+                id="agent"
+                value={formData.agent}
+                onChange={(e) =>
+                  { setFormData({ ...formData, agent: e.target.value as AgentType }); }
+                }
+                className="cursor-pointer flex h-10 w-full rounded-md border-2 border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <option value="Claude">Claude</option>
+                <option value="Gemini">Gemini</option>
               </select>
             </div>
 

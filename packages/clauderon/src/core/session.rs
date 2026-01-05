@@ -330,13 +330,14 @@ pub enum BackendType {
 
 /// AI agent type
 #[typeshare]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum AgentType {
     /// Claude Code CLI
-    ClaudeCode,
+    #[default]
+    Claude,
 
-    /// `OpenAI` Codex
-    Codex,
+    /// Gemini CLI
+    Gemini,
 }
 
 /// PR check status

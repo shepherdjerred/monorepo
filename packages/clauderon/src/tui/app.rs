@@ -104,6 +104,7 @@ pub enum CreateDialogFocus {
     Prompt,
     RepoPath,
     Backend,
+    Agent,
     AccessMode,
     SkipChecks,
     PlanMode,
@@ -152,6 +153,7 @@ pub struct CreateDialogState {
     pub prompt: String,
     pub repo_path: String,
     pub backend: BackendType,
+    pub agent: crate::core::AgentType,
     pub skip_checks: bool,
     pub plan_mode: bool,
     pub access_mode: AccessMode,
@@ -379,6 +381,7 @@ impl CreateDialogState {
             prompt: String::new(),
             repo_path: String::new(),
             backend: BackendType::Zellij, // Default to Zellij
+            agent: crate::core::AgentType::Claude,
             skip_checks: false,
             plan_mode: true,                 // Default to plan mode ON
             access_mode: Default::default(), // ReadOnly by default (secure)
@@ -415,6 +418,15 @@ impl CreateDialogState {
         self.access_mode = match self.access_mode {
             AccessMode::ReadOnly => AccessMode::ReadWrite,
             AccessMode::ReadWrite => AccessMode::ReadOnly,
+        };
+    }
+
+    /// Cycle through agents: Claude -> Gemini -> Claude
+    pub fn toggle_agent(&mut self) {
+        use crate::core::AgentType;
+        self.agent = match self.agent {
+            AgentType::Claude => AgentType::Gemini,
+            AgentType::Gemini => AgentType::Claude,
         };
     }
 
@@ -814,7 +826,7 @@ impl App {
             repo_path: self.create_dialog.repo_path.clone(),
             initial_prompt: self.create_dialog.prompt.clone(),
             backend: self.create_dialog.backend,
-            agent: AgentType::ClaudeCode,
+            agent: self.create_dialog.agent,
             dangerous_skip_checks: self.create_dialog.skip_checks,
             print_mode: false, // TUI always uses interactive mode
             plan_mode: self.create_dialog.plan_mode,

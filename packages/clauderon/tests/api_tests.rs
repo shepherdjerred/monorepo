@@ -21,7 +21,7 @@ fn test_create_session_request_serialization() {
         repo_path: "/home/user/project".to_string(),
         initial_prompt: "Fix the bug".to_string(),
         backend: BackendType::Zellij,
-        agent: AgentType::ClaudeCode,
+        agent: AgentType::Claude,
         dangerous_skip_checks: false,
         print_mode: false,
         plan_mode: true,
@@ -137,11 +137,8 @@ fn test_backend_type_serialization() {
 
 #[test]
 fn test_agent_type_serialization() {
-    let json = serde_json::to_string(&AgentType::ClaudeCode).unwrap();
-    assert_eq!(json, r#""ClaudeCode""#);
-
-    let json = serde_json::to_string(&AgentType::Codex).unwrap();
-    assert_eq!(json, r#""Codex""#);
+    let json = serde_json::to_string(&AgentType::Claude).unwrap();
+    assert_eq!(json, r#""Claude""#);
 }
 
 // ========== Print Mode Flow Tests ==========
@@ -157,7 +154,7 @@ fn test_print_mode_serialization() {
         repo_path: "/tmp/repo".to_string(),
         initial_prompt: "Generate a hello world".to_string(),
         backend: BackendType::Docker,
-        agent: AgentType::ClaudeCode,
+        agent: AgentType::Claude,
         dangerous_skip_checks: true,
         print_mode: true,
         plan_mode: false,
@@ -188,7 +185,7 @@ fn test_print_mode_serialization() {
 #[test]
 fn test_print_mode_default_false() {
     // JSON without print_mode field - should default to false
-    let json = r#"{"type":"CreateSession","payload":{"repo_path":"/tmp","initial_prompt":"test","backend":"Docker","agent":"ClaudeCode","dangerous_skip_checks":false}}"#;
+    let json = r#"{"type":"CreateSession","payload":{"repo_path":"/tmp","initial_prompt":"test","backend":"Docker","agent":"Claude","dangerous_skip_checks":false}}"#;
 
     let parsed: Request = serde_json::from_str(json).unwrap();
     match parsed {

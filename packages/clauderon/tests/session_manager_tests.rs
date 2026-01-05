@@ -108,7 +108,7 @@ async fn test_create_session_zellij_success() {
             repo_dir.path().to_string_lossy().to_string(),
             "Test prompt".to_string(),
             BackendType::Zellij,
-            AgentType::ClaudeCode,
+            AgentType::Claude,
             true,
             false,              // print_mode
             true,               // plan_mode
@@ -151,7 +151,7 @@ async fn test_create_session_docker_success() {
             repo_dir.path().to_string_lossy().to_string(),
             "Zellij prompt".to_string(),
             BackendType::Zellij, // Changed from Docker to avoid proxy requirement
-            AgentType::ClaudeCode,
+            AgentType::Claude,
             false,
             false,              // print_mode
             true,               // plan_mode
@@ -187,7 +187,7 @@ async fn test_create_session_git_fails() {
             repo_dir.path().to_string_lossy().to_string(),
             "Test prompt".to_string(),
             BackendType::Zellij,
-            AgentType::ClaudeCode,
+            AgentType::Claude,
             true,
             false,              // print_mode
             true,               // plan_mode
@@ -221,7 +221,7 @@ async fn test_create_session_backend_fails() {
             repo_dir.path().to_string_lossy().to_string(),
             "Test prompt".to_string(),
             BackendType::Zellij,
-            AgentType::ClaudeCode,
+            AgentType::Claude,
             true,
             false,              // print_mode
             true,               // plan_mode
@@ -255,7 +255,7 @@ async fn test_get_session_by_name() {
             repo_dir.path().to_string_lossy().to_string(),
             "prompt".to_string(),
             BackendType::Zellij,
-            AgentType::ClaudeCode,
+            AgentType::Claude,
             true,
             false,              // print_mode
             true,               // plan_mode
@@ -281,7 +281,7 @@ async fn test_get_session_by_uuid() {
             repo_dir.path().to_string_lossy().to_string(),
             "prompt".to_string(),
             BackendType::Zellij,
-            AgentType::ClaudeCode,
+            AgentType::Claude,
             true,
             false,              // print_mode
             true,               // plan_mode
@@ -317,7 +317,7 @@ async fn test_delete_session_success() {
             repo_dir.path().to_string_lossy().to_string(),
             "prompt".to_string(),
             BackendType::Zellij,
-            AgentType::ClaudeCode,
+            AgentType::Claude,
             true,
             false,              // print_mode
             true,               // plan_mode
@@ -366,7 +366,7 @@ async fn test_archive_session_success() {
             repo_dir.path().to_string_lossy().to_string(),
             "prompt".to_string(),
             BackendType::Zellij,
-            AgentType::ClaudeCode,
+            AgentType::Claude,
             true,
             false,              // print_mode
             true,               // plan_mode
@@ -407,7 +407,7 @@ async fn test_get_attach_command_zellij() {
             repo_dir.path().to_string_lossy().to_string(),
             "prompt".to_string(),
             BackendType::Zellij,
-            AgentType::ClaudeCode,
+            AgentType::Claude,
             true,
             false,              // print_mode
             true,               // plan_mode
@@ -434,7 +434,7 @@ async fn test_get_attach_command_docker() {
             repo_dir.path().to_string_lossy().to_string(),
             "prompt".to_string(),
             BackendType::Zellij, // Changed from Docker to avoid proxy requirement
-            AgentType::ClaudeCode,
+            AgentType::Claude,
             true,
             false,              // print_mode
             true,               // plan_mode
@@ -471,7 +471,7 @@ async fn test_reconcile_healthy_session() {
             repo_dir.path().to_string_lossy().to_string(),
             "prompt".to_string(),
             BackendType::Zellij,
-            AgentType::ClaudeCode,
+            AgentType::Claude,
             true,
             false,              // print_mode
             true,               // plan_mode
@@ -500,7 +500,7 @@ async fn test_reconcile_missing_backend() {
             repo_dir.path().to_string_lossy().to_string(),
             "prompt".to_string(),
             BackendType::Zellij,
-            AgentType::ClaudeCode,
+            AgentType::Claude,
             true,
             false,              // print_mode
             true,               // plan_mode
@@ -541,7 +541,7 @@ async fn test_list_sessions_multiple() {
             repo_dir.path().to_string_lossy().to_string(),
             "prompt 1".to_string(),
             BackendType::Zellij,
-            AgentType::ClaudeCode,
+            AgentType::Claude,
             true,
             false,              // print_mode
             true,               // plan_mode
@@ -556,7 +556,7 @@ async fn test_list_sessions_multiple() {
             repo_dir.path().to_string_lossy().to_string(),
             "prompt 2".to_string(),
             BackendType::Zellij, // Changed from Docker to avoid proxy requirement
-            AgentType::ClaudeCode,
+            AgentType::Claude,
             true,
             false,              // print_mode
             true,               // plan_mode
@@ -571,7 +571,7 @@ async fn test_list_sessions_multiple() {
             repo_dir.path().to_string_lossy().to_string(),
             "prompt 3".to_string(),
             BackendType::Zellij,
-            AgentType::ClaudeCode,
+            AgentType::Claude,
             true,
             false,              // print_mode
             true,               // plan_mode
@@ -598,7 +598,7 @@ async fn test_session_lifecycle() {
             repo_dir.path().to_string_lossy().to_string(),
             "prompt".to_string(),
             BackendType::Zellij,
-            AgentType::ClaudeCode,
+            AgentType::Claude,
             true,
             false,              // print_mode
             true,               // plan_mode

@@ -87,7 +87,7 @@ impl MockApiClient {
             branch_name: format!("feature/{name}"),
             initial_prompt: "Mock prompt".to_string(),
             backend: BackendType::Zellij,
-            agent: AgentType::ClaudeCode,
+            agent: AgentType::Claude,
             dangerous_skip_checks: false,
             access_mode: crate::core::AccessMode::default(),
         };
@@ -323,7 +323,7 @@ mod tests {
             repo_path: "/tmp/repo".to_string(),
             initial_prompt: "Test prompt".to_string(),
             backend: BackendType::Zellij,
-            agent: AgentType::ClaudeCode,
+            agent: AgentType::Claude,
             dangerous_skip_checks: false,
             print_mode: false,
             plan_mode: true,
