@@ -182,3 +182,10 @@ clauderon/
 
 - `/ws/console/:session_id` - Terminal console stream
 - `/ws/events` - Real-time session events
+
+## Alternatives
+
+- [hapi](https://github.com/tiann/hapi/) - Headless API for Claude Code
+- [Happy Engineering](https://happy.engineering/) - Claude Code session management
+- [Omnara](https://www.omnara.com/) - AI coding assistant platform
+- [ClawdBot](https://github.com/clawdbot/clawdbot) - Claude Code automation tool

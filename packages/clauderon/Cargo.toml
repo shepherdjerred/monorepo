@@ -7,7 +7,7 @@ description = "Session management system for AI coding agents"
 license = "MIT"
 
 [[bin]]
-name = "mux"
+name = "clauderon"
 path = "src/main.rs"
 
 [dependencies]
