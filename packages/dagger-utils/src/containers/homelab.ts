@@ -45,6 +45,36 @@ export async function updateHomelabVersion(options: UpdateHomelabVersionOptions)
   // Escape slashes in appName for sed
   const escapedAppName = appName.replace(/\//g, "\\/");
 
+  const updateScript = `
+set -e
+
+# Update version using sed
+sed -i 's/"shepherdjerred\\/${escapedAppName}": "[^"]*"/"shepherdjerred\\/${escapedAppName}": "${version}"/g' src/cdk8s/src/versions.ts
+
+# Check if there are any changes
+if git diff --quiet; then
+  echo "✓ Version ${version} for ${appName} is already up to date in homelab"
+  exit 0
+fi
+
+# Changes detected - proceed with commit and PR
+git add .
+git checkout -b "${branchName}"
+git commit -m "chore: update ${appName} version to ${version}"
+git push --set-upstream origin "${branchName}"
+
+# Create PR with auto-merge
+gh pr create \\
+  --title "chore: update ${appName} version to ${version}" \\
+  --body "This PR updates the ${appName} version to ${version}" \\
+  --base main \\
+  --head "${branchName}"
+
+gh pr merge --auto --rebase
+
+echo "✓ Created and auto-merged PR for ${appName} version ${version}"
+`;
+
   const result = await getGitHubContainer()
     .withSecretVariable("GH_TOKEN", ghToken)
     .withEnvVariable("CACHE_BUST", Date.now().toString())
@@ -53,31 +83,8 @@ export async function updateHomelabVersion(options: UpdateHomelabVersionOptions)
     .withExec(["git", "fetch", "--depth=2"])
     .withExec(["git", "checkout", "main"])
     .withExec(["git", "pull", "origin", "main"])
-    // Update version using sed
-    .withExec([
-      "sh",
-      "-c",
-      `sed -i 's/"shepherdjerred\\/${escapedAppName}": "[^"]*"/"shepherdjerred\\/${escapedAppName}": "${version}"/g' src/cdk8s/src/versions.ts`,
-    ])
-    .withExec(["git", "add", "."])
-    .withExec(["git", "checkout", "-b", branchName])
-    .withExec(["git", "commit", "-m", `chore: update ${appName} version to ${version}`])
-    .withExec(["git", "push", "--set-upstream", "origin", branchName])
-    .withExec([
-      "gh",
-      "pr",
-      "create",
-      "--title",
-      `chore: update ${appName} version to ${version}`,
-      "--body",
-      `This PR updates the ${appName} version to ${version}`,
-      "--base",
-      "main",
-      "--head",
-      branchName,
-    ])
-    .withExec(["gh", "pr", "merge", "--auto", "--rebase"])
+    .withExec(["sh", "-c", updateScript])
     .stdout();
 
-  return `Updated ${appName} to ${version}: ${result}`;
+  return result;
 }
