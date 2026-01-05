@@ -82,7 +82,7 @@ export function RepositoryPathSelector({ value, onChange, required }: Repository
         <button
           type="button"
           onClick={() => { setShowDropdown(!showDropdown); }}
-          className="px-4 border-2 border-input bg-background hover:bg-primary/10 transition-all font-mono flex items-center gap-2"
+          className="cursor-pointer px-4 border-2 border-input bg-background hover:bg-primary/10 hover:scale-105 transition-all duration-200 font-mono flex items-center gap-2"
           title="Show recent repositories and browse"
         >
           <FolderOpen className="w-4 h-4" />
@@ -111,7 +111,7 @@ export function RepositoryPathSelector({ value, onChange, required }: Repository
                     key={repo.repo_path}
                     type="button"
                     onClick={() => { handleSelectRecentRepo(repo.repo_path); }}
-                    className="w-full text-left px-3 py-2 hover:bg-primary/10 border-b border-primary/10 font-mono text-sm flex items-center gap-2 transition-all"
+                    className="cursor-pointer w-full text-left px-3 py-2 hover:bg-primary/10 hover:pl-4 border-b border-primary/10 font-mono text-sm flex items-center gap-2 transition-all duration-200"
                   >
                     <Clock className="w-4 h-4 flex-shrink-0 text-cyan-600" />
                     <div className="flex-1 min-w-0">
@@ -144,7 +144,7 @@ export function RepositoryPathSelector({ value, onChange, required }: Repository
           <button
             type="button"
             onClick={handleOpenBrowser}
-            className="w-full text-left px-3 py-3 hover:bg-primary/10 font-mono text-sm flex items-center gap-2 transition-all border-t-2 border-primary/20"
+            className="cursor-pointer w-full text-left px-3 py-3 hover:bg-primary/10 hover:pl-4 font-mono text-sm flex items-center gap-2 transition-all duration-200 border-t-2 border-primary/20"
           >
             <FolderOpen className="w-4 h-4 flex-shrink-0" />
             <span>Browse daemon filesystem...</span>

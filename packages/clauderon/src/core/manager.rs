@@ -1662,9 +1662,7 @@ impl SessionManager {
 
         // Broadcast event to WebSocket clients if broadcaster available
         if let Some(ref broadcaster) = self.event_broadcaster {
-            if let Some(session) = self.get_session(&session_id.to_string()).await {
-                broadcast_event(broadcaster, WsEvent::SessionUpdated(session)).await;
-            }
+            broadcast_event(broadcaster, WsEvent::SessionUpdated(session_clone)).await;
         }
 
         Ok(())
@@ -1713,9 +1711,7 @@ impl SessionManager {
 
         // Broadcast event to WebSocket clients if broadcaster available
         if let Some(ref broadcaster) = self.event_broadcaster {
-            if let Some(session) = self.get_session(&session_id.to_string()).await {
-                broadcast_event(broadcaster, WsEvent::SessionUpdated(session)).await;
-            }
+            broadcast_event(broadcaster, WsEvent::SessionUpdated(session_clone)).await;
         }
 
         Ok(())
@@ -1762,9 +1758,7 @@ impl SessionManager {
 
         // Broadcast event to WebSocket clients if broadcaster available
         if let Some(ref broadcaster) = self.event_broadcaster {
-            if let Some(session) = self.get_session(&session_id.to_string()).await {
-                broadcast_event(broadcaster, WsEvent::SessionUpdated(session)).await;
-            }
+            broadcast_event(broadcaster, WsEvent::SessionUpdated(session_clone)).await;
         }
 
         Ok(())
@@ -1813,9 +1807,7 @@ impl SessionManager {
 
         // Broadcast event to WebSocket clients if broadcaster available
         if let Some(ref broadcaster) = self.event_broadcaster {
-            if let Some(session) = self.get_session(&session_id.to_string()).await {
-                broadcast_event(broadcaster, WsEvent::SessionUpdated(session)).await;
-            }
+            broadcast_event(broadcaster, WsEvent::SessionUpdated(session_clone)).await;
         }
 
         Ok(())
