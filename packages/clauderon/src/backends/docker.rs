@@ -188,6 +188,7 @@ impl DockerBackend {
         git_user_name: Option<&str>,
         git_user_email: Option<&str>,
         session_id: Option<&uuid::Uuid>,
+        http_port: Option<u16>,
     ) -> anyhow::Result<Vec<String>> {
         let container_name = format!("clauderon-{name}");
         let escaped_prompt = initial_prompt.replace('\'', "'\\''");
@@ -239,9 +240,19 @@ impl DockerBackend {
             "SCCACHE_DIR=/workspace/.cache/sccache".to_string(),
         ]);
 
-        // Mount .clauderon directory for hook socket communication
-        // This allows Claude Code hooks inside the container to send status updates
-        // to the daemon on the host via shared Unix sockets
+        // Add hook communication environment variables
+        // These allow Claude Code hooks to send status updates via HTTP to the daemon
+        // (Unix sockets don't work across the macOS VM boundary in Docker/OrbStack)
+        if let (Some(sid), Some(port)) = (session_id, http_port) {
+            args.extend([
+                "-e".to_string(),
+                format!("CLAUDERON_SESSION_ID={sid}"),
+                "-e".to_string(),
+                format!("CLAUDERON_HTTP_PORT={port}"),
+            ]);
+        }
+
+        // Mount .clauderon directory for config/cache (hooks use HTTP, not sockets)
         let home_dir = std::env::var("HOME").unwrap_or_else(|_| "/root".to_string());
         let clauderon_dir = format!("{home_dir}/.clauderon");
         args.extend([
@@ -658,6 +669,7 @@ impl ExecutionBackend for DockerBackend {
             git_user_name.as_deref(),
             git_user_email.as_deref(),
             options.session_id.as_ref(),
+            options.http_port,
         )?;
         let output = Command::new("docker").args(&args).output().await?;
 
@@ -788,6 +800,7 @@ impl DockerBackend {
                 dangerous_skip_checks: false,
                 session_id: None,
                 initial_workdir: std::path::PathBuf::new(),
+                http_port: None,
             },
         )
         .await
@@ -827,6 +840,7 @@ mod tests {
             None,  // git user name
             None,  // git user email
             None,  // session_id
+            None,  // http_port
         )
         .expect("Failed to build args");
 
@@ -896,6 +910,7 @@ mod tests {
             None,  // git_user_name
             None,  // git_user_email
             None,  // session_id
+            None,  // http_port
         )
         .expect("Failed to build args");
 
@@ -926,6 +941,7 @@ mod tests {
             None,  // git_user_name
             None,  // git_user_email
             None,  // session_id
+            None,  // http_port
         )
         .expect("Failed to build args");
 
@@ -959,6 +975,7 @@ mod tests {
             None,  // git_user_name
             None,  // git_user_email
             None,  // session_id
+            None,  // http_port
         )
         .expect("Failed to build args");
 
@@ -992,6 +1009,7 @@ mod tests {
             None,  // git_user_name
             None,  // git_user_email
             None,  // session_id
+            None,  // http_port
         )
         .expect("Failed to build args");
 
@@ -1086,6 +1104,7 @@ mod tests {
             None,  // git_user_name
             None,  // git_user_email
             None,  // session_id
+            None,  // http_port
         )
         .expect("Failed to build args");
 
@@ -1115,6 +1134,7 @@ mod tests {
             None,  // git_user_name
             None,  // git_user_email
             None,  // session_id
+            None,  // http_port
         )
         .expect("Failed to build args");
 
@@ -1157,6 +1177,7 @@ mod tests {
             None,  // git_user_name
             None,  // git_user_email
             None,  // session_id
+            None,  // http_port
         )
         .expect("Failed to build args");
 
@@ -1197,6 +1218,7 @@ mod tests {
             None,  // git_user_name
             None,  // git_user_email
             None,  // session_id
+            None,  // http_port
         )
         .expect("Failed to build args");
 
@@ -1221,6 +1243,7 @@ mod tests {
             None,  // git_user_name
             None,  // git_user_email
             None,  // session_id
+            None,  // http_port
         )
         .expect("Failed to build args");
 
@@ -1255,6 +1278,7 @@ mod tests {
             None,  // git_user_name
             None,  // git_user_email
             None,  // session_id
+            None,  // http_port
         )
         .expect("Failed to build args");
 
@@ -1288,6 +1312,7 @@ mod tests {
             None, // git_user_name
             None, // git_user_email
             None, // session_id
+            None, // http_port
         )
         .expect("Failed to build args");
 
@@ -1318,6 +1343,7 @@ mod tests {
             None,  // git_user_name
             None,  // git_user_email
             None,  // session_id
+            None,  // http_port
         )
         .expect("Failed to build args");
 
@@ -1370,6 +1396,7 @@ mod tests {
             None,  // git_user_name
             None,  // git_user_email
             None,  // session_id
+            None,  // http_port
         )
         .expect("Failed to build args");
 
@@ -1421,6 +1448,7 @@ mod tests {
             None,  // git_user_name
             None,  // git_user_email
             None,  // session_id
+            None,  // http_port
         )
         .expect("Failed to build args");
 
@@ -1468,6 +1496,7 @@ mod tests {
             None,  // git_user_name
             None,  // git_user_email
             None,  // session_id
+            None,  // http_port
         )
         .expect("Failed to build args");
 
@@ -1518,6 +1547,7 @@ mod tests {
             None,  // git_user_name
             None,  // git_user_email
             None,  // session_id
+            None,  // http_port
         )
         .expect("Failed to build args");
 
@@ -1558,6 +1588,7 @@ mod tests {
             None,  // git_user_name
             None,  // git_user_email
             None,  // session_id
+            None,  // http_port
         )
         .expect("Failed to build args");
 
@@ -1598,6 +1629,7 @@ mod tests {
             None,  // git_user_name
             None,  // git_user_email
             None,  // session_id
+            None,  // http_port
         )
         .expect("Failed to build args");
 
@@ -1625,6 +1657,7 @@ mod tests {
             None,  // git_user_name
             None,  // git_user_email
             None,  // session_id
+            None,  // http_port
         )
         .expect("Failed to build args");
 
@@ -1666,6 +1699,7 @@ mod tests {
             None,  // git_user_name
             None,  // git_user_email
             None,  // session_id
+            None,  // http_port
         )
         .expect("Failed to build args");
 
