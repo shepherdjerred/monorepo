@@ -7,7 +7,7 @@ use tokio::task::JoinHandle;
 use uuid::Uuid;
 
 use crate::api::{ApiClient, Client};
-use crate::core::{AccessMode, Session};
+use crate::core::{AccessMode, BackendType, Session};
 use crate::tui::attached::PtySession;
 
 /// Progress update from background session creation task
