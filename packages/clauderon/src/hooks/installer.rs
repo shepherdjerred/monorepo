@@ -65,9 +65,12 @@ const SEND_STATUS_SCRIPT: &str = r#"#!/usr/bin/env bash
 # Send hook event to clauderon daemon via HTTP
 # Usage: send_status.sh <event_type>
 #
-# Required env vars (set by clauderon for Docker/K8s backends):
+# Required env vars (set by clauderon for Docker backend):
 #   CLAUDERON_SESSION_ID - UUID of the session
 #   CLAUDERON_HTTP_PORT - HTTP port of the daemon
+#
+# Note: This script uses host.docker.internal which only works with Docker.
+# For Kubernetes, a different mechanism would be needed (e.g., Service discovery).
 
 set -euo pipefail
 
