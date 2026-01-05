@@ -117,15 +117,13 @@ fn test_proxy_config_flows_to_container_args() {
 /// Test that disabled proxy config doesn't add proxy args.
 #[test]
 fn test_disabled_proxy_config_no_args() {
-    let proxy_config = DockerProxyConfig::disabled();
-
     let args = DockerBackend::build_create_args(
         "test-session",
         &PathBuf::from("/workspace"),
         &PathBuf::new(),
         "test prompt",
         1000,
-        Some(&proxy_config),
+        None, // No proxy config
         false, // print mode
         false, // plan mode
         &[],   // images
