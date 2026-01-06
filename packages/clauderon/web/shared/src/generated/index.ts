@@ -157,7 +157,7 @@ export interface UploadResponse {
 	/** Absolute path to the uploaded file */
 	path: string;
 	/** Size of the uploaded file in bytes */
-	size: number; // u64 in Rust
+	size: number; // u32 in Rust
 }
 
 /** Proxy status information */
