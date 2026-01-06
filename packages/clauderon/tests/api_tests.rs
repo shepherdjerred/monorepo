@@ -217,6 +217,7 @@ fn test_print_mode_flows_to_docker_args() {
         "Generate a hello world",
         1000,
         None,
+        AgentType::ClaudeCode,
         print_mode,
         true, // dangerous_skip_checks - pass true to get --dangerously-skip-permissions
         &[],  // images
@@ -259,8 +260,9 @@ fn test_interactive_mode_no_print_flag_in_docker_args() {
         "Interactive prompt",
         1000,
         None,
+        AgentType::ClaudeCode,
         false, // interactive mode
-        false, // plan_mode
+        false, // dangerous_skip_checks
         &[],   // images
         None,  // git user name
         None,  // git user email
