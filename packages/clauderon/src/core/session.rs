@@ -211,6 +211,18 @@ impl Session {
         self.updated_at = Utc::now();
     }
 
+    /// Set the session title
+    pub fn set_title(&mut self, title: Option<String>) {
+        self.title = title;
+        self.updated_at = Utc::now();
+    }
+
+    /// Set the session description
+    pub fn set_description(&mut self, description: Option<String>) {
+        self.description = description;
+        self.updated_at = Utc::now();
+    }
+
     /// Set the proxy port
     pub fn set_proxy_port(&mut self, port: u16) {
         self.proxy_port = Some(port);
