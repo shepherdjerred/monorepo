@@ -1,10 +1,10 @@
 # Clauderon
 
-A Rust-based session manager for running isolated Claude Code sessions in Docker containers or Kubernetes pods.
+A Rust-based session manager for running isolated Claude Code or Codex sessions in Docker containers or Kubernetes pods.
 
 ## Features
 
-- **Session Isolation**: Run Claude Code in isolated Docker containers or K8s pods with Git worktrees
+- **Session Isolation**: Run Claude Code or Codex in isolated Docker containers or K8s pods with Git worktrees
 - **Zero-Credential Proxy**: Containers have access to zero credentials (even Claude Code creds), enabling safer use of bypass-all-permissions mode
 - **Multiple Interfaces**: Manage sessions via CLI, TUI, web UI, or mobile app
 - **Direct Terminal Access**: Attach to sessions directly via Docker attach or through the web browser
@@ -55,6 +55,12 @@ A Rust-based session manager for running isolated Claude Code sessions in Docker
 - **Rust** (1.85+) - Install via [rustup](https://rustup.rs/)
 - **Bun** (1.3.5+) - Install via [bun.sh](https://bun.sh/)
 - **typeshare-cli** - Install via `cargo install typeshare-cli`
+- **Claude Code CLI** - `claude` on PATH (for Claude sessions)
+- **Codex CLI** - `codex` on PATH (for Codex sessions)
+
+If you use Codex with the proxy enabled, provide an OpenAI API key via:
+- `OPENAI_API_KEY` environment variable, or
+- `~/.secrets/openai_api_key` (for the clauderon proxy to inject)
 
 ## Build Order
 
