@@ -12,9 +12,10 @@ type CreateSessionDialogProps = {
 }
 
 export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
-  const { createSession } = useSessionContext();
+  const { createSession, client } = useSessionContext();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
   const [formData, setFormData] = useState({
     repo_path: "",
@@ -52,7 +53,21 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
         images: [],
       };
 
-      await createSession(request);
+      const result = await createSession(request);
+
+      // Upload images if any were selected
+      if (selectedFiles.length > 0 && result) {
+        toast.info(`Uploading ${selectedFiles.length} image(s)...`);
+        for (const file of selectedFiles) {
+          try {
+            await client.uploadImage(result, file);
+          } catch (uploadErr) {
+            console.error('Failed to upload image:', uploadErr);
+            toast.warning(`Failed to upload ${file.name}`);
+          }
+        }
+      }
+
       toast.success("Session created successfully");
       onClose();
     } catch (err) {
@@ -167,6 +182,38 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
               Configuration: <code>~/.clauderon/k8s-config.toml</code>
             </div>
           )}
+
+          <div className="space-y-2">
+            <Label htmlFor="images">Attach Images (optional)</Label>
+            <input
+              type="file"
+              id="images"
+              accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
+              multiple
+              onChange={(e) => {
+                if (e.target.files) {
+                  setSelectedFiles(Array.from(e.target.files));
+                }
+              }}
+              className="block w-full text-sm border-2 rounded file:mr-4 file:py-2 file:px-4 file:border-0 file:font-semibold"
+            />
+            {selectedFiles.length > 0 && (
+              <div className="space-y-1 mt-2">
+                {selectedFiles.map((file, i) => (
+                  <div key={i} className="flex items-center justify-between p-2 border-2 rounded bg-white">
+                    <span className="text-sm truncate font-mono">{file.name}</span>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedFiles(files => files.filter((_, idx) => idx !== i))}
+                      className="text-red-600 font-bold px-2 hover:bg-red-100 rounded"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
           <div className="flex items-center gap-2">
             <input

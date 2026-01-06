@@ -9,7 +9,10 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Image,
+  ScrollView,
 } from "react-native";
+import { launchImageLibrary, launchCamera } from "react-native-image-picker";
 import type { RootStackScreenProps } from "../types/navigation";
 import { useConsole } from "../hooks/useConsole";
 import { useSessionHistory } from "../hooks/useSessionHistory";
@@ -18,6 +21,7 @@ import { ConnectionStatus } from "../components/ConnectionStatus";
 import { colors } from "../styles/colors";
 import { typography } from "../styles/typography";
 import { commonStyles } from "../styles/common";
+import { useClauderonClient } from "../contexts/ClauderonContext";
 
 type ChatScreenProps = RootStackScreenProps<"Chat">;
 
@@ -25,8 +29,12 @@ export function ChatScreen({ route, navigation }: ChatScreenProps) {
   const { sessionId, sessionName } = route.params;
   const { client, isConnected } = useConsole(sessionId);
   const { messages, isLoading, error: historyError, fileExists } = useSessionHistory(sessionId);
+  const apiClient = useClauderonClient();
   const [input, setInput] = useState("");
   const [wsError, setWsError] = useState<string | null>(null);
+  const [attachedImages, setAttachedImages] = useState<
+    Array<{ uri: string; name: string }>
+  >([]);
   const flatListRef = useRef<FlatList>(null);
 
   useEffect(() => {
@@ -48,9 +56,57 @@ export function ChatScreen({ route, navigation }: ChatScreenProps) {
     };
   }, [client]);
 
-  const handleSubmit = () => {
+  const handlePickImage = async () => {
+    const result = await launchImageLibrary({
+      mediaType: "photo",
+      selectionLimit: 5,
+      quality: 0.8,
+    });
+
+    if (result.assets) {
+      const newImages = result.assets.map((asset) => ({
+        uri: asset.uri!,
+        name: asset.fileName || "image.jpg",
+      }));
+      setAttachedImages((prev) => [...prev, ...newImages]);
+    }
+  };
+
+  const handleTakePhoto = async () => {
+    const result = await launchCamera({
+      mediaType: "photo",
+      quality: 0.8,
+      saveToPhotos: false,
+    });
+
+    if (result.assets && result.assets[0]) {
+      const asset = result.assets[0];
+      setAttachedImages((prev) => [
+        ...prev,
+        {
+          uri: asset.uri!,
+          name: asset.fileName || "photo.jpg",
+        },
+      ]);
+    }
+  };
+
+  const handleSubmit = async () => {
     if (!input.trim() || !client || !isConnected) {
       return;
+    }
+
+    // Upload images first if any
+    if (attachedImages.length > 0) {
+      for (const image of attachedImages) {
+        try {
+          await apiClient.uploadImage(sessionId, image.uri, image.name);
+        } catch (error) {
+          console.error("Failed to upload image:", error);
+          // Continue even if upload fails
+        }
+      }
+      setAttachedImages([]);
     }
 
     // Send input to console
@@ -108,8 +164,47 @@ export function ChatScreen({ route, navigation }: ChatScreenProps) {
         }
       />
 
+      {/* Image previews */}
+      {attachedImages.length > 0 && (
+        <ScrollView
+          horizontal
+          style={styles.imagePreviewContainer}
+          contentContainerStyle={styles.imagePreviewContent}
+        >
+          {attachedImages.map((img, index) => (
+            <View key={index} style={styles.imagePreviewWrapper}>
+              <Image source={{ uri: img.uri }} style={styles.imagePreview} />
+              <TouchableOpacity
+                style={styles.removeImageButton}
+                onPress={() =>
+                  setAttachedImages((imgs) =>
+                    imgs.filter((_, i) => i !== index)
+                  )
+                }
+              >
+                <Text style={styles.removeImageText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+          ))}
+        </ScrollView>
+      )}
+
       {/* Input */}
       <View style={styles.inputContainer}>
+        <TouchableOpacity
+          style={[commonStyles.button, styles.imageButton]}
+          onPress={() => void handlePickImage()}
+          disabled={!isConnected}
+        >
+          <Text style={styles.imageButtonText}>📷</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[commonStyles.button, styles.imageButton]}
+          onPress={() => void handleTakePhoto()}
+          disabled={!isConnected}
+        >
+          <Text style={styles.imageButtonText}>📸</Text>
+        </TouchableOpacity>
         <TextInput
           style={[commonStyles.input, styles.input]}
           value={input}
@@ -126,7 +221,7 @@ export function ChatScreen({ route, navigation }: ChatScreenProps) {
             styles.sendButton,
             (!isConnected || !input.trim()) && styles.sendButtonDisabled,
           ]}
-          onPress={handleSubmit}
+          onPress={() => void handleSubmit()}
           disabled={!isConnected || !input.trim()}
         >
           <Text style={commonStyles.buttonText}>Send</Text>
@@ -164,6 +259,44 @@ const styles = StyleSheet.create({
     color: colors.textLight,
     textAlign: "center",
   },
+  imagePreviewContainer: {
+    maxHeight: 100,
+    borderTopWidth: 2,
+    borderTopColor: colors.border,
+    backgroundColor: colors.background,
+  },
+  imagePreviewContent: {
+    padding: 8,
+    gap: 8,
+  },
+  imagePreviewWrapper: {
+    position: "relative",
+  },
+  imagePreview: {
+    width: 80,
+    height: 80,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: colors.primary,
+  },
+  removeImageButton: {
+    position: "absolute",
+    top: -8,
+    right: -8,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: colors.error,
+    borderWidth: 2,
+    borderColor: colors.background,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  removeImageText: {
+    color: colors.textWhite,
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.bold,
+  },
   inputContainer: {
     flexDirection: "row",
     padding: 12,
@@ -171,6 +304,15 @@ const styles = StyleSheet.create({
     borderTopColor: colors.border,
     backgroundColor: colors.background,
     gap: 8,
+  },
+  imageButton: {
+    alignSelf: "flex-end",
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    minWidth: 48,
+  },
+  imageButtonText: {
+    fontSize: 20,
   },
   input: {
     flex: 1,

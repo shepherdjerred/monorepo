@@ -91,7 +91,7 @@ time = "0.3"
 
 # HTTP/WebSocket server
 axum = { version = "0.8", features = ["ws"] }
-axum-extra = { version = "0.10", features = ["cookie"] }
+axum-extra = { version = "0.10", features = ["cookie", "multipart"] }
 tower = "0.5"
 tower-http = { version = "0.6", features = ["cors", "trace", "fs"] }
 hyper = { version = "1", features = ["full"] }
