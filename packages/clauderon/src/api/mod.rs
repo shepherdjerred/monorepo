@@ -1,3 +1,4 @@
+pub mod claude_client;
 pub mod client;
 pub mod handlers;
 pub mod http_server;
