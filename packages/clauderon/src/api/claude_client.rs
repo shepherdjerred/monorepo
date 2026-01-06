@@ -29,15 +29,15 @@ struct ClaudeUsageResponse {
 #[derive(Debug, Deserialize)]
 struct UsageData {
     #[serde(default)]
-    current: u64,
+    current: i64,
     #[serde(default = "default_limit")]
-    limit: u64,
+    limit: i64,
     #[serde(default)]
     utilization: f64,
     resets_at: Option<String>,
 }
 
-fn default_limit() -> u64 {
+fn default_limit() -> i64 {
     100
 }
 
