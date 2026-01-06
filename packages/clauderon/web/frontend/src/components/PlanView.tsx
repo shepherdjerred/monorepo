@@ -85,6 +85,6 @@ export function isPlan(message: Message): boolean {
   return (
     content.includes("## implementation plan") ||
     content.includes("# implementation plan") ||
-    content.includes("## plan") && content.includes("implementation")
+    (content.includes("## plan") && content.includes("implementation"))
   );
 }

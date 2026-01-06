@@ -7,6 +7,20 @@ type CodeBlockProps = {
   filePath?: string;
 };
 
+/**
+ * Escape HTML special characters to prevent XSS
+ */
+function escapeHtml(text: string): string {
+  const map: Record<string, string> = {
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;",
+  };
+  return text.replace(/[&<>"']/g, (char) => map[char] ?? char);
+}
+
 export function CodeBlock({ code, language, filePath }: CodeBlockProps) {
   const [html, setHtml] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
@@ -27,7 +41,7 @@ export function CodeBlock({ code, language, filePath }: CodeBlockProps) {
       } catch (error) {
         // Fallback to plain text if language is not supported
         if (!cancelled) {
-          setHtml(`<pre><code>${code}</code></pre>`);
+          setHtml(`<pre><code>${escapeHtml(code)}</code></pre>`);
           setIsLoading(false);
         }
       }
