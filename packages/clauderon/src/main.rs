@@ -592,14 +592,14 @@ async fn main() -> anyhow::Result<()> {
             println!("Cache cleanup complete");
         }
         Commands::Config(config_cmd) => {
-            handle_config_command(config_cmd);
+            handle_config_command(&config_cmd);
         }
     }
 
     Ok(())
 }
 
-fn handle_config_command(cmd: ConfigCommands) {
+fn handle_config_command(cmd: &ConfigCommands) {
     match cmd {
         ConfigCommands::Show => {
             println!("clauderon configuration\n");
@@ -614,7 +614,6 @@ fn handle_config_command(cmd: ConfigCommands) {
             print_path("Base directory", &utils::paths::base_dir());
             print_path("Database", &utils::paths::database_path());
             print_path("Unix socket", &utils::paths::socket_path());
-            print_path("Hooks socket", &utils::paths::hooks_socket_path());
             print_path("Worktrees directory", &utils::paths::worktrees_dir());
             print_path("Log file", &utils::paths::log_path());
             print_path("Config file", &utils::paths::config_path());
@@ -679,7 +678,6 @@ fn handle_config_command(cmd: ConfigCommands) {
 
             println!("SOCKETS:");
             print_path("Daemon socket", &utils::paths::socket_path());
-            print_path("Hooks socket", &utils::paths::hooks_socket_path());
             println!();
 
             println!("DATA:");
