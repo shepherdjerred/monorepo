@@ -111,7 +111,7 @@ pub async fn handle_paste_event(app: &mut App, text: &str) -> anyhow::Result<()>
                     let trimmed = text.trim();
                     if is_image_path(trimmed) {
                         app.create_dialog.images.push(trimmed.to_string());
-                        app.set_status_message(format!("Image attached: {}", trimmed));
+                        app.status_message = Some(format!("Image attached: {}", trimmed));
                         return Ok(());
                     }
 
@@ -127,7 +127,7 @@ pub async fn handle_paste_event(app: &mut App, text: &str) -> anyhow::Result<()>
                             }
                         }
                         if added_images > 0 {
-                            app.set_status_message(format!("Added {} image(s)", added_images));
+                            app.status_message = Some(format!("Added {} image(s)", added_images));
                             return Ok(());
                         }
                     }
@@ -254,7 +254,7 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
     {
         let last_idx = app.create_dialog.images.len() - 1;
         app.create_dialog.remove_image(last_idx);
-        app.set_status_message("Image removed");
+        app.status_message = Some("Image removed".to_string());
         return Ok(());
     }
 
