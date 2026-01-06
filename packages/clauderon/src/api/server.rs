@@ -305,16 +305,37 @@ async fn run_http_server(
     let bind_addr =
         std::env::var("CLAUDERON_BIND_ADDR").unwrap_or_else(|_| "127.0.0.1".to_string());
 
-    // Determine if authentication is required (only for external binding)
-    let requires_auth = bind_addr == "0.0.0.0";
+    // Check if auth is explicitly disabled via environment variable
+    let auth_disabled = std::env::var("CLAUDERON_DISABLE_AUTH")
+        .map(|v| v == "1" || v.to_lowercase() == "true")
+        .unwrap_or(false);
+
+    // Determine if authentication is required (for any non-localhost binding)
+    let is_localhost = bind_addr == "127.0.0.1" || bind_addr == "localhost";
+    let requires_auth = !is_localhost && !auth_disabled;
+
+    // Warn if auth is disabled on a non-localhost binding
+    if !is_localhost && auth_disabled {
+        tracing::warn!("╔══════════════════════════════════════════════════════════════════╗");
+        tracing::warn!("║  WARNING: Authentication is DISABLED on external interface!     ║");
+        tracing::warn!("║                                                                  ║");
+        tracing::warn!("║  This allows ANYONE with network access to execute arbitrary    ║");
+        tracing::warn!("║  code on this machine via Claude Code sessions.                 ║");
+        tracing::warn!("║                                                                  ║");
+        tracing::warn!("║  Only use CLAUDERON_DISABLE_AUTH=true in trusted networks       ║");
+        tracing::warn!("║  or behind a reverse proxy with its own authentication.         ║");
+        tracing::warn!("╚══════════════════════════════════════════════════════════════════╝");
+    }
 
     tracing::info!(
         "HTTP server will bind to {} (authentication {})",
         bind_addr,
         if requires_auth {
             "REQUIRED"
+        } else if is_localhost {
+            "not required (localhost)"
         } else {
-            "NOT required"
+            "DISABLED (unsafe!)"
         }
     );
 
