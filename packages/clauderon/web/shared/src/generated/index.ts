@@ -152,6 +152,14 @@ export interface ProgressStep {
 	message: string;
 }
 
+/** Response from uploading an image file */
+export interface UploadResponse {
+	/** Absolute path to the uploaded file */
+	path: string;
+	/** Size of the uploaded file in bytes */
+	size: number;
+}
+
 /** Proxy status information */
 export interface ProxyStatus {
 	/** Proxy name (e.g., "HTTP Auth Proxy", "Kubernetes Proxy") */
