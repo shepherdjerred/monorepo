@@ -155,8 +155,8 @@ impl ClaudeApiClient {
                 limit: five_hour.limit,
                 utilization: if five_hour.utilization > 0.0 {
                     five_hour.utilization / 100.0 // API returns percentage, we want 0.0-1.0
-                } else if five_hour.limit > 0 {
-                    five_hour.current as f64 / five_hour.limit as f64
+                } else if five_hour.limit > 0.0 {
+                    five_hour.current / five_hour.limit
                 } else {
                     0.0
                 },
@@ -167,8 +167,8 @@ impl ClaudeApiClient {
                 limit: seven_day.limit,
                 utilization: if seven_day.utilization > 0.0 {
                     seven_day.utilization / 100.0 // API returns percentage, we want 0.0-1.0
-                } else if seven_day.limit > 0 {
-                    seven_day.current as f64 / seven_day.limit as f64
+                } else if seven_day.limit > 0.0 {
+                    seven_day.current / seven_day.limit
                 } else {
                     0.0
                 },
@@ -180,8 +180,8 @@ impl ClaudeApiClient {
                     limit: s.limit,
                     utilization: if s.utilization > 0.0 {
                         s.utilization / 100.0 // API returns percentage, we want 0.0-1.0
-                    } else if s.limit > 0 {
-                        s.current as f64 / s.limit as f64
+                    } else if s.limit > 0.0 {
+                        s.current / s.limit
                     } else {
                         0.0
                     },
