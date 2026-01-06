@@ -160,6 +160,7 @@ fn test_create_dialog_focus_cycle() {
     let focuses = [
         CreateDialogFocus::RepoPath,
         CreateDialogFocus::Backend,
+        CreateDialogFocus::Agent,
         CreateDialogFocus::AccessMode,
         CreateDialogFocus::SkipChecks,
         CreateDialogFocus::PlanMode,
@@ -171,7 +172,8 @@ fn test_create_dialog_focus_cycle() {
         app.create_dialog.focus = match app.create_dialog.focus {
             CreateDialogFocus::Prompt => CreateDialogFocus::RepoPath,
             CreateDialogFocus::RepoPath => CreateDialogFocus::Backend,
-            CreateDialogFocus::Backend => CreateDialogFocus::AccessMode,
+            CreateDialogFocus::Backend => CreateDialogFocus::Agent,
+            CreateDialogFocus::Agent => CreateDialogFocus::AccessMode,
             CreateDialogFocus::AccessMode => CreateDialogFocus::SkipChecks,
             CreateDialogFocus::SkipChecks => CreateDialogFocus::PlanMode,
             CreateDialogFocus::PlanMode => CreateDialogFocus::Buttons,
