@@ -36,12 +36,20 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
     let prompt_lines = dialog.prompt.lines().count().max(1);
     let prompt_height = prompt_lines.clamp(5, 15); // Min 5, max 15 lines
 
+    // Calculate images height (0 if no images, or limited height if images present)
+    let images_height = if dialog.images.is_empty() {
+        0
+    } else {
+        dialog.images.len().min(3) as u16 + 2 // Show up to 3 images, +2 for borders
+    };
+
     // Inner area (with padding)
     let inner = Layout::default()
         .direction(Direction::Vertical)
         .margin(1)
         .constraints([
             Constraint::Length(prompt_height as u16 + 2), // Prompt (dynamic + borders)
+            Constraint::Length(images_height),            // Images (dynamic)
             Constraint::Length(3),                        // Repo path
             Constraint::Length(2),                        // Backend
             Constraint::Length(2),                        // Access mode
@@ -65,13 +73,18 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         inner[0],
     );
 
+    // Images field (if any images attached)
+    if !dialog.images.is_empty() {
+        render_images_field(frame, &dialog.images, inner[1]);
+    }
+
     // Repo path field (clickable to open directory picker)
     render_repo_path_field(
         frame,
         "Repository",
         &dialog.repo_path,
         dialog.focus == CreateDialogFocus::RepoPath,
-        inner[1],
+        inner[2],
     );
 
     // Backend selection
@@ -84,7 +97,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
             ("Kubernetes", dialog.backend == BackendType::Kubernetes),
         ],
         dialog.focus == CreateDialogFocus::Backend,
-        inner[2],
+        inner[3],
     );
 
     // Access mode selection
@@ -96,7 +109,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
             ("Read-Write", dialog.access_mode == AccessMode::ReadWrite),
         ],
         dialog.focus == CreateDialogFocus::AccessMode,
-        inner[3],
+        inner[4],
     );
 
     // Skip checks checkbox
@@ -105,7 +118,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         "Dangerously skip checks",
         dialog.skip_checks,
         dialog.focus == CreateDialogFocus::SkipChecks,
-        inner[4],
+        inner[5],
     );
 
     // Plan mode checkbox
@@ -114,7 +127,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         "Start in plan mode",
         dialog.plan_mode,
         dialog.focus == CreateDialogFocus::PlanMode,
-        inner[5],
+        inner[6],
     );
 
     // Buttons
@@ -122,7 +135,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         frame,
         dialog.focus == CreateDialogFocus::Buttons,
         dialog.button_create_focused,
-        inner[7],
+        inner[8],
     );
 
     // Render directory picker overlay if active
@@ -167,6 +180,37 @@ fn render_repo_path_field(frame: &mut Frame, label: &str, value: &str, focused: 
     };
 
     let paragraph = Paragraph::new(Span::styled(display_value, value_style)).block(block);
+    frame.render_widget(paragraph, area);
+}
+
+fn render_images_field(frame: &mut Frame, images: &[String], area: Rect) {
+    let block = Block::default()
+        .title(" 📎 Attached Images (Ctrl+Backspace to remove last) ")
+        .borders(Borders::ALL)
+        .border_style(Style::default().fg(Color::Blue));
+
+    // Create list of image file names
+    let image_lines: Vec<Line> = images
+        .iter()
+        .enumerate()
+        .map(|(i, path)| {
+            let filename = std::path::Path::new(path)
+                .file_name()
+                .and_then(|n| n.to_str())
+                .unwrap_or(path);
+            Line::from(vec![
+                Span::styled(
+                    format!("  [{}] ", i + 1),
+                    Style::default()
+                        .fg(Color::Blue)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::raw(filename),
+            ])
+        })
+        .collect();
+
+    let paragraph = Paragraph::new(image_lines).block(block);
     frame.render_widget(paragraph, area);
 }
 
