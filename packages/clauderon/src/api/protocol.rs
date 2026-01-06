@@ -309,10 +309,10 @@ pub struct UpdateCredentialRequest {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UsageWindow {
     /// Current usage (e.g., number of requests or tokens)
-    pub current: i64,
+    pub current: f64,
 
     /// Maximum allowed usage for this window
-    pub limit: i64,
+    pub limit: f64,
 
     /// Usage as a percentage (0.0 - 1.0)
     pub utilization: f64,

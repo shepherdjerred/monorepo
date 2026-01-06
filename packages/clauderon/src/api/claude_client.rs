@@ -29,16 +29,16 @@ struct ClaudeUsageResponse {
 #[derive(Debug, Deserialize)]
 struct UsageData {
     #[serde(default)]
-    current: i64,
+    current: f64,
     #[serde(default = "default_limit")]
-    limit: i64,
+    limit: f64,
     #[serde(default)]
     utilization: f64,
     resets_at: Option<String>,
 }
 
-fn default_limit() -> i64 {
-    100
+fn default_limit() -> f64 {
+    100.0
 }
 
 /// Client for Claude.ai API operations
