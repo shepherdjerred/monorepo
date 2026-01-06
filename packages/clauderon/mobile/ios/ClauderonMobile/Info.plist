@@ -47,6 +47,12 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>Take photos to send to Claude</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Select photos to send to Claude</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Save photos from Claude sessions</string>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
 </dict>
