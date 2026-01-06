@@ -581,14 +581,14 @@ async fn main() -> anyhow::Result<()> {
             println!("Cache cleanup complete");
         }
         Commands::Config(config_cmd) => {
-            handle_config_command(config_cmd);
+            handle_config_command(&config_cmd);
         }
     }
 
     Ok(())
 }
 
-fn handle_config_command(cmd: ConfigCommands) {
+fn handle_config_command(cmd: &ConfigCommands) {
     match cmd {
         ConfigCommands::Show => {
             println!("clauderon configuration\n");
