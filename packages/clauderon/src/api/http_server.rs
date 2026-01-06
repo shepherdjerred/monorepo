@@ -449,6 +449,7 @@ async fn update_credential(
 ///
 /// The file is saved to `~/.clauderon/uploads/{session-id}/{filename}`
 /// and the absolute path is returned.
+#[tracing::instrument(skip(state, multipart), fields(session_id = %id))]
 async fn upload_file(
     State(state): State<AppState>,
     Path(id): Path<String>,
@@ -506,8 +507,11 @@ async fn upload_file(
     crate::uploads::validate_image_file(&file_name, content_type.as_deref(), file_data.len())
         .map_err(|e| AppError::BadRequest(format!("Invalid image file: {e}")))?;
 
+    // Generate unique filename with UUID prefix to prevent collisions
+    let unique_filename = format!("{}_{}", uuid::Uuid::new_v4(), file_name);
+
     // Save file to upload directory
-    let file_path = upload_dir.join(&file_name);
+    let file_path = upload_dir.join(&unique_filename);
     tokio::fs::write(&file_path, &file_data)
         .await
         .map_err(|e| AppError::BadRequest(format!("Failed to save file: {e}")))?;
@@ -522,7 +526,7 @@ async fn upload_file(
 
     Ok(Json(crate::api::protocol::UploadResponse {
         path: file_path.to_string_lossy().to_string(),
-        size: file_data.len(),
+        size: file_data.len() as u64,
     }))
 }
 

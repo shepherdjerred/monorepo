@@ -38,10 +38,23 @@ export function ChatInterface({
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || !client || !isConnected) {
       return;
+    }
+
+    // Upload attached images first if any
+    if (attachedImages.length > 0) {
+      for (const file of attachedImages) {
+        try {
+          await apiClient.uploadImage(sessionId, file);
+        } catch (error) {
+          console.error("Failed to upload image:", error);
+          // Continue even if upload fails
+        }
+      }
+      setAttachedImages([]);
     }
 
     // Send input to console
