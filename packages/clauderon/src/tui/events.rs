@@ -107,6 +107,31 @@ pub async fn handle_paste_event(app: &mut App, text: &str) -> anyhow::Result<()>
 
             match app.create_dialog.focus {
                 CreateDialogFocus::Prompt => {
+                    // Check if pasted text is an image file path (drag-and-drop support)
+                    let trimmed = text.trim();
+                    if is_image_path(trimmed) {
+                        app.create_dialog.images.push(trimmed.to_string());
+                        app.set_status_message(format!("Image attached: {}", trimmed));
+                        return Ok(());
+                    }
+
+                    // Handle multiple lines (e.g., multiple files pasted)
+                    let lines: Vec<&str> = text.lines().collect();
+                    if lines.len() > 1 {
+                        let mut added_images = 0;
+                        for line in lines {
+                            let line = line.trim();
+                            if is_image_path(line) {
+                                app.create_dialog.images.push(line.to_string());
+                                added_images += 1;
+                            }
+                        }
+                        if added_images > 0 {
+                            app.set_status_message(format!("Added {} image(s)", added_images));
+                            return Ok(());
+                        }
+                    }
+
                     // For prompt field, normalize line endings to \n
                     let normalized_text = text.replace("\r\n", "\n").replace('\r', "\n");
 
@@ -219,6 +244,17 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
         && app.create_dialog.focus == CreateDialogFocus::Prompt
     {
         app.launch_editor = true;
+        return Ok(());
+    }
+
+    // Handle Ctrl+Backspace to remove last attached image
+    if key.modifiers.contains(KeyModifiers::CONTROL)
+        && key.code == KeyCode::Backspace
+        && !app.create_dialog.images.is_empty()
+    {
+        let last_idx = app.create_dialog.images.len() - 1;
+        app.create_dialog.remove_image(last_idx);
+        app.set_status_message("Image removed");
         return Ok(());
     }
 
@@ -888,4 +924,27 @@ fn handle_scroll_mode_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
     }
 
     Ok(())
+}
+
+/// Check if a pasted text string is an image file path
+///
+/// This enables drag-and-drop support in terminals that convert drops to paste events.
+fn is_image_path(text: &str) -> bool {
+    let path = std::path::Path::new(text);
+
+    // Must exist as a file
+    if !path.is_file() {
+        return false;
+    }
+
+    // Check extension
+    path.extension()
+        .and_then(|ext| ext.to_str())
+        .map(|ext| {
+            matches!(
+                ext.to_lowercase().as_str(),
+                "jpg" | "jpeg" | "png" | "gif" | "webp"
+            )
+        })
+        .unwrap_or(false)
 }

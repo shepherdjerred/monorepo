@@ -484,6 +484,13 @@ impl CreateDialogState {
         // Clamp scroll to valid range
         self.clamp_prompt_scroll();
     }
+
+    /// Remove an image from the attached images list
+    pub fn remove_image(&mut self, index: usize) {
+        if index < self.images.len() {
+            self.images.remove(index);
+        }
+    }
 }
 
 /// Main application state
