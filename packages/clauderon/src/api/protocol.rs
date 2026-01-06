@@ -156,6 +156,16 @@ pub struct ProgressStep {
     pub message: String,
 }
 
+/// Response from uploading an image file
+#[typeshare]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UploadResponse {
+    /// Absolute path to the uploaded file
+    pub path: String,
+    /// Size of the uploaded file in bytes
+    pub size: u32,
+}
+
 /// Response types for the API
 #[typeshare]
 #[derive(Debug, Clone, Serialize, Deserialize)]
