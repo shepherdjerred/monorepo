@@ -7,13 +7,14 @@ use crate::core::manager::SessionManager;
 use crate::core::session::AccessMode;
 use axum::{
     Json, Router,
-    extract::{Multipart, Path, Query, State},
+    extract::{Path, Query, State},
     http::StatusCode,
     middleware,
     middleware::from_fn_with_state,
     response::{IntoResponse, Response},
     routing::{delete, get, post},
 };
+use axum_extra::extract::Multipart;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::sync::Arc;

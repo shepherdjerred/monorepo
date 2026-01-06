@@ -40,7 +40,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
     let images_height = if dialog.images.is_empty() {
         0
     } else {
-        (dialog.images.len().min(3) as u16 + 2) // Show up to 3 images, +2 for borders
+        dialog.images.len().min(3) as u16 + 2 // Show up to 3 images, +2 for borders
     };
 
     // Inner area (with padding)
