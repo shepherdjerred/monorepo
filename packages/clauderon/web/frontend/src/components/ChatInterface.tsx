@@ -40,7 +40,7 @@ export function ChatInterface({
     }
 
     // Send input to console
-    client.write(input + "\n");
+    client.write(input + "\r");
     setInput("");
   };
 
