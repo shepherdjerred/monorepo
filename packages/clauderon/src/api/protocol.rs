@@ -287,6 +287,10 @@ pub struct SystemStatus {
 
     /// Total number of active sessions with proxies
     pub active_session_proxies: u32,
+
+    /// Claude Code usage tracking (if available)
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub claude_usage: Option<ClaudeUsage>,
 }
 
 /// Request to update a credential
@@ -298,4 +302,44 @@ pub struct UpdateCredentialRequest {
 
     /// The credential token/key value
     pub value: String,
+}
+
+/// Claude Code usage data for a specific time window
+#[typeshare]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UsageWindow {
+    /// Current usage (e.g., number of requests or tokens)
+    pub current: u64,
+
+    /// Maximum allowed usage for this window
+    pub limit: u64,
+
+    /// Usage as a percentage (0.0 - 1.0)
+    pub utilization: f64,
+
+    /// When this usage window resets (ISO 8601 timestamp)
+    pub resets_at: Option<String>,
+}
+
+/// Claude Code usage tracking data
+#[typeshare]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ClaudeUsage {
+    /// Organization ID
+    pub organization_id: String,
+
+    /// Organization name (if available)
+    pub organization_name: Option<String>,
+
+    /// 5-hour usage window
+    pub five_hour: UsageWindow,
+
+    /// 7-day usage window
+    pub seven_day: UsageWindow,
+
+    /// 7-day Sonnet-specific usage window (if applicable)
+    pub seven_day_sonnet: Option<UsageWindow>,
+
+    /// When this data was last fetched
+    pub fetched_at: String,
 }
