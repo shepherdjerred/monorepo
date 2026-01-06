@@ -1,5 +1,7 @@
 use std::str::FromStr;
 use std::sync::Arc;
+
+use anyhow::Context;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::{UnixListener, UnixStream};
 use uuid::Uuid;
@@ -30,10 +32,16 @@ pub async fn run_daemon() -> anyhow::Result<()> {
 /// Returns an error if the database cannot be opened, the socket cannot be
 /// bound, or other I/O errors occur.
 pub async fn run_daemon_with_options(enable_proxy: bool) -> anyhow::Result<()> {
-    run_daemon_with_http(enable_proxy, Some(3030)).await
+    run_daemon_with_http(enable_proxy, Some(3030), false).await
 }
 
 /// Run the clauderon daemon with HTTP server option
+///
+/// # Arguments
+///
+/// * `enable_proxy` - Whether to enable proxy services
+/// * `http_port` - HTTP server port (None to disable)
+/// * `dev_mode` - Whether to serve frontend from filesystem instead of embedded
 ///
 /// # Errors
 ///
@@ -42,14 +50,28 @@ pub async fn run_daemon_with_options(enable_proxy: bool) -> anyhow::Result<()> {
 pub async fn run_daemon_with_http(
     enable_proxy: bool,
     http_port: Option<u16>,
+    dev_mode: bool,
 ) -> anyhow::Result<()> {
+    // Write daemon info for auto-restart detection
+    use crate::utils::binary_info::DaemonInfo;
+    if let Err(e) = DaemonInfo::current().and_then(|info| info.write()) {
+        tracing::warn!(error = %e, "Failed to write daemon info");
+    }
+
+    if dev_mode {
+        tracing::info!("Development mode enabled - serving frontend from filesystem");
+    }
+
     // Initialize the store
     tracing::debug!("Initializing database store...");
     let db_path = paths::database_path();
-    let store: Arc<dyn Store> = Arc::new(SqliteStore::new(&db_path).await.map_err(|e| {
+    let sqlite_store = SqliteStore::new(&db_path).await.map_err(|e| {
         tracing::error!("Failed to initialize database at {:?}: {}", db_path, e);
         e
-    })?);
+    })?;
+    // Get pool reference before wrapping in Arc<dyn Store> (for auth handlers)
+    let db_pool = sqlite_store.pool();
+    let store: Arc<dyn Store> = Arc::new(sqlite_store);
     tracing::debug!("Database store initialized successfully");
 
     // Initialize proxy services if enabled
@@ -150,7 +172,13 @@ pub async fn run_daemon_with_http(
 
         // Spawn both Unix socket and HTTP servers concurrently
         let unix_socket_future = run_unix_socket_server(Arc::clone(&manager));
-        let http_future = run_http_server(Arc::clone(&manager), port, event_broadcaster);
+        let http_future = run_http_server(
+            Arc::clone(&manager),
+            port,
+            event_broadcaster,
+            dev_mode,
+            db_pool,
+        );
 
         tracing::info!(
             "Starting daemon with Unix socket and HTTP server on port {}",
@@ -265,6 +293,8 @@ async fn run_http_server(
     manager: Arc<SessionManager>,
     port: u16,
     event_broadcaster: tokio::sync::broadcast::Sender<crate::api::protocol::Event>,
+    dev_mode: bool,
+    db_pool: sqlx::SqlitePool,
 ) -> anyhow::Result<()> {
     use crate::api::http_server::create_router;
     use crate::api::ws_console::ws_console_handler;
@@ -291,9 +321,52 @@ async fn run_http_server(
     // Initialize auth state if needed
     let auth_state = if requires_auth {
         // Read WebAuthn configuration from environment
-        let rp_origin = std::env::var("CLAUDERON_ORIGIN")
-            .unwrap_or_else(|_| format!("http://{}:{}", bind_addr, port));
-        let rp_id = std::env::var("CLAUDERON_RP_ID").unwrap_or_else(|_| "localhost".to_string());
+        let rp_origin = std::env::var("CLAUDERON_ORIGIN").ok();
+
+        // Validate origin is set when binding externally
+        let rp_origin = match rp_origin {
+            Some(origin) => origin,
+            None => {
+                anyhow::bail!(
+                    "CLAUDERON_ORIGIN environment variable is required when binding to 0.0.0.0\n\
+                    \n\
+                    WebAuthn authentication requires a valid origin URL that clients will use.\n\
+                    \n\
+                    Example:\n\
+                      CLAUDERON_ORIGIN=http://192.168.1.100:3030 clauderon daemon\n\
+                    \n\
+                    For HTTPS behind a reverse proxy:\n\
+                      CLAUDERON_ORIGIN=https://clauderon.example.com clauderon daemon"
+                );
+            }
+        };
+
+        // Validate origin is a proper URL
+        if !rp_origin.starts_with("http://") && !rp_origin.starts_with("https://") {
+            anyhow::bail!(
+                "CLAUDERON_ORIGIN must be a full URL with scheme (http:// or https://)\n\
+                \n\
+                Received: {}\n\
+                Expected: https://{}\n\
+                \n\
+                Example:\n\
+                  CLAUDERON_ORIGIN=https://{}:3030 clauderon daemon",
+                rp_origin,
+                rp_origin,
+                rp_origin
+            );
+        }
+
+        // Extract hostname from origin for default RP ID
+        let origin_host = rp_origin
+            .strip_prefix("http://")
+            .or_else(|| rp_origin.strip_prefix("https://"))
+            .and_then(|s| s.split(':').next())
+            .and_then(|s| s.split('/').next())
+            .unwrap_or("localhost");
+
+        // RP ID defaults to origin hostname (can be overridden)
+        let rp_id = std::env::var("CLAUDERON_RP_ID").unwrap_or_else(|_| origin_host.to_string());
 
         tracing::info!(
             "WebAuthn configured with origin: {}, RP ID: {}",
@@ -302,16 +375,19 @@ async fn run_http_server(
         );
 
         // Initialize WebAuthn handler
-        let webauthn = WebAuthnHandler::new(&rp_origin, &rp_id)?;
+        let webauthn = WebAuthnHandler::new(&rp_origin, &rp_id).with_context(|| {
+            format!(
+                "Failed to initialize WebAuthn.\n\
+                Origin: {}\n\
+                RP ID: {}\n\
+                \n\
+                The RP ID must match or be a registrable suffix of the origin's hostname.",
+                rp_origin, rp_id
+            )
+        })?;
 
-        // Get SQLite pool from manager's store
-        // Note: This is a bit of a hack - we need access to the pool
-        // In a real implementation, we'd pass the pool more cleanly
-        let db_path = crate::utils::paths::database_path();
-        let pool_options =
-            sqlx::sqlite::SqliteConnectOptions::from_str(&format!("sqlite:{}", db_path.display()))?
-                .create_if_missing(true);
-        let pool = sqlx::SqlitePool::connect_with(pool_options).await?;
+        // Use the shared pool from SqliteStore (migrations already applied)
+        let pool = db_pool.clone();
 
         // Create session store
         let session_store = SessionStore::new(pool.clone());
@@ -335,7 +411,7 @@ async fn run_http_server(
     };
 
     // Create the HTTP router with all routes and state
-    let app = create_router(&auth_state)
+    let app = create_router(&auth_state, dev_mode)
         .route("/ws/events", axum::routing::get(ws_events_handler))
         .route(
             "/ws/console/{sessionId}",

@@ -37,3 +37,58 @@ run = "cargo clean"
 description = "Install clauderon binary to ~/.cargo/bin"
 run = "cargo install --path ."
 
+[tasks.dev]
+description = "Build and run daemon in dev mode (one-shot)"
+run = """
+mise run install
+cd web && bun run build && cd ..
+CLAUDERON_DEV=1 clauderon daemon
+"""
+
+[tasks.dev-watch]
+description = "Watch for git changes, rebuild, and run daemon in dev mode"
+run = """
+#!/usr/bin/env bash
+set -e
+
+# Kill any existing daemon
+pkill -f 'clauderon daemon' 2>/dev/null || true
+
+# Initial build if binary doesn't exist
+if ! command -v clauderon &> /dev/null; then
+    echo "Initial build..."
+    mise run install
+    cd web && bun run build && cd ..
+fi
+
+while true; do
+    # Fetch and check for changes
+    git fetch origin main --quiet
+    CURRENT_COMMIT=$(git rev-parse HEAD)
+    REMOTE_COMMIT=$(git rev-parse origin/main)
+
+    if [ "$CURRENT_COMMIT" != "$REMOTE_COMMIT" ]; then
+        echo "Changes detected, pulling..."
+        git pull --quiet
+
+        echo "Building Rust binary..."
+        mise run install
+
+        echo "Building frontend..."
+        cd web && bun run build && cd ..
+
+        echo "Restarting daemon..."
+        pkill -f 'clauderon daemon' 2>/dev/null || true
+        sleep 1
+    fi
+
+    # Ensure daemon is running
+    if ! pgrep -f 'clauderon daemon' > /dev/null; then
+        echo "Starting daemon in dev mode..."
+        CLAUDERON_DEV=1 clauderon daemon &
+    fi
+
+    sleep 10
+done
+"""
+

@@ -1,3 +1,4 @@
+pub mod binary_info;
 pub mod daemon;
 pub mod directory;
 pub mod editor;

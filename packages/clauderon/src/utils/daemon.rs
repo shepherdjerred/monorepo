@@ -141,13 +141,36 @@ pub fn spawn_daemon() -> anyhow::Result<()> {
 /// This function uses file locking to prevent race conditions when
 /// multiple clients try to spawn the daemon simultaneously.
 ///
+/// If the binary is newer than the running daemon, the daemon will be
+/// killed and restarted automatically.
+///
 /// # Errors
 ///
 /// Returns an error if the daemon cannot be spawned or fails to start.
 pub async fn ensure_daemon_running() -> anyhow::Result<()> {
-    // Fast path: daemon is already running
+    use super::binary_info;
+
+    // Check if daemon is running
     if is_daemon_running() {
-        return Ok(());
+        // Check if binary is newer than running daemon
+        match binary_info::is_binary_newer_than_daemon() {
+            Ok(true) => {
+                tracing::info!("Binary is newer than running daemon, restarting...");
+                if let Err(e) = binary_info::kill_daemon() {
+                    tracing::warn!(error = %e, "Failed to kill old daemon, will attempt spawn anyway");
+                }
+                // Fall through to spawn new daemon
+            }
+            Ok(false) => {
+                // Daemon is up-to-date
+                return Ok(());
+            }
+            Err(e) => {
+                // If we can't check, assume daemon is current
+                tracing::debug!(error = %e, "Failed to check binary age, assuming daemon is current");
+                return Ok(());
+            }
+        }
     }
 
     // Try to acquire the spawn lock
