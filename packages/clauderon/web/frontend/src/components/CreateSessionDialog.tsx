@@ -56,11 +56,11 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
       const result = await createSession(request);
 
       // Upload images if any were selected
-      if (selectedFiles.length > 0 && result?.id) {
+      if (selectedFiles.length > 0 && result) {
         toast.info(`Uploading ${selectedFiles.length} image(s)...`);
         for (const file of selectedFiles) {
           try {
-            await client.uploadImage(result.id, file);
+            await client.uploadImage(result, file);
           } catch (uploadErr) {
             console.error('Failed to upload image:', uploadErr);
             toast.warning(`Failed to upload ${file.name}`);
