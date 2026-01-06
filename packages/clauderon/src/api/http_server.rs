@@ -54,6 +54,7 @@ pub fn create_router(auth_state: &Option<AuthState>, dev_mode: bool) -> Router<A
         .route("/api/sessions/{id}", delete(delete_session))
         .route("/api/sessions/{id}/archive", post(archive_session))
         .route("/api/sessions/{id}/access-mode", post(update_access_mode))
+        .route("/api/sessions/{id}/metadata", post(update_metadata))
         .route("/api/sessions/{id}/history", get(get_session_history))
         .route("/api/sessions/{id}/upload", post(upload_file))
         .route("/api/recent-repos", get(get_recent_repos))
@@ -306,6 +307,13 @@ struct UpdateAccessModeRequest {
     access_mode: AccessMode,
 }
 
+/// Request to update session metadata
+#[derive(Debug, Deserialize, Serialize)]
+struct UpdateMetadataRequest {
+    title: Option<String>,
+    description: Option<String>,
+}
+
 /// Query parameters for session history endpoint
 #[derive(Debug, Deserialize)]
 struct HistoryQueryParams {
@@ -336,6 +344,26 @@ async fn update_access_mode(
     state
         .session_manager
         .update_access_mode(&id, request.access_mode)
+        .await?;
+
+    // Broadcast session updated event
+    if let Some(session) = state.session_manager.get_session(&id).await {
+        broadcast_event(&state.event_broadcaster, Event::SessionUpdated(session)).await;
+    }
+
+    Ok(StatusCode::NO_CONTENT)
+}
+
+/// Update session metadata (title and description)
+async fn update_metadata(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+    Json(request): Json<UpdateMetadataRequest>,
+) -> Result<StatusCode, AppError> {
+    validate_session_id(&id)?;
+    state
+        .session_manager
+        .update_metadata(&id, request.title, request.description)
         .await?;
 
     // Broadcast session updated event
