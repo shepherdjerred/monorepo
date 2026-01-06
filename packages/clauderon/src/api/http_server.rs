@@ -526,7 +526,7 @@ async fn upload_file(
 
     Ok(Json(crate::api::protocol::UploadResponse {
         path: file_path.to_string_lossy().to_string(),
-        size: file_data.len() as u64,
+        size: file_data.len() as u32,
     }))
 }
 

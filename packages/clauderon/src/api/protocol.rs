@@ -163,7 +163,7 @@ pub struct UploadResponse {
     /// Absolute path to the uploaded file
     pub path: String,
     /// Size of the uploaded file in bytes
-    pub size: u64,
+    pub size: u32,
 }
 
 /// Response types for the API
