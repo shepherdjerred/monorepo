@@ -1336,7 +1336,7 @@ mod tests {
             &PathBuf::new(), // initial_workdir (empty = root)
             "test prompt",
             1000,
-            None,  // No proxy config
+            None, // No proxy config
             AgentType::ClaudeCode,
             false, // print mode
             true,  // dangerous_skip_checks
