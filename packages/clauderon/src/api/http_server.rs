@@ -30,8 +30,12 @@ pub struct AppState {
 /// Create the HTTP router with all endpoints (without state)
 /// The caller should add WebSocket routes and then call `with_state()`
 ///
-/// If `auth_state` is provided, protected routes will require authentication
-pub fn create_router(auth_state: &Option<AuthState>) -> Router<AppState> {
+/// If `auth_state` is provided, protected routes will require authentication.
+/// If `dev_mode` is true, static files are served from the filesystem instead of embedded.
+pub fn create_router(auth_state: &Option<AuthState>, dev_mode: bool) -> Router<AppState> {
+    use std::path::PathBuf;
+    use tower_http::services::{ServeDir, ServeFile};
+
     // Configure CORS for development
     let cors = CorsLayer::new()
         .allow_origin(Any)
@@ -62,7 +66,7 @@ pub fn create_router(auth_state: &Option<AuthState>) -> Router<AppState> {
         ));
     }
 
-    Router::new()
+    let router = Router::new()
         // Auth endpoints (always public)
         .route("/api/auth/status", get(auth_status_wrapper))
         .route("/api/auth/register/start", post(register_start_wrapper))
@@ -71,10 +75,28 @@ pub fn create_router(auth_state: &Option<AuthState>) -> Router<AppState> {
         .route("/api/auth/login/finish", post(login_finish_wrapper))
         .route("/api/auth/logout", post(logout_wrapper))
         // Merge protected routes
-        .merge(protected_routes)
-        // WebSocket endpoints will be added by caller
-        // Serve static files for all non-API routes (SPA fallback)
-        .fallback(serve_static)
+        .merge(protected_routes);
+
+    // Serve static files - from filesystem in dev mode, embedded otherwise
+    let router = if dev_mode {
+        let frontend_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("web/frontend/dist");
+        let index_file = frontend_path.join("index.html");
+
+        tracing::info!(
+            path = %frontend_path.display(),
+            "Dev mode: serving frontend from filesystem"
+        );
+
+        // ServeDir with fallback to index.html for SPA routing
+        let serve_dir = ServeDir::new(&frontend_path).fallback(ServeFile::new(&index_file));
+
+        router.fallback_service(serve_dir)
+    } else {
+        // Use embedded static files
+        router.fallback(serve_static)
+    };
+
+    router
         .layer(middleware::from_fn(correlation_id_middleware))
         .layer(cors)
 }

@@ -43,6 +43,16 @@ impl SqliteStore {
         Ok(Self { pool })
     }
 
+    /// Get a clone of the underlying connection pool
+    ///
+    /// This is useful when other components need direct database access
+    /// (e.g., auth handlers) while ensuring they use the same pool
+    /// that has already had migrations applied.
+    #[must_use]
+    pub fn pool(&self) -> SqlitePool {
+        self.pool.clone()
+    }
+
     /// Run database migrations
     async fn run_migrations(pool: &SqlitePool) -> anyhow::Result<()> {
         // Create schema_version table if it doesn't exist

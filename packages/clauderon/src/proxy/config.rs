@@ -24,7 +24,7 @@ impl Default for ProxyConfig {
     fn default() -> Self {
         let home = dirs::home_dir().unwrap_or_else(|| PathBuf::from("/tmp"));
         Self {
-            secrets_dir: home.join(".secrets"),
+            secrets_dir: home.join(".clauderon/secrets"),
             talos_gateway_port: 18082,
             audit_enabled: true,
             audit_log_path: home.join(".clauderon/audit.jsonl"),
