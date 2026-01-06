@@ -152,14 +152,6 @@ export interface ProgressStep {
 	message: string;
 }
 
-/** Response from uploading an image file */
-export interface UploadResponse {
-	/** Absolute path to the uploaded file */
-	path: string;
-	/** Size of the uploaded file in bytes */
-	size: number; // u32 in Rust
-}
-
 /** Proxy status information */
 export interface ProxyStatus {
 	/** Proxy name (e.g., "HTTP Auth Proxy", "Kubernetes Proxy") */
@@ -348,6 +340,14 @@ export interface UpdateCredentialRequest {
 	service_id: string;
 	/** The credential token/key value */
 	value: string;
+}
+
+/** Response from uploading an image file */
+export interface UploadResponse {
+	/** Absolute path to the uploaded file */
+	path: string;
+	/** Size of the uploaded file in bytes */
+	size: number;
 }
 
 /** User's passkey credential */
