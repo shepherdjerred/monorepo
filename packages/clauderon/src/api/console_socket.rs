@@ -113,7 +113,7 @@ async fn handle_console_connection(
                         writer.write_all(payload.as_bytes()).await?;
                         writer.write_all(b"\n").await?;
                     }
-                    Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => continue,
+                    Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => {}
                     Err(tokio::sync::broadcast::error::RecvError::Closed) => break,
                 }
             }
