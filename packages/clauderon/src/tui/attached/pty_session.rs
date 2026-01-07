@@ -15,6 +15,9 @@ use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
 
 use super::terminal_buffer::TerminalBuffer;
+use crate::utils::terminal_queries::{
+    TerminalEvent, TerminalQuery, TerminalQueryParser, build_query_response,
+};
 
 /// Buffer size for PTY reads.
 const READ_BUFFER_SIZE: usize = 4096;
@@ -24,6 +27,13 @@ const EVENT_CHANNEL_SIZE: usize = 256;
 
 /// Channel buffer size for write requests.
 const WRITE_CHANNEL_SIZE: usize = 256;
+
+/// Requests sent to the PTY writer task.
+#[derive(Debug)]
+enum WriteRequest {
+    Bytes(Vec<u8>),
+    Resize { rows: u16, cols: u16 },
+}
 
 /// Events emitted by a PTY session.
 #[derive(Debug)]
@@ -56,7 +66,7 @@ pub struct PtySession {
     container_id: String,
 
     /// Channel to send input to the PTY.
-    write_tx: mpsc::Sender<Vec<u8>>,
+    write_tx: mpsc::Sender<WriteRequest>,
 
     /// Terminal buffer (shared with background reader).
     terminal_buffer: Arc<tokio::sync::Mutex<TerminalBuffer>>,
@@ -102,7 +112,7 @@ impl PtySession {
         let (pty_reader, pty_writer) = pty.into_split();
 
         // Create channels
-        let (write_tx, write_rx) = mpsc::channel::<Vec<u8>>(WRITE_CHANNEL_SIZE);
+        let (write_tx, write_rx) = mpsc::channel::<WriteRequest>(WRITE_CHANNEL_SIZE);
         let (event_tx, event_rx) = mpsc::channel::<PtyEvent>(EVENT_CHANNEL_SIZE);
 
         // Create shared terminal buffer
@@ -115,10 +125,18 @@ impl PtySession {
         let reader_task = {
             let terminal_buffer = Arc::clone(&terminal_buffer);
             let event_tx = event_tx.clone();
+            let write_tx = write_tx.clone();
             let cancel_token = cancel_token.clone();
 
             tokio::spawn(async move {
-                Self::reader_loop(pty_reader, terminal_buffer, event_tx, cancel_token).await;
+                Self::reader_loop(
+                    pty_reader,
+                    terminal_buffer,
+                    event_tx,
+                    write_tx,
+                    cancel_token,
+                )
+                .await;
             })
         };
 
@@ -177,9 +195,11 @@ impl PtySession {
         mut reader: pty_process::OwnedReadPty,
         terminal_buffer: Arc<tokio::sync::Mutex<TerminalBuffer>>,
         event_tx: mpsc::Sender<PtyEvent>,
+        write_tx: mpsc::Sender<WriteRequest>,
         cancel_token: CancellationToken,
     ) {
         let mut buf = vec![0u8; READ_BUFFER_SIZE];
+        let mut query_parser = TerminalQueryParser::new();
 
         loop {
             tokio::select! {
@@ -190,13 +210,41 @@ impl PtySession {
                             break;
                         }
                         Ok(n) => {
-                            // Process data into terminal buffer
+                            let events = query_parser.parse(&buf[..n]);
+                            let mut responses = Vec::new();
+                            let mut had_output = false;
+
                             {
                                 let mut buffer = terminal_buffer.lock().await;
-                                buffer.process(&buf[..n]);
+                                for event in events {
+                                    match event {
+                                        TerminalEvent::Output(data) => {
+                                            if !data.is_empty() {
+                                                buffer.process(&data);
+                                                had_output = true;
+                                            }
+                                        }
+                                        TerminalEvent::Query(query) => {
+                                            let cursor = match query {
+                                                TerminalQuery::CursorPosition => {
+                                                    Some(buffer.screen().cursor_position())
+                                                }
+                                                _ => None,
+                                            };
+                                            responses.push(build_query_response(query, cursor));
+                                        }
+                                    }
+                                }
                             }
+
+                            for response in responses {
+                                if write_tx.send(WriteRequest::Bytes(response)).await.is_err() {
+                                    break;
+                                }
+                            }
+
                             // Notify of output
-                            if event_tx.send(PtyEvent::Output).await.is_err() {
+                            if had_output && event_tx.send(PtyEvent::Output).await.is_err() {
                                 break;
                             }
                         }
@@ -216,15 +264,21 @@ impl PtySession {
     /// Background writer loop.
     async fn writer_loop(
         mut writer: pty_process::OwnedWritePty,
-        mut write_rx: mpsc::Receiver<Vec<u8>>,
+        mut write_rx: mpsc::Receiver<WriteRequest>,
         cancel_token: CancellationToken,
     ) {
         loop {
             tokio::select! {
                 data = write_rx.recv() => {
                     match data {
-                        Some(bytes) => {
+                        Some(WriteRequest::Bytes(bytes)) => {
                             if writer.write_all(&bytes).await.is_err() {
+                                break;
+                            }
+                        }
+                        Some(WriteRequest::Resize { rows, cols }) => {
+                            let size = pty_process::Size::new(rows, cols);
+                            if writer.resize(size).is_err() {
                                 break;
                             }
                         }
@@ -245,7 +299,7 @@ impl PtySession {
     /// Returns an error if the write channel is closed.
     pub async fn write(&self, data: Vec<u8>) -> anyhow::Result<()> {
         self.write_tx
-            .send(data)
+            .send(WriteRequest::Bytes(data))
             .await
             .map_err(|_| anyhow::anyhow!("PTY write channel closed"))
     }
@@ -291,9 +345,11 @@ impl PtySession {
 
     /// Resize the PTY.
     ///
-    /// Note: This requires recreating the PTY or using platform-specific APIs.
-    /// For now, this only updates the terminal buffer.
     pub async fn resize(&self, rows: u16, cols: u16) {
+        let _ = self
+            .write_tx
+            .send(WriteRequest::Resize { rows, cols })
+            .await;
         let mut buffer = self.terminal_buffer.lock().await;
         buffer.resize(rows, cols);
     }

@@ -397,6 +397,7 @@ async fn run_http_server(
         session_manager: Arc::clone(&manager),
         event_broadcaster,
         auth_state: auth_state.clone(),
+        console_state: Arc::new(crate::api::console_state::ConsoleState::new()),
     };
 
     // Create the HTTP router with all routes and state
