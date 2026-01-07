@@ -306,7 +306,14 @@ mod tests {
     #[test]
     fn test_new_pane_has_cwd() {
         let workdir = PathBuf::from("/my/work/dir");
-        let args = ZellijBackend::build_new_pane_args(&workdir, "test prompt", true, &[], None);
+        let args = ZellijBackend::build_new_pane_args(
+            &workdir,
+            "test prompt",
+            true,
+            &[],
+            None,
+            crate::core::AgentType::Claude,
+        );
 
         assert!(
             args.contains(&"--cwd".to_string()),
@@ -331,6 +338,7 @@ mod tests {
             true,
             &[],
             None,
+            crate::core::AgentType::Claude,
         );
 
         assert_eq!(args[0], "action", "Expected 'action' as first arg");
@@ -347,6 +355,7 @@ mod tests {
             true,
             &[],
             None,
+            crate::core::AgentType::Claude,
         );
 
         // Find the command argument (last one containing the prompt)
@@ -379,6 +388,7 @@ mod tests {
             true,
             &[],
             None,
+            crate::core::AgentType::Claude,
         );
 
         assert!(
@@ -396,6 +406,7 @@ mod tests {
             true,
             &[],
             None,
+            crate::core::AgentType::Claude,
         );
 
         assert!(
@@ -418,6 +429,7 @@ mod tests {
             true,
             &[],
             None,
+            crate::core::AgentType::Claude,
         );
 
         let cmd_arg = args.last().unwrap();
@@ -440,6 +452,7 @@ mod tests {
             true,
             &images,
             None,
+            crate::core::AgentType::Claude,
         );
 
         let cmd_arg = args.last().unwrap();
@@ -464,6 +477,7 @@ mod tests {
             true,
             &images,
             None,
+            crate::core::AgentType::Claude,
         );
 
         let cmd_arg = args.last().unwrap();
@@ -483,6 +497,7 @@ mod tests {
             true,
             &[],
             None,
+            crate::core::AgentType::Claude,
         );
 
         let cmd_arg = args.last().unwrap();

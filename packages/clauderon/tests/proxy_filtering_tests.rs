@@ -103,9 +103,13 @@ async fn create_test_manager_with_proxy() -> (
     .expect("Failed to create manager");
 
     // Create proxy manager
+    use rand::Rng; // Add this import
+
     let proxy_config = ProxyConfig::default();
-    let proxy_manager =
-        Arc::new(ProxyManager::new(proxy_config).expect("Failed to create proxy manager"));
+    let random_port = rand::thread_rng().gen_range(20000..21000); // Use a higher, less common range
+    let proxy_manager = Arc::new(
+        ProxyManager::new(proxy_config, Some(random_port)).expect("Failed to create proxy manager"),
+    );
 
     // Wire up proxy manager
     manager.set_proxy_manager(Arc::clone(&proxy_manager));
@@ -314,7 +318,7 @@ async fn test_port_allocator_basic() {
     use clauderon::proxy::PortAllocator;
     use uuid::Uuid;
 
-    let allocator = PortAllocator::new();
+    let allocator = PortAllocator::new(None);
 
     // Allocate a port
     let session1 = Uuid::new_v4();
@@ -350,7 +354,7 @@ async fn test_port_allocator_wraparound() {
     use clauderon::proxy::PortAllocator;
     use uuid::Uuid;
 
-    let allocator = PortAllocator::new();
+    let allocator = PortAllocator::new(None);
 
     // Allocate many ports to force wraparound
     let mut ports = Vec::new();

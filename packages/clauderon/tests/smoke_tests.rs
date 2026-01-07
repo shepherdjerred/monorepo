@@ -7,16 +7,13 @@
 //! - API access (network connectivity)
 //!
 //! Run with: cargo test --test smoke_tests -- --include-ignored
-//!
-//! These tests are typically run:
-//! - Before releases
-//! - When debugging authentication issues
-//! - After major infrastructure changes
 
 mod common;
 
 use clauderon::backends::{CreateOptions, DockerBackend, DockerProxyConfig, ExecutionBackend};
+use clauderon::core::AgentType;
 use clauderon::proxy::{Credentials, ProxyCa};
+use std::path::PathBuf;
 use std::time::Duration;
 use tempfile::TempDir;
 use tokio::time::sleep;
@@ -49,7 +46,17 @@ async fn test_claude_starts_in_docker() {
             &container_name,
             temp_dir.path(),
             "echo 'smoke test' && exit",
-            CreateOptions::default(),
+            CreateOptions {
+                agent_type: AgentType::Claude,
+                print_mode: false,
+                plan_mode: true,
+                session_proxy_port: None,
+                images: vec![],
+                dangerous_skip_checks: false,
+                session_id: None,
+                initial_workdir: PathBuf::new(),
+                http_port: None,
+            },
         )
         .await;
 
@@ -112,7 +119,17 @@ async fn test_claude_writes_debug_files() {
             &container_name,
             temp_dir.path(),
             "echo 'testing debug write'",
-            CreateOptions::default(),
+            CreateOptions {
+                agent_type: AgentType::Claude,
+                print_mode: false,
+                plan_mode: true,
+                session_proxy_port: None,
+                images: vec![],
+                dangerous_skip_checks: false,
+                session_id: None,
+                initial_workdir: PathBuf::new(),
+                http_port: None,
+            },
         )
         .await;
 
@@ -163,7 +180,17 @@ async fn test_container_runs_as_non_root() {
             &container_name,
             temp_dir.path(),
             "id -u",
-            CreateOptions::default(),
+            CreateOptions {
+                agent_type: AgentType::Claude,
+                print_mode: false,
+                plan_mode: true,
+                session_proxy_port: None,
+                images: vec![],
+                dangerous_skip_checks: false,
+                session_id: None,
+                initial_workdir: PathBuf::new(),
+                http_port: None,
+            },
         )
         .await;
 
@@ -226,7 +253,17 @@ async fn test_initial_prompt_executed() {
             &container_name,
             temp_dir.path(),
             "read the file test-file.txt and print its contents exactly",
-            CreateOptions::default(),
+            CreateOptions {
+                agent_type: AgentType::Claude,
+                print_mode: false,
+                plan_mode: true,
+                session_proxy_port: None,
+                images: vec![],
+                dangerous_skip_checks: false,
+                session_id: None,
+                initial_workdir: PathBuf::new(),
+                http_port: None,
+            },
         )
         .await;
 
@@ -341,8 +378,9 @@ async fn test_claude_print_mode_e2e() {
         images: vec![],
         dangerous_skip_checks: true,
         session_id: None,
-        initial_workdir: std::path::PathBuf::new(),
+        initial_workdir: PathBuf::new(),
         http_port: None,
+        agent_type: AgentType::Claude,
     };
 
     // Simple prompt that should produce predictable-ish output
@@ -410,7 +448,6 @@ async fn test_claude_print_mode_e2e() {
             let seems_valid = final_output.contains("Hello")
                 || final_output.contains("World")
                 || final_output.contains("test.txt")
-                || final_output.contains("file")
                 || final_output.len() > 100; // Some substantial output
 
             assert!(
