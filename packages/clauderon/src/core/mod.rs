@@ -1,3 +1,4 @@
+pub mod console_manager;
 pub mod errors;
 pub mod events;
 pub mod manager;
