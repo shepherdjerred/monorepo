@@ -154,8 +154,8 @@ impl ConsoleSession {
 
     async fn shutdown(&self) {
         self.cancel_token.cancel();
-        let _ = self.reader_task.abort();
-        let _ = self.writer_task.abort();
+        self.reader_task.abort();
+        self.writer_task.abort();
     }
 
     async fn reader_loop(

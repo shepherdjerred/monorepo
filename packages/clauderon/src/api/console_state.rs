@@ -64,7 +64,7 @@ impl ConsoleState {
         sessions
             .get(session_id)
             .and_then(|session| session.active_client_id)
-            .map_or(false, |active| active == client_id)
+            == Some(client_id)
     }
 
     /// Unregister a client and clear active if needed.
