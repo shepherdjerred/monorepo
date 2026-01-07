@@ -1,52 +1,49 @@
-//! PTY session management with persistent background reader.
+//! Console session management with persistent background reader.
 //!
 //! This module provides:
-//! - PTY spawning via pty-process
+//! - Console socket attachment via daemon
 //! - Background reader that continues even when detached
-//! - Write channel for sending input to PTY
+//! - Write channel for sending input/resizes
 //! - Session status tracking
 
 use std::sync::Arc;
 
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::process::Child;
+use base64::Engine;
+use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+use tokio::net::UnixStream;
 use tokio::sync::mpsc;
 use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
 
 use super::terminal_buffer::TerminalBuffer;
-use crate::utils::terminal_queries::{
-    TerminalEvent, TerminalQuery, TerminalQueryParser, build_query_response,
-};
+use crate::api::console_protocol::ConsoleMessage;
+use crate::utils::paths;
 
-/// Buffer size for PTY reads.
-const READ_BUFFER_SIZE: usize = 4096;
-
-/// Channel buffer size for PTY events.
+/// Channel buffer size for console events.
 const EVENT_CHANNEL_SIZE: usize = 256;
 
 /// Channel buffer size for write requests.
 const WRITE_CHANNEL_SIZE: usize = 256;
 
-/// Requests sent to the PTY writer task.
+/// Requests sent to the console writer task.
 #[derive(Debug)]
 enum WriteRequest {
     Bytes(Vec<u8>),
     Resize { rows: u16, cols: u16 },
 }
 
-/// Events emitted by a PTY session.
+/// Events emitted by a console session.
 #[derive(Debug)]
 pub enum PtyEvent {
-    /// New output data from the PTY (already processed into terminal buffer).
+    /// New output data from the console (already processed into terminal buffer).
     Output,
-    /// PTY process exited.
+    /// Console connection closed.
     Exited(i32),
     /// Error occurred.
     Error(String),
 }
 
-/// Status of a PTY session.
+/// Status of a console session.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SessionStatus {
     /// Session is running.
@@ -57,7 +54,7 @@ pub enum SessionStatus {
     Error(String),
 }
 
-/// A PTY session with background reader.
+/// A console session with background reader.
 pub struct PtySession {
     /// Session identifier (matches clauderon session ID).
     session_id: uuid::Uuid,
@@ -65,13 +62,13 @@ pub struct PtySession {
     /// Container ID for reconnection.
     container_id: String,
 
-    /// Channel to send input to the PTY.
+    /// Channel to send input to the console.
     write_tx: mpsc::Sender<WriteRequest>,
 
     /// Terminal buffer (shared with background reader).
     terminal_buffer: Arc<tokio::sync::Mutex<TerminalBuffer>>,
 
-    /// Channel to receive PTY events.
+    /// Channel to receive console events.
     event_rx: mpsc::Receiver<PtyEvent>,
 
     /// Background reader task handle (Option for shutdown).
@@ -88,73 +85,67 @@ pub struct PtySession {
 }
 
 impl PtySession {
-    /// Spawn a new PTY session attached to a Docker container.
+    /// Spawn a new console session attached to a Docker session via the daemon.
     ///
     /// # Errors
     ///
-    /// Returns an error if the PTY cannot be spawned.
-    pub fn spawn_docker_attach(
+    /// Returns an error if the console socket cannot be opened.
+    pub async fn spawn_docker_attach(
         session_id: uuid::Uuid,
         container_id: String,
         rows: u16,
         cols: u16,
     ) -> anyhow::Result<Self> {
-        // Create PTY using the open() function
-        let (pty, pts) = pty_process::open()?;
-        pty.resize(pty_process::Size::new(rows, cols))?;
+        let socket_path = paths::console_socket_path();
+        let stream = UnixStream::connect(&socket_path).await?;
+        let (reader, mut writer) = stream.into_split();
 
-        // Spawn docker attach command
-        let cmd = pty_process::Command::new("docker").args(["attach", &container_id]);
+        let attach = ConsoleMessage::Attach {
+            session_id: session_id.to_string(),
+            rows,
+            cols,
+        };
+        let payload = serde_json::to_string(&attach)?;
+        writer.write_all(payload.as_bytes()).await?;
+        writer.write_all(b"\n").await?;
 
-        let child: Child = cmd.spawn(pts)?;
+        let mut reader = BufReader::new(reader);
+        let mut line = String::new();
+        let bytes_read = reader.read_line(&mut line).await?;
+        if bytes_read == 0 {
+            anyhow::bail!("Console connection closed before attach");
+        }
 
-        // Split PTY into read/write halves
-        let (pty_reader, pty_writer) = pty.into_split();
+        match serde_json::from_str::<ConsoleMessage>(line.trim())? {
+            ConsoleMessage::Attached => {}
+            ConsoleMessage::Error { message } => {
+                anyhow::bail!("Console attach failed: {message}");
+            }
+            _ => {
+                anyhow::bail!("Unexpected console attach response");
+            }
+        }
 
-        // Create channels
         let (write_tx, write_rx) = mpsc::channel::<WriteRequest>(WRITE_CHANNEL_SIZE);
         let (event_tx, event_rx) = mpsc::channel::<PtyEvent>(EVENT_CHANNEL_SIZE);
 
-        // Create shared terminal buffer
         let terminal_buffer = Arc::new(tokio::sync::Mutex::new(TerminalBuffer::new(rows, cols)));
-
-        // Create cancellation token
         let cancel_token = CancellationToken::new();
 
-        // Spawn background reader task
         let reader_task = {
             let terminal_buffer = Arc::clone(&terminal_buffer);
-            let event_tx = event_tx.clone();
-            let write_tx = write_tx.clone();
             let cancel_token = cancel_token.clone();
-
             tokio::spawn(async move {
-                Self::reader_loop(
-                    pty_reader,
-                    terminal_buffer,
-                    event_tx,
-                    write_tx,
-                    cancel_token,
-                )
-                .await;
+                Self::reader_loop(reader, terminal_buffer, event_tx, cancel_token).await;
             })
         };
 
-        // Spawn background writer task
         let writer_task = {
             let cancel_token = cancel_token.clone();
-
             tokio::spawn(async move {
-                Self::writer_loop(pty_writer, write_rx, cancel_token).await;
+                Self::writer_loop(writer, write_rx, cancel_token).await;
             })
         };
-
-        // Spawn task to wait for child exit
-        let event_tx_exit = event_tx;
-        let cancel_token_exit = cancel_token.clone();
-        tokio::spawn(async move {
-            Self::child_exit_loop(child, event_tx_exit, cancel_token_exit).await;
-        });
 
         Ok(Self {
             session_id,
@@ -169,83 +160,39 @@ impl PtySession {
         })
     }
 
-    /// Wait for child process to exit.
-    async fn child_exit_loop(
-        mut child: Child,
-        event_tx: mpsc::Sender<PtyEvent>,
-        cancel_token: CancellationToken,
-    ) {
-        tokio::select! {
-            result = child.wait() => {
-                let exit_code = match result {
-                    Ok(status) => status.code().unwrap_or(-1),
-                    Err(_) => -1,
-                };
-                let _ = event_tx.send(PtyEvent::Exited(exit_code)).await;
-            }
-            () = cancel_token.cancelled() => {
-                // Cancelled, try to kill child
-                let _ = child.kill().await;
-            }
-        }
-    }
-
-    /// Background reader loop.
     async fn reader_loop(
-        mut reader: pty_process::OwnedReadPty,
+        mut reader: BufReader<tokio::net::unix::OwnedReadHalf>,
         terminal_buffer: Arc<tokio::sync::Mutex<TerminalBuffer>>,
         event_tx: mpsc::Sender<PtyEvent>,
-        write_tx: mpsc::Sender<WriteRequest>,
         cancel_token: CancellationToken,
     ) {
-        let mut buf = vec![0u8; READ_BUFFER_SIZE];
-        let mut query_parser = TerminalQueryParser::new();
-
+        let mut line = String::new();
         loop {
             tokio::select! {
-                result = reader.read(&mut buf) => {
+                result = reader.read_line(&mut line) => {
                     match result {
                         Ok(0) => {
-                            // EOF
+                            let _ = event_tx.send(PtyEvent::Error("Console connection closed".to_string())).await;
                             break;
                         }
-                        Ok(n) => {
-                            let events = query_parser.parse(&buf[..n]);
-                            let mut responses = Vec::new();
-                            let mut had_output = false;
-
-                            {
-                                let mut buffer = terminal_buffer.lock().await;
-                                for event in events {
-                                    match event {
-                                        TerminalEvent::Output(data) => {
-                                            if !data.is_empty() {
-                                                buffer.process(&data);
-                                                had_output = true;
-                                            }
-                                        }
-                                        TerminalEvent::Query(query) => {
-                                            let cursor = match query {
-                                                TerminalQuery::CursorPosition => {
-                                                    Some(buffer.screen().cursor_position())
-                                                }
-                                                _ => None,
-                                            };
-                                            responses.push(build_query_response(query, cursor));
-                                        }
+                        Ok(_) => {
+                            let message = serde_json::from_str::<ConsoleMessage>(line.trim());
+                            line.clear();
+                            match message {
+                                Ok(ConsoleMessage::Output { data }) => {
+                                    if let Ok(bytes) = base64::prelude::BASE64_STANDARD.decode(data) {
+                                        let mut buffer = terminal_buffer.lock().await;
+                                        buffer.process(&bytes);
+                                        let _ = event_tx.send(PtyEvent::Output).await;
                                     }
                                 }
-                            }
-
-                            for response in responses {
-                                if write_tx.send(WriteRequest::Bytes(response)).await.is_err() {
-                                    break;
+                                Ok(ConsoleMessage::Error { message }) => {
+                                    let _ = event_tx.send(PtyEvent::Error(message)).await;
                                 }
-                            }
-
-                            // Notify of output
-                            if had_output && event_tx.send(PtyEvent::Output).await.is_err() {
-                                break;
+                                Ok(_) => {}
+                                Err(e) => {
+                                    let _ = event_tx.send(PtyEvent::Error(e.to_string())).await;
+                                }
                             }
                         }
                         Err(e) => {
@@ -254,16 +201,13 @@ impl PtySession {
                         }
                     }
                 }
-                () = cancel_token.cancelled() => {
-                    break;
-                }
+                () = cancel_token.cancelled() => break,
             }
         }
     }
 
-    /// Background writer loop.
     async fn writer_loop(
-        mut writer: pty_process::OwnedWritePty,
+        mut writer: tokio::net::unix::OwnedWriteHalf,
         mut write_rx: mpsc::Receiver<WriteRequest>,
         cancel_token: CancellationToken,
     ) {
@@ -272,27 +216,37 @@ impl PtySession {
                 data = write_rx.recv() => {
                     match data {
                         Some(WriteRequest::Bytes(bytes)) => {
-                            if writer.write_all(&bytes).await.is_err() {
-                                break;
+                            let data = base64::prelude::BASE64_STANDARD.encode(bytes);
+                            let message = ConsoleMessage::Input { data };
+                            if let Ok(payload) = serde_json::to_string(&message) {
+                                if writer.write_all(payload.as_bytes()).await.is_err() {
+                                    break;
+                                }
+                                if writer.write_all(b"\n").await.is_err() {
+                                    break;
+                                }
                             }
                         }
                         Some(WriteRequest::Resize { rows, cols }) => {
-                            let size = pty_process::Size::new(rows, cols);
-                            if writer.resize(size).is_err() {
-                                break;
+                            let message = ConsoleMessage::Resize { rows, cols };
+                            if let Ok(payload) = serde_json::to_string(&message) {
+                                if writer.write_all(payload.as_bytes()).await.is_err() {
+                                    break;
+                                }
+                                if writer.write_all(b"\n").await.is_err() {
+                                    break;
+                                }
                             }
                         }
                         None => break,
                     }
                 }
-                () = cancel_token.cancelled() => {
-                    break;
-                }
+                () = cancel_token.cancelled() => break,
             }
         }
     }
 
-    /// Send input to the PTY.
+    /// Send input to the console.
     ///
     /// # Errors
     ///
@@ -301,15 +255,15 @@ impl PtySession {
         self.write_tx
             .send(WriteRequest::Bytes(data))
             .await
-            .map_err(|_| anyhow::anyhow!("PTY write channel closed"))
+            .map_err(|_| anyhow::anyhow!("Console write channel closed"))
     }
 
-    /// Try to receive the next PTY event (non-blocking).
+    /// Try to receive the next console event (non-blocking).
     pub fn try_recv_event(&mut self) -> Option<PtyEvent> {
         self.event_rx.try_recv().ok()
     }
 
-    /// Receive the next PTY event (blocking).
+    /// Receive the next console event (blocking).
     pub async fn recv_event(&mut self) -> Option<PtyEvent> {
         self.event_rx.recv().await
     }
@@ -343,8 +297,7 @@ impl PtySession {
         self.status = status;
     }
 
-    /// Resize the PTY.
-    ///
+    /// Resize the console session.
     pub async fn resize(&self, rows: u16, cols: u16) {
         let _ = self
             .write_tx
@@ -356,14 +309,11 @@ impl PtySession {
 
     /// Gracefully shutdown the session.
     pub async fn shutdown(&mut self) {
-        // Signal cancellation
         self.cancel_token.cancel();
 
-        // Take task handles and wait for completion
         let reader_task = self.reader_task.take();
         let writer_task = self.writer_task.take();
 
-        // Wait for tasks to complete (with timeout)
         let _ = tokio::time::timeout(std::time::Duration::from_secs(5), async {
             if let Some(task) = reader_task {
                 let _ = task.await;
@@ -384,10 +334,7 @@ impl PtySession {
 
 impl Drop for PtySession {
     fn drop(&mut self) {
-        // Cancel background tasks (tasks will exit on next poll)
         self.cancel_token.cancel();
-
-        // Abort tasks if they're still running
         if let Some(task) = self.reader_task.take() {
             task.abort();
         }

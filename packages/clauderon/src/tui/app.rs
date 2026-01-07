@@ -981,7 +981,7 @@ impl App {
     /// # Errors
     ///
     /// Returns an error if the session cannot be attached.
-    pub fn attach_selected_session(&mut self) -> anyhow::Result<()> {
+    pub async fn attach_selected_session(&mut self) -> anyhow::Result<()> {
         let session = self
             .selected_session()
             .ok_or_else(|| anyhow::anyhow!("No session selected"))?;
@@ -1009,7 +1009,8 @@ impl App {
 
         // Create new PTY session
         let (rows, cols) = self.terminal_size;
-        let pty_session = PtySession::spawn_docker_attach(session_id, container_id, rows, cols)?;
+        let pty_session =
+            PtySession::spawn_docker_attach(session_id, container_id, rows, cols).await?;
 
         self.pty_sessions.insert(session_id, pty_session);
         self.attached_session_id = Some(session_id);
@@ -1146,7 +1147,7 @@ impl App {
 
     /// Switch to the next Docker session while attached.
     /// Returns true if switched, false if no next session.
-    pub fn switch_to_next_session(&mut self) -> anyhow::Result<bool> {
+    pub async fn switch_to_next_session(&mut self) -> anyhow::Result<bool> {
         use crate::core::{BackendType, SessionStatus};
 
         // Get list of Docker sessions (only those support PTY)
@@ -1182,7 +1183,7 @@ impl App {
         if !self.pty_sessions.contains_key(&session_id) {
             let (rows, cols) = self.terminal_size;
             let pty_session =
-                PtySession::spawn_docker_attach(session_id, container_id, rows, cols)?;
+                PtySession::spawn_docker_attach(session_id, container_id, rows, cols).await?;
             self.pty_sessions.insert(session_id, pty_session);
         }
 
@@ -1197,7 +1198,7 @@ impl App {
 
     /// Switch to the previous Docker session while attached.
     /// Returns true if switched, false if no previous session.
-    pub fn switch_to_previous_session(&mut self) -> anyhow::Result<bool> {
+    pub async fn switch_to_previous_session(&mut self) -> anyhow::Result<bool> {
         use crate::core::{BackendType, SessionStatus};
 
         // Get list of Docker sessions (only those support PTY)
@@ -1234,7 +1235,7 @@ impl App {
         if !self.pty_sessions.contains_key(&session_id) {
             let (rows, cols) = self.terminal_size;
             let pty_session =
-                PtySession::spawn_docker_attach(session_id, container_id, rows, cols)?;
+                PtySession::spawn_docker_attach(session_id, container_id, rows, cols).await?;
             self.pty_sessions.insert(session_id, pty_session);
         }
 

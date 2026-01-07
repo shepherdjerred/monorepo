@@ -1,4 +1,6 @@
 pub mod client;
+pub mod console_protocol;
+pub mod console_socket;
 pub mod console_state;
 pub mod handlers;
 pub mod http_server;

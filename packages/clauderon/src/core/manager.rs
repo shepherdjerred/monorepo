@@ -8,6 +8,7 @@ use uuid::Uuid;
 use crate::backends::{
     DockerBackend, ExecutionBackend, GitBackend, GitOperations, KubernetesBackend, ZellijBackend,
 };
+use crate::core::console_manager::ConsoleManager;
 use crate::store::Store;
 
 use super::events::{Event, EventType};
@@ -53,6 +54,7 @@ pub struct SessionManager {
     zellij: Arc<dyn ExecutionBackend>,
     docker: Arc<dyn ExecutionBackend>,
     kubernetes: Arc<dyn ExecutionBackend>,
+    console_manager: Arc<ConsoleManager>,
     sessions: RwLock<Vec<Session>>,
     /// Optional proxy manager for per-session filtering
     proxy_manager: Option<Arc<crate::proxy::ProxyManager>>,
@@ -92,6 +94,7 @@ impl SessionManager {
             zellij,
             docker,
             kubernetes,
+            console_manager: Arc::new(ConsoleManager::new()),
             sessions: RwLock::new(sessions),
             proxy_manager: None,
             event_broadcaster: None,
@@ -170,6 +173,11 @@ impl SessionManager {
     /// across VM/network boundaries).
     pub fn set_http_port(&mut self, port: u16) {
         self.http_port = Some(port);
+    }
+
+    #[must_use]
+    pub fn console_manager(&self) -> Arc<ConsoleManager> {
+        Arc::clone(&self.console_manager)
     }
 
     /// List all sessions
@@ -567,6 +575,20 @@ impl SessionManager {
                 }
             }
 
+            if backend == BackendType::Docker && !print_mode {
+                if let Err(err) = self
+                    .console_manager
+                    .ensure_session(session_id, backend, &backend_id)
+                    .await
+                {
+                    tracing::warn!(
+                        session_id = %session_id,
+                        error = %err,
+                        "Failed to start console session"
+                    );
+                }
+            }
+
             // Record backend ID event
             let event = Event::new(session_id, EventType::BackendIdSet { backend_id });
             self.store.record_event(&event).await?;
@@ -902,6 +924,20 @@ impl SessionManager {
         session.set_backend_id(backend_id.clone());
         session.set_status(SessionStatus::Running);
 
+        if backend == BackendType::Docker && !print_mode {
+            if let Err(err) = self
+                .console_manager
+                .ensure_session(session.id, backend, &backend_id)
+                .await
+            {
+                tracing::warn!(
+                    session_id = %session.id,
+                    error = %err,
+                    "Failed to start console session"
+                );
+            }
+        }
+
         // Record backend ID event
         let event = Event::new(session.id, EventType::BackendIdSet { backend_id });
         self.store.record_event(&event).await?;
@@ -996,6 +1032,7 @@ impl SessionManager {
 
         // Update in store
         self.store.save_session(&session_clone).await?;
+        self.console_manager.remove_session(session_id).await;
 
         Ok(())
     }
@@ -1055,6 +1092,8 @@ impl SessionManager {
                 }
             }
         }
+
+        self.console_manager.remove_session(session_id).await;
 
         // Spawn background deletion task
         let manager_clone = Arc::clone(self);
@@ -1285,6 +1324,7 @@ impl SessionManager {
 
         // Remove from in-memory list
         self.sessions.write().await.retain(|s| s.id != session.id);
+        self.console_manager.remove_session(session.id).await;
 
         Ok(())
     }
