@@ -644,6 +644,11 @@ export class Monorepo {
     await container.sync();
     outputs.push("✓ Clippy passed");
 
+    // Compile tests without running (catches test compile issues)
+    container = container.withExec(["cargo", "test", "--no-run"]);
+    await container.sync();
+    outputs.push("✓ Tests compiled");
+
     // Tests
     container = container.withExec(["cargo", "test"]);
     await container.sync();

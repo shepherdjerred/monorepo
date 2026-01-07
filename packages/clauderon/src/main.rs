@@ -170,6 +170,10 @@ BACKENDS:
         #[arg(short, long, default_value = "zellij", value_parser = ["zellij", "docker"])]
         backend: String,
 
+        /// Agent to use (claude or codex)
+        #[arg(short, long, default_value = "claude")]
+        agent: String,
+
         /// Skip safety checks (dangerous - bypasses dirty repo checks)
         #[arg(long, default_value = "false")]
         dangerous_skip_checks: bool,
@@ -436,6 +440,7 @@ async fn main() -> anyhow::Result<()> {
             repo,
             prompt,
             backend,
+            agent,
             dangerous_skip_checks,
             print,
             access_mode,
@@ -447,6 +452,12 @@ async fn main() -> anyhow::Result<()> {
                 _ => anyhow::bail!("Unknown backend: {backend}. Use 'zellij' or 'docker'"),
             };
 
+            let agent_type = match agent.to_lowercase().as_str() {
+                "claude" | "claude-code" | "claude_code" => core::session::AgentType::ClaudeCode,
+                "codex" => core::session::AgentType::Codex,
+                _ => anyhow::bail!("Unknown agent: {agent}. Use 'claude' or 'codex'"),
+            };
+
             let access_mode = access_mode.parse::<core::session::AccessMode>()?;
 
             let mut client = api::client::Client::connect().await?;
@@ -455,7 +466,7 @@ async fn main() -> anyhow::Result<()> {
                     repo_path: repo,
                     initial_prompt: prompt,
                     backend: backend_type,
-                    agent: core::session::AgentType::ClaudeCode,
+                    agent: agent_type,
                     dangerous_skip_checks,
                     print_mode: print,
                     plan_mode: !no_plan_mode,

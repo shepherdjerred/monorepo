@@ -339,6 +339,12 @@ pub enum AgentType {
     Codex,
 }
 
+impl Default for AgentType {
+    fn default() -> Self {
+        Self::ClaudeCode
+    }
+}
+
 /// PR check status
 #[typeshare]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
