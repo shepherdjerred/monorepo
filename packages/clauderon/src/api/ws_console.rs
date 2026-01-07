@@ -10,8 +10,13 @@ use serde_json::json;
 use std::sync::Arc;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::sync::Mutex;
+use uuid::Uuid;
 
 use super::http_server::AppState;
+use crate::tui::attached::TerminalBuffer;
+use crate::utils::terminal_queries::{
+    TerminalEvent, TerminalQuery, TerminalQueryParser, build_query_response,
+};
 
 /// WebSocket handler for /ws/console/{sessionId} endpoint
 /// Clients connect here to stream terminal I/O for a specific session
@@ -26,6 +31,7 @@ pub async fn ws_console_handler(
 /// Handle an individual WebSocket connection for console streaming
 async fn handle_console_socket(socket: WebSocket, session_id: String, state: AppState) {
     tracing::info!("Console WebSocket connected for session: {}", session_id);
+    let client_id = Uuid::new_v4();
 
     // Get the session to find its backend ID (container ID or Zellij session)
     let session = match state.session_manager.get_session(&session_id).await {
@@ -63,11 +69,18 @@ async fn handle_console_socket(socket: WebSocket, session_id: String, state: App
         }
     };
 
+    state
+        .console_state
+        .register_client(&session_id, client_id)
+        .await;
+
     // PTY handles are already wrapped in Arc<Mutex<>> from spawn functions
     let (mut ws_sender, mut ws_receiver) = socket.split();
 
     // Create buffer for PTY reading
     let mut pty_buffer = vec![0u8; 4096];
+    let terminal_buffer = Arc::new(Mutex::new(TerminalBuffer::new(24, 80)));
+    let mut query_parser = TerminalQueryParser::new();
 
     // Main event loop - handles both directions in single loop to avoid race conditions
     loop {
@@ -84,16 +97,64 @@ async fn handle_console_socket(socket: WebSocket, session_id: String, state: App
                         break;
                     }
                     Ok(n) => {
-                        // Convert bytes to base64 for binary-safe transmission
-                        let data = base64::prelude::BASE64_STANDARD.encode(&pty_buffer[..n]);
-                        let message = json!({
-                            "type": "output",
-                            "data": data,
-                        });
+                        let events = query_parser.parse(&pty_buffer[..n]);
+                        let mut responses = Vec::new();
+                        let mut output = Vec::new();
 
-                        if let Err(e) = ws_sender.send(Message::Text(message.to_string().into())).await {
-                            tracing::debug!("Failed to send PTY output to WebSocket: {}", e);
-                            break;
+                        {
+                            let mut buffer = terminal_buffer.lock().await;
+                            for event in events {
+                                match event {
+                                    TerminalEvent::Output(data) => {
+                                        if !data.is_empty() {
+                                            buffer.process(&data);
+                                            output.extend_from_slice(&data);
+                                        }
+                                    }
+                                    TerminalEvent::Query(query) => {
+                                        let cursor = match query {
+                                            TerminalQuery::CursorPosition => {
+                                                Some(buffer.screen().cursor_position())
+                                            }
+                                            _ => None,
+                                        };
+                                        responses.push(build_query_response(query, cursor));
+                                    }
+                                }
+                            }
+                        }
+
+                        if !output.is_empty() {
+                            // Convert bytes to base64 for binary-safe transmission
+                            let data = base64::prelude::BASE64_STANDARD.encode(&output);
+                            let message = json!({
+                                "type": "output",
+                                "data": data,
+                            });
+
+                            if let Err(e) = ws_sender.send(Message::Text(message.to_string().into())).await {
+                                tracing::debug!("Failed to send PTY output to WebSocket: {}", e);
+                                break;
+                            }
+                        }
+
+                        if !responses.is_empty()
+                            && state
+                                .console_state
+                                .is_active(&session_id, client_id)
+                                .await
+                        {
+                            for response in responses {
+                                let mut writer = pty_writer.lock().await;
+                                if let Err(e) = writer.write_all(&response).await {
+                                    tracing::error!("Failed to write PTY response: {}", e);
+                                    break;
+                                }
+                                if let Err(e) = writer.flush().await {
+                                    tracing::error!("Failed to flush PTY response: {}", e);
+                                    break;
+                                }
+                            }
                         }
                     }
                     Err(e) => {
@@ -122,6 +183,10 @@ async fn handle_console_socket(socket: WebSocket, session_id: String, state: App
                                 if let Some(data) = message["data"].as_str() {
                                     // Data is base64-encoded
                                     if let Ok(bytes) = base64::prelude::BASE64_STANDARD.decode(data) {
+                                        state
+                                            .console_state
+                                            .set_active(&session_id, client_id)
+                                            .await;
                                         let mut writer = pty_writer.lock().await;
                                         if let Err(e) = writer.write_all(&bytes).await {
                                             tracing::error!("Failed to write to PTY: {}", e);
@@ -140,12 +205,24 @@ async fn handle_console_socket(socket: WebSocket, session_id: String, state: App
                                 if let (Some(rows), Some(cols)) =
                                     (message["rows"].as_u64(), message["cols"].as_u64())
                                 {
-                                    let size = pty_process::Size::new(rows as u16, cols as u16);
-                                    let writer = pty_writer.lock().await;
-                                    if let Err(e) = writer.resize(size) {
-                                        tracing::error!("Failed to resize PTY: {}", e);
-                                    } else {
-                                        tracing::debug!("Resized PTY to {}x{}", rows, cols);
+                                    let is_active = state
+                                        .console_state
+                                        .is_active(&session_id, client_id)
+                                        .await
+                                        || state
+                                            .console_state
+                                            .set_active_if_none(&session_id, client_id)
+                                            .await;
+                                    if is_active {
+                                        let size = pty_process::Size::new(rows as u16, cols as u16);
+                                        let writer = pty_writer.lock().await;
+                                        if let Err(e) = writer.resize(size) {
+                                            tracing::error!("Failed to resize PTY: {}", e);
+                                        } else {
+                                            let mut buffer = terminal_buffer.lock().await;
+                                            buffer.resize(rows as u16, cols as u16);
+                                            tracing::debug!("Resized PTY to {}x{}", rows, cols);
+                                        }
                                     }
                                 } else {
                                     tracing::warn!("Invalid resize message: {:?}", message);
@@ -178,6 +255,10 @@ async fn handle_console_socket(socket: WebSocket, session_id: String, state: App
         }
     }
 
+    state
+        .console_state
+        .unregister_client(&session_id, client_id)
+        .await;
     tracing::info!("Console WebSocket disconnected for session: {}", session_id);
 }
 
