@@ -289,6 +289,9 @@ async fn test_create_dialog_tab_navigation() {
     assert_eq!(app.create_dialog.focus, CreateDialogFocus::Backend);
 
     handle_key_event(&mut app, key(KeyCode::Tab)).await.unwrap();
+    assert_eq!(app.create_dialog.focus, CreateDialogFocus::Agent);
+
+    handle_key_event(&mut app, key(KeyCode::Tab)).await.unwrap();
     assert_eq!(app.create_dialog.focus, CreateDialogFocus::AccessMode);
 }
 
