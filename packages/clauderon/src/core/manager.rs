@@ -1518,12 +1518,8 @@ impl SessionManager {
             dangerous_skip_checks: session.dangerous_skip_checks,
             session_id: Some(session.id),
             initial_workdir: session.subdirectory.clone(),
-<<<<<<< HEAD
             http_port: self.http_port,
-||||||| parent of 887d2fec7 (feat: add support for gemini to clauderon)
-=======
             agent_type: session.agent,
->>>>>>> 887d2fec7 (feat: add support for gemini to clauderon)
         };
 
         // Recreate container
