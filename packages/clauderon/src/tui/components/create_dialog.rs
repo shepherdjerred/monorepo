@@ -6,7 +6,7 @@ use ratatui::{
     widgets::{Block, Borders, Clear, Paragraph, Wrap},
 };
 
-use crate::core::{AccessMode, BackendType};
+use crate::core::{AccessMode, AgentType, BackendType};
 use crate::tui::app::{App, CreateDialogFocus};
 
 /// Render the create session dialog
@@ -52,6 +52,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
             Constraint::Length(images_height),            // Images (dynamic)
             Constraint::Length(3),                        // Repo path
             Constraint::Length(2),                        // Backend
+            Constraint::Length(2),                        // Agent
             Constraint::Length(2),                        // Access mode
             Constraint::Length(2),                        // Skip checks
             Constraint::Length(2),                        // Plan mode
@@ -97,6 +98,18 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
             ("Kubernetes", dialog.backend == BackendType::Kubernetes),
         ],
         dialog.focus == CreateDialogFocus::Backend,
+        inner[3],
+    );
+
+    // Agent selection
+    render_radio_field(
+        frame,
+        "Agent",
+        &[
+            ("Claude Code", dialog.agent == AgentType::ClaudeCode),
+            ("Codex", dialog.agent == AgentType::Codex),
+        ],
+        dialog.focus == CreateDialogFocus::Agent,
         inner[3],
     );
 

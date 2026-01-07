@@ -300,11 +300,13 @@ impl SessionManager {
             access_mode,
         });
 
-        // Set history file path
-        session.history_file_path = Some(super::session::get_history_file_path(
-            &worktree_path,
-            &session.id,
-        ));
+        // Set history file path for Claude Code sessions
+        if session.agent == super::session::AgentType::ClaudeCode {
+            session.history_file_path = Some(super::session::get_history_file_path(
+                &worktree_path,
+                &session.id,
+            ));
+        }
 
         // Set initial progress
         session.set_progress(crate::api::protocol::ProgressStep {
@@ -361,6 +363,7 @@ impl SessionManager {
                     subdirectory,
                     initial_prompt,
                     backend,
+                    agent,
                     print_mode,
                     plan_mode,
                     access_mode,
@@ -385,6 +388,7 @@ impl SessionManager {
         subdirectory: PathBuf,
         initial_prompt: String,
         backend: BackendType,
+        agent: super::session::AgentType,
         print_mode: bool,
         plan_mode: bool,
         access_mode: super::session::AccessMode,
@@ -503,6 +507,7 @@ impl SessionManager {
             update_progress(4, "Starting backend resource".to_string()).await;
             // Create backend resource
             let create_options = crate::backends::CreateOptions {
+                agent,
                 print_mode,
                 plan_mode,
                 session_proxy_port: proxy_port,
@@ -768,11 +773,13 @@ impl SessionManager {
             access_mode,
         });
 
-        // Set history file path (directory created after worktree exists)
-        session.history_file_path = Some(super::session::get_history_file_path(
-            &worktree_path,
-            &session.id,
-        ));
+        // Set history file path for Claude Code sessions (directory created after worktree exists)
+        if session.agent == super::session::AgentType::ClaudeCode {
+            session.history_file_path = Some(super::session::get_history_file_path(
+                &worktree_path,
+                &session.id,
+            ));
+        }
 
         // Record creation event
         let event = Event::new(
@@ -849,6 +856,7 @@ impl SessionManager {
 
         // Create backend resource
         let create_options = crate::backends::CreateOptions {
+            agent,
             print_mode,
             plan_mode,
             session_proxy_port: proxy_port,
@@ -941,6 +949,10 @@ impl SessionManager {
             .backend_id
             .as_ref()
             .ok_or_else(|| anyhow::anyhow!("Session has no backend ID"))?;
+
+        if session.agent == super::session::AgentType::Codex {
+            anyhow::bail!("Send prompt is only supported for Claude Code sessions");
+        }
 
         match session.backend {
             BackendType::Zellij => Ok(self.zellij.attach_command(backend_id)),
@@ -1507,6 +1519,7 @@ impl SessionManager {
 
         // Build creation options from session state
         let create_options = crate::backends::CreateOptions {
+            agent: session.agent,
             print_mode: false, // Never use print mode for recreation
             plan_mode: false,  // Don't enter plan mode - session already has context
             session_proxy_port: session.proxy_port,
@@ -1992,6 +2005,28 @@ impl SessionManager {
                     .map(|v| mask_credential(v)),
             });
 
+            // OpenAI
+            let (source, readonly) = if std::env::var("OPENAI_API_KEY").is_ok()
+                || std::env::var("CODEX_API_KEY").is_ok()
+            {
+                (Some("environment".to_string()), true)
+            } else {
+                let path = secrets_dir.join("openai_api_key");
+                if path.exists() {
+                    (Some("file".to_string()), false)
+                } else {
+                    (None, false)
+                }
+            };
+            credentials.push(CredentialStatus {
+                name: "OpenAI".to_string(),
+                service_id: "openai".to_string(),
+                available: creds.openai_api_key.is_some(),
+                source,
+                readonly,
+                masked_value: creds.openai_api_key.as_ref().map(|v| mask_credential(v)),
+            });
+
             // PagerDuty
             let (source, readonly) = credential_source("PAGERDUTY_TOKEN", "pagerduty_token");
             credentials.push(CredentialStatus {
@@ -2173,6 +2208,7 @@ impl SessionManager {
         match service_id {
             "github" => Ok("github_token"),
             "anthropic" => Ok("anthropic_oauth_token"),
+            "openai" => Ok("openai_api_key"),
             "pagerduty" => Ok("pagerduty_token"),
             "sentry" => Ok("sentry_auth_token"),
             "grafana" => Ok("grafana_api_key"),
@@ -2189,6 +2225,7 @@ impl SessionManager {
         match service_id {
             "github" => Ok("GITHUB_TOKEN"),
             "anthropic" => Ok("CLAUDE_CODE_OAUTH_TOKEN"),
+            "openai" => Ok("OPENAI_API_KEY"),
             "pagerduty" => Ok("PAGERDUTY_TOKEN"),
             "sentry" => Ok("SENTRY_AUTH_TOKEN"),
             "grafana" => Ok("GRAFANA_API_KEY"),
