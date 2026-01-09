@@ -121,6 +121,43 @@ pub static RULES: &[Rule] = &[
         credential_key: "anthropic",
         encoding: AuthEncoding::Simple,
     },
+    // ChatGPT backend (WHAM)
+    Rule {
+        host_pattern: "chatgpt.com",
+        header_name: "Authorization",
+        format: "Bearer {}",
+        credential_key: "chatgpt",
+        encoding: AuthEncoding::Simple,
+    },
+    Rule {
+        host_pattern: "*.chatgpt.com",
+        header_name: "Authorization",
+        format: "Bearer {}",
+        credential_key: "chatgpt",
+        encoding: AuthEncoding::Simple,
+    },
+    Rule {
+        host_pattern: "chat.openai.com",
+        header_name: "Authorization",
+        format: "Bearer {}",
+        credential_key: "chatgpt",
+        encoding: AuthEncoding::Simple,
+    },
+    Rule {
+        host_pattern: "*.chat.openai.com",
+        header_name: "Authorization",
+        format: "Bearer {}",
+        credential_key: "chatgpt",
+        encoding: AuthEncoding::Simple,
+    },
+    // OpenAI API
+    Rule {
+        host_pattern: "api.openai.com",
+        header_name: "Authorization",
+        format: "Bearer {}",
+        credential_key: "openai",
+        encoding: AuthEncoding::Simple,
+    },
     // PagerDuty API (uses "Token token=" format)
     Rule {
         host_pattern: "api.pagerduty.com",
@@ -225,6 +262,26 @@ mod tests {
         let rule = rule.unwrap();
         assert_eq!(rule.credential_key, "sentry");
         assert_eq!(rule.encoding, AuthEncoding::Simple);
+    }
+
+    #[test]
+    fn test_chatgpt_rules() {
+        let rule = find_matching_rule("chatgpt.com");
+        assert!(rule.is_some());
+        let rule = rule.unwrap();
+        assert_eq!(rule.credential_key, "chatgpt");
+
+        let rule = find_matching_rule("api.chatgpt.com");
+        assert!(rule.is_some());
+        assert_eq!(rule.unwrap().credential_key, "chatgpt");
+
+        let rule = find_matching_rule("chat.openai.com");
+        assert!(rule.is_some());
+        assert_eq!(rule.unwrap().credential_key, "chatgpt");
+
+        let rule = find_matching_rule("sub.chat.openai.com");
+        assert!(rule.is_some());
+        assert_eq!(rule.unwrap().credential_key, "chatgpt");
     }
 
     #[test]

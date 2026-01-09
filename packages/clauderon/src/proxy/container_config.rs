@@ -5,12 +5,30 @@
 
 use std::path::PathBuf;
 
+use crate::proxy::{dummy_auth_json_string, dummy_config_toml};
+
 /// Generate all container configuration files.
 pub fn generate_container_configs(
     clauderon_dir: &PathBuf,
     talos_gateway_port: u16,
 ) -> anyhow::Result<()> {
     generate_talosconfig(clauderon_dir, talos_gateway_port)?;
+    Ok(())
+}
+
+/// Generate Codex dummy auth/config files for containers.
+pub fn generate_codex_config(
+    clauderon_dir: &PathBuf,
+    account_id: Option<&str>,
+) -> anyhow::Result<()> {
+    let codex_dir = clauderon_dir.join("codex");
+    std::fs::create_dir_all(&codex_dir)?;
+
+    let auth_json_path = codex_dir.join("auth.json");
+    let config_toml_path = codex_dir.join("config.toml");
+
+    std::fs::write(auth_json_path, dummy_auth_json_string(account_id)?)?;
+    std::fs::write(config_toml_path, dummy_config_toml())?;
     Ok(())
 }
 
@@ -62,5 +80,19 @@ mod tests {
 
         let content = std::fs::read_to_string(&config_path).unwrap();
         assert!(content.contains("host.docker.internal:18082"));
+    }
+
+    #[test]
+    fn test_generate_codex_config() {
+        let dir = tempdir().unwrap();
+        let clauderon_dir = dir.path().to_path_buf();
+
+        generate_codex_config(&clauderon_dir, Some("acct-123")).unwrap();
+
+        let auth_path = clauderon_dir.join("codex/auth.json");
+        let config_path = clauderon_dir.join("codex/config.toml");
+
+        assert!(auth_path.exists());
+        assert!(config_path.exists());
     }
 }

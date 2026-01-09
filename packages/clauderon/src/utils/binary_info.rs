@@ -143,6 +143,10 @@ pub fn kill_daemon() -> anyhow::Result<()> {
     if socket_path.exists() {
         let _ = fs::remove_file(&socket_path);
     }
+    let console_socket_path = paths::console_socket_path();
+    if console_socket_path.exists() {
+        let _ = fs::remove_file(&console_socket_path);
+    }
 
     // Clean up info file
     DaemonInfo::remove()?;

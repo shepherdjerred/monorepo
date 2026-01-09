@@ -5,8 +5,10 @@ import type {
   AccessMode,
   SystemStatus,
   UpdateCredentialRequest,
+  UploadResponse,
 } from "../types/generated";
 import { ApiError, NetworkError, SessionNotFoundError } from "./errors";
+import { Platform } from "react-native";
 
 /**
  * Configuration options for ClauderonClient
@@ -171,6 +173,59 @@ export class ClauderonClient {
       totalLines: response.total_lines,
       fileExists: response.file_exists,
     };
+  }
+
+  /**
+   * Upload an image file for a session
+   * @param sessionId Session ID
+   * @param imageUri Local file URI from image picker
+   * @param fileName File name
+   */
+  async uploadImage(
+    sessionId: string,
+    imageUri: string,
+    fileName: string
+  ): Promise<UploadResponse> {
+    const formData = new FormData();
+
+    // React Native FormData expects an object with uri, type, and name
+    formData.append("file", {
+      uri: Platform.OS === "ios" ? imageUri.replace("file://", "") : imageUri,
+      type: "image/jpeg", // Default to JPEG, could be improved to detect actual type
+      name: fileName,
+    } as any);
+
+    const url = `${this.baseUrl}/api/sessions/${encodeURIComponent(sessionId)}/upload`;
+
+    try {
+      const response = await this.fetch(url, {
+        method: "POST",
+        body: formData,
+        headers: {
+          // Don't set Content-Type - let browser/RN set it with multipart boundary
+        },
+      });
+
+      if (!response.ok) {
+        const data = (await response.json()) as { error?: string };
+        throw new ApiError(
+          data.error ??
+            `HTTP ${String(response.status)}: ${response.statusText}`,
+          undefined,
+          response.status
+        );
+      }
+
+      return (await response.json()) as UploadResponse;
+    } catch (error) {
+      if (error instanceof ApiError) {
+        throw error;
+      }
+      throw new NetworkError(
+        `Failed to upload image: ${error instanceof Error ? error.message : String(error)}`,
+        error
+      );
+    }
   }
 
   /**

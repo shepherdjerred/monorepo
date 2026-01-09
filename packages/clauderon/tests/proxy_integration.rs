@@ -4,6 +4,7 @@
 //! to Docker container arguments.
 
 use clauderon::backends::{DockerBackend, DockerProxyConfig};
+use clauderon::core::AgentType;
 use std::path::PathBuf;
 use tempfile::tempdir;
 
@@ -31,8 +32,9 @@ fn test_proxy_config_flows_to_container_args() {
         "test prompt",
         1000,
         Some(&proxy_config),
+        AgentType::ClaudeCode,
         false, // print mode
-        false, // plan mode
+        false, // dangerous_skip_checks
         &[],   // images
         None,  // git user name
         None,  // git user email
@@ -113,9 +115,10 @@ fn test_disabled_proxy_config_no_args() {
         &PathBuf::new(),
         "test prompt",
         1000,
-        None,  // No proxy config
+        None, // No proxy config
+        AgentType::ClaudeCode,
         false, // print mode
-        false, // plan mode
+        false, // dangerous_skip_checks
         &[],   // images
         None,  // git user name
         None,  // git user email
@@ -147,9 +150,10 @@ fn test_none_proxy_config_no_args() {
         &PathBuf::new(),
         "test prompt",
         1000,
-        None,  // No proxy config
+        None, // No proxy config
+        AgentType::ClaudeCode,
         false, // print mode
-        false, // plan mode
+        false, // dangerous_skip_checks
         &[],   // images
         None,  // git user name
         None,  // git user email
@@ -185,8 +189,9 @@ fn test_proxy_port_in_env_vars() {
         "test prompt",
         1000,
         Some(&proxy_config),
+        AgentType::ClaudeCode,
         false, // print mode
-        false, // plan mode
+        false, // dangerous_skip_checks
         &[],   // images
         None,  // git user name
         None,  // git user email
@@ -229,8 +234,9 @@ fn test_clauderon_dir_in_volume_mounts() {
         "test prompt",
         1000,
         Some(&proxy_config),
+        AgentType::ClaudeCode,
         false, // print mode
-        false, // plan mode
+        false, // dangerous_skip_checks
         &[],   // images
         None,  // git user name
         None,  // git user email

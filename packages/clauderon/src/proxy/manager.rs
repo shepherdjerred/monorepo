@@ -11,7 +11,7 @@ use uuid::Uuid;
 use super::audit::AuditLogger;
 use super::ca::ProxyCa;
 use super::config::{Credentials, ProxyConfig};
-use super::container_config::generate_container_configs;
+use super::container_config::{generate_codex_config, generate_container_configs};
 use super::http_proxy::HttpAuthProxy;
 use super::port_allocator::PortAllocator;
 use super::talos_gateway::TalosGateway;
@@ -57,7 +57,7 @@ impl ProxyManager {
         let ca = ProxyCa::load_or_generate(&clauderon_dir)?;
 
         // Load credentials
-        let credentials = Arc::new(Credentials::load(&config.secrets_dir));
+        let credentials = Arc::new(Credentials::load(&config));
 
         // Create audit logger
         let audit_logger = if config.audit_enabled {
@@ -86,6 +86,8 @@ impl ProxyManager {
     /// Generate container configuration files.
     pub fn generate_configs(&self) -> anyhow::Result<()> {
         generate_container_configs(&self.clauderon_dir, self.config.talos_gateway_port)?;
+        let account_id = self.credentials.codex_account_id();
+        generate_codex_config(&self.clauderon_dir, account_id.as_deref())?;
         Ok(())
     }
 
@@ -278,7 +280,7 @@ impl ProxyManager {
     /// credential references. New proxies created after this call will
     /// use the updated credentials.
     pub fn reload_credentials(&mut self) {
-        self.credentials = Arc::new(Credentials::load(&self.config.secrets_dir));
+        self.credentials = Arc::new(Credentials::load(&self.config));
         tracing::info!("Credentials reloaded from disk");
     }
 
