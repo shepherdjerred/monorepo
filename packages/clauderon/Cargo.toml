@@ -91,7 +91,7 @@ time = "0.3"
 
 # HTTP/WebSocket server
 axum = { version = "0.8", features = ["ws"] }
-axum-extra = { version = "0.10", features = ["cookie"] }
+axum-extra = { version = "0.10", features = ["cookie", "multipart"] }
 tower = "0.5"
 tower-http = { version = "0.6", features = ["cors", "trace", "fs"] }
 hyper = { version = "1", features = ["full"] }
@@ -209,12 +209,8 @@ clone_on_ref_ptr = "allow"
 needless_borrow = "allow"
 # Match vs equality
 equatable_if_let = "allow"
-# IP addresses
-hardcoded_ip_addresses = "allow"
 # Structure name repetition
 use_self = "allow"
-# Debug formatting
-debug_format = "allow"
 # Clone to slice
 assigning_clones = "allow"
 # Redundant closure
@@ -225,17 +221,11 @@ cast_lossless = "allow"
 if_same_then_else = "allow"
 # Let if seq - complex refactoring
 useless_let_if_seq = "allow"
-# IP address literals
-ip_literal_addrs = "allow"
 # Test-related lints
 used_underscore_binding = "allow"
 used_underscore_items = "allow"
 no_effect_underscore_binding = "allow"
 ignore_without_reason = "allow"
-# Deprecated methods - will fix later
-deprecated = "allow"
-# Dead code in tests
-dead_code = "allow"
 # Type comparison lints
 absurd_extreme_comparisons = "allow"
 # Field assignment

@@ -128,6 +128,7 @@ pub async fn run_daemon_with_http(
         session_manager.set_http_port(port);
 
         let manager = Arc::new(session_manager);
+        let console_state = Arc::new(crate::api::console_state::ConsoleState::new());
         tracing::info!("Session manager initialized with event broadcasting");
 
         // Restore session proxies for active sessions (if proxy manager is enabled)
@@ -175,10 +176,15 @@ pub async fn run_daemon_with_http(
 
         // Spawn both Unix socket and HTTP servers concurrently
         let unix_socket_future = run_unix_socket_server(Arc::clone(&manager));
+        let console_socket_future = crate::api::console_socket::run_console_socket_server(
+            Arc::clone(&manager),
+            Arc::clone(&console_state),
+        );
         let http_future = run_http_server(
             Arc::clone(&manager),
             port,
             event_broadcaster,
+            Arc::clone(&console_state),
             dev_mode,
             db_pool,
         );
@@ -193,6 +199,10 @@ pub async fn run_daemon_with_http(
                 tracing::error!("Unix socket server exited: {:?}", result);
                 result
             }
+            result = console_socket_future => {
+                tracing::error!("Console socket server exited: {:?}", result);
+                result
+            }
             result = http_future => {
                 tracing::error!("HTTP server exited: {:?}", result);
                 result
@@ -200,12 +210,26 @@ pub async fn run_daemon_with_http(
         }
     } else {
         let manager = Arc::new(session_manager);
+        let console_state = Arc::new(crate::api::console_state::ConsoleState::new());
         tracing::info!("Session manager initialized");
 
         // Spawn Unix socket server only
         let unix_socket_future = run_unix_socket_server(Arc::clone(&manager));
-        tracing::info!("Starting daemon with Unix socket only");
-        unix_socket_future.await
+        let console_socket_future = crate::api::console_socket::run_console_socket_server(
+            Arc::clone(&manager),
+            Arc::clone(&console_state),
+        );
+        tracing::info!("Starting daemon with Unix socket and console socket");
+        tokio::select! {
+            result = unix_socket_future => {
+                tracing::error!("Unix socket server exited: {:?}", result);
+                result
+            }
+            result = console_socket_future => {
+                tracing::error!("Console socket server exited: {:?}", result);
+                result
+            }
+        }
     }
 }
 
@@ -261,6 +285,7 @@ async fn run_http_server(
     manager: Arc<SessionManager>,
     port: u16,
     event_broadcaster: tokio::sync::broadcast::Sender<crate::api::protocol::Event>,
+    console_state: Arc<crate::api::console_state::ConsoleState>,
     dev_mode: bool,
     db_pool: sqlx::SqlitePool,
 ) -> anyhow::Result<()> {
@@ -397,6 +422,7 @@ async fn run_http_server(
         session_manager: Arc::clone(&manager),
         event_broadcaster,
         auth_state: auth_state.clone(),
+        console_state,
     };
 
     // Create the HTTP router with all routes and state

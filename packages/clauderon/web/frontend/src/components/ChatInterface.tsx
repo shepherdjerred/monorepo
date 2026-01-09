@@ -2,9 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { useConsole } from "../hooks/useConsole";
 import { useSessionHistory } from "../hooks/useSessionHistory";
 import { MessageBubble } from "./MessageBubble";
-import { Send, Terminal as TerminalIcon, X } from "lucide-react";
+import { Send, Terminal as TerminalIcon, X, Paperclip } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useSessionContext } from "../contexts/SessionContext";
 
 type ChatInterfaceProps = {
   sessionId: string;
@@ -25,7 +26,11 @@ export function ChatInterface({
   // Still need console client for sending input
   const { client, isConnected } = useConsole(sessionId);
 
+  const { client: apiClient } = useSessionContext();
+
   const [input, setInput] = useState("");
+  const [attachedImages, setAttachedImages] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom on new messages
@@ -33,10 +38,23 @@ export function ChatInterface({
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || !client || !isConnected) {
       return;
+    }
+
+    // Upload attached images first if any
+    if (attachedImages.length > 0) {
+      for (const file of attachedImages) {
+        try {
+          await apiClient.uploadImage(sessionId, file);
+        } catch (error) {
+          console.error("Failed to upload image:", error);
+          // Continue even if upload fails
+        }
+      }
+      setAttachedImages([]);
     }
 
     // Send input to console
@@ -128,7 +146,52 @@ export function ChatInterface({
 
         {/* Input */}
         <div className="p-4 border-t-4 border-primary" style={{ backgroundColor: 'hsl(220, 15%, 90%)' }}>
+          {/* Image previews */}
+          {attachedImages.length > 0 && (
+            <div className="flex gap-2 mb-3 flex-wrap">
+              {attachedImages.map((file, i) => (
+                <div key={i} className="relative border-2 border-primary">
+                  <img
+                    src={URL.createObjectURL(file)}
+                    alt={file.name}
+                    className="w-16 h-16 object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setAttachedImages(files => files.filter((_, idx) => idx !== i))}
+                    className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-5 h-5 text-xs font-bold border-2 border-white hover:bg-red-700"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            className="hidden"
+            onChange={(e) => {
+              if (e.target.files) {
+                setAttachedImages(prev => [...prev, ...Array.from(e.target.files!)]);
+              }
+            }}
+          />
+
           <form onSubmit={handleSubmit} className="flex gap-3">
+            <Button
+              type="button"
+              variant="brutalist"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={!isConnected}
+              className="px-3"
+            >
+              <Paperclip className="w-4 h-4" />
+            </Button>
             <Input
               type="text"
               value={input}
