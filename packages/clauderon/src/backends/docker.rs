@@ -5,6 +5,7 @@ use tracing::instrument;
 
 use super::traits::ExecutionBackend;
 use crate::core::AgentType;
+use crate::proxy::{dummy_auth_json_string, dummy_config_toml};
 
 /// Sanitize git config value to prevent environment variable injection
 ///
@@ -216,6 +217,9 @@ impl DockerBackend {
             "-e".to_string(),
             "HOME=/workspace".to_string(),
         ];
+        if agent == AgentType::Codex {
+            args.extend(["-e".to_string(), "CODEX_HOME=/workspace/.codex".to_string()]);
+        }
 
         // Mount shared Rust cargo and sccache cache volumes for faster builds
         // These are shared across ALL clauderon sessions and persist between container restarts
@@ -338,6 +342,43 @@ impl DockerBackend {
                 );
             }
 
+            let codex_dir = clauderon_dir.join("codex");
+            let codex_auth_path = codex_dir.join("auth.json");
+            let codex_config_path = codex_dir.join("config.toml");
+            if let Err(e) = std::fs::create_dir_all(&codex_dir) {
+                tracing::warn!(
+                    "Failed to create Codex config directory at {:?}: {}",
+                    codex_dir,
+                    e
+                );
+            } else {
+                if !codex_auth_path.exists() {
+                    match dummy_auth_json_string(None) {
+                        Ok(contents) => {
+                            if let Err(e) = std::fs::write(&codex_auth_path, contents) {
+                                tracing::warn!(
+                                    "Failed to write Codex auth.json at {:?}: {}",
+                                    codex_auth_path,
+                                    e
+                                );
+                            }
+                        }
+                        Err(e) => {
+                            tracing::warn!("Failed to build Codex auth.json contents: {}", e);
+                        }
+                    }
+                }
+                if !codex_config_path.exists() {
+                    if let Err(e) = std::fs::write(&codex_config_path, dummy_config_toml()) {
+                        tracing::warn!(
+                            "Failed to write Codex config.toml at {:?}: {}",
+                            codex_config_path,
+                            e
+                        );
+                    }
+                }
+            }
+
             // Add host.docker.internal resolution
             // Required for Linux and macOS with OrbStack
             // Harmless on Docker Desktop (flag is ignored if host already exists)
@@ -404,6 +445,15 @@ impl DockerBackend {
                     display = ca_cert_path.display()
                 ),
             ]);
+            if codex_dir.exists() {
+                args.extend([
+                    "-v".to_string(),
+                    format!(
+                        "{display}:/etc/clauderon/codex:ro",
+                        display = codex_dir.display()
+                    ),
+                ]);
+            }
 
             // Mount and configure Talos if available
             if has_talos_config {
@@ -620,6 +670,15 @@ fi"#,
                     }
                 }
                 AgentType::Codex => {
+                    let codex_preamble = r#"CODEX_HOME="/workspace/.codex"
+export CODEX_HOME
+mkdir -p "$CODEX_HOME"
+if [ -f /etc/clauderon/codex/auth.json ]; then
+    cp /etc/clauderon/codex/auth.json "$CODEX_HOME/auth.json"
+fi
+if [ -f /etc/clauderon/codex/config.toml ]; then
+    cp /etc/clauderon/codex/config.toml "$CODEX_HOME/config.toml"
+fi"#;
                     if print_mode {
                         let mut cmd_vec = vec!["codex".to_string()];
                         if dangerous_skip_checks {
@@ -633,11 +692,12 @@ fi"#,
                         if !escaped_prompt.is_empty() {
                             cmd_vec.push(escaped_prompt.clone());
                         }
-                        cmd_vec
+                        let cmd = cmd_vec
                             .iter()
                             .map(|arg| quote_arg(arg))
                             .collect::<Vec<_>>()
-                            .join(" ")
+                            .join(" ");
+                        format!("{codex_preamble}\n{cmd}")
                     } else {
                         let create_cmd_vec = CodexAgent::new().start_command(
                             &escaped_prompt,
@@ -664,7 +724,8 @@ fi"#,
                             .join(" ");
 
                         format!(
-                            r#"CODEX_DIR="/workspace/.codex/sessions"
+                            r#"{codex_preamble}
+CODEX_DIR="/workspace/.codex/sessions"
 if [ -d "$CODEX_DIR" ] && [ "$(ls -A "$CODEX_DIR" 2>/dev/null)" ]; then
     echo "Resuming last Codex session"
     exec {resume_cmd}
