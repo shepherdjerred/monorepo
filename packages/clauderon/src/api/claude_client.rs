@@ -81,15 +81,13 @@ impl ClaudeApiClient {
             .context("Failed to fetch current account from Claude.ai")?;
 
         if !response.status().is_success() {
-            anyhow::bail!(
-                "Claude.ai API returned error: {} - {}",
-                response.status(),
-                response.text().await.unwrap_or_default()
-            );
+            let status = response.status();
+            let body = response.text().await.unwrap_or_else(|_| String::new());
+            anyhow::bail!("Claude.ai API returned error: {} - {}", status, body);
         }
 
         let account: CurrentAccountResponse = response
-            .json()
+            .json::<CurrentAccountResponse>()
             .await
             .context("Failed to parse current account response")?;
 
@@ -129,12 +127,12 @@ impl ClaudeApiClient {
 
         if !response.status().is_success() {
             let status = response.status();
-            let body = response.text().await.unwrap_or_default();
+            let body = response.text().await.unwrap_or_else(|_| String::new());
             anyhow::bail!("Claude.ai usage API returned error: {} - {}", status, body);
         }
 
         let usage_response: ClaudeUsageResponse = response
-            .json()
+            .json::<ClaudeUsageResponse>()
             .await
             .context("Failed to parse usage response")?;
 
