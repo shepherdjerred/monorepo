@@ -33,6 +33,37 @@ function getDefaultWsBaseUrl(): string {
 }
 
 /**
+ * Validate base64 string format
+ * Returns true if valid, false otherwise
+ */
+function isValidBase64(str: string): boolean {
+  if (!str || str.length === 0) {
+    return false;
+  }
+
+  // Base64 should only contain A-Z, a-z, 0-9, +, /, and = for padding
+  const base64Regex = /^[A-Za-z0-9+/]*={0,2}$/;
+
+  // Check format
+  if (!base64Regex.test(str)) {
+    return false;
+  }
+
+  // Base64 length should be multiple of 4
+  if (str.length % 4 !== 0) {
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Maximum size for a single message (1MB encoded = ~750KB decoded)
+ * Prevents memory issues from extremely large chunks
+ */
+const MAX_MESSAGE_SIZE = 1024 * 1024;
+
+/**
  * WebSocket client for terminal console streaming
  */
 export class ConsoleClient {
@@ -40,6 +71,12 @@ export class ConsoleClient {
   private readonly baseUrl: string;
   private sessionId: string | null = null;
   private decoder: TextDecoder | null = null;
+
+  // Error throttling to prevent UI freezes
+  private errorCount: number = 0;
+  private lastErrorTime: number = 0;
+  private readonly MAX_ERRORS_PER_SECOND = 5;
+  private isErrorThrottled: boolean = false;
 
   private listeners: {
     connected: (() => void)[];
@@ -90,7 +127,60 @@ export class ConsoleClient {
         try {
           const message = JSON.parse(event.data) as ConsoleMessage;
 
-          if (message.type === "output" && typeof message.data === "string") {
+          if (message.type === "output") {
+            // Validate data field exists and is a string
+            if (typeof message.data !== "string") {
+              console.warn(
+                `[ConsoleClient] Invalid output message for session ${this.sessionId}: ` +
+                `data field is ${typeof message.data}, expected string`
+              );
+              return;
+            }
+
+            // Check for empty data
+            if (message.data.length === 0) {
+              console.debug(`[ConsoleClient] Received empty output data for session ${this.sessionId}`);
+              // Empty data is valid - just emit empty string
+              this.emit("data", "");
+              return;
+            }
+
+            // Validate base64 format before attempting decode
+            if (!isValidBase64(message.data)) {
+              if (this.shouldEmitError()) {
+                console.error(
+                  `[ConsoleClient] Invalid base64 format for session ${this.sessionId}. ` +
+                  `Length: ${message.data.length}, ` +
+                  `First 50 chars: ${message.data.substring(0, 50)}`
+                );
+                this.emit(
+                  "error",
+                  new WebSocketError(
+                    `Invalid base64 format received from server. This may indicate a protocol mismatch.`
+                  )
+                );
+              }
+              return;
+            }
+
+            // Check message size to prevent memory issues
+            if (message.data.length > MAX_MESSAGE_SIZE) {
+              if (this.shouldEmitError()) {
+                console.error(
+                  `[ConsoleClient] Message size exceeded limit for session ${this.sessionId}. ` +
+                  `Size: ${message.data.length} bytes, Max: ${MAX_MESSAGE_SIZE} bytes`
+                );
+                this.emit(
+                  "error",
+                  new WebSocketError(
+                    `Received message exceeds size limit (${(message.data.length / 1024).toFixed(0)}KB). ` +
+                    `Large outputs may be truncated.`
+                  )
+                );
+              }
+              return;
+            }
+
             // Decode base64 data with error handling
             try {
               // Decode base64 to binary string
@@ -104,21 +194,36 @@ export class ConsoleClient {
               const decoded = this.decoder!.decode(bytes, { stream: true });
               this.emit("data", decoded);
             } catch (decodeError) {
-              this.emit(
-                "error",
-                new WebSocketError(
-                  `Failed to decode base64 data: ${decodeError instanceof Error ? decodeError.message : String(decodeError)}`
-                )
-              );
+              if (this.shouldEmitError()) {
+                const errorMsg = decodeError instanceof Error ? decodeError.message : String(decodeError);
+                console.error(
+                  `[ConsoleClient] Decode error for session ${this.sessionId}: ${errorMsg}. ` +
+                  `Data length: ${message.data.length}, ` +
+                  `Sample: ${message.data.substring(0, 100)}`
+                );
+                this.emit(
+                  "error",
+                  new WebSocketError(
+                    `Failed to decode terminal data: ${errorMsg}. ` +
+                    `This may indicate corrupted output from the session.`
+                  )
+                );
+              }
             }
           }
         } catch (error) {
-          this.emit(
-            "error",
-            new WebSocketError(
-              `Failed to parse message: ${error instanceof Error ? error.message : String(error)}`
-            )
-          );
+          if (this.shouldEmitError()) {
+            const errorMsg = error instanceof Error ? error.message : String(error);
+            console.error(
+              `[ConsoleClient] Message parse error for session ${this.sessionId}: ${errorMsg}`
+            );
+            this.emit(
+              "error",
+              new WebSocketError(
+                `Failed to parse message: ${errorMsg}`
+              )
+            );
+          }
         }
       };
     } catch (error) {
@@ -142,6 +247,11 @@ export class ConsoleClient {
     }
     this.sessionId = null;
     this.decoder = null;
+
+    // Reset error tracking
+    this.errorCount = 0;
+    this.lastErrorTime = 0;
+    this.isErrorThrottled = false;
   }
 
   /**
@@ -257,5 +367,36 @@ export class ConsoleClient {
         listener(arg);
       }
     }
+  }
+
+  /**
+   * Check if we should emit an error or throttle it
+   * Prevents error loops from freezing the UI
+   */
+  private shouldEmitError(): boolean {
+    const now = Date.now();
+
+    // Reset counter if more than 1 second has passed
+    if (now - this.lastErrorTime > 1000) {
+      this.errorCount = 0;
+      this.isErrorThrottled = false;
+    }
+
+    this.lastErrorTime = now;
+    this.errorCount++;
+
+    // Throttle if too many errors
+    if (this.errorCount > this.MAX_ERRORS_PER_SECOND) {
+      if (!this.isErrorThrottled) {
+        this.isErrorThrottled = true;
+        console.error(
+          `[ConsoleClient] Error rate exceeded for session ${this.sessionId}. ` +
+          `Throttling errors to prevent UI freeze. Check server logs.`
+        );
+      }
+      return false;
+    }
+
+    return true;
   }
 }
