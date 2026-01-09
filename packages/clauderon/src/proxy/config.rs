@@ -1,8 +1,12 @@
 //! Proxy configuration and credentials management.
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
+use std::sync::{Arc, RwLock};
 
+use base64::Engine as _;
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 /// Proxy service configuration.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -18,6 +22,9 @@ pub struct ProxyConfig {
 
     /// Audit log file path.
     pub audit_log_path: PathBuf,
+
+    /// Optional path to the host Codex auth.json file.
+    pub codex_auth_json_path: Option<PathBuf>,
 }
 
 impl Default for ProxyConfig {
@@ -28,6 +35,7 @@ impl Default for ProxyConfig {
             talos_gateway_port: 18082,
             audit_enabled: true,
             audit_log_path: home.join(".clauderon/audit.jsonl"),
+            codex_auth_json_path: Some(home.join(".codex/auth.json")),
         }
     }
 }
@@ -38,22 +46,89 @@ impl ProxyConfig {
         let home = dirs::home_dir().unwrap_or_else(|| PathBuf::from("/tmp"));
         let config_path = home.join(".clauderon/proxy.toml");
 
-        if config_path.exists() {
+        let mut config = if config_path.exists() {
             let content = std::fs::read_to_string(&config_path)?;
-            let config: Self = toml::from_str(&content)?;
-            Ok(config)
+            toml::from_str(&content)?
         } else {
-            Ok(Self::default())
+            Self::default()
+        };
+
+        if let Ok(path) = std::env::var("CODEX_AUTH_JSON_PATH") {
+            config.codex_auth_json_path = Some(PathBuf::from(path));
+        }
+
+        Ok(config)
+    }
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct CodexTokens {
+    pub access_token: Option<String>,
+    pub refresh_token: Option<String>,
+    pub id_token: Option<String>,
+    pub account_id: Option<String>,
+}
+
+impl CodexTokens {
+    fn apply_overlay(&mut self, other: CodexTokens) {
+        if other.access_token.is_some() {
+            self.access_token = other.access_token;
+        }
+        if other.refresh_token.is_some() {
+            self.refresh_token = other.refresh_token;
+        }
+        if other.id_token.is_some() {
+            self.id_token = other.id_token;
+        }
+        if other.account_id.is_some() {
+            self.account_id = other.account_id;
+        }
+    }
+
+    fn fill_account_id_from_id_token(&mut self) {
+        if self.account_id.is_none() {
+            if let Some(id_token) = self.id_token.as_deref() {
+                if let Some(account_id) = extract_chatgpt_account_id(id_token) {
+                    self.account_id = Some(account_id);
+                }
+            }
         }
     }
 }
 
-/// Credentials for various services.
+#[derive(Debug, Deserialize, Serialize, Clone)]
+struct CodexAuthTokens {
+    id_token: String,
+    access_token: String,
+    refresh_token: String,
+    #[serde(default)]
+    account_id: Option<String>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+struct CodexAuthJson {
+    #[serde(rename = "OPENAI_API_KEY")]
+    openai_api_key: Option<String>,
+    tokens: Option<CodexAuthTokens>,
+    #[serde(default)]
+    last_refresh: Option<DateTime<Utc>>,
+}
+
 #[derive(Debug, Clone, Default)]
+pub struct CodexTokenUpdate {
+    pub access_token: Option<String>,
+    pub refresh_token: Option<String>,
+    pub id_token: Option<String>,
+    pub account_id: Option<String>,
+}
+
+/// Credentials for various services.
+#[derive(Debug, Clone)]
 pub struct Credentials {
     pub github_token: Option<String>,
     pub anthropic_oauth_token: Option<String>,
     pub openai_api_key: Option<String>,
+    pub codex_tokens: Arc<RwLock<CodexTokens>>,
     pub pagerduty_token: Option<String>,
     pub sentry_auth_token: Option<String>,
     pub grafana_api_key: Option<String>,
@@ -61,17 +136,45 @@ pub struct Credentials {
     pub docker_token: Option<String>,
     pub k8s_token: Option<String>,
     pub talos_token: Option<String>,
+    pub codex_auth_json_path: Option<PathBuf>,
+}
+
+impl Default for Credentials {
+    fn default() -> Self {
+        Self {
+            github_token: None,
+            anthropic_oauth_token: None,
+            openai_api_key: None,
+            codex_tokens: Arc::new(RwLock::new(CodexTokens::default())),
+            pagerduty_token: None,
+            sentry_auth_token: None,
+            grafana_api_key: None,
+            npm_token: None,
+            docker_token: None,
+            k8s_token: None,
+            talos_token: None,
+            codex_auth_json_path: None,
+        }
+    }
 }
 
 impl Credentials {
     /// Load credentials from environment variables.
     pub fn load_from_env() -> Self {
+        let mut codex_tokens = CodexTokens {
+            access_token: std::env::var("CODEX_ACCESS_TOKEN").ok(),
+            refresh_token: std::env::var("CODEX_REFRESH_TOKEN").ok(),
+            id_token: std::env::var("CODEX_ID_TOKEN").ok(),
+            account_id: std::env::var("CODEX_ACCOUNT_ID").ok(),
+        };
+        codex_tokens.fill_account_id_from_id_token();
         Self {
             github_token: std::env::var("GITHUB_TOKEN").ok(),
             anthropic_oauth_token: std::env::var("CLAUDE_CODE_OAUTH_TOKEN").ok(),
             openai_api_key: std::env::var("OPENAI_API_KEY")
                 .or_else(|_| std::env::var("CODEX_API_KEY"))
                 .ok(),
+            codex_tokens: Arc::new(RwLock::new(codex_tokens)),
             // Support both PAGERDUTY_TOKEN and PAGERDUTY_API_KEY for compatibility
             pagerduty_token: std::env::var("PAGERDUTY_TOKEN")
                 .or_else(|_| std::env::var("PAGERDUTY_API_KEY"))
@@ -82,6 +185,7 @@ impl Credentials {
             docker_token: std::env::var("DOCKER_TOKEN").ok(),
             k8s_token: std::env::var("K8S_TOKEN").ok(),
             talos_token: std::env::var("TALOS_TOKEN").ok(),
+            codex_auth_json_path: None,
         }
     }
 
@@ -98,6 +202,7 @@ impl Credentials {
             github_token: read_secret("github_token"),
             anthropic_oauth_token: read_secret("anthropic_oauth_token"),
             openai_api_key: read_secret("openai_api_key"),
+            codex_tokens: Arc::new(RwLock::new(CodexTokens::default())),
             pagerduty_token: read_secret("pagerduty_token"),
             sentry_auth_token: read_secret("sentry_auth_token"),
             grafana_api_key: read_secret("grafana_api_key"),
@@ -105,20 +210,36 @@ impl Credentials {
             docker_token: read_secret("docker_token"),
             k8s_token: read_secret("k8s_token"),
             talos_token: read_secret("talos_token"),
+            codex_auth_json_path: None,
         }
     }
 
     /// Load credentials - try environment first, then files.
-    pub fn load(secrets_dir: &PathBuf) -> Self {
+    pub fn load(config: &ProxyConfig) -> Self {
         let from_env = Self::load_from_env();
-        let from_files = Self::load_from_files(secrets_dir);
+        let from_files = Self::load_from_files(&config.secrets_dir);
+        let mut openai_api_key = from_env
+            .openai_api_key
+            .clone()
+            .or(from_files.openai_api_key);
+
+        let (codex_tokens_from_auth, auth_openai_api_key) =
+            load_codex_tokens_from_auth_json(config.codex_auth_json_path.as_deref());
+        if openai_api_key.is_none() {
+            openai_api_key = auth_openai_api_key;
+        }
+
+        let mut codex_tokens = codex_tokens_from_auth;
+        codex_tokens.apply_overlay(from_env.codex_tokens_snapshot());
+        codex_tokens.fill_account_id_from_id_token();
 
         let credentials = Self {
             github_token: from_env.github_token.or(from_files.github_token),
             anthropic_oauth_token: from_env
                 .anthropic_oauth_token
                 .or(from_files.anthropic_oauth_token),
-            openai_api_key: from_env.openai_api_key.or(from_files.openai_api_key),
+            openai_api_key,
+            codex_tokens: Arc::new(RwLock::new(codex_tokens)),
             pagerduty_token: from_env.pagerduty_token.or(from_files.pagerduty_token),
             sentry_auth_token: from_env.sentry_auth_token.or(from_files.sentry_auth_token),
             grafana_api_key: from_env.grafana_api_key.or(from_files.grafana_api_key),
@@ -126,6 +247,7 @@ impl Credentials {
             docker_token: from_env.docker_token.or(from_files.docker_token),
             k8s_token: from_env.k8s_token.or(from_files.k8s_token),
             talos_token: from_env.talos_token.or(from_files.talos_token),
+            codex_auth_json_path: config.codex_auth_json_path.clone(),
         };
 
         // Log which credentials were loaded
@@ -138,6 +260,9 @@ impl Credentials {
         }
         if credentials.openai_api_key.is_some() {
             tracing::info!("  ✓ OpenAI API key");
+        }
+        if credentials.codex_access_token().is_some() {
+            tracing::info!("  ✓ Codex access token");
         }
         if credentials.pagerduty_token.is_some() {
             tracing::info!("  ✓ PagerDuty token");
@@ -159,21 +284,188 @@ impl Credentials {
     }
 
     /// Get a credential by service name.
-    pub fn get(&self, service: &str) -> Option<&str> {
+    pub fn get(&self, service: &str) -> Option<String> {
         match service {
-            "github" => self.github_token.as_deref(),
-            "anthropic" => self.anthropic_oauth_token.as_deref(),
-            "openai" => self.openai_api_key.as_deref(),
-            "pagerduty" => self.pagerduty_token.as_deref(),
-            "sentry" => self.sentry_auth_token.as_deref(),
-            "grafana" => self.grafana_api_key.as_deref(),
-            "npm" => self.npm_token.as_deref(),
-            "docker" => self.docker_token.as_deref(),
-            "k8s" => self.k8s_token.as_deref(),
-            "talos" => self.talos_token.as_deref(),
+            "github" => self.github_token.clone(),
+            "anthropic" => self.anthropic_oauth_token.clone(),
+            "openai" => self
+                .codex_access_token()
+                .or_else(|| self.openai_api_key.clone()),
+            "chatgpt" => self.codex_access_token(),
+            "pagerduty" => self.pagerduty_token.clone(),
+            "sentry" => self.sentry_auth_token.clone(),
+            "grafana" => self.grafana_api_key.clone(),
+            "npm" => self.npm_token.clone(),
+            "docker" => self.docker_token.clone(),
+            "k8s" => self.k8s_token.clone(),
+            "talos" => self.talos_token.clone(),
             _ => None,
         }
     }
+
+    pub fn codex_access_token(&self) -> Option<String> {
+        self.codex_tokens
+            .read()
+            .ok()
+            .and_then(|t| t.access_token.clone())
+    }
+
+    pub fn codex_refresh_token(&self) -> Option<String> {
+        self.codex_tokens
+            .read()
+            .ok()
+            .and_then(|t| t.refresh_token.clone())
+    }
+
+    pub fn codex_account_id(&self) -> Option<String> {
+        self.codex_tokens
+            .read()
+            .ok()
+            .and_then(|t| t.account_id.clone())
+    }
+
+    pub fn update_codex_tokens(&self, update: CodexTokenUpdate) {
+        let mut updated_tokens = None;
+        if let Ok(mut guard) = self.codex_tokens.write() {
+            if update.access_token.is_some() {
+                guard.access_token = update.access_token;
+            }
+            if update.refresh_token.is_some() {
+                guard.refresh_token = update.refresh_token;
+            }
+            if update.id_token.is_some() {
+                guard.id_token = update.id_token;
+            }
+            if update.account_id.is_some() {
+                guard.account_id = update.account_id;
+            }
+            guard.fill_account_id_from_id_token();
+            updated_tokens = Some(guard.clone());
+        }
+
+        let Some(path) = self.codex_auth_json_path.as_ref() else {
+            return;
+        };
+        let Some(tokens) = updated_tokens else {
+            return;
+        };
+
+        if let Err(err) = persist_codex_auth_json(path, &tokens, &self.openai_api_key) {
+            tracing::warn!("Failed to persist Codex auth.json: {}", err);
+        }
+    }
+
+    fn codex_tokens_snapshot(&self) -> CodexTokens {
+        self.codex_tokens
+            .read()
+            .ok()
+            .map(|guard| guard.clone())
+            .unwrap_or_default()
+    }
+}
+
+fn load_codex_tokens_from_auth_json(path: Option<&Path>) -> (CodexTokens, Option<String>) {
+    let Some(path) = path else {
+        return (CodexTokens::default(), None);
+    };
+
+    let content = match std::fs::read_to_string(path) {
+        Ok(content) => content,
+        Err(err) => {
+            tracing::warn!(
+                "Failed to read Codex auth.json at {}: {}",
+                path.display(),
+                err
+            );
+            return (CodexTokens::default(), None);
+        }
+    };
+
+    let auth_json: CodexAuthJson = match serde_json::from_str(&content) {
+        Ok(auth_json) => auth_json,
+        Err(err) => {
+            tracing::warn!(
+                "Failed to parse Codex auth.json at {}: {}",
+                path.display(),
+                err
+            );
+            return (CodexTokens::default(), None);
+        }
+    };
+
+    let tokens = auth_json
+        .tokens
+        .map_or_else(CodexTokens::default, |tokens| CodexTokens {
+            access_token: Some(tokens.access_token),
+            refresh_token: Some(tokens.refresh_token),
+            id_token: Some(tokens.id_token),
+            account_id: tokens.account_id,
+        });
+
+    (tokens, auth_json.openai_api_key)
+}
+
+fn persist_codex_auth_json(
+    path: &Path,
+    tokens: &CodexTokens,
+    openai_api_key: &Option<String>,
+) -> anyhow::Result<()> {
+    let auth_json = if path.exists() {
+        let content = std::fs::read_to_string(path)?;
+        serde_json::from_str::<CodexAuthJson>(&content).unwrap_or(CodexAuthJson {
+            openai_api_key: openai_api_key.clone(),
+            tokens: None,
+            last_refresh: None,
+        })
+    } else {
+        CodexAuthJson {
+            openai_api_key: openai_api_key.clone(),
+            tokens: None,
+            last_refresh: None,
+        }
+    };
+
+    let mut auth_json = auth_json;
+    let token_payload = CodexAuthTokens {
+        id_token: tokens
+            .id_token
+            .clone()
+            .unwrap_or_else(|| "invalid.invalid.invalid".to_string()),
+        access_token: tokens
+            .access_token
+            .clone()
+            .unwrap_or_else(|| "missing-access-token".to_string()),
+        refresh_token: tokens
+            .refresh_token
+            .clone()
+            .unwrap_or_else(|| "missing-refresh-token".to_string()),
+        account_id: tokens.account_id.clone(),
+    };
+    auth_json.openai_api_key = openai_api_key.clone();
+    auth_json.tokens = Some(token_payload);
+    auth_json.last_refresh = Some(Utc::now());
+
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
+    std::fs::write(path, serde_json::to_string_pretty(&auth_json)?)?;
+    Ok(())
+}
+
+fn extract_chatgpt_account_id(id_token: &str) -> Option<String> {
+    let mut parts = id_token.split('.');
+    let _header_b64 = parts.next()?;
+    let payload_b64 = parts.next()?;
+    let _sig_b64 = parts.next()?;
+
+    let payload_bytes = base64::engine::general_purpose::URL_SAFE_NO_PAD
+        .decode(payload_b64.as_bytes())
+        .ok()?;
+    let payload: Value = serde_json::from_slice(&payload_bytes).ok()?;
+    let auth = payload.get("https://api.openai.com/auth")?;
+    auth.get("chatgpt_account_id")
+        .and_then(Value::as_str)
+        .map(str::to_string)
 }
 
 #[cfg(test)]

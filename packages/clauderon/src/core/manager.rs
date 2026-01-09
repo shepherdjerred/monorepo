@@ -2018,6 +2018,20 @@ impl SessionManager {
                     }
                 }
             };
+            let codex_env_present = [
+                "CODEX_ACCESS_TOKEN",
+                "CODEX_REFRESH_TOKEN",
+                "CODEX_ID_TOKEN",
+            ]
+            .iter()
+            .any(|name| std::env::var(name).is_ok());
+            let codex_auth_source = creds.codex_auth_json_path.as_ref().and_then(|path| {
+                if path.exists() {
+                    Some(format!("auth.json:{}", path.display()))
+                } else {
+                    None
+                }
+            });
 
             // GitHub
             let (source, readonly) = credential_source("GITHUB_TOKEN", "github_token");
@@ -2054,6 +2068,8 @@ impl SessionManager {
                 let path = secrets_dir.join("openai_api_key");
                 if path.exists() {
                     (Some("file".to_string()), false)
+                } else if codex_auth_source.is_some() && creds.openai_api_key.is_some() {
+                    (codex_auth_source.clone(), true)
                 } else {
                     (None, false)
                 }
@@ -2065,6 +2081,24 @@ impl SessionManager {
                 source,
                 readonly,
                 masked_value: creds.openai_api_key.as_ref().map(|v| mask_credential(v)),
+            });
+            let (source, readonly) = if codex_env_present {
+                (Some("environment".to_string()), true)
+            } else if codex_auth_source.is_some() {
+                (codex_auth_source.clone(), true)
+            } else {
+                (None, true)
+            };
+            credentials.push(CredentialStatus {
+                name: "ChatGPT".to_string(),
+                service_id: "chatgpt".to_string(),
+                available: creds.codex_access_token().is_some(),
+                source,
+                readonly,
+                masked_value: creds
+                    .codex_access_token()
+                    .as_ref()
+                    .map(|v| mask_credential(v)),
             });
 
             // PagerDuty

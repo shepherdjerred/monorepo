@@ -17,6 +17,7 @@ use tokio::time::timeout;
 use super::kubernetes_config::{KubernetesConfig, KubernetesProxyConfig};
 use super::traits::{CreateOptions, ExecutionBackend};
 use crate::core::AgentType;
+use crate::proxy::{dummy_auth_json_string, dummy_config_toml};
 
 /// Sanitize git config value to prevent environment variable injection
 ///
@@ -395,6 +396,51 @@ impl KubernetesBackend {
         Ok(())
     }
 
+    /// Create ConfigMap for Codex dummy auth/config (if proxy enabled)
+    async fn create_codex_config_configmap(&self, pod_name: &str) -> anyhow::Result<()> {
+        let Some(ref proxy_config) = self.proxy_config else {
+            return Ok(());
+        };
+
+        if !proxy_config.enabled {
+            return Ok(());
+        }
+
+        let cms: Api<ConfigMap> = Api::namespaced(self.client.clone(), &self.config.namespace);
+        let codex_dir = proxy_config.clauderon_dir.join("codex");
+        let auth_path = codex_dir.join("auth.json");
+        let config_path = codex_dir.join("config.toml");
+
+        let auth_json = match std::fs::read_to_string(&auth_path) {
+            Ok(contents) => contents,
+            Err(_) => dummy_auth_json_string(None)?,
+        };
+        let config_toml = std::fs::read_to_string(&config_path)
+            .unwrap_or_else(|_| dummy_config_toml().to_string());
+
+        let mut data = BTreeMap::new();
+        data.insert("auth.json".to_string(), auth_json);
+        data.insert("config.toml".to_string(), config_toml);
+
+        let cm = ConfigMap {
+            metadata: ObjectMeta {
+                name: Some(format!("{pod_name}-codex-config")),
+                namespace: Some(self.config.namespace.clone()),
+                labels: Some({
+                    let mut labels = BTreeMap::new();
+                    labels.insert("clauderon.io/managed".to_string(), "true".to_string());
+                    labels
+                }),
+                ..Default::default()
+            },
+            data: Some(data),
+            ..Default::default()
+        };
+
+        cms.create(&PostParams::default(), &cm).await?;
+        Ok(())
+    }
+
     /// Create ConfigMap for proxy CA certificate (if proxy enabled)
     async fn create_proxy_configmap(&self) -> anyhow::Result<()> {
         let Some(ref proxy_config) = self.proxy_config else {
@@ -585,6 +631,13 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
             env.push(EnvVar {
                 name: "GIT_COMMITTER_EMAIL".to_string(),
                 value: Some(email.to_string()),
+                ..Default::default()
+            });
+        }
+        if options.agent == AgentType::Codex {
+            env.push(EnvVar {
+                name: "CODEX_HOME".to_string(),
+                value: Some("/workspace/.codex".to_string()),
                 ..Default::default()
             });
         }
@@ -784,6 +837,15 @@ fi"#,
                     }
                 }
                 AgentType::Codex => {
+                    let codex_preamble = r#"CODEX_HOME="/workspace/.codex"
+export CODEX_HOME
+mkdir -p "$CODEX_HOME"
+if [ -f /etc/clauderon/codex/auth.json ]; then
+    cp /etc/clauderon/codex/auth.json "$CODEX_HOME/auth.json"
+fi
+if [ -f /etc/clauderon/codex/config.toml ]; then
+    cp /etc/clauderon/codex/config.toml "$CODEX_HOME/config.toml"
+fi"#;
                     if options.print_mode {
                         let mut cmd_vec = vec!["codex".to_string()];
                         if options.dangerous_skip_checks {
@@ -797,11 +859,12 @@ fi"#,
                         if !escaped_prompt.is_empty() {
                             cmd_vec.push(escaped_prompt.clone());
                         }
-                        cmd_vec
+                        let cmd = cmd_vec
                             .iter()
                             .map(|a| quote_arg(a))
                             .collect::<Vec<_>>()
-                            .join(" ")
+                            .join(" ");
+                        format!("{codex_preamble}\n{cmd}")
                     } else {
                         let mut create_cmd_vec = vec!["codex".to_string()];
                         if options.dangerous_skip_checks {
@@ -833,7 +896,8 @@ fi"#,
                             .join(" ");
 
                         format!(
-                            r#"CODEX_DIR="/workspace/.codex/sessions"
+                            r#"{codex_preamble}
+CODEX_DIR="/workspace/.codex/sessions"
 if [ -d "$CODEX_DIR" ] && [ "$(ls -A "$CODEX_DIR" 2>/dev/null)" ]; then
     echo "Resuming last Codex session"
     exec {resume_cmd}
@@ -884,6 +948,18 @@ fi"#,
                     read_only: Some(true),
                     ..Default::default()
                 });
+            }
+        }
+        if options.agent == AgentType::Codex {
+            if let Some(ref proxy_config) = self.proxy_config {
+                if proxy_config.enabled {
+                    volume_mounts.push(VolumeMount {
+                        name: "codex-config".to_string(),
+                        mount_path: "/etc/clauderon/codex".to_string(),
+                        read_only: Some(true),
+                        ..Default::default()
+                    });
+                }
             }
         }
 
@@ -1004,6 +1080,20 @@ fi"#,
                     }),
                     ..Default::default()
                 });
+            }
+        }
+        if options.agent == AgentType::Codex {
+            if let Some(ref proxy_config) = self.proxy_config {
+                if proxy_config.enabled {
+                    volumes.push(Volume {
+                        name: "codex-config".to_string(),
+                        config_map: Some(k8s_openapi::api::core::v1::ConfigMapVolumeSource {
+                            name: format!("{pod_name}-codex-config"),
+                            ..Default::default()
+                        }),
+                        ..Default::default()
+                    });
+                }
             }
         }
 
@@ -1152,6 +1242,9 @@ impl ExecutionBackend for KubernetesBackend {
 
         // Create Claude config ConfigMap
         self.create_claude_config_configmap(&pod_name).await?;
+        if options.agent == AgentType::Codex {
+            self.create_codex_config_configmap(&pod_name).await?;
+        }
 
         // Create proxy ConfigMap if needed
         self.create_proxy_configmap().await?;
@@ -1211,6 +1304,17 @@ impl ExecutionBackend for KubernetesBackend {
                 tracing::debug!("ConfigMap {config_name} already deleted");
             }
             Err(e) => tracing::warn!("Failed to delete ConfigMap {config_name}: {e}"),
+        }
+        let codex_config_name = format!("{id}-codex-config");
+        match cms
+            .delete(&codex_config_name, &DeleteParams::default())
+            .await
+        {
+            Ok(_) => tracing::info!("Deleted ConfigMap {codex_config_name}"),
+            Err(kube::Error::Api(err)) if err.code == 404 => {
+                tracing::debug!("ConfigMap {codex_config_name} already deleted");
+            }
+            Err(e) => tracing::warn!("Failed to delete ConfigMap {codex_config_name}: {e}"),
         }
 
         // Delete workspace PVC (log warning on failure)
