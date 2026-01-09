@@ -52,6 +52,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
             Constraint::Length(images_height),            // Images (dynamic)
             Constraint::Length(3),                        // Repo path
             Constraint::Length(2),                        // Backend
+            Constraint::Length(2),                        // Agent
             Constraint::Length(2),                        // Access mode
             Constraint::Length(2),                        // Skip checks
             Constraint::Length(2),                        // Plan mode
@@ -100,6 +101,18 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         inner[3],
     );
 
+    // Agent selection
+    render_radio_field(
+        frame,
+        "Agent",
+        &[
+            ("Claude", dialog.agent == crate::core::AgentType::Claude),
+            ("Gemini", dialog.agent == crate::core::AgentType::Gemini),
+        ],
+        dialog.focus == CreateDialogFocus::Agent,
+        inner[4],
+    );
+
     // Access mode selection
     render_radio_field(
         frame,
@@ -109,7 +122,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
             ("Read-Write", dialog.access_mode == AccessMode::ReadWrite),
         ],
         dialog.focus == CreateDialogFocus::AccessMode,
-        inner[4],
+        inner[5],
     );
 
     // Skip checks checkbox
@@ -118,7 +131,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         "Dangerously skip checks",
         dialog.skip_checks,
         dialog.focus == CreateDialogFocus::SkipChecks,
-        inner[5],
+        inner[6],
     );
 
     // Plan mode checkbox
@@ -127,7 +140,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         "Start in plan mode",
         dialog.plan_mode,
         dialog.focus == CreateDialogFocus::PlanMode,
-        inner[6],
+        inner[7],
     );
 
     // Buttons
@@ -135,7 +148,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         frame,
         dialog.focus == CreateDialogFocus::Buttons,
         dialog.button_create_focused,
-        inner[8],
+        inner[9],
     );
 
     // Render directory picker overlay if active
