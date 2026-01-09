@@ -1676,6 +1676,7 @@ impl SessionManager {
     /// # Errors
     ///
     /// Returns an error if the session is not found or the store update fails.
+    #[instrument(skip(self), fields(id_or_name = %id_or_name, title = ?title, description = ?description))]
     pub async fn update_metadata(
         &self,
         id_or_name: &str,
