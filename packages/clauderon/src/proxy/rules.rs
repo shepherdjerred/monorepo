@@ -121,6 +121,14 @@ pub static RULES: &[Rule] = &[
         credential_key: "anthropic",
         encoding: AuthEncoding::Simple,
     },
+    // OpenAI API
+    Rule {
+        host_pattern: "api.openai.com",
+        header_name: "Authorization",
+        format: "Bearer {}",
+        credential_key: "openai",
+        encoding: AuthEncoding::Simple,
+    },
     // PagerDuty API (uses "Token token=" format)
     Rule {
         host_pattern: "api.pagerduty.com",

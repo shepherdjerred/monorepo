@@ -16,6 +16,7 @@ use tokio::time::timeout;
 
 use super::kubernetes_config::{KubernetesConfig, KubernetesProxyConfig};
 use super::traits::{CreateOptions, ExecutionBackend};
+use crate::core::AgentType;
 
 /// Sanitize git config value to prevent environment variable injection
 ///
@@ -657,63 +658,106 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
                             value: Some("clauderon-proxy".to_string()),
                             ..Default::default()
                         },
-                        EnvVar {
-                            name: "CLAUDE_CODE_OAUTH_TOKEN".to_string(),
-                            value: Some("sk-ant-oat01-clauderon-proxy-placeholder".to_string()),
-                            ..Default::default()
-                        },
                     ]);
+
+                    match options.agent {
+                        AgentType::ClaudeCode => {
+                            env.push(EnvVar {
+                                name: "CLAUDE_CODE_OAUTH_TOKEN".to_string(),
+                                value: Some("sk-ant-oat01-clauderon-proxy-placeholder".to_string()),
+                                ..Default::default()
+                            });
+                        }
+                        AgentType::Codex => {
+                            env.push(EnvVar {
+                                name: "OPENAI_API_KEY".to_string(),
+                                value: Some("sk-openai-clauderon-proxy-placeholder".to_string()),
+                                ..Default::default()
+                            });
+                            env.push(EnvVar {
+                                name: "CODEX_API_KEY".to_string(),
+                                value: Some("sk-openai-clauderon-proxy-placeholder".to_string()),
+                                ..Default::default()
+                            });
+                        }
+                    }
                 }
             }
         }
 
-        // Build claude command
+        // Build agent command
         // Build a wrapper script that handles both initial creation and pod restart:
         // - On first run: session file doesn't exist → create new session with prompt
-        // - On restart: session file exists → resume session with --resume --fork
-        let claude_cmd = {
+        // - On restart: session file exists → resume session
+        let agent_cmd = {
             let escaped_prompt = initial_prompt.replace('\'', "'\\''");
 
-            // Build args for create command (without session-id, we add it in wrapper)
-            let mut create_args = vec![];
-            if options.print_mode {
-                create_args.push("--print");
-            }
-            if options.plan_mode {
-                create_args.push("--plan");
-            }
-            if options.dangerous_skip_checks {
-                create_args.push("--dangerously-skip-permissions");
-            }
-
-            if let Some(session_id) = options.session_id {
-                let session_id_str = session_id.to_string();
-
-                // Build create command with all args
-                let create_cmd = format!(
-                    "claude --session-id {} {} '{}'",
-                    session_id_str,
-                    create_args.join(" "),
-                    escaped_prompt
-                );
-
-                // Build resume command
-                // Use --resume to continue an existing session instead of --session-id
-                // which would try to create a new session with that ID
-                // --fork-session creates a new session ID from the session so we don't modify the original
-                let resume_cmd = if options.dangerous_skip_checks {
-                    format!(
-                        "claude --dangerously-skip-permissions --resume {} --fork-session",
-                        session_id_str
-                    )
+            let quote_arg = |arg: &str| -> String {
+                if arg.contains('\'')
+                    || arg.contains(' ')
+                    || arg.contains('\n')
+                    || arg.contains('&')
+                    || arg.contains('|')
+                {
+                    let escaped = arg.replace('\'', "'\\''");
+                    format!("'{escaped}'")
                 } else {
-                    format!("claude --resume {} --fork-session", session_id_str)
-                };
+                    arg.to_string()
+                }
+            };
 
-                // Generate wrapper script that detects restart via session history file
-                // Claude Code stores session history at: .claude/projects/-workspace/<session-id>.jsonl
-                format!(
-                    r#"SESSION_ID="{session_id}"
+            match options.agent {
+                AgentType::ClaudeCode => {
+                    // Build base args (without session-id, we add it in wrapper)
+                    let mut base_args = vec!["claude".to_string()];
+                    if options.print_mode {
+                        base_args.push("--print".to_string());
+                        base_args.push("--verbose".to_string());
+                    }
+                    if options.plan_mode {
+                        base_args.push("--plan".to_string());
+                    }
+                    if options.dangerous_skip_checks {
+                        base_args.push("--dangerously-skip-permissions".to_string());
+                    }
+                    for image in &options.images {
+                        base_args.push("--image".to_string());
+                        base_args.push(image.clone());
+                    }
+
+                    if let Some(session_id) = options.session_id {
+                        let session_id_str = session_id.to_string();
+
+                        // Build create command with all args
+                        let mut create_cmd = base_args.clone();
+                        create_cmd.insert(1, "--session-id".to_string());
+                        create_cmd.insert(2, session_id_str.clone());
+                        if !escaped_prompt.is_empty() {
+                            create_cmd.push(escaped_prompt.clone());
+                        }
+                        let create_cmd = create_cmd
+                            .iter()
+                            .map(|a| quote_arg(a))
+                            .collect::<Vec<_>>()
+                            .join(" ");
+
+                        // Build resume command
+                        // Use --resume to continue an existing session instead of --session-id
+                        // which would try to create a new session with that ID
+                        // --fork-session creates a new session ID from the session so we don't modify the original
+                        let resume_cmd = if options.dangerous_skip_checks {
+                            format!(
+                                "claude --dangerously-skip-permissions --resume {} --fork-session",
+                                session_id_str
+                            )
+                        } else {
+                            format!("claude --resume {} --fork-session", session_id_str)
+                        };
+
+                        // Generate wrapper script that detects restart via session history file
+                        // Claude Code stores session history at: .claude/projects/-workspace/<session-id>.jsonl
+                        format!(
+                            r#"SESSION_ID="{session_id}"
 HISTORY_FILE="/workspace/.claude/projects/-workspace/${{SESSION_ID}}.jsonl"
 if [ -f "$HISTORY_FILE" ]; then
     echo "Resuming existing session $SESSION_ID"
@@ -722,13 +766,86 @@ else
     echo "Creating new session $SESSION_ID"
     exec {create_cmd}
 fi"#,
-                    session_id = session_id_str,
-                    resume_cmd = resume_cmd,
-                    create_cmd = create_cmd,
-                )
-            } else {
-                // No session ID - just run the command directly
-                format!("claude {} '{}'", create_args.join(" "), escaped_prompt)
+                            session_id = session_id_str,
+                            resume_cmd = resume_cmd,
+                            create_cmd = create_cmd,
+                        )
+                    } else {
+                        // No session ID - just run the command directly
+                        let mut cmd_vec = base_args;
+                        if !escaped_prompt.is_empty() {
+                            cmd_vec.push(escaped_prompt.clone());
+                        }
+                        cmd_vec
+                            .iter()
+                            .map(|a| quote_arg(a))
+                            .collect::<Vec<_>>()
+                            .join(" ")
+                    }
+                }
+                AgentType::Codex => {
+                    if options.print_mode {
+                        let mut cmd_vec = vec!["codex".to_string()];
+                        if options.dangerous_skip_checks {
+                            cmd_vec.push("--full-auto".to_string());
+                        }
+                        cmd_vec.push("exec".to_string());
+                        for image in &options.images {
+                            cmd_vec.push("--image".to_string());
+                            cmd_vec.push(image.clone());
+                        }
+                        if !escaped_prompt.is_empty() {
+                            cmd_vec.push(escaped_prompt.clone());
+                        }
+                        cmd_vec
+                            .iter()
+                            .map(|a| quote_arg(a))
+                            .collect::<Vec<_>>()
+                            .join(" ")
+                    } else {
+                        let mut create_cmd_vec = vec!["codex".to_string()];
+                        if options.dangerous_skip_checks {
+                            create_cmd_vec.push("--full-auto".to_string());
+                        }
+                        for image in &options.images {
+                            create_cmd_vec.push("--image".to_string());
+                            create_cmd_vec.push(image.clone());
+                        }
+                        if !escaped_prompt.is_empty() {
+                            create_cmd_vec.push(escaped_prompt.clone());
+                        }
+                        let create_cmd = create_cmd_vec
+                            .iter()
+                            .map(|a| quote_arg(a))
+                            .collect::<Vec<_>>()
+                            .join(" ");
+
+                        let mut resume_cmd_vec = vec!["codex".to_string()];
+                        if options.dangerous_skip_checks {
+                            resume_cmd_vec.push("--full-auto".to_string());
+                        }
+                        resume_cmd_vec.push("resume".to_string());
+                        resume_cmd_vec.push("--last".to_string());
+                        let resume_cmd = resume_cmd_vec
+                            .iter()
+                            .map(|a| quote_arg(a))
+                            .collect::<Vec<_>>()
+                            .join(" ");
+
+                        format!(
+                            r#"CODEX_DIR="/workspace/.codex/sessions"
+if [ -d "$CODEX_DIR" ] && [ "$(ls -A "$CODEX_DIR" 2>/dev/null)" ]; then
+    echo "Resuming last Codex session"
+    exec {resume_cmd}
+else
+    echo "Creating new Codex session"
+    exec {create_cmd}
+fi"#,
+                            resume_cmd = resume_cmd,
+                            create_cmd = create_cmd,
+                        )
+                    }
+                }
             }
         };
 
@@ -791,7 +908,7 @@ fi"#,
             stdin: Some(true), // REQUIRED for kubectl attach
             tty: Some(true),   // REQUIRED for kubectl attach
             command: Some(vec!["bash".to_string(), "-c".to_string()]),
-            args: Some(vec![claude_cmd]),
+            args: Some(vec![agent_cmd]),
             working_dir: Some("/workspace".to_string()),
             env: Some(env),
             volume_mounts: Some(volume_mounts),

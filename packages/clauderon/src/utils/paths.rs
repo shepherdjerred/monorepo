@@ -24,6 +24,12 @@ pub fn socket_path() -> PathBuf {
     base_dir().join("clauderon.sock")
 }
 
+/// Get the path to the console Unix socket (for TUI streaming)
+#[must_use]
+pub fn console_socket_path() -> PathBuf {
+    base_dir().join("clauderon-console.sock")
+}
+
 /// Get the directory for worktrees
 #[must_use]
 pub fn worktrees_dir() -> PathBuf {

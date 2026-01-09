@@ -28,6 +28,7 @@ pub struct AppState {
     pub session_manager: Arc<SessionManager>,
     pub event_broadcaster: EventBroadcaster,
     pub auth_state: Option<AuthState>,
+    pub console_state: Arc<crate::api::console_state::ConsoleState>,
 }
 
 /// Create the HTTP router with all endpoints (without state)
