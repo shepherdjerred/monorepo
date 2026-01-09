@@ -3,6 +3,7 @@ use std::path::Path;
 use tokio::process::Command;
 
 use super::traits::ExecutionBackend;
+use crate::core::AgentType;
 
 /// Zellij terminal multiplexer backend
 pub struct ZellijBackend;
@@ -31,17 +32,29 @@ impl ZellijBackend {
         initial_prompt: &str,
         dangerous_skip_checks: bool,
         images: &[String],
+        agent: AgentType,
         session_id: Option<&uuid::Uuid>,
     ) -> Vec<String> {
-        use crate::agents::claude_code::ClaudeCodeAgent;
         use crate::agents::traits::Agent;
+        use crate::agents::{ClaudeCodeAgent, CodexAgent};
 
         let escaped_prompt = initial_prompt.replace('\'', "'\\''");
 
-        // Build claude command using the agent
-        let agent = ClaudeCodeAgent::new();
-        let cmd_vec =
-            agent.start_command(&escaped_prompt, images, dangerous_skip_checks, session_id);
+        // Build agent command
+        let cmd_vec = match agent {
+            AgentType::ClaudeCode => ClaudeCodeAgent::new().start_command(
+                &escaped_prompt,
+                images,
+                dangerous_skip_checks,
+                session_id,
+            ),
+            AgentType::Codex => CodexAgent::new().start_command(
+                &escaped_prompt,
+                images,
+                dangerous_skip_checks,
+                session_id,
+            ),
+        };
 
         // Join all arguments into a shell command, properly quoting each argument
         let claude_cmd = cmd_vec
@@ -128,6 +141,7 @@ impl ExecutionBackend for ZellijBackend {
             initial_prompt,
             options.dangerous_skip_checks,
             &options.images,
+            options.agent,
             options.session_id.as_ref(),
         );
         let output = Command::new("zellij")
@@ -244,6 +258,7 @@ impl ZellijBackend {
             workdir,
             initial_prompt,
             super::traits::CreateOptions {
+                agent: AgentType::ClaudeCode,
                 print_mode: false,
                 plan_mode: true, // Default to plan mode
                 session_proxy_port: None,
@@ -294,7 +309,14 @@ mod tests {
     #[test]
     fn test_new_pane_has_cwd() {
         let workdir = PathBuf::from("/my/work/dir");
-        let args = ZellijBackend::build_new_pane_args(&workdir, "test prompt", true, &[], None);
+        let args = ZellijBackend::build_new_pane_args(
+            &workdir,
+            "test prompt",
+            true,
+            &[],
+            AgentType::ClaudeCode,
+            None,
+        );
 
         assert!(
             args.contains(&"--cwd".to_string()),
@@ -318,6 +340,7 @@ mod tests {
             "test prompt",
             true,
             &[],
+            AgentType::ClaudeCode,
             None,
         );
 
@@ -334,6 +357,7 @@ mod tests {
             prompt_with_quotes,
             true,
             &[],
+            AgentType::ClaudeCode,
             None,
         );
 
@@ -366,6 +390,7 @@ mod tests {
             "test prompt",
             true,
             &[],
+            AgentType::ClaudeCode,
             None,
         );
 
@@ -383,6 +408,7 @@ mod tests {
             "test prompt",
             true,
             &[],
+            AgentType::ClaudeCode,
             None,
         );
 
@@ -405,6 +431,7 @@ mod tests {
             "test prompt",
             true,
             &[],
+            AgentType::ClaudeCode,
             None,
         );
 
@@ -427,6 +454,7 @@ mod tests {
             "test prompt",
             true,
             &images,
+            AgentType::ClaudeCode,
             None,
         );
 
@@ -451,6 +479,7 @@ mod tests {
             "test prompt",
             true,
             &images,
+            AgentType::ClaudeCode,
             None,
         );
 
@@ -470,6 +499,7 @@ mod tests {
             "test prompt",
             true,
             &[],
+            AgentType::ClaudeCode,
             None,
         );
 

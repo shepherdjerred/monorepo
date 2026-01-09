@@ -16,6 +16,7 @@ use axum::{
     response::{IntoResponse, Response},
     routing::{delete, get, post},
 };
+use axum_extra::extract::Multipart;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::sync::Arc;
@@ -27,6 +28,7 @@ pub struct AppState {
     pub session_manager: Arc<SessionManager>,
     pub event_broadcaster: EventBroadcaster,
     pub auth_state: Option<AuthState>,
+    pub console_state: Arc<crate::api::console_state::ConsoleState>,
 }
 
 /// Create the HTTP router with all endpoints (without state)
@@ -53,6 +55,7 @@ pub fn create_router(auth_state: &Option<AuthState>, dev_mode: bool) -> Router<A
         .route("/api/sessions/{id}/archive", post(archive_session))
         .route("/api/sessions/{id}/access-mode", post(update_access_mode))
         .route("/api/sessions/{id}/history", get(get_session_history))
+        .route("/api/sessions/{id}/upload", post(upload_file))
         .route("/api/recent-repos", get(get_recent_repos))
         .route("/api/browse-directory", post(browse_directory))
         .route("/api/status", get(get_system_status))
@@ -446,6 +449,91 @@ async fn update_credential(
         .map_err(|e| AppError::BadRequest(e.to_string()))?;
 
     Ok(StatusCode::NO_CONTENT)
+}
+
+/// Upload an image file for a session
+///
+/// The file is saved to `~/.clauderon/uploads/{session-id}/{filename}`
+/// and the absolute path is returned.
+#[tracing::instrument(skip(state, multipart), fields(session_id = %id))]
+async fn upload_file(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+    mut multipart: Multipart,
+) -> Result<Json<crate::api::protocol::UploadResponse>, AppError> {
+    validate_session_id(&id)?;
+
+    // Verify session exists
+    let session = state
+        .session_manager
+        .get_session(&id)
+        .await
+        .ok_or_else(|| AppError::NotFound(format!("Session not found: {id}")))?;
+
+    // Get upload directory for this session
+    let upload_dir = crate::uploads::upload_dir_for_session(session.id);
+
+    // Create upload directory if it doesn't exist
+    tokio::fs::create_dir_all(&upload_dir)
+        .await
+        .map_err(|e| AppError::BadRequest(format!("Failed to create upload directory: {e}")))?;
+
+    // Process multipart form data
+    let mut file_name: Option<String> = None;
+    let mut file_data: Option<Vec<u8>> = None;
+    let mut content_type: Option<String> = None;
+
+    while let Some(field) = multipart
+        .next_field()
+        .await
+        .map_err(|e| AppError::BadRequest(format!("Failed to read multipart field: {e}")))?
+    {
+        let name = field.name().unwrap_or("").to_string();
+
+        if name == "file" {
+            content_type = field.content_type().map(|s| s.to_string());
+            file_name = field.file_name().map(|s| s.to_string());
+            file_data = Some(
+                field
+                    .bytes()
+                    .await
+                    .map_err(|e| AppError::BadRequest(format!("Failed to read file bytes: {e}")))?
+                    .to_vec(),
+            );
+        }
+    }
+
+    // Validate we got a file
+    let file_name =
+        file_name.ok_or_else(|| AppError::BadRequest("No file provided".to_string()))?;
+    let file_data =
+        file_data.ok_or_else(|| AppError::BadRequest("No file data provided".to_string()))?;
+
+    // Validate the image file
+    crate::uploads::validate_image_file(&file_name, content_type.as_deref(), file_data.len())
+        .map_err(|e| AppError::BadRequest(format!("Invalid image file: {e}")))?;
+
+    // Generate unique filename with UUID prefix to prevent collisions
+    let unique_filename = format!("{}_{}", uuid::Uuid::new_v4(), file_name);
+
+    // Save file to upload directory
+    let file_path = upload_dir.join(&unique_filename);
+    tokio::fs::write(&file_path, &file_data)
+        .await
+        .map_err(|e| AppError::BadRequest(format!("Failed to save file: {e}")))?;
+
+    tracing::info!(
+        session_id = %session.id,
+        file_name = %file_name,
+        file_size = file_data.len(),
+        path = %file_path.display(),
+        "Image uploaded successfully"
+    );
+
+    Ok(Json(crate::api::protocol::UploadResponse {
+        path: file_path.to_string_lossy().to_string(),
+        size: file_data.len() as u32,
+    }))
 }
 
 /// Get session history from Claude Code's JSONL file
