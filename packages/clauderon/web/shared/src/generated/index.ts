@@ -342,6 +342,14 @@ export interface UpdateCredentialRequest {
 	value: string;
 }
 
+/** Response from uploading an image file */
+export interface UploadResponse {
+	/** Absolute path to the uploaded file */
+	path: string;
+	/** Size of the uploaded file in bytes */
+	size: number;
+}
+
 /** User's passkey credential */
 export interface UserPasskey {
 	id: string;

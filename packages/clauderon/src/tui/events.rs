@@ -107,6 +107,31 @@ pub async fn handle_paste_event(app: &mut App, text: &str) -> anyhow::Result<()>
 
             match app.create_dialog.focus {
                 CreateDialogFocus::Prompt => {
+                    // Check if pasted text is an image file path (drag-and-drop support)
+                    let trimmed = text.trim();
+                    if is_image_path(trimmed) {
+                        app.create_dialog.images.push(trimmed.to_string());
+                        app.status_message = Some(format!("Image attached: {}", trimmed));
+                        return Ok(());
+                    }
+
+                    // Handle multiple lines (e.g., multiple files pasted)
+                    let lines: Vec<&str> = text.lines().collect();
+                    if lines.len() > 1 {
+                        let mut added_images = 0;
+                        for line in lines {
+                            let line = line.trim();
+                            if is_image_path(line) {
+                                app.create_dialog.images.push(line.to_string());
+                                added_images += 1;
+                            }
+                        }
+                        if added_images > 0 {
+                            app.status_message = Some(format!("Added {} image(s)", added_images));
+                            return Ok(());
+                        }
+                    }
+
                     // For prompt field, normalize line endings to \n
                     let normalized_text = text.replace("\r\n", "\n").replace('\r', "\n");
 
@@ -222,6 +247,17 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
         return Ok(());
     }
 
+    // Handle Ctrl+Backspace to remove last attached image
+    if key.modifiers.contains(KeyModifiers::CONTROL)
+        && key.code == KeyCode::Backspace
+        && !app.create_dialog.images.is_empty()
+    {
+        let last_idx = app.create_dialog.images.len() - 1;
+        app.create_dialog.remove_image(last_idx);
+        app.status_message = Some("Image removed".to_string());
+        return Ok(());
+    }
+
     match key.code {
         KeyCode::Esc => {
             app.close_create_dialog();
@@ -267,7 +303,8 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
             app.create_dialog.focus = match app.create_dialog.focus {
                 CreateDialogFocus::Prompt => CreateDialogFocus::RepoPath,
                 CreateDialogFocus::RepoPath => CreateDialogFocus::Backend,
-                CreateDialogFocus::Backend => CreateDialogFocus::AccessMode,
+                CreateDialogFocus::Backend => CreateDialogFocus::Agent,
+                CreateDialogFocus::Agent => CreateDialogFocus::AccessMode,
                 CreateDialogFocus::AccessMode => CreateDialogFocus::SkipChecks,
                 CreateDialogFocus::SkipChecks => CreateDialogFocus::PlanMode,
                 CreateDialogFocus::PlanMode => CreateDialogFocus::Buttons,
@@ -280,7 +317,8 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                 CreateDialogFocus::Prompt => CreateDialogFocus::Buttons,
                 CreateDialogFocus::RepoPath => CreateDialogFocus::Prompt,
                 CreateDialogFocus::Backend => CreateDialogFocus::RepoPath,
-                CreateDialogFocus::AccessMode => CreateDialogFocus::Backend,
+                CreateDialogFocus::Agent => CreateDialogFocus::Backend,
+                CreateDialogFocus::AccessMode => CreateDialogFocus::Agent,
                 CreateDialogFocus::SkipChecks => CreateDialogFocus::AccessMode,
                 CreateDialogFocus::PlanMode => CreateDialogFocus::SkipChecks,
                 CreateDialogFocus::Buttons => CreateDialogFocus::PlanMode,
@@ -322,7 +360,7 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                         repo_path: app.create_dialog.repo_path.clone(),
                         initial_prompt: app.create_dialog.prompt.clone(),
                         backend: app.create_dialog.backend,
-                        agent: AgentType::ClaudeCode,
+                        agent: app.create_dialog.agent,
                         dangerous_skip_checks: app.create_dialog.skip_checks,
                         print_mode: false, // TUI always uses interactive mode
                         plan_mode: app.create_dialog.plan_mode,
@@ -424,7 +462,8 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                     CreateDialogFocus::Prompt => CreateDialogFocus::Buttons,
                     CreateDialogFocus::RepoPath => CreateDialogFocus::Prompt,
                     CreateDialogFocus::Backend => CreateDialogFocus::RepoPath,
-                    CreateDialogFocus::AccessMode => CreateDialogFocus::Backend,
+                    CreateDialogFocus::Agent => CreateDialogFocus::Backend,
+                    CreateDialogFocus::AccessMode => CreateDialogFocus::Agent,
                     CreateDialogFocus::SkipChecks => CreateDialogFocus::AccessMode,
                     CreateDialogFocus::PlanMode => CreateDialogFocus::SkipChecks,
                     CreateDialogFocus::Buttons => CreateDialogFocus::PlanMode,
@@ -455,7 +494,8 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                 app.create_dialog.focus = match app.create_dialog.focus {
                     CreateDialogFocus::Prompt => CreateDialogFocus::RepoPath,
                     CreateDialogFocus::RepoPath => CreateDialogFocus::Backend,
-                    CreateDialogFocus::Backend => CreateDialogFocus::AccessMode,
+                    CreateDialogFocus::Backend => CreateDialogFocus::Agent,
+                    CreateDialogFocus::Agent => CreateDialogFocus::AccessMode,
                     CreateDialogFocus::AccessMode => CreateDialogFocus::SkipChecks,
                     CreateDialogFocus::SkipChecks => CreateDialogFocus::PlanMode,
                     CreateDialogFocus::PlanMode => CreateDialogFocus::Buttons,
@@ -486,6 +526,9 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
             CreateDialogFocus::Backend => {
                 app.create_dialog.toggle_backend();
             }
+            CreateDialogFocus::Agent => {
+                app.create_dialog.toggle_agent();
+            }
             CreateDialogFocus::AccessMode => {
                 app.create_dialog.toggle_access_mode();
             }
@@ -503,6 +546,9 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
         KeyCode::Char(' ') => match app.create_dialog.focus {
             CreateDialogFocus::Backend => {
                 app.create_dialog.toggle_backend();
+            }
+            CreateDialogFocus::Agent => {
+                app.create_dialog.toggle_agent();
             }
             CreateDialogFocus::AccessMode => {
                 app.create_dialog.toggle_access_mode();
@@ -779,13 +825,13 @@ async fn handle_attached_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()>
     if key.modifiers.contains(KeyModifiers::CONTROL) {
         match key.code {
             KeyCode::Char('p') => {
-                if app.switch_to_previous_session()? {
+                if app.switch_to_previous_session().await? {
                     app.status_message = Some("Switched to previous session".to_string());
                 }
                 return Ok(());
             }
             KeyCode::Char('n') => {
-                if app.switch_to_next_session()? {
+                if app.switch_to_next_session().await? {
                     app.status_message = Some("Switched to next session".to_string());
                 }
                 return Ok(());
@@ -888,4 +934,27 @@ fn handle_scroll_mode_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
     }
 
     Ok(())
+}
+
+/// Check if a pasted text string is an image file path
+///
+/// This enables drag-and-drop support in terminals that convert drops to paste events.
+fn is_image_path(text: &str) -> bool {
+    let path = std::path::Path::new(text);
+
+    // Must exist as a file
+    if !path.is_file() {
+        return false;
+    }
+
+    // Check extension
+    path.extension()
+        .and_then(|ext| ext.to_str())
+        .map(|ext| {
+            matches!(
+                ext.to_lowercase().as_str(),
+                "jpg" | "jpeg" | "png" | "gif" | "webp"
+            )
+        })
+        .unwrap_or(false)
 }

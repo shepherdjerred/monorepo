@@ -8,6 +8,7 @@ use uuid::Uuid;
 use crate::backends::{
     DockerBackend, ExecutionBackend, GitBackend, GitOperations, KubernetesBackend, ZellijBackend,
 };
+use crate::core::console_manager::ConsoleManager;
 use crate::store::Store;
 
 use super::events::{Event, EventType};
@@ -53,6 +54,7 @@ pub struct SessionManager {
     zellij: Arc<dyn ExecutionBackend>,
     docker: Arc<dyn ExecutionBackend>,
     kubernetes: Arc<dyn ExecutionBackend>,
+    console_manager: Arc<ConsoleManager>,
     sessions: RwLock<Vec<Session>>,
     /// Optional proxy manager for per-session filtering
     proxy_manager: Option<Arc<crate::proxy::ProxyManager>>,
@@ -92,6 +94,7 @@ impl SessionManager {
             zellij,
             docker,
             kubernetes,
+            console_manager: Arc::new(ConsoleManager::new()),
             sessions: RwLock::new(sessions),
             proxy_manager: None,
             event_broadcaster: None,
@@ -170,6 +173,11 @@ impl SessionManager {
     /// across VM/network boundaries).
     pub fn set_http_port(&mut self, port: u16) {
         self.http_port = Some(port);
+    }
+
+    #[must_use]
+    pub fn console_manager(&self) -> Arc<ConsoleManager> {
+        Arc::clone(&self.console_manager)
     }
 
     /// List all sessions
@@ -317,11 +325,13 @@ impl SessionManager {
             access_mode,
         });
 
-        // Set history file path
-        session.history_file_path = Some(super::session::get_history_file_path(
-            &worktree_path,
-            &session.id,
-        ));
+        // Set history file path for Claude Code sessions
+        if session.agent == super::session::AgentType::ClaudeCode {
+            session.history_file_path = Some(super::session::get_history_file_path(
+                &worktree_path,
+                &session.id,
+            ));
+        }
 
         // Set initial progress
         session.set_progress(crate::api::protocol::ProgressStep {
@@ -383,6 +393,7 @@ impl SessionManager {
                     subdirectory,
                     initial_prompt,
                     backend,
+                    agent,
                     print_mode,
                     plan_mode,
                     access_mode,
@@ -407,6 +418,7 @@ impl SessionManager {
         subdirectory: PathBuf,
         initial_prompt: String,
         backend: BackendType,
+        agent: super::session::AgentType,
         print_mode: bool,
         plan_mode: bool,
         access_mode: super::session::AccessMode,
@@ -525,6 +537,7 @@ impl SessionManager {
             update_progress(4, "Starting backend resource".to_string()).await;
             // Create backend resource
             let create_options = crate::backends::CreateOptions {
+                agent,
                 print_mode,
                 plan_mode,
                 session_proxy_port: proxy_port,
@@ -581,6 +594,20 @@ impl SessionManager {
                     if let Err(e) = self.store.save_session(session).await {
                         tracing::error!("Failed to save session after creation: {}", e);
                     }
+                }
+            }
+
+            if backend == BackendType::Docker && !print_mode {
+                if let Err(err) = self
+                    .console_manager
+                    .ensure_session(session_id, backend, &backend_id)
+                    .await
+                {
+                    tracing::warn!(
+                        session_id = %session_id,
+                        error = %err,
+                        "Failed to start console session"
+                    );
                 }
             }
 
@@ -790,11 +817,13 @@ impl SessionManager {
             access_mode,
         });
 
-        // Set history file path (directory created after worktree exists)
-        session.history_file_path = Some(super::session::get_history_file_path(
-            &worktree_path,
-            &session.id,
-        ));
+        // Set history file path for Claude Code sessions (directory created after worktree exists)
+        if session.agent == super::session::AgentType::ClaudeCode {
+            session.history_file_path = Some(super::session::get_history_file_path(
+                &worktree_path,
+                &session.id,
+            ));
+        }
 
         // Record creation event
         let event = Event::new(
@@ -871,6 +900,7 @@ impl SessionManager {
 
         // Create backend resource
         let create_options = crate::backends::CreateOptions {
+            agent,
             print_mode,
             plan_mode,
             session_proxy_port: proxy_port,
@@ -915,6 +945,20 @@ impl SessionManager {
 
         session.set_backend_id(backend_id.clone());
         session.set_status(SessionStatus::Running);
+
+        if backend == BackendType::Docker && !print_mode {
+            if let Err(err) = self
+                .console_manager
+                .ensure_session(session.id, backend, &backend_id)
+                .await
+            {
+                tracing::warn!(
+                    session_id = %session.id,
+                    error = %err,
+                    "Failed to start console session"
+                );
+            }
+        }
 
         // Record backend ID event
         let event = Event::new(session.id, EventType::BackendIdSet { backend_id });
@@ -964,6 +1008,10 @@ impl SessionManager {
             .as_ref()
             .ok_or_else(|| anyhow::anyhow!("Session has no backend ID"))?;
 
+        if session.agent == super::session::AgentType::Codex {
+            anyhow::bail!("Send prompt is only supported for Claude Code sessions");
+        }
+
         match session.backend {
             BackendType::Zellij => Ok(self.zellij.attach_command(backend_id)),
             BackendType::Docker => Ok(self.docker.attach_command(backend_id)),
@@ -1006,6 +1054,7 @@ impl SessionManager {
 
         // Update in store
         self.store.save_session(&session_clone).await?;
+        self.console_manager.remove_session(session_id).await;
 
         Ok(())
     }
@@ -1065,6 +1114,8 @@ impl SessionManager {
                 }
             }
         }
+
+        self.console_manager.remove_session(session_id).await;
 
         // Spawn background deletion task
         let manager_clone = Arc::clone(self);
@@ -1176,6 +1227,15 @@ impl SessionManager {
             // Delete git worktree
             let _ = self.git.delete_worktree(&repo_path, &worktree_path).await;
 
+            // Clean up uploaded files
+            if let Err(e) = crate::uploads::cleanup_session_uploads(session_id) {
+                tracing::warn!(
+                    session_id = %session_id,
+                    error = %e,
+                    "Failed to clean up session uploads"
+                );
+            }
+
             update_progress(4, "Cleaning up database".to_string()).await;
             // Record deletion event
             let event = Event::new(session_id, EventType::SessionDeleted { reason: None });
@@ -1286,6 +1346,7 @@ impl SessionManager {
 
         // Remove from in-memory list
         self.sessions.write().await.retain(|s| s.id != session.id);
+        self.console_manager.remove_session(session.id).await;
 
         Ok(())
     }
@@ -1520,6 +1581,7 @@ impl SessionManager {
 
         // Build creation options from session state
         let create_options = crate::backends::CreateOptions {
+            agent: session.agent,
             print_mode: false, // Never use print mode for recreation
             plan_mode: false,  // Don't enter plan mode - session already has context
             session_proxy_port: session.proxy_port,
@@ -1978,6 +2040,20 @@ impl SessionManager {
                     }
                 }
             };
+            let codex_env_present = [
+                "CODEX_ACCESS_TOKEN",
+                "CODEX_REFRESH_TOKEN",
+                "CODEX_ID_TOKEN",
+            ]
+            .iter()
+            .any(|name| std::env::var(name).is_ok());
+            let codex_auth_source = creds.codex_auth_json_path.as_ref().and_then(|path| {
+                if path.exists() {
+                    Some(format!("auth.json:{}", path.display()))
+                } else {
+                    None
+                }
+            });
 
             // GitHub
             let (source, readonly) = credential_source("GITHUB_TOKEN", "github_token");
@@ -2001,6 +2077,48 @@ impl SessionManager {
                 readonly,
                 masked_value: creds
                     .anthropic_oauth_token
+                    .as_ref()
+                    .map(|v| mask_credential(v)),
+            });
+
+            // OpenAI
+            let (source, readonly) = if std::env::var("OPENAI_API_KEY").is_ok()
+                || std::env::var("CODEX_API_KEY").is_ok()
+            {
+                (Some("environment".to_string()), true)
+            } else {
+                let path = secrets_dir.join("openai_api_key");
+                if path.exists() {
+                    (Some("file".to_string()), false)
+                } else if codex_auth_source.is_some() && creds.openai_api_key.is_some() {
+                    (codex_auth_source.clone(), true)
+                } else {
+                    (None, false)
+                }
+            };
+            credentials.push(CredentialStatus {
+                name: "OpenAI".to_string(),
+                service_id: "openai".to_string(),
+                available: creds.openai_api_key.is_some(),
+                source,
+                readonly,
+                masked_value: creds.openai_api_key.as_ref().map(|v| mask_credential(v)),
+            });
+            let (source, readonly) = if codex_env_present {
+                (Some("environment".to_string()), true)
+            } else if codex_auth_source.is_some() {
+                (codex_auth_source.clone(), true)
+            } else {
+                (None, true)
+            };
+            credentials.push(CredentialStatus {
+                name: "ChatGPT".to_string(),
+                service_id: "chatgpt".to_string(),
+                available: creds.codex_access_token().is_some(),
+                source,
+                readonly,
+                masked_value: creds
+                    .codex_access_token()
                     .as_ref()
                     .map(|v| mask_credential(v)),
             });
@@ -2186,6 +2304,7 @@ impl SessionManager {
         match service_id {
             "github" => Ok("github_token"),
             "anthropic" => Ok("anthropic_oauth_token"),
+            "openai" => Ok("openai_api_key"),
             "pagerduty" => Ok("pagerduty_token"),
             "sentry" => Ok("sentry_auth_token"),
             "grafana" => Ok("grafana_api_key"),
@@ -2202,6 +2321,7 @@ impl SessionManager {
         match service_id {
             "github" => Ok("GITHUB_TOKEN"),
             "anthropic" => Ok("CLAUDE_CODE_OAUTH_TOKEN"),
+            "openai" => Ok("OPENAI_API_KEY"),
             "pagerduty" => Ok("PAGERDUTY_TOKEN"),
             "sentry" => Ok("SENTRY_AUTH_TOKEN"),
             "grafana" => Ok("GRAFANA_API_KEY"),

@@ -35,6 +35,8 @@ ENVIRONMENT VARIABLES:
     Credentials (env var or file in ~/.clauderon/secrets/):
         GITHUB_TOKEN            GitHub API token
         CLAUDE_CODE_OAUTH_TOKEN Anthropic OAuth token
+        OPENAI_API_KEY          OpenAI API key
+        CODEX_API_KEY           Codex API key (alias of OPENAI_API_KEY)
         PAGERDUTY_TOKEN         PagerDuty API token (or PAGERDUTY_API_KEY)
         SENTRY_AUTH_TOKEN       Sentry authentication token
         GRAFANA_API_KEY         Grafana API key
@@ -42,6 +44,12 @@ ENVIRONMENT VARIABLES:
         DOCKER_TOKEN            Docker registry token
         K8S_TOKEN               Kubernetes token
         TALOS_TOKEN             Talos OS token
+    Codex auth (env var or ~/.codex/auth.json):
+        CODEX_ACCESS_TOKEN      Codex access token
+        CODEX_REFRESH_TOKEN     Codex refresh token
+        CODEX_ID_TOKEN          Codex ID token
+        CODEX_ACCOUNT_ID        ChatGPT account ID (optional)
+        CODEX_AUTH_JSON_PATH    Override ~/.codex/auth.json path
 
 FILE LOCATIONS:
     ~/.clauderon/               Base directory for all data
@@ -60,6 +68,7 @@ PROXY CONFIGURATION (~/.clauderon/proxy.toml):
     talos_gateway_port          Talos mTLS gateway port (default: 18082)
     audit_enabled               Enable audit logging (default: true)
     audit_log_path              Audit log file path
+    codex_auth_json_path        Path to host Codex auth.json (default: ~/.codex/auth.json)
 
 Use 'clauderon <command> --help' for command-specific information.
 Use 'clauderon config' to inspect current configuration and paths.")]
@@ -169,6 +178,10 @@ BACKENDS:
         /// Backend to use: 'zellij' (default) or 'docker'
         #[arg(short, long, default_value = "zellij", value_parser = ["zellij", "docker"])]
         backend: String,
+
+        /// Agent to use (claude or codex)
+        #[arg(short, long, default_value = "claude")]
+        agent: String,
 
         /// Skip safety checks (dangerous - bypasses dirty repo checks)
         #[arg(long, default_value = "false")]
@@ -436,6 +449,7 @@ async fn main() -> anyhow::Result<()> {
             repo,
             prompt,
             backend,
+            agent,
             dangerous_skip_checks,
             print,
             access_mode,
@@ -447,6 +461,12 @@ async fn main() -> anyhow::Result<()> {
                 _ => anyhow::bail!("Unknown backend: {backend}. Use 'zellij' or 'docker'"),
             };
 
+            let agent_type = match agent.to_lowercase().as_str() {
+                "claude" | "claude-code" | "claude_code" => core::session::AgentType::ClaudeCode,
+                "codex" => core::session::AgentType::Codex,
+                _ => anyhow::bail!("Unknown agent: {agent}. Use 'claude' or 'codex'"),
+            };
+
             let access_mode = access_mode.parse::<core::session::AccessMode>()?;
 
             let mut client = api::client::Client::connect().await?;
@@ -455,7 +475,7 @@ async fn main() -> anyhow::Result<()> {
                     repo_path: repo,
                     initial_prompt: prompt,
                     backend: backend_type,
-                    agent: core::session::AgentType::ClaudeCode,
+                    agent: agent_type,
                     dangerous_skip_checks,
                     print_mode: print,
                     plan_mode: !no_plan_mode,
@@ -581,14 +601,14 @@ async fn main() -> anyhow::Result<()> {
             println!("Cache cleanup complete");
         }
         Commands::Config(config_cmd) => {
-            handle_config_command(config_cmd);
+            handle_config_command(&config_cmd);
         }
     }
 
     Ok(())
 }
 
-fn handle_config_command(cmd: ConfigCommands) {
+fn handle_config_command(cmd: &ConfigCommands) {
     match cmd {
         ConfigCommands::Show => {
             println!("clauderon configuration\n");
@@ -603,7 +623,6 @@ fn handle_config_command(cmd: ConfigCommands) {
             print_path("Base directory", &utils::paths::base_dir());
             print_path("Database", &utils::paths::database_path());
             print_path("Unix socket", &utils::paths::socket_path());
-            print_path("Hooks socket", &utils::paths::hooks_socket_path());
             print_path("Worktrees directory", &utils::paths::worktrees_dir());
             print_path("Log file", &utils::paths::log_path());
             print_path("Config file", &utils::paths::config_path());
@@ -612,6 +631,7 @@ fn handle_config_command(cmd: ConfigCommands) {
             print_path("Proxy config", &home.join(".clauderon/proxy.toml"));
             print_path("Audit log", &home.join(".clauderon/audit.jsonl"));
             print_path("Secrets directory", &home.join(".clauderon/secrets"));
+            print_path("Codex auth.json", &codex_auth_json_path());
             println!();
 
             // Key environment variables
@@ -632,6 +652,8 @@ fn handle_config_command(cmd: ConfigCommands) {
                 "anthropic_oauth_token",
                 &secrets_dir,
             );
+            print_credential_status("OpenAI", "OPENAI_API_KEY", "openai_api_key", &secrets_dir);
+            print_codex_credential_status(&codex_auth_json_path());
             print_credential_status(
                 "PagerDuty",
                 "PAGERDUTY_TOKEN",
@@ -668,7 +690,6 @@ fn handle_config_command(cmd: ConfigCommands) {
 
             println!("SOCKETS:");
             print_path("Daemon socket", &utils::paths::socket_path());
-            print_path("Hooks socket", &utils::paths::hooks_socket_path());
             println!();
 
             println!("DATA:");
@@ -680,6 +701,7 @@ fn handle_config_command(cmd: ConfigCommands) {
             println!("CONFIGURATION:");
             print_path("Proxy config", &home.join(".clauderon/proxy.toml"));
             print_path("Secrets directory", &home.join(".clauderon/secrets"));
+            print_path("Codex auth.json", &codex_auth_json_path());
         }
         ConfigCommands::Env => {
             println!("clauderon environment variables\n");
@@ -708,6 +730,12 @@ fn handle_config_command(cmd: ConfigCommands) {
             println!("CREDENTIALS:");
             print_env_detailed("GITHUB_TOKEN", "GitHub API token", None);
             print_env_detailed("CLAUDE_CODE_OAUTH_TOKEN", "Anthropic OAuth token", None);
+            print_env_detailed("OPENAI_API_KEY", "OpenAI API key", None);
+            print_env_detailed(
+                "CODEX_API_KEY",
+                "Codex API key (alias of OPENAI_API_KEY)",
+                None,
+            );
             print_env_detailed("PAGERDUTY_TOKEN", "PagerDuty API token", None);
             print_env_detailed("PAGERDUTY_API_KEY", "PagerDuty API key (alt)", None);
             print_env_detailed("SENTRY_AUTH_TOKEN", "Sentry auth token", None);
@@ -716,6 +744,17 @@ fn handle_config_command(cmd: ConfigCommands) {
             print_env_detailed("DOCKER_TOKEN", "Docker registry token", None);
             print_env_detailed("K8S_TOKEN", "Kubernetes token", None);
             print_env_detailed("TALOS_TOKEN", "Talos OS token", None);
+            println!();
+            println!("CODEX AUTH:");
+            print_env_detailed("CODEX_ACCESS_TOKEN", "Codex access token", None);
+            print_env_detailed("CODEX_REFRESH_TOKEN", "Codex refresh token", None);
+            print_env_detailed("CODEX_ID_TOKEN", "Codex ID token", None);
+            print_env_detailed("CODEX_ACCOUNT_ID", "ChatGPT account ID (optional)", None);
+            print_env_detailed(
+                "CODEX_AUTH_JSON_PATH",
+                "Override ~/.codex/auth.json path",
+                None,
+            );
         }
         ConfigCommands::Credentials => {
             println!("clauderon credential status\n");
@@ -733,6 +772,8 @@ fn handle_config_command(cmd: ConfigCommands) {
                 "anthropic_oauth_token",
                 &secrets_dir,
             );
+            print_credential_row("OpenAI", "OPENAI_API_KEY", "openai_api_key", &secrets_dir);
+            print_codex_credential_row(&codex_auth_json_path());
             print_credential_row(
                 "PagerDuty",
                 "PAGERDUTY_TOKEN",
@@ -759,6 +800,10 @@ fn handle_config_command(cmd: ConfigCommands) {
             println!();
             println!("Credentials are loaded from environment variables first,");
             println!("then from files in {}", secrets_dir.display());
+            println!(
+                "Codex auth tokens are loaded from env or {}",
+                codex_auth_json_path().display()
+            );
         }
     }
 }
@@ -849,4 +894,57 @@ fn print_credential_row(
     };
 
     println!("{:<20} {:<12} {:<30}", service, status, source);
+}
+
+fn codex_auth_json_path() -> std::path::PathBuf {
+    if let Ok(path) = std::env::var("CODEX_AUTH_JSON_PATH") {
+        return std::path::PathBuf::from(path);
+    }
+    dirs::home_dir()
+        .unwrap_or_default()
+        .join(".codex/auth.json")
+}
+
+fn codex_env_present() -> bool {
+    [
+        "CODEX_ACCESS_TOKEN",
+        "CODEX_REFRESH_TOKEN",
+        "CODEX_ID_TOKEN",
+    ]
+    .iter()
+    .any(|name| std::env::var(name).is_ok())
+}
+
+fn print_codex_credential_status(auth_path: &std::path::Path) {
+    let from_env = codex_env_present();
+    let from_file = auth_path.exists();
+
+    let status = if from_env {
+        "from env"
+    } else if from_file {
+        "from auth.json"
+    } else {
+        "missing"
+    };
+
+    let marker = if from_env || from_file { "+" } else { "-" };
+    println!(
+        "    [{marker}] {service:<20} ({status})",
+        service = "ChatGPT"
+    );
+}
+
+fn print_codex_credential_row(auth_path: &std::path::Path) {
+    let from_env = codex_env_present();
+    let from_file = auth_path.exists();
+
+    let (status, source) = if from_env {
+        ("loaded", "env:CODEX_*".to_string())
+    } else if from_file {
+        ("loaded", format!("auth.json:{}", auth_path.display()))
+    } else {
+        ("missing", "-".to_string())
+    };
+
+    println!("{:<20} {:<12} {:<30}", "ChatGPT", status, source);
 }

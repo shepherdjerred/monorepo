@@ -48,11 +48,17 @@ fn main() {
     // Check that frontend dist directory exists
     // Frontend must be built before Rust compilation for static file embedding
     let frontend_dist = PathBuf::from("web/frontend/dist");
-    if !frontend_dist.exists() {
+    if !frontend_dist.is_dir() {
         let msg = "Frontend dist directory not found. Build the frontend first: cd web/frontend && bun run build";
         if is_ci {
             panic!("{msg}");
         } else {
+            if let Err(e) = std::fs::create_dir_all(&frontend_dist) {
+                println!(
+                    "cargo:warning=Failed to create frontend dist directory {}: {e}",
+                    frontend_dist.display()
+                );
+            }
             println!("cargo:warning={msg}");
         }
     }
