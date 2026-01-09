@@ -667,35 +667,54 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
             }
         }
 
-        // Build claude command
+        // Build agent command
         // Build a wrapper script that handles both initial creation and pod restart:
         // - On first run: session file doesn't exist → create new session with prompt
         // - On restart: session file exists → resume session with --resume --fork
         let claude_cmd = {
+            use crate::agents::{
+                claude_code::ClaudeCodeAgent, gemini_code::GeminiCodeAgent, traits::Agent,
+            };
+            use crate::core::AgentType;
+
             let escaped_prompt = initial_prompt.replace('\'', "'\\''");
 
-            // Build args for create command (without session-id, we add it in wrapper)
-            let mut create_args = vec![];
+            // Build command using appropriate agent
+            let mut cmd_vec: Vec<String> = match options.agent_type {
+                AgentType::Claude => {
+                    let agent = ClaudeCodeAgent::new();
+                    agent.start_command(&escaped_prompt, &options.images, options.dangerous_skip_checks, None)
+                }
+                AgentType::Gemini => {
+                    let agent = GeminiCodeAgent::new();
+                    agent.start_command(&escaped_prompt, &options.images, options.dangerous_skip_checks, None)
+                }
+            };
+
+            // Add print mode flags if enabled
             if options.print_mode {
-                create_args.push("--print");
+                cmd_vec.insert(1, "--print".to_string());
             }
             if options.plan_mode {
-                create_args.push("--plan");
+                cmd_vec.insert(1, "--plan".to_string());
             }
-            if options.dangerous_skip_checks {
-                create_args.push("--dangerously-skip-permissions");
-            }
+
+            // Determine CLI name based on agent type
+            let cli_name = match options.agent_type {
+                AgentType::Claude => "claude",
+                AgentType::Gemini => "gemini",
+            };
 
             if let Some(session_id) = options.session_id {
                 let session_id_str = session_id.to_string();
 
-                // Build create command with all args
-                let create_cmd = format!(
-                    "claude --session-id {} {} '{}'",
-                    session_id_str,
-                    create_args.join(" "),
-                    escaped_prompt
-                );
+                // Build the create command with session ID
+                let mut create_cmd = vec![cli_name.to_string()];
+                create_cmd.push("--session-id".to_string());
+                create_cmd.push(session_id_str.clone());
+                // Add remaining args (skip CLI name at index 0)
+                create_cmd.extend(cmd_vec.iter().skip(1).cloned());
+                let create_cmd_str = create_cmd.join(" ");
 
                 // Build resume command
                 // Use --resume to continue an existing session instead of --session-id
@@ -703,15 +722,16 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
                 // --fork-session creates a new session ID from the session so we don't modify the original
                 let resume_cmd = if options.dangerous_skip_checks {
                     format!(
-                        "claude --dangerously-skip-permissions --resume {} --fork-session",
+                        "{} --dangerously-skip-permissions --resume {} --fork-session",
+                        cli_name,
                         session_id_str
                     )
                 } else {
-                    format!("claude --resume {} --fork-session", session_id_str)
+                    format!("{} --resume {} --fork-session", cli_name, session_id_str)
                 };
 
                 // Generate wrapper script that detects restart via session history file
-                // Claude Code stores session history at: .claude/projects/-workspace/<session-id>.jsonl
+                // Agent stores session history at: .claude/projects/-workspace/<session-id>.jsonl
                 format!(
                     r#"SESSION_ID="{session_id}"
 HISTORY_FILE="/workspace/.claude/projects/-workspace/${{SESSION_ID}}.jsonl"
@@ -724,11 +744,11 @@ else
 fi"#,
                     session_id = session_id_str,
                     resume_cmd = resume_cmd,
-                    create_cmd = create_cmd,
+                    create_cmd = create_cmd_str,
                 )
             } else {
                 // No session ID - just run the command directly
-                format!("claude {} '{}'", create_args.join(" "), escaped_prompt)
+                cmd_vec.join(" ")
             }
         };
 

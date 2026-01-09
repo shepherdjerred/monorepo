@@ -58,6 +58,10 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
             Style::default().fg(Color::DarkGray),
         ),
         Span::styled(
+            format!("{:8}", "Agent"),
+            Style::default().fg(Color::DarkGray),
+        ),
+        Span::styled(
             format!("{:12}", "Branch/PR"),
             Style::default().fg(Color::DarkGray),
         ),
@@ -134,6 +138,10 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
             };
 
             let backend_text = format!("{:?}", session.backend);
+            let agent_text = match session.agent {
+                crate::core::AgentType::Claude => "Claude",
+                crate::core::AgentType::Gemini => "Gemini",
+            };
             let pr_text = session
                 .pr_url
                 .as_ref()
@@ -193,6 +201,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
                 Span::raw(format!("{repo_name:20}")),
                 Span::styled(format!("{status_text:12}"), status_style),
                 Span::raw(format!("{backend_text:8}")),
+                Span::raw(format!("{agent_text:8}")),
                 Span::raw(format!("{pr_text:12}")),
                 claude_indicator,
                 Span::raw(" "),
