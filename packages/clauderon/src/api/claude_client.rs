@@ -2,6 +2,7 @@
 
 use anyhow::{Context, Result};
 use chrono::Utc;
+use reqwest::Client;
 use serde::Deserialize;
 use std::time::Duration;
 use tracing::instrument;
@@ -44,14 +45,14 @@ fn default_limit() -> f64 {
 
 /// Client for Claude.ai API operations
 pub struct ClaudeApiClient {
-    http_client: reqwest::Client,
+    http_client: Client,
     base_url: String,
 }
 
 impl ClaudeApiClient {
     /// Create a new Claude.ai API client
     pub fn new() -> Self {
-        let http_client = reqwest::Client::builder()
+        let http_client = Client::builder()
             .timeout(Duration::from_secs(10))
             .build()
             .expect("Failed to create HTTP client");
