@@ -413,13 +413,13 @@ fn persist_codex_auth_json(
     let auth_json = if path.exists() {
         let content = std::fs::read_to_string(path)?;
         serde_json::from_str::<CodexAuthJson>(&content).unwrap_or(CodexAuthJson {
-            openai_api_key: openai_api_key.map(|s| s.clone()),
+            openai_api_key: openai_api_key.cloned(),
             tokens: None,
             last_refresh: None,
         })
     } else {
         CodexAuthJson {
-            openai_api_key: openai_api_key.map(|s| s.clone()),
+            openai_api_key: openai_api_key.cloned(),
             tokens: None,
             last_refresh: None,
         }
@@ -441,7 +441,7 @@ fn persist_codex_auth_json(
             .unwrap_or_else(|| "missing-refresh-token".to_string()),
         account_id: tokens.account_id.clone(),
     };
-    auth_json.openai_api_key = openai_api_key.map(|s| s.clone());
+    auth_json.openai_api_key = openai_api_key.cloned();
     auth_json.tokens = Some(token_payload);
     auth_json.last_refresh = Some(Utc::now());
 
