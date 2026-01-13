@@ -58,9 +58,13 @@ A Rust-based session manager for running isolated Claude Code or Codex sessions 
 - **Claude Code CLI** - `claude` on PATH (for Claude sessions)
 - **Codex CLI** - `codex` on PATH (for Codex sessions)
 
-If you use Codex with the proxy enabled, provide an OpenAI API key via:
-- `OPENAI_API_KEY` environment variable, or
-- `~/.secrets/openai_api_key` (for the clauderon proxy to inject)
+If you use Codex with the proxy enabled, clauderon reads the host Codex auth file:
+- `~/.codex/auth.json` (override with `CODEX_AUTH_JSON_PATH`)
+- or `CODEX_ACCESS_TOKEN`, `CODEX_REFRESH_TOKEN`, `CODEX_ID_TOKEN`, `CODEX_ACCOUNT_ID` env vars
+
+You can provide an OpenAI API key via:
+- `OPENAI_API_KEY` or `CODEX_API_KEY` environment variables, or
+- `~/.clauderon/secrets/openai_api_key` (for the clauderon proxy to inject)
 
 ## Build Order
 

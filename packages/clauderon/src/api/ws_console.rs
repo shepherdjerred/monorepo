@@ -70,7 +70,35 @@ async fn handle_console_socket(socket: WebSocket, session_id: String, state: App
             output = output_rx.recv() => {
                 match output {
                     Ok(bytes) => {
+                        // Validate read size is reasonable
+                        if bytes.len() > 1_048_576 {
+                            tracing::warn!(
+                                session_id = %session_id,
+                                bytes_read = bytes.len(),
+                                "Unusually large console output, may cause client issues"
+                            );
+                        }
+
+                        // Convert bytes to base64 for binary-safe transmission
                         let data = base64::prelude::BASE64_STANDARD.encode(&bytes);
+
+                        // Validate encoded data
+                        if data.is_empty() && !bytes.is_empty() {
+                            tracing::error!(
+                                session_id = %session_id,
+                                bytes_read = bytes.len(),
+                                "Base64 encoding produced empty string from non-empty input"
+                            );
+                            continue;
+                        }
+
+                        tracing::trace!(
+                            session_id = %session_id,
+                            bytes_read = bytes.len(),
+                            encoded_length = data.len(),
+                            "Sent console output to client"
+                        );
+
                         let message = ConsoleMessage::Output { data };
                         let payload = json!(message);
                         if let Err(e) = ws_sender.send(Message::Text(payload.to_string().into())).await {
@@ -145,6 +173,3 @@ async fn handle_console_socket(socket: WebSocket, session_id: String, state: App
         .await;
     tracing::info!("Console WebSocket disconnected for session: {}", session_id);
 }
-
-// Add base64 to dependencies
-use base64::prelude::*;

@@ -467,14 +467,13 @@ export class Monorepo {
         outputs.push(`Published:\n${refs.join("\n")}`);
 
         // Deploy to homelab
-        // TEMPORARILY DISABLED: Waiting for dagger-utils with homelab fix to be published to npm
-        // outputs.push(
-        //   await updateHomelabVersion({
-        //     ghToken: githubToken,
-        //     appName: "birmel",
-        //     version,
-        //   }),
-        // );
+        outputs.push(
+          await updateHomelabVersion({
+            ghToken: githubToken,
+            appName: "birmel",
+            version,
+          }),
+        );
       }
 
       // Check if a mux release was created and upload binaries
