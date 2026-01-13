@@ -13,7 +13,7 @@ export function QuestionView({ message }: QuestionViewProps) {
     return null;
   }
 
-  const questions = questionTool.input.questions as Array<{
+  const questions = questionTool.input['questions'] as Array<{
     question: string;
     header: string;
     options: Array<{

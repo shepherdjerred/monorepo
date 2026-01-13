@@ -4,7 +4,7 @@ import { codeToHtml } from "shiki";
 type CodeBlockProps = {
   code: string;
   language: string;
-  filePath?: string;
+  filePath?: string | undefined;
 };
 
 /**
