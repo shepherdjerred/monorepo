@@ -1,9 +1,8 @@
 //! Client for interacting with Claude.ai APIs
 
 use anyhow::{Context, Result};
-use chrono;
-use reqwest;
-use serde::{Deserialize, Serialize};
+use chrono::Utc;
+use serde::Deserialize;
 use std::time::Duration;
 use tracing::instrument;
 
@@ -136,7 +135,7 @@ impl ClaudeApiClient {
             .await
             .context("Failed to parse usage response")?;
 
-        let now = chrono::Utc::now().to_rfc3339();
+        let now = Utc::now().to_rfc3339();
 
         // Calculate utilization if not provided
         let five_hour = usage_response
