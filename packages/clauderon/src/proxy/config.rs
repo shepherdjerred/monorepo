@@ -350,7 +350,7 @@ impl Credentials {
             return;
         };
 
-        if let Err(err) = persist_codex_auth_json(path, &tokens, &self.openai_api_key) {
+        if let Err(err) = persist_codex_auth_json(path, &tokens, self.openai_api_key.as_ref()) {
             tracing::warn!("Failed to persist Codex auth.json: {}", err);
         }
     }
@@ -408,18 +408,18 @@ fn load_codex_tokens_from_auth_json(path: Option<&Path>) -> (CodexTokens, Option
 fn persist_codex_auth_json(
     path: &Path,
     tokens: &CodexTokens,
-    openai_api_key: &Option<String>,
+    openai_api_key: Option<&String>,
 ) -> anyhow::Result<()> {
     let auth_json = if path.exists() {
         let content = std::fs::read_to_string(path)?;
         serde_json::from_str::<CodexAuthJson>(&content).unwrap_or(CodexAuthJson {
-            openai_api_key: openai_api_key.clone(),
+            openai_api_key: openai_api_key.cloned(),
             tokens: None,
             last_refresh: None,
         })
     } else {
         CodexAuthJson {
-            openai_api_key: openai_api_key.clone(),
+            openai_api_key: openai_api_key.cloned(),
             tokens: None,
             last_refresh: None,
         }
@@ -441,7 +441,7 @@ fn persist_codex_auth_json(
             .unwrap_or_else(|| "missing-refresh-token".to_string()),
         account_id: tokens.account_id.clone(),
     };
-    auth_json.openai_api_key = openai_api_key.clone();
+    auth_json.openai_api_key = openai_api_key.cloned();
     auth_json.tokens = Some(token_payload);
     auth_json.last_refresh = Some(Utc::now());
 

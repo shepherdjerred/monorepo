@@ -133,6 +133,11 @@ async fn rewrite_refresh_response(
     });
     let dummy_bytes = serde_json::to_vec(&dummy_body).unwrap_or_else(|_| b"{}".to_vec());
     let dummy_body = String::from_utf8(dummy_bytes).unwrap_or_else(|_| "{}".to_string());
+
+    // Remove Content-Length header since we've replaced the body
+    let mut parts = parts;
+    parts.headers.remove(hyper::header::CONTENT_LENGTH);
+
     Response::from_parts(parts, Body::from(dummy_body))
 }
 
