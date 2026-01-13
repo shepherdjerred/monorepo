@@ -173,6 +173,3 @@ async fn handle_console_socket(socket: WebSocket, session_id: String, state: App
         .await;
     tracing::info!("Console WebSocket disconnected for session: {}", session_id);
 }
-
-// Add base64 to dependencies
-use base64::prelude::*;
