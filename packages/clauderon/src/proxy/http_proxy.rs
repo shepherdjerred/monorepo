@@ -7,19 +7,23 @@ use std::time::Instant;
 
 use chrono::{DateTime, Utc};
 use dashmap::DashMap;
+use http_body_util::BodyExt;
 use hudsucker::certificate_authority::RcgenAuthority;
-use hudsucker::hyper::{Request, Response};
+use hudsucker::hyper::{Method, Request, Response};
 use hudsucker::hyper_util::client::legacy::Error as ClientError;
 use hudsucker::{Body, HttpContext, HttpHandler, Proxy, RequestOrResponse};
 use rustls::crypto::aws_lc_rs::default_provider;
+use serde::Deserialize;
+use serde_json::Value;
 use tokio::sync::RwLock;
 use uuid::Uuid;
 
 use super::audit::{AuditEntry, AuditLogger};
-use super::config::Credentials;
+use super::config::{CodexTokenUpdate, Credentials};
 use super::filter::is_write_operation;
 use super::rules::find_matching_rule;
 use crate::core::session::AccessMode;
+use crate::proxy::codex::{DUMMY_ACCESS_TOKEN, DUMMY_REFRESH_TOKEN, dummy_id_token};
 
 /// Check if a request is to a Kubernetes API based on host pattern.
 fn is_k8s_request(host: &str) -> bool {
@@ -37,6 +41,104 @@ fn is_k8s_write_operation(method: &hyper::Method) -> bool {
         *method,
         hyper::Method::POST | hyper::Method::PUT | hyper::Method::PATCH | hyper::Method::DELETE
     )
+}
+
+fn normalize_host(host: &str) -> &str {
+    host.split(':').next().unwrap_or(host)
+}
+
+fn is_chatgpt_host(host: &str) -> bool {
+    let host = normalize_host(host);
+    host == "chatgpt.com"
+        || host.ends_with(".chatgpt.com")
+        || host == "chat.openai.com"
+        || host.ends_with(".chat.openai.com")
+}
+
+fn is_refresh_request(host: &str, path: &str, method: &Method) -> bool {
+    normalize_host(host) == "auth.openai.com" && path == "/oauth/token" && *method == Method::POST
+}
+
+#[derive(Deserialize)]
+struct RefreshResponse {
+    id_token: Option<String>,
+    access_token: Option<String>,
+    refresh_token: Option<String>,
+}
+
+async fn rewrite_refresh_request(
+    req: &mut Request<Body>,
+    credentials: &Credentials,
+) -> Result<(), Response<Body>> {
+    let Some(refresh_token) = credentials.codex_refresh_token() else {
+        return Err(build_error_response("MISSING_CODEX_REFRESH_TOKEN"));
+    };
+
+    let body = std::mem::replace(req.body_mut(), Body::empty());
+    let collected = body
+        .collect()
+        .await
+        .map_err(|_| build_error_response("INVALID_REFRESH_BODY"))?;
+    let body_bytes = collected.to_bytes();
+    let mut json: Value = serde_json::from_slice(&body_bytes)
+        .map_err(|_| build_error_response("INVALID_REFRESH_PAYLOAD"))?;
+
+    let Some(token_value) = json.get_mut("refresh_token") else {
+        return Err(build_error_response("MISSING_REFRESH_TOKEN_FIELD"));
+    };
+    *token_value = Value::String(refresh_token);
+
+    let updated_body =
+        serde_json::to_vec(&json).map_err(|_| build_error_response("INVALID_REFRESH_PAYLOAD"))?;
+    let updated_body = String::from_utf8(updated_body).unwrap_or_default();
+    *req.body_mut() = Body::from(updated_body);
+    Ok(())
+}
+
+async fn rewrite_refresh_response(
+    res: Response<Body>,
+    credentials: &Credentials,
+) -> Response<Body> {
+    let (parts, body) = res.into_parts();
+    let collected = match body.collect().await {
+        Ok(collected) => collected,
+        Err(_) => return Response::from_parts(parts, Body::from("")),
+    };
+    let body_bytes = collected.to_bytes();
+
+    if !parts.status.is_success() {
+        let body_string = String::from_utf8_lossy(&body_bytes).into_owned();
+        return Response::from_parts(parts, Body::from(body_string));
+    }
+
+    let parsed: RefreshResponse = match serde_json::from_slice(&body_bytes) {
+        Ok(parsed) => parsed,
+        Err(_) => {
+            let body_string = String::from_utf8_lossy(&body_bytes).into_owned();
+            return Response::from_parts(parts, Body::from(body_string));
+        }
+    };
+
+    credentials.update_codex_tokens(CodexTokenUpdate {
+        access_token: parsed.access_token,
+        refresh_token: parsed.refresh_token,
+        id_token: parsed.id_token,
+        account_id: None,
+    });
+
+    let dummy_body = serde_json::json!({
+        "access_token": DUMMY_ACCESS_TOKEN,
+        "refresh_token": DUMMY_REFRESH_TOKEN,
+        "id_token": dummy_id_token(credentials.codex_account_id().as_deref()),
+    });
+    let dummy_bytes = serde_json::to_vec(&dummy_body).unwrap_or_else(|_| b"{}".to_vec());
+    let dummy_body = String::from_utf8(dummy_bytes).unwrap_or_else(|_| "{}".to_string());
+
+    // Remove Content-Length header since we've replaced the body
+    let mut parts = parts;
+    parts.headers.remove(hyper::header::CONTENT_LENGTH);
+
+    Response::from_parts(parts, Body::from(dummy_body))
 }
 
 /// HTTP auth proxy that intercepts HTTPS and injects auth headers.
@@ -154,6 +256,7 @@ struct PendingRequest {
     method: String,
     path: String,
     auth_injected: bool,
+    auth_refresh: bool,
 }
 
 /// Shared request tracking for timing measurements.
@@ -228,10 +331,11 @@ impl HttpHandler for AuthInjector {
             let method = req.method().to_string();
             let path = req.uri().path().to_string();
             let version = req.version();
+            let host_match = normalize_host(&host).to_string();
 
             tracing::debug!(
                 request_id = %request_id,
-                host = %host,
+                host = %host_match,
                 method = %method,
                 path = %path,
                 version = ?version,
@@ -240,7 +344,19 @@ impl HttpHandler for AuthInjector {
 
             // Check for matching rule and inject auth
             let mut auth_injected = false;
-            if let Some(rule) = find_matching_rule(&host) {
+            let mut auth_refresh = false;
+
+            if is_refresh_request(&host_match, &path, req.method()) {
+                match rewrite_refresh_request(&mut req, &credentials).await {
+                    Ok(()) => {
+                        auth_injected = true;
+                        auth_refresh = true;
+                    }
+                    Err(response) => return RequestOrResponse::Response(response),
+                }
+            }
+
+            if let Some(rule) = find_matching_rule(&host_match) {
                 if let Some(token) = credentials.get(rule.credential_key) {
                     if rule.credential_key == "anthropic" {
                         // Remove placeholder auth header before injecting real OAuth token
@@ -261,19 +377,32 @@ impl HttpHandler for AuthInjector {
                             tracing::debug!("Injected authorization header for {}", host);
                         }
                     } else {
-                        let header_value = rule.format_header(token);
+                        let header_value = rule.format_header(&token);
                         if let Ok(value) = header_value.parse() {
                             req.headers_mut().insert(rule.header_name, value);
                             auth_injected = true;
-                            tracing::debug!("Injected {} header for {}", rule.header_name, host);
+                            tracing::debug!(
+                                "Injected {} header for {}",
+                                rule.header_name,
+                                host_match
+                            );
                         }
                     }
                 } else {
                     tracing::debug!(
                         "Rule matched for {} but credential '{}' is missing",
-                        host,
+                        host_match,
                         rule.credential_key
                     );
+                }
+            }
+
+            if is_chatgpt_host(&host_match) {
+                if let Some(account_id) = credentials.codex_account_id() {
+                    if let Ok(value) = account_id.parse() {
+                        req.headers_mut().insert("ChatGPT-Account-ID", value);
+                        auth_injected = true;
+                    }
                 }
             }
 
@@ -284,10 +413,11 @@ impl HttpHandler for AuthInjector {
                     request_id,
                     start_time,
                     timestamp,
-                    service: host,
+                    service: host_match,
                     method,
                     path,
                     auth_injected,
+                    auth_refresh,
                 },
             );
 
@@ -303,15 +433,18 @@ impl HttpHandler for AuthInjector {
         let client_addr = ctx.client_addr;
         let request_tracker = Arc::clone(&self.request_tracker);
         let audit_logger = Arc::clone(&self.audit_logger);
+        let credentials = Arc::clone(&self.credentials);
 
         async move {
             let status = res.status();
 
             // Find and remove matching pending request by client address
             let pending = request_tracker.remove(&client_addr);
+            let mut should_rewrite_refresh = false;
 
             if let Some((_, pending)) = pending {
                 let duration_ms = pending.start_time.elapsed().as_millis() as u64;
+                should_rewrite_refresh = pending.auth_refresh;
 
                 tracing::debug!(
                     request_id = %pending.request_id,
@@ -352,6 +485,10 @@ impl HttpHandler for AuthInjector {
                     status = %status,
                     "Response received but no matching request found"
                 );
+            }
+
+            if should_rewrite_refresh {
+                return rewrite_refresh_response(res, &credentials).await;
             }
 
             res
@@ -503,6 +640,7 @@ impl HttpHandler for FilteringHandler {
             let method = req.method().to_string();
             let path = req.uri().path().to_string();
             let version = req.version();
+            let host_match = normalize_host(&host).to_string();
 
             tracing::debug!(
                 request_id = %request_id,
@@ -516,7 +654,19 @@ impl HttpHandler for FilteringHandler {
 
             // Check for matching rule and inject auth
             let mut auth_injected = false;
-            if let Some(rule) = find_matching_rule(&host) {
+            let mut auth_refresh = false;
+
+            if is_refresh_request(&host_match, &path, req.method()) {
+                match rewrite_refresh_request(&mut req, &credentials).await {
+                    Ok(()) => {
+                        auth_injected = true;
+                        auth_refresh = true;
+                    }
+                    Err(response) => return RequestOrResponse::Response(response),
+                }
+            }
+
+            if let Some(rule) = find_matching_rule(&host_match) {
                 if let Some(token) = credentials.get(rule.credential_key) {
                     if rule.credential_key == "anthropic" {
                         // Remove placeholder auth header before injecting real OAuth token
@@ -532,22 +682,40 @@ impl HttpHandler for FilteringHandler {
                         } else if let Ok(value) = format!("Bearer {token}").parse() {
                             req.headers_mut().insert("authorization", value);
                             auth_injected = true;
-                            tracing::debug!(session_id = %session_id, "Injected authorization header for {}", host);
+                            tracing::debug!(
+                                session_id = %session_id,
+                                "Injected authorization header for {}",
+                                host_match
+                            );
                         }
                     } else {
-                        let header_value = rule.format_header(token);
+                        let header_value = rule.format_header(&token);
                         if let Ok(value) = header_value.parse() {
                             req.headers_mut().insert(rule.header_name, value);
                             auth_injected = true;
-                            tracing::debug!(session_id = %session_id, "Injected {} header for {}", rule.header_name, host);
+                            tracing::debug!(
+                                session_id = %session_id,
+                                "Injected {} header for {}",
+                                rule.header_name,
+                                host_match
+                            );
                         }
                     }
                 } else {
                     tracing::debug!(
                         "Rule matched for {} but credential '{}' is missing",
-                        host,
+                        host_match,
                         rule.credential_key
                     );
+                }
+            }
+
+            if is_chatgpt_host(&host_match) {
+                if let Some(account_id) = credentials.codex_account_id() {
+                    if let Ok(value) = account_id.parse() {
+                        req.headers_mut().insert("ChatGPT-Account-ID", value);
+                        auth_injected = true;
+                    }
                 }
             }
 
@@ -558,10 +726,11 @@ impl HttpHandler for FilteringHandler {
                     request_id,
                     start_time,
                     timestamp,
-                    service: host,
+                    service: host_match,
                     method,
                     path,
                     auth_injected,
+                    auth_refresh,
                 },
             );
 
@@ -578,15 +747,18 @@ impl HttpHandler for FilteringHandler {
         let client_addr = ctx.client_addr;
         let request_tracker = Arc::clone(&self.request_tracker);
         let audit_logger = Arc::clone(&self.audit_logger);
+        let credentials = Arc::clone(&self.credentials);
 
         async move {
             let status = res.status();
 
             // Find and remove matching pending request by client address
             let pending = request_tracker.remove(&client_addr);
+            let mut should_rewrite_refresh = false;
 
             if let Some((_, pending)) = pending {
                 let duration_ms = pending.start_time.elapsed().as_millis() as u64;
+                should_rewrite_refresh = pending.auth_refresh;
 
                 tracing::debug!(
                     request_id = %pending.request_id,
@@ -630,6 +802,10 @@ impl HttpHandler for FilteringHandler {
                     status = %status,
                     "Response received but no matching request found"
                 );
+            }
+
+            if should_rewrite_refresh {
+                return rewrite_refresh_response(res, &credentials).await;
             }
 
             res

@@ -5,6 +5,7 @@
 
 mod audit;
 mod ca;
+mod codex;
 mod config;
 mod container_config;
 mod filter;
@@ -16,6 +17,10 @@ mod talos_gateway;
 
 pub use audit::{AuditEntry, AuditLogger};
 pub use ca::ProxyCa;
+pub use codex::{
+    DUMMY_ACCESS_TOKEN, DUMMY_ACCOUNT_ID, DUMMY_REFRESH_TOKEN, dummy_auth_json_string,
+    dummy_config_toml, dummy_id_token,
+};
 pub use config::{Credentials, ProxyConfig};
 pub use container_config::generate_container_configs;
 pub use filter::{is_read_operation, is_write_operation};
