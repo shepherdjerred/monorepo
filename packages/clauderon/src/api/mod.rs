@@ -1,3 +1,4 @@
+pub mod claude_client;
 pub mod client;
 pub mod console_protocol;
 pub mod console_socket;
