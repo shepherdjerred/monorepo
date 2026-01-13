@@ -102,6 +102,9 @@ http-body-util = "0.1"
 webauthn-rs = { version = "0.5", features = ["danger-allow-state-serialisation"] }
 webauthn-rs-proto = "0.5"
 
+# HTTP client (for Claude.ai API)
+reqwest = { version = "0.12", features = ["json", "rustls-tls"], default-features = false }
+
 [dev-dependencies]
 cargo-husky = { version = "1", features = ["precommit-hook", "run-cargo-fmt", "run-cargo-clippy"] }
 tempfile = "3"

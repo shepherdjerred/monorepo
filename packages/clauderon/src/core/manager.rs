@@ -2212,13 +2212,85 @@ impl SessionManager {
 
             // Count session-specific proxies
             active_session_proxies = pm.active_session_proxy_count().await as u32;
+
+            // Try to fetch Claude Code usage if OAuth token is available
+            let claude_usage = if let Some(oauth_token) = creds.anthropic_oauth_token.as_ref() {
+                match Self::fetch_claude_usage(oauth_token).await {
+                    Ok(usage) => {
+                        tracing::info!(
+                            org_id = %usage.organization_id,
+                            five_hour_utilization = %usage.five_hour.utilization,
+                            seven_day_utilization = %usage.seven_day.utilization,
+                            "Successfully fetched Claude Code usage"
+                        );
+                        Some(usage)
+                    }
+                    Err(e) => {
+                        tracing::warn!(
+                            error = %e,
+                            "Failed to fetch Claude Code usage - will continue without usage data"
+                        );
+                        None
+                    }
+                }
+            } else {
+                tracing::debug!("No Anthropic OAuth token available - skipping usage fetch");
+                None
+            };
+
+            return Ok(SystemStatus {
+                credentials,
+                proxies,
+                active_session_proxies,
+                claude_usage,
+            });
         }
 
         Ok(SystemStatus {
             credentials,
             proxies,
             active_session_proxies,
+            claude_usage: None,
         })
+    }
+
+    /// Fetch Claude Code usage data from Claude.ai API
+    ///
+    /// This attempts to get the org ID and usage data in one flow.
+    /// Falls back to environment variable if API calls fail.
+    #[instrument(skip(oauth_token))]
+    async fn fetch_claude_usage(
+        oauth_token: &str,
+    ) -> anyhow::Result<crate::api::protocol::ClaudeUsage> {
+        use crate::api::claude_client::ClaudeApiClient;
+
+        let client = ClaudeApiClient::new();
+
+        // First, try to get org ID from current account endpoint
+        let (org_id, org_name) = match client.get_current_account(oauth_token).await {
+            Ok(info) => info,
+            Err(e) => {
+                // Fallback to environment variable
+                tracing::warn!(
+                    error = %e,
+                    "Failed to get org ID from Claude.ai API, trying CLAUDE_ORG_ID env var"
+                );
+
+                let org_id = std::env::var("CLAUDE_ORG_ID")
+                    .or_else(|_| std::env::var("ANTHROPIC_ORG_ID"))
+                    .context("Failed to get org ID from API and no CLAUDE_ORG_ID env var set")?;
+
+                (org_id, None)
+            }
+        };
+
+        // Now fetch usage data
+        let mut usage = client.get_usage(oauth_token, &org_id).await?;
+
+        // Fill in org name if we got it
+        usage.organization_name = org_name;
+
+        Ok(usage)
     }
 
     /// Update a credential value.
