@@ -259,7 +259,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                 />
                 <p className="text-xs text-muted-foreground mt-1">
                   Image must include: <code className="font-mono bg-muted px-1 py-0.5 rounded">claude</code>/<code className="font-mono bg-muted px-1 py-0.5 rounded">codex</code> CLI, <code className="font-mono bg-muted px-1 py-0.5 rounded">bash</code>, <code className="font-mono bg-muted px-1 py-0.5 rounded">curl</code>, <code className="font-mono bg-muted px-1 py-0.5 rounded">git</code> (recommended)
-                  {' '}<a href="/docs/IMAGE_COMPATIBILITY.md" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">View requirements</a>
+                  {' '}<a href="https://github.com/shepherdjerred/monorepo/blob/main/packages/clauderon/docs/IMAGE_COMPATIBILITY.md" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">View requirements</a>
                 </p>
               </div>
 
