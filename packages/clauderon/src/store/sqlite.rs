@@ -680,15 +680,20 @@ impl SqliteStore {
         .execute(pool)
         .await?;
 
-        // Step 3: Drop old table
+        // Step 3: Drop old index first to avoid conflicts
+        sqlx::query("DROP INDEX IF EXISTS idx_recent_repos_last_used")
+            .execute(pool)
+            .await?;
+
+        // Step 4: Drop old table
         sqlx::query("DROP TABLE recent_repos").execute(pool).await?;
 
-        // Step 4: Rename new table
+        // Step 5: Rename new table
         sqlx::query("ALTER TABLE recent_repos_new RENAME TO recent_repos")
             .execute(pool)
             .await?;
 
-        // Step 5: Recreate index on last_used
+        // Step 6: Recreate index on last_used
         sqlx::query(
             r"
             CREATE INDEX IF NOT EXISTS idx_recent_repos_last_used
