@@ -715,8 +715,8 @@ impl SqliteStore {
         .execute(pool)
         .await?;
 
-        // Step 8: Drop temp table
-        sqlx::query("DROP TABLE recent_repos_v10_temp")
+        // Step 8: Drop temp table (if it still exists)
+        sqlx::query("DROP TABLE IF EXISTS recent_repos_v10_temp")
             .execute(pool)
             .await?;
 
