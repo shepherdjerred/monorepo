@@ -8,7 +8,7 @@ type SessionContextValue = {
   sessions: Map<string, Session>;
   isLoading: boolean;
   error: Error | null;
-  refreshSessions: () => Promise<void>;
+  refreshSessions: (showLoading?: boolean) => Promise<void>;
   createSession: (request: CreateSessionRequest) => Promise<string>;
   deleteSession: (id: string) => Promise<void>;
   archiveSession: (id: string) => Promise<void>;
@@ -25,9 +25,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const refreshSessions = useCallback(async () => {
+  const refreshSessions = useCallback(async (showLoading = true) => {
     try {
-      setIsLoading(true);
+      if (showLoading) {
+        setIsLoading(true);
+      }
       setError(null);
       const sessionsList = await client.listSessions();
       const newSessions = new Map(sessionsList.map((s) => [s.id, s]));
@@ -35,7 +37,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     } catch (err) {
       setError(err instanceof Error ? err : new Error(String(err)));
     } finally {
-      setIsLoading(false);
+      if (showLoading) {
+        setIsLoading(false);
+      }
     }
   }, [client]);
 
