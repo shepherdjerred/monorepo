@@ -42,10 +42,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const createSession = useCallback(
     async (request: CreateSessionRequest) => {
       const result = await client.createSession(request);
-      await refreshSessions();
+      // WebSocket events will automatically update the session list
       return result.id;
     },
-    [client, refreshSessions]
+    [client]
   );
 
   const deleteSession = useCallback(
