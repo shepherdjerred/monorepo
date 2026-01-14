@@ -81,7 +81,7 @@ export function isPlan(message: Message): boolean {
   }
 
   // Check for plan-like content
-  const content = message.content.toLowerCase();
+  const content = (message.content ?? "").toLowerCase();
   return (
     content.includes("## implementation plan") ||
     content.includes("# implementation plan") ||
