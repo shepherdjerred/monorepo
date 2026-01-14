@@ -320,6 +320,9 @@ async def crawl_hig(
 
                 if html is None:
                     stats.failed += 1
+                    # Mark as visited to avoid retrying on resume
+                    # (permanently broken pages won't be retried)
+                    tracker.visited.add(normalized)
                     print(f"[FAIL] {url}")
                     continue
 
@@ -329,6 +332,8 @@ async def crawl_hig(
                     filepath.write_text(html, encoding='utf-8')
                 except OSError as e:
                     stats.failed += 1
+                    # Mark as visited to avoid retrying on resume
+                    tracker.visited.add(normalized)
                     print(f"[FAIL] {url}: Could not write file: {e}", file=sys.stderr)
                     continue
 
@@ -393,7 +398,7 @@ Examples:
         "--output",
         "-o",
         type=Path,
-        default=Path("/workspace/packages/claude-plugin/data/hig"),
+        default=Path(__file__).parent.parent / "packages/claude-plugin/data/hig",
         help="Output directory for HTML files (default: packages/claude-plugin/data/hig)",
     )
     parser.add_argument(
@@ -419,6 +424,17 @@ Examples:
     )
 
     args = parser.parse_args()
+
+    # Validate start URL is a HIG URL
+    if not is_hig_url(
+        args.start_url,
+        "https://developer.apple.com",
+        "/design/human-interface-guidelines"
+    ):
+        print(f"Error: Start URL must be an Apple HIG URL", file=sys.stderr)
+        print(f"Expected: https://developer.apple.com/design/human-interface-guidelines...", file=sys.stderr)
+        print(f"Got: {args.start_url}", file=sys.stderr)
+        sys.exit(1)
 
     print("=" * 80)
     print("Apple HIG Scraper")
