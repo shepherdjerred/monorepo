@@ -72,10 +72,10 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
     window.history.pushState({}, "", url.toString());
   }, [filter]);
 
-  // Auto-refresh every 2 seconds
+  // Auto-refresh every 2 seconds (silent - no loading indicators)
   useEffect(() => {
     const interval = setInterval(() => {
-      void refreshSessions().then(() => {
+      void refreshSessions(false).then(() => {
         setLastRefreshTime(new Date());
       });
     }, 2000);
@@ -147,7 +147,7 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
             variant="ghost"
             size="icon"
             onClick={() => {
-              void refreshSessions().then(() => {
+              void refreshSessions(false).then(() => {
                 setLastRefreshTime(new Date());
               });
             }}
