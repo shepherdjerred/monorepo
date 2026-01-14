@@ -194,8 +194,10 @@ export interface ProxyStatus {
 
 /** Recent repository entry with timestamp */
 export interface RecentRepoDto {
-	/** Path to the repository */
+	/** Path to the repository (git root) */
 	repo_path: string;
+	/** Subdirectory path relative to git root (empty string if at root) */
+	subdirectory: string;
 	/** When this repository was last used (ISO 8601 timestamp) */
 	last_used: string;
 }

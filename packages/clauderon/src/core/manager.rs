@@ -627,7 +627,11 @@ impl SessionManager {
 
             // Track this repo in recent repos
             let repo_path_buf = PathBuf::from(&repo_path);
-            if let Err(e) = self.store.add_recent_repo(repo_path_buf).await {
+            if let Err(e) = self
+                .store
+                .add_recent_repo(repo_path_buf, subdirectory.clone())
+                .await
+            {
                 tracing::warn!("Failed to add repo to recent list: {e}");
             }
 
@@ -981,7 +985,11 @@ impl SessionManager {
         self.sessions.write().await.push(session.clone());
 
         // Track this repo in recent repos
-        if let Err(e) = self.store.add_recent_repo(repo_path_buf.clone()).await {
+        if let Err(e) = self
+            .store
+            .add_recent_repo(repo_path_buf.clone(), subdirectory.clone())
+            .await
+        {
             tracing::warn!("Failed to add repo to recent list: {e}");
         }
 
