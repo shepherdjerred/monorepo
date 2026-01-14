@@ -76,7 +76,9 @@ pub fn config_path() -> PathBuf {
 /// use clauderon::utils::paths::translate_image_path_to_container;
 ///
 /// // Set HOME to a known value for the test
-/// std::env::set_var("HOME", "/home/user");
+/// unsafe {
+///     std::env::set_var("HOME", "/home/user");
+/// }
 ///
 /// let host_path = "/home/user/.clauderon/uploads/session-id/image.png";
 /// let container_path = translate_image_path_to_container(host_path);
