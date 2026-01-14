@@ -206,7 +206,10 @@ BACKENDS:
         ///
         /// Image must include: claude/codex CLI, bash, curl, git (recommended)
         /// See docs/IMAGE_COMPATIBILITY.md for full requirements
-        #[arg(long, help = "Custom container image (e.g., ghcr.io/user/image:tag)\nRequires: claude/codex CLI, bash, curl, git\nSee docs/IMAGE_COMPATIBILITY.md")]
+        #[arg(
+            long,
+            help = "Custom container image (e.g., ghcr.io/user/image:tag)\nRequires: claude/codex CLI, bash, curl, git\nSee docs/IMAGE_COMPATIBILITY.md"
+        )]
         image: Option<String>,
 
         /// Image pull policy: always, if-not-present (default), never

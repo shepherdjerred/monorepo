@@ -1018,7 +1018,10 @@ fi"#,
             requests.insert("cpu".to_string(), Quantity(self.config.cpu_request.clone()));
             requests.insert("memory".to_string(), Quantity(self.config.memory_request.clone()));
             limits.insert("cpu".to_string(), Quantity(self.config.cpu_limit.clone()));
-            limits.insert("memory".to_string(), Quantity(self.config.memory_limit.clone()));
+            limits.insert(
+                "memory".to_string(),
+                Quantity(self.config.memory_limit.clone()),
+            );
         }
 
         Container {
