@@ -158,6 +158,7 @@ pub async fn handle_request(request: Request, manager: &SessionManager) -> Respo
                     .into_iter()
                     .map(|r| super::protocol::RecentRepoDto {
                         repo_path: r.repo_path.to_string_lossy().to_string(),
+                        subdirectory: r.subdirectory.to_string_lossy().to_string(),
                         last_used: r.last_used.to_rfc3339(),
                     })
                     .collect();
