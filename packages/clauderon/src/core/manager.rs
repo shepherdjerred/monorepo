@@ -1693,6 +1693,42 @@ impl SessionManager {
         Ok(())
     }
 
+    /// Update session metadata (title and description)
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the session is not found or the store update fails.
+    #[instrument(skip(self), fields(id_or_name = %id_or_name, title = ?title, description = ?description))]
+    pub async fn update_metadata(
+        &self,
+        id_or_name: &str,
+        title: Option<String>,
+        description: Option<String>,
+    ) -> anyhow::Result<()> {
+        let mut sessions = self.sessions.write().await;
+        let session = sessions
+            .iter_mut()
+            .find(|s| s.name == id_or_name || s.id.to_string() == id_or_name)
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {id_or_name}"))?;
+
+        let session_id = session.id;
+        session.set_title(title);
+        session.set_description(description);
+        let session_clone = session.clone();
+        drop(sessions);
+
+        // Update in store
+        self.store.save_session(&session_clone).await?;
+
+        tracing::info!(
+            session_id = %session_id,
+            name = %session_clone.name,
+            "Updated session metadata"
+        );
+
+        Ok(())
+    }
+
     /// Update Claude working status from hook message
     ///
     /// # Errors
