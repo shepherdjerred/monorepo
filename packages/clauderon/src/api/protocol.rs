@@ -51,8 +51,11 @@ pub enum Request {
 #[typeshare]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RecentRepoDto {
-    /// Path to the repository
+    /// Path to the repository (git root)
     pub repo_path: String,
+
+    /// Subdirectory path relative to git root (empty string if at root)
+    pub subdirectory: String,
 
     /// When this repository was last used (ISO 8601 timestamp)
     pub last_used: String,
