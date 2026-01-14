@@ -48,7 +48,19 @@ export function ChatInterface({
     if (attachedImages.length > 0) {
       for (const file of attachedImages) {
         try {
-          await apiClient.uploadImage(sessionId, file);
+          const response = await apiClient.uploadImage(sessionId, file);
+
+          // Translate host path to container path
+          // Host: /Users/name/.clauderon/uploads/... → Container: /workspace/.clauderon/uploads/...
+          const containerPath = response.path.includes('/.clauderon/uploads/')
+            ? response.path.replace(/.*\/.clauderon\/uploads\//, '/workspace/.clauderon/uploads/')
+            : response.path;
+
+          // Send the container path to Claude Code via console (like drag-and-drop)
+          client.write(containerPath + "\r");
+
+          // Optional: small delay between multiple images
+          await new Promise(resolve => setTimeout(resolve, 100));
         } catch (error) {
           console.error("Failed to upload image:", error);
           // Continue even if upload fails
