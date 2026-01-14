@@ -57,10 +57,10 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
         access_mode: formData.access_mode,
         images: [],
         // Include container settings if specified
-        container_image: formData.container_image || undefined,
         pull_policy: formData.pull_policy,
-        cpu_limit: formData.cpu_limit || undefined,
-        memory_limit: formData.memory_limit || undefined,
+        ...(formData.container_image && { container_image: formData.container_image }),
+        ...(formData.cpu_limit && { cpu_limit: formData.cpu_limit }),
+        ...(formData.memory_limit && { memory_limit: formData.memory_limit }),
       };
 
       const result = await createSession(request);
