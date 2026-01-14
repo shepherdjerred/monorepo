@@ -294,7 +294,7 @@ impl ApiClient for MockApiClient {
         Ok(vec![
             super::protocol::RecentRepoDto {
                 repo_path: "/home/user/projects/repo1".to_string(),
-                subdirectory: "".to_string(),
+                subdirectory: String::new(),
                 last_used: Utc::now().to_rfc3339(),
             },
             super::protocol::RecentRepoDto {
