@@ -76,7 +76,9 @@ impl ColumnWidths {
                 SessionStatus::Failed => "Failed",
                 SessionStatus::Archived => "Archived",
             };
-            max_status = max_status.max(status_text.width()).min(Self::STATUS_RANGE.1);
+            max_status = max_status
+                .max(status_text.width())
+                .min(Self::STATUS_RANGE.1);
 
             // Backend (using Debug format)
             let backend_text = format!("{:?}", session.backend);
