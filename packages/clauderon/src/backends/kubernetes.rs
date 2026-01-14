@@ -771,7 +771,9 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
             let translated_images: Vec<String> = options
                 .images
                 .iter()
-                .map(|image_path| crate::utils::paths::translate_image_path_to_container(image_path))
+                .map(|image_path| {
+                    crate::utils::paths::translate_image_path_to_container(image_path)
+                })
                 .collect();
 
             match options.agent {
