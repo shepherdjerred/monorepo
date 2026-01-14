@@ -135,7 +135,9 @@ fi
 echo ""
 echo "Calculating PR complexity..."
 
-TOTAL_CHANGES=$((ACTUAL_ADDITIONS + ACTUAL_DELETIONS))
+# Use GitHub API stats for complexity calculation (represents full PR scope)
+# Git diff is only used for trivial PR detection (merge/rebase detection)
+TOTAL_CHANGES=$((ADDITIONS + DELETIONS))
 MAX_TURNS=30  # Default
 COMPLEXITY="complex"
 
