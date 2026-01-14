@@ -661,10 +661,10 @@ impl SqliteStore {
             .execute(pool)
             .await?;
 
-        // Step 2: Create temporary table to hold existing data
+        // Step 2: Create regular table to hold existing data (not TEMP due to connection pooling)
         sqlx::query(
             r"
-            CREATE TEMP TABLE recent_repos_v10_temp (
+            CREATE TABLE recent_repos_v10_temp (
                 repo_path TEXT NOT NULL,
                 last_used TEXT NOT NULL
             )
