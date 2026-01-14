@@ -86,8 +86,12 @@ ACTUAL_DELETIONS="$DELETIONS"
 if git diff --shortstat "origin/${BASE_REF}...${HEAD_SHA}" 2>/dev/null; then
   DIFF_OUTPUT=$(git diff --shortstat "origin/${BASE_REF}...${HEAD_SHA}")
   if [ -n "$DIFF_OUTPUT" ]; then
-    ACTUAL_ADDITIONS=$(echo "$DIFF_OUTPUT" | grep -oP '\d+(?= insertion)' || echo "0")
-    ACTUAL_DELETIONS=$(echo "$DIFF_OUTPUT" | grep -oP '\d+(?= deletion)' || echo "0")
+    # Use sed instead of grep -P for portability
+    ACTUAL_ADDITIONS=$(echo "$DIFF_OUTPUT" | sed -n 's/.*\([0-9][0-9]*\) insertion.*/\1/p')
+    ACTUAL_DELETIONS=$(echo "$DIFF_OUTPUT" | sed -n 's/.*\([0-9][0-9]*\) deletion.*/\1/p')
+    # Default to 0 if sed didn't match
+    ACTUAL_ADDITIONS=${ACTUAL_ADDITIONS:-0}
+    ACTUAL_DELETIONS=${ACTUAL_DELETIONS:-0}
     echo "  Actual changes from git diff: +${ACTUAL_ADDITIONS} -${ACTUAL_DELETIONS}"
   else
     echo "  No diff output, using API stats"
@@ -185,18 +189,33 @@ else
   echo "  Previous review: ${PREVIOUS_STATE}"
 fi
 
-# Check if this is a re-review (PR was updated after last review)
+# Check if this is a re-review (new commits since last review)
 IS_REREVIEW="false"
 if [ "$PREVIOUS_STATE" != "none" ]; then
-  LAST_REVIEW_DATE=$(echo "$REVIEWS" | jq -r '[.[] | select(.user.login == "github-actions[bot]")] | .[0].submitted_at // ""')
-  if [ -n "$LAST_REVIEW_DATE" ]; then
-    # Check if PR was updated after last review
-    LAST_UPDATED=$(echo "$PR_DATA" | jq -r '.updated_at')
-    if [[ "$LAST_UPDATED" > "$LAST_REVIEW_DATE" ]]; then
+  # Get the commit SHA that was reviewed last time
+  LAST_REVIEW_COMMIT=$(echo "$REVIEWS" | jq -r '[.[] | select(.user.login == "github-actions[bot]")] | .[0].commit_id // ""')
+  if [ -n "$LAST_REVIEW_COMMIT" ] && [ "$LAST_REVIEW_COMMIT" != "null" ]; then
+    # Compare with current HEAD SHA
+    if [ "$LAST_REVIEW_COMMIT" != "$HEAD_SHA" ]; then
       IS_REREVIEW="true"
-      echo "  Re-review detected: PR updated after last review"
-      echo "    Last review: ${LAST_REVIEW_DATE}"
-      echo "    Last updated: ${LAST_UPDATED}"
+      echo "  Re-review detected: new commits since last review"
+      echo "    Last reviewed commit: ${LAST_REVIEW_COMMIT:0:8}"
+      echo "    Current commit: ${HEAD_SHA:0:8}"
+    else
+      echo "  Same commit as last review, not a re-review"
+    fi
+  else
+    # Fallback: If commit_id not available, check date comparison
+    # Note: ISO 8601 dates are lexicographically comparable (YYYY-MM-DDTHH:MM:SSZ format)
+    LAST_REVIEW_DATE=$(echo "$REVIEWS" | jq -r '[.[] | select(.user.login == "github-actions[bot]")] | .[0].submitted_at // ""')
+    if [ -n "$LAST_REVIEW_DATE" ]; then
+      LAST_UPDATED=$(echo "$PR_DATA" | jq -r '.updated_at')
+      if [[ "$LAST_UPDATED" > "$LAST_REVIEW_DATE" ]]; then
+        IS_REREVIEW="true"
+        echo "  Re-review detected: PR updated after last review (using date fallback)"
+        echo "    Last review: ${LAST_REVIEW_DATE}"
+        echo "    Last updated: ${LAST_UPDATED}"
+      fi
     fi
   fi
 fi
