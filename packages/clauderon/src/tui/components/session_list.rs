@@ -168,6 +168,11 @@ impl ColumnWidths {
 fn truncate_with_ellipsis(text: &str, max_width: usize) -> String {
     use unicode_width::UnicodeWidthChar;
 
+    // Handle edge case: zero width requested
+    if max_width == 0 {
+        return String::new();
+    }
+
     let text_width = text.width();
 
     if text_width <= max_width {
