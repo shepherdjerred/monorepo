@@ -11,7 +11,9 @@ use uuid::Uuid;
 use super::audit::AuditLogger;
 use super::ca::ProxyCa;
 use super::config::{Credentials, ProxyConfig};
-use super::container_config::{generate_codex_config, generate_container_configs, generate_plugin_config};
+use super::container_config::{
+    generate_codex_config, generate_container_configs, generate_plugin_config,
+};
 use super::http_proxy::HttpAuthProxy;
 use super::port_allocator::PortAllocator;
 use super::talos_gateway::TalosGateway;
