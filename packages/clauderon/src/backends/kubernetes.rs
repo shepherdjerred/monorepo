@@ -808,10 +808,24 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
                         };
 
                         // Generate wrapper script that detects restart via session history file
-                        // Claude Code stores session history at: .claude/projects/-workspace/<session-id>.jsonl
+                        // Claude Code stores session history at: .claude/projects/<project-path>/<session-id>.jsonl
+                        // where project-path is the working directory with / replaced by -
+                        let project_path = if options.initial_workdir.as_os_str().is_empty() {
+                            "-workspace".to_string()
+                        } else {
+                            format!(
+                                "-workspace-{}",
+                                options
+                                    .initial_workdir
+                                    .display()
+                                    .to_string()
+                                    .replace('/', "-")
+                            )
+                        };
+
                         format!(
                             r#"SESSION_ID="{session_id}"
-HISTORY_FILE="/workspace/.claude/projects/-workspace/${{SESSION_ID}}.jsonl"
+HISTORY_FILE="/workspace/.claude/projects/{project_path}/${{SESSION_ID}}.jsonl"
 if [ -f "$HISTORY_FILE" ]; then
     echo "Resuming existing session $SESSION_ID"
     exec {resume_cmd}
@@ -820,6 +834,7 @@ else
     exec {create_cmd}
 fi"#,
                             session_id = session_id_str,
+                            project_path = project_path,
                             resume_cmd = resume_cmd,
                             create_cmd = create_cmd,
                         )
