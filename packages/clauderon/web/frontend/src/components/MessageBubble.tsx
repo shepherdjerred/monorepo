@@ -1,14 +1,48 @@
 import type { Message } from "../lib/claudeParser";
 import { User, Bot, Terminal, FileText, Edit, Search } from "lucide-react";
 import { formatRelativeTime } from "../lib/utils";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { CodeBlock } from "./CodeBlock";
+import { PlanView, isPlan } from "./PlanView";
+import { QuestionView, isQuestion } from "./QuestionView";
 
 type MessageBubbleProps = {
   message: Message;
 }
 
 export function MessageBubble({ message }: MessageBubbleProps) {
+  // Don't render if there's no displayable content
+  const hasContent = message.content?.trim();
+  const hasToolUses = message.toolUses && message.toolUses.length > 0;
+  const hasCodeBlocks = message.codeBlocks && message.codeBlocks.length > 0;
+
+  if (!hasContent && !hasToolUses && !hasCodeBlocks) {
+    return null;
+  }
+
   const isUser = message.role === "user";
   const isSystem = message.role === "system";
+  const messageIsPlan = isPlan(message);
+  const messageIsQuestion = isQuestion(message);
+
+  // Render question with special styling
+  if (messageIsQuestion && !isUser) {
+    return (
+      <div className="p-4 border-b-2">
+        <QuestionView message={message} />
+      </div>
+    );
+  }
+
+  // Render plan with special styling
+  if (messageIsPlan && !isUser) {
+    return (
+      <div className="p-4 border-b-2">
+        <PlanView message={message} />
+      </div>
+    );
+  }
 
   const icon = isUser ? (
     <User className="w-5 h-5" />
@@ -59,7 +93,9 @@ export function MessageBubble({ message }: MessageBubbleProps) {
         {/* Message text */}
         {message.content && (
           <div className="prose prose-sm max-w-none dark:prose-invert mb-3">
-            <p className="whitespace-pre-wrap">{message.content}</p>
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {message.content}
+            </ReactMarkdown>
           </div>
         )}
 
@@ -92,21 +128,16 @@ export function MessageBubble({ message }: MessageBubbleProps) {
           </div>
         )}
 
-        {/* Code blocks with retro terminal style */}
+        {/* Code blocks with syntax highlighting */}
         {message.codeBlocks && message.codeBlocks.length > 0 && (
           <div className="space-y-3">
             {message.codeBlocks.map((block, idx) => (
-              <div key={idx} className="border-4 border-primary overflow-hidden">
-                <div className="flex items-center justify-between px-3 py-2 bg-primary text-primary-foreground">
-                  <span className="font-mono text-xs font-bold uppercase">{block.language}</span>
-                  {block.filePath && (
-                    <span className="font-mono text-xs">{block.filePath}</span>
-                  )}
-                </div>
-                <pre className="p-4 bg-[#0a0e14] overflow-x-auto">
-                  <code className="text-sm font-mono text-[#e6e1dc]">{block.code}</code>
-                </pre>
-              </div>
+              <CodeBlock
+                key={idx}
+                code={block.code}
+                language={block.language}
+                filePath={block.filePath}
+              />
             ))}
           </div>
         )}
