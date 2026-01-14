@@ -744,10 +744,20 @@ impl DockerBackend {
                         };
 
                         // Generate wrapper script that detects restart via session history file
-                        // Claude Code stores session history at: .claude/projects/-workspace/<session-id>.jsonl
+                        // Claude Code stores session history at: .claude/projects/<project-path>/<session-id>.jsonl
+                        // where project-path is the working directory with / replaced by -
+                        let project_path = if initial_workdir.as_os_str().is_empty() {
+                            "-workspace".to_string()
+                        } else {
+                            format!(
+                                "-workspace-{}",
+                                initial_workdir.display().to_string().replace('/', "-")
+                            )
+                        };
+
                         format!(
                             r#"SESSION_ID="{session_id}"
-HISTORY_FILE="/workspace/.claude/projects/-workspace/${{SESSION_ID}}.jsonl"
+HISTORY_FILE="/workspace/.claude/projects/{project_path}/${{SESSION_ID}}.jsonl"
 if [ -f "$HISTORY_FILE" ]; then
     echo "Resuming existing session $SESSION_ID"
     exec {resume_cmd}
@@ -756,6 +766,7 @@ else
     exec {create_cmd}
 fi"#,
                             session_id = session_id_str,
+                            project_path = project_path,
                             resume_cmd = resume_cmd_str,
                             create_cmd = create_cmd_str,
                         )
@@ -2060,6 +2071,77 @@ mod tests {
         assert!(
             has_claude_json,
             "Should mount .claude.json for onboarding even without bypass mode"
+        );
+    }
+
+    /// Test that session history file path uses correct project path based on initial_workdir
+    /// This fixes a bug where the wrapper script used hardcoded "-workspace" instead of
+    /// computing the project path from the actual working directory.
+    #[test]
+    fn test_session_history_project_path_with_subdirectory() {
+        let session_id = uuid::Uuid::new_v4();
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            &PathBuf::from("/workspace"),
+            &PathBuf::from("packages/clauderon"), // subdirectory
+            "test prompt",
+            1000,
+            None,
+            AgentType::ClaudeCode,
+            false,             // print_mode
+            false,             // dangerous_skip_checks
+            &[],               // images
+            None,              // git_user_name
+            None,              // git_user_email
+            Some(&session_id), // session_id - required for wrapper script generation
+            None,              // http_port
+        )
+        .expect("Failed to build args");
+
+        // Find the bash command (last argument)
+        let cmd_arg = args.last().unwrap();
+
+        // The wrapper script should use the correct project path: -workspace-packages-clauderon
+        // (not the hardcoded -workspace)
+        assert!(
+            cmd_arg.contains("-workspace-packages-clauderon"),
+            "Expected project path '-workspace-packages-clauderon' in wrapper script, got: {cmd_arg}"
+        );
+        assert!(
+            !cmd_arg.contains("projects/-workspace/"),
+            "Should NOT use hardcoded '-workspace' project path when initial_workdir is set"
+        );
+    }
+
+    /// Test that session history file path uses -workspace when initial_workdir is empty
+    #[test]
+    fn test_session_history_project_path_at_root() {
+        let session_id = uuid::Uuid::new_v4();
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            &PathBuf::from("/workspace"),
+            &PathBuf::new(), // empty initial_workdir = root
+            "test prompt",
+            1000,
+            None,
+            AgentType::ClaudeCode,
+            false,             // print_mode
+            false,             // dangerous_skip_checks
+            &[],               // images
+            None,              // git_user_name
+            None,              // git_user_email
+            Some(&session_id), // session_id - required for wrapper script generation
+            None,              // http_port
+        )
+        .expect("Failed to build args");
+
+        // Find the bash command (last argument)
+        let cmd_arg = args.last().unwrap();
+
+        // The wrapper script should use -workspace (no subdirectory suffix)
+        assert!(
+            cmd_arg.contains("projects/-workspace/"),
+            "Expected project path '-workspace' in wrapper script when initial_workdir is empty, got: {cmd_arg}"
         );
     }
 }
