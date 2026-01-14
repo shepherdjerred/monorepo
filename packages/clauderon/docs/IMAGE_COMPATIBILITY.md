@@ -38,7 +38,7 @@ These are hard requirements - without them, Clauderon sessions won't work.
 
 **Why**: Clauderon runs this as the container's main command.
 
-**Source**: `src/backend/docker.rs:61`, `src/backend/k8s.rs`
+**Source**: `src/backends/docker.rs`, `src/backends/kubernetes.rs`
 
 **What to do**: Install the Claude Code CLI or Codex CLI and ensure it's in PATH (typically `/usr/local/bin/claude` or `/usr/local/bin/codex`).
 
@@ -51,7 +51,7 @@ These are hard requirements - without them, Clauderon sessions won't work.
 - The hook script uses bash-isms like `set -euo pipefail` (pipefail is not in POSIX sh)
 - Hook installation uses bash for heredoc file writing
 
-**Source**: `src/hooks/installer.rs:12` (hook invocation), line 64 (shebang), line 75 (pipefail)
+**Source**: `src/hooks/installer.rs` (hook invocation at line 12, shebang at line 64, pipefail at line 75)
 
 **Important**: Images with only `/bin/sh` (like Alpine Linux without bash) won't work. If using Alpine, you must `apk add bash`.
 
@@ -71,7 +71,7 @@ These are hard requirements - without them, Clauderon sessions won't work.
 
 **Why**: The hooks system uses curl to POST events back to the Clauderon daemon on the host.
 
-**Source**: `src/hooks/installer.rs:98` (send_status.sh script uses curl)
+**Source**: `src/hooks/installer.rs` (send_status.sh script uses curl at lines 98-104)
 
 **Usage**: `curl -s -X POST -H "Content-Type: application/json" -d "$MESSAGE" "http://host.docker.internal:${CLAUDERON_HTTP_PORT}/api/hooks"`
 
@@ -85,7 +85,7 @@ These are hard requirements - without them, Clauderon sessions won't work.
 - `cat` - Write files via heredoc (hook script)
 - `date` - Timestamp generation with `-u` flag (hook script)
 
-**Source**: `src/hooks/installer.rs` (mkdir line 133, chmod line 179), hook script (cat, date)
+**Source**: `src/hooks/installer.rs` (mkdir around line 128, chmod around line 175), hook script (cat, date)
 
 **Note**: These are present in all standard base images (Debian, Ubuntu, Alpine, etc.). Only the most minimal images might lack them.
 
