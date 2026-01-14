@@ -6,9 +6,7 @@ use tracing::instrument;
 use super::traits::ExecutionBackend;
 use crate::core::AgentType;
 use crate::plugins::{PluginDiscovery, PluginManifest};
-use crate::proxy::{
-    container_config::generate_plugin_config, dummy_auth_json_string, dummy_config_toml,
-};
+use crate::proxy::{dummy_auth_json_string, dummy_config_toml, generate_plugin_config};
 
 /// Sanitize git config value to prevent environment variable injection
 ///
