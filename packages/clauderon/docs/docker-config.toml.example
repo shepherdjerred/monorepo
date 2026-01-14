@@ -1,0 +1,89 @@
+# Clauderon Docker Backend Configuration
+# This file configures default settings for Docker-based sessions.
+# All settings can be overridden per-session via CLI/API.
+#
+# Location: ~/.clauderon/docker-config.toml
+#
+# For image compatibility requirements, see docs/IMAGE_COMPATIBILITY.md
+
+[image]
+# Default container image (name:tag format)
+# Common registries:
+#   - ghcr.io/user/repo (GitHub Container Registry)
+#   - docker.io/user/repo (Docker Hub)
+#   - gcr.io/project/repo (Google Container Registry)
+#
+# Image must include:
+#   - claude OR codex executable in PATH
+#   - bash shell
+#   - curl binary
+#   - git (strongly recommended)
+#   - Standard Unix utilities (mkdir, chmod, cat, date)
+#
+# See docs/IMAGE_COMPATIBILITY.md for full requirements.
+image = "ghcr.io/shepherdjerred/dotfiles:latest"
+
+# Image pull policy
+# Options:
+#   - "if-not-present" (default): Pull if image not cached locally
+#   - "always": Always pull latest version
+#   - "never": Never pull, use local cache only (fails if missing)
+pull_policy = "if-not-present"
+
+# Optional: Registry authentication
+# RECOMMENDED: Use `docker login` instead of config file
+#
+# To authenticate with a registry:
+#   docker login ghcr.io
+#
+# This stores credentials in ~/.docker/config.json which Docker
+# automatically uses. This is the most secure and convenient method.
+#
+# ALTERNATIVE: Custom config file
+# [image.registry_auth]
+# registry = "ghcr.io"
+# config_file = "~/.docker/config.json"
+#
+# Note: Inline username/password is NOT supported for security reasons.
+
+[resources]
+# Optional: Default resource limits for containers
+# These help prevent runaway processes from consuming all system resources.
+#
+# CPU limit: Number of CPU cores
+#   Examples: "1.0", "2.5", "0.5" (half a core)
+#   Format: Decimal number (e.g., "2.0") or millicores (e.g., "2000m")
+#
+# Uncomment to enable:
+# cpu = "2.0"
+
+# Memory limit: Maximum RAM allocation
+#   Suffixes: k, m, g (lowercase = 1000-based), K, M, G (uppercase = 1024-based)
+#   Examples: "2g" (2 gigabytes), "512m" (512 megabytes), "2G" (2 gibibytes)
+#
+# Uncomment to enable:
+# memory = "2g"
+
+# Optional: Advanced Docker flags (use with caution)
+# These are passed directly to `docker run`.
+#
+# WARNING: Incorrect flags can cause security issues or session failures.
+# Only use if you understand Docker security implications.
+#
+# Examples:
+# extra_flags = [
+#     "--cap-add=SYS_PTRACE",  # Allow process tracing (for debuggers like gdb)
+#     "--security-opt=seccomp=unconfined"  # Disable seccomp filtering (security risk!)
+# ]
+
+# Example complete configuration:
+#
+# [image]
+# image = "myregistry.example.com/custom-dev:v1.0"
+# pull_policy = "always"
+#
+# [resources]
+# cpu = "4.0"
+# memory = "8g"
+#
+# extra_flags = ["--cap-add=SYS_PTRACE"]

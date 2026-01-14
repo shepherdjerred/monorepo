@@ -136,6 +136,41 @@ pub struct CreateSessionRequest {
     /// Images will be passed to Claude Code using the `--image` flag.
     #[serde(default)]
     pub images: Vec<String>,
+
+    /// Optional: Custom container image (overrides backend default).
+    ///
+    /// Format: `[registry/]repository[:tag]`
+    /// Example: `"ghcr.io/user/custom-dev:latest"`
+    ///
+    /// Image must meet requirements: claude/codex CLI, bash, curl, git (recommended).
+    /// See docs/IMAGE_COMPATIBILITY.md for full requirements.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub container_image: Option<String>,
+
+    /// Optional: Image pull policy.
+    ///
+    /// Controls when to pull the container image:
+    /// - `"always"`: Always pull latest version
+    /// - `"if-not-present"`: Pull only if not cached (default)
+    /// - `"never"`: Never pull, use local cache only
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pull_policy: Option<String>,
+
+    /// Optional: CPU limit for the container.
+    ///
+    /// Format:
+    /// - Docker: Decimal cores (e.g., `"2.0"`, `"0.5"`)
+    /// - Kubernetes: Millicores or cores (e.g., `"2000m"`, `"2"`)
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cpu_limit: Option<String>,
+
+    /// Optional: Memory limit for the container.
+    ///
+    /// Format: Number with suffix
+    /// - Docker: `"2g"` (2 gigabytes), `"512m"` (512 megabytes)
+    /// - Kubernetes: `"2Gi"` (2 gibibytes), `"512Mi"` (512 mebibytes)
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub memory_limit: Option<String>,
 }
 
 /// Default to plan mode for safety - allows users to explore and understand
