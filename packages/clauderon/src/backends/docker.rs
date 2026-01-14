@@ -611,18 +611,7 @@ impl DockerBackend {
             // Host: /Users/name/.clauderon/uploads/... → Container: /workspace/.clauderon/uploads/...
             let translated_images: Vec<String> = images
                 .iter()
-                .map(|image_path| {
-                    let home = std::env::var("HOME").unwrap_or_else(|_| "/root".to_string());
-                    let host_uploads_prefix = format!("{home}/.clauderon/uploads");
-
-                    if image_path.starts_with(&host_uploads_prefix) {
-                        // Replace host prefix with container prefix
-                        image_path.replace(&host_uploads_prefix, "/workspace/.clauderon/uploads")
-                    } else {
-                        // Path not in uploads dir - pass through unchanged (e.g., relative paths to workspace)
-                        image_path.clone()
-                    }
-                })
+                .map(|image_path| crate::utils::paths::translate_image_path_to_container(image_path))
                 .collect();
 
             match agent {
