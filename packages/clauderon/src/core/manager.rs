@@ -239,11 +239,28 @@ impl SessionManager {
         images: Vec<String>,
     ) -> anyhow::Result<Uuid> {
         // Validate session count limit
-        let session_count = self.sessions.read().await.len();
-        if session_count >= self.max_sessions {
+        let sessions_guard = self.sessions.read().await;
+        let active_count = sessions_guard
+            .iter()
+            .filter(|s| s.status != SessionStatus::Archived)
+            .count();
+        let archived_count = sessions_guard
+            .iter()
+            .filter(|s| s.status == SessionStatus::Archived)
+            .count();
+        drop(sessions_guard);
+
+        if active_count >= self.max_sessions {
+            tracing::warn!(
+                active_sessions = active_count,
+                archived_sessions = archived_count,
+                max_sessions = self.max_sessions,
+                "Session creation blocked - maximum active sessions reached"
+            );
             anyhow::bail!(
-                "Maximum session limit reached ({}/{}). Delete or archive sessions before creating new ones.",
-                session_count,
+                "Maximum session limit reached ({} active / {} total, max {}). Archive or delete sessions before creating new ones.",
+                active_count,
+                active_count + archived_count,
                 self.max_sessions
             );
         }
@@ -345,7 +362,12 @@ impl SessionManager {
             let mut sessions = self.sessions.write().await;
 
             // Re-check limit with lock held (defense against race)
-            if sessions.len() >= self.max_sessions {
+            if sessions
+                .iter()
+                .filter(|s| s.status != SessionStatus::Archived)
+                .count()
+                >= self.max_sessions
+            {
                 // Rollback database save
                 let _ = self.store.delete_session(session.id).await;
                 anyhow::bail!("Maximum session limit reached (prevented race condition)");
