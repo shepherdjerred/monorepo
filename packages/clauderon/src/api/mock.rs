@@ -294,10 +294,12 @@ impl ApiClient for MockApiClient {
         Ok(vec![
             super::protocol::RecentRepoDto {
                 repo_path: "/home/user/projects/repo1".to_string(),
+                subdirectory: "".to_string(),
                 last_used: Utc::now().to_rfc3339(),
             },
             super::protocol::RecentRepoDto {
                 repo_path: "/home/user/projects/repo2".to_string(),
+                subdirectory: "packages/foo".to_string(),
                 last_used: (Utc::now() - chrono::Duration::hours(1)).to_rfc3339(),
             },
         ])
