@@ -255,6 +255,10 @@ async fn create_session(
             request.plan_mode,
             request.access_mode,
             request.images,
+            request.container_image,
+            request.pull_policy,
+            request.cpu_limit,
+            request.memory_limit,
         )
         .await?;
 

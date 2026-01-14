@@ -25,6 +25,11 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
     access_mode: "ReadWrite" as AccessMode,
     plan_mode: true,
     dangerous_skip_checks: true, // Docker/Kubernetes default
+    // Advanced container settings
+    container_image: "",
+    pull_policy: "if-not-present" as "always" | "if-not-present" | "never",
+    cpu_limit: "",
+    memory_limit: "",
   });
 
   // Auto-check dangerous_skip_checks for Docker and Kubernetes, uncheck for Zellij
@@ -51,6 +56,11 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
         plan_mode: formData.plan_mode,
         access_mode: formData.access_mode,
         images: [],
+        // Include container settings if specified
+        container_image: formData.container_image || undefined,
+        pull_policy: formData.pull_policy,
+        cpu_limit: formData.cpu_limit || undefined,
+        memory_limit: formData.memory_limit || undefined,
       };
 
       const result = await createSession(request);
@@ -229,6 +239,71 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
               </div>
             )}
           </div>
+
+          {/* Advanced Container Settings */}
+          <details className="space-y-2 border-2 border-primary p-4" style={{ backgroundColor: 'hsl(220, 15%, 98%)' }}>
+            <summary className="font-semibold cursor-pointer hover:text-primary font-mono uppercase tracking-wider mb-4">
+              Advanced Container Settings
+            </summary>
+
+            <div className="pl-4 space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="container_image">Custom Image (optional)</Label>
+                <input
+                  type="text"
+                  id="container_image"
+                  placeholder="ghcr.io/user/image:tag"
+                  value={formData.container_image}
+                  onChange={(e) => setFormData({ ...formData, container_image: e.target.value })}
+                  className="w-full px-3 py-2 border-2 rounded font-mono text-sm"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Image must include: <code className="font-mono bg-muted px-1 py-0.5 rounded">claude</code>/<code className="font-mono bg-muted px-1 py-0.5 rounded">codex</code> CLI, <code className="font-mono bg-muted px-1 py-0.5 rounded">bash</code>, <code className="font-mono bg-muted px-1 py-0.5 rounded">curl</code>, <code className="font-mono bg-muted px-1 py-0.5 rounded">git</code> (recommended)
+                  {' '}<a href="/docs/IMAGE_COMPATIBILITY.md" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">View requirements</a>
+                </p>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="pull_policy">Pull Policy</Label>
+                  <select
+                    id="pull_policy"
+                    value={formData.pull_policy}
+                    onChange={(e) => setFormData({ ...formData, pull_policy: e.target.value as "always" | "if-not-present" | "never" })}
+                    className="w-full px-3 py-2 border-2 rounded font-mono text-sm"
+                  >
+                    <option value="if-not-present">If Not Present</option>
+                    <option value="always">Always</option>
+                    <option value="never">Never</option>
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="cpu_limit">CPU Limit</Label>
+                  <input
+                    type="text"
+                    id="cpu_limit"
+                    placeholder="2.0"
+                    value={formData.cpu_limit}
+                    onChange={(e) => setFormData({ ...formData, cpu_limit: e.target.value })}
+                    className="w-full px-3 py-2 border-2 rounded font-mono text-sm"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="memory_limit">Memory Limit</Label>
+                  <input
+                    type="text"
+                    id="memory_limit"
+                    placeholder="2g"
+                    value={formData.memory_limit}
+                    onChange={(e) => setFormData({ ...formData, memory_limit: e.target.value })}
+                    className="w-full px-3 py-2 border-2 rounded font-mono text-sm"
+                  />
+                </div>
+              </div>
+            </div>
+          </details>
 
           <div className="flex items-center gap-2">
             <input
