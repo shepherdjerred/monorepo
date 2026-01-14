@@ -1047,15 +1047,6 @@ mod tests {
     use super::*;
     use std::path::PathBuf;
 
-    // TODO: All test calls to build_create_args() need to be updated to include the three new parameters:
-    //   - &DockerConfig::default() for config
-    //   - None for image_override
-    //   - None for resource_override
-    // Pattern to add before the closing parenthesis of each build_create_args() call:
-    //   &DockerConfig::default(),
-    //   None,  // image_override
-    //   None,  // resource_override
-
     /// Test that docker run uses -dit (detach + interactive + TTY), not just -d
     #[test]
     fn test_create_uses_dit_not_d() {
@@ -1074,7 +1065,7 @@ mod tests {
             None,  // git user email
             None,  // session_id
             None,  // http_port
-            &DockerConfig::default(),
+                &DockerConfig::default(),
             None,  // image_override
             None,  // resource_override
         )
@@ -1148,6 +1139,9 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
+                &DockerConfig::default(),
+            None,  // image_override
+            None,  // resource_override
         )
         .expect("Failed to build args");
 
@@ -1180,6 +1174,9 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
+                &DockerConfig::default(),
+            None,  // image_override
+            None,  // resource_override
         )
         .expect("Failed to build args");
 
@@ -1215,6 +1212,9 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
+            &DockerConfig::default(),
+            None,  // image_override
+            None,  // resource_override
         )
         .expect("Failed to build args");
 
@@ -1250,6 +1250,9 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
+            &DockerConfig::default(),
+            None,  // image_override
+            None,  // resource_override
         )
         .expect("Failed to build args");
 
@@ -1346,6 +1349,9 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
+            &DockerConfig::default(),
+            None,  // image_override
+            None,  // resource_override
         )
         .expect("Failed to build args");
 
@@ -1377,6 +1383,9 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
+            &DockerConfig::default(),
+            None,  // image_override
+            None,  // resource_override
         )
         .expect("Failed to build args");
 
@@ -1421,6 +1430,9 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
+            &DockerConfig::default(),
+            None,  // image_override
+            None,  // resource_override
         )
         .expect("Failed to build args");
 
@@ -1463,6 +1475,9 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
+            &DockerConfig::default(),
+            None,  // image_override
+            None,  // resource_override
         )
         .expect("Failed to build args");
 
@@ -1489,6 +1504,9 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
+            &DockerConfig::default(),
+            None,  // image_override
+            None,  // resource_override
         )
         .expect("Failed to build args");
 
@@ -1525,6 +1543,9 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
+            &DockerConfig::default(),
+            None,  // image_override
+            None,  // resource_override
         )
         .expect("Failed to build args");
 
@@ -1560,6 +1581,9 @@ mod tests {
             None, // git_user_email
             None, // session_id
             None, // http_port
+            &DockerConfig::default(),
+            None,  // image_override
+            None,  // resource_override
         )
         .expect("Failed to build args");
 
@@ -1592,6 +1616,9 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
+            &DockerConfig::default(),
+            None,  // image_override
+            None,  // resource_override
         )
         .expect("Failed to build args");
 
@@ -1646,6 +1673,9 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
+            &DockerConfig::default(),
+            None,  // image_override
+            None,  // resource_override
         )
         .expect("Failed to build args");
 
@@ -1699,6 +1729,9 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
+            &DockerConfig::default(),
+            None,  // image_override
+            None,  // resource_override
         )
         .expect("Failed to build args");
 
@@ -1748,6 +1781,9 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
+            &DockerConfig::default(),
+            None,  // image_override
+            None,  // resource_override
         )
         .expect("Failed to build args");
 
@@ -1800,6 +1836,9 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
+            &DockerConfig::default(),
+            None,  // image_override
+            None,  // resource_override
         )
         .expect("Failed to build args");
 
@@ -1842,6 +1881,9 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
+            &DockerConfig::default(),
+            None,  // image_override
+            None,  // resource_override
         )
         .expect("Failed to build args");
 
@@ -1884,6 +1926,9 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
+            &DockerConfig::default(),
+            None,  // image_override
+            None,  // resource_override
         )
         .expect("Failed to build args");
 
@@ -1913,6 +1958,9 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
+            &DockerConfig::default(),
+            None,  // image_override
+            None,  // resource_override
         )
         .expect("Failed to build args");
 
@@ -1956,6 +2004,9 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
+            &DockerConfig::default(),
+            None,  // image_override
+            None,  // resource_override
         )
         .expect("Failed to build args");
 
