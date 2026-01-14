@@ -1705,7 +1705,7 @@ mod tests {
 
         let args = DockerBackend::build_create_args(
             "test-session",
-            &temp_dir.path().to_path_buf(),
+            temp_dir.path(),
             &PathBuf::new(),
             "test prompt",
             1000,
@@ -1713,7 +1713,7 @@ mod tests {
             AgentType::ClaudeCode,
             false,
             true,
-            &[host_path.clone()],
+            std::slice::from_ref(&host_path),
             None,
             None,
             None,
