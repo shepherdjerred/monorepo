@@ -611,7 +611,9 @@ impl DockerBackend {
             // Host: /Users/name/.clauderon/uploads/... → Container: /workspace/.clauderon/uploads/...
             let translated_images: Vec<String> = images
                 .iter()
-                .map(|image_path| crate::utils::paths::translate_image_path_to_container(image_path))
+                .map(|image_path| {
+                    crate::utils::paths::translate_image_path_to_container(image_path)
+                })
                 .collect();
 
             match agent {
