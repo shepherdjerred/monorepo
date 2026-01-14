@@ -48,6 +48,34 @@ export interface BrowseDirectoryResponse {
 	error?: string;
 }
 
+/** Claude Code usage data for a specific time window */
+export interface UsageWindow {
+	/** Current usage (e.g., number of requests or tokens) */
+	current: number;
+	/** Maximum allowed usage for this window */
+	limit: number;
+	/** Usage as a percentage (0.0 - 1.0) */
+	utilization: number;
+	/** When this usage window resets (ISO 8601 timestamp) */
+	resets_at?: string;
+}
+
+/** Claude Code usage tracking data */
+export interface ClaudeUsage {
+	/** Organization ID */
+	organization_id: string;
+	/** Organization name (if available) */
+	organization_name?: string;
+	/** 5-hour usage window */
+	five_hour: UsageWindow;
+	/** 7-day usage window */
+	seven_day: UsageWindow;
+	/** 7-day Sonnet-specific usage window (if applicable) */
+	seven_day_sonnet?: UsageWindow;
+	/** When this data was last fetched */
+	fetched_at: string;
+}
+
 /** Execution backend type */
 export enum BackendType {
 	/** Zellij terminal multiplexer */
@@ -332,6 +360,8 @@ export interface SystemStatus {
 	proxies: ProxyStatus[];
 	/** Total number of active sessions with proxies */
 	active_session_proxies: number;
+	/** Claude Code usage tracking (if available) */
+	claude_usage?: ClaudeUsage;
 }
 
 /** Request to update a credential */
