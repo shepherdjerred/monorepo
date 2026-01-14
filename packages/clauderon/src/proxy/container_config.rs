@@ -259,7 +259,9 @@ mod tests {
         let container_config = transform_marketplace_paths_for_container(&host_config);
 
         // Path should remain unchanged if it doesn't match the expected pattern
-        let location = container_config["test"]["installLocation"].as_str().unwrap();
+        let location = container_config["test"]["installLocation"]
+            .as_str()
+            .unwrap();
         assert_eq!(location, "/some/other/path");
     }
 
