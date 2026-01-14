@@ -657,14 +657,44 @@ impl SqliteStore {
         tracing::info!("Applying migration v10: Add subdirectory column to recent_repos");
 
         // Step 1: Clean up any partial migration artifacts
-        sqlx::query("DROP TABLE IF EXISTS recent_repos_new")
+        sqlx::query("DROP TABLE IF EXISTS recent_repos_v10_temp")
             .execute(pool)
             .await?;
 
-        // Step 2: Create new table with composite primary key
+        // Step 2: Create temporary table to hold existing data
         sqlx::query(
             r"
-            CREATE TABLE recent_repos_new (
+            CREATE TEMP TABLE recent_repos_v10_temp (
+                repo_path TEXT NOT NULL,
+                last_used TEXT NOT NULL
+            )
+            ",
+        )
+        .execute(pool)
+        .await?;
+
+        // Step 3: Copy existing data to temp table
+        sqlx::query(
+            r"
+            INSERT INTO recent_repos_v10_temp (repo_path, last_used)
+            SELECT repo_path, last_used FROM recent_repos
+            ",
+        )
+        .execute(pool)
+        .await?;
+
+        // Step 4: Drop old index
+        sqlx::query("DROP INDEX IF EXISTS idx_recent_repos_last_used")
+            .execute(pool)
+            .await?;
+
+        // Step 5: Drop old table completely
+        sqlx::query("DROP TABLE recent_repos").execute(pool).await?;
+
+        // Step 6: Create new table with correct schema
+        sqlx::query(
+            r"
+            CREATE TABLE recent_repos (
                 repo_path TEXT NOT NULL,
                 subdirectory TEXT NOT NULL DEFAULT '',
                 last_used TEXT NOT NULL,
@@ -675,33 +705,25 @@ impl SqliteStore {
         .execute(pool)
         .await?;
 
-        // Step 3: Migrate existing data (all subdirectories will be empty string)
+        // Step 7: Copy data back with empty subdirectory
         sqlx::query(
             r"
-            INSERT INTO recent_repos_new (repo_path, subdirectory, last_used)
-            SELECT repo_path, '', last_used FROM recent_repos
+            INSERT INTO recent_repos (repo_path, subdirectory, last_used)
+            SELECT repo_path, '', last_used FROM recent_repos_v10_temp
             ",
         )
         .execute(pool)
         .await?;
 
-        // Step 4: Drop old index first to avoid conflicts
-        sqlx::query("DROP INDEX IF EXISTS idx_recent_repos_last_used")
+        // Step 8: Drop temp table
+        sqlx::query("DROP TABLE recent_repos_v10_temp")
             .execute(pool)
             .await?;
 
-        // Step 5: Drop old table
-        sqlx::query("DROP TABLE recent_repos").execute(pool).await?;
-
-        // Step 6: Rename new table
-        sqlx::query("ALTER TABLE recent_repos_new RENAME TO recent_repos")
-            .execute(pool)
-            .await?;
-
-        // Step 7: Recreate index on last_used
+        // Step 9: Create index on last_used
         sqlx::query(
             r"
-            CREATE INDEX IF NOT EXISTS idx_recent_repos_last_used
+            CREATE INDEX idx_recent_repos_last_used
             ON recent_repos(last_used DESC)
             ",
         )
