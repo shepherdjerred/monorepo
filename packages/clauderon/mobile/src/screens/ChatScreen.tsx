@@ -110,7 +110,7 @@ export function ChatScreen({ route, navigation }: ChatScreenProps) {
     }
 
     // Send input to console
-    client.write(input + "\n");
+    client.write(input + "\r");
     setInput("");
   };
 
