@@ -11,11 +11,12 @@ use uuid::Uuid;
 use super::audit::AuditLogger;
 use super::ca::ProxyCa;
 use super::config::{Credentials, ProxyConfig};
-use super::container_config::{generate_codex_config, generate_container_configs};
+use super::container_config::{generate_codex_config, generate_container_configs, generate_plugin_config};
 use super::http_proxy::HttpAuthProxy;
 use super::port_allocator::PortAllocator;
 use super::talos_gateway::TalosGateway;
 use crate::core::session::AccessMode;
+use crate::plugins::PluginDiscovery;
 
 /// Manages all proxy services.
 pub struct ProxyManager {
@@ -88,6 +89,24 @@ impl ProxyManager {
         generate_container_configs(&self.clauderon_dir, self.config.talos_gateway_port)?;
         let account_id = self.credentials.codex_account_id();
         generate_codex_config(&self.clauderon_dir, account_id.as_deref())?;
+
+        // Generate plugin configuration
+        let plugin_discovery = PluginDiscovery::new(
+            dirs::home_dir()
+                .unwrap_or_else(|| PathBuf::from("/tmp"))
+                .join(".claude"),
+        );
+        if let Ok(plugin_manifest) = plugin_discovery.discover_plugins() {
+            if let Err(e) = generate_plugin_config(&self.clauderon_dir, &plugin_manifest) {
+                tracing::warn!("Failed to generate plugin config: {}", e);
+            } else if !plugin_manifest.installed_plugins.is_empty() {
+                tracing::info!(
+                    "Generated plugin config with {} plugins",
+                    plugin_manifest.installed_plugins.len()
+                );
+            }
+        }
+
         Ok(())
     }
 

@@ -5,7 +5,10 @@ use tracing::instrument;
 
 use super::traits::ExecutionBackend;
 use crate::core::AgentType;
-use crate::proxy::{dummy_auth_json_string, dummy_config_toml};
+use crate::plugins::{PluginDiscovery, PluginManifest};
+use crate::proxy::{
+    container_config::generate_plugin_config, dummy_auth_json_string, dummy_config_toml,
+};
 
 /// Sanitize git config value to prevent environment variable injection
 ///
@@ -517,6 +520,17 @@ impl DockerBackend {
                 temp_dir
             };
 
+            // Discover plugins from host
+            let plugin_discovery = PluginDiscovery::new(
+                dirs::home_dir()
+                    .unwrap_or_else(|| PathBuf::from("/tmp"))
+                    .join(".claude"),
+            );
+            let plugin_manifest = plugin_discovery.discover_plugins().unwrap_or_else(|e| {
+                tracing::warn!("Failed to discover plugins: {}", e);
+                PluginManifest::empty()
+            });
+
             // Create the config directory if it doesn't exist
             if let Err(e) = std::fs::create_dir_all(&config_dir) {
                 tracing::warn!(
@@ -551,6 +565,45 @@ impl DockerBackend {
                             display = claude_json_path.display()
                         ),
                     ]);
+                }
+
+                // Generate and mount plugin configuration if plugins are available
+                if !plugin_manifest.installed_plugins.is_empty() {
+                    if let Err(e) = generate_plugin_config(&config_dir, &plugin_manifest) {
+                        tracing::warn!("Failed to generate plugin config: {}", e);
+                    } else {
+                        // Mount plugin marketplace config
+                        let plugin_config_path = config_dir.join("plugins/known_marketplaces.json");
+                        if plugin_config_path.exists() {
+                            args.extend([
+                                "-v".to_string(),
+                                format!(
+                                    "{}:/workspace/.claude/plugins/known_marketplaces.json:ro",
+                                    plugin_config_path.display()
+                                ),
+                            ]);
+                        }
+
+                        // Mount marketplace directory read-only
+                        let host_plugins_dir = dirs::home_dir()
+                            .unwrap_or_else(|| PathBuf::from("/tmp"))
+                            .join(".claude/plugins/marketplaces");
+
+                        if host_plugins_dir.exists() {
+                            args.extend([
+                                "-v".to_string(),
+                                format!(
+                                    "{}:/workspace/.claude/plugins/marketplaces:ro",
+                                    host_plugins_dir.display()
+                                ),
+                            ]);
+                            tracing::info!(
+                                "Mounted {} plugins from {} to container",
+                                plugin_manifest.installed_plugins.len(),
+                                host_plugins_dir.display()
+                            );
+                        }
+                    }
                 }
 
                 // Proxy-specific configuration (only when proxy is enabled)
