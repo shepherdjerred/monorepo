@@ -771,18 +771,7 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
             let translated_images: Vec<String> = options
                 .images
                 .iter()
-                .map(|image_path| {
-                    let home = std::env::var("HOME").unwrap_or_else(|_| "/root".to_string());
-                    let host_uploads_prefix = format!("{home}/.clauderon/uploads");
-
-                    if image_path.starts_with(&host_uploads_prefix) {
-                        // Replace host prefix with container prefix
-                        image_path.replace(&host_uploads_prefix, "/workspace/.clauderon/uploads")
-                    } else {
-                        // Keep relative paths as-is (relative to workspace)
-                        image_path.clone()
-                    }
-                })
+                .map(|image_path| crate::utils::paths::translate_image_path_to_container(image_path))
                 .collect();
 
             match options.agent {
