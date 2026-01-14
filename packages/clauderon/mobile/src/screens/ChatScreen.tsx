@@ -21,7 +21,7 @@ import { ConnectionStatus } from "../components/ConnectionStatus";
 import { colors } from "../styles/colors";
 import { typography } from "../styles/typography";
 import { commonStyles } from "../styles/common";
-import { useClauderonClient } from "../contexts/ClauderonContext";
+import { useClauderonClient } from "../hooks/useClauderonClient";
 
 type ChatScreenProps = RootStackScreenProps<"Chat">;
 

@@ -701,6 +701,7 @@ dependencies = [
  "tracing-appender",
  "tracing-subscriber",
  "typeshare",
+ "unicode-width",
  "uuid",
  "vt100",
  "webauthn-rs",
