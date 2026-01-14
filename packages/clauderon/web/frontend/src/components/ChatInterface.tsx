@@ -52,8 +52,10 @@ export function ChatInterface({
 
           // Translate host path to container path
           // Host: /Users/name/.clauderon/uploads/... → Container: /workspace/.clauderon/uploads/...
-          const containerPath = response.path.includes('/.clauderon/uploads/')
-            ? response.path.replace(/.*\/.clauderon\/uploads\//, '/workspace/.clauderon/uploads/')
+          const prefix = '/.clauderon/uploads/';
+          const idx = response.path.indexOf(prefix);
+          const containerPath = idx !== -1
+            ? '/workspace/.clauderon/uploads/' + response.path.slice(idx + prefix.length)
             : response.path;
 
           // Send the container path to Claude Code via console (like drag-and-drop)
