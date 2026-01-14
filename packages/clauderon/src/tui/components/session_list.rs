@@ -127,10 +127,8 @@ impl ColumnWidths {
 
     /// Shrink proportionally if total exceeds available width
     fn fit_to_width(&mut self, available_width: u16) {
-        let fixed_width = self.prefix_width
-            + self.claude_indicator
-            + self.ci_indicator
-            + self.conflict_indicator;
+        let fixed_width =
+            self.prefix_width + self.claude_indicator + self.ci_indicator + self.conflict_indicator;
         let available_for_columns = (available_width as usize).saturating_sub(fixed_width);
 
         let total_current =
@@ -153,8 +151,7 @@ impl ColumnWidths {
             ((self.branch_pr as f64 * shrink_ratio) as usize).max(Self::BRANCH_PR_RANGE.0);
 
         // If still doesn't fit after respecting minimums, force to minimums
-        let new_total =
-            self.name + self.repository + self.status + self.backend + self.branch_pr;
+        let new_total = self.name + self.repository + self.status + self.backend + self.branch_pr;
         if new_total > available_for_columns {
             self.name = Self::NAME_RANGE.0;
             self.repository = Self::REPO_RANGE.0;
