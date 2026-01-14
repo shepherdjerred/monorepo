@@ -255,7 +255,11 @@ mod tests {
         fs::create_dir_all(&manifest_dir).unwrap();
 
         let manifest_path = manifest_dir.join("plugin.json");
-        fs::write(&manifest_path, r#"{"name": "test-plugin", "version": "1.0.0"}"#).unwrap();
+        fs::write(
+            &manifest_path,
+            r#"{"name": "test-plugin", "version": "1.0.0"}"#,
+        )
+        .unwrap();
 
         // Create known_marketplaces.json
         let plugins_root = claude_dir.join("plugins");
@@ -271,7 +275,10 @@ mod tests {
 
         assert_eq!(manifest.installed_plugins.len(), 1);
         assert_eq!(manifest.installed_plugins[0].name, "test-plugin");
-        assert_eq!(manifest.installed_plugins[0].marketplace, "test-marketplace");
+        assert_eq!(
+            manifest.installed_plugins[0].marketplace,
+            "test-marketplace"
+        );
         assert!(manifest.marketplace_configs.is_object());
     }
 

@@ -76,9 +76,7 @@ pub fn generate_plugin_config(
 ///
 /// Replaces host-specific paths (e.g., /Users/foo/.claude/plugins/...) with container
 /// paths (e.g., /workspace/.claude/plugins/...) since HOME=/workspace in containers.
-fn transform_marketplace_paths_for_container(
-    host_config: &serde_json::Value,
-) -> serde_json::Value {
+fn transform_marketplace_paths_for_container(host_config: &serde_json::Value) -> serde_json::Value {
     let mut container_config = host_config.clone();
 
     if let Some(obj) = container_config.as_object_mut() {
@@ -166,5 +164,109 @@ mod tests {
 
         assert!(auth_path.exists());
         assert!(config_path.exists());
+    }
+
+    #[test]
+    fn test_generate_plugin_config() {
+        use crate::plugins::{DiscoveredPlugin, PluginManifest};
+
+        let dir = tempdir().unwrap();
+        let clauderon_dir = dir.path().to_path_buf();
+
+        let manifest = PluginManifest {
+            marketplace_configs: serde_json::json!({
+                "test-marketplace": {
+                    "installLocation": "/home/user/.claude/plugins/marketplaces/test-marketplace",
+                    "source": {
+                        "source": "github",
+                        "repo": "test/test"
+                    }
+                }
+            }),
+            installed_plugins: vec![DiscoveredPlugin {
+                name: "test-plugin".to_string(),
+                marketplace: "test-marketplace".to_string(),
+                path: PathBuf::from(
+                    "/home/user/.claude/plugins/marketplaces/test-marketplace/plugins/test-plugin",
+                ),
+            }],
+        };
+
+        generate_plugin_config(&clauderon_dir, &manifest).unwrap();
+
+        let marketplaces_path = clauderon_dir.join("plugins/known_marketplaces.json");
+        assert!(marketplaces_path.exists());
+
+        // Verify the content has transformed paths
+        let content = std::fs::read_to_string(&marketplaces_path).unwrap();
+        assert!(content.contains("/workspace/.claude/plugins/marketplaces"));
+    }
+
+    #[test]
+    fn test_generate_plugin_config_creates_directory() {
+        use crate::plugins::PluginManifest;
+
+        let dir = tempdir().unwrap();
+        let clauderon_dir = dir.path().to_path_buf();
+
+        let manifest = PluginManifest::empty();
+        generate_plugin_config(&clauderon_dir, &manifest).unwrap();
+
+        assert!(clauderon_dir.join("plugins").exists());
+    }
+
+    #[test]
+    fn test_transform_marketplace_paths() {
+        let host_config = serde_json::json!({
+            "official": {
+                "installLocation": "/Users/foo/.claude/plugins/marketplaces/official",
+                "source": {"source": "github"}
+            },
+            "custom": {
+                "installLocation": "/home/user/.claude/plugins/marketplaces/custom",
+                "source": {"source": "local"}
+            }
+        });
+
+        let container_config = transform_marketplace_paths_for_container(&host_config);
+
+        let official_location = container_config["official"]["installLocation"]
+            .as_str()
+            .unwrap();
+        assert_eq!(
+            official_location,
+            "/workspace/.claude/plugins/marketplaces/official"
+        );
+
+        let custom_location = container_config["custom"]["installLocation"]
+            .as_str()
+            .unwrap();
+        assert_eq!(
+            custom_location,
+            "/workspace/.claude/plugins/marketplaces/custom"
+        );
+    }
+
+    #[test]
+    fn test_transform_marketplace_paths_no_match() {
+        let host_config = serde_json::json!({
+            "test": {
+                "installLocation": "/some/other/path",
+                "source": {"source": "github"}
+            }
+        });
+
+        let container_config = transform_marketplace_paths_for_container(&host_config);
+
+        // Path should remain unchanged if it doesn't match the expected pattern
+        let location = container_config["test"]["installLocation"].as_str().unwrap();
+        assert_eq!(location, "/some/other/path");
+    }
+
+    #[test]
+    fn test_transform_marketplace_paths_empty_config() {
+        let host_config = serde_json::json!({});
+        let container_config = transform_marketplace_paths_for_container(&host_config);
+        assert!(container_config.as_object().unwrap().is_empty());
     }
 }
