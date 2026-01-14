@@ -3,8 +3,10 @@
 //! Generates kubeconfig and talosconfig files that point to the host proxy,
 //! so containers can access Kubernetes and Talos without credentials.
 
+use anyhow::Context;
 use std::path::PathBuf;
 
+use crate::plugins::PluginManifest;
 use crate::proxy::{dummy_auth_json_string, dummy_config_toml};
 
 /// Generate all container configuration files.
@@ -30,6 +32,76 @@ pub fn generate_codex_config(
     std::fs::write(auth_json_path, dummy_auth_json_string(account_id)?)?;
     std::fs::write(config_toml_path, dummy_config_toml())?;
     Ok(())
+}
+
+/// Generate plugin configuration for containers.
+///
+/// Creates a known_marketplaces.json file with container-adjusted paths that point to
+/// the mounted plugin directories. Plugin files themselves are mounted read-only from
+/// the host, so this only generates the configuration metadata.
+pub fn generate_plugin_config(
+    clauderon_dir: &PathBuf,
+    plugin_manifest: &PluginManifest,
+) -> anyhow::Result<()> {
+    let plugins_dir = clauderon_dir.join("plugins");
+    std::fs::create_dir_all(&plugins_dir).context("Failed to create plugins directory")?;
+
+    // Transform marketplace paths from host to container paths
+    let container_marketplaces =
+        transform_marketplace_paths_for_container(&plugin_manifest.marketplace_configs);
+
+    // Write known_marketplaces.json with container paths
+    let marketplaces_path = plugins_dir.join("known_marketplaces.json");
+    std::fs::write(
+        &marketplaces_path,
+        serde_json::to_string_pretty(&container_marketplaces)?,
+    )
+    .with_context(|| {
+        format!(
+            "Failed to write known_marketplaces.json to {}",
+            marketplaces_path.display()
+        )
+    })?;
+
+    tracing::debug!(
+        "Generated plugin config at {} with {} marketplaces",
+        marketplaces_path.display(),
+        plugin_manifest.installed_plugins.len()
+    );
+
+    Ok(())
+}
+
+/// Transform marketplace configuration paths from host to container paths.
+///
+/// Replaces host-specific paths (e.g., /Users/foo/.claude/plugins/...) with container
+/// paths (e.g., /workspace/.claude/plugins/...) since HOME=/workspace in containers.
+fn transform_marketplace_paths_for_container(
+    host_config: &serde_json::Value,
+) -> serde_json::Value {
+    let mut container_config = host_config.clone();
+
+    if let Some(obj) = container_config.as_object_mut() {
+        for (_marketplace_name, marketplace_data) in obj.iter_mut() {
+            if let Some(install_location) = marketplace_data.get_mut("installLocation") {
+                if let Some(path_str) = install_location.as_str() {
+                    // Transform the path to container location
+                    // The plugins will be mounted at /workspace/.claude/plugins/marketplaces
+                    // regardless of where they are on the host
+                    if path_str.contains(".claude/plugins/marketplaces") {
+                        // Extract just the marketplace-specific portion
+                        if let Some(idx) = path_str.find(".claude/plugins/marketplaces") {
+                            let marketplace_relative = &path_str[idx..];
+                            let container_path = format!("/workspace/{}", marketplace_relative);
+                            *install_location = serde_json::Value::String(container_path);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    container_config
 }
 
 /// Generate talosconfig for containers.

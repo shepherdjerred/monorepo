@@ -17,6 +17,7 @@ use tokio::time::timeout;
 use super::kubernetes_config::{KubernetesConfig, KubernetesProxyConfig};
 use super::traits::{CreateOptions, ExecutionBackend};
 use crate::core::AgentType;
+use crate::plugins::PluginDiscovery;
 use crate::proxy::{dummy_auth_json_string, dummy_config_toml};
 
 /// Sanitize git config value to prevent environment variable injection
@@ -367,6 +368,24 @@ impl KubernetesBackend {
     /// Create ConfigMap for Claude configuration
     async fn create_claude_config_configmap(&self, pod_name: &str) -> anyhow::Result<()> {
         let cms: Api<ConfigMap> = Api::namespaced(self.client.clone(), &self.config.namespace);
+
+        // Discover plugins from host (where clauderon server runs)
+        // Note: Plugins cannot be mounted in Kubernetes pods without PersistentVolumes
+        let plugin_discovery = PluginDiscovery::new(
+            dirs::home_dir()
+                .unwrap_or_else(|| std::path::PathBuf::from("/tmp"))
+                .join(".claude"),
+        );
+
+        if let Ok(plugin_manifest) = plugin_discovery.discover_plugins() {
+            if !plugin_manifest.installed_plugins.is_empty() {
+                tracing::warn!(
+                    plugin_count = plugin_manifest.installed_plugins.len(),
+                    "Plugins discovered but cannot be mounted in Kubernetes pods. \
+                     Plugin functionality will be limited. Future enhancement: use PersistentVolumes for plugin support."
+                );
+            }
+        }
 
         // Create minimal .claude.json config
         let claude_config = serde_json::json!({
