@@ -6,6 +6,7 @@ import { typography } from "../styles/typography";
 import { formatTime } from "../lib/utils";
 import Markdown from "react-native-markdown-display";
 import SyntaxHighlighter from "react-native-syntax-highlighter";
+import { atomOneDark } from "react-syntax-highlighter/dist/esm/styles/hljs";
 import { PlanView, isPlan } from "./PlanView";
 import { QuestionView, isQuestion } from "./QuestionView";
 
@@ -93,18 +94,21 @@ export function MessageBubble({ message }: MessageBubbleProps) {
                   )}
                 </View>
                 <ScrollView horizontal style={styles.codeScroll}>
-                  <SyntaxHighlighter
-                    language={block.language || "text"}
-                    style={{
-                      backgroundColor: colors.backgroundDark,
-                      padding: 8,
-                    }}
-                    fontSize={typography.fontSize.sm}
-                    fontFamily={typography.fontFamily.mono}
-                    highlighter="prism"
-                  >
-                    {block.code}
-                  </SyntaxHighlighter>
+                  <View style={styles.codeContent}>
+                    <SyntaxHighlighter
+                      language={block.language || "text"}
+                      style={atomOneDark}
+                      customStyle={{
+                        backgroundColor: colors.backgroundDark,
+                        padding: 8,
+                      }}
+                      fontSize={typography.fontSize.sm}
+                      fontFamily={typography.fontFamily.mono}
+                      highlighter="hljs"
+                    >
+                      {block.code}
+                    </SyntaxHighlighter>
+                  </View>
                 </ScrollView>
               </View>
             ))}
@@ -216,6 +220,9 @@ const styles = StyleSheet.create({
   },
   codeScroll: {
     maxHeight: 300,
+  },
+  codeContent: {
+    minWidth: "100%",
   },
   timestamp: {
     fontSize: typography.fontSize.xs,
