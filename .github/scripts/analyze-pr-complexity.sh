@@ -140,22 +140,22 @@ MAX_TURNS=30  # Default
 COMPLEXITY="complex"
 
 # Complexity thresholds:
-# - Simple: <150 lines, <5 files → 10 turns
-# - Medium: <300 lines, <8 files → 20 turns
-# - Complex: >=300 lines OR >=8 files → 30 turns
+# - Simple: <100 lines AND <5 files → 10 turns
+# - Medium: <250 lines AND <8 files → 20 turns
+# - Complex: >=250 lines OR >=8 files → 30 turns
 
-if [ "$TOTAL_CHANGES" -lt 150 ] && [ "$CHANGED_FILES" -lt 5 ]; then
+if [ "$TOTAL_CHANGES" -lt 100 ] && [ "$CHANGED_FILES" -lt 5 ]; then
   MAX_TURNS=10
   COMPLEXITY="simple"
-  echo "  Classification: SIMPLE (<150 lines, <5 files)"
-elif [ "$TOTAL_CHANGES" -lt 300 ] && [ "$CHANGED_FILES" -lt 8 ]; then
+  echo "  Classification: SIMPLE (<100 lines AND <5 files)"
+elif [ "$TOTAL_CHANGES" -lt 250 ] && [ "$CHANGED_FILES" -lt 8 ]; then
   MAX_TURNS=20
   COMPLEXITY="medium"
-  echo "  Classification: MEDIUM (<300 lines, <8 files)"
+  echo "  Classification: MEDIUM (<250 lines AND <8 files)"
 else
   MAX_TURNS=30
   COMPLEXITY="complex"
-  echo "  Classification: COMPLEX (≥300 lines OR ≥8 files)"
+  echo "  Classification: COMPLEX (≥250 lines OR ≥8 files)"
 fi
 
 echo "  Max turns: ${MAX_TURNS}"
