@@ -1066,8 +1066,8 @@ mod tests {
             None,  // session_id
             None,  // http_port
                 &DockerConfig::default(),
-            None,  // image_override
-            None,  // resource_override
+            None, // image_override
+            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -1140,8 +1140,8 @@ mod tests {
             None,  // session_id
             None,  // http_port
                 &DockerConfig::default(),
-            None,  // image_override
-            None,  // resource_override
+            None, // image_override
+            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -1175,8 +1175,8 @@ mod tests {
             None,  // session_id
             None,  // http_port
                 &DockerConfig::default(),
-            None,  // image_override
-            None,  // resource_override
+            None, // image_override
+            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -1213,8 +1213,8 @@ mod tests {
             None,  // session_id
             None,  // http_port
             &DockerConfig::default(),
-            None,  // image_override
-            None,  // resource_override
+            None, // image_override
+            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -1251,8 +1251,8 @@ mod tests {
             None,  // session_id
             None,  // http_port
             &DockerConfig::default(),
-            None,  // image_override
-            None,  // resource_override
+            None, // image_override
+            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -1350,8 +1350,8 @@ mod tests {
             None,  // session_id
             None,  // http_port
             &DockerConfig::default(),
-            None,  // image_override
-            None,  // resource_override
+            None, // image_override
+            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -1384,8 +1384,8 @@ mod tests {
             None,  // session_id
             None,  // http_port
             &DockerConfig::default(),
-            None,  // image_override
-            None,  // resource_override
+            None, // image_override
+            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -1431,8 +1431,8 @@ mod tests {
             None,  // session_id
             None,  // http_port
             &DockerConfig::default(),
-            None,  // image_override
-            None,  // resource_override
+            None, // image_override
+            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -1476,8 +1476,8 @@ mod tests {
             None,  // session_id
             None,  // http_port
             &DockerConfig::default(),
-            None,  // image_override
-            None,  // resource_override
+            None, // image_override
+            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -1505,8 +1505,8 @@ mod tests {
             None,  // session_id
             None,  // http_port
             &DockerConfig::default(),
-            None,  // image_override
-            None,  // resource_override
+            None, // image_override
+            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -1544,8 +1544,8 @@ mod tests {
             None,  // session_id
             None,  // http_port
             &DockerConfig::default(),
-            None,  // image_override
-            None,  // resource_override
+            None, // image_override
+            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -1582,8 +1582,8 @@ mod tests {
             None, // session_id
             None, // http_port
             &DockerConfig::default(),
-            None,  // image_override
-            None,  // resource_override
+            None, // image_override
+            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -1617,8 +1617,8 @@ mod tests {
             None,  // session_id
             None,  // http_port
             &DockerConfig::default(),
-            None,  // image_override
-            None,  // resource_override
+            None, // image_override
+            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -1674,8 +1674,8 @@ mod tests {
             None,  // session_id
             None,  // http_port
             &DockerConfig::default(),
-            None,  // image_override
-            None,  // resource_override
+            None, // image_override
+            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -1730,8 +1730,8 @@ mod tests {
             None,  // session_id
             None,  // http_port
             &DockerConfig::default(),
-            None,  // image_override
-            None,  // resource_override
+            None, // image_override
+            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -1782,8 +1782,8 @@ mod tests {
             None,  // session_id
             None,  // http_port
             &DockerConfig::default(),
-            None,  // image_override
-            None,  // resource_override
+            None, // image_override
+            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -1837,8 +1837,8 @@ mod tests {
             None,  // session_id
             None,  // http_port
             &DockerConfig::default(),
-            None,  // image_override
-            None,  // resource_override
+            None, // image_override
+            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -1882,8 +1882,8 @@ mod tests {
             None,  // session_id
             None,  // http_port
             &DockerConfig::default(),
-            None,  // image_override
-            None,  // resource_override
+            None, // image_override
+            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -1927,8 +1927,8 @@ mod tests {
             None,  // session_id
             None,  // http_port
             &DockerConfig::default(),
-            None,  // image_override
-            None,  // resource_override
+            None, // image_override
+            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -1959,8 +1959,8 @@ mod tests {
             None,  // session_id
             None,  // http_port
             &DockerConfig::default(),
-            None,  // image_override
-            None,  // resource_override
+            None, // image_override
+            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -2005,8 +2005,8 @@ mod tests {
             None,  // session_id
             None,  // http_port
             &DockerConfig::default(),
-            None,  // image_override
-            None,  // resource_override
+            None, // image_override
+            None, // resource_override
         )
         .expect("Failed to build args");
 

@@ -1004,8 +1004,14 @@ fi"#,
                 limits.insert("memory".to_string(), Quantity(memory.clone()));
             } else {
                 // No memory override, use config
-                requests.insert("memory".to_string(), Quantity(self.config.memory_request.clone()));
-                limits.insert("memory".to_string(), Quantity(self.config.memory_limit.clone()));
+                requests.insert(
+                    "memory".to_string(),
+                    Quantity(self.config.memory_request.clone()),
+                );
+                limits.insert(
+                    "memory".to_string(),
+                    Quantity(self.config.memory_limit.clone()),
+                );
             }
 
             tracing::info!(
@@ -1016,7 +1022,10 @@ fi"#,
         } else {
             // No override, use config defaults
             requests.insert("cpu".to_string(), Quantity(self.config.cpu_request.clone()));
-            requests.insert("memory".to_string(), Quantity(self.config.memory_request.clone()));
+            requests.insert(
+                "memory".to_string(),
+                Quantity(self.config.memory_request.clone()),
+            );
             limits.insert("cpu".to_string(), Quantity(self.config.cpu_limit.clone()));
             limits.insert(
                 "memory".to_string(),
