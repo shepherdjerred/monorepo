@@ -66,6 +66,36 @@ You can provide an OpenAI API key via:
 - `OPENAI_API_KEY` or `CODEX_API_KEY` environment variables, or
 - `~/.clauderon/secrets/openai_api_key` (for the clauderon proxy to inject)
 
+## Custom Container Images
+
+Clauderon uses container images to run isolated Claude Code or Codex sessions. The default image is `ghcr.io/shepherdjerred/dotfiles`.
+
+### Using a custom image
+
+You can use any Docker image that meets Clauderon's requirements:
+
+```bash
+clauderon create --image your-image:tag --name session-name --repository /path/to/repo
+```
+
+### Image requirements
+
+Your image must have:
+- `claude` or `codex` CLI in PATH
+- `bash` shell (not just `/bin/sh`)
+- Writable `/workspace` directory
+- `curl` binary
+- Standard Unix utilities: `mkdir`, `chmod`, `cat`, `date`
+
+Strongly recommended:
+- `git` CLI (for git operations)
+
+See [`docs/IMAGE_COMPATIBILITY.md`](docs/IMAGE_COMPATIBILITY.md) for complete requirements and troubleshooting.
+
+### Example Dockerfiles
+
+See [`examples/`](examples/) for minimal and recommended Dockerfile examples.
+
 ## Build Order
 
 The frontend must be built before the Rust binary because static files are embedded at compile time.
