@@ -188,6 +188,13 @@ impl KubernetesBackend {
             tracing::info!("Created shared sccache PVC");
         }
 
+        // Create uploads PVC for image attachments (shared across sessions)
+        // Unlike workspace PVCs which are per-session, uploads are shared with session-id subdirectories
+        if pvcs.get("clauderon-uploads").await.is_err() {
+            self.create_shared_pvc("clauderon-uploads", "10Gi").await?;
+            tracing::info!("Created shared uploads PVC");
+        }
+
         Ok(())
     }
 
@@ -759,6 +766,25 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
                 }
             };
 
+            // Translate image paths from host to container
+            // Host: /Users/name/.clauderon/uploads/... → Container: /workspace/.clauderon/uploads/...
+            let translated_images: Vec<String> = options
+                .images
+                .iter()
+                .map(|image_path| {
+                    let home = std::env::var("HOME").unwrap_or_else(|_| "/root".to_string());
+                    let host_uploads_prefix = format!("{home}/.clauderon/uploads");
+
+                    if image_path.starts_with(&host_uploads_prefix) {
+                        // Replace host prefix with container prefix
+                        image_path.replace(&host_uploads_prefix, "/workspace/.clauderon/uploads")
+                    } else {
+                        // Keep relative paths as-is (relative to workspace)
+                        image_path.clone()
+                    }
+                })
+                .collect();
+
             match options.agent {
                 AgentType::ClaudeCode => {
                     // Build base args (without session-id, we add it in wrapper)
@@ -773,7 +799,7 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
                     if options.dangerous_skip_checks {
                         base_args.push("--dangerously-skip-permissions".to_string());
                     }
-                    for image in &options.images {
+                    for image in &translated_images {
                         base_args.push("--image".to_string());
                         base_args.push(image.clone());
                     }
@@ -852,7 +878,7 @@ fi"#;
                             cmd_vec.push("--full-auto".to_string());
                         }
                         cmd_vec.push("exec".to_string());
-                        for image in &options.images {
+                        for image in &translated_images {
                             cmd_vec.push("--image".to_string());
                             cmd_vec.push(image.clone());
                         }
@@ -870,7 +896,7 @@ fi"#;
                         if options.dangerous_skip_checks {
                             create_cmd_vec.push("--full-auto".to_string());
                         }
-                        for image in &options.images {
+                        for image in &translated_images {
                             create_cmd_vec.push("--image".to_string());
                             create_cmd_vec.push(image.clone());
                         }
@@ -934,6 +960,11 @@ fi"#,
                 name: "claude-config".to_string(),
                 mount_path: "/workspace/.claude.json".to_string(),
                 sub_path: Some("claude.json".to_string()),
+                ..Default::default()
+            },
+            VolumeMount {
+                name: "uploads".to_string(),
+                mount_path: "/workspace/.clauderon/uploads".to_string(),
                 ..Default::default()
             },
         ];
@@ -1065,6 +1096,16 @@ fi"#,
                     name: format!("{pod_name}-config"),
                     ..Default::default()
                 }),
+                ..Default::default()
+            },
+            Volume {
+                name: "uploads".to_string(),
+                persistent_volume_claim: Some(
+                    k8s_openapi::api::core::v1::PersistentVolumeClaimVolumeSource {
+                        claim_name: "clauderon-uploads".to_string(),
+                        ..Default::default()
+                    },
+                ),
                 ..Default::default()
             },
         ];
