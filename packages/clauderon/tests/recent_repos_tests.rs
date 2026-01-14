@@ -372,7 +372,7 @@ async fn test_nonexistent_repo_handles_gracefully() {
     // but will not store the path since it can't be canonicalized
     let nonexistent = PathBuf::from("/definitely/does/not/exist");
     store
-        .add_recent_repo(nonexistent.clone())
+        .add_recent_repo(nonexistent.clone(), PathBuf::new())
         .await
         .expect("Should handle nonexistent paths gracefully");
 
