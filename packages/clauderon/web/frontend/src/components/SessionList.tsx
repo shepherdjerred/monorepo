@@ -24,7 +24,7 @@ type FilterStatus = "all" | "running" | "idle" | "completed" | "archived";
 const TAB_TRIGGER_CLASS = "cursor-pointer transition-all duration-200 hover:bg-primary/20 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-b-4 data-[state=active]:border-foreground";
 
 export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
-  const { sessions, isLoading, error, refreshSessions, archiveSession, refreshSession, deleteSession } =
+  const { sessions, isLoading, error, refreshSessions, archiveSession, unarchiveSession, refreshSession, deleteSession } =
     useSessionContext();
 
   // Initialize filter from URL parameter
@@ -39,7 +39,7 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
 
   const [filter, setFilter] = useState<FilterStatus>(getInitialFilter);
   const [confirmDialog, setConfirmDialog] = useState<{
-    type: "archive" | "delete" | "refresh";
+    type: "archive" | "unarchive" | "delete" | "refresh";
     session: Session;
   } | null>(null);
   const [editingSession, setEditingSession] = useState<Session | null>(null);
@@ -109,6 +109,10 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
     setConfirmDialog({ type: "archive", session });
   };
 
+  const handleUnarchive = (session: Session) => {
+    setConfirmDialog({ type: "unarchive", session });
+  };
+
   const handleDelete = (session: Session) => {
     setConfirmDialog({ type: "delete", session });
   };
@@ -125,6 +129,12 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
         toast.success(`Session "${confirmDialog.session.name}" archived`);
       }).catch((err) => {
         toast.error(`Failed to archive: ${err instanceof Error ? err.message : String(err)}`);
+      });
+    } else if (confirmDialog.type === "unarchive") {
+      void unarchiveSession(confirmDialog.session.id).then(() => {
+        toast.success(`Session "${confirmDialog.session.name}" restored from archive`);
+      }).catch((err) => {
+        toast.error(`Failed to unarchive: ${err instanceof Error ? err.message : String(err)}`);
       });
     } else if (confirmDialog.type === "refresh") {
       void refreshSession(confirmDialog.session.id).then(() => {
@@ -276,6 +286,7 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
                 onAttach={onAttach}
                 onEdit={handleEdit}
                 onArchive={handleArchive}
+                onUnarchive={handleUnarchive}
                 onRefresh={handleRefresh}
                 onDelete={handleDelete}
               />
@@ -296,23 +307,29 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
           title={
             confirmDialog.type === "archive"
               ? "Archive Session"
-              : confirmDialog.type === "refresh"
-                ? "Refresh Session"
-                : "Delete Session"
+              : confirmDialog.type === "unarchive"
+                ? "Unarchive Session"
+                : confirmDialog.type === "refresh"
+                  ? "Refresh Session"
+                  : "Delete Session"
           }
           description={
             confirmDialog.type === "archive"
               ? `Are you sure you want to archive "${confirmDialog.session.name}"?`
-              : confirmDialog.type === "refresh"
-                ? `This will pull the latest image and recreate the container for "${confirmDialog.session.name}". The session history will be preserved.`
-                : `Are you sure you want to delete "${confirmDialog.session.name}"? This action cannot be undone.`
+              : confirmDialog.type === "unarchive"
+                ? `Are you sure you want to restore "${confirmDialog.session.name}" from the archive?`
+                : confirmDialog.type === "refresh"
+                  ? `This will pull the latest image and recreate the container for "${confirmDialog.session.name}". The session history will be preserved.`
+                  : `Are you sure you want to delete "${confirmDialog.session.name}"? This action cannot be undone.`
           }
           confirmLabel={
             confirmDialog.type === "archive"
               ? "Archive"
-              : confirmDialog.type === "refresh"
-                ? "Refresh"
-                : "Delete"
+              : confirmDialog.type === "unarchive"
+                ? "Unarchive"
+                : confirmDialog.type === "refresh"
+                  ? "Refresh"
+                  : "Delete"
           }
           variant={confirmDialog.type === "delete" ? "destructive" : "default"}
           onConfirm={handleConfirm}

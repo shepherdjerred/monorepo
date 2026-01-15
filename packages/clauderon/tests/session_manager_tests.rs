@@ -427,6 +427,84 @@ async fn test_archive_session_not_found() {
     assert!(result.unwrap_err().to_string().contains("not found"));
 }
 
+// ========== unarchive_session tests ==========
+
+#[tokio::test]
+async fn test_unarchive_session_success() {
+    let repo_dir = create_temp_git_repo();
+    let (manager, _temp_dir, _git, _zellij, _docker) = create_test_manager().await;
+
+    let (session, _) = manager
+        .create_session(
+            repo_dir.path().to_string_lossy().to_string(),
+            "prompt".to_string(),
+            BackendType::Zellij,
+            AgentType::ClaudeCode,
+            true,
+            false,              // print_mode
+            true,               // plan_mode
+            Default::default(), // access_mode
+            vec![],             // images
+            None,               // container_image
+            None,               // pull_policy
+            None,               // cpu_limit
+            None,               // memory_limit
+        )
+        .await
+        .unwrap();
+
+    // Archive the session first
+    manager.archive_session(&session.name).await.unwrap();
+    let archived = manager.get_session(&session.name).await.unwrap();
+    assert_eq!(archived.status, SessionStatus::Archived);
+
+    // Unarchive the session
+    manager.unarchive_session(&session.name).await.unwrap();
+
+    // Session should now be Idle
+    let unarchived = manager.get_session(&session.name).await.unwrap();
+    assert_eq!(unarchived.status, SessionStatus::Idle);
+}
+
+#[tokio::test]
+async fn test_unarchive_session_not_archived() {
+    let repo_dir = create_temp_git_repo();
+    let (manager, _temp_dir, _git, _zellij, _docker) = create_test_manager().await;
+
+    let (session, _) = manager
+        .create_session(
+            repo_dir.path().to_string_lossy().to_string(),
+            "prompt".to_string(),
+            BackendType::Zellij,
+            AgentType::ClaudeCode,
+            true,
+            false,              // print_mode
+            true,               // plan_mode
+            Default::default(), // access_mode
+            vec![],             // images
+            None,               // container_image
+            None,               // pull_policy
+            None,               // cpu_limit
+            None,               // memory_limit
+        )
+        .await
+        .unwrap();
+
+    // Try to unarchive a non-archived session
+    let result = manager.unarchive_session(&session.name).await;
+    assert!(result.is_err());
+    assert!(result.unwrap_err().to_string().contains("not archived"));
+}
+
+#[tokio::test]
+async fn test_unarchive_session_not_found() {
+    let (manager, _temp_dir, _git, _zellij, _docker) = create_test_manager().await;
+
+    let result = manager.unarchive_session("nonexistent").await;
+    assert!(result.is_err());
+    assert!(result.unwrap_err().to_string().contains("not found"));
+}
+
 // ========== get_attach_command tests ==========
 
 #[tokio::test]

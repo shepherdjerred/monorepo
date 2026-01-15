@@ -25,6 +25,9 @@ pub enum Request {
     /// Archive a session
     ArchiveSession { id: String },
 
+    /// Unarchive a session
+    UnarchiveSession { id: String },
+
     /// Get the attach command for a session
     AttachSession { id: String },
 
@@ -233,6 +236,9 @@ pub enum Response {
 
     /// Session archived successfully
     Archived,
+
+    /// Session unarchived successfully
+    Unarchived,
 
     /// Session refreshed successfully
     Refreshed,
