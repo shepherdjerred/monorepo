@@ -404,6 +404,10 @@ impl SessionManager {
                     access_mode,
                     images,
                     dangerous_skip_checks,
+                    container_image,
+                    pull_policy,
+                    cpu_limit,
+                    memory_limit,
                 )
                 .await;
         });
@@ -429,6 +433,10 @@ impl SessionManager {
         access_mode: super::session::AccessMode,
         images: Vec<String>,
         dangerous_skip_checks: bool,
+        container_image: Option<String>,
+        pull_policy: Option<String>,
+        cpu_limit: Option<String>,
+        memory_limit: Option<String>,
     ) {
         // Acquire semaphore to limit concurrent creations
         let Ok(_permit) = self.creation_semaphore.acquire().await else {
