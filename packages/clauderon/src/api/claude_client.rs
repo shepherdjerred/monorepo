@@ -51,6 +51,7 @@ pub struct ClaudeApiClient {
 
 impl ClaudeApiClient {
     /// Create a new Claude.ai API client
+    #[must_use]
     pub fn new() -> Self {
         let http_client = Client::builder()
             .timeout(Duration::from_secs(10))
