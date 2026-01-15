@@ -141,9 +141,12 @@ impl ResourceLimits {
 fn validate_cpu_limit(cpu: &str) -> anyhow::Result<()> {
     // Check for millicores format (e.g., "2000m")
     if let Some(stripped) = cpu.strip_suffix('m') {
-        stripped
-            .parse::<u64>()
-            .map_err(|_| anyhow::anyhow!("Invalid CPU limit: '{}'. Millicores must be a positive integer (e.g., '2000m')", cpu))?;
+        stripped.parse::<u64>().map_err(|_| {
+            anyhow::anyhow!(
+                "Invalid CPU limit: '{}'. Millicores must be a positive integer (e.g., '2000m')",
+                cpu
+            )
+        })?;
         return Ok(());
     }
 
@@ -452,10 +455,7 @@ mod tests {
     #[test]
     fn test_docker_config_default() {
         let config = DockerConfig::default();
-        assert_eq!(
-            config.image.image,
-            "ghcr.io/shepherdjerred/dotfiles:latest"
-        );
+        assert_eq!(config.image.image, "ghcr.io/shepherdjerred/dotfiles:latest");
         assert_eq!(config.image.pull_policy, ImagePullPolicy::IfNotPresent);
         assert!(config.resources.is_none());
         assert!(config.extra_flags.is_empty());

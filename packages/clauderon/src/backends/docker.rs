@@ -262,10 +262,7 @@ impl DockerBackend {
         // Validate the effective image
         image_config.validate()?;
 
-        let mut args = vec![
-            "run".to_string(),
-            "-dit".to_string(),
-        ];
+        let mut args = vec!["run".to_string(), "-dit".to_string()];
 
         // Add pull policy flag if not default (IfNotPresent is Docker's default)
         if let Some(pull_flag) = image_config.pull_policy.to_docker_flag() {
@@ -1164,7 +1161,7 @@ mod tests {
             None,  // git user email
             None,  // session_id
             None,  // http_port
-                &DockerConfig::default(),
+            &DockerConfig::default(),
             None, // image_override
             None, // resource_override
         )
@@ -1238,7 +1235,7 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
-                &DockerConfig::default(),
+            &DockerConfig::default(),
             None, // image_override
             None, // resource_override
         )
@@ -1273,7 +1270,7 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
-                &DockerConfig::default(),
+            &DockerConfig::default(),
             None, // image_override
             None, // resource_override
         )

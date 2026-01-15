@@ -970,9 +970,9 @@ impl SessionManager {
         // Parse container image configuration
         let container_image_config = if let Some(image) = container_image {
             let policy = if let Some(policy_str) = pull_policy {
-                policy_str.parse::<ImagePullPolicy>().map_err(|e| {
-                    anyhow::anyhow!("Invalid pull policy '{}': {}", policy_str, e)
-                })?
+                policy_str
+                    .parse::<ImagePullPolicy>()
+                    .map_err(|e| anyhow::anyhow!("Invalid pull policy '{}': {}", policy_str, e))?
             } else {
                 ImagePullPolicy::default()
             };
