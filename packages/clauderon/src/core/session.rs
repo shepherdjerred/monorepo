@@ -1,6 +1,6 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use typeshare::typeshare;
 use uuid::Uuid;
 
@@ -72,6 +72,9 @@ pub struct Session {
 
     /// Whether the session branch has merge conflicts with main
     pub merge_conflict: bool,
+
+    /// Whether the worktree has uncommitted changes (dirty working tree)
+    pub worktree_dirty: bool,
 
     /// Access mode for proxy filtering
     pub access_mode: AccessMode,
@@ -161,6 +164,7 @@ impl Session {
             claude_status: ClaudeWorkingStatus::Unknown,
             claude_status_updated_at: None,
             merge_conflict: false,
+            worktree_dirty: false,
             access_mode: config.access_mode,
             proxy_port: None,
             history_file_path: None,
@@ -235,6 +239,12 @@ impl Session {
         self.updated_at = Utc::now();
     }
 
+    /// Set the working tree dirty status
+    pub fn set_worktree_dirty(&mut self, is_dirty: bool) {
+        self.worktree_dirty = is_dirty;
+        self.updated_at = Utc::now();
+    }
+
     /// Record a failed reconciliation attempt
     pub fn record_reconcile_failure(&mut self, error: String) {
         self.reconcile_attempts += 1;
@@ -253,6 +263,7 @@ impl Session {
 
     /// Check if we should attempt reconciliation based on backoff timing
     /// Returns true if enough time has passed since last attempt
+    #[must_use]
     pub fn should_attempt_reconcile(&self) -> bool {
         use std::time::Duration;
 
@@ -276,6 +287,7 @@ impl Session {
     }
 
     /// Check if we've exceeded maximum reconciliation attempts
+    #[must_use]
     pub fn exceeded_max_reconcile_attempts(&self) -> bool {
         self.reconcile_attempts >= 3
     }
@@ -342,9 +354,10 @@ pub enum BackendType {
 
 /// AI agent type
 #[typeshare]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum AgentType {
     /// Claude Code CLI
+    #[default]
     ClaudeCode,
 
     /// OpenAI Codex
@@ -352,12 +365,6 @@ pub enum AgentType {
 
     /// Gemini CLI
     Gemini,
-}
-
-impl Default for AgentType {
-    fn default() -> Self {
-        Self::ClaudeCode
-    }
 }
 
 /// PR check status
@@ -418,18 +425,13 @@ impl std::str::FromStr for ClaudeWorkingStatus {
 
 /// Access mode for proxy filtering
 #[typeshare]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum AccessMode {
     /// Read-only: GET, HEAD, OPTIONS allowed; POST, PUT, DELETE, PATCH blocked
+    #[default]
     ReadOnly,
     /// Read-write: All HTTP methods allowed
     ReadWrite,
-}
-
-impl Default for AccessMode {
-    fn default() -> Self {
-        Self::ReadOnly // Principle of least privilege - secure default
-    }
 }
 
 impl std::fmt::Display for AccessMode {
@@ -464,7 +466,7 @@ impl std::str::FromStr for AccessMode {
 /// # Returns
 /// The path to the history file (may not exist yet)
 #[must_use]
-pub fn get_history_file_path(worktree_path: &PathBuf, session_id: &Uuid) -> PathBuf {
+pub fn get_history_file_path(worktree_path: &Path, session_id: &Uuid) -> PathBuf {
     worktree_path
         .join(".claude")
         .join("projects")

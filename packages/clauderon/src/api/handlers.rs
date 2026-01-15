@@ -8,7 +8,10 @@ use super::protocol::{CreateSessionRequest, ProgressStep, Request, Response};
 use super::types::ReconcileReportDto;
 
 /// Handle an API request
-#[allow(clippy::too_many_lines)]
+#[allow(
+    clippy::too_many_lines,
+    reason = "Protocol handler with many request types - splitting would reduce clarity"
+)]
 #[instrument(skip(manager), fields(request_type = ?std::mem::discriminant(&request)))]
 pub async fn handle_request(request: Request, manager: &SessionManager) -> Response {
     match request {
@@ -97,6 +100,20 @@ pub async fn handle_request(request: Request, manager: &SessionManager) -> Respo
                 tracing::error!(id = %id, error = %e, "Failed to archive session");
                 Response::Error {
                     code: "ARCHIVE_ERROR".to_string(),
+                    message: e.to_string(),
+                }
+            }
+        },
+
+        Request::UnarchiveSession { id } => match manager.unarchive_session(&id).await {
+            Ok(()) => {
+                tracing::info!(id = %id, "Session unarchived");
+                Response::Unarchived
+            }
+            Err(e) => {
+                tracing::error!(id = %id, error = %e, "Failed to unarchive session");
+                Response::Error {
+                    code: "UNARCHIVE_ERROR".to_string(),
                     message: e.to_string(),
                 }
             }

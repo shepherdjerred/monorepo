@@ -21,6 +21,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::sync::Arc;
 use tower_http::cors::{Any, CorsLayer};
+use uuid::Uuid;
 
 /// Shared state for HTTP handlers
 #[derive(Clone)]
@@ -53,9 +54,14 @@ pub fn create_router(auth_state: &Option<AuthState>, dev_mode: bool) -> Router<A
         .route("/api/sessions/{id}", get(get_session))
         .route("/api/sessions/{id}", delete(delete_session))
         .route("/api/sessions/{id}/archive", post(archive_session))
+        .route("/api/sessions/{id}/unarchive", post(unarchive_session))
         .route("/api/sessions/{id}/refresh", post(refresh_session))
         .route("/api/sessions/{id}/access-mode", post(update_access_mode))
         .route("/api/sessions/{id}/metadata", post(update_metadata))
+        .route(
+            "/api/sessions/{id}/regenerate-metadata",
+            post(regenerate_metadata),
+        )
         .route("/api/sessions/{id}/history", get(get_session_history))
         .route("/api/sessions/{id}/upload", post(upload_file))
         .route("/api/recent-repos", get(get_recent_repos))
@@ -306,6 +312,22 @@ async fn archive_session(
     Ok(StatusCode::NO_CONTENT)
 }
 
+/// Unarchive a session
+async fn unarchive_session(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+) -> Result<StatusCode, AppError> {
+    validate_session_id(&id)?;
+    state.session_manager.unarchive_session(&id).await?;
+
+    // Broadcast session updated event (status changed to Idle)
+    if let Some(session) = state.session_manager.get_session(&id).await {
+        broadcast_event(&state.event_broadcaster, Event::SessionUpdated(session)).await;
+    }
+
+    Ok(StatusCode::NO_CONTENT)
+}
+
 async fn refresh_session(
     State(state): State<AppState>,
     Path(id): Path<String>,
@@ -394,6 +416,38 @@ async fn update_metadata(
     Ok(StatusCode::NO_CONTENT)
 }
 
+/// Regenerate session metadata using AI
+async fn regenerate_metadata(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+) -> Result<Json<serde_json::Value>, AppError> {
+    validate_session_id(&id)?;
+    let session_id = Uuid::parse_str(&id)
+        .map_err(|e| AppError::BadRequest(format!("Invalid session ID: {}", e)))?;
+
+    // Regenerate metadata
+    state
+        .session_manager
+        .regenerate_session_metadata(session_id)
+        .await?;
+
+    // Get updated session
+    let session = state
+        .session_manager
+        .get_session(&id)
+        .await
+        .ok_or_else(|| AppError::NotFound(format!("Session not found after regeneration: {id}")))?;
+
+    // Broadcast session updated event
+    broadcast_event(
+        &state.event_broadcaster,
+        Event::SessionUpdated(session.clone()),
+    )
+    .await;
+
+    Ok(Json(json!({ "session": session })))
+}
+
 /// Get recent repositories
 async fn get_recent_repos(
     State(state): State<AppState>,
@@ -426,9 +480,7 @@ async fn browse_directory(
     // Try to canonicalize the path, or use home directory as fallback
     let current_path = requested_path.canonicalize().unwrap_or_else(|_| {
         // If path doesn't exist, try home directory or root as fallback
-        std::env::var("HOME")
-            .map(PathBuf::from)
-            .unwrap_or_else(|_| PathBuf::from("/"))
+        std::env::var("HOME").map_or_else(|_| PathBuf::from("/"), PathBuf::from)
     });
 
     // Get parent directory if not at root
@@ -540,8 +592,8 @@ async fn upload_file(
         let name = field.name().unwrap_or("").to_string();
 
         if name == "file" {
-            content_type = field.content_type().map(|s| s.to_string());
-            file_name = field.file_name().map(|s| s.to_string());
+            content_type = field.content_type().map(std::string::ToString::to_string);
+            file_name = field.file_name().map(std::string::ToString::to_string);
             file_data = Some(
                 field
                     .bytes()
@@ -579,9 +631,10 @@ async fn upload_file(
         "Image uploaded successfully"
     );
 
+    #[allow(clippy::cast_possible_truncation)]
     Ok(Json(crate::api::protocol::UploadResponse {
         path: file_path.to_string_lossy().to_string(),
-        size: file_data.len() as u32,
+        size: file_data.len() as u32, // Files >4GB are not expected for image uploads
     }))
 }
 
@@ -770,8 +823,7 @@ async fn receive_hook(
     );
 
     let new_status = match msg.event {
-        HookEvent::UserPromptSubmit => ClaudeWorkingStatus::Working,
-        HookEvent::PreToolUse { .. } => ClaudeWorkingStatus::Working,
+        HookEvent::UserPromptSubmit | HookEvent::PreToolUse { .. } => ClaudeWorkingStatus::Working,
         HookEvent::PermissionRequest => ClaudeWorkingStatus::WaitingApproval,
         HookEvent::Stop => ClaudeWorkingStatus::WaitingInput,
         HookEvent::IdlePrompt => ClaudeWorkingStatus::Idle,

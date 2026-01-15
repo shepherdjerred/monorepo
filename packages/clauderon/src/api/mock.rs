@@ -76,6 +76,7 @@ impl MockApiClient {
     }
 
     /// Create a mock session with the given name
+    #[must_use]
     pub fn create_mock_session(name: &str, status: SessionStatus) -> Session {
         let config = SessionConfig {
             name: name.to_string(),
@@ -128,7 +129,9 @@ impl ApiClient for MockApiClient {
         if let Ok(uuid) = Uuid::parse_str(id)
             && let Some(session) = sessions.get(&uuid)
         {
-            return Ok(session.clone());
+            let session = session.clone();
+            drop(sessions);
+            return Ok(session);
         }
 
         // Try to find by name
@@ -154,6 +157,7 @@ impl ApiClient for MockApiClient {
         let mut counter = self.session_counter.write().await;
         *counter += 1;
         let counter_val = *counter;
+        drop(counter);
         let session_name = format!("mock-session-{counter_val:04}");
 
         let config = SessionConfig {
@@ -195,6 +199,7 @@ impl ApiClient for MockApiClient {
         if let Ok(uuid) = Uuid::parse_str(id)
             && sessions.remove(&uuid).is_some()
         {
+            drop(sessions);
             return Ok(());
         }
 
@@ -225,6 +230,7 @@ impl ApiClient for MockApiClient {
             && let Some(session) = sessions.get_mut(&uuid)
         {
             session.set_status(SessionStatus::Archived);
+            drop(sessions);
             return Ok(());
         }
 
@@ -232,6 +238,39 @@ impl ApiClient for MockApiClient {
         for session in sessions.values_mut() {
             if session.name == id {
                 session.set_status(SessionStatus::Archived);
+                return Ok(());
+            }
+        }
+
+        anyhow::bail!("Session not found: {id}")
+    }
+
+    async fn unarchive_session(&mut self, id: &str) -> anyhow::Result<()> {
+        if self.should_fail() {
+            let msg = self.error_message.read().await.clone();
+            anyhow::bail!("{msg}");
+        }
+
+        let mut sessions = self.sessions.write().await;
+
+        // Try to find by UUID first
+        if let Ok(uuid) = Uuid::parse_str(id)
+            && let Some(session) = sessions.get_mut(&uuid)
+        {
+            if session.status != SessionStatus::Archived {
+                anyhow::bail!("Session {id} is not archived");
+            }
+            session.set_status(SessionStatus::Idle);
+            return Ok(());
+        }
+
+        // Try to find by name
+        for session in sessions.values_mut() {
+            if session.name == id {
+                if session.status != SessionStatus::Archived {
+                    anyhow::bail!("Session {id} is not archived");
+                }
+                session.set_status(SessionStatus::Idle);
                 return Ok(());
             }
         }
@@ -252,6 +291,7 @@ impl ApiClient for MockApiClient {
         if let Ok(uuid) = Uuid::parse_str(id)
             && sessions.contains_key(&uuid)
         {
+            drop(sessions);
             return Ok(());
         }
 
@@ -430,6 +470,33 @@ mod tests {
 
         let found = client.get_session(&name).await.unwrap();
         assert_eq!(found.status, SessionStatus::Archived);
+    }
+
+    #[tokio::test]
+    async fn test_mock_api_unarchive_session() {
+        let mut client = MockApiClient::new();
+
+        let session = MockApiClient::create_mock_session("to-unarchive", SessionStatus::Archived);
+        let name = session.name.clone();
+        client.add_session(session).await;
+
+        client.unarchive_session(&name).await.unwrap();
+
+        let found = client.get_session(&name).await.unwrap();
+        assert_eq!(found.status, SessionStatus::Idle);
+    }
+
+    #[tokio::test]
+    async fn test_mock_api_unarchive_not_archived() {
+        let mut client = MockApiClient::new();
+
+        let session = MockApiClient::create_mock_session("running-session", SessionStatus::Running);
+        let name = session.name.clone();
+        client.add_session(session).await;
+
+        let result = client.unarchive_session(&name).await;
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("not archived"));
     }
 
     #[tokio::test]

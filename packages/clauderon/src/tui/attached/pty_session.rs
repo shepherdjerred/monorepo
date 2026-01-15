@@ -183,6 +183,7 @@ impl PtySession {
                                     if let Ok(bytes) = base64::prelude::BASE64_STANDARD.decode(data) {
                                         let mut buffer = terminal_buffer.lock().await;
                                         buffer.process(&bytes);
+                                        drop(buffer);
                                         let _ = event_tx.send(PtyEvent::Output).await;
                                     }
                                 }

@@ -82,7 +82,7 @@ fn render_attached_terminal(frame: &mut Frame, app: &App, area: Rect) {
             if !buf.is_at_bottom() {
                 let scroll_offset = buf.get_scroll_offset();
                 let indicator_text = format!(" ↑ Scrolled {scroll_offset} lines ");
-                let indicator_width = indicator_text.len() as u16;
+                let indicator_width = u16::try_from(indicator_text.len()).unwrap_or(u16::MAX);
 
                 // Position in top-right corner
                 if area.width > indicator_width && area.height > 0 {
@@ -226,9 +226,12 @@ fn render_help(frame: &mut Frame, app: &App, area: Rect) {
                 ("↑/k", "Move up"),
                 ("↓/j", "Move down"),
                 ("Enter", "Attach to session"),
+                ("1-5", "Switch filter view"),
+                ("Tab", "Cycle through filters"),
                 ("n", "New session"),
                 ("d", "Delete session"),
                 ("a", "Archive session"),
+                ("u", "Unarchive session"),
                 ("f", "Refresh session (Docker only)"),
                 ("r", "Reconcile state"),
                 ("R", "Refresh list"),

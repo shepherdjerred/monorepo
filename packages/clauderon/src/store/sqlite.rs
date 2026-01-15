@@ -117,6 +117,10 @@ impl SqliteStore {
             Self::migrate_to_v10(pool).await?;
         }
 
+        if current_version < 11 {
+            Self::migrate_to_v11(pool).await?;
+        }
+
         Ok(())
     }
 
@@ -741,6 +745,38 @@ impl SqliteStore {
         tracing::info!("Migration v10 complete");
         Ok(())
     }
+
+    /// Migration v11: Add worktree_dirty column for tracking uncommitted changes
+    async fn migrate_to_v11(pool: &SqlitePool) -> anyhow::Result<()> {
+        tracing::info!("Applying migration v11: Add worktree_dirty column");
+
+        // Check if column exists
+        let worktree_dirty_exists: bool = sqlx::query_scalar(
+            "SELECT COUNT(*) > 0 FROM pragma_table_info('sessions') WHERE name = 'worktree_dirty'",
+        )
+        .fetch_one(pool)
+        .await?;
+
+        if !worktree_dirty_exists {
+            sqlx::query(
+                "ALTER TABLE sessions ADD COLUMN worktree_dirty INTEGER NOT NULL DEFAULT 0",
+            )
+            .execute(pool)
+            .await?;
+            tracing::debug!("Added worktree_dirty column to sessions table");
+        }
+
+        // Record migration
+        let now = Utc::now();
+        sqlx::query("INSERT OR REPLACE INTO schema_version (version, applied_at) VALUES (?, ?)")
+            .bind(11)
+            .bind(now.to_rfc3339())
+            .execute(pool)
+            .await?;
+
+        tracing::info!("Migration v11 complete");
+        Ok(())
+    }
 }
 
 #[async_trait]
@@ -785,10 +821,10 @@ impl Store for SqliteStore {
                 id, name, title, description, status, backend, agent, repo_path, worktree_path,
                 subdirectory, branch_name, backend_id, initial_prompt, dangerous_skip_checks,
                 pr_url, pr_check_status, claude_status, claude_status_updated_at,
-                merge_conflict, access_mode, proxy_port, history_file_path,
+                merge_conflict, worktree_dirty, access_mode, proxy_port, history_file_path,
                 reconcile_attempts, last_reconcile_error, last_reconcile_at, error_message,
                 created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ",
         )
         .bind(session.id.to_string())
@@ -814,8 +850,9 @@ impl Store for SqliteStore {
         .bind(serde_json::to_string(&session.claude_status)?)
         .bind(session.claude_status_updated_at.map(|t| t.to_rfc3339()))
         .bind(session.merge_conflict)
+        .bind(session.worktree_dirty)
         .bind(session.access_mode.to_string())
-        .bind(session.proxy_port.map(|p| p as i64))
+        .bind(session.proxy_port.map(i64::from))
         .bind(
             session
                 .history_file_path
@@ -823,7 +860,7 @@ impl Store for SqliteStore {
                 .and_then(|p| p.to_str())
                 .map(String::from),
         )
-        .bind(session.reconcile_attempts as i64)
+        .bind(i64::from(session.reconcile_attempts))
         .bind(&session.last_reconcile_error)
         .bind(session.last_reconcile_at.map(|t| t.to_rfc3339()))
         .bind(&session.error_message)
@@ -969,6 +1006,7 @@ const fn event_type_name(event_type: &crate::core::events::EventType) -> &'stati
         EventType::CheckStatusChanged { .. } => "CheckStatusChanged",
         EventType::ClaudeStatusChanged { .. } => "ClaudeStatusChanged",
         EventType::ConflictStatusChanged { .. } => "ConflictStatusChanged",
+        EventType::WorktreeStatusChanged { .. } => "WorktreeStatusChanged",
         EventType::SessionArchived => "SessionArchived",
         EventType::SessionDeleted { .. } => "SessionDeleted",
         EventType::SessionRestored => "SessionRestored",
@@ -997,6 +1035,7 @@ struct SessionRow {
     claude_status: String,
     claude_status_updated_at: Option<String>,
     merge_conflict: bool,
+    worktree_dirty: bool,
     access_mode: String,
     proxy_port: Option<i64>,
     history_file_path: Option<String>,
@@ -1145,6 +1184,7 @@ impl TryFrom<SessionRow> for Session {
             claude_status,
             claude_status_updated_at,
             merge_conflict: row.merge_conflict,
+            worktree_dirty: row.worktree_dirty,
             access_mode: row.access_mode.parse().unwrap_or_default(),
             proxy_port: row.proxy_port.map(|p| p as u16),
             history_file_path: row.history_file_path.map(PathBuf::from),

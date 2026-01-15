@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use clauderon::backends::{ExecutionBackend, GitOperations, MockExecutionBackend, MockGitBackend};
-use clauderon::core::{AgentType, BackendType, SessionManager};
+use clauderon::core::{AccessMode, AgentType, BackendType, SessionManager};
 use clauderon::store::{SqliteStore, Store};
 use tempfile::TempDir;
 
@@ -104,15 +104,15 @@ async fn test_recent_repo_tracked_on_session_create() {
             "Test prompt".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
-            true,               // dangerous_skip_checks
-            false,              // print_mode
-            false,              // plan_mode
-            Default::default(), // access_mode
-            vec![],             // images
-            None,               // container_image
-            None,               // pull_policy
-            None,               // cpu_limit
-            None,               // memory_limit
+            true,                  // dangerous_skip_checks
+            false,                 // print_mode
+            false,                 // plan_mode
+            AccessMode::default(), // access_mode
+            vec![],                // images
+            None,                  // container_image
+            None,                  // pull_policy
+            None,                  // cpu_limit
+            None,                  // memory_limit
         )
         .await
         .expect("Failed to create session");
@@ -154,7 +154,7 @@ async fn test_path_canonicalization_prevents_duplicates() {
             true,
             false,
             false,
-            Default::default(),
+            AccessMode::default(),
             vec![],
             None,
             None,
@@ -175,7 +175,7 @@ async fn test_path_canonicalization_prevents_duplicates() {
             true,
             false,
             false,
-            Default::default(),
+            AccessMode::default(),
             vec![],
             None,
             None,
@@ -213,7 +213,7 @@ async fn test_limit_enforcement_removes_oldest() {
                 true,
                 false,
                 false,
-                Default::default(),
+                AccessMode::default(),
                 vec![],
                 None,
                 None,
@@ -264,7 +264,7 @@ async fn test_upsert_behavior_updates_timestamp() {
             true,
             false,
             false,
-            Default::default(),
+            AccessMode::default(),
             vec![],
             None,
             None,
@@ -294,7 +294,7 @@ async fn test_upsert_behavior_updates_timestamp() {
             true,
             false,
             false,
-            Default::default(),
+            AccessMode::default(),
             vec![],
             None,
             None,
@@ -337,7 +337,7 @@ async fn test_recent_repos_ordered_by_most_recent() {
                 true,
                 false,
                 false,
-                Default::default(),
+                AccessMode::default(),
                 vec![],
                 None,
                 None,
@@ -382,7 +382,7 @@ async fn test_nonexistent_repo_handles_gracefully() {
             true,
             false,
             false,
-            Default::default(),
+            AccessMode::default(),
             vec![],
             None,
             None,
@@ -442,7 +442,7 @@ async fn test_subdirectories_tracked_separately() {
             true,
             false,
             false,
-            Default::default(),
+            AccessMode::default(),
             vec![],
             None,
             None,
@@ -465,7 +465,7 @@ async fn test_subdirectories_tracked_separately() {
             true,
             false,
             false,
-            Default::default(),
+            AccessMode::default(),
             vec![],
             None,
             None,
@@ -527,7 +527,7 @@ async fn test_same_subdir_updates_timestamp() {
             true,
             false,
             false,
-            Default::default(),
+            AccessMode::default(),
             vec![],
             None,
             None,
@@ -557,7 +557,7 @@ async fn test_same_subdir_updates_timestamp() {
             true,
             false,
             false,
-            Default::default(),
+            AccessMode::default(),
             vec![],
             None,
             None,
@@ -609,7 +609,7 @@ async fn test_subdirectories_respect_limit() {
                 true,
                 false,
                 false,
-                Default::default(),
+                AccessMode::default(),
                 vec![],
                 None,
                 None,
