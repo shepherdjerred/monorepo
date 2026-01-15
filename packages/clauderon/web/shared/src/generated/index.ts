@@ -60,6 +60,18 @@ export interface UsageWindow {
 	resets_at?: string;
 }
 
+/** Error details for usage tracking failures */
+export interface UsageError {
+	/** Error category (invalid_token, api_error, missing_org_id, etc) */
+	error_type: string;
+	/** Human-readable error message */
+	message: string;
+	/** Technical details for debugging */
+	details?: string;
+	/** Suggested action to resolve the error */
+	suggestion?: string;
+}
+
 /** Claude Code usage tracking data */
 export interface ClaudeUsage {
 	/** Organization ID */
@@ -74,6 +86,8 @@ export interface ClaudeUsage {
 	seven_day_sonnet?: UsageWindow;
 	/** When this data was last fetched */
 	fetched_at: string;
+	/** Error information if usage fetch failed */
+	error?: UsageError;
 }
 
 /** Execution backend type */
