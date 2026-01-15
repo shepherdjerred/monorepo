@@ -1,5 +1,6 @@
 //! Proxy configuration and credentials management.
 
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, RwLock};
 
@@ -7,6 +8,36 @@ use base64::Engine as _;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+
+/// 1Password configuration section.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct OnePasswordConfig {
+    /// Enable 1Password integration.
+    #[serde(default)]
+    pub enabled: bool,
+
+    /// Path to op CLI (default: "op").
+    #[serde(default = "default_op_path")]
+    pub op_path: String,
+
+    /// Credential mappings (credential_name -> op://reference).
+    #[serde(default)]
+    pub credentials: HashMap<String, String>,
+}
+
+fn default_op_path() -> String {
+    "op".to_string()
+}
+
+impl Default for OnePasswordConfig {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            op_path: default_op_path(),
+            credentials: HashMap::new(),
+        }
+    }
+}
 
 /// Proxy service configuration.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -28,6 +59,10 @@ pub struct ProxyConfig {
 
     /// Optional path to the host Codex auth.json file.
     pub codex_auth_json_path: Option<PathBuf>,
+
+    /// 1Password integration configuration.
+    #[serde(default)]
+    pub onepassword: OnePasswordConfig,
 }
 
 impl Default for ProxyConfig {
@@ -220,13 +255,150 @@ impl Credentials {
         }
     }
 
-    /// Load credentials - try environment first, then files.
+    /// Load credentials - try environment first, then 1Password, then files.
+    ///
+    /// This is the main entry point for credential loading, supporting three sources
+    /// in priority order:
+    /// 1. Environment variables (highest)
+    /// 2. 1Password (if enabled)
+    /// 3. Files in secrets directory (lowest)
     pub fn load(config: &ProxyConfig) -> Self {
+        // Use block_in_place to allow async operations in sync context
+        tokio::task::block_in_place(|| {
+            tokio::runtime::Handle::current().block_on(Self::load_with_priority(config))
+        })
+    }
+
+    /// Detect if a value contains an op:// reference.
+    fn is_op_reference(value: &str) -> bool {
+        value.starts_with("op://")
+    }
+
+    /// Load credentials from 1Password based on configuration and env vars.
+    #[tracing::instrument(skip(config))]
+    pub async fn load_from_onepassword(config: &ProxyConfig) -> Self {
+        use crate::proxy::onepassword::{OnePasswordClient, OpReference};
+
+        // Early return if 1Password is not enabled
+        if !config.onepassword.enabled {
+            tracing::debug!("1Password integration disabled");
+            return Self::default();
+        }
+
+        // Create 1Password client
+        let client = OnePasswordClient::new(config.onepassword.op_path.clone());
+
+        // Check if op CLI is available
+        if !client.is_available().await {
+            tracing::warn!("1Password CLI (op) not found, skipping 1Password credential loading");
+            return Self::default();
+        }
+
+        // Collect all op:// references from:
+        // 1. TOML config
+        // 2. Environment variables
+        let mut references = HashMap::new();
+
+        // Add from TOML
+        for (key, value) in &config.onepassword.credentials {
+            if let Ok(op_ref) = OpReference::parse(value) {
+                references.insert(key.clone(), op_ref);
+            } else {
+                tracing::warn!(credential = %key, reference = %value, "Invalid op:// reference");
+            }
+        }
+
+        // Add from environment variables with op:// references
+        let env_mappings = [
+            ("GITHUB_TOKEN", "github_token"),
+            ("CLAUDE_CODE_OAUTH_TOKEN", "anthropic_oauth_token"),
+            ("OPENAI_API_KEY", "openai_api_key"),
+            ("CODEX_API_KEY", "openai_api_key"),
+            ("PAGERDUTY_TOKEN", "pagerduty_token"),
+            ("PAGERDUTY_API_KEY", "pagerduty_token"),
+            ("SENTRY_AUTH_TOKEN", "sentry_auth_token"),
+            ("GRAFANA_API_KEY", "grafana_api_key"),
+            ("NPM_TOKEN", "npm_token"),
+            ("DOCKER_TOKEN", "docker_token"),
+            ("K8S_TOKEN", "k8s_token"),
+            ("TALOS_TOKEN", "talos_token"),
+        ];
+
+        for (env_key, credential_key) in env_mappings {
+            if let Ok(value) = std::env::var(env_key) {
+                if Self::is_op_reference(&value) {
+                    if let Ok(op_ref) = OpReference::parse(&value) {
+                        references.insert(credential_key.to_string(), op_ref);
+                    }
+                }
+            }
+        }
+
+        // Early return if no references to fetch
+        if references.is_empty() {
+            tracing::debug!("No 1Password references found");
+            return Self::default();
+        }
+
+        // Batch fetch all credentials
+        let results = client.fetch_all_credentials(&references).await;
+
+        // Build Credentials struct from results
+        Self {
+            github_token: results
+                .get("github_token")
+                .and_then(|r| r.as_ref().ok().cloned()),
+            anthropic_oauth_token: results
+                .get("anthropic_oauth_token")
+                .and_then(|r| r.as_ref().ok().cloned()),
+            openai_api_key: results
+                .get("openai_api_key")
+                .and_then(|r| r.as_ref().ok().cloned()),
+            codex_tokens: Arc::new(RwLock::new(CodexTokens::default())),
+            pagerduty_token: results
+                .get("pagerduty_token")
+                .and_then(|r| r.as_ref().ok().cloned()),
+            sentry_auth_token: results
+                .get("sentry_auth_token")
+                .and_then(|r| r.as_ref().ok().cloned()),
+            grafana_api_key: results
+                .get("grafana_api_key")
+                .and_then(|r| r.as_ref().ok().cloned()),
+            npm_token: results
+                .get("npm_token")
+                .and_then(|r| r.as_ref().ok().cloned()),
+            docker_token: results
+                .get("docker_token")
+                .and_then(|r| r.as_ref().ok().cloned()),
+            k8s_token: results
+                .get("k8s_token")
+                .and_then(|r| r.as_ref().ok().cloned()),
+            talos_token: results
+                .get("talos_token")
+                .and_then(|r| r.as_ref().ok().cloned()),
+            codex_auth_json_path: None,
+        }
+    }
+
+    /// Load credentials with 3-source priority: env vars → 1Password → files.
+    #[tracing::instrument(skip(config))]
+    pub async fn load_with_priority(config: &ProxyConfig) -> Self {
+        tracing::info!("Loading credentials from multiple sources");
+
+        // Source 1: Environment variables (highest priority)
         let from_env = Self::load_from_env();
+
+        // Source 2: 1Password (middle priority)
+        let from_onepassword = Self::load_from_onepassword(config).await;
+
+        // Source 3: Files (lowest priority)
         let from_files = Self::load_from_files(&config.secrets_dir);
+
+        // Handle OpenAI API key with special Codex auth.json logic
         let mut openai_api_key = from_env
             .openai_api_key
             .clone()
+            .or(from_onepassword.openai_api_key)
             .or(from_files.openai_api_key);
 
         let (codex_tokens_from_auth, auth_openai_api_key) =
@@ -239,25 +411,51 @@ impl Credentials {
         codex_tokens.apply_overlay(from_env.codex_tokens_snapshot());
         codex_tokens.fill_account_id_from_id_token();
 
+        // Merge credentials with priority
         let credentials = Self {
-            github_token: from_env.github_token.or(from_files.github_token),
+            github_token: from_env
+                .github_token
+                .or(from_onepassword.github_token)
+                .or(from_files.github_token),
             anthropic_oauth_token: from_env
                 .anthropic_oauth_token
+                .or(from_onepassword.anthropic_oauth_token)
                 .or(from_files.anthropic_oauth_token),
             openai_api_key,
             codex_tokens: Arc::new(RwLock::new(codex_tokens)),
-            pagerduty_token: from_env.pagerduty_token.or(from_files.pagerduty_token),
-            sentry_auth_token: from_env.sentry_auth_token.or(from_files.sentry_auth_token),
-            grafana_api_key: from_env.grafana_api_key.or(from_files.grafana_api_key),
-            npm_token: from_env.npm_token.or(from_files.npm_token),
-            docker_token: from_env.docker_token.or(from_files.docker_token),
-            k8s_token: from_env.k8s_token.or(from_files.k8s_token),
-            talos_token: from_env.talos_token.or(from_files.talos_token),
+            pagerduty_token: from_env
+                .pagerduty_token
+                .or(from_onepassword.pagerduty_token)
+                .or(from_files.pagerduty_token),
+            sentry_auth_token: from_env
+                .sentry_auth_token
+                .or(from_onepassword.sentry_auth_token)
+                .or(from_files.sentry_auth_token),
+            grafana_api_key: from_env
+                .grafana_api_key
+                .or(from_onepassword.grafana_api_key)
+                .or(from_files.grafana_api_key),
+            npm_token: from_env
+                .npm_token
+                .or(from_onepassword.npm_token)
+                .or(from_files.npm_token),
+            docker_token: from_env
+                .docker_token
+                .or(from_onepassword.docker_token)
+                .or(from_files.docker_token),
+            k8s_token: from_env
+                .k8s_token
+                .or(from_onepassword.k8s_token)
+                .or(from_files.k8s_token),
+            talos_token: from_env
+                .talos_token
+                .or(from_onepassword.talos_token)
+                .or(from_files.talos_token),
             codex_auth_json_path: config.codex_auth_json_path.clone(),
         };
 
-        // Log which credentials were loaded
-        tracing::info!("Loaded credentials:");
+        // Enhanced logging showing credential availability
+        tracing::info!("Credential loading summary:");
         if credentials.github_token.is_some() {
             tracing::info!("  ✓ GitHub token");
         }
@@ -284,6 +482,12 @@ impl Credentials {
         }
         if credentials.docker_token.is_some() {
             tracing::info!("  ✓ Docker token");
+        }
+        if credentials.k8s_token.is_some() {
+            tracing::info!("  ✓ Kubernetes token");
+        }
+        if credentials.talos_token.is_some() {
+            tracing::info!("  ✓ Talos token");
         }
 
         credentials
@@ -332,6 +536,14 @@ impl Credentials {
             .read()
             .ok()
             .and_then(|t| t.account_id.clone())
+    }
+
+    fn codex_tokens_snapshot(&self) -> CodexTokens {
+        self.codex_tokens
+            .read()
+            .ok()
+            .map(|t| t.clone())
+            .unwrap_or_default()
     }
 
     pub fn update_codex_tokens(&self, update: CodexTokenUpdate) {
