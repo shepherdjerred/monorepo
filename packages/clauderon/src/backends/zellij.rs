@@ -6,6 +6,11 @@ use super::traits::ExecutionBackend;
 use crate::core::AgentType;
 
 /// Zellij terminal multiplexer backend
+///
+/// Note on plugin inheritance: Zellij sessions run directly on the host system,
+/// not in containers. This means Claude Code plugins are automatically available
+/// at ~/.claude/plugins/ without any special configuration or mounting.
+/// No plugin-specific handling is needed for this backend.
 pub struct ZellijBackend;
 
 impl ZellijBackend {

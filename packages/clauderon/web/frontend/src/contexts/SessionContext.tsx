@@ -8,10 +8,11 @@ type SessionContextValue = {
   sessions: Map<string, Session>;
   isLoading: boolean;
   error: Error | null;
-  refreshSessions: () => Promise<void>;
+  refreshSessions: (showLoading?: boolean) => Promise<void>;
   createSession: (request: CreateSessionRequest) => Promise<string>;
   deleteSession: (id: string) => Promise<void>;
   archiveSession: (id: string) => Promise<void>;
+  refreshSession: (id: string) => Promise<void>;
   updateAccessMode: (id: string, mode: AccessMode) => Promise<void>;
   updateSession: (id: string, title?: string, description?: string) => Promise<void>;
   client: ClauderonClient;
@@ -25,9 +26,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const refreshSessions = useCallback(async () => {
+  const refreshSessions = useCallback(async (showLoading = true) => {
     try {
-      setIsLoading(true);
+      if (showLoading) {
+        setIsLoading(true);
+      }
       setError(null);
       const sessionsList = await client.listSessions();
       const newSessions = new Map(sessionsList.map((s) => [s.id, s]));
@@ -35,17 +38,19 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     } catch (err) {
       setError(err instanceof Error ? err : new Error(String(err)));
     } finally {
-      setIsLoading(false);
+      if (showLoading) {
+        setIsLoading(false);
+      }
     }
   }, [client]);
 
   const createSession = useCallback(
     async (request: CreateSessionRequest) => {
       const result = await client.createSession(request);
-      await refreshSessions();
+      // WebSocket events will update the session list automatically
       return result.id;
     },
-    [client, refreshSessions]
+    [client]
   );
 
   const deleteSession = useCallback(
@@ -63,6 +68,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const archiveSession = useCallback(
     async (id: string) => {
       await client.archiveSession(id);
+      await refreshSessions();
+    },
+    [client, refreshSessions]
+  );
+
+  const refreshSession = useCallback(
+    async (id: string) => {
+      await client.refreshSession(id);
       await refreshSessions();
     },
     [client, refreshSessions]
@@ -132,6 +145,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         createSession,
         deleteSession,
         archiveSession,
+        refreshSession,
         updateAccessMode,
         updateSession,
         client,
