@@ -89,8 +89,11 @@ impl ClaudeApiClient {
                 Ok(result) => return Ok(result),
                 Err(e) => {
                     // Don't retry auth errors (401, 403)
+                    // Match the specific error format from our API calls to avoid false positives
                     let error_str = e.to_string();
-                    if error_str.contains("401") || error_str.contains("403") {
+                    if error_str.contains("Claude.ai API returned error: 401")
+                        || error_str.contains("Claude.ai API returned error: 403")
+                    {
                         return Err(e);
                     }
 
