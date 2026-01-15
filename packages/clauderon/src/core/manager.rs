@@ -2116,6 +2116,88 @@ impl SessionManager {
         Ok(())
     }
 
+    /// Regenerate session metadata using AI
+    ///
+    /// Calls the Claude CLI to regenerate the title, description, and branch name
+    /// for a session based on its initial prompt. This is useful when the initial
+    /// generation failed or timed out during session creation.
+    ///
+    /// # Arguments
+    ///
+    /// * `session_id` - The UUID of the session to regenerate metadata for
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the session is not found or the store update fails.
+    ///
+    /// # Note
+    ///
+    /// If AI generation fails and returns default values, existing metadata is preserved
+    /// to avoid overwriting user-edited values with defaults.
+    #[instrument(skip(self), fields(session_id = %session_id))]
+    pub async fn regenerate_session_metadata(&self, session_id: Uuid) -> anyhow::Result<()> {
+        // Get session
+        let sessions = self.sessions.read().await;
+        let session = sessions
+            .iter()
+            .find(|s| s.id == session_id)
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {}", session_id))?;
+
+        let repo_path = session.repo_path.clone();
+        let initial_prompt = session.initial_prompt.clone();
+        let session_name = session.name.clone();
+        drop(sessions);
+
+        tracing::info!(
+            session_id = %session_id,
+            session_name = %session_name,
+            "Regenerating session metadata with AI"
+        );
+
+        // Generate new metadata
+        let metadata = crate::utils::generate_session_name_ai(&repo_path, &initial_prompt).await;
+
+        // Only update if we got non-default values
+        // (avoid overwriting user edits with defaults)
+        if metadata.title == "New Session" {
+            tracing::warn!(
+                session_id = %session_id,
+                "Metadata regeneration returned defaults, preserving existing values"
+            );
+            anyhow::bail!("AI metadata generation returned defaults - possible timeout or failure");
+        }
+
+        // Update session with new metadata
+        let mut sessions = self.sessions.write().await;
+        let session = sessions
+            .iter_mut()
+            .find(|s| s.id == session_id)
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {}", session_id))?;
+
+        session.set_title(Some(metadata.title.clone()));
+        session.set_description(Some(metadata.description.clone()));
+
+        let session_clone = session.clone();
+        drop(sessions);
+
+        // Save updated session
+        self.store.save_session(&session_clone).await?;
+
+        // Broadcast update event
+        self.event_bus
+            .send(Event::SessionUpdated(session_clone.clone()))
+            .await;
+
+        tracing::info!(
+            session_id = %session_id,
+            title = %metadata.title,
+            description = %metadata.description,
+            "Successfully regenerated session metadata"
+        );
+
+        Ok(())
+    }
+
     /// Update Claude working status from hook message
     ///
     /// # Errors

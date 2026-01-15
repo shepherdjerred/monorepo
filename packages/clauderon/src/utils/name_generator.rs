@@ -29,6 +29,8 @@ impl Default for SessionMetadata {
 /// to generate title, description, and branch name based on the repository path
 /// and initial prompt.
 ///
+/// Retries up to 3 times with exponential backoff (2s, 4s, 8s) on failure.
+///
 /// # Arguments
 /// * `repo_path` - Path to the repository
 /// * `initial_prompt` - The user's initial prompt/task description
@@ -43,7 +45,7 @@ impl Default for SessionMetadata {
 /// // Returns SessionMetadata { title: "Fix login bug", description: "...", branch_name: "fix-login-bug" }
 /// ```
 pub async fn generate_session_name_ai(repo_path: &str, initial_prompt: &str) -> SessionMetadata {
-    match generate_with_timeout(repo_path, initial_prompt).await {
+    match generate_with_retries(repo_path, initial_prompt).await {
         Ok(metadata) => {
             tracing::info!(
                 repo = %repo_path,
@@ -54,27 +56,89 @@ pub async fn generate_session_name_ai(repo_path: &str, initial_prompt: &str) -> 
             metadata
         }
         Err(e) => {
-            tracing::warn!(
+            tracing::error!(
                 error = %e,
-                "Failed to generate AI metadata, using fallback"
+                repo_path = %repo_path,
+                prompt_length = initial_prompt.len(),
+                "Failed to generate AI metadata after all retries, using fallback"
             );
             SessionMetadata::default()
         }
     }
 }
 
+async fn generate_with_retries(
+    repo_path: &str,
+    initial_prompt: &str,
+) -> anyhow::Result<SessionMetadata> {
+    const MAX_RETRIES: u32 = 3;
+    const INITIAL_BACKOFF_SECS: u64 = 2;
+
+    for attempt in 1..=MAX_RETRIES {
+        tracing::info!(
+            attempt = attempt,
+            max_retries = MAX_RETRIES,
+            repo_path = %repo_path,
+            prompt_length = initial_prompt.len(),
+            "Attempting to generate session metadata"
+        );
+
+        match generate_with_timeout(repo_path, initial_prompt).await {
+            Ok(metadata) => {
+                if attempt > 1 {
+                    tracing::info!(
+                        attempt = attempt,
+                        "Successfully generated metadata after retry"
+                    );
+                }
+                return Ok(metadata);
+            }
+            Err(e) if attempt < MAX_RETRIES => {
+                let backoff_secs = INITIAL_BACKOFF_SECS * (1 << (attempt - 1)); // 2s, 4s, 8s
+                tracing::warn!(
+                    attempt = attempt,
+                    error = %e,
+                    backoff_secs = backoff_secs,
+                    "Metadata generation failed, retrying after backoff"
+                );
+                tokio::time::sleep(Duration::from_secs(backoff_secs)).await;
+            }
+            Err(e) => {
+                tracing::error!(
+                    attempt = attempt,
+                    error = %e,
+                    "Final metadata generation attempt failed"
+                );
+                return Err(e);
+            }
+        }
+    }
+    unreachable!()
+}
+
 async fn generate_with_timeout(
     repo_path: &str,
     initial_prompt: &str,
 ) -> anyhow::Result<SessionMetadata> {
-    // 30 second timeout for CLI execution to account for network latency,
-    // CLI startup time, OAuth validation, and potential API throttling
+    // 60 second timeout for CLI execution to account for network latency,
+    // CLI startup time, OAuth validation, and potential API throttling.
+    // Increased from 30s to reduce timeout-related failures.
+    const TIMEOUT_SECS: u64 = 60;
+
     tokio::time::timeout(
-        Duration::from_secs(30),
+        Duration::from_secs(TIMEOUT_SECS),
         call_claude_cli(repo_path, initial_prompt),
     )
     .await
-    .map_err(|_| anyhow::anyhow!("Claude CLI call timed out"))?
+    .map_err(|_| {
+        tracing::error!(
+            timeout_secs = TIMEOUT_SECS,
+            repo_path = %repo_path,
+            error_type = "timeout",
+            "Claude CLI call timed out"
+        );
+        anyhow::anyhow!("Claude CLI call timed out after {} seconds", TIMEOUT_SECS)
+    })?
 }
 
 async fn call_claude_cli(repo_path: &str, initial_prompt: &str) -> anyhow::Result<SessionMetadata> {
@@ -108,11 +172,17 @@ async fn call_claude_cli(repo_path: &str, initial_prompt: &str) -> anyhow::Resul
         .arg(&prompt);
 
     // Execute CLI
-    tracing::debug!("Invoking Claude CLI for name generation");
+    tracing::info!("Invoking Claude CLI for name generation");
     let output = cmd.output().await.map_err(|e| {
         if e.kind() == std::io::ErrorKind::NotFound {
+            tracing::error!(error_type = "cli_not_found", "Claude CLI not found in PATH");
             anyhow::anyhow!("Claude CLI not found in PATH")
         } else {
+            tracing::error!(
+                error = %e,
+                error_type = "execution_failed",
+                "Failed to execute Claude CLI"
+            );
             anyhow::anyhow!("Failed to execute Claude CLI: {e}")
         }
     })?;
@@ -120,9 +190,20 @@ async fn call_claude_cli(repo_path: &str, initial_prompt: &str) -> anyhow::Resul
     // Check exit status
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        let exit_code = output.status.code();
+
+        tracing::error!(
+            exit_code = ?exit_code,
+            error_type = "non_zero_exit",
+            stderr = %stderr,
+            stdout = %stdout.chars().take(500).collect::<String>(),
+            "Claude CLI failed with non-zero exit code"
+        );
+
         anyhow::bail!(
             "Claude CLI failed with exit code {:?}: {}",
-            output.status.code(),
+            exit_code,
             stderr
         );
     }
@@ -131,8 +212,15 @@ async fn call_claude_cli(repo_path: &str, initial_prompt: &str) -> anyhow::Resul
     let stdout = String::from_utf8_lossy(&output.stdout);
     tracing::debug!("Claude CLI raw output: {}", stdout);
 
-    let json: serde_json::Value = serde_json::from_str(&stdout)
-        .map_err(|e| anyhow::anyhow!("Failed to parse JSON output: {e}"))?;
+    let json: serde_json::Value = serde_json::from_str(&stdout).map_err(|e| {
+        tracing::error!(
+            error = %e,
+            error_type = "json_parse_error",
+            stdout = %stdout.chars().take(500).collect::<String>(),
+            "Failed to parse JSON output from Claude CLI"
+        );
+        anyhow::anyhow!("Failed to parse JSON output: {e}")
+    })?;
 
     // Check subtype before extracting structured_output
     let subtype = json
@@ -161,6 +249,11 @@ async fn call_claude_cli(repo_path: &str, initial_prompt: &str) -> anyhow::Resul
 
     // Extract the structured_output field (CLI returns wrapper object)
     let structured_output = json.get("structured_output").ok_or_else(|| {
+        tracing::error!(
+            error_type = "missing_structured_output",
+            json_keys = ?json.as_object().map(|o| o.keys().collect::<Vec<_>>()),
+            "Missing 'structured_output' field in Claude CLI response"
+        );
         anyhow::anyhow!("Missing 'structured_output' field in Claude CLI response")
     })?;
 
@@ -181,13 +274,24 @@ async fn call_claude_cli(repo_path: &str, initial_prompt: &str) -> anyhow::Resul
     let branch_name_raw = structured_output
         .get("branch_name")
         .and_then(|v| v.as_str())
-        .ok_or_else(|| anyhow::anyhow!("Missing 'branch_name' field (required)"))?;
+        .ok_or_else(|| {
+            tracing::error!(
+                error_type = "missing_branch_name",
+                "Missing 'branch_name' field (required)"
+            );
+            anyhow::anyhow!("Missing 'branch_name' field (required)")
+        })?;
 
     // Sanitize the branch name
     let branch_name = crate::utils::random::sanitize_branch_name(branch_name_raw);
 
     // Validate not empty after sanitization
     if branch_name.is_empty() {
+        tracing::error!(
+            error_type = "empty_branch_name",
+            branch_name_raw = %branch_name_raw,
+            "Empty branch name after sanitization"
+        );
         anyhow::bail!("Empty branch name after sanitization");
     }
 
