@@ -381,9 +381,8 @@ async fn test_claude_print_mode_e2e() {
         session_id: None,
         initial_workdir: PathBuf::new(),
         http_port: None,
-        &clauderon::backends::DockerConfig::default(),
-        None,
-        None,
+        container_image: None,
+        container_resources: None,
     };
 
     // Simple prompt that should produce predictable-ish output
