@@ -58,9 +58,9 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
     );
 
     // Attempts info with time since last attempt
-    let time_ago = session
-        .last_reconcile_at
-        .map_or_else(|| "unknown".to_string(), |t| {
+    let time_ago = session.last_reconcile_at.map_or_else(
+        || "unknown".to_string(),
+        |t| {
             let duration = Utc::now().signed_duration_since(t);
             if duration.num_minutes() < 1 {
                 format!("{} seconds ago", duration.num_seconds())
@@ -69,7 +69,8 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
             } else {
                 format!("{} hours ago", duration.num_hours())
             }
-        });
+        },
+    );
 
     let attempts_info = Line::from(vec![
         Span::styled("Attempts: ", Style::default().fg(Color::DarkGray)),

@@ -84,7 +84,10 @@ fn encode_char(c: char, has_ctrl: bool, has_alt: bool) -> Vec<u8> {
         // Control characters: Ctrl+A = 0x01, Ctrl+B = 0x02, etc.
         match c.to_ascii_lowercase() {
             'a'..='z' => {
-                let ctrl_char = u8::try_from(c.to_ascii_lowercase()).unwrap_or(b'a').saturating_sub(b'a').saturating_add(1);
+                let ctrl_char = u8::try_from(c.to_ascii_lowercase())
+                    .unwrap_or(b'a')
+                    .saturating_sub(b'a')
+                    .saturating_add(1);
                 result.push(ctrl_char);
             }
             '[' => result.push(0x1b),  // Ctrl+[ = ESC

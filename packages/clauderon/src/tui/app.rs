@@ -505,7 +505,7 @@ impl Default for CreateDialogState {
             backend: BackendType::Zellij, // Default to Zellij
             agent: AgentType::ClaudeCode,
             skip_checks: false,
-            plan_mode: true,                   // Default to plan mode ON
+            plan_mode: true,                    // Default to plan mode ON
             access_mode: AccessMode::default(), // ReadOnly by default (secure)
             images: Vec::new(),
             prompt_cursor_line: 0,
