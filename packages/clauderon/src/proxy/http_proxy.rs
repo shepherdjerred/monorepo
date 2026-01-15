@@ -3,6 +3,7 @@
 use std::future::Future;
 use std::net::SocketAddr;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Instant;
 
 use chrono::{DateTime, Utc};
@@ -254,7 +255,8 @@ struct PendingRequest {
     service: String,
     method: String,
     path: String,
-    auth_injected: bool,
+    /// Shared atomic flag that can be updated from async block and read from response handler.
+    auth_injected: Arc<AtomicBool>,
     auth_refresh: bool,
 }
 
@@ -339,6 +341,10 @@ impl HttpHandler for AuthInjector {
             "Proxying request"
         );
 
+        // Create shared atomic flag for auth_injected that can be updated from async block
+        let auth_injected_flag = Arc::new(AtomicBool::new(false));
+        let auth_injected_for_async = Arc::clone(&auth_injected_flag);
+
         // Store pending request for correlation with response
         self.pending_request = Some(PendingRequest {
             request_id,
@@ -347,18 +353,16 @@ impl HttpHandler for AuthInjector {
             service: host_match.clone(),
             method: method.clone(),
             path: path.clone(),
-            auth_injected: false, // Updated below but not reflected in pending_request
+            auth_injected: auth_injected_flag,
             auth_refresh,
         });
 
         async move {
             // Check for matching rule and inject auth
-            let mut auth_injected = false;
-
             if auth_refresh {
                 match rewrite_refresh_request(&mut req, &credentials).await {
                     Ok(()) => {
-                        auth_injected = true;
+                        auth_injected_for_async.store(true, Ordering::SeqCst);
                     }
                     Err(response) => return RequestOrResponse::Response(response),
                 }
@@ -381,14 +385,14 @@ impl HttpHandler for AuthInjector {
                             // Don't inject - let the request fail clearly without auth
                         } else if let Ok(value) = format!("Bearer {token}").parse() {
                             req.headers_mut().insert("authorization", value);
-                            auth_injected = true;
+                            auth_injected_for_async.store(true, Ordering::SeqCst);
                             tracing::debug!("Injected authorization header for {}", host);
                         }
                     } else {
                         let header_value = rule.format_header(&token);
                         if let Ok(value) = header_value.parse() {
                             req.headers_mut().insert(rule.header_name, value);
-                            auth_injected = true;
+                            auth_injected_for_async.store(true, Ordering::SeqCst);
                             tracing::debug!(
                                 "Injected {} header for {}",
                                 rule.header_name,
@@ -409,14 +413,10 @@ impl HttpHandler for AuthInjector {
                 if let Some(account_id) = credentials.codex_account_id() {
                     if let Ok(value) = account_id.parse() {
                         req.headers_mut().insert("ChatGPT-Account-ID", value);
-                        auth_injected = true;
+                        auth_injected_for_async.store(true, Ordering::SeqCst);
                     }
                 }
             }
-
-            // Note: auth_injected is not reflected in pending_request since we can't
-            // mutate self from async block. Audit logging will show auth_injected=false.
-            let _ = auth_injected;
 
             RequestOrResponse::Request(req)
         }
@@ -457,7 +457,7 @@ impl HttpHandler for AuthInjector {
                     service: pending.service,
                     method: pending.method,
                     path: pending.path,
-                    auth_injected: pending.auth_injected,
+                    auth_injected: pending.auth_injected.load(Ordering::SeqCst),
                     response_code: Some(status.as_u16()),
                     duration_ms,
                 };
@@ -523,7 +523,7 @@ impl HttpHandler for AuthInjector {
                     service: pending.service,
                     method: pending.method,
                     path: pending.path,
-                    auth_injected: pending.auth_injected,
+                    auth_injected: pending.auth_injected.load(Ordering::SeqCst),
                     response_code: Some(502), // Proxy error
                     duration_ms,
                 };
@@ -603,6 +603,10 @@ impl HttpHandler for FilteringHandler {
             "Proxying request"
         );
 
+        // Create shared atomic flag for auth_injected that can be updated from async block
+        let auth_injected_flag = Arc::new(AtomicBool::new(false));
+        let auth_injected_for_async = Arc::clone(&auth_injected_flag);
+
         // Store pending request for correlation with response
         self.pending_request = Some(PendingRequest {
             request_id,
@@ -611,7 +615,7 @@ impl HttpHandler for FilteringHandler {
             service: host_match.clone(),
             method: method.clone(),
             path: path.clone(),
-            auth_injected: false, // Updated below but not reflected in pending_request
+            auth_injected: auth_injected_flag,
             auth_refresh,
         });
 
@@ -658,12 +662,10 @@ impl HttpHandler for FilteringHandler {
             }
 
             // Check for matching rule and inject auth
-            let mut auth_injected = false;
-
             if auth_refresh {
                 match rewrite_refresh_request(&mut req, &credentials).await {
                     Ok(()) => {
-                        auth_injected = true;
+                        auth_injected_for_async.store(true, Ordering::SeqCst);
                     }
                     Err(response) => return RequestOrResponse::Response(response),
                 }
@@ -684,7 +686,7 @@ impl HttpHandler for FilteringHandler {
                             );
                         } else if let Ok(value) = format!("Bearer {token}").parse() {
                             req.headers_mut().insert("authorization", value);
-                            auth_injected = true;
+                            auth_injected_for_async.store(true, Ordering::SeqCst);
                             tracing::debug!(
                                 session_id = %session_id,
                                 "Injected authorization header for {}",
@@ -695,7 +697,7 @@ impl HttpHandler for FilteringHandler {
                         let header_value = rule.format_header(&token);
                         if let Ok(value) = header_value.parse() {
                             req.headers_mut().insert(rule.header_name, value);
-                            auth_injected = true;
+                            auth_injected_for_async.store(true, Ordering::SeqCst);
                             tracing::debug!(
                                 session_id = %session_id,
                                 "Injected {} header for {}",
@@ -717,14 +719,10 @@ impl HttpHandler for FilteringHandler {
                 if let Some(account_id) = credentials.codex_account_id() {
                     if let Ok(value) = account_id.parse() {
                         req.headers_mut().insert("ChatGPT-Account-ID", value);
-                        auth_injected = true;
+                        auth_injected_for_async.store(true, Ordering::SeqCst);
                     }
                 }
             }
-
-            // Note: auth_injected is not reflected in pending_request since we can't
-            // mutate self from async block. Audit logging will show auth_injected=false.
-            let _ = auth_injected;
 
             RequestOrResponse::Request(req)
         }
@@ -767,7 +765,7 @@ impl HttpHandler for FilteringHandler {
                     service: pending.service,
                     method: pending.method,
                     path: pending.path,
-                    auth_injected: pending.auth_injected,
+                    auth_injected: pending.auth_injected.load(Ordering::SeqCst),
                     response_code: Some(status.as_u16()),
                     duration_ms,
                 };
@@ -837,7 +835,7 @@ impl HttpHandler for FilteringHandler {
                     service: pending.service,
                     method: pending.method,
                     path: pending.path,
-                    auth_injected: pending.auth_injected,
+                    auth_injected: pending.auth_injected.load(Ordering::SeqCst),
                     response_code: Some(502), // Proxy error
                     duration_ms,
                 };

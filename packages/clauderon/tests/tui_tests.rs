@@ -777,7 +777,6 @@ async fn test_create_session_failure() {
 }
 
 #[tokio::test]
-#[ignore = "requires running daemon - confirm_delete uses Client::connect"]
 async fn test_delete_session_success() {
     use clauderon::tui::app::DeleteProgress;
 
@@ -805,7 +804,10 @@ async fn test_delete_session_success() {
     match progress {
         DeleteProgress::Done { session_id } => {
             app.status_message = Some(format!("Deleted session {session_id}"));
-            app.refresh_sessions().await.unwrap();
+            // Note: We can't call refresh_sessions here because the client was moved
+            // to the delete task. In a real app, the main event loop handles this
+            // by clearing sessions or reconnecting. For testing, we clear manually.
+            app.sessions.clear();
         }
         DeleteProgress::Error { message, .. } => {
             panic!("Deletion should succeed, but got error: {message}");
@@ -948,7 +950,6 @@ async fn test_delete_error_handling() {
 }
 
 #[tokio::test]
-#[ignore = "requires running daemon - confirm_delete uses Client::connect"]
 async fn test_deletion_state_tracking() {
     use clauderon::tui::app::DeleteProgress;
 
