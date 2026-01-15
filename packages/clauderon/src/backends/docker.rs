@@ -3,6 +3,7 @@ use std::path::{Path, PathBuf};
 use tokio::process::Command;
 use tracing::instrument;
 
+use super::container_config::{DockerConfig, ImageConfig, ResourceLimits};
 use super::traits::ExecutionBackend;
 use crate::core::AgentType;
 use crate::plugins::{PluginDiscovery, PluginManifest};
@@ -58,7 +59,11 @@ async fn read_git_user_config() -> (Option<String>, Option<String>) {
     (name, email)
 }
 
-/// Docker container image to use
+/// Docker container image to use (deprecated - use DockerConfig instead)
+///
+/// This constant is kept for backward compatibility but is no longer used directly.
+/// The actual image is now loaded from DockerConfig.
+#[deprecated(note = "Use DockerConfig.image instead")]
 const DOCKER_IMAGE: &str = "ghcr.io/shepherdjerred/dotfiles";
 
 /// Shared cache volumes used across all clauderon Docker containers for faster Rust builds:
@@ -97,22 +102,44 @@ impl DockerProxyConfig {
 pub struct DockerBackend {
     /// Path to clauderon directory for proxy CA and configs.
     clauderon_dir: PathBuf,
+    /// Docker backend configuration (loaded from ~/.clauderon/docker-config.toml or defaults)
+    config: DockerConfig,
 }
 
 impl DockerBackend {
     /// Create a new Docker backend.
+    ///
+    /// Loads configuration from `~/.clauderon/docker-config.toml` if present,
+    /// otherwise uses default configuration.
     #[must_use]
     pub fn new() -> Self {
         let home = dirs::home_dir().unwrap_or_else(|| PathBuf::from("/tmp"));
+        let config = DockerConfig::load_or_default();
         Self {
             clauderon_dir: home.join(".clauderon"),
+            config,
         }
     }
 
     /// Create a Docker backend with a specific clauderon directory.
     #[must_use]
     pub fn with_clauderon_dir(clauderon_dir: PathBuf) -> Self {
-        Self { clauderon_dir }
+        let config = DockerConfig::load_or_default();
+        Self {
+            clauderon_dir,
+            config,
+        }
+    }
+
+    /// Create a Docker backend with custom configuration (for testing).
+    #[cfg(test)]
+    #[must_use]
+    pub fn with_config(config: DockerConfig) -> Self {
+        let home = dirs::home_dir().unwrap_or_else(|| PathBuf::from("/tmp"));
+        Self {
+            clauderon_dir: home.join(".clauderon"),
+            config,
+        }
     }
 
     /// Check if a container is running
@@ -222,17 +249,42 @@ impl DockerBackend {
         git_user_email: Option<&str>,
         session_id: Option<&uuid::Uuid>,
         http_port: Option<u16>,
+        config: &DockerConfig,
+        image_override: Option<&ImageConfig>,
+        resource_override: Option<&ResourceLimits>,
     ) -> anyhow::Result<Vec<String>> {
         let container_name = format!("clauderon-{name}");
         let escaped_prompt = initial_prompt.replace('\'', "'\\''");
 
-        let mut args = vec![
-            "run".to_string(),
-            "-dit".to_string(),
+        // Determine effective image configuration (override > config > default)
+        let image_config = image_override.unwrap_or(&config.image);
+
+        // Validate the effective image
+        image_config.validate()?;
+
+        let mut args = vec!["run".to_string(), "-dit".to_string()];
+
+        // Add pull policy flag if not default (IfNotPresent is Docker's default)
+        if let Some(pull_flag) = image_config.pull_policy.to_docker_flag() {
+            args.push("--pull".to_string());
+            args.push(pull_flag.to_string());
+        }
+
+        args.extend([
             "--name".to_string(),
             container_name,
             "--user".to_string(),
             uid.to_string(),
+        ]);
+
+        // Add resource limits if configured
+        let resource_limits = resource_override.or(config.resources.as_ref());
+        if let Some(resources) = resource_limits {
+            resources.validate()?;
+            args.extend(resources.to_docker_args());
+        }
+
+        args.extend([
             "-v".to_string(),
             format!("{display}:/workspace", display = workdir.display()),
             "-w".to_string(),
@@ -245,7 +297,13 @@ impl DockerBackend {
             "TERM=xterm-256color".to_string(),
             "-e".to_string(),
             "HOME=/workspace".to_string(),
-        ];
+        ]);
+
+        // Add extra flags from config (advanced users only)
+        for flag in &config.extra_flags {
+            args.push(flag.clone());
+        }
+
         if agent == AgentType::Codex {
             args.extend(["-e".to_string(), "CODEX_HOME=/workspace/.codex".to_string()]);
         }
@@ -852,11 +910,18 @@ fi"#,
         };
 
         args.extend([
-            DOCKER_IMAGE.to_string(),
+            image_config.image.clone(),
             "bash".to_string(),
             "-c".to_string(),
             agent_cmd,
         ]);
+
+        tracing::info!(
+            image = %image_config.image,
+            pull_policy = %image_config.pull_policy,
+            has_resources = resource_limits.is_some(),
+            "Building Docker container with configured image settings"
+        );
 
         Ok(args)
     }
@@ -929,6 +994,9 @@ impl ExecutionBackend for DockerBackend {
             git_user_email.as_deref(),
             options.session_id.as_ref(),
             options.http_port,
+            &self.config,
+            options.container_image.as_ref(),
+            options.container_resources.as_ref(),
         )?;
         let output = Command::new("docker").args(&args).output().await?;
 
@@ -1063,6 +1131,8 @@ impl DockerBackend {
                 session_id: None,
                 initial_workdir: std::path::PathBuf::new(),
                 http_port: None,
+                container_image: None,
+                container_resources: None,
             },
         )
         .await
@@ -1104,6 +1174,9 @@ mod tests {
             None,  // git user email
             None,  // session_id
             None,  // http_port
+            &DockerConfig::default(),
+            None, // image_override
+            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -1175,6 +1248,9 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
+            &DockerConfig::default(),
+            None, // image_override
+            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -1207,6 +1283,9 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
+            &DockerConfig::default(),
+            None, // image_override
+            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -1242,6 +1321,9 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
+            &DockerConfig::default(),
+            None, // image_override
+            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -1277,6 +1359,9 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
+            &DockerConfig::default(),
+            None, // image_override
+            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -1373,6 +1458,9 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
+            &DockerConfig::default(),
+            None, // image_override
+            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -1404,6 +1492,9 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
+            &DockerConfig::default(),
+            None, // image_override
+            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -1448,6 +1539,9 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
+            &DockerConfig::default(),
+            None, // image_override
+            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -1490,6 +1584,9 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
+            &DockerConfig::default(),
+            None, // image_override
+            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -1516,6 +1613,9 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
+            &DockerConfig::default(),
+            None, // image_override
+            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -1552,6 +1652,9 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
+            &DockerConfig::default(),
+            None, // image_override
+            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -1587,6 +1690,9 @@ mod tests {
             None, // git_user_email
             None, // session_id
             None, // http_port
+            &DockerConfig::default(),
+            None, // image_override
+            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -1619,6 +1725,9 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
+            &DockerConfig::default(),
+            None, // image_override
+            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -1673,6 +1782,9 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
+            &DockerConfig::default(),
+            None, // image_override
+            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -1726,6 +1838,9 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
+            &DockerConfig::default(),
+            None, // image_override
+            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -1760,6 +1875,9 @@ mod tests {
             &[],
             None,
             None,
+            None,
+            None,
+            &DockerConfig::default(),
             None,
             None,
         )
@@ -1798,6 +1916,9 @@ mod tests {
             std::slice::from_ref(&host_path),
             None,
             None,
+            None,
+            None,
+            &DockerConfig::default(),
             None,
             None,
         )
@@ -1856,6 +1977,9 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
+            &DockerConfig::default(),
+            None, // image_override
+            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -1908,6 +2032,9 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
+            &DockerConfig::default(),
+            None, // image_override
+            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -1950,6 +2077,9 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
+            &DockerConfig::default(),
+            None, // image_override
+            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -1993,6 +2123,9 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
+            &DockerConfig::default(),
+            None, // image_override
+            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -2023,6 +2156,9 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
+            &DockerConfig::default(),
+            None, // image_override
+            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -2066,6 +2202,9 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
+            &DockerConfig::default(),
+            None, // image_override
+            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -2098,6 +2237,9 @@ mod tests {
             None,              // git_user_email
             Some(&session_id), // session_id - required for wrapper script generation
             None,              // http_port
+            &DockerConfig::default(),
+            None,
+            None,
         )
         .expect("Failed to build args");
 
@@ -2135,6 +2277,9 @@ mod tests {
             None,              // git_user_email
             Some(&session_id), // session_id - required for wrapper script generation
             None,              // http_port
+            &DockerConfig::default(),
+            None,
+            None,
         )
         .expect("Failed to build args");
 
