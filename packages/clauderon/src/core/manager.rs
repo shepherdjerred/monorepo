@@ -389,6 +389,7 @@ impl SessionManager {
             session.history_file_path = Some(super::session::get_history_file_path(
                 &worktree_path,
                 &session.id,
+                &subdirectory,
             ));
         }
 
@@ -544,7 +545,8 @@ impl SessionManager {
                 .await?;
 
             // Create history directory
-            let history_path = super::session::get_history_file_path(&worktree_path, &session_id);
+            let history_path =
+                super::session::get_history_file_path(&worktree_path, &session_id, &subdirectory);
             if let Some(parent_dir) = history_path.parent() {
                 if let Err(e) = tokio::fs::create_dir_all(parent_dir).await {
                     tracing::warn!(
@@ -980,6 +982,7 @@ impl SessionManager {
             session.history_file_path = Some(super::session::get_history_file_path(
                 &worktree_path,
                 &session.id,
+                &subdirectory,
             ));
         }
 

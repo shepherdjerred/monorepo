@@ -461,19 +461,35 @@ impl std::str::FromStr for AccessMode {
 /// Get the path to the Claude Code session history file
 ///
 /// Claude Code stores session history at:
-/// `<worktree>/.claude/projects/-workspace/<session-id>.jsonl`
+/// - Root directory: `<worktree>/.claude/projects/-workspace/<session-id>.jsonl`
+/// - Subdirectory: `<worktree>/.claude/projects/-workspace-<subdir>/<session-id>.jsonl`
+///   where <subdir> has `/` replaced with `-`
 ///
 /// # Arguments
 /// * `worktree_path` - Path to the git worktree
 /// * `session_id` - UUID of the session
+/// * `subdirectory` - Subdirectory path relative to git root (empty if at root)
 ///
 /// # Returns
 /// The path to the history file (may not exist yet)
 #[must_use]
-pub fn get_history_file_path(worktree_path: &Path, session_id: &Uuid) -> PathBuf {
+pub fn get_history_file_path(
+    worktree_path: &Path,
+    session_id: &Uuid,
+    subdirectory: &Path,
+) -> PathBuf {
+    let project_path = if subdirectory.as_os_str().is_empty() {
+        "-workspace".to_string()
+    } else {
+        format!(
+            "-workspace-{}",
+            subdirectory.display().to_string().replace('/', "-")
+        )
+    };
+
     worktree_path
         .join(".claude")
         .join("projects")
-        .join("-workspace")
+        .join(project_path)
         .join(format!("{session_id}.jsonl"))
 }
