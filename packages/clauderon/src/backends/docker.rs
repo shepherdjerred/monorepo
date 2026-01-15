@@ -1012,7 +1012,6 @@ impl ExecutionBackend for DockerBackend {
             git_user_email.as_deref(),
             options.session_id.as_ref(),
             options.http_port,
-            options.agent_type,
         )?;
         let output = Command::new("docker").args(&args).output().await?;
 
@@ -1671,7 +1670,6 @@ mod tests {
             None, // git_user_email
             None, // session_id
             None, // http_port
-            crate::core::AgentType::ClaudeCode,
         )
         .expect("Failed to build args");
 
