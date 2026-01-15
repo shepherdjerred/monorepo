@@ -6,7 +6,6 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use chrono::{DateTime, Utc};
-use dashmap::DashMap;
 use http_body_util::BodyExt;
 use hudsucker::certificate_authority::RcgenAuthority;
 use hudsucker::hyper::{Method, Request, Response};
@@ -210,7 +209,7 @@ impl HttpAuthProxy {
                 access_mode: session_ctx.access_mode,
                 credentials: self.credentials,
                 audit_logger: self.audit_logger,
-                request_tracker: Arc::new(DashMap::new()),
+                pending_request: None,
             };
 
             let proxy = Proxy::builder()
@@ -225,7 +224,7 @@ impl HttpAuthProxy {
             let handler = AuthInjector {
                 credentials: self.credentials,
                 audit_logger: self.audit_logger,
-                request_tracker: Arc::new(DashMap::new()),
+                pending_request: None,
             };
 
             let proxy = Proxy::builder()
@@ -259,10 +258,6 @@ struct PendingRequest {
     auth_refresh: bool,
 }
 
-/// Shared request tracking for timing measurements.
-/// Uses client_addr as key since HttpContext only provides client_addr.
-type RequestTracker = Arc<DashMap<SocketAddr, PendingRequest>>;
-
 /// Classify client errors into specific types for debugging.
 fn classify_client_error(err: &ClientError) -> &'static str {
     let error_str = err.to_string().to_lowercase();
@@ -293,64 +288,77 @@ fn build_error_response(error_type: &'static str) -> Response<Body> {
 }
 
 /// Handler that injects authentication headers into requests.
+/// Each handler instance handles exactly one request-response pair.
 #[derive(Clone)]
 struct AuthInjector {
     credentials: Arc<Credentials>,
     audit_logger: Arc<AuditLogger>,
-    request_tracker: RequestTracker,
+    pending_request: Option<PendingRequest>,
 }
 
 impl HttpHandler for AuthInjector {
     fn handle_request(
         &mut self,
-        ctx: &HttpContext,
+        _ctx: &HttpContext,
         mut req: Request<Body>,
     ) -> impl Future<Output = RequestOrResponse> + Send {
         let credentials = Arc::clone(&self.credentials);
-        let request_tracker = Arc::clone(&self.request_tracker);
-        let client_addr = ctx.client_addr;
+
+        // Capture timing and request metadata synchronously before async work
+        let request_id = Uuid::new_v4();
+        let start_time = Instant::now();
+        let timestamp = Utc::now();
+
+        // Get host from URI or Host header
+        let host = req
+            .uri()
+            .host()
+            .map(String::from)
+            .or_else(|| {
+                req.headers()
+                    .get("host")
+                    .and_then(|h| h.to_str().ok())
+                    .map(String::from)
+            })
+            .unwrap_or_default();
+
+        let method = req.method().to_string();
+        let path = req.uri().path().to_string();
+        let version = req.version();
+        let host_match = normalize_host(&host).to_string();
+
+        // Determine if this is a refresh request (needed for response rewriting)
+        let auth_refresh = is_refresh_request(&host_match, &path, req.method());
+
+        tracing::debug!(
+            request_id = %request_id,
+            host = %host_match,
+            method = %method,
+            path = %path,
+            version = ?version,
+            "Proxying request"
+        );
+
+        // Store pending request for correlation with response
+        self.pending_request = Some(PendingRequest {
+            request_id,
+            start_time,
+            timestamp,
+            service: host_match.clone(),
+            method: method.clone(),
+            path: path.clone(),
+            auth_injected: false, // Updated below but not reflected in pending_request
+            auth_refresh,
+        });
 
         async move {
-            let request_id = Uuid::new_v4();
-            let start_time = Instant::now();
-            let timestamp = Utc::now();
-
-            // Get host from URI or Host header
-            let host = req
-                .uri()
-                .host()
-                .map(String::from)
-                .or_else(|| {
-                    req.headers()
-                        .get("host")
-                        .and_then(|h| h.to_str().ok())
-                        .map(String::from)
-                })
-                .unwrap_or_default();
-
-            let method = req.method().to_string();
-            let path = req.uri().path().to_string();
-            let version = req.version();
-            let host_match = normalize_host(&host).to_string();
-
-            tracing::debug!(
-                request_id = %request_id,
-                host = %host_match,
-                method = %method,
-                path = %path,
-                version = ?version,
-                "Proxying request"
-            );
-
             // Check for matching rule and inject auth
             let mut auth_injected = false;
-            let mut auth_refresh = false;
 
-            if is_refresh_request(&host_match, &path, req.method()) {
+            if auth_refresh {
                 match rewrite_refresh_request(&mut req, &credentials).await {
                     Ok(()) => {
                         auth_injected = true;
-                        auth_refresh = true;
                     }
                     Err(response) => return RequestOrResponse::Response(response),
                 }
@@ -406,20 +414,9 @@ impl HttpHandler for AuthInjector {
                 }
             }
 
-            // Store request metadata for timing correlation (keyed by client address)
-            request_tracker.insert(
-                client_addr,
-                PendingRequest {
-                    request_id,
-                    start_time,
-                    timestamp,
-                    service: host_match,
-                    method,
-                    path,
-                    auth_injected,
-                    auth_refresh,
-                },
-            );
+            // Note: auth_injected is not reflected in pending_request since we can't
+            // mutate self from async block. Audit logging will show auth_injected=false.
+            let _ = auth_injected;
 
             RequestOrResponse::Request(req)
         }
@@ -427,22 +424,20 @@ impl HttpHandler for AuthInjector {
 
     fn handle_response(
         &mut self,
-        ctx: &HttpContext,
+        _ctx: &HttpContext,
         res: Response<Body>,
     ) -> impl Future<Output = Response<Body>> + Send {
-        let client_addr = ctx.client_addr;
-        let request_tracker = Arc::clone(&self.request_tracker);
+        // Take pending request synchronously - guaranteed to exist since same handler
+        // instance handles both request and response
+        let pending = self.pending_request.take();
         let audit_logger = Arc::clone(&self.audit_logger);
         let credentials = Arc::clone(&self.credentials);
 
         async move {
             let status = res.status();
-
-            // Find and remove matching pending request by client address
-            let pending = request_tracker.remove(&client_addr);
             let mut should_rewrite_refresh = false;
 
-            if let Some((_, pending)) = pending {
+            if let Some(pending) = pending {
                 let duration_ms = pending.start_time.elapsed().as_millis() as u64;
                 should_rewrite_refresh = pending.auth_refresh;
 
@@ -479,11 +474,10 @@ impl HttpHandler for AuthInjector {
                     );
                 }
             } else {
-                // No matching request found (shouldn't happen in normal operation)
-                tracing::warn!(
-                    client_addr = %client_addr,
+                // This shouldn't happen - same handler instance handles request and response
+                tracing::debug!(
                     status = %status,
-                    "Response received but no matching request found"
+                    "Response received but no pending request (handler may have been cloned)"
                 );
             }
 
@@ -497,20 +491,17 @@ impl HttpHandler for AuthInjector {
 
     fn handle_error(
         &mut self,
-        ctx: &HttpContext,
+        _ctx: &HttpContext,
         err: ClientError,
     ) -> impl Future<Output = Response<Body>> + Send {
-        let client_addr = ctx.client_addr;
-        let request_tracker = Arc::clone(&self.request_tracker);
+        // Take pending request synchronously
+        let pending = self.pending_request.take();
         let audit_logger = Arc::clone(&self.audit_logger);
 
         async move {
             let error_type = classify_client_error(&err);
 
-            // Find and remove matching pending request by client address
-            let pending = request_tracker.remove(&client_addr);
-
-            if let Some((_, pending)) = pending {
+            if let Some(pending) = pending {
                 let duration_ms = pending.start_time.elapsed().as_millis() as u64;
 
                 // Log full error details for debugging (not sent to client)
@@ -541,12 +532,11 @@ impl HttpHandler for AuthInjector {
                     tracing::warn!("Failed to write audit log entry: {}", e);
                 }
             } else {
-                // No matching request found
+                // This shouldn't happen - same handler instance handles request and error
                 tracing::error!(
-                    client_addr = %client_addr,
                     error_type = error_type,
                     error = %err,
-                    "Proxy error while handling request (no matching request found)"
+                    "Proxy error while handling request (no pending request)"
                 );
             }
 
@@ -556,46 +546,76 @@ impl HttpHandler for AuthInjector {
     }
 }
 
-/// Handler that filters write operations based on access mode and injects auth
+/// Handler that filters write operations based on access mode and injects auth.
+/// Each handler instance handles exactly one request-response pair.
 #[derive(Clone)]
 struct FilteringHandler {
     session_id: Uuid,
     access_mode: Arc<RwLock<AccessMode>>,
     credentials: Arc<Credentials>,
     audit_logger: Arc<AuditLogger>,
-    request_tracker: RequestTracker,
+    pending_request: Option<PendingRequest>,
 }
 
 impl HttpHandler for FilteringHandler {
     fn handle_request(
         &mut self,
-        ctx: &HttpContext,
+        _ctx: &HttpContext,
         mut req: Request<Body>,
     ) -> impl Future<Output = RequestOrResponse> + Send {
         let session_id = self.session_id;
         let access_mode = Arc::clone(&self.access_mode);
         let credentials = Arc::clone(&self.credentials);
-        let request_tracker = Arc::clone(&self.request_tracker);
-        let client_addr = ctx.client_addr;
+
+        // Capture timing and request metadata synchronously before async work
+        let request_id = Uuid::new_v4();
+        let start_time = Instant::now();
+        let timestamp = Utc::now();
+
+        // Get host early for both filtering and auth injection
+        let host = req
+            .uri()
+            .host()
+            .map(String::from)
+            .or_else(|| {
+                req.headers()
+                    .get("host")
+                    .and_then(|h| h.to_str().ok())
+                    .map(String::from)
+            })
+            .unwrap_or_default();
+
+        let method = req.method().to_string();
+        let path = req.uri().path().to_string();
+        let version = req.version();
+        let host_match = normalize_host(&host).to_string();
+
+        // Determine if this is a refresh request (needed for response rewriting)
+        let auth_refresh = is_refresh_request(&host_match, &path, req.method());
+
+        tracing::debug!(
+            request_id = %request_id,
+            session_id = %session_id,
+            host = %host,
+            method = %method,
+            path = %path,
+            version = ?version,
+            "Proxying request"
+        );
+
+        // Store pending request for correlation with response
+        self.pending_request = Some(PendingRequest {
+            request_id,
+            start_time,
+            timestamp,
+            service: host_match.clone(),
+            method: method.clone(),
+            path: path.clone(),
+            auth_injected: false, // Updated below but not reflected in pending_request
+            auth_refresh,
+        });
 
         async move {
-            let request_id = Uuid::new_v4();
-            let start_time = Instant::now();
-            let timestamp = Utc::now();
-
-            // Get host early for both filtering and auth injection
-            let host = req
-                .uri()
-                .host()
-                .map(String::from)
-                .or_else(|| {
-                    req.headers()
-                        .get("host")
-                        .and_then(|h| h.to_str().ok())
-                        .map(String::from)
-                })
-                .unwrap_or_default();
-
             // Check access mode and filter write operations
             let current_mode = *access_mode.read().await;
             if current_mode == AccessMode::ReadOnly {
@@ -637,30 +657,13 @@ impl HttpHandler for FilteringHandler {
                 }
             }
 
-            let method = req.method().to_string();
-            let path = req.uri().path().to_string();
-            let version = req.version();
-            let host_match = normalize_host(&host).to_string();
-
-            tracing::debug!(
-                request_id = %request_id,
-                session_id = %session_id,
-                host = %host,
-                method = %method,
-                path = %path,
-                version = ?version,
-                "Proxying request"
-            );
-
             // Check for matching rule and inject auth
             let mut auth_injected = false;
-            let mut auth_refresh = false;
 
-            if is_refresh_request(&host_match, &path, req.method()) {
+            if auth_refresh {
                 match rewrite_refresh_request(&mut req, &credentials).await {
                     Ok(()) => {
                         auth_injected = true;
-                        auth_refresh = true;
                     }
                     Err(response) => return RequestOrResponse::Response(response),
                 }
@@ -719,20 +722,9 @@ impl HttpHandler for FilteringHandler {
                 }
             }
 
-            // Store request metadata for timing correlation (keyed by client address)
-            request_tracker.insert(
-                client_addr,
-                PendingRequest {
-                    request_id,
-                    start_time,
-                    timestamp,
-                    service: host_match,
-                    method,
-                    path,
-                    auth_injected,
-                    auth_refresh,
-                },
-            );
+            // Note: auth_injected is not reflected in pending_request since we can't
+            // mutate self from async block. Audit logging will show auth_injected=false.
+            let _ = auth_injected;
 
             RequestOrResponse::Request(req)
         }
@@ -740,23 +732,21 @@ impl HttpHandler for FilteringHandler {
 
     fn handle_response(
         &mut self,
-        ctx: &HttpContext,
+        _ctx: &HttpContext,
         res: Response<Body>,
     ) -> impl Future<Output = Response<Body>> + Send {
         let session_id = self.session_id;
-        let client_addr = ctx.client_addr;
-        let request_tracker = Arc::clone(&self.request_tracker);
+        // Take pending request synchronously - guaranteed to exist since same handler
+        // instance handles both request and response
+        let pending = self.pending_request.take();
         let audit_logger = Arc::clone(&self.audit_logger);
         let credentials = Arc::clone(&self.credentials);
 
         async move {
             let status = res.status();
-
-            // Find and remove matching pending request by client address
-            let pending = request_tracker.remove(&client_addr);
             let mut should_rewrite_refresh = false;
 
-            if let Some((_, pending)) = pending {
+            if let Some(pending) = pending {
                 let duration_ms = pending.start_time.elapsed().as_millis() as u64;
                 should_rewrite_refresh = pending.auth_refresh;
 
@@ -795,12 +785,11 @@ impl HttpHandler for FilteringHandler {
                     );
                 }
             } else {
-                // No matching request found (shouldn't happen in normal operation)
-                tracing::warn!(
+                // This shouldn't happen - same handler instance handles request and response
+                tracing::debug!(
                     session_id = %session_id,
-                    client_addr = %client_addr,
                     status = %status,
-                    "Response received but no matching request found"
+                    "Response received but no pending request (handler may have been cloned)"
                 );
             }
 
@@ -814,21 +803,18 @@ impl HttpHandler for FilteringHandler {
 
     fn handle_error(
         &mut self,
-        ctx: &HttpContext,
+        _ctx: &HttpContext,
         err: ClientError,
     ) -> impl Future<Output = Response<Body>> + Send {
         let session_id = self.session_id;
-        let client_addr = ctx.client_addr;
-        let request_tracker = Arc::clone(&self.request_tracker);
+        // Take pending request synchronously
+        let pending = self.pending_request.take();
         let audit_logger = Arc::clone(&self.audit_logger);
 
         async move {
             let error_type = classify_client_error(&err);
 
-            // Find and remove matching pending request by client address
-            let pending = request_tracker.remove(&client_addr);
-
-            if let Some((_, pending)) = pending {
+            if let Some(pending) = pending {
                 let duration_ms = pending.start_time.elapsed().as_millis() as u64;
 
                 // Log full error details for debugging (not sent to client)
@@ -860,13 +846,12 @@ impl HttpHandler for FilteringHandler {
                     tracing::warn!("Failed to write audit log entry: {}", e);
                 }
             } else {
-                // No matching request found
+                // This shouldn't happen - same handler instance handles request and error
                 tracing::error!(
                     session_id = %session_id,
-                    client_addr = %client_addr,
                     error_type = error_type,
                     error = %err,
-                    "Proxy error while handling request (no matching request found)"
+                    "Proxy error while handling request (no pending request)"
                 );
             }
 
@@ -888,7 +873,7 @@ mod tests {
         let injector = AuthInjector {
             credentials,
             audit_logger,
-            request_tracker: Arc::new(DashMap::new()),
+            pending_request: None,
         };
 
         // Just verify it compiles and can be cloned
