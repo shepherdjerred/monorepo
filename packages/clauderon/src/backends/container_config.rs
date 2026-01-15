@@ -114,7 +114,7 @@ impl ResourceLimits {
 
     /// Convert to Docker CLI arguments.
     ///
-    /// Returns a vector of Docker run arguments (e.g., ["--cpus", "2.0", "--memory", "2g"]).
+    /// Returns a vector of Docker run arguments (e.g., `["--cpus", "2.0", "--memory", "2g"]`).
     #[must_use]
     pub fn to_docker_args(&self) -> Vec<String> {
         let mut args = Vec::new();
