@@ -127,6 +127,9 @@ fn test_disabled_proxy_config_no_args() {
         None,  // git user email
         None,  // session_id
         None,  // http_port
+        &clauderon::backends::DockerConfig::default(),
+        None,
+        None,
     )
     .expect("Failed to build args");
 
@@ -162,6 +165,9 @@ fn test_none_proxy_config_no_args() {
         None,  // git user email
         None,  // session_id
         None,  // http_port
+        &clauderon::backends::DockerConfig::default(),
+        None,
+        None,
     )
     .expect("Failed to build args");
 
