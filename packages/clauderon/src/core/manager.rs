@@ -1358,6 +1358,15 @@ impl SessionManager {
             // Delete git worktree
             let _ = self.git.delete_worktree(&repo_path, &worktree_path).await;
 
+            // Clean up session uploads
+            if let Err(e) = crate::uploads::cleanup_session_uploads(session_id) {
+                tracing::warn!(
+                    session_id = %session_id,
+                    error = %e,
+                    "Failed to clean up session uploads"
+                );
+            }
+
             update_progress(4, "Cleaning up database".to_string()).await;
             // Record deletion event
             let event = Event::new(session_id, EventType::SessionDeleted { reason: None });
