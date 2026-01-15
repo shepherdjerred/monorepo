@@ -419,7 +419,7 @@ async fn update_metadata(
 async fn regenerate_metadata(
     State(state): State<AppState>,
     Path(id): Path<String>,
-) -> Result<Json<SessionResponse>, AppError> {
+) -> Result<Json<serde_json::Value>, AppError> {
     let session_id = validate_session_id(&id)?;
 
     // Regenerate metadata
@@ -433,7 +433,7 @@ async fn regenerate_metadata(
         .session_manager
         .get_session(&id)
         .await
-        .ok_or_else(|| anyhow::anyhow!("Session not found after regeneration"))?;
+        .ok_or_else(|| AppError::NotFound(format!("Session not found after regeneration: {id}")))?;
 
     // Broadcast session updated event
     broadcast_event(
@@ -442,7 +442,7 @@ async fn regenerate_metadata(
     )
     .await;
 
-    Ok(Json(SessionResponse::from(session)))
+    Ok(Json(json!({ "session": session })))
 }
 
 /// Get recent repositories
