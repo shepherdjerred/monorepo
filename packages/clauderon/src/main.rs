@@ -198,6 +198,31 @@ BACKENDS:
         /// Skip plan mode (start directly in implementation mode)
         #[arg(long, default_value = "false")]
         no_plan_mode: bool,
+
+        /// Custom container image (overrides backend default)
+        ///
+        /// Format: [registry/]repository[:tag]
+        /// Example: ghcr.io/user/custom-dev:latest
+        ///
+        /// Image must include: claude/codex CLI, bash, curl, git (recommended)
+        /// See docs/IMAGE_COMPATIBILITY.md for full requirements
+        #[arg(
+            long,
+            help = "Custom container image (e.g., ghcr.io/user/image:tag)\nRequires: claude/codex CLI, bash, curl, git\nSee docs/IMAGE_COMPATIBILITY.md"
+        )]
+        image: Option<String>,
+
+        /// Image pull policy: always, if-not-present (default), never
+        #[arg(long, value_parser = ["always", "if-not-present", "never"])]
+        pull_policy: Option<String>,
+
+        /// CPU limit (e.g., "2.0" for 2 cores, "500m" for 0.5 cores)
+        #[arg(long)]
+        cpu_limit: Option<String>,
+
+        /// Memory limit (e.g., "2g" for 2 gigabytes, "512m" for 512 megabytes)
+        #[arg(long)]
+        memory_limit: Option<String>,
     },
 
     /// List all sessions
@@ -479,6 +504,10 @@ async fn main() -> anyhow::Result<()> {
             print,
             access_mode,
             no_plan_mode,
+            image,
+            pull_policy,
+            cpu_limit,
+            memory_limit,
         } => {
             let backend_type = match backend.to_lowercase().as_str() {
                 "zellij" => core::session::BackendType::Zellij,
@@ -506,6 +535,10 @@ async fn main() -> anyhow::Result<()> {
                     plan_mode: !no_plan_mode,
                     access_mode,
                     images: vec![],
+                    container_image: image,
+                    pull_policy,
+                    cpu_limit,
+                    memory_limit,
                 })
                 .await?;
 
