@@ -1375,7 +1375,6 @@ mod tests {
             None, // image_override
             None, // resource_override
             &[],  // repositories (empty = legacy mode)
-            &[],  // repositories (empty = legacy mode)
         )
         .expect("Failed to build args");
 
@@ -2093,6 +2092,7 @@ mod tests {
             &DockerConfig::default(),
             None,
             None,
+            &[], // repositories (empty = legacy mode)
         )
         .expect("Failed to build args");
 
