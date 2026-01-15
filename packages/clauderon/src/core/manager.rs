@@ -1937,8 +1937,16 @@ impl SessionManager {
                             }
                         }
                     } else {
-                        // Clean up orphaned session proxy for non-running sessions
-                        if session.backend == BackendType::Docker {
+                        // Clean up orphaned session proxy for non-running sessions (container backends)
+                        #[cfg(target_os = "macos")]
+                        let needs_proxy_cleanup = matches!(
+                            session.backend,
+                            BackendType::Docker | BackendType::AppleContainer
+                        );
+                        #[cfg(not(target_os = "macos"))]
+                        let needs_proxy_cleanup = session.backend == BackendType::Docker;
+
+                        if needs_proxy_cleanup {
                             if let Some(ref proxy_manager) = self.proxy_manager {
                                 tracing::info!(
                                     session_id = %session.id,
@@ -1985,10 +1993,17 @@ impl SessionManager {
                         }
                     }
 
-                    // Verify proxy exists for running Docker sessions
-                    if session.backend == BackendType::Docker
-                        && session.status == SessionStatus::Running
-                    {
+                    // Verify proxy exists for running container sessions (Docker and Apple Container)
+                    #[cfg(target_os = "macos")]
+                    let needs_proxy_check = matches!(
+                        session.backend,
+                        BackendType::Docker | BackendType::AppleContainer
+                    ) && session.status == SessionStatus::Running;
+                    #[cfg(not(target_os = "macos"))]
+                    let needs_proxy_check = session.backend == BackendType::Docker
+                        && session.status == SessionStatus::Running;
+
+                    if needs_proxy_check {
                         if let Some(ref proxy_manager) = self.proxy_manager {
                             if let Some(port) = session.proxy_port {
                                 // Check if proxy is actually listening
@@ -2165,8 +2180,13 @@ impl SessionManager {
         let session_clone = session.clone();
         drop(sessions);
 
-        // Update runtime proxy if session has one
-        if backend == BackendType::Docker {
+        // Update runtime proxy if session has one (container backends: Docker and Apple Container)
+        #[cfg(target_os = "macos")]
+        let needs_proxy = matches!(backend, BackendType::Docker | BackendType::AppleContainer);
+        #[cfg(not(target_os = "macos"))]
+        let needs_proxy = backend == BackendType::Docker;
+
+        if needs_proxy {
             if let Some(ref proxy_manager) = self.proxy_manager {
                 // Only update proxy if session actually has a proxy port allocated
                 // (proxy creation can fail gracefully, leaving session without proxy)
