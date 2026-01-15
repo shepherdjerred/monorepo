@@ -102,6 +102,8 @@ async fn call_claude_cli(repo_path: &str, initial_prompt: &str) -> anyhow::Resul
         .arg(json_schema)
         .arg("--model")
         .arg("haiku")
+        .arg("--max-turns")
+        .arg("10")
         .arg("--dangerously-skip-permissions")
         .arg(&prompt);
 
@@ -131,6 +133,34 @@ async fn call_claude_cli(repo_path: &str, initial_prompt: &str) -> anyhow::Resul
 
     let json: serde_json::Value = serde_json::from_str(&stdout)
         .map_err(|e| anyhow::anyhow!("Failed to parse JSON output: {e}"))?;
+
+    // Log the subtype for debugging
+    if let Some(subtype) = json.get("subtype").and_then(|v| v.as_str()) {
+        tracing::debug!("Claude CLI response subtype: {}", subtype);
+    }
+
+    // Check subtype before extracting structured_output
+    let subtype = json
+        .get("subtype")
+        .and_then(|v| v.as_str())
+        .unwrap_or("unknown");
+
+    if subtype != "success" {
+        // Special handling for error_max_turns with --json-schema
+        if subtype == "error_max_turns" {
+            anyhow::bail!(
+                "Error: --json-schema was provided but Claude did not return structured_output. \
+                 Result subtype: error_max_turns. The conversation reached the maximum turn limit \
+                 before completing the structured output request."
+            );
+        }
+
+        // Generic error for other non-success subtypes
+        anyhow::bail!(
+            "Claude CLI returned non-success response with subtype: {}",
+            subtype
+        );
+    }
 
     // Extract the structured_output field (CLI returns wrapper object)
     let structured_output = json.get("structured_output").ok_or_else(|| {
@@ -267,5 +297,23 @@ mod tests {
         assert_eq!(title, "Test Session Title");
         assert_eq!(description, "Test session description");
         assert_eq!(branch_name, "test-branch");
+    }
+
+    #[test]
+    fn test_error_max_turns_handling() {
+        // Test that we correctly parse error_max_turns response format
+        let json_response = r#"{
+            "type": "result",
+            "subtype": "error_max_turns",
+            "is_error": true,
+            "session_id": "test-123",
+            "usage": {}
+        }"#;
+
+        let json: serde_json::Value = serde_json::from_str(json_response).unwrap();
+        let subtype = json.get("subtype").and_then(|v| v.as_str()).unwrap();
+
+        assert_eq!(subtype, "error_max_turns");
+        assert!(json.get("structured_output").is_none());
     }
 }
