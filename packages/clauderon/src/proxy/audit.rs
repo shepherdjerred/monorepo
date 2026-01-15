@@ -84,6 +84,7 @@ impl AuditLogger {
             let json = serde_json::to_string(entry)?;
             writeln!(file, "{json}")?;
         }
+        drop(guard);
 
         Ok(())
     }
@@ -98,6 +99,7 @@ impl AuditLogger {
         if let Some(file) = guard.as_mut() {
             file.flush()?;
         }
+        drop(guard);
 
         Ok(())
     }

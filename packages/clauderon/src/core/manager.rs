@@ -280,7 +280,9 @@ impl SessionManager {
             loop {
                 let candidate = crate::utils::random::generate_session_name(&metadata.branch_name);
                 let sessions = self.sessions.read().await;
-                if !sessions.iter().any(|s| s.name == candidate) {
+                let is_unique = !sessions.iter().any(|s| s.name == candidate);
+                drop(sessions);
+                if is_unique {
                     break candidate;
                 }
                 attempts += 1;
@@ -413,6 +415,7 @@ impl SessionManager {
                     tracing::error!("Failed to save shutdown error: {}", e);
                 }
             }
+            drop(sessions);
             return;
         };
 
@@ -764,7 +767,9 @@ impl SessionManager {
             loop {
                 let candidate = crate::utils::random::generate_session_name(&metadata.branch_name);
                 let sessions = self.sessions.read().await;
-                if !sessions.iter().any(|s| s.name == candidate) {
+                let is_unique = !sessions.iter().any(|s| s.name == candidate);
+                drop(sessions);
+                if is_unique {
                     break candidate;
                 }
                 attempts += 1;
@@ -1112,6 +1117,7 @@ impl SessionManager {
                     tracing::error!("Failed to save shutdown error: {}", e);
                 }
             }
+            drop(sessions);
             return;
         };
 
@@ -1242,6 +1248,7 @@ impl SessionManager {
                         });
                     }
                 }
+                drop(sessions);
 
                 tracing::error!(session_id = %session_id, error = %e, "Session deletion failed");
             }
@@ -1646,7 +1653,7 @@ impl SessionManager {
                 .find(|s| s.id == session_id)
                 .ok_or_else(|| anyhow::anyhow!("Session disappeared"))?;
 
-            (
+            let result = (
                 s.name.clone(),
                 s.repo_path.clone(),
                 s.worktree_path.clone(),
@@ -1657,7 +1664,9 @@ impl SessionManager {
                 s.access_mode,
                 s.proxy_port,
                 s.backend_id.clone(),
-            )
+            );
+            drop(sessions);
+            result
         };
 
         // Execute refresh: pull + delete + create

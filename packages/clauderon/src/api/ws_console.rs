@@ -28,12 +28,9 @@ async fn handle_console_socket(socket: WebSocket, session_id: String, state: App
     tracing::info!("Console WebSocket connected for session: {}", session_id);
 
     // Get the session to find its backend ID (container ID or Zellij session)
-    let session = match state.session_manager.get_session(&session_id).await {
-        Some(s) => s,
-        None => {
-            tracing::error!("Session not found: {}", session_id);
-            return;
-        }
+    let Some(session) = state.session_manager.get_session(&session_id).await else {
+        tracing::error!("Session not found: {}", session_id);
+        return;
     };
 
     let backend_id: String = match &session.backend_id {

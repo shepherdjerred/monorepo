@@ -121,7 +121,7 @@ pub fn replay_events(events: &[Event]) -> Option<Session> {
         backend: *backend,
         agent: super::session::AgentType::ClaudeCode,
         dangerous_skip_checks: false,
-        access_mode: Default::default(),
+        access_mode: AccessMode::default(),
     });
 
     // Apply all subsequent events

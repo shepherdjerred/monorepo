@@ -268,14 +268,17 @@ impl ConsoleManager {
         backend: BackendType,
         backend_id: &str,
     ) -> anyhow::Result<ConsoleSessionHandle> {
-        if let Some(existing) = self.sessions.lock().await.get(&session_id).cloned() {
+        let sessions = self.sessions.lock().await;
+        if let Some(existing) = sessions.get(&session_id).cloned() {
+            drop(sessions);
             return Ok(ConsoleSessionHandle::new(existing));
         }
+        drop(sessions);
 
         let session = match backend {
             BackendType::Docker => ConsoleSession::spawn_docker(backend_id).await?,
             BackendType::Zellij => ConsoleSession::spawn_zellij(backend_id).await?,
-            _ => anyhow::bail!("Console manager not supported for backend: {backend:?}"),
+            BackendType::Kubernetes => anyhow::bail!("Console manager not supported for backend: {backend:?}"),
         };
 
         let session = Arc::new(session);
@@ -283,7 +286,9 @@ impl ConsoleManager {
         let entry = sessions
             .entry(session_id)
             .or_insert_with(|| Arc::clone(&session));
-        Ok(ConsoleSessionHandle::new(Arc::clone(entry)))
+        let handle = ConsoleSessionHandle::new(Arc::clone(entry));
+        drop(sessions);
+        Ok(handle)
     }
 
     pub async fn remove_session(&self, session_id: Uuid) {

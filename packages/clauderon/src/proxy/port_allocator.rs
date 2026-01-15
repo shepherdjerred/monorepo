@@ -40,6 +40,7 @@ impl PortAllocator {
                 e.insert(session_id);
                 state.next_port = state.next_port.wrapping_add(1);
                 tracing::info!(port, session_id = %session_id, "Allocated proxy port");
+                drop(state);
                 return Ok(port);
             }
 

@@ -290,12 +290,13 @@ fn parse_ed25519_key(pem_bytes: &[u8]) -> anyhow::Result<PrivateKeyDer<'static>>
 
 /// Simple base64 decoder (without PEM detection).
 fn decode_base64_raw(s: &str) -> anyhow::Result<Vec<u8>> {
+    #[allow(clippy::cast_possible_truncation)]
     const DECODE_TABLE: [i8; 256] = {
         let mut table = [-1i8; 256];
         let alphabet = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
         let mut i = 0;
         while i < 64 {
-            table[alphabet[i] as usize] = i as i8;
+            table[alphabet[i] as usize] = i as i8; // i is always < 64, safe to cast to i8
             i += 1;
         }
         table

@@ -720,7 +720,7 @@ impl Store for SqliteStore {
         .bind(session.claude_status_updated_at.map(|t| t.to_rfc3339()))
         .bind(session.merge_conflict)
         .bind(session.access_mode.to_string())
-        .bind(session.proxy_port.map(|p| i64::from(p)))
+        .bind(session.proxy_port.map(i64::from))
         .bind(
             session
                 .history_file_path
