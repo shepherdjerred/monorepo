@@ -55,6 +55,31 @@ export function SessionCard({ session, onAttach, onEdit, onArchive, onRefresh, o
           </p>
         )}
 
+        {/* Repositories Section */}
+        {session.repositories && session.repositories.length > 1 && (
+          <details className="mb-3 border-2 border-primary/20 rounded">
+            <summary className="cursor-pointer px-2 py-1 hover:bg-muted/50 text-xs font-mono font-semibold flex items-center gap-2">
+              <span>📁 {session.repositories.length} Repositories</span>
+            </summary>
+            <div className="px-3 py-2 space-y-1 bg-muted/20">
+              {session.repositories.map((repo, idx) => (
+                <div key={idx} className="text-xs font-mono flex items-center gap-2">
+                  {repo.is_primary && (
+                    <span className="text-yellow-600 font-bold">★</span>
+                  )}
+                  <span className="font-semibold">{repo.mount_name}:</span>
+                  <span className="text-muted-foreground truncate">
+                    {repo.repo_path.split('/').pop()}/{repo.subdirectory || '.'}
+                  </span>
+                  <span className="text-xs text-muted-foreground/70">
+                    → {repo.is_primary ? '/workspace' : `/repos/${repo.mount_name}`}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </details>
+        )}
+
         {/* Status Indicators */}
         <div className="flex flex-col gap-1 mb-3">
           {/* PR and CI Status */}

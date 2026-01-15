@@ -142,6 +142,45 @@ impl DockerBackend {
         }
     }
 
+    /// Validate a repository mount name
+    ///
+    /// Mount names must be:
+    /// - Alphanumeric + hyphens + underscores only
+    /// - Not reserved names (workspace, clauderon, repos)
+    /// - Maximum 64 characters
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the mount name is invalid.
+    fn validate_mount_name(mount_name: &str) -> anyhow::Result<()> {
+        // Check length
+        if mount_name.is_empty() {
+            anyhow::bail!("Mount name cannot be empty");
+        }
+        if mount_name.len() > 64 {
+            anyhow::bail!("Mount name cannot exceed 64 characters: {}", mount_name);
+        }
+
+        // Check for valid characters (alphanumeric, hyphens, underscores)
+        if !mount_name
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
+        {
+            anyhow::bail!(
+                "Mount name can only contain alphanumeric characters, hyphens, and underscores: {}",
+                mount_name
+            );
+        }
+
+        // Check for reserved names
+        let reserved = ["workspace", "clauderon", "repos", "primary"];
+        if reserved.contains(&mount_name.to_lowercase().as_str()) {
+            anyhow::bail!("Mount name '{}' is reserved", mount_name);
+        }
+
+        Ok(())
+    }
+
     /// Check if a container is running
     ///
     /// # Errors
@@ -252,6 +291,7 @@ impl DockerBackend {
         config: &DockerConfig,
         image_override: Option<&ImageConfig>,
         resource_override: Option<&ResourceLimits>,
+        repositories: &[crate::core::SessionRepository],
     ) -> anyhow::Result<Vec<String>> {
         let container_name = format!("clauderon-{name}");
         let escaped_prompt = initial_prompt.replace('\'', "'\\''");
@@ -284,15 +324,69 @@ impl DockerBackend {
             args.extend(resources.to_docker_args());
         }
 
-        args.extend([
-            "-v".to_string(),
-            format!("{display}:/workspace", display = workdir.display()),
-            "-w".to_string(),
+        // Mount repositories (multi-repo mode if repositories is non-empty, legacy mode otherwise)
+        let working_dir = if repositories.is_empty() {
+            // LEGACY MODE: Single repository using workdir parameter
+            args.extend([
+                "-v".to_string(),
+                format!("{display}:/workspace", display = workdir.display()),
+            ]);
+
+            // Set working directory based on initial_workdir
             if initial_workdir.as_os_str().is_empty() {
                 "/workspace".to_string()
             } else {
                 format!("/workspace/{}", initial_workdir.display())
-            },
+            }
+        } else {
+            // MULTI-REPO MODE: Mount multiple repositories
+            // Find primary repository
+            let primary_repo = repositories.iter().find(|r| r.is_primary).ok_or_else(|| {
+                anyhow::anyhow!("No primary repository found in multi-repo session")
+            })?;
+
+            // Mount primary repository to /workspace
+            args.extend([
+                "-v".to_string(),
+                format!(
+                    "{display}:/workspace",
+                    display = primary_repo.worktree_path.display()
+                ),
+            ]);
+
+            // Mount secondary repositories to /repos/{mount_name}
+            for repo in repositories.iter().filter(|r| !r.is_primary) {
+                // Validate mount name
+                Self::validate_mount_name(&repo.mount_name)?;
+
+                args.extend([
+                    "-v".to_string(),
+                    format!(
+                        "{src}:/repos/{mount}",
+                        src = repo.worktree_path.display(),
+                        mount = repo.mount_name
+                    ),
+                ]);
+
+                tracing::info!(
+                    mount_name = %repo.mount_name,
+                    repo_path = %repo.repo_path.display(),
+                    worktree = %repo.worktree_path.display(),
+                    "Mounting secondary repository"
+                );
+            }
+
+            // Set working directory based on primary repo's subdirectory
+            if primary_repo.subdirectory.as_os_str().is_empty() {
+                "/workspace".to_string()
+            } else {
+                format!("/workspace/{}", primary_repo.subdirectory.display())
+            }
+        };
+
+        args.extend([
+            "-w".to_string(),
+            working_dir,
             "-e".to_string(),
             "TERM=xterm-256color".to_string(),
             "-e".to_string(),
@@ -365,50 +459,68 @@ impl DockerBackend {
             format!("{uploads_dir}:/workspace/.clauderon/uploads"),
         ]);
 
-        // Detect if workdir is a git worktree and mount parent .git directory
-        match crate::utils::git::detect_worktree_parent_git_dir(workdir) {
-            Ok(Some(parent_git_dir)) => {
-                tracing::info!(
-                    workdir = %workdir.display(),
-                    parent_git = %parent_git_dir.display(),
-                    "Detected git worktree, mounting parent .git directory"
-                );
+        // Detect if repositories are git worktrees and mount parent .git directories
+        // In multi-repo mode, check each repository; in legacy mode, check the single workdir
+        let repos_to_check: Vec<&Path> = if repositories.is_empty() {
+            vec![workdir]
+        } else {
+            repositories
+                .iter()
+                .map(|r| r.worktree_path.as_path())
+                .collect()
+        };
 
-                // Mount the parent .git directory to the same absolute path in the container
-                // This allows git operations (including commits) to work correctly with worktrees
-                // Read-write access is required for commits, branch operations, etc.
-                //
-                // NOTE: This requires the host and container to have compatible filesystem layouts.
-                // The parent .git directory must be accessible at the same absolute path.
-                // This works for most cases but may fail if:
-                // - The parent repo is on a different volume than the worktree
-                // - There are path conflicts in the container
-                // - The worktree and parent repo are in very different directory structures
-                args.extend([
-                    "-v".to_string(),
-                    format!(
-                        "{display1}:{display2}",
-                        display1 = parent_git_dir.display(),
-                        display2 = parent_git_dir.display()
-                    ),
-                ]);
-            }
-            Ok(None) => {
-                // Not a git worktree, that's fine - normal git repos work without extra mounts
-                tracing::debug!(
-                    workdir = %workdir.display(),
-                    "Not a git worktree, skipping parent .git mount"
-                );
-            }
-            Err(e) => {
-                // Failed to detect worktree - log a warning but continue
-                // Git operations may not work properly if this is actually a worktree
-                tracing::warn!(
-                    workdir = %workdir.display(),
-                    error = %e,
-                    "Failed to detect git worktree, git operations may not work correctly. \
-                    If this directory is a git worktree, you may need to fix the .git file or parent repository."
-                );
+        // Track mounted parent .git directories to avoid duplicates
+        let mut mounted_git_dirs = std::collections::HashSet::new();
+
+        for repo_workdir in repos_to_check {
+            match crate::utils::git::detect_worktree_parent_git_dir(repo_workdir) {
+                Ok(Some(parent_git_dir)) => {
+                    // Only mount if not already mounted (multiple repos might share same parent)
+                    if mounted_git_dirs.insert(parent_git_dir.clone()) {
+                        tracing::info!(
+                            workdir = %repo_workdir.display(),
+                            parent_git = %parent_git_dir.display(),
+                            "Detected git worktree, mounting parent .git directory"
+                        );
+
+                        // Mount the parent .git directory to the same absolute path in the container
+                        // This allows git operations (including commits) to work correctly with worktrees
+                        // Read-write access is required for commits, branch operations, etc.
+                        //
+                        // NOTE: This requires the host and container to have compatible filesystem layouts.
+                        // The parent .git directory must be accessible at the same absolute path.
+                        // This works for most cases but may fail if:
+                        // - The parent repo is on a different volume than the worktree
+                        // - There are path conflicts in the container
+                        // - The worktree and parent repo are in very different directory structures
+                        args.extend([
+                            "-v".to_string(),
+                            format!(
+                                "{display1}:{display2}",
+                                display1 = parent_git_dir.display(),
+                                display2 = parent_git_dir.display()
+                            ),
+                        ]);
+                    }
+                }
+                Ok(None) => {
+                    // Not a git worktree, that's fine - normal git repos work without extra mounts
+                    tracing::debug!(
+                        workdir = %repo_workdir.display(),
+                        "Not a git worktree, skipping parent .git mount"
+                    );
+                }
+                Err(e) => {
+                    // Failed to detect worktree - log a warning but continue
+                    // Git operations may not work properly if this is actually a worktree
+                    tracing::warn!(
+                        workdir = %repo_workdir.display(),
+                        error = %e,
+                        "Failed to detect git worktree, git operations may not work correctly. \
+                        If this directory is a git worktree, you may need to fix the .git file or parent repository."
+                    );
+                }
             }
         }
 
@@ -1080,6 +1192,7 @@ impl ExecutionBackend for DockerBackend {
             &self.config,
             options.container_image.as_ref(),
             options.container_resources.as_ref(),
+            &options.repositories,
         )?;
         let output = Command::new("docker").args(&args).output().await?;
 
@@ -1260,6 +1373,8 @@ mod tests {
             &DockerConfig::default(),
             None, // image_override
             None, // resource_override
+            &[],  // repositories (empty = legacy mode)
+            &[],  // repositories (empty = legacy mode)
         )
         .expect("Failed to build args");
 
@@ -1334,6 +1449,7 @@ mod tests {
             &DockerConfig::default(),
             None, // image_override
             None, // resource_override
+            &[],  // repositories (empty = legacy mode)
         )
         .expect("Failed to build args");
 
@@ -1369,6 +1485,7 @@ mod tests {
             &DockerConfig::default(),
             None, // image_override
             None, // resource_override
+            &[],  // repositories (empty = legacy mode)
         )
         .expect("Failed to build args");
 
@@ -1407,6 +1524,7 @@ mod tests {
             &DockerConfig::default(),
             None, // image_override
             None, // resource_override
+            &[],  // repositories (empty = legacy mode)
         )
         .expect("Failed to build args");
 
@@ -1445,6 +1563,7 @@ mod tests {
             &DockerConfig::default(),
             None, // image_override
             None, // resource_override
+            &[],  // repositories (empty = legacy mode)
         )
         .expect("Failed to build args");
 
@@ -1544,6 +1663,7 @@ mod tests {
             &DockerConfig::default(),
             None, // image_override
             None, // resource_override
+            &[],  // repositories (empty = legacy mode)
         )
         .expect("Failed to build args");
 
@@ -1578,6 +1698,7 @@ mod tests {
             &DockerConfig::default(),
             None, // image_override
             None, // resource_override
+            &[],  // repositories (empty = legacy mode)
         )
         .expect("Failed to build args");
 
@@ -1625,6 +1746,7 @@ mod tests {
             &DockerConfig::default(),
             None, // image_override
             None, // resource_override
+            &[],  // repositories (empty = legacy mode)
         )
         .expect("Failed to build args");
 
@@ -1670,6 +1792,7 @@ mod tests {
             &DockerConfig::default(),
             None, // image_override
             None, // resource_override
+            &[],  // repositories (empty = legacy mode)
         )
         .expect("Failed to build args");
 
@@ -1699,6 +1822,7 @@ mod tests {
             &DockerConfig::default(),
             None, // image_override
             None, // resource_override
+            &[],  // repositories (empty = legacy mode)
         )
         .expect("Failed to build args");
 
@@ -1738,6 +1862,7 @@ mod tests {
             &DockerConfig::default(),
             None, // image_override
             None, // resource_override
+            &[],  // repositories (empty = legacy mode)
         )
         .expect("Failed to build args");
 
@@ -1776,6 +1901,7 @@ mod tests {
             &DockerConfig::default(),
             None, // image_override
             None, // resource_override
+            &[],  // repositories (empty = legacy mode)
         )
         .expect("Failed to build args");
 
@@ -1811,6 +1937,7 @@ mod tests {
             &DockerConfig::default(),
             None, // image_override
             None, // resource_override
+            &[],  // repositories (empty = legacy mode)
         )
         .expect("Failed to build args");
 
@@ -1868,6 +1995,7 @@ mod tests {
             &DockerConfig::default(),
             None, // image_override
             None, // resource_override
+            &[],  // repositories (empty = legacy mode)
         )
         .expect("Failed to build args");
 
@@ -1924,6 +2052,7 @@ mod tests {
             &DockerConfig::default(),
             None, // image_override
             None, // resource_override
+            &[],  // repositories (empty = legacy mode)
         )
         .expect("Failed to build args");
 
@@ -2063,6 +2192,7 @@ mod tests {
             &DockerConfig::default(),
             None, // image_override
             None, // resource_override
+            &[],  // repositories (empty = legacy mode)
         )
         .expect("Failed to build args");
 
@@ -2118,6 +2248,7 @@ mod tests {
             &DockerConfig::default(),
             None, // image_override
             None, // resource_override
+            &[],  // repositories (empty = legacy mode)
         )
         .expect("Failed to build args");
 
@@ -2163,6 +2294,7 @@ mod tests {
             &DockerConfig::default(),
             None, // image_override
             None, // resource_override
+            &[],  // repositories (empty = legacy mode)
         )
         .expect("Failed to build args");
 
@@ -2209,6 +2341,7 @@ mod tests {
             &DockerConfig::default(),
             None, // image_override
             None, // resource_override
+            &[],  // repositories (empty = legacy mode)
         )
         .expect("Failed to build args");
 
@@ -2242,6 +2375,7 @@ mod tests {
             &DockerConfig::default(),
             None, // image_override
             None, // resource_override
+            &[],  // repositories (empty = legacy mode)
         )
         .expect("Failed to build args");
 
@@ -2288,6 +2422,7 @@ mod tests {
             &DockerConfig::default(),
             None, // image_override
             None, // resource_override
+            &[],  // repositories (empty = legacy mode)
         )
         .expect("Failed to build args");
 
