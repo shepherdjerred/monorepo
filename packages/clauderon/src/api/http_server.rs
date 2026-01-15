@@ -420,7 +420,9 @@ async fn regenerate_metadata(
     State(state): State<AppState>,
     Path(id): Path<String>,
 ) -> Result<Json<serde_json::Value>, AppError> {
-    let session_id = validate_session_id(&id)?;
+    validate_session_id(&id)?;
+    let session_id = Uuid::parse_str(&id)
+        .map_err(|e| AppError::BadRequest(format!("Invalid session ID: {}", e)))?;
 
     // Regenerate metadata
     state
