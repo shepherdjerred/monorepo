@@ -305,7 +305,8 @@ async fn run_http_server(
 
     // Determine if authentication is required (for any non-localhost binding)
     let is_localhost = bind_addr == "127.0.0.1" || bind_addr == "localhost";
-    let requires_auth = !is_localhost && !auth_disabled;
+    let is_all_interfaces = bind_addr == "0.0.0.0" || bind_addr == "::";
+    let requires_auth = !is_localhost && !is_all_interfaces && !auth_disabled;
 
     // Warn if auth is disabled on a non-localhost binding
     if !is_localhost && auth_disabled {
@@ -319,18 +320,6 @@ async fn run_http_server(
         tracing::warn!("║  or behind a reverse proxy with its own authentication.         ║");
         tracing::warn!("╚══════════════════════════════════════════════════════════════════╝");
     }
-
-    tracing::info!(
-        "HTTP server will bind to {} (authentication {})",
-        bind_addr,
-        if requires_auth {
-            "REQUIRED"
-        } else if is_localhost {
-            "not required (localhost)"
-        } else {
-            "DISABLED (unsafe!)"
-        }
-    );
 
     // Initialize auth state if needed
     let auth_state = if requires_auth {
@@ -413,7 +402,7 @@ async fn run_http_server(
             requires_auth,
         })
     } else {
-        tracing::info!("Authentication disabled (binding to localhost only)");
+        tracing::info!("Authentication disabled");
         None
     };
 
@@ -434,14 +423,67 @@ async fn run_http_server(
         )
         .with_state(state);
 
-    // Parse bind address (configurable for auth support)
-    let addr: std::net::SocketAddr = format!("{}:{}", bind_addr, port).parse()?;
-    let listener = tokio::net::TcpListener::bind(addr).await?;
+    // Determine if we need additional localhost listener for container access
+    let needs_localhost_listener = !is_localhost && !is_all_interfaces;
 
-    tracing::info!("HTTP server listening on {}", addr);
+    // Parse and bind primary address
+    let primary_addr: std::net::SocketAddr = format!("{}:{}", bind_addr, port).parse()?;
+    let primary_listener = tokio::net::TcpListener::bind(primary_addr).await?;
 
-    // Start the server
-    axum::serve(listener, app).await?;
+    tracing::info!(
+        "HTTP server listening on {} (authentication {})",
+        primary_addr,
+        if requires_auth {
+            "REQUIRED"
+        } else {
+            "not required"
+        }
+    );
+
+    // Create localhost listener for container access if needed
+    let localhost_listener = if needs_localhost_listener {
+        let localhost_addr: std::net::SocketAddr = format!("127.0.0.1:{}", port).parse()?;
+        match tokio::net::TcpListener::bind(localhost_addr).await {
+            Ok(listener) => {
+                tracing::info!(
+                    "Additional listener on {} for container access",
+                    localhost_addr
+                );
+                Some(listener)
+            }
+            Err(e) => {
+                tracing::warn!("Failed to bind additional localhost listener: {}", e);
+                tracing::warn!(
+                    "Container hooks may not work if Docker cannot reach {}",
+                    bind_addr
+                );
+                None
+            }
+        }
+    } else {
+        None
+    };
+
+    // Log info message for 0.0.0.0 binding
+    if is_all_interfaces && !requires_auth && !auth_disabled {
+        tracing::info!("Binding to all interfaces - accessible from Docker and all networks");
+        tracing::info!("To enable authentication, set CLAUDERON_ORIGIN environment variable");
+    }
+
+    // Start the server (on both listeners if applicable)
+    match localhost_listener {
+        Some(localhost_listener) => {
+            // Serve on both listeners concurrently
+            tokio::try_join!(
+                axum::serve(primary_listener, app.clone()),
+                axum::serve(localhost_listener, app)
+            )?;
+        }
+        None => {
+            // Single listener
+            axum::serve(primary_listener, app).await?;
+        }
+    }
 
     Ok(())
 }
