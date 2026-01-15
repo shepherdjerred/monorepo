@@ -258,13 +258,24 @@ impl Credentials {
     /// 2. 1Password (if enabled)
     /// 3. Files in secrets directory (lowest)
     pub fn load(config: &ProxyConfig) -> Self {
+        // If 1Password is disabled, we can avoid the async complexity entirely
+        if !config.onepassword.enabled {
+            return Self::load_sync(config);
+        }
+
+        // 1Password is enabled, we need async support
         // Try to use existing runtime if available, otherwise create one
         match tokio::runtime::Handle::try_current() {
-            Ok(handle) => {
-                // We're already in a runtime, just use block_on directly
-                // Note: block_in_place only works with multi-threaded runtimes,
-                // so we use block_on which works with both single and multi-threaded
-                handle.block_on(Self::load_with_priority(config))
+            Ok(_handle) => {
+                // We're in an async context but can't block here.
+                // This is a limitation: load() is sync but needs async for 1Password.
+                // Fall back to sync loading (skip 1Password)
+                tracing::warn!(
+                    "1Password is enabled but Credentials::load() was called from an async context. \
+                     Falling back to sync loading (skipping 1Password). \
+                     Use Credentials::load_with_priority() directly in async contexts."
+                );
+                Self::load_sync(config)
             }
             Err(_) => {
                 // No runtime available, create a new one just for this operation
@@ -272,6 +283,45 @@ impl Credentials {
                     .expect("Failed to create tokio runtime for credential loading");
                 rt.block_on(Self::load_with_priority(config))
             }
+        }
+    }
+
+    /// Synchronous credential loading without 1Password support.
+    /// Used as a fallback when async is not available or when 1Password is disabled.
+    fn load_sync(config: &ProxyConfig) -> Self {
+        let from_env = Self::load_from_env();
+        let from_files = Self::load_from_files(&config.secrets_dir);
+
+        let mut openai_api_key = from_env
+            .openai_api_key
+            .clone()
+            .or(from_files.openai_api_key);
+
+        let (codex_tokens_from_auth, auth_openai_api_key) =
+            load_codex_tokens_from_auth_json(config.codex_auth_json_path.as_deref());
+        if openai_api_key.is_none() {
+            openai_api_key = auth_openai_api_key;
+        }
+
+        let mut codex_tokens = codex_tokens_from_auth;
+        codex_tokens.apply_overlay(from_env.codex_tokens_snapshot());
+        codex_tokens.fill_account_id_from_id_token();
+
+        Self {
+            github_token: from_env.github_token.or(from_files.github_token),
+            anthropic_oauth_token: from_env
+                .anthropic_oauth_token
+                .or(from_files.anthropic_oauth_token),
+            openai_api_key,
+            codex_tokens: Arc::new(RwLock::new(codex_tokens)),
+            pagerduty_token: from_env.pagerduty_token.or(from_files.pagerduty_token),
+            sentry_auth_token: from_env.sentry_auth_token.or(from_files.sentry_auth_token),
+            grafana_api_key: from_env.grafana_api_key.or(from_files.grafana_api_key),
+            npm_token: from_env.npm_token.or(from_files.npm_token),
+            docker_token: from_env.docker_token.or(from_files.docker_token),
+            k8s_token: from_env.k8s_token.or(from_files.k8s_token),
+            talos_token: from_env.talos_token.or(from_files.talos_token),
+            codex_auth_json_path: config.codex_auth_json_path.clone(),
         }
     }
 
