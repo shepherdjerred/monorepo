@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
+use super::container_config::ImagePullPolicy;
+
 /// Proxy mode for Kubernetes backend
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
@@ -34,6 +36,10 @@ pub struct KubernetesConfig {
 
     /// Container image (same as Docker backend default)
     pub image: String,
+
+    /// Image pull policy (controls when to pull the image)
+    #[serde(default)]
+    pub image_pull_policy: ImagePullPolicy,
 
     /// CPU request (e.g., "500m")
     pub cpu_request: String,
@@ -90,6 +96,7 @@ impl Default for KubernetesConfig {
         Self {
             namespace: "clauderon".to_string(),
             image: "ghcr.io/shepherdjerred/dotfiles".to_string(),
+            image_pull_policy: ImagePullPolicy::default(),
             cpu_request: "500m".to_string(),
             cpu_limit: "2000m".to_string(),
             memory_request: "512Mi".to_string(),

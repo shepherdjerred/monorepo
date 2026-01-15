@@ -41,7 +41,7 @@ impl ZellijBackend {
         session_id: Option<&uuid::Uuid>,
     ) -> Vec<String> {
         use crate::agents::traits::Agent;
-        use crate::agents::{ClaudeCodeAgent, CodexAgent};
+        use crate::agents::{ClaudeCodeAgent, CodexAgent, GeminiCodeAgent};
 
         let escaped_prompt = initial_prompt.replace('\'', "'\\''");
 
@@ -59,10 +59,16 @@ impl ZellijBackend {
                 dangerous_skip_checks,
                 session_id,
             ),
+            AgentType::Gemini => GeminiCodeAgent::new().start_command(
+                &escaped_prompt,
+                images,
+                dangerous_skip_checks,
+                session_id,
+            ),
         };
 
         // Join all arguments into a shell command, properly quoting each argument
-        let claude_cmd = cmd_vec
+        let agent_cmd = cmd_vec
             .iter()
             .map(|arg| {
                 // Always quote arguments that contain special characters or spaces
@@ -88,7 +94,7 @@ impl ZellijBackend {
             "--".to_string(),
             "bash".to_string(),
             "-c".to_string(),
-            claude_cmd,
+            agent_cmd,
         ]
     }
 
@@ -272,6 +278,8 @@ impl ZellijBackend {
                 session_id: None,
                 initial_workdir: std::path::PathBuf::new(),
                 http_port: None,
+                container_image: None,
+                container_resources: None,
             },
         )
         .await

@@ -762,6 +762,13 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
                                 ..Default::default()
                             });
                         }
+                        AgentType::Gemini => {
+                            env.push(EnvVar {
+                                name: "GEMINI_API_KEY".to_string(),
+                                value: Some("sk-gemini-clauderon-proxy-placeholder".to_string()),
+                                ..Default::default()
+                            });
+                        }
                     }
                 }
             }
@@ -834,9 +841,6 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
                             .join(" ");
 
                         // Build resume command
-                        // Use --resume to continue an existing session instead of --session-id
-                        // which would try to create a new session with that ID
-                        // --fork-session creates a new session ID from the session so we don't modify the original
                         let resume_cmd = if options.dangerous_skip_checks {
                             format!(
                                 "claude --dangerously-skip-permissions --resume {} --fork-session",
@@ -846,9 +850,7 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
                             format!("claude --resume {} --fork-session", session_id_str)
                         };
 
-                        // Generate wrapper script that detects restart via session history file
-                        // Claude Code stores session history at: .claude/projects/<project-path>/<session-id>.jsonl
-                        // where project-path is the working directory with / replaced by -
+                        // Generate wrapper script
                         let project_path = if options.initial_workdir.as_os_str().is_empty() {
                             "-workspace".to_string()
                         } else {
@@ -964,6 +966,91 @@ fi"#,
                         )
                     }
                 }
+                AgentType::Gemini => {
+                    // Build base args (similar to Claude Code)
+                    let mut base_args = vec!["gemini".to_string()];
+                    if options.print_mode {
+                        base_args.push("--print".to_string());
+                    }
+                    if options.plan_mode {
+                        base_args.push("--plan".to_string());
+                    }
+                    if options.dangerous_skip_checks {
+                        base_args.push("--dangerously-skip-permissions".to_string());
+                    }
+                    for image in &translated_images {
+                        base_args.push("--image".to_string());
+                        base_args.push(image.clone());
+                    }
+
+                    if let Some(session_id) = options.session_id {
+                        let session_id_str = session_id.to_string();
+
+                        // Build create command
+                        let mut create_cmd = base_args.clone();
+                        create_cmd.insert(1, "--session-id".to_string());
+                        create_cmd.insert(2, session_id_str.clone());
+                        if !escaped_prompt.is_empty() {
+                            create_cmd.push(escaped_prompt.clone());
+                        }
+                        let create_cmd = create_cmd
+                            .iter()
+                            .map(|a| quote_arg(a))
+                            .collect::<Vec<_>>()
+                            .join(" ");
+
+                        // Build resume command
+                        let resume_cmd = if options.dangerous_skip_checks {
+                            format!(
+                                "gemini --dangerously-skip-permissions --resume {} --fork-session",
+                                session_id_str
+                            )
+                        } else {
+                            format!("gemini --resume {} --fork-session", session_id_str)
+                        };
+
+                        // Generate wrapper script
+                        let project_path = if options.initial_workdir.as_os_str().is_empty() {
+                            "-workspace".to_string()
+                        } else {
+                            format!(
+                                "-workspace-{}",
+                                options
+                                    .initial_workdir
+                                    .display()
+                                    .to_string()
+                                    .replace('/', "-")
+                            )
+                        };
+
+                        format!(
+                            r#"SESSION_ID="{session_id}"
+HISTORY_FILE="/workspace/.claude/projects/{project_path}/${{SESSION_ID}}.jsonl"
+if [ -f "$HISTORY_FILE" ]; then
+    echo "Resuming existing session $SESSION_ID"
+    exec {resume_cmd}
+else
+    echo "Creating new session $SESSION_ID"
+    exec {create_cmd}
+fi"#,
+                            session_id = session_id_str,
+                            project_path = project_path,
+                            resume_cmd = resume_cmd,
+                            create_cmd = create_cmd,
+                        )
+                    } else {
+                        // No session ID - just run the command directly
+                        let mut cmd_vec = base_args;
+                        if !escaped_prompt.is_empty() {
+                            cmd_vec.push(escaped_prompt.clone());
+                        }
+                        cmd_vec
+                            .iter()
+                            .map(|a| quote_arg(a))
+                            .collect::<Vec<_>>()
+                            .join(" ")
+                    }
+                }
             }
         };
 
@@ -1022,24 +1109,80 @@ fi"#,
             }
         }
 
-        // Resource requirements
-        let mut requests = BTreeMap::new();
-        requests.insert("cpu".to_string(), Quantity(self.config.cpu_request.clone()));
-        requests.insert(
-            "memory".to_string(),
-            Quantity(self.config.memory_request.clone()),
+        // Determine effective image (override > config)
+        let image = options
+            .container_image
+            .as_ref()
+            .map(|ic| ic.image.clone())
+            .unwrap_or_else(|| self.config.image.clone());
+
+        // Determine effective image pull policy (override > config)
+        let image_pull_policy = options
+            .container_image
+            .as_ref()
+            .map(|ic| ic.pull_policy.to_kubernetes_value())
+            .unwrap_or_else(|| self.config.image_pull_policy.to_kubernetes_value());
+
+        tracing::info!(
+            image = %image,
+            pull_policy = %image_pull_policy,
+            has_override = options.container_image.is_some(),
+            "Building Kubernetes pod with image settings"
         );
 
+        // Resource requirements (use override if provided, otherwise use config)
+        let mut requests = BTreeMap::new();
         let mut limits = BTreeMap::new();
-        limits.insert("cpu".to_string(), Quantity(self.config.cpu_limit.clone()));
-        limits.insert(
-            "memory".to_string(),
-            Quantity(self.config.memory_limit.clone()),
-        );
+
+        if let Some(ref resource_override) = options.container_resources {
+            // Use override resources
+            if let Some(ref cpu) = resource_override.cpu {
+                requests.insert("cpu".to_string(), Quantity(cpu.clone()));
+                limits.insert("cpu".to_string(), Quantity(cpu.clone()));
+            } else {
+                // No CPU override, use config
+                requests.insert("cpu".to_string(), Quantity(self.config.cpu_request.clone()));
+                limits.insert("cpu".to_string(), Quantity(self.config.cpu_limit.clone()));
+            }
+
+            if let Some(ref memory) = resource_override.memory {
+                requests.insert("memory".to_string(), Quantity(memory.clone()));
+                limits.insert("memory".to_string(), Quantity(memory.clone()));
+            } else {
+                // No memory override, use config
+                requests.insert(
+                    "memory".to_string(),
+                    Quantity(self.config.memory_request.clone()),
+                );
+                limits.insert(
+                    "memory".to_string(),
+                    Quantity(self.config.memory_limit.clone()),
+                );
+            }
+
+            tracing::info!(
+                cpu = ?resource_override.cpu,
+                memory = ?resource_override.memory,
+                "Using custom resource limits for Kubernetes pod"
+            );
+        } else {
+            // No override, use config defaults
+            requests.insert("cpu".to_string(), Quantity(self.config.cpu_request.clone()));
+            requests.insert(
+                "memory".to_string(),
+                Quantity(self.config.memory_request.clone()),
+            );
+            limits.insert("cpu".to_string(), Quantity(self.config.cpu_limit.clone()));
+            limits.insert(
+                "memory".to_string(),
+                Quantity(self.config.memory_limit.clone()),
+            );
+        }
 
         Container {
             name: "claude".to_string(),
-            image: Some(self.config.image.clone()),
+            image: Some(image),
+            image_pull_policy: Some(image_pull_policy.to_string()),
             stdin: Some(true), // REQUIRED for kubectl attach
             tty: Some(true),   // REQUIRED for kubectl attach
             command: Some(vec!["bash".to_string(), "-c".to_string()]),

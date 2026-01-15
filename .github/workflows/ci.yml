@@ -30,6 +30,8 @@ jobs:
         env:
           NPM_TOKEN: op://bic45kuflnwsnxnd67dzcnxjze/5p65mbzr237yyzt2sfnfao3a5a/NPM_TOKEN
           GH_TOKEN: op://bic45kuflnwsnxnd67dzcnxjze/5p65mbzr237yyzt2sfnfao3a5a/GH_TOKEN
+          S3_ACCESS_KEY_ID: op://bic45kuflnwsnxnd67dzcnxjze/5p65mbzr237yyzt2sfnfao3a5a/S3_ACCESS_KEY_ID
+          S3_SECRET_ACCESS_KEY: op://bic45kuflnwsnxnd67dzcnxjze/5p65mbzr237yyzt2sfnfao3a5a/S3_SECRET_ACCESS_KEY
 
       - name: Extract kubectl version
         id: kubectl-version
@@ -124,6 +126,8 @@ jobs:
               --git-sha="${{ github.sha }}"
               --registry-username="${{ github.actor }}"
               --registry-password=env:GITHUB_TOKEN
+              --s3-access-key-id=env:S3_ACCESS_KEY_ID
+              --s3-secret-access-key=env:S3_SECRET_ACCESS_KEY
             )
           fi
 

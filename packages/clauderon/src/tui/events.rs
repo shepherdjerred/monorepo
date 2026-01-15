@@ -371,6 +371,10 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                         plan_mode: app.create_dialog.plan_mode,
                         access_mode: app.create_dialog.access_mode,
                         images: app.create_dialog.images.clone(),
+                        container_image: None,
+                        pull_policy: None,
+                        cpu_limit: None,
+                        memory_limit: None,
                     };
 
                     // Spawn background task

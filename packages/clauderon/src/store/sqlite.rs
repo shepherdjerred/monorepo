@@ -15,14 +15,6 @@ pub struct SqliteStore {
 }
 
 impl SqliteStore {
-    /// Get a clone of the database connection pool
-    ///
-    /// This is useful for accessing the database directly from other parts of the application.
-    #[must_use]
-    pub fn pool(&self) -> SqlitePool {
-        self.pool.clone()
-    }
-
     /// Create a new `SQLite` store at the given path
     ///
     /// # Errors
@@ -49,6 +41,16 @@ impl SqliteStore {
         Self::run_migrations(&pool).await?;
 
         Ok(Self { pool })
+    }
+
+    /// Get a clone of the underlying connection pool
+    ///
+    /// This is useful when other components need direct database access
+    /// (e.g., auth handlers) while ensuring they use the same pool
+    /// that has already had migrations applied.
+    #[must_use]
+    pub fn pool(&self) -> SqlitePool {
+        self.pool.clone()
     }
 
     /// Run database migrations
@@ -109,6 +111,10 @@ impl SqliteStore {
 
         if current_version < 9 {
             Self::migrate_to_v9(pool).await?;
+        }
+
+        if current_version < 10 {
+            Self::migrate_to_v10(pool).await?;
         }
 
         Ok(())
@@ -190,7 +196,6 @@ impl SqliteStore {
             r"
             CREATE TABLE IF NOT EXISTS recent_repos (
                 repo_path TEXT PRIMARY KEY,
-                subdirectory TEXT NOT NULL DEFAULT '',
                 last_used TEXT NOT NULL
             )
             ",
@@ -646,6 +651,96 @@ impl SqliteStore {
         tracing::info!("Migration v9 complete");
         Ok(())
     }
+
+    /// Migration v10: Add subdirectory tracking to recent_repos with composite primary key
+    async fn migrate_to_v10(pool: &SqlitePool) -> anyhow::Result<()> {
+        tracing::info!("Applying migration v10: Add subdirectory column to recent_repos");
+
+        // Step 1: Clean up any partial migration artifacts
+        sqlx::query("DROP TABLE IF EXISTS recent_repos_v10_temp")
+            .execute(pool)
+            .await?;
+
+        // Step 2: Create regular table to hold existing data (not TEMP due to connection pooling)
+        sqlx::query(
+            r"
+            CREATE TABLE recent_repos_v10_temp (
+                repo_path TEXT NOT NULL,
+                last_used TEXT NOT NULL
+            )
+            ",
+        )
+        .execute(pool)
+        .await?;
+
+        // Step 3: Copy existing data to temp table
+        sqlx::query(
+            r"
+            INSERT INTO recent_repos_v10_temp (repo_path, last_used)
+            SELECT repo_path, last_used FROM recent_repos
+            ",
+        )
+        .execute(pool)
+        .await?;
+
+        // Step 4: Drop old index
+        sqlx::query("DROP INDEX IF EXISTS idx_recent_repos_last_used")
+            .execute(pool)
+            .await?;
+
+        // Step 5: Drop old table completely
+        sqlx::query("DROP TABLE recent_repos").execute(pool).await?;
+
+        // Step 6: Create new table with correct schema
+        sqlx::query(
+            r"
+            CREATE TABLE recent_repos (
+                repo_path TEXT NOT NULL,
+                subdirectory TEXT NOT NULL DEFAULT '',
+                last_used TEXT NOT NULL,
+                PRIMARY KEY (repo_path, subdirectory)
+            )
+            ",
+        )
+        .execute(pool)
+        .await?;
+
+        // Step 7: Copy data back with empty subdirectory
+        sqlx::query(
+            r"
+            INSERT INTO recent_repos (repo_path, subdirectory, last_used)
+            SELECT repo_path, '', last_used FROM recent_repos_v10_temp
+            ",
+        )
+        .execute(pool)
+        .await?;
+
+        // Step 8: Drop temp table (if it still exists)
+        sqlx::query("DROP TABLE IF EXISTS recent_repos_v10_temp")
+            .execute(pool)
+            .await?;
+
+        // Step 9: Create index on last_used (IF NOT EXISTS for idempotency on retry)
+        sqlx::query(
+            r"
+            CREATE INDEX IF NOT EXISTS idx_recent_repos_last_used
+            ON recent_repos(last_used DESC)
+            ",
+        )
+        .execute(pool)
+        .await?;
+
+        // Record migration
+        let now = Utc::now();
+        sqlx::query("INSERT OR REPLACE INTO schema_version (version, applied_at) VALUES (?, ?)")
+            .bind(10)
+            .bind(now.to_rfc3339())
+            .execute(pool)
+            .await?;
+
+        tracing::info!("Migration v10 complete");
+        Ok(())
+    }
 }
 
 #[async_trait]
@@ -720,7 +815,7 @@ impl Store for SqliteStore {
         .bind(session.claude_status_updated_at.map(|t| t.to_rfc3339()))
         .bind(session.merge_conflict)
         .bind(session.access_mode.to_string())
-        .bind(session.proxy_port.map(i64::from))
+        .bind(session.proxy_port.map(|p| p as i64))
         .bind(
             session
                 .history_file_path
@@ -728,7 +823,7 @@ impl Store for SqliteStore {
                 .and_then(|p| p.to_str())
                 .map(String::from),
         )
-        .bind(i64::from(session.reconcile_attempts))
+        .bind(session.reconcile_attempts as i64)
         .bind(&session.last_reconcile_error)
         .bind(session.last_reconcile_at.map(|t| t.to_rfc3339()))
         .bind(&session.error_message)
@@ -819,10 +914,12 @@ impl Store for SqliteStore {
 
     #[instrument(skip(self))]
     async fn get_recent_repos(&self) -> anyhow::Result<Vec<RecentRepo>> {
-        // Use compile-time constant instead of format!() for cleaner SQL
-        const QUERY: &str = "SELECT * FROM recent_repos ORDER BY last_used DESC LIMIT 10";
+        let query = format!(
+            "SELECT * FROM recent_repos ORDER BY last_used DESC LIMIT {}",
+            super::MAX_RECENT_REPOS
+        );
 
-        let rows = sqlx::query_as::<_, RecentRepoRow>(QUERY)
+        let rows = sqlx::query_as::<_, RecentRepoRow>(&query)
             .fetch_all(&self.pool)
             .await?;
 
@@ -1049,9 +1146,9 @@ impl TryFrom<SessionRow> for Session {
             claude_status_updated_at,
             merge_conflict: row.merge_conflict,
             access_mode: row.access_mode.parse().unwrap_or_default(),
-            proxy_port: row.proxy_port.and_then(|p| u16::try_from(p).ok()),
+            proxy_port: row.proxy_port.map(|p| p as u16),
             history_file_path: row.history_file_path.map(PathBuf::from),
-            reconcile_attempts: u32::try_from(row.reconcile_attempts).unwrap_or(0),
+            reconcile_attempts: row.reconcile_attempts as u32,
             last_reconcile_error: row.last_reconcile_error,
             last_reconcile_at,
             error_message: row.error_message,

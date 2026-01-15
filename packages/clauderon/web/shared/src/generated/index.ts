@@ -90,8 +90,10 @@ export enum BackendType {
 export enum AgentType {
 	/** Claude Code CLI */
 	ClaudeCode = "ClaudeCode",
-	/** `OpenAI` Codex */
+	/** OpenAI Codex */
 	Codex = "Codex",
+	/** Gemini CLI */
+	Gemini = "Gemini",
 }
 
 /** Access mode for proxy filtering */
