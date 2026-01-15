@@ -27,10 +27,6 @@ fn test_create_session_request_serialization() {
         plan_mode: true,
         access_mode: Default::default(),
         images: vec![],
-        container_image: None,
-        pull_policy: None,
-        cpu_limit: None,
-        memory_limit: None,
     });
 
     let json = serde_json::to_string(&request).unwrap();
@@ -167,10 +163,6 @@ fn test_print_mode_serialization() {
         plan_mode: false,
         access_mode: Default::default(),
         images: vec![],
-        container_image: None,
-        pull_policy: None,
-        cpu_limit: None,
-        memory_limit: None,
     });
 
     let json = serde_json::to_string(&request).unwrap();

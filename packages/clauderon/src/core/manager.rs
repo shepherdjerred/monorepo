@@ -6,8 +6,7 @@ use tracing::instrument;
 use uuid::Uuid;
 
 use crate::backends::{
-    DockerBackend, ExecutionBackend, GitBackend, GitOperations, ImageConfig, ImagePullPolicy,
-    KubernetesBackend, ResourceLimits, ZellijBackend,
+    DockerBackend, ExecutionBackend, GitBackend, GitOperations, KubernetesBackend, ZellijBackend,
 };
 use crate::core::console_manager::ConsoleManager;
 use crate::store::Store;
@@ -238,10 +237,6 @@ impl SessionManager {
         plan_mode: bool,
         access_mode: super::session::AccessMode,
         images: Vec<String>,
-        container_image: Option<String>,
-        pull_policy: Option<String>,
-        cpu_limit: Option<String>,
-        memory_limit: Option<String>,
     ) -> anyhow::Result<Uuid> {
         // Validate session count limit
         let sessions_guard = self.sessions.read().await;
@@ -540,60 +535,6 @@ impl SessionManager {
             };
 
             update_progress(4, "Starting backend resource".to_string()).await;
-
-            // Parse container image configuration from request
-            let container_image_config = if let Some(image) = container_image {
-                let policy = if let Some(policy_str) = pull_policy {
-                    policy_str.parse::<ImagePullPolicy>().map_err(|e| {
-                        anyhow::anyhow!("Invalid pull policy '{}': {}", policy_str, e)
-                    })?
-                } else {
-                    ImagePullPolicy::default()
-                };
-
-                let image_config = ImageConfig {
-                    image,
-                    pull_policy: policy,
-                    registry_auth: None, // Registry auth via docker login or config file
-                };
-
-                // Validate the image configuration
-                image_config.validate()?;
-
-                tracing::info!(
-                    session_id = %session_id,
-                    image = %image_config.image,
-                    pull_policy = %image_config.pull_policy,
-                    "Using custom container image for session"
-                );
-
-                Some(image_config)
-            } else {
-                None
-            };
-
-            // Parse container resource limits from request
-            let container_resource_limits = if cpu_limit.is_some() || memory_limit.is_some() {
-                let limits = ResourceLimits {
-                    cpu: cpu_limit,
-                    memory: memory_limit,
-                };
-
-                // Validate the resource limits
-                limits.validate()?;
-
-                tracing::info!(
-                    session_id = %session_id,
-                    cpu = ?limits.cpu,
-                    memory = ?limits.memory,
-                    "Using custom resource limits for session"
-                );
-
-                Some(limits)
-            } else {
-                None
-            };
-
             // Create backend resource
             let create_options = crate::backends::CreateOptions {
                 agent,
@@ -605,8 +546,6 @@ impl SessionManager {
                 session_id: Some(session_id),
                 initial_workdir: subdirectory.clone(),
                 http_port: self.http_port,
-                container_image: container_image_config,
-                container_resources: container_resource_limits,
             };
             let backend_id = match backend {
                 BackendType::Zellij => {
@@ -688,7 +627,11 @@ impl SessionManager {
 
             // Track this repo in recent repos
             let repo_path_buf = PathBuf::from(&repo_path);
-            if let Err(e) = self.store.add_recent_repo(repo_path_buf).await {
+            if let Err(e) = self
+                .store
+                .add_recent_repo(repo_path_buf, subdirectory.clone())
+                .await
+            {
                 tracing::warn!("Failed to add repo to recent list: {e}");
             }
 
@@ -810,10 +753,6 @@ impl SessionManager {
         plan_mode: bool,
         access_mode: super::session::AccessMode,
         images: Vec<String>,
-        container_image: Option<String>,
-        pull_policy: Option<String>,
-        cpu_limit: Option<String>,
-        memory_limit: Option<String>,
     ) -> anyhow::Result<(Session, Option<Vec<String>>)> {
         // Validate and resolve git repository path
         let repo_path_buf = std::path::PathBuf::from(&repo_path);
@@ -963,45 +902,6 @@ impl SessionManager {
             initial_prompt.clone()
         };
 
-        // Parse container image configuration
-        let container_image_config = if let Some(image) = container_image {
-            let policy = if let Some(policy_str) = pull_policy {
-                policy_str.parse::<ImagePullPolicy>().map_err(|e| {
-                    anyhow::anyhow!("Invalid pull policy '{}': {}", policy_str, e)
-                })?
-            } else {
-                ImagePullPolicy::default()
-            };
-
-            let image_config = ImageConfig {
-                image,
-                pull_policy: policy,
-                registry_auth: None, // Registry auth via docker login or config file
-            };
-
-            // Validate the image configuration
-            image_config.validate()?;
-
-            Some(image_config)
-        } else {
-            None
-        };
-
-        // Parse container resource limits
-        let container_resource_limits = if cpu_limit.is_some() || memory_limit.is_some() {
-            let limits = ResourceLimits {
-                cpu: cpu_limit,
-                memory: memory_limit,
-            };
-
-            // Validate the resource limits
-            limits.validate()?;
-
-            Some(limits)
-        } else {
-            None
-        };
-
         // Create backend resource
         let create_options = crate::backends::CreateOptions {
             agent,
@@ -1013,8 +913,6 @@ impl SessionManager {
             session_id: Some(session.id), // Pass session ID for Kubernetes PVC labeling
             initial_workdir: subdirectory.clone(),
             http_port: self.http_port,
-            container_image: container_image_config,
-            container_resources: container_resource_limits,
         };
         let backend_id = match backend {
             BackendType::Zellij => {
@@ -1087,7 +985,11 @@ impl SessionManager {
         self.sessions.write().await.push(session.clone());
 
         // Track this repo in recent repos
-        if let Err(e) = self.store.add_recent_repo(repo_path_buf.clone()).await {
+        if let Err(e) = self
+            .store
+            .add_recent_repo(repo_path_buf.clone(), subdirectory.clone())
+            .await
+        {
             tracing::warn!("Failed to add repo to recent list: {e}");
         }
 

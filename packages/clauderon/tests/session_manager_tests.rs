@@ -113,8 +113,7 @@ async fn test_create_session_zellij_success() {
             false,              // print_mode
             true,               // plan_mode
             Default::default(), // access_mode
-            vec![], // images
-            None, None, None, None, // container settings
+            vec![],             // images
         )
         .await
         .expect("Failed to create session");
@@ -157,8 +156,7 @@ async fn test_create_session_docker_success() {
             false,              // print_mode
             true,               // plan_mode
             Default::default(), // access_mode
-            vec![], // images
-            None, None, None, None, // container settings
+            vec![],             // images
         )
         .await
         .expect("Failed to create session");
@@ -194,8 +192,7 @@ async fn test_create_session_git_fails() {
             false,              // print_mode
             true,               // plan_mode
             Default::default(), // access_mode
-            vec![], // images
-            None, None, None, None, // container settings
+            vec![],             // images
         )
         .await;
 
@@ -229,8 +226,7 @@ async fn test_create_session_backend_fails() {
             false,              // print_mode
             true,               // plan_mode
             Default::default(), // access_mode
-            vec![], // images
-            None, None, None, None, // container settings
+            vec![],             // images
         )
         .await;
 
@@ -264,8 +260,7 @@ async fn test_get_session_by_name() {
             false,              // print_mode
             true,               // plan_mode
             Default::default(), // access_mode
-            vec![], // images
-            None, None, None, None, // container settings
+            vec![],             // images
         )
         .await
         .unwrap();
@@ -291,8 +286,7 @@ async fn test_get_session_by_uuid() {
             false,              // print_mode
             true,               // plan_mode
             Default::default(), // access_mode
-            vec![], // images
-            None, None, None, None, // container settings
+            vec![],             // images
         )
         .await
         .unwrap();
@@ -328,8 +322,7 @@ async fn test_delete_session_success() {
             false,              // print_mode
             true,               // plan_mode
             Default::default(), // access_mode
-            vec![], // images
-            None, None, None, None, // container settings
+            vec![],             // images
         )
         .await
         .unwrap();
@@ -378,8 +371,7 @@ async fn test_archive_session_success() {
             false,              // print_mode
             true,               // plan_mode
             Default::default(), // access_mode
-            vec![], // images
-            None, None, None, None, // container settings
+            vec![],             // images
         )
         .await
         .unwrap();
@@ -420,8 +412,7 @@ async fn test_get_attach_command_zellij() {
             false,              // print_mode
             true,               // plan_mode
             Default::default(), // access_mode
-            vec![], // images
-            None, None, None, None, // container settings
+            vec![],             // images
         )
         .await
         .unwrap();
@@ -448,8 +439,7 @@ async fn test_get_attach_command_docker() {
             false,              // print_mode
             true,               // plan_mode
             Default::default(), // access_mode
-            vec![], // images
-            None, None, None, None, // container settings
+            vec![],             // images
         )
         .await
         .unwrap();
@@ -486,8 +476,7 @@ async fn test_reconcile_healthy_session() {
             false,              // print_mode
             true,               // plan_mode
             Default::default(), // access_mode
-            vec![], // images
-            None, None, None, None, // container settings
+            vec![],             // images
         )
         .await
         .unwrap();
@@ -516,8 +505,7 @@ async fn test_reconcile_missing_backend() {
             false,              // print_mode
             true,               // plan_mode
             Default::default(), // access_mode
-            vec![], // images
-            None, None, None, None, // container settings
+            vec![],             // images
         )
         .await
         .unwrap();
@@ -558,8 +546,7 @@ async fn test_list_sessions_multiple() {
             false,              // print_mode
             true,               // plan_mode
             Default::default(), // access_mode
-            vec![], // images
-            None, None, None, None, // container settings
+            vec![],             // images
         )
         .await
         .unwrap();
@@ -574,8 +561,7 @@ async fn test_list_sessions_multiple() {
             false,              // print_mode
             true,               // plan_mode
             Default::default(), // access_mode
-            vec![], // images
-            None, None, None, None, // container settings
+            vec![],             // images
         )
         .await
         .unwrap();
@@ -590,8 +576,7 @@ async fn test_list_sessions_multiple() {
             false,              // print_mode
             true,               // plan_mode
             Default::default(), // access_mode
-            vec![], // images
-            None, None, None, None, // container settings
+            vec![],             // images
         )
         .await
         .unwrap();
@@ -617,8 +602,7 @@ async fn test_update_metadata_success() {
             false,              // print_mode
             true,               // plan_mode
             Default::default(), // access_mode
-            vec![], // images
-            None, None, None, None, // container settings
+            vec![],             // images
         )
         .await
         .unwrap();
@@ -657,8 +641,7 @@ async fn test_update_metadata_by_uuid() {
             false,              // print_mode
             true,               // plan_mode
             Default::default(), // access_mode
-            vec![], // images
-            None, None, None, None, // container settings
+            vec![],             // images
         )
         .await
         .unwrap();
@@ -693,8 +676,7 @@ async fn test_update_metadata_partial() {
             false,              // print_mode
             true,               // plan_mode
             Default::default(), // access_mode
-            vec![], // images
-            None, None, None, None, // container settings
+            vec![],             // images
         )
         .await
         .unwrap();
@@ -754,8 +736,7 @@ async fn test_session_lifecycle() {
             false,              // print_mode
             true,               // plan_mode
             Default::default(), // access_mode
-            vec![], // images
-            None, None, None, None, // container settings
+            vec![],             // images
         )
         .await
         .unwrap();
