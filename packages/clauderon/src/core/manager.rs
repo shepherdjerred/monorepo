@@ -1,6 +1,7 @@
 use anyhow::Context;
 use std::path::PathBuf;
 use std::sync::Arc;
+use std::time::{Duration, Instant};
 use tokio::sync::{RwLock, Semaphore};
 use tracing::instrument;
 use uuid::Uuid;
@@ -48,6 +49,44 @@ pub struct ReconcileReport {
     pub gave_up: Vec<Uuid>,
 }
 
+/// Cache for Claude Code usage data
+struct UsageCache {
+    data: Option<crate::api::protocol::ClaudeUsage>,
+    fetched_at: Option<Instant>,
+    ttl: Duration,
+}
+
+impl UsageCache {
+    fn new() -> Self {
+        Self {
+            data: None,
+            fetched_at: None,
+            ttl: Duration::from_secs(5 * 60), // 5 minutes
+        }
+    }
+
+    fn is_valid(&self) -> bool {
+        if let Some(fetched_at) = self.fetched_at {
+            fetched_at.elapsed() < self.ttl
+        } else {
+            false
+        }
+    }
+
+    fn set(&mut self, data: crate::api::protocol::ClaudeUsage) {
+        self.data = Some(data);
+        self.fetched_at = Some(Instant::now());
+    }
+
+    fn get(&self) -> Option<&crate::api::protocol::ClaudeUsage> {
+        if self.is_valid() {
+            self.data.as_ref()
+        } else {
+            None
+        }
+    }
+}
+
 /// Manages session lifecycle and state
 pub struct SessionManager {
     store: Arc<dyn Store>,
@@ -69,6 +108,8 @@ pub struct SessionManager {
     max_sessions: usize,
     /// HTTP server port for hook communication (Docker only)
     http_port: Option<u16>,
+    /// Cache for Claude Code usage data
+    usage_cache: Arc<RwLock<UsageCache>>,
 }
 
 impl SessionManager {
@@ -103,6 +144,7 @@ impl SessionManager {
             deletion_semaphore: Arc::new(Semaphore::new(3)),
             max_sessions: 15,
             http_port: None,
+            usage_cache: Arc::new(RwLock::new(UsageCache::new())),
         })
     }
 
@@ -2596,22 +2638,73 @@ impl SessionManager {
 
             // Try to fetch Claude Code usage if OAuth token is available
             let claude_usage = if let Some(oauth_token) = creds.anthropic_oauth_token.as_ref() {
-                match Self::fetch_claude_usage(oauth_token).await {
-                    Ok(usage) => {
-                        tracing::info!(
-                            org_id = %usage.organization_id,
-                            five_hour_utilization = %usage.five_hour.utilization,
-                            seven_day_utilization = %usage.seven_day.utilization,
-                            "Successfully fetched Claude Code usage"
-                        );
-                        Some(usage)
-                    }
-                    Err(e) => {
-                        tracing::warn!(
-                            error = %e,
-                            "Failed to fetch Claude Code usage - will continue without usage data"
-                        );
-                        None
+                // Check cache first
+                {
+                    let cache = self.usage_cache.read().await;
+                    if let Some(cached_usage) = cache.get() {
+                        tracing::debug!("Using cached usage data");
+                        Some(cached_usage.clone())
+                    } else {
+                        drop(cache); // Release read lock
+
+                        // Cache miss - fetch fresh data
+                        match Self::fetch_claude_usage(oauth_token).await {
+                            Ok(usage) => {
+                                tracing::info!(
+                                    org_id = %usage.organization_id,
+                                    five_hour_utilization = %usage.five_hour.utilization,
+                                    seven_day_utilization = %usage.seven_day.utilization,
+                                    "Successfully fetched Claude Code usage"
+                                );
+
+                                // Cache successful fetch
+                                let mut cache = self.usage_cache.write().await;
+                                cache.set(usage.clone());
+
+                                Some(usage)
+                            }
+                            Err(usage_error) => {
+                                // Log with appropriate severity based on error type
+                                match usage_error.error_type.as_str() {
+                                    "invalid_token" | "unauthorized" | "invalid_token_format" => {
+                                        tracing::error!(
+                                            error_type = %usage_error.error_type,
+                                            message = %usage_error.message,
+                                            "Usage tracking authentication failed"
+                                        );
+                                    }
+                                    _ => {
+                                        tracing::warn!(
+                                            error_type = %usage_error.error_type,
+                                            message = %usage_error.message,
+                                            "Usage tracking failed - continuing without usage data"
+                                        );
+                                    }
+                                }
+
+                                // Don't cache errors - Return ClaudeUsage with error field populated
+                                use crate::api::protocol::{ClaudeUsage, UsageWindow};
+                                Some(ClaudeUsage {
+                                    organization_id: String::new(),
+                                    organization_name: None,
+                                    five_hour: UsageWindow {
+                                        current: 0.0,
+                                        limit: 0.0,
+                                        utilization: 0.0,
+                                        resets_at: None,
+                                    },
+                                    seven_day: UsageWindow {
+                                        current: 0.0,
+                                        limit: 0.0,
+                                        utilization: 0.0,
+                                        resets_at: None,
+                                    },
+                                    seven_day_sonnet: None,
+                                    fetched_at: chrono::Utc::now().to_rfc3339(),
+                                    error: Some(usage_error),
+                                })
+                            }
+                        }
                     }
                 }
             } else {
@@ -2642,31 +2735,98 @@ impl SessionManager {
     #[instrument(skip(oauth_token))]
     async fn fetch_claude_usage(
         oauth_token: &str,
-    ) -> anyhow::Result<crate::api::protocol::ClaudeUsage> {
+    ) -> Result<crate::api::protocol::ClaudeUsage, crate::api::protocol::UsageError> {
         use crate::api::claude_client::ClaudeApiClient;
+        use crate::api::protocol::UsageError;
+
+        // Validate token format first
+        if let Err(e) = ClaudeApiClient::validate_token_format(oauth_token) {
+            return Err(UsageError {
+                error_type: "invalid_token_format".to_string(),
+                message: "OAuth token has invalid format".to_string(),
+                details: Some(e.to_string()),
+                suggestion: Some(
+                    "Set CLAUDE_CODE_OAUTH_TOKEN to a valid token starting with 'sk-ant-'"
+                        .to_string(),
+                ),
+            });
+        }
 
         let client = ClaudeApiClient::new();
 
-        // First, try to get org ID from current account endpoint
-        let (org_id, org_name) = match client.get_current_account(oauth_token).await {
+        // First, try to get org ID from current account endpoint (with retry)
+        let (org_id, org_name) = match client.get_current_account_with_retry(oauth_token).await {
             Ok(info) => info,
             Err(e) => {
+                // Check if it's an auth error
+                let error_str = e.to_string();
+                if error_str.contains("401") || error_str.contains("403") {
+                    return Err(UsageError {
+                        error_type: "invalid_token".to_string(),
+                        message: "OAuth token is invalid or expired".to_string(),
+                        details: Some(error_str),
+                        suggestion: Some("Get a fresh token from claude.ai settings".to_string()),
+                    });
+                }
+
                 // Fallback to environment variable
                 tracing::warn!(
                     error = %e,
                     "Failed to get org ID from Claude.ai API, trying CLAUDE_ORG_ID env var"
                 );
 
-                let org_id = std::env::var("CLAUDE_ORG_ID")
+                let org_id = match std::env::var("CLAUDE_ORG_ID")
                     .or_else(|_| std::env::var("ANTHROPIC_ORG_ID"))
-                    .context("Failed to get org ID from API and no CLAUDE_ORG_ID env var set")?;
+                {
+                    Ok(id) => id,
+                    Err(_) => {
+                        return Err(UsageError {
+                            error_type: "missing_org_id".to_string(),
+                            message: "Failed to get organization ID".to_string(),
+                            details: Some(format!(
+                                "API error: {}. No CLAUDE_ORG_ID env var set.",
+                                error_str
+                            )),
+                            suggestion: Some("Set CLAUDE_ORG_ID environment variable".to_string()),
+                        });
+                    }
+                };
 
                 (org_id, None)
             }
         };
 
-        // Now fetch usage data
-        let mut usage = client.get_usage(oauth_token, &org_id).await?;
+        // Now fetch usage data (with retry)
+        let mut usage = match client.get_usage_with_retry(oauth_token, &org_id).await {
+            Ok(u) => u,
+            Err(e) => {
+                let error_str = e.to_string();
+                if error_str.contains("401") || error_str.contains("403") {
+                    return Err(UsageError {
+                        error_type: "unauthorized".to_string(),
+                        message: "Not authorized to access usage data".to_string(),
+                        details: Some(error_str),
+                        suggestion: Some(
+                            "Verify token has access to this organization".to_string(),
+                        ),
+                    });
+                } else if error_str.contains("404") {
+                    return Err(UsageError {
+                        error_type: "not_found".to_string(),
+                        message: format!("Organization {} not found", org_id),
+                        details: Some(error_str),
+                        suggestion: Some("Verify CLAUDE_ORG_ID is correct".to_string()),
+                    });
+                } else {
+                    return Err(UsageError {
+                        error_type: "api_error".to_string(),
+                        message: "Failed to fetch usage data from Claude.ai".to_string(),
+                        details: Some(error_str),
+                        suggestion: Some("Check network connectivity and try again".to_string()),
+                    });
+                }
+            }
+        };
 
         // Fill in org name if we got it
         usage.organization_name = org_name;
