@@ -1181,6 +1181,50 @@ impl SessionManager {
         Ok(())
     }
 
+    /// Unarchive a session
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the session is not found, is not archived, or the store update fails.
+    #[instrument(skip(self), fields(id_or_name = %id_or_name))]
+    pub async fn unarchive_session(&self, id_or_name: &str) -> anyhow::Result<()> {
+        let mut sessions = self.sessions.write().await;
+
+        let session = sessions
+            .iter_mut()
+            .find(|s| s.name == id_or_name || s.id.to_string() == id_or_name)
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {id_or_name}"))?;
+
+        // Validate that the session is currently archived
+        if session.status != SessionStatus::Archived {
+            anyhow::bail!("Session {id_or_name} is not archived");
+        }
+
+        let old_status = session.status;
+        let session_id = session.id;
+        session.set_status(SessionStatus::Idle);
+        let session_clone = session.clone();
+        drop(sessions);
+
+        // Record event
+        let event = Event::new(session_id, EventType::SessionRestored);
+        self.store.record_event(&event).await?;
+
+        let event = Event::new(
+            session_id,
+            EventType::StatusChanged {
+                old_status,
+                new_status: SessionStatus::Idle,
+            },
+        );
+        self.store.record_event(&event).await?;
+
+        // Update in store
+        self.store.save_session(&session_clone).await?;
+
+        Ok(())
+    }
+
     /// Start session deletion asynchronously (returns immediately)
     ///
     /// Marks the session as "Deleting" and spawns a background task to complete

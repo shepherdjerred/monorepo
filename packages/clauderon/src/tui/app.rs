@@ -804,6 +804,23 @@ impl App {
         Ok(())
     }
 
+    /// Unarchive the selected session
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if unarchiving fails.
+    pub async fn unarchive_selected(&mut self) -> anyhow::Result<()> {
+        if let Some(session) = self.selected_session() {
+            let id = session.id.to_string();
+            if let Some(client) = &mut self.client {
+                client.unarchive_session(&id).await?;
+                self.status_message = Some(format!("Unarchived session {id}"));
+                self.refresh_sessions().await?;
+            }
+        }
+        Ok(())
+    }
+
     /// Refresh the selected session (pull latest image and recreate container)
     ///
     /// # Errors
