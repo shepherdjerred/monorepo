@@ -288,6 +288,7 @@ impl ZellijBackend {
                 http_port: None,
                 container_image: None,
                 container_resources: None,
+                repositories: &[], // Legacy single-repo mode
             },
         )
         .await

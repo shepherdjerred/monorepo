@@ -248,6 +248,7 @@ async fn create_session(
         .session_manager
         .start_session_creation(
             request.repo_path,
+            request.repositories,
             request.initial_prompt,
             request.backend,
             request.agent,
