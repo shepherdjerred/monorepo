@@ -6,7 +6,8 @@ use tracing::instrument;
 use uuid::Uuid;
 
 use crate::backends::{
-    DockerBackend, ExecutionBackend, GitBackend, GitOperations, KubernetesBackend, ZellijBackend,
+    DockerBackend, ExecutionBackend, GitBackend, GitOperations, ImageConfig, ImagePullPolicy,
+    KubernetesBackend, ResourceLimits, ZellijBackend,
 };
 use crate::core::console_manager::ConsoleManager;
 use crate::store::Store;
@@ -238,6 +239,10 @@ impl SessionManager {
         plan_mode: bool,
         access_mode: super::session::AccessMode,
         images: Vec<String>,
+        container_image: Option<String>,
+        pull_policy: Option<String>,
+        cpu_limit: Option<String>,
+        memory_limit: Option<String>,
     ) -> anyhow::Result<Uuid> {
         // Validate session count limit
         let session_count = self.sessions.read().await.len();
@@ -378,6 +383,10 @@ impl SessionManager {
                     access_mode,
                     images,
                     dangerous_skip_checks,
+                    container_image,
+                    pull_policy,
+                    cpu_limit,
+                    memory_limit,
                 )
                 .await;
         });
@@ -403,6 +412,10 @@ impl SessionManager {
         access_mode: super::session::AccessMode,
         images: Vec<String>,
         dangerous_skip_checks: bool,
+        container_image: Option<String>,
+        pull_policy: Option<String>,
+        cpu_limit: Option<String>,
+        memory_limit: Option<String>,
     ) {
         // Acquire semaphore to limit concurrent creations
         let Ok(_permit) = self.creation_semaphore.acquire().await else {
@@ -524,6 +537,60 @@ impl SessionManager {
             };
 
             update_progress(4, "Starting backend resource".to_string()).await;
+
+            // Parse container image configuration from request
+            let container_image_config = if let Some(image) = container_image {
+                let policy = if let Some(policy_str) = pull_policy {
+                    policy_str.parse::<ImagePullPolicy>().map_err(|e| {
+                        anyhow::anyhow!("Invalid pull policy '{}': {}", policy_str, e)
+                    })?
+                } else {
+                    ImagePullPolicy::default()
+                };
+
+                let image_config = ImageConfig {
+                    image,
+                    pull_policy: policy,
+                    registry_auth: None, // Registry auth via docker login or config file
+                };
+
+                // Validate the image configuration
+                image_config.validate()?;
+
+                tracing::info!(
+                    session_id = %session_id,
+                    image = %image_config.image,
+                    pull_policy = %image_config.pull_policy,
+                    "Using custom container image for session"
+                );
+
+                Some(image_config)
+            } else {
+                None
+            };
+
+            // Parse container resource limits from request
+            let container_resource_limits = if cpu_limit.is_some() || memory_limit.is_some() {
+                let limits = ResourceLimits {
+                    cpu: cpu_limit,
+                    memory: memory_limit,
+                };
+
+                // Validate the resource limits
+                limits.validate()?;
+
+                tracing::info!(
+                    session_id = %session_id,
+                    cpu = ?limits.cpu,
+                    memory = ?limits.memory,
+                    "Using custom resource limits for session"
+                );
+
+                Some(limits)
+            } else {
+                None
+            };
+
             // Create backend resource
             let create_options = crate::backends::CreateOptions {
                 agent,
@@ -535,6 +602,8 @@ impl SessionManager {
                 session_id: Some(session_id),
                 initial_workdir: subdirectory.clone(),
                 http_port: *self.http_port.read().await,
+                container_image: container_image_config,
+                container_resources: container_resource_limits,
             };
             let backend_id = match backend {
                 BackendType::Zellij => {
@@ -728,6 +797,10 @@ impl SessionManager {
         plan_mode: bool,
         access_mode: super::session::AccessMode,
         images: Vec<String>,
+        container_image: Option<String>,
+        pull_policy: Option<String>,
+        cpu_limit: Option<String>,
+        memory_limit: Option<String>,
     ) -> anyhow::Result<(Session, Option<Vec<String>>)> {
         // Validate and resolve git repository path
         let repo_path_buf = std::path::PathBuf::from(&repo_path);
@@ -887,6 +960,45 @@ impl SessionManager {
             initial_prompt.clone()
         };
 
+        // Parse container image configuration
+        let container_image_config = if let Some(image) = container_image {
+            let policy = if let Some(policy_str) = pull_policy {
+                policy_str
+                    .parse::<ImagePullPolicy>()
+                    .map_err(|e| anyhow::anyhow!("Invalid pull policy '{}': {}", policy_str, e))?
+            } else {
+                ImagePullPolicy::default()
+            };
+
+            let image_config = ImageConfig {
+                image,
+                pull_policy: policy,
+                registry_auth: None, // Registry auth via docker login or config file
+            };
+
+            // Validate the image configuration
+            image_config.validate()?;
+
+            Some(image_config)
+        } else {
+            None
+        };
+
+        // Parse container resource limits
+        let container_resource_limits = if cpu_limit.is_some() || memory_limit.is_some() {
+            let limits = ResourceLimits {
+                cpu: cpu_limit,
+                memory: memory_limit,
+            };
+
+            // Validate the resource limits
+            limits.validate()?;
+
+            Some(limits)
+        } else {
+            None
+        };
+
         // Create backend resource
         let create_options = crate::backends::CreateOptions {
             agent,
@@ -898,6 +1010,8 @@ impl SessionManager {
             session_id: Some(session.id), // Pass session ID for Kubernetes PVC labeling
             initial_workdir: subdirectory.clone(),
             http_port: *self.http_port.read().await,
+            container_image: container_image_config,
+            container_resources: container_resource_limits,
         };
         let backend_id = match backend {
             BackendType::Zellij => {
@@ -1315,6 +1429,183 @@ impl SessionManager {
         Ok(())
     }
 
+    /// Refresh a session by recreating its container with the latest image
+    ///
+    /// This operation:
+    /// 1. Pulls the latest Docker image
+    /// 2. Stops and removes the old container
+    /// 3. Creates a new container with the same configuration
+    /// 4. Preserves all session metadata and history
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - Session not found
+    /// - Session is not Docker-based
+    /// - Image pull fails
+    /// - Container recreation fails
+    #[instrument(skip(self), fields(id_or_name = %id_or_name))]
+    pub async fn refresh_session(&self, id_or_name: &str) -> anyhow::Result<()> {
+        // Acquire deletion semaphore (refresh is destructive like delete)
+        let _permit = self
+            .deletion_semaphore
+            .acquire()
+            .await
+            .map_err(|_| anyhow::anyhow!("System is shutting down"))?;
+
+        // Get session and validate it's Docker
+        let session = self
+            .get_session(id_or_name)
+            .await
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {id_or_name}"))?;
+
+        if session.backend != BackendType::Docker {
+            anyhow::bail!("Refresh only supported for Docker sessions");
+        }
+
+        let session_id = session.id;
+
+        // Capture configuration before deletion
+        let (
+            name,
+            _repo_path,
+            worktree_path,
+            subdirectory,
+            initial_prompt,
+            agent,
+            dangerous_skip_checks,
+            _access_mode,
+            proxy_port,
+            old_backend_id,
+        ) = {
+            let sessions = self.sessions.read().await;
+            let s = sessions
+                .iter()
+                .find(|s| s.id == session_id)
+                .ok_or_else(|| anyhow::anyhow!("Session disappeared"))?;
+
+            (
+                s.name.clone(),
+                s.repo_path.clone(),
+                s.worktree_path.clone(),
+                s.subdirectory.clone(),
+                s.initial_prompt.clone(),
+                s.agent,
+                s.dangerous_skip_checks,
+                s.access_mode,
+                s.proxy_port,
+                s.backend_id.clone(),
+            )
+        };
+
+        // Execute refresh: pull + delete + create
+        let result: anyhow::Result<String> = async {
+            // Pull latest image
+            let docker_image = "ghcr.io/shepherdjerred/dotfiles";
+            tracing::info!(image = docker_image, "Pulling Docker image");
+
+            let output = tokio::process::Command::new("docker")
+                .args(["pull", docker_image])
+                .output()
+                .await
+                .context("Failed to execute docker pull")?;
+
+            if !output.status.success() {
+                let stderr = String::from_utf8_lossy(&output.stderr);
+                tracing::error!(
+                    image = docker_image,
+                    stderr = %stderr,
+                    "Failed to pull Docker image"
+                );
+                anyhow::bail!("Failed to pull Docker image: {stderr}");
+            }
+
+            tracing::info!(image = docker_image, "Successfully pulled Docker image");
+
+            // Delete old container
+            if let Some(ref backend_id) = old_backend_id {
+                let _ = self.docker.delete(backend_id).await;
+            }
+
+            // Create new container
+            let create_options = crate::backends::CreateOptions {
+                agent,
+                print_mode: false,
+                plan_mode: false,
+                session_proxy_port: proxy_port,
+                images: vec![],
+                dangerous_skip_checks,
+                session_id: Some(session_id),
+                initial_workdir: subdirectory,
+                http_port: *self.http_port.read().await,
+                container_image: None,
+                container_resources: None,
+            };
+
+            let new_backend_id = self
+                .docker
+                .create(&name, &worktree_path, &initial_prompt, create_options)
+                .await
+                .context("Failed to create new container")?;
+
+            // Reinstall hooks for Claude Code
+            if agent == super::session::AgentType::ClaudeCode {
+                let container_name = format!("clauderon-{name}");
+                if let Err(e) = crate::hooks::install_hooks_in_container(&container_name).await {
+                    tracing::warn!(error = %e, "Failed to install hooks (non-fatal)");
+                }
+            }
+
+            Ok(new_backend_id)
+        }
+        .await;
+
+        // Update session based on result
+        match result {
+            Ok(new_backend_id) => {
+                let mut sessions = self.sessions.write().await;
+                if let Some(session) = sessions.iter_mut().find(|s| s.id == session_id) {
+                    session.set_backend_id(new_backend_id.clone());
+                    session.set_status(SessionStatus::Running);
+                    session.reset_reconcile_state();
+
+                    let session_clone = session.clone();
+                    drop(sessions);
+
+                    self.store.save_session(&session_clone).await?;
+
+                    let event = Event::new(
+                        session_id,
+                        EventType::BackendIdSet {
+                            backend_id: new_backend_id.clone(),
+                        },
+                    );
+                    self.store.record_event(&event).await?;
+
+                    // Restart console session
+                    if let Err(err) = self
+                        .console_manager
+                        .ensure_session(session_id, BackendType::Docker, &new_backend_id)
+                        .await
+                    {
+                        tracing::warn!(error = %err, "Failed to start console session");
+                    }
+                }
+                Ok(())
+            }
+            Err(e) => {
+                // Mark as failed
+                let error_msg = format!("{:#}", e);
+                let mut sessions = self.sessions.write().await;
+                if let Some(session) = sessions.iter_mut().find(|s| s.id == session_id) {
+                    session.set_error(SessionStatus::Failed, error_msg.clone());
+                    self.store.save_session(session).await?;
+                }
+                Err(e)
+            }
+        }
+    }
+
     /// Reconcile expected state with reality
     ///
     /// This method:
@@ -1554,6 +1845,8 @@ impl SessionManager {
             session_id: Some(session.id),
             initial_workdir: session.subdirectory.clone(),
             http_port: *self.http_port.read().await,
+            container_image: None,
+            container_resources: None,
         };
 
         // Recreate container

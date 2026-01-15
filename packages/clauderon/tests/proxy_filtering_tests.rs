@@ -103,9 +103,13 @@ async fn create_test_manager_with_proxy() -> (
     .expect("Failed to create manager");
 
     // Create proxy manager
+    use rand::Rng; // Add this import
+
     let proxy_config = ProxyConfig::default();
-    let proxy_manager =
-        Arc::new(ProxyManager::new(proxy_config).expect("Failed to create proxy manager"));
+    let random_port = rand::thread_rng().gen_range(20000..21000); // Use a higher, less common range
+    let proxy_manager = Arc::new(
+        ProxyManager::new(proxy_config, Some(random_port)).expect("Failed to create proxy manager"),
+    );
 
     // Wire up proxy manager
     manager.set_proxy_manager(Arc::clone(&proxy_manager));
@@ -148,6 +152,10 @@ async fn test_create_session_with_read_only_mode() {
             false, // plan_mode
             AccessMode::ReadOnly,
             vec![], // images
+            None,   // container_image
+            None,   // pull_policy
+            None,   // cpu_limit
+            None,   // memory_limit
         )
         .await
         .expect("Failed to create session");
@@ -178,6 +186,10 @@ async fn test_create_session_with_read_write_mode() {
             false, // plan_mode
             AccessMode::ReadWrite,
             vec![], // images
+            None,   // container_image
+            None,   // pull_policy
+            None,   // cpu_limit
+            None,   // memory_limit
         )
         .await
         .expect("Failed to create session");
@@ -204,6 +216,10 @@ async fn test_zellij_backend_ignores_proxy_port() {
             false, // plan_mode
             AccessMode::ReadOnly,
             vec![], // images
+            None,   // container_image
+            None,   // pull_policy
+            None,   // cpu_limit
+            None,   // memory_limit
         )
         .await
         .expect("Failed to create session");
@@ -232,6 +248,10 @@ async fn test_update_access_mode_by_name() {
             false, // plan_mode
             AccessMode::ReadOnly,
             vec![], // images
+            None,   // container_image
+            None,   // pull_policy
+            None,   // cpu_limit
+            None,   // memory_limit
         )
         .await
         .expect("Failed to create session");
@@ -270,6 +290,10 @@ async fn test_update_access_mode_by_id() {
             false, // plan_mode
             AccessMode::ReadWrite,
             vec![], // images
+            None,   // container_image
+            None,   // pull_policy
+            None,   // cpu_limit
+            None,   // memory_limit
         )
         .await
         .expect("Failed to update access mode");
@@ -314,7 +338,7 @@ async fn test_port_allocator_basic() {
     use clauderon::proxy::PortAllocator;
     use uuid::Uuid;
 
-    let allocator = PortAllocator::new();
+    let allocator = PortAllocator::new(None);
 
     // Allocate a port
     let session1 = Uuid::new_v4();
@@ -350,7 +374,7 @@ async fn test_port_allocator_wraparound() {
     use clauderon::proxy::PortAllocator;
     use uuid::Uuid;
 
-    let allocator = PortAllocator::new();
+    let allocator = PortAllocator::new(None);
 
     // Allocate many ports to force wraparound
     let mut ports = Vec::new();
@@ -421,6 +445,10 @@ async fn test_access_mode_persists_across_restarts() {
                 false, // plan_mode
                 AccessMode::ReadOnly,
                 vec![], // images
+                None,   // container_image
+                None,   // pull_policy
+                None,   // cpu_limit
+                None,   // memory_limit
             )
             .await
             .expect("Failed to create session");
@@ -549,6 +577,10 @@ async fn test_delete_session_cleans_up_proxy() {
             false, // plan_mode
             AccessMode::ReadOnly,
             vec![], // images
+            None,   // container_image
+            None,   // pull_policy
+            None,   // cpu_limit
+            None,   // memory_limit
         )
         .await
         .expect("Failed to create session");

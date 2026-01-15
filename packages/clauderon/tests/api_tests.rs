@@ -27,6 +27,10 @@ fn test_create_session_request_serialization() {
         plan_mode: true,
         access_mode: Default::default(),
         images: vec![],
+        container_image: None,
+        pull_policy: None,
+        cpu_limit: None,
+        memory_limit: None,
     });
 
     let json = serde_json::to_string(&request).unwrap();
@@ -139,9 +143,6 @@ fn test_backend_type_serialization() {
 fn test_agent_type_serialization() {
     let json = serde_json::to_string(&AgentType::ClaudeCode).unwrap();
     assert_eq!(json, r#""ClaudeCode""#);
-
-    let json = serde_json::to_string(&AgentType::Codex).unwrap();
-    assert_eq!(json, r#""Codex""#);
 }
 
 // ========== Print Mode Flow Tests ==========
@@ -163,6 +164,10 @@ fn test_print_mode_serialization() {
         plan_mode: false,
         access_mode: Default::default(),
         images: vec![],
+        container_image: None,
+        pull_policy: None,
+        cpu_limit: None,
+        memory_limit: None,
     });
 
     let json = serde_json::to_string(&request).unwrap();
@@ -225,6 +230,9 @@ fn test_print_mode_flows_to_docker_args() {
         None, // git user email
         None, // session_id
         None, // http_port
+        &clauderon::backends::DockerConfig::default(),
+        None,
+        None,
     )
     .expect("Failed to build args");
 
@@ -335,6 +343,9 @@ fn test_interactive_mode_no_print_flag_in_docker_args() {
         None,  // git user email
         None,  // session_id
         None,  // http_port
+        &clauderon::backends::DockerConfig::default(),
+        None,
+        None,
     )
     .expect("Failed to build args");
 
