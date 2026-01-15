@@ -164,8 +164,15 @@ pub async fn handle_paste_event(app: &mut App, text: &str) -> anyhow::Result<()>
                 _ => {}
             }
         }
-        AppMode::CopyMode | _ => {
-            // Ignore paste events in copy mode and other modes
+        AppMode::CopyMode
+        | AppMode::SessionList
+        | AppMode::CreateDialog
+        | AppMode::ConfirmDelete
+        | AppMode::Help
+        | AppMode::Locked
+        | AppMode::Scroll
+        | AppMode::ReconcileError => {
+            // Ignore paste events in these modes
         }
     }
 
