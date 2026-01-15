@@ -109,10 +109,10 @@ async fn test_recent_repo_tracked_on_session_create() {
             false,              // plan_mode
             Default::default(), // access_mode
             vec![],             // images
-            None,
-            None,
-            None,
-            None, // container settings
+            None,               // container_image
+            None,               // pull_policy
+            None,               // cpu_limit
+            None,               // memory_limit
         )
         .await
         .expect("Failed to create session");
@@ -156,6 +156,10 @@ async fn test_path_canonicalization_prevents_duplicates() {
             false,
             Default::default(),
             vec![],
+            None,
+            None,
+            None,
+            None,
         )
         .await
         .expect("Failed to create session 1");
@@ -173,6 +177,10 @@ async fn test_path_canonicalization_prevents_duplicates() {
             false,
             Default::default(),
             vec![],
+            None,
+            None,
+            None,
+            None,
         )
         .await
         .expect("Failed to create session 2");
@@ -207,6 +215,10 @@ async fn test_limit_enforcement_removes_oldest() {
                 false,
                 Default::default(),
                 vec![],
+                None,
+                None,
+                None,
+                None,
             )
             .await
             .expect("Failed to create session");
@@ -254,6 +266,10 @@ async fn test_upsert_behavior_updates_timestamp() {
             false,
             Default::default(),
             vec![],
+            None,
+            None,
+            None,
+            None,
         )
         .await
         .expect("Failed to create session 1");
@@ -280,6 +296,10 @@ async fn test_upsert_behavior_updates_timestamp() {
             false,
             Default::default(),
             vec![],
+            None,
+            None,
+            None,
+            None,
         )
         .await
         .expect("Failed to create session 2");
@@ -319,6 +339,10 @@ async fn test_recent_repos_ordered_by_most_recent() {
                 false,
                 Default::default(),
                 vec![],
+                None,
+                None,
+                None,
+                None,
             )
             .await
             .expect("Failed to create session");
@@ -360,6 +384,10 @@ async fn test_nonexistent_repo_handles_gracefully() {
             false,
             Default::default(),
             vec![],
+            None,
+            None,
+            None,
+            None,
         )
         .await;
 
@@ -416,6 +444,10 @@ async fn test_subdirectories_tracked_separately() {
             false,
             Default::default(),
             vec![],
+            None,
+            None,
+            None,
+            None,
         )
         .await
         .expect("Failed to create session in packages/foo");
@@ -435,6 +467,10 @@ async fn test_subdirectories_tracked_separately() {
             false,
             Default::default(),
             vec![],
+            None,
+            None,
+            None,
+            None,
         )
         .await
         .expect("Failed to create session in packages/bar");
@@ -493,6 +529,10 @@ async fn test_same_subdir_updates_timestamp() {
             false,
             Default::default(),
             vec![],
+            None,
+            None,
+            None,
+            None,
         )
         .await
         .expect("Failed to create session 1");
@@ -567,6 +607,10 @@ async fn test_subdirectories_respect_limit() {
                 false,
                 Default::default(),
                 vec![],
+                None,
+                None,
+                None,
+                None,
             )
             .await
             .expect("Failed to create session");
