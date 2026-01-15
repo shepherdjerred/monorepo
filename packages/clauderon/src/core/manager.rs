@@ -835,8 +835,14 @@ impl SessionManager {
                 // CLEANUP: Remove partially created resources
                 tracing::warn!(session_id = %session_id, "Cleaning up after failed creation");
 
-                // Remove proxy if created
-                if backend == BackendType::Docker {
+                // Remove proxy if created for container backends (Docker and Apple Container)
+                #[cfg(target_os = "macos")]
+                let needs_proxy_cleanup =
+                    matches!(backend, BackendType::Docker | BackendType::AppleContainer);
+                #[cfg(not(target_os = "macos"))]
+                let needs_proxy_cleanup = backend == BackendType::Docker;
+
+                if needs_proxy_cleanup {
                     if let Some(ref proxy_manager) = self.proxy_manager {
                         let _ = proxy_manager.destroy_session_proxy(session_id).await;
                     }
@@ -1016,12 +1022,18 @@ impl SessionManager {
             }
         }
 
-        // Create per-session proxy for Docker backends BEFORE creating container (required, no fallback)
-        let proxy_port = if backend == BackendType::Docker {
+        // Create per-session proxy for container backends (Docker and Apple Container)
+        // BEFORE creating container (required, no fallback)
+        #[cfg(target_os = "macos")]
+        let needs_proxy = matches!(backend, BackendType::Docker | BackendType::AppleContainer);
+        #[cfg(not(target_os = "macos"))]
+        let needs_proxy = backend == BackendType::Docker;
+
+        let proxy_port = if needs_proxy {
             let proxy_manager = self
                 .proxy_manager
                 .as_ref()
-                .ok_or_else(|| anyhow::anyhow!("Proxy manager required for Docker backend"))?;
+                .ok_or_else(|| anyhow::anyhow!("Proxy manager required for container backend"))?;
 
             let port = proxy_manager
                 .create_session_proxy(session.id, access_mode)
@@ -1037,7 +1049,7 @@ impl SessionManager {
             );
             Some(port)
         } else {
-            None // Non-Docker backends don't need proxy
+            None // Non-container backends don't need proxy
         };
 
         // Prepend plan mode instruction if enabled
@@ -1134,12 +1146,30 @@ impl SessionManager {
                     )
                     .await?
             }
+            #[cfg(target_os = "macos")]
+            BackendType::AppleContainer => {
+                self.apple_container
+                    .create(
+                        &full_name,
+                        &worktree_path,
+                        &transformed_prompt,
+                        create_options,
+                    )
+                    .await?
+            }
         };
 
         session.set_backend_id(backend_id.clone());
         session.set_status(SessionStatus::Running);
 
-        if backend == BackendType::Docker && !print_mode {
+        // Start console session for container backends (Docker and Apple Container)
+        #[cfg(target_os = "macos")]
+        let is_container_backend =
+            matches!(backend, BackendType::Docker | BackendType::AppleContainer);
+        #[cfg(not(target_os = "macos"))]
+        let is_container_backend = backend == BackendType::Docker;
+
+        if is_container_backend && !print_mode {
             if let Err(err) = self
                 .console_manager
                 .ensure_session(session.id, backend, &backend_id)
@@ -1456,8 +1486,14 @@ impl SessionManager {
             }
 
             update_progress(2, "Removing session proxy".to_string()).await;
-            // Destroy per-session proxy if it exists
-            if backend == BackendType::Docker {
+            // Destroy per-session proxy if it exists for container backends (Docker and Apple Container)
+            #[cfg(target_os = "macos")]
+            let needs_proxy_cleanup =
+                matches!(backend, BackendType::Docker | BackendType::AppleContainer);
+            #[cfg(not(target_os = "macos"))]
+            let needs_proxy_cleanup = backend == BackendType::Docker;
+
+            if needs_proxy_cleanup {
                 if let Some(ref proxy_manager) = self.proxy_manager {
                     if let Err(e) = proxy_manager.destroy_session_proxy(session_id).await {
                         tracing::warn!(
@@ -1568,8 +1604,16 @@ impl SessionManager {
             }
         }
 
-        // Destroy per-session proxy if it exists
-        if session.backend == BackendType::Docker {
+        // Destroy per-session proxy if it exists for container backends (Docker and Apple Container)
+        #[cfg(target_os = "macos")]
+        let needs_proxy_cleanup = matches!(
+            session.backend,
+            BackendType::Docker | BackendType::AppleContainer
+        );
+        #[cfg(not(target_os = "macos"))]
+        let needs_proxy_cleanup = session.backend == BackendType::Docker;
+
+        if needs_proxy_cleanup {
             if let Some(ref proxy_manager) = self.proxy_manager {
                 if let Err(e) = proxy_manager.destroy_session_proxy(session.id).await {
                     tracing::warn!(
