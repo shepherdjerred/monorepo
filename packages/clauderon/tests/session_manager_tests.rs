@@ -7,7 +7,7 @@ use std::path::Path;
 use std::sync::Arc;
 
 use clauderon::backends::{ExecutionBackend, GitOperations, MockExecutionBackend, MockGitBackend};
-use clauderon::core::{AgentType, BackendType, SessionManager, SessionStatus};
+use clauderon::core::{AccessMode, AgentType, BackendType, SessionManager, SessionStatus};
 use clauderon::store::SqliteStore;
 use tempfile::TempDir;
 
@@ -112,7 +112,7 @@ async fn test_create_session_zellij_success() {
             true,
             false,              // print_mode
             true,               // plan_mode
-            Default::default(), // access_mode
+            AccessMode::default(), // access_mode
             vec![],             // images
             None,               // container_image
             None,               // pull_policy
@@ -159,7 +159,7 @@ async fn test_create_session_docker_success() {
             false,
             false,              // print_mode
             true,               // plan_mode
-            Default::default(), // access_mode
+            AccessMode::default(), // access_mode
             vec![],             // images
             None,               // container_image
             None,               // pull_policy
@@ -199,7 +199,7 @@ async fn test_create_session_git_fails() {
             true,
             false,              // print_mode
             true,               // plan_mode
-            Default::default(), // access_mode
+            AccessMode::default(), // access_mode
             vec![],             // images
             None,               // container_image
             None,               // pull_policy
@@ -237,7 +237,7 @@ async fn test_create_session_backend_fails() {
             true,
             false,              // print_mode
             true,               // plan_mode
-            Default::default(), // access_mode
+            AccessMode::default(), // access_mode
             vec![],             // images
             None,               // container_image
             None,               // pull_policy
@@ -275,7 +275,7 @@ async fn test_get_session_by_name() {
             true,
             false,              // print_mode
             true,               // plan_mode
-            Default::default(), // access_mode
+            AccessMode::default(), // access_mode
             vec![],             // images
             None,               // container_image
             None,               // pull_policy
@@ -305,7 +305,7 @@ async fn test_get_session_by_uuid() {
             true,
             false,              // print_mode
             true,               // plan_mode
-            Default::default(), // access_mode
+            AccessMode::default(), // access_mode
             vec![],             // images
             None,               // container_image
             None,               // pull_policy
@@ -345,7 +345,7 @@ async fn test_delete_session_success() {
             true,
             false,              // print_mode
             true,               // plan_mode
-            Default::default(), // access_mode
+            AccessMode::default(), // access_mode
             vec![],             // images
             None,               // container_image
             None,               // pull_policy
@@ -398,7 +398,7 @@ async fn test_archive_session_success() {
             true,
             false,              // print_mode
             true,               // plan_mode
-            Default::default(), // access_mode
+            AccessMode::default(), // access_mode
             vec![],             // images
             None,               // container_image
             None,               // pull_policy
@@ -443,7 +443,7 @@ async fn test_get_attach_command_zellij() {
             true,
             false,              // print_mode
             true,               // plan_mode
-            Default::default(), // access_mode
+            AccessMode::default(), // access_mode
             vec![],             // images
             None,               // container_image
             None,               // pull_policy
@@ -474,7 +474,7 @@ async fn test_get_attach_command_docker() {
             true,
             false,              // print_mode
             true,               // plan_mode
-            Default::default(), // access_mode
+            AccessMode::default(), // access_mode
             vec![],             // images
             None,
             None,
@@ -515,7 +515,7 @@ async fn test_reconcile_healthy_session() {
             true,
             false,              // print_mode
             true,               // plan_mode
-            Default::default(), // access_mode
+            AccessMode::default(), // access_mode
             vec![],             // images
             None,               // container_image
             None,               // pull_policy
@@ -548,7 +548,7 @@ async fn test_reconcile_missing_backend() {
             true,
             false,              // print_mode
             true,               // plan_mode
-            Default::default(), // access_mode
+            AccessMode::default(), // access_mode
             vec![],             // images
             None,               // container_image
             None,               // pull_policy
@@ -593,7 +593,7 @@ async fn test_list_sessions_multiple() {
             true,
             false,              // print_mode
             true,               // plan_mode
-            Default::default(), // access_mode
+            AccessMode::default(), // access_mode
             vec![],             // images
             None,               // container_image
             None,               // pull_policy
@@ -612,7 +612,7 @@ async fn test_list_sessions_multiple() {
             true,
             false,              // print_mode
             true,               // plan_mode
-            Default::default(), // access_mode
+            AccessMode::default(), // access_mode
             vec![],             // images
             None,               // container_image
             None,               // pull_policy
@@ -631,7 +631,7 @@ async fn test_list_sessions_multiple() {
             true,
             false,              // print_mode
             true,               // plan_mode
-            Default::default(), // access_mode
+            AccessMode::default(), // access_mode
             vec![],             // images
             None,               // container_image
             None,               // pull_policy
@@ -661,7 +661,7 @@ async fn test_update_metadata_success() {
             true,
             false,              // print_mode
             true,               // plan_mode
-            Default::default(), // access_mode
+            AccessMode::default(), // access_mode
             vec![],             // images
             None,               // container_image
             None,               // pull_policy
@@ -704,7 +704,7 @@ async fn test_update_metadata_by_uuid() {
             true,
             false,              // print_mode
             true,               // plan_mode
-            Default::default(), // access_mode
+            AccessMode::default(), // access_mode
             vec![],             // images
             None,               // container_image
             None,               // pull_policy
@@ -743,7 +743,7 @@ async fn test_update_metadata_partial() {
             true,
             false,              // print_mode
             true,               // plan_mode
-            Default::default(), // access_mode
+            AccessMode::default(), // access_mode
             vec![],             // images
             None,               // container_image
             None,               // pull_policy
@@ -807,7 +807,7 @@ async fn test_session_lifecycle() {
             true,
             false,              // print_mode
             true,               // plan_mode
-            Default::default(), // access_mode
+            AccessMode::default(), // access_mode
             vec![],             // images
             None,               // container_image
             None,               // pull_policy

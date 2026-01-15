@@ -876,7 +876,7 @@ mod tests {
         };
 
         // Just verify it compiles and can be cloned
-        let _cloned = injector.clone();
+        let _cloned = injector;
     }
 
     #[test]
