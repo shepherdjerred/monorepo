@@ -222,7 +222,6 @@ impl DockerBackend {
         git_user_email: Option<&str>,
         session_id: Option<&uuid::Uuid>,
         http_port: Option<u16>,
-        agent_type: crate::core::AgentType,
     ) -> anyhow::Result<Vec<String>> {
         let container_name = format!("clauderon-{name}");
         let escaped_prompt = initial_prompt.replace('\'', "'\\''");
@@ -1189,7 +1188,6 @@ mod tests {
             None,  // git user email
             None,  // session_id
             None,  // http_port
-            crate::core::AgentType::Claude,
         )
         .expect("Failed to build args");
 
@@ -1261,7 +1259,6 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
-            crate::core::AgentType::Claude,
         )
         .expect("Failed to build args");
 
@@ -1294,7 +1291,6 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
-            crate::core::AgentType::Claude,
         )
         .expect("Failed to build args");
 
@@ -1330,7 +1326,6 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
-            crate::core::AgentType::Claude,
         )
         .expect("Failed to build args");
 
@@ -1366,7 +1361,6 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
-            crate::core::AgentType::Claude,
         )
         .expect("Failed to build args");
 
@@ -1463,7 +1457,6 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
-            crate::core::AgentType::Claude,
         )
         .expect("Failed to build args");
 
@@ -1495,7 +1488,6 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
-            crate::core::AgentType::Claude,
         )
         .expect("Failed to build args");
 
@@ -1540,7 +1532,6 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
-            crate::core::AgentType::Claude,
         )
         .expect("Failed to build args");
 
@@ -1583,7 +1574,6 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
-            crate::core::AgentType::Claude,
         )
         .expect("Failed to build args");
 
@@ -1610,7 +1600,6 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
-            crate::core::AgentType::Claude,
         )
         .expect("Failed to build args");
 
@@ -1647,7 +1636,6 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
-            crate::core::AgentType::Claude,
         )
         .expect("Failed to build args");
 
@@ -1683,7 +1671,7 @@ mod tests {
             None, // git_user_email
             None, // session_id
             None, // http_port
-            crate::core::AgentType::Claude,
+            crate::core::AgentType::ClaudeCode,
         )
         .expect("Failed to build args");
 
@@ -1716,7 +1704,6 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
-            crate::core::AgentType::Claude,
         )
         .expect("Failed to build args");
 
@@ -1771,7 +1758,6 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
-            crate::core::AgentType::Claude,
         )
         .expect("Failed to build args");
 
@@ -1825,7 +1811,6 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
-            crate::core::AgentType::Claude,
         )
         .expect("Failed to build args");
 
@@ -1956,7 +1941,6 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
-            crate::core::AgentType::Claude,
         )
         .expect("Failed to build args");
 
@@ -2009,7 +1993,6 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
-            crate::core::AgentType::Claude,
         )
         .expect("Failed to build args");
 
@@ -2052,7 +2035,6 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
-            crate::core::AgentType::Claude,
         )
         .expect("Failed to build args");
 
@@ -2096,7 +2078,6 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
-            crate::core::AgentType::Claude,
         )
         .expect("Failed to build args");
 
@@ -2127,7 +2108,6 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
-            crate::core::AgentType::Claude,
         )
         .expect("Failed to build args");
 
@@ -2171,7 +2151,6 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
-            crate::core::AgentType::Claude,
         )
         .expect("Failed to build args");
 
