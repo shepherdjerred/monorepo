@@ -2069,7 +2069,10 @@ impl SessionManager {
         );
 
         // Generate new metadata
-        let metadata = crate::utils::generate_session_name_ai(&repo_path, &initial_prompt).await;
+        let repo_path_str = repo_path
+            .to_str()
+            .ok_or_else(|| anyhow::anyhow!("Invalid UTF-8 in repo path"))?;
+        let metadata = crate::utils::generate_session_name_ai(repo_path_str, &initial_prompt).await;
 
         // Only update if we got non-default values
         // (avoid overwriting user edits with defaults)
