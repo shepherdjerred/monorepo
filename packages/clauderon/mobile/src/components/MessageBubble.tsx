@@ -6,7 +6,7 @@ import { typography } from "../styles/typography";
 import { formatTime } from "../lib/utils";
 import Markdown from "react-native-markdown-display";
 import SyntaxHighlighter from "react-native-syntax-highlighter";
-import { atomOneDark } from "react-syntax-highlighter/dist/styles/hljs";
+import { atomOneDark } from "react-syntax-highlighter/dist/esm/styles/hljs";
 import { PlanView, isPlan } from "./PlanView";
 import { QuestionView, isQuestion } from "./QuestionView";
 
