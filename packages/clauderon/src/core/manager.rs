@@ -1404,7 +1404,7 @@ impl SessionManager {
             initial_prompt,
             agent,
             dangerous_skip_checks,
-            access_mode,
+            _access_mode,
             proxy_port,
             old_backend_id,
         ) = {

@@ -379,6 +379,10 @@ impl ApiClient for Client {
         Self::archive_session(self, id).await
     }
 
+    async fn refresh_session(&mut self, id: &str) -> anyhow::Result<()> {
+        Self::refresh_session(self, id).await
+    }
+
     async fn attach_session(&mut self, id: &str) -> anyhow::Result<Vec<String>> {
         Self::attach_session(self, id).await
     }
