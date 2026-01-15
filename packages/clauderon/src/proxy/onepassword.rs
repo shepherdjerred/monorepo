@@ -211,8 +211,16 @@ impl OnePasswordClient {
         // Wait for all tasks to complete
         let mut results = HashMap::new();
         for task in tasks {
-            if let Ok((name, result)) = task.await {
-                results.insert(name, result);
+            match task.await {
+                Ok((name, result)) => {
+                    results.insert(name, result);
+                }
+                Err(join_error) => {
+                    tracing::error!(
+                        error = %join_error,
+                        "Task panicked while fetching credential from 1Password"
+                    );
+                }
             }
         }
 
