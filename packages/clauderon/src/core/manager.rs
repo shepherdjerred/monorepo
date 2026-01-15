@@ -1398,7 +1398,7 @@ impl SessionManager {
         // Capture configuration before deletion
         let (
             name,
-            repo_path,
+            _repo_path,
             worktree_path,
             subdirectory,
             initial_prompt,
