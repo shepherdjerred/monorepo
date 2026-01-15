@@ -180,23 +180,6 @@ impl DirectoryPickerState {
     pub fn new() -> Self {
         Self::default()
     }
-}
-
-impl Default for DirectoryPickerState {
-    fn default() -> Self {
-        Self {
-            current_dir: std::env::current_dir().unwrap_or_default(),
-            all_entries: Vec::new(),
-            recent_repos: Vec::new(),
-            filtered_entries: Vec::new(),
-            search_query: String::new(),
-            selected_index: 0,
-            is_active: false,
-            error: None,
-            matcher: nucleo_matcher::Matcher::new(nucleo_matcher::Config::DEFAULT),
-        }
-    }
-}
 
     /// Load recent repositories from structured data with timestamps
     pub fn load_recent_repos(&mut self, repo_dtos: Vec<crate::api::protocol::RecentRepoDto>) {
@@ -381,33 +364,27 @@ impl Default for DirectoryPickerState {
     }
 }
 
+impl Default for DirectoryPickerState {
+    fn default() -> Self {
+        Self {
+            current_dir: std::env::current_dir().unwrap_or_default(),
+            all_entries: Vec::new(),
+            recent_repos: Vec::new(),
+            filtered_entries: Vec::new(),
+            search_query: String::new(),
+            selected_index: 0,
+            is_active: false,
+            error: None,
+            matcher: nucleo_matcher::Matcher::new(nucleo_matcher::Config::DEFAULT),
+        }
+    }
+}
+
 impl CreateDialogState {
     #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
-}
-
-impl Default for CreateDialogState {
-    fn default() -> Self {
-        Self {
-            prompt: String::new(),
-            repo_path: String::new(),
-            backend: BackendType::Zellij, // Default to Zellij
-            agent: AgentType::ClaudeCode,
-            skip_checks: false,
-            plan_mode: true,                   // Default to plan mode ON
-            access_mode: AccessMode::default(), // ReadOnly by default (secure)
-            images: Vec::new(),
-            prompt_cursor_line: 0,
-            prompt_cursor_col: 0,
-            prompt_scroll_offset: 0,
-            focus: CreateDialogFocus::default(),
-            button_create_focused: false,
-            directory_picker: DirectoryPickerState::new(),
-        }
-    }
-}
 
     pub fn reset(&mut self) {
         *self = Self::new();
@@ -516,6 +493,27 @@ impl Default for CreateDialogState {
     pub fn remove_image(&mut self, index: usize) {
         if index < self.images.len() {
             self.images.remove(index);
+        }
+    }
+}
+
+impl Default for CreateDialogState {
+    fn default() -> Self {
+        Self {
+            prompt: String::new(),
+            repo_path: String::new(),
+            backend: BackendType::Zellij, // Default to Zellij
+            agent: AgentType::ClaudeCode,
+            skip_checks: false,
+            plan_mode: true,                   // Default to plan mode ON
+            access_mode: AccessMode::default(), // ReadOnly by default (secure)
+            images: Vec::new(),
+            prompt_cursor_line: 0,
+            prompt_cursor_col: 0,
+            prompt_scroll_offset: 0,
+            focus: CreateDialogFocus::default(),
+            button_create_focused: false,
+            directory_picker: DirectoryPickerState::new(),
         }
     }
 }
