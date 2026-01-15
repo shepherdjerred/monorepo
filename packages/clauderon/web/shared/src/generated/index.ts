@@ -48,6 +48,34 @@ export interface BrowseDirectoryResponse {
 	error?: string;
 }
 
+/** Claude Code usage data for a specific time window */
+export interface UsageWindow {
+	/** Current usage (e.g., number of requests or tokens) */
+	current: number;
+	/** Maximum allowed usage for this window */
+	limit: number;
+	/** Usage as a percentage (0.0 - 1.0) */
+	utilization: number;
+	/** When this usage window resets (ISO 8601 timestamp) */
+	resets_at?: string;
+}
+
+/** Claude Code usage tracking data */
+export interface ClaudeUsage {
+	/** Organization ID */
+	organization_id: string;
+	/** Organization name (if available) */
+	organization_name?: string;
+	/** 5-hour usage window */
+	five_hour: UsageWindow;
+	/** 7-day usage window */
+	seven_day: UsageWindow;
+	/** 7-day Sonnet-specific usage window (if applicable) */
+	seven_day_sonnet?: UsageWindow;
+	/** When this data was last fetched */
+	fetched_at: string;
+}
+
 /** Execution backend type */
 export enum BackendType {
 	/** Zellij terminal multiplexer */
@@ -166,8 +194,10 @@ export interface ProxyStatus {
 
 /** Recent repository entry with timestamp */
 export interface RecentRepoDto {
-	/** Path to the repository */
+	/** Path to the repository (git root) */
 	repo_path: string;
+	/** Subdirectory path relative to git root (empty string if at root) */
+	subdirectory: string;
 	/** When this repository was last used (ISO 8601 timestamp) */
 	last_used: string;
 }
@@ -332,6 +362,8 @@ export interface SystemStatus {
 	proxies: ProxyStatus[];
 	/** Total number of active sessions with proxies */
 	active_session_proxies: number;
+	/** Claude Code usage tracking (if available) */
+	claude_usage?: ClaudeUsage;
 }
 
 /** Request to update a credential */
@@ -340,6 +372,14 @@ export interface UpdateCredentialRequest {
 	service_id: string;
 	/** The credential token/key value */
 	value: string;
+}
+
+/** Response from uploading an image file */
+export interface UploadResponse {
+	/** Absolute path to the uploaded file */
+	path: string;
+	/** Size of the uploaded file in bytes */
+	size: number;
 }
 
 /** User's passkey credential */
@@ -473,6 +513,10 @@ export type Request =
 	/** Get session ID by name (for hook scripts) */
 	| { type: "GetSessionIdByName", payload: {
 	name: string;
+}}
+	/** Refresh a session (pull latest image and recreate container) */
+	| { type: "RefreshSession", payload: {
+	id: string;
 }};
 
 /** Response types for the API */
@@ -492,6 +536,8 @@ export type Response =
 	| { type: "Deleted", payload?: undefined }
 	/** Session archived successfully */
 	| { type: "Archived", payload?: undefined }
+	/** Session refreshed successfully */
+	| { type: "Refreshed", payload?: undefined }
 	/** Command to attach to a session */
 	| { type: "AttachReady", payload: {
 	command: string[];

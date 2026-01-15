@@ -1,11 +1,9 @@
 pub mod installer;
-pub mod listener;
 
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 pub use installer::install_hooks_in_container;
-pub use listener::HookListener;
 
 /// Message sent from Claude Code hooks to the daemon
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -37,9 +37,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
 fn render_attached_status(app: &App) -> Line<'static> {
     let session_name = app
         .attached_session_id
-        .and_then(|id| app.sessions.iter().find(|s| s.id == id))
-        .map(|s| s.name.clone())
-        .unwrap_or_else(|| "Unknown".to_string());
+        .and_then(|id| app.sessions.iter().find(|s| s.id == id)).map_or_else(|| "Unknown".to_string(), |s| s.name.clone());
 
     // Check scroll position
     let scroll_indicator = if let Some(pty_session) = app.attached_pty_session() {
@@ -84,8 +82,7 @@ fn render_copy_mode_status(app: &App) -> Line<'static> {
     let is_visual = app
         .copy_mode_state
         .as_ref()
-        .map(|s| s.visual_mode)
-        .unwrap_or(false);
+        .is_some_and(|s| s.visual_mode);
 
     if is_visual {
         Line::from(vec![

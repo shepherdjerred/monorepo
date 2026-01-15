@@ -1,0 +1,51 @@
+[tasks.ios-install]
+description = "Build and install the app on a physical iPhone"
+run = """
+#!/usr/bin/env bash
+set -e
+
+cd ios
+
+DEVICE_ID="${DEVICE_ID:-00008150-000103943C87801C}"
+
+echo "Building iOS app..."
+xcodebuild -workspace ClauderonMobile.xcworkspace \
+  -scheme ClauderonMobile \
+  -configuration Debug \
+  -destination "id=$DEVICE_ID" \
+  -allowProvisioningUpdates \
+  build \
+  2>&1 | grep -E "(BUILD SUCCEEDED|BUILD FAILED|error:)" || true
+
+echo ""
+echo "Installing on device..."
+xcrun devicectl device install app \
+  --device "$DEVICE_ID" \
+  ~/Library/Developer/Xcode/DerivedData/ClauderonMobile-*/Build/Products/Debug-iphoneos/ClauderonMobile.app
+
+echo ""
+echo "App installed! Open ClauderonMobile on your iPhone."
+"""
+
+[tasks.ios-build]
+description = "Build the iOS app without installing"
+run = """
+#!/usr/bin/env bash
+set -e
+
+cd ios
+
+DEVICE_ID="${DEVICE_ID:-00008150-000103943C87801C}"
+
+echo "Building iOS app..."
+xcodebuild -workspace ClauderonMobile.xcworkspace \
+  -scheme ClauderonMobile \
+  -configuration Debug \
+  -destination "id=$DEVICE_ID" \
+  -allowProvisioningUpdates \
+  build
+"""
+
+[tasks.start]
+description = "Start Metro bundler"
+run = "bun start"

@@ -5,6 +5,8 @@ use crate::api::ws_events::{EventBroadcaster, broadcast_event};
 use crate::auth::{self, AuthState};
 use crate::core::manager::SessionManager;
 use crate::core::session::AccessMode;
+use crate::core::session::ClaudeWorkingStatus;
+use crate::hooks::{HookEvent, HookMessage};
 use axum::{
     Json, Router,
     extract::{Path, Query, State},
@@ -14,6 +16,7 @@ use axum::{
     response::{IntoResponse, Response},
     routing::{delete, get, post},
 };
+use axum_extra::extract::Multipart;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::sync::Arc;
@@ -25,13 +28,18 @@ pub struct AppState {
     pub session_manager: Arc<SessionManager>,
     pub event_broadcaster: EventBroadcaster,
     pub auth_state: Option<AuthState>,
+    pub console_state: Arc<crate::api::console_state::ConsoleState>,
 }
 
 /// Create the HTTP router with all endpoints (without state)
 /// The caller should add WebSocket routes and then call `with_state()`
 ///
-/// If `auth_state` is provided, protected routes will require authentication
-pub fn create_router(auth_state: &Option<AuthState>) -> Router<AppState> {
+/// If `auth_state` is provided, protected routes will require authentication.
+/// If `dev_mode` is true, static files are served from the filesystem instead of embedded.
+pub fn create_router(auth_state: &Option<AuthState>, dev_mode: bool) -> Router<AppState> {
+    use std::path::PathBuf;
+    use tower_http::services::{ServeDir, ServeFile};
+
     // Configure CORS for development
     let cors = CorsLayer::new()
         .allow_origin(Any)
@@ -45,8 +53,11 @@ pub fn create_router(auth_state: &Option<AuthState>) -> Router<AppState> {
         .route("/api/sessions/{id}", get(get_session))
         .route("/api/sessions/{id}", delete(delete_session))
         .route("/api/sessions/{id}/archive", post(archive_session))
+        .route("/api/sessions/{id}/refresh", post(refresh_session))
         .route("/api/sessions/{id}/access-mode", post(update_access_mode))
+        .route("/api/sessions/{id}/metadata", post(update_metadata))
         .route("/api/sessions/{id}/history", get(get_session_history))
+        .route("/api/sessions/{id}/upload", post(upload_file))
         .route("/api/recent-repos", get(get_recent_repos))
         .route("/api/browse-directory", post(browse_directory))
         .route("/api/status", get(get_system_status))
@@ -62,7 +73,7 @@ pub fn create_router(auth_state: &Option<AuthState>) -> Router<AppState> {
         ));
     }
 
-    Router::new()
+    let router = Router::new()
         // Auth endpoints (always public)
         .route("/api/auth/status", get(auth_status_wrapper))
         .route("/api/auth/register/start", post(register_start_wrapper))
@@ -70,11 +81,31 @@ pub fn create_router(auth_state: &Option<AuthState>) -> Router<AppState> {
         .route("/api/auth/login/start", post(login_start_wrapper))
         .route("/api/auth/login/finish", post(login_finish_wrapper))
         .route("/api/auth/logout", post(logout_wrapper))
+        // Hook endpoint (public - used by containers without auth)
+        .route("/api/hooks", post(receive_hook))
         // Merge protected routes
-        .merge(protected_routes)
-        // WebSocket endpoints will be added by caller
-        // Serve static files for all non-API routes (SPA fallback)
-        .fallback(serve_static)
+        .merge(protected_routes);
+
+    // Serve static files - from filesystem in dev mode, embedded otherwise
+    let router = if dev_mode {
+        let frontend_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("web/frontend/dist");
+        let index_file = frontend_path.join("index.html");
+
+        tracing::info!(
+            path = %frontend_path.display(),
+            "Dev mode: serving frontend from filesystem"
+        );
+
+        // ServeDir with fallback to index.html for SPA routing
+        let serve_dir = ServeDir::new(&frontend_path).fallback(ServeFile::new(&index_file));
+
+        router.fallback_service(serve_dir)
+    } else {
+        // Use embedded static files
+        router.fallback(serve_static)
+    };
+
+    router
         .layer(middleware::from_fn(correlation_id_middleware))
         .layer(cors)
 }
@@ -271,10 +302,32 @@ async fn archive_session(
     Ok(StatusCode::NO_CONTENT)
 }
 
+async fn refresh_session(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+) -> Result<StatusCode, AppError> {
+    validate_session_id(&id)?;
+    state.session_manager.refresh_session(&id).await?;
+
+    // Broadcast session updated event (container refreshed)
+    if let Some(session) = state.session_manager.get_session(&id).await {
+        broadcast_event(&state.event_broadcaster, Event::SessionUpdated(session)).await;
+    }
+
+    Ok(StatusCode::NO_CONTENT)
+}
+
 /// Request to update access mode
 #[derive(Debug, Deserialize, Serialize)]
 struct UpdateAccessModeRequest {
     access_mode: AccessMode,
+}
+
+/// Request to update session metadata
+#[derive(Debug, Deserialize, Serialize)]
+struct UpdateMetadataRequest {
+    title: Option<String>,
+    description: Option<String>,
 }
 
 /// Query parameters for session history endpoint
@@ -317,6 +370,26 @@ async fn update_access_mode(
     Ok(StatusCode::NO_CONTENT)
 }
 
+/// Update session metadata (title and description)
+async fn update_metadata(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+    Json(request): Json<UpdateMetadataRequest>,
+) -> Result<StatusCode, AppError> {
+    validate_session_id(&id)?;
+    state
+        .session_manager
+        .update_metadata(&id, request.title, request.description)
+        .await?;
+
+    // Broadcast session updated event
+    if let Some(session) = state.session_manager.get_session(&id).await {
+        broadcast_event(&state.event_broadcaster, Event::SessionUpdated(session)).await;
+    }
+
+    Ok(StatusCode::NO_CONTENT)
+}
+
 /// Get recent repositories
 async fn get_recent_repos(
     State(state): State<AppState>,
@@ -328,6 +401,7 @@ async fn get_recent_repos(
         .iter()
         .map(|r| crate::api::protocol::RecentRepoDto {
             repo_path: r.repo_path.to_string_lossy().to_string(),
+            subdirectory: r.subdirectory.to_string_lossy().to_string(),
             last_used: r.last_used.to_rfc3339(),
         })
         .collect();
@@ -348,9 +422,7 @@ async fn browse_directory(
     // Try to canonicalize the path, or use home directory as fallback
     let current_path = requested_path.canonicalize().unwrap_or_else(|_| {
         // If path doesn't exist, try home directory or root as fallback
-        std::env::var("HOME")
-            .map(PathBuf::from)
-            .unwrap_or_else(|_| PathBuf::from("/"))
+        std::env::var("HOME").map_or_else(|_| PathBuf::from("/"), PathBuf::from)
     });
 
     // Get parent directory if not at root
@@ -420,6 +492,91 @@ async fn update_credential(
         .map_err(|e| AppError::BadRequest(e.to_string()))?;
 
     Ok(StatusCode::NO_CONTENT)
+}
+
+/// Upload an image file for a session
+///
+/// The file is saved to `~/.clauderon/uploads/{session-id}/{filename}`
+/// and the absolute path is returned.
+#[tracing::instrument(skip(state, multipart), fields(session_id = %id))]
+async fn upload_file(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+    mut multipart: Multipart,
+) -> Result<Json<crate::api::protocol::UploadResponse>, AppError> {
+    validate_session_id(&id)?;
+
+    // Verify session exists
+    let session = state
+        .session_manager
+        .get_session(&id)
+        .await
+        .ok_or_else(|| AppError::NotFound(format!("Session not found: {id}")))?;
+
+    // Get upload directory for this session
+    let upload_dir = crate::uploads::upload_dir_for_session(session.id);
+
+    // Create upload directory if it doesn't exist
+    tokio::fs::create_dir_all(&upload_dir)
+        .await
+        .map_err(|e| AppError::BadRequest(format!("Failed to create upload directory: {e}")))?;
+
+    // Process multipart form data
+    let mut file_name: Option<String> = None;
+    let mut file_data: Option<Vec<u8>> = None;
+    let mut content_type: Option<String> = None;
+
+    while let Some(field) = multipart
+        .next_field()
+        .await
+        .map_err(|e| AppError::BadRequest(format!("Failed to read multipart field: {e}")))?
+    {
+        let name = field.name().unwrap_or("").to_string();
+
+        if name == "file" {
+            content_type = field.content_type().map(std::string::ToString::to_string);
+            file_name = field.file_name().map(std::string::ToString::to_string);
+            file_data = Some(
+                field
+                    .bytes()
+                    .await
+                    .map_err(|e| AppError::BadRequest(format!("Failed to read file bytes: {e}")))?
+                    .to_vec(),
+            );
+        }
+    }
+
+    // Validate we got a file
+    let file_name =
+        file_name.ok_or_else(|| AppError::BadRequest("No file provided".to_string()))?;
+    let file_data =
+        file_data.ok_or_else(|| AppError::BadRequest("No file data provided".to_string()))?;
+
+    // Validate the image file
+    crate::uploads::validate_image_file(&file_name, content_type.as_deref(), file_data.len())
+        .map_err(|e| AppError::BadRequest(format!("Invalid image file: {e}")))?;
+
+    // Generate unique filename with UUID prefix to prevent collisions
+    let unique_filename = format!("{}_{}", uuid::Uuid::new_v4(), file_name);
+
+    // Save file to upload directory
+    let file_path = upload_dir.join(&unique_filename);
+    tokio::fs::write(&file_path, &file_data)
+        .await
+        .map_err(|e| AppError::BadRequest(format!("Failed to save file: {e}")))?;
+
+    tracing::info!(
+        session_id = %session.id,
+        file_name = %file_name,
+        file_size = file_data.len(),
+        path = %file_path.display(),
+        "Image uploaded successfully"
+    );
+
+    Ok(Json(crate::api::protocol::UploadResponse {
+        path: file_path.to_string_lossy().to_string(),
+        size: file_data.len() as u32,
+    }))
 }
 
 /// Get session history from Claude Code's JSONL file
@@ -590,4 +747,34 @@ impl IntoResponse for AppError {
 
         (status, body).into_response()
     }
+}
+
+/// Receive hook messages from containers via HTTP
+///
+/// This endpoint is used by Docker containers to send Claude status updates
+/// since Unix sockets don't work across the macOS VM boundary.
+async fn receive_hook(
+    State(state): State<AppState>,
+    Json(msg): Json<HookMessage>,
+) -> Result<Json<serde_json::Value>, AppError> {
+    tracing::debug!(
+        session_id = %msg.session_id,
+        event = ?msg.event,
+        "Received hook message via HTTP"
+    );
+
+    let new_status = match msg.event {
+        HookEvent::UserPromptSubmit => ClaudeWorkingStatus::Working,
+        HookEvent::PreToolUse { .. } => ClaudeWorkingStatus::Working,
+        HookEvent::PermissionRequest => ClaudeWorkingStatus::WaitingApproval,
+        HookEvent::Stop => ClaudeWorkingStatus::WaitingInput,
+        HookEvent::IdlePrompt => ClaudeWorkingStatus::Idle,
+    };
+
+    state
+        .session_manager
+        .update_claude_status(msg.session_id, new_status)
+        .await?;
+
+    Ok(Json(json!({ "status": "ok" })))
 }

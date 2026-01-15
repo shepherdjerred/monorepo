@@ -35,8 +35,30 @@ export function RepositoryPathSelector({ value, onChange, required }: Repository
     void fetchRecentRepos();
   }, [client]);
 
-  const handleSelectRecentRepo = (path: string) => {
-    onChange(path);
+  // Extract repository name from full path
+  const extractRepoName = (fullPath: string): string => {
+    const parts = fullPath.split('/');
+    return parts[parts.length - 1] || fullPath;
+  };
+
+  // Format display with subdirectory
+  const formatRepoDisplay = (repo: RecentRepoDto): string => {
+    const repoName = extractRepoName(repo.repo_path);
+
+    if (!repo.subdirectory || repo.subdirectory === '') {
+      return repoName;
+    }
+
+    return `${repoName} › ${repo.subdirectory}`;
+  };
+
+  const handleSelectRecentRepo = (repo: RecentRepoDto) => {
+    // Combine repo_path and subdirectory to get full path
+    const fullPath = repo.subdirectory && repo.subdirectory !== ''
+      ? `${repo.repo_path}/${repo.subdirectory}`
+      : repo.repo_path;
+
+    onChange(fullPath);
     setShowDropdown(false);
   };
 
@@ -82,7 +104,7 @@ export function RepositoryPathSelector({ value, onChange, required }: Repository
         <button
           type="button"
           onClick={() => { setShowDropdown(!showDropdown); }}
-          className="px-4 border-2 border-input bg-background hover:bg-primary/10 transition-all font-mono flex items-center gap-2"
+          className="cursor-pointer px-4 border-2 border-input bg-background hover:bg-primary/10 hover:scale-105 transition-all duration-200 font-mono flex items-center gap-2"
           title="Show recent repositories and browse"
         >
           <FolderOpen className="w-4 h-4" />
@@ -103,25 +125,32 @@ export function RepositoryPathSelector({ value, onChange, required }: Repository
           {recentRepos.length > 0 && (
             <div className="border-b-2 border-primary/20">
               <div className="px-3 py-2 text-xs font-bold uppercase tracking-wide text-muted-foreground bg-primary/5">
-                Recent:
+                Recent Repositories ({recentRepos.length}/20)
               </div>
               <div className="max-h-64 overflow-y-auto">
-                {recentRepos.map((repo) => (
-                  <button
-                    key={repo.repo_path}
-                    type="button"
-                    onClick={() => { handleSelectRecentRepo(repo.repo_path); }}
-                    className="w-full text-left px-3 py-2 hover:bg-primary/10 border-b border-primary/10 font-mono text-sm flex items-center gap-2 transition-all"
-                  >
-                    <Clock className="w-4 h-4 flex-shrink-0 text-cyan-600" />
-                    <div className="flex-1 min-w-0">
-                      <div className="truncate">{repo.repo_path}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {formatRelativeTime(repo.last_used)}
+                {recentRepos.map((repo) => {
+                  // Compute composite key using both repo_path and subdirectory
+                  const key = `${repo.repo_path}::${repo.subdirectory}`;
+
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => { handleSelectRecentRepo(repo); }}
+                      className="cursor-pointer w-full text-left px-3 py-2 hover:bg-primary/10 hover:pl-4 border-b border-primary/10 font-mono text-sm flex items-center gap-2 transition-all duration-200"
+                    >
+                      <Clock className="w-4 h-4 flex-shrink-0 text-cyan-600" />
+                      <div className="flex-1 min-w-0">
+                        <div className="truncate font-semibold">
+                          {formatRepoDisplay(repo)}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {formatRelativeTime(repo.last_used)}
+                        </div>
                       </div>
-                    </div>
-                  </button>
-                ))}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -144,7 +173,7 @@ export function RepositoryPathSelector({ value, onChange, required }: Repository
           <button
             type="button"
             onClick={handleOpenBrowser}
-            className="w-full text-left px-3 py-3 hover:bg-primary/10 font-mono text-sm flex items-center gap-2 transition-all border-t-2 border-primary/20"
+            className="cursor-pointer w-full text-left px-3 py-3 hover:bg-primary/10 hover:pl-4 font-mono text-sm flex items-center gap-2 transition-all duration-200 border-t-2 border-primary/20"
           >
             <FolderOpen className="w-4 h-4 flex-shrink-0" />
             <span>Browse daemon filesystem...</span>

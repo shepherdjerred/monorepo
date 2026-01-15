@@ -5,15 +5,17 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { X } from "lucide-react";
 import { RepositoryPathSelector } from "./RepositoryPathSelector";
+import { toast } from "sonner";
 
 type CreateSessionDialogProps = {
   onClose: () => void;
 }
 
 export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
-  const { createSession } = useSessionContext();
+  const { createSession, client } = useSessionContext();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
   const [formData, setFormData] = useState({
     repo_path: "",
@@ -22,14 +24,14 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
     agent: "ClaudeCode" as AgentType,
     access_mode: "ReadWrite" as AccessMode,
     plan_mode: true,
-    dangerous_skip_checks: true, // Docker default
+    dangerous_skip_checks: true, // Docker/Kubernetes default
   });
 
-  // Auto-check dangerous_skip_checks for Docker, uncheck for Zellij
+  // Auto-check dangerous_skip_checks for Docker and Kubernetes, uncheck for Zellij
   useEffect(() => {
     setFormData(prev => ({
       ...prev,
-      dangerous_skip_checks: prev.backend === "Docker"
+      dangerous_skip_checks: prev.backend === "Docker" || prev.backend === "Kubernetes"
     }));
   }, [formData.backend]);
 
@@ -51,10 +53,27 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
         images: [],
       };
 
-      await createSession(request);
+      const result = await createSession(request);
+
+      // Upload images if any were selected
+      if (selectedFiles.length > 0 && result) {
+        toast.info(`Uploading ${selectedFiles.length} image(s)...`);
+        for (const file of selectedFiles) {
+          try {
+            await client.uploadImage(result, file);
+          } catch (uploadErr) {
+            console.error('Failed to upload image:', uploadErr);
+            toast.warning(`Failed to upload ${file.name}`);
+          }
+        }
+      }
+
+      toast.success("Session created successfully");
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      setError(errorMsg);
+      toast.error(`Failed to create session: ${errorMsg}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -78,7 +97,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
             </h2>
             <button
               onClick={onClose}
-              className="p-2 border-2 border-white bg-white/10 hover:bg-red-600 hover:text-white transition-all font-bold text-white"
+              className="cursor-pointer p-2 border-2 border-white bg-white/10 hover:bg-red-600 hover:text-white transition-all duration-200 font-bold text-white"
               title="Close dialog"
               aria-label="Close dialog"
             >
@@ -112,7 +131,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                 { setFormData({ ...formData, initial_prompt: e.target.value }); }
               }
               className="flex w-full rounded-md border-2 border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm min-h-[100px]"
-              placeholder="What should Claude Code do?"
+              placeholder={formData.agent === "Codex" ? "What should Codex do?" : "What should Claude Code do?"}
               required
             />
           </div>
@@ -126,10 +145,26 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                 onChange={(e) =>
                   { setFormData({ ...formData, backend: e.target.value as BackendType }); }
                 }
-                className="flex h-10 w-full rounded-md border-2 border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className="cursor-pointer flex h-10 w-full rounded-md border-2 border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <option value="Docker">Docker</option>
                 <option value="Zellij">Zellij</option>
+                <option value="Kubernetes">Kubernetes</option>
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="agent" className="font-semibold">Agent</Label>
+              <select
+                id="agent"
+                value={formData.agent}
+                onChange={(e) =>
+                  { setFormData({ ...formData, agent: e.target.value as AgentType }); }
+                }
+                className="cursor-pointer flex h-10 w-full rounded-md border-2 border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <option value="ClaudeCode">Claude Code</option>
+                <option value="Codex">Codex</option>
               </select>
             </div>
 
@@ -144,12 +179,55 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                     access_mode: e.target.value as AccessMode,
                   }); }
                 }
-                className="flex h-10 w-full rounded-md border-2 border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className="cursor-pointer flex h-10 w-full rounded-md border-2 border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <option value="ReadWrite">Read-Write</option>
                 <option value="ReadOnly">Read-Only</option>
               </select>
             </div>
+          </div>
+
+          {formData.backend === "Kubernetes" && (
+            <div className="mt-2 p-3 border-2 text-sm font-mono" style={{
+              backgroundColor: 'hsl(220, 15%, 90%)',
+              borderColor: 'hsl(220, 85%, 65%)',
+              color: 'hsl(220, 85%, 25%)'
+            }}>
+              <strong>Note:</strong> Requires kubectl access and the <code>clauderon</code> namespace.
+              Configuration: <code>~/.clauderon/k8s-config.toml</code>
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <Label htmlFor="images">Attach Images (optional)</Label>
+            <input
+              type="file"
+              id="images"
+              accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
+              multiple
+              onChange={(e) => {
+                if (e.target.files) {
+                  setSelectedFiles(Array.from(e.target.files));
+                }
+              }}
+              className="block w-full text-sm border-2 rounded file:mr-4 file:py-2 file:px-4 file:border-0 file:font-semibold"
+            />
+            {selectedFiles.length > 0 && (
+              <div className="space-y-1 mt-2">
+                {selectedFiles.map((file, i) => (
+                  <div key={i} className="flex items-center justify-between p-2 border-2 rounded bg-white">
+                    <span className="text-sm truncate font-mono">{file.name}</span>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedFiles(files => files.filter((_, idx) => idx !== i))}
+                      className="text-red-600 font-bold px-2 hover:bg-red-100 rounded"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="flex items-center gap-2">
@@ -160,7 +238,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
               onChange={(e) =>
                 { setFormData({ ...formData, plan_mode: e.target.checked }); }
               }
-              className="w-4 h-4 rounded border-2 border-input"
+              className="cursor-pointer w-4 h-4 rounded border-2 border-input"
             />
             <Label htmlFor="plan-mode" className="cursor-pointer">
               Start in plan mode (read-only)
@@ -175,9 +253,9 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
               onChange={(e) =>
                 { setFormData({ ...formData, dangerous_skip_checks: e.target.checked }); }
               }
-              className="w-4 h-4"
+              className="cursor-pointer w-4 h-4"
             />
-            <label htmlFor="dangerous-skip-checks" className="text-sm text-destructive font-medium">
+            <label htmlFor="dangerous-skip-checks" className="cursor-pointer text-sm text-destructive font-medium">
               Dangerously skip safety checks (bypass permissions)
             </label>
           </div>

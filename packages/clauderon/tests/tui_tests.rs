@@ -10,7 +10,7 @@ use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use ratatui::{Terminal, backend::TestBackend};
 
 use clauderon::api::MockApiClient;
-use clauderon::core::SessionStatus;
+use clauderon::core::{BackendType, SessionStatus};
 use clauderon::tui::app::{App, AppMode, CreateDialogFocus};
 use clauderon::tui::events::handle_key_event;
 use clauderon::tui::ui;
@@ -160,6 +160,7 @@ fn test_create_dialog_focus_cycle() {
     let focuses = [
         CreateDialogFocus::RepoPath,
         CreateDialogFocus::Backend,
+        CreateDialogFocus::Agent,
         CreateDialogFocus::AccessMode,
         CreateDialogFocus::SkipChecks,
         CreateDialogFocus::PlanMode,
@@ -171,7 +172,8 @@ fn test_create_dialog_focus_cycle() {
         app.create_dialog.focus = match app.create_dialog.focus {
             CreateDialogFocus::Prompt => CreateDialogFocus::RepoPath,
             CreateDialogFocus::RepoPath => CreateDialogFocus::Backend,
-            CreateDialogFocus::Backend => CreateDialogFocus::AccessMode,
+            CreateDialogFocus::Backend => CreateDialogFocus::Agent,
+            CreateDialogFocus::Agent => CreateDialogFocus::AccessMode,
             CreateDialogFocus::AccessMode => CreateDialogFocus::SkipChecks,
             CreateDialogFocus::SkipChecks => CreateDialogFocus::PlanMode,
             CreateDialogFocus::PlanMode => CreateDialogFocus::Buttons,
@@ -287,6 +289,9 @@ async fn test_create_dialog_tab_navigation() {
     assert_eq!(app.create_dialog.focus, CreateDialogFocus::Backend);
 
     handle_key_event(&mut app, key(KeyCode::Tab)).await.unwrap();
+    assert_eq!(app.create_dialog.focus, CreateDialogFocus::Agent);
+
+    handle_key_event(&mut app, key(KeyCode::Tab)).await.unwrap();
     assert_eq!(app.create_dialog.focus, CreateDialogFocus::AccessMode);
 }
 
@@ -351,17 +356,31 @@ async fn test_create_dialog_toggle_backend() {
     app.open_create_dialog();
     app.create_dialog.focus = CreateDialogFocus::Backend;
 
-    assert!(app.create_dialog.backend_zellij); // Default is Zellij
+    assert_eq!(app.create_dialog.backend, BackendType::Zellij); // Default is Zellij
 
+    // Toggle to Docker (Left and Right both toggle forward)
     handle_key_event(&mut app, key(KeyCode::Left))
         .await
         .unwrap();
-    assert!(!app.create_dialog.backend_zellij);
+    assert_eq!(app.create_dialog.backend, BackendType::Docker);
 
+    // Toggle to Kubernetes
+    handle_key_event(&mut app, key(KeyCode::Left))
+        .await
+        .unwrap();
+    assert_eq!(app.create_dialog.backend, BackendType::Kubernetes);
+
+    // Toggle back to Zellij
+    handle_key_event(&mut app, key(KeyCode::Left))
+        .await
+        .unwrap();
+    assert_eq!(app.create_dialog.backend, BackendType::Zellij);
+
+    // Verify Right key also toggles (same direction as Left)
     handle_key_event(&mut app, key(KeyCode::Right))
         .await
         .unwrap();
-    assert!(app.create_dialog.backend_zellij);
+    assert_eq!(app.create_dialog.backend, BackendType::Docker);
 }
 
 #[tokio::test]

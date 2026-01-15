@@ -5,7 +5,12 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-const datasourceUrl = process.env["OPS_DATABASE_URL"] ?? process.env["DATABASE_URL"];
+const databasePath = process.env["DATABASE_PATH"];
+const datasourceUrl = databasePath
+  ? databasePath.startsWith("file:")
+    ? databasePath
+    : `file:${databasePath}`
+  : undefined;
 
 export const prisma =
   globalForPrisma.prisma ??

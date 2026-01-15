@@ -7,6 +7,7 @@ import { SessionList } from "./components/SessionList";
 import { CreateSessionDialog } from "./components/CreateSessionDialog";
 import { Console } from "./components/Console";
 import { ChatInterface } from "./components/ChatInterface";
+import { Toaster } from "sonner";
 
 type View = "list" | "console" | "chat";
 
@@ -43,6 +44,7 @@ function AppContent() {
 
   return (
     <SessionProvider>
+      <Toaster position="top-right" richColors />
       <div className="h-screen w-screen overflow-hidden bg-background text-foreground">
         <SessionList onAttach={handleAttach} onCreateNew={handleCreateNew} />
 

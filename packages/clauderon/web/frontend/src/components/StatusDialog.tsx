@@ -10,9 +10,11 @@ import {
   EyeOff,
   Lock,
   Loader2,
+  TrendingUp,
 } from "lucide-react";
 import type { SystemStatus, CredentialStatus, ProxyStatus } from "@clauderon/client";
 import { useSessionContext } from "../contexts/SessionContext";
+import { UsageProgressBar } from "./UsageProgressBar";
 
 type StatusDialogProps = {
   onClose: () => void;
@@ -115,7 +117,7 @@ export function StatusDialog({ onClose }: StatusDialogProps) {
             <h2 className="text-2xl font-bold font-mono uppercase tracking-wider text-white">System Status</h2>
             <button
               onClick={onClose}
-              className="p-2 border-2 border-white bg-white/10 hover:bg-red-600 hover:text-white transition-all font-bold text-white"
+              className="cursor-pointer p-2 border-2 border-white bg-white/10 hover:bg-red-600 hover:text-white transition-all duration-200 font-bold text-white"
               title="Close"
             >
               <X className="w-5 h-5" />
@@ -204,7 +206,7 @@ export function StatusDialog({ onClose }: StatusDialogProps) {
                                     <button
                                       type="button"
                                       onClick={() => { toggleShowCredential(cred.service_id); }}
-                                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-secondary rounded"
+                                      className="cursor-pointer absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-secondary rounded transition-colors duration-200"
                                       disabled={savingCredential === cred.service_id}
                                     >
                                       {showCredentials.get(cred.service_id) ? (
@@ -217,7 +219,7 @@ export function StatusDialog({ onClose }: StatusDialogProps) {
                                   <button
                                     onClick={() => { void handleSaveCredential(cred.service_id); }}
                                     disabled={savingCredential === cred.service_id}
-                                    className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                    className="cursor-pointer px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                   >
                                     {savingCredential === cred.service_id ? (
                                       <>
@@ -318,6 +320,57 @@ export function StatusDialog({ onClose }: StatusDialogProps) {
                 )}
               </div>
 
+              {/* Claude Code Usage Section */}
+              {status.claude_usage && (
+                <div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <TrendingUp className="w-5 h-5 text-primary" />
+                    <h3 className="text-xl font-semibold">Claude Code Usage</h3>
+                  </div>
+
+                  {/* Organization info */}
+                  <div className="mb-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-md">
+                    <div className="text-sm">
+                      <span className="font-semibold">Organization:</span>{" "}
+                      {status.claude_usage.organization_name || status.claude_usage.organization_id}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      Last updated: {new Date(status.claude_usage.fetched_at).toLocaleString()}
+                    </div>
+                  </div>
+
+                  {/* Usage windows */}
+                  <div className="space-y-4">
+                    <UsageProgressBar
+                      window={status.claude_usage.five_hour}
+                      title="5-Hour Window"
+                      subtitle="Session-based usage limit"
+                    />
+
+                    <UsageProgressBar
+                      window={status.claude_usage.seven_day}
+                      title="7-Day Window"
+                      subtitle="Weekly usage limit"
+                    />
+
+                    {status.claude_usage.seven_day_sonnet && (
+                      <UsageProgressBar
+                        window={status.claude_usage.seven_day_sonnet}
+                        title="7-Day Sonnet Window"
+                        subtitle="Sonnet-specific weekly limit"
+                      />
+                    )}
+                  </div>
+
+                  {/* Info about usage limits */}
+                  <div className="mt-4 p-3 bg-secondary/30 border border-secondary rounded-md text-sm text-muted-foreground">
+                    <p>
+                      Usage limits apply to Claude Code sessions. The 5-hour window resets based on when you first interact, while the 7-day window is a rolling weekly limit.
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {/* Info Footer */}
               <div className="pt-4 border-t text-sm text-muted-foreground space-y-2">
                 <p>
@@ -335,7 +388,7 @@ export function StatusDialog({ onClose }: StatusDialogProps) {
         <div className="flex justify-end gap-3 p-6 border-t-4 border-primary" style={{ backgroundColor: 'hsl(220, 15%, 90%)' }}>
           <button
             onClick={onClose}
-            className="px-4 py-2 border-2 font-bold transition-colors"
+            className="cursor-pointer px-4 py-2 border-2 font-bold transition-colors duration-200 hover:opacity-90"
             style={{ backgroundColor: 'hsl(220, 85%, 25%)', color: 'white', borderColor: 'hsl(220, 85%, 25%)' }}
           >
             Close

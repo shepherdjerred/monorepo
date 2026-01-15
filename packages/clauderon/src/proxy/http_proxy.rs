@@ -121,6 +121,7 @@ impl HttpAuthProxy {
     }
 
     /// Get the listen address.
+    #[must_use] 
     pub fn addr(&self) -> SocketAddr {
         self.addr
     }
@@ -243,7 +244,7 @@ impl HttpHandler for AuthInjector {
                             tracing::debug!("Injected authorization header for {}", host);
                         }
                     } else {
-                        let header_value = rule.format_header(token);
+                        let header_value = rule.format_header(&token);
                         if let Ok(value) = header_value.parse() {
                             req.headers_mut().insert(rule.header_name, value);
                             auth_injected = true;
@@ -293,7 +294,7 @@ impl HttpHandler for AuthInjector {
             let pending = request_tracker.remove(&client_addr);
 
             if let Some((_, pending)) = pending {
-                let duration_ms = pending.start_time.elapsed().as_millis() as u64;
+                let duration_ms = u64::try_from(pending.start_time.elapsed().as_millis()).unwrap_or(u64::MAX);
 
                 tracing::debug!(
                     request_id = %pending.request_id,
@@ -356,7 +357,7 @@ impl HttpHandler for AuthInjector {
             let pending = request_tracker.remove(&client_addr);
 
             if let Some((_, pending)) = pending {
-                let duration_ms = pending.start_time.elapsed().as_millis() as u64;
+                let duration_ms = u64::try_from(pending.start_time.elapsed().as_millis()).unwrap_or(u64::MAX);
 
                 // Log full error details for debugging (not sent to client)
                 tracing::error!(
@@ -494,7 +495,7 @@ impl HttpHandler for FilteringHandler {
                             tracing::debug!(session_id = %session_id, "Injected authorization header for {}", host);
                         }
                     } else {
-                        let header_value = rule.format_header(token);
+                        let header_value = rule.format_header(&token);
                         if let Ok(value) = header_value.parse() {
                             req.headers_mut().insert(rule.header_name, value);
                             auth_injected = true;
@@ -545,7 +546,7 @@ impl HttpHandler for FilteringHandler {
             let pending = request_tracker.remove(&client_addr);
 
             if let Some((_, pending)) = pending {
-                let duration_ms = pending.start_time.elapsed().as_millis() as u64;
+                let duration_ms = u64::try_from(pending.start_time.elapsed().as_millis()).unwrap_or(u64::MAX);
 
                 tracing::debug!(
                     request_id = %pending.request_id,
@@ -612,7 +613,7 @@ impl HttpHandler for FilteringHandler {
             let pending = request_tracker.remove(&client_addr);
 
             if let Some((_, pending)) = pending {
-                let duration_ms = pending.start_time.elapsed().as_millis() as u64;
+                let duration_ms = u64::try_from(pending.start_time.elapsed().as_millis()).unwrap_or(u64::MAX);
 
                 // Log full error details for debugging (not sent to client)
                 tracing::error!(

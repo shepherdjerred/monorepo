@@ -19,6 +19,7 @@ impl PortAllocator {
     const MAX_SESSIONS: u16 = 500;
 
     /// Create a new port allocator
+    #[must_use] 
     pub fn new() -> Self {
         Self {
             state: RwLock::new(AllocatorState {
@@ -35,8 +36,8 @@ impl PortAllocator {
         for _ in 0..Self::MAX_SESSIONS {
             let port = Self::BASE_PORT + (state.next_port % Self::MAX_SESSIONS);
 
-            if !state.allocated.contains_key(&port) {
-                state.allocated.insert(port, session_id);
+            if let std::collections::hash_map::Entry::Vacant(e) = state.allocated.entry(port) {
+                e.insert(session_id);
                 state.next_port = state.next_port.wrapping_add(1);
                 tracing::info!(port, session_id = %session_id, "Allocated proxy port");
                 return Ok(port);
@@ -72,7 +73,7 @@ impl PortAllocator {
 
         for (port, session_id) in allocations {
             // Validate port is in our range
-            if port < Self::BASE_PORT || port >= Self::BASE_PORT + Self::MAX_SESSIONS {
+            if !(Self::BASE_PORT..Self::BASE_PORT + Self::MAX_SESSIONS).contains(&port) {
                 tracing::warn!(
                     port,
                     session_id = %session_id,

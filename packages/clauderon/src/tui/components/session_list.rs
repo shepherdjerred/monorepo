@@ -5,15 +5,230 @@ use ratatui::{
     text::{Line, Span},
     widgets::{Block, Borders, List, ListItem, ListState, Paragraph},
 };
+use unicode_width::UnicodeWidthStr;
 
-use crate::core::{CheckStatus, ClaudeWorkingStatus, SessionStatus};
+use crate::core::{CheckStatus, ClaudeWorkingStatus, Session, SessionStatus};
 use crate::tui::app::App;
+
+/// Number of spaces between columns
+const COLUMN_PADDING: usize = 2;
+
+/// Column width configuration with min/max constraints
+#[derive(Copy, Clone)]
+struct ColumnWidths {
+    name: usize,
+    repository: usize,
+    status: usize,
+    backend: usize,
+    branch_pr: usize,
+    prefix_width: usize,
+    claude_indicator: usize,
+    ci_indicator: usize,
+    conflict_indicator: usize,
+}
+
+impl ColumnWidths {
+    /// Column constraints (min, max)
+    const NAME_RANGE: (usize, usize) = (15, 40);
+    const REPO_RANGE: (usize, usize) = (12, 30);
+    const STATUS_RANGE: (usize, usize) = (8, 15);
+    const BACKEND_RANGE: (usize, usize) = (10, 15);
+    const BRANCH_PR_RANGE: (usize, usize) = (10, 25);
+
+    /// Fixed widths
+    const PREFIX_WIDTH: usize = 4;
+    const CLAUDE_WIDTH: usize = 2;
+    const CI_WIDTH: usize = 2;
+    const CONFLICT_WIDTH: usize = 2;
+
+    /// Calculate optimal column widths from session data
+    fn calculate(sessions: &[Session], available_width: u16) -> Self {
+        let mut max_name = Self::NAME_RANGE.0;
+        let mut max_repo = Self::REPO_RANGE.0;
+        let mut max_status = Self::STATUS_RANGE.0;
+        let mut max_backend = Self::BACKEND_RANGE.0;
+        let mut max_branch = Self::BRANCH_PR_RANGE.0;
+
+        // Scan all sessions to find max widths
+        for session in sessions {
+            // Name (account for reconcile error prefix "⚠ ")
+            let has_reconcile_error =
+                session.reconcile_attempts > 0 && session.last_reconcile_error.is_some();
+            let name_width = if has_reconcile_error {
+                "⚠ ".width() + session.name.width()
+            } else {
+                session.name.width()
+            };
+            max_name = max_name.max(name_width).min(Self::NAME_RANGE.1);
+
+            // Repository (extract filename)
+            let repo_name = session
+                .repo_path
+                .file_name()
+                .and_then(|n| n.to_str())
+                .unwrap_or("unknown");
+            max_repo = max_repo.max(repo_name.width()).min(Self::REPO_RANGE.1);
+
+            // Status text
+            let status_text = match session.status {
+                SessionStatus::Creating => "Creating",
+                SessionStatus::Deleting => "Deleting",
+                SessionStatus::Running => "Running",
+                SessionStatus::Idle => "Idle",
+                SessionStatus::Completed => "Completed",
+                SessionStatus::Failed => "Failed",
+                SessionStatus::Archived => "Archived",
+            };
+            max_status = max_status
+                .max(status_text.width())
+                .min(Self::STATUS_RANGE.1);
+
+            // Backend (using Debug format)
+            let backend_text = format!("{:?}", session.backend);
+            max_backend = max_backend
+                .max(backend_text.width())
+                .min(Self::BACKEND_RANGE.1);
+
+            // Branch/PR
+            let pr_text = session
+                .pr_url
+                .as_ref()
+                .map_or_else(|| session.branch_name.clone(), |_| "PR".to_string());
+            max_branch = max_branch.max(pr_text.width()).min(Self::BRANCH_PR_RANGE.1);
+        }
+
+        let mut widths = Self {
+            name: max_name,
+            repository: max_repo,
+            status: max_status,
+            backend: max_backend,
+            branch_pr: max_branch,
+            prefix_width: Self::PREFIX_WIDTH,
+            claude_indicator: Self::CLAUDE_WIDTH,
+            ci_indicator: Self::CI_WIDTH,
+            conflict_indicator: Self::CONFLICT_WIDTH,
+        };
+
+        // Check if total fits, shrink if needed
+        if widths.total_width() > available_width as usize {
+            widths.fit_to_width(available_width);
+        }
+
+        widths
+    }
+
+    /// Get total required width
+    fn total_width(&self) -> usize {
+        // 4 gaps between the 5 main columns (name, repo, status, backend, branch)
+        let padding_width = 4 * COLUMN_PADDING;
+
+        self.prefix_width
+            + self.name
+            + self.repository
+            + self.status
+            + self.backend
+            + self.branch_pr
+            + self.claude_indicator
+            + self.ci_indicator
+            + self.conflict_indicator
+            + padding_width
+    }
+
+    /// Shrink proportionally if total exceeds available width
+    fn fit_to_width(&mut self, available_width: u16) {
+        let padding_width = 4 * COLUMN_PADDING;
+        let fixed_width = self.prefix_width
+            + self.claude_indicator
+            + self.ci_indicator
+            + self.conflict_indicator
+            + padding_width;
+        let available_for_columns = (available_width as usize).saturating_sub(fixed_width);
+
+        let total_current =
+            self.name + self.repository + self.status + self.backend + self.branch_pr;
+
+        if total_current <= available_for_columns {
+            return; // Already fits
+        }
+
+        // Calculate shrink ratio
+        let shrink_ratio = available_for_columns as f64 / total_current as f64;
+
+        // Apply proportional shrinking, respecting minimums
+        self.name = ((self.name as f64 * shrink_ratio) as usize).max(Self::NAME_RANGE.0);
+        self.repository =
+            ((self.repository as f64 * shrink_ratio) as usize).max(Self::REPO_RANGE.0);
+        self.status = ((self.status as f64 * shrink_ratio) as usize).max(Self::STATUS_RANGE.0);
+        self.backend = ((self.backend as f64 * shrink_ratio) as usize).max(Self::BACKEND_RANGE.0);
+        self.branch_pr =
+            ((self.branch_pr as f64 * shrink_ratio) as usize).max(Self::BRANCH_PR_RANGE.0);
+
+        // If still doesn't fit after respecting minimums, force to minimums
+        let new_total = self.name + self.repository + self.status + self.backend + self.branch_pr;
+        if new_total > available_for_columns {
+            self.name = Self::NAME_RANGE.0;
+            self.repository = Self::REPO_RANGE.0;
+            self.status = Self::STATUS_RANGE.0;
+            self.backend = Self::BACKEND_RANGE.0;
+            self.branch_pr = Self::BRANCH_PR_RANGE.0;
+        }
+    }
+}
+
+/// Truncate string to max width with ellipsis, Unicode-aware
+fn truncate_with_ellipsis(text: &str, max_width: usize) -> String {
+    use unicode_width::UnicodeWidthChar;
+
+    // Handle edge case: zero width requested
+    if max_width == 0 {
+        return String::new();
+    }
+
+    let text_width = text.width();
+
+    if text_width <= max_width {
+        return text.to_string();
+    }
+
+    // Need to truncate
+    const ELLIPSIS: &str = "…";
+    const ELLIPSIS_WIDTH: usize = 1;
+
+    if max_width <= ELLIPSIS_WIDTH {
+        return ELLIPSIS.to_string();
+    }
+
+    let target_width = max_width - ELLIPSIS_WIDTH;
+    let mut current_width = 0;
+    let mut char_boundary = 0;
+
+    for (idx, ch) in text.char_indices() {
+        let char_width = ch.width().unwrap_or(0);
+        if current_width + char_width > target_width {
+            break;
+        }
+        current_width += char_width;
+        char_boundary = idx + ch.len_utf8();
+    }
+
+    format!("{}{}", &text[..char_boundary], ELLIPSIS)
+}
+
+/// Pad string to width, Unicode-aware
+fn pad_to_width(text: &str, width: usize) -> String {
+    let text_width = text.width();
+    if text_width >= width {
+        text.to_string()
+    } else {
+        format!("{}{}", text, " ".repeat(width - text_width))
+    }
+}
 
 /// Render the session list
 pub fn render(frame: &mut Frame, app: &App, area: Rect) {
     let block = Block::default()
         .title(" Clauderon - Sessions ")
-        .title_bottom(" [n]ew  [d]elete  [a]rchive  [p]r  [f]ix-ci  [?]help  [q]uit ")
+        .title_bottom(" [n]ew  [d]elete  [a]rchive  [f]refresh  [?]help  [q]uit ")
         .borders(Borders::ALL)
         .border_style(Style::default().fg(Color::Cyan));
 
@@ -37,33 +252,41 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
     let header_area = chunks[0];
     let list_area = chunks[1];
 
+    // Calculate optimal column widths based on actual data
+    let widths = ColumnWidths::calculate(&app.sessions, inner_area.width);
+
     // Render header row
-    // Account for highlight symbol "▶ " (2 chars) + deletion spinner space (2 chars)
     let header = Line::from(vec![
-        Span::styled("    ", Style::default()), // highlight symbol + spinner space
+        Span::styled(" ".repeat(widths.prefix_width), Style::default()),
         Span::styled(
-            format!("{:22}", "Name"),
+            pad_to_width("Name", widths.name),
             Style::default().fg(Color::DarkGray),
         ),
+        Span::raw("  "), // Column padding
         Span::styled(
-            format!("{:20}", "Repository"),
+            pad_to_width("Repository", widths.repository),
             Style::default().fg(Color::DarkGray),
         ),
+        Span::raw("  "), // Column padding
         Span::styled(
-            format!("{:12}", "Status"),
+            pad_to_width("Status", widths.status),
             Style::default().fg(Color::DarkGray),
         ),
+        Span::raw("  "), // Column padding
         Span::styled(
-            format!("{:8}", "Backend"),
+            pad_to_width("Backend", widths.backend),
             Style::default().fg(Color::DarkGray),
         ),
+        Span::raw("  "), // Column padding
         Span::styled(
-            format!("{:12}", "Branch/PR"),
+            pad_to_width("Branch/PR", widths.branch_pr),
             Style::default().fg(Color::DarkGray),
         ),
-        Span::styled("◎ ", Style::default().fg(Color::DarkGray)), // Claude status header
-        Span::styled("CI ", Style::default().fg(Color::DarkGray)), // Check status header
-        Span::styled("⚠", Style::default().fg(Color::DarkGray)),  // Merge conflict header
+        Span::styled("◎", Style::default().fg(Color::DarkGray)),
+        Span::raw(" "),
+        Span::styled("CI", Style::default().fg(Color::DarkGray)),
+        Span::raw(" "),
+        Span::styled("⚠", Style::default().fg(Color::DarkGray)),
     ]);
     frame.render_widget(Paragraph::new(header), header_area);
 
@@ -175,9 +398,9 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
 
             // Format session name with optional warning indicator
             let name_display = if has_reconcile_error {
-                format!("⚠ {:20}", session.name)
+                format!("⚠ {}", session.name)
             } else {
-                format!("{:22}", session.name)
+                session.name.clone()
             };
 
             let name_style = if has_reconcile_error {
@@ -188,12 +411,32 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
                 Style::default().add_modifier(Modifier::BOLD)
             };
 
+            // Truncate and pad each field
+            let name_truncated = truncate_with_ellipsis(&name_display, widths.name);
+            let name_padded = pad_to_width(&name_truncated, widths.name);
+
+            let repo_truncated = truncate_with_ellipsis(repo_name, widths.repository);
+            let repo_padded = pad_to_width(&repo_truncated, widths.repository);
+
+            let status_truncated = truncate_with_ellipsis(status_text, widths.status);
+            let status_padded = pad_to_width(&status_truncated, widths.status);
+
+            let backend_truncated = truncate_with_ellipsis(&backend_text, widths.backend);
+            let backend_padded = pad_to_width(&backend_truncated, widths.backend);
+
+            let pr_truncated = truncate_with_ellipsis(&pr_text, widths.branch_pr);
+            let pr_padded = pad_to_width(&pr_truncated, widths.branch_pr);
+
             spans.extend(vec![
-                Span::styled(name_display, name_style),
-                Span::raw(format!("{repo_name:20}")),
-                Span::styled(format!("{status_text:12}"), status_style),
-                Span::raw(format!("{backend_text:8}")),
-                Span::raw(format!("{pr_text:12}")),
+                Span::styled(name_padded, name_style),
+                Span::raw("  "), // Column padding
+                Span::raw(repo_padded),
+                Span::raw("  "), // Column padding
+                Span::styled(status_padded, status_style),
+                Span::raw("  "), // Column padding
+                Span::raw(backend_padded),
+                Span::raw("  "), // Column padding
+                Span::raw(pr_padded),
                 claude_indicator,
                 Span::raw(" "),
                 check_indicator,

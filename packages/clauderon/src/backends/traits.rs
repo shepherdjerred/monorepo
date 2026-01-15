@@ -1,6 +1,8 @@
 use async_trait::async_trait;
 use std::path::{Path, PathBuf};
 
+use crate::core::AgentType;
+
 /// Trait for git worktree operations
 #[async_trait]
 pub trait GitOperations: Send + Sync {
@@ -34,6 +36,9 @@ pub trait GitOperations: Send + Sync {
 /// Options for creating an execution backend session.
 #[derive(Debug, Clone, Default)]
 pub struct CreateOptions {
+    /// Agent to run (Claude Code or Codex).
+    pub agent: AgentType,
+
     /// Run in print mode (non-interactive, outputs response and exits).
     /// Only applicable to Docker backend.
     pub print_mode: bool,
@@ -59,6 +64,10 @@ pub struct CreateOptions {
     /// Initial working directory relative to worktree root
     /// Empty PathBuf means start at worktree root
     pub initial_workdir: PathBuf,
+
+    /// HTTP server port for hook communication.
+    /// Required for Docker containers to send status updates via HTTP.
+    pub http_port: Option<u16>,
 }
 
 /// Trait for execution backends (Zellij, Docker, etc.)

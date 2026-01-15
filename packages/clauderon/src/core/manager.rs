@@ -8,6 +8,7 @@ use uuid::Uuid;
 use crate::backends::{
     DockerBackend, ExecutionBackend, GitBackend, GitOperations, KubernetesBackend, ZellijBackend,
 };
+use crate::core::console_manager::ConsoleManager;
 use crate::store::Store;
 
 use super::events::{Event, EventType};
@@ -58,6 +59,10 @@ pub struct SessionManager {
     proxy_manager: Option<Arc<crate::proxy::ProxyManager>>,
     /// Optional event broadcaster for real-time WebSocket updates
     event_broadcaster: Option<EventBroadcaster>,
+    /// HTTP server port for hook communication
+    http_port: RwLock<Option<u16>>,
+    /// Console manager for WebSocket-based PTY access
+    console_manager: Arc<ConsoleManager>,
     /// Semaphore to limit concurrent creations (max 3)
     creation_semaphore: Arc<Semaphore>,
     /// Semaphore to limit concurrent deletions (max 3)
@@ -93,6 +98,8 @@ impl SessionManager {
             sessions: RwLock::new(sessions),
             proxy_manager: None,
             event_broadcaster: None,
+            http_port: RwLock::new(None),
+            console_manager: Arc::new(ConsoleManager::new()),
             creation_semaphore: Arc::new(Semaphore::new(3)),
             deletion_semaphore: Arc::new(Semaphore::new(3)),
             max_sessions: 15,
@@ -150,6 +157,20 @@ impl SessionManager {
     /// This should be called after construction to enable per-session proxy support.
     pub fn set_proxy_manager(&mut self, proxy_manager: Arc<crate::proxy::ProxyManager>) {
         self.proxy_manager = Some(proxy_manager);
+    }
+
+    /// Set the HTTP server port for hook communication
+    ///
+    /// This should be called after construction to enable Docker/K8s hook communication.
+    pub fn set_http_port(&self, port: u16) {
+        *self.http_port.blocking_write() = Some(port);
+    }
+
+    /// Get the console manager for WebSocket-based PTY access
+    ///
+    /// The console manager maintains PTY connections for WebSocket clients.
+    pub fn console_manager(&self) -> Arc<ConsoleManager> {
+        Arc::clone(&self.console_manager)
     }
 
     /// Set the event broadcaster for real-time WebSocket updates
@@ -349,6 +370,7 @@ impl SessionManager {
                     subdirectory,
                     initial_prompt,
                     backend,
+                    agent,
                     print_mode,
                     plan_mode,
                     access_mode,
@@ -373,6 +395,7 @@ impl SessionManager {
         subdirectory: PathBuf,
         initial_prompt: String,
         backend: BackendType,
+        agent: super::session::AgentType,
         print_mode: bool,
         plan_mode: bool,
         access_mode: super::session::AccessMode,
@@ -500,6 +523,7 @@ impl SessionManager {
             update_progress(4, "Starting backend resource".to_string()).await;
             // Create backend resource
             let create_options = crate::backends::CreateOptions {
+                agent,
                 print_mode,
                 plan_mode,
                 session_proxy_port: proxy_port,
@@ -507,6 +531,7 @@ impl SessionManager {
                 dangerous_skip_checks,
                 session_id: Some(session_id),
                 initial_workdir: subdirectory.clone(),
+                http_port: *self.http_port.read().await,
             };
             let backend_id = match backend {
                 BackendType::Zellij => {
@@ -574,7 +599,11 @@ impl SessionManager {
 
             // Track this repo in recent repos
             let repo_path_buf = PathBuf::from(&repo_path);
-            if let Err(e) = self.store.add_recent_repo(repo_path_buf).await {
+            if let Err(e) = self
+                .store
+                .add_recent_repo(repo_path_buf, subdirectory.clone())
+                .await
+            {
                 tracing::warn!("Failed to add repo to recent list: {e}");
             }
 
@@ -855,6 +884,7 @@ impl SessionManager {
 
         // Create backend resource
         let create_options = crate::backends::CreateOptions {
+            agent,
             print_mode,
             plan_mode,
             session_proxy_port: proxy_port,
@@ -862,6 +892,7 @@ impl SessionManager {
             dangerous_skip_checks,
             session_id: Some(session.id), // Pass session ID for Kubernetes PVC labeling
             initial_workdir: subdirectory.clone(),
+            http_port: *self.http_port.read().await,
         };
         let backend_id = match backend {
             BackendType::Zellij => {
@@ -920,7 +951,11 @@ impl SessionManager {
         self.sessions.write().await.push(session.clone());
 
         // Track this repo in recent repos
-        if let Err(e) = self.store.add_recent_repo(repo_path_buf.clone()).await {
+        if let Err(e) = self
+            .store
+            .add_recent_repo(repo_path_buf.clone(), subdirectory.clone())
+            .await
+        {
             tracing::warn!("Failed to add repo to recent list: {e}");
         }
 
@@ -1018,7 +1053,7 @@ impl SessionManager {
                 anyhow::bail!("Session is already being deleted");
             }
 
-            (session.id, session.name.clone())
+            (session.id, session.name)
         };
 
         // Update to Deleting status
@@ -1445,7 +1480,7 @@ impl SessionManager {
                                     );
                                     // Attempt auto-recreation
                                     let _ = proxy_manager
-                                        .restore_session_proxies(std::slice::from_ref(&session))
+                                        .restore_session_proxies(std::slice::from_ref(session))
                                         .await;
                                 }
                             }
@@ -1503,6 +1538,7 @@ impl SessionManager {
 
         // Build creation options from session state
         let create_options = crate::backends::CreateOptions {
+            agent: session.agent,
             print_mode: false, // Never use print mode for recreation
             plan_mode: false,  // Don't enter plan mode - session already has context
             session_proxy_port: session.proxy_port,
@@ -1510,6 +1546,7 @@ impl SessionManager {
             dangerous_skip_checks: session.dangerous_skip_checks,
             session_id: Some(session.id),
             initial_workdir: session.subdirectory.clone(),
+            http_port: *self.http_port.read().await,
         };
 
         // Recreate container
@@ -1560,6 +1597,190 @@ impl SessionManager {
         if let Some(ref broadcaster) = self.event_broadcaster {
             broadcast_event(broadcaster, WsEvent::SessionUpdated(session_clone)).await;
         }
+
+        Ok(())
+    }
+
+    /// Refresh a session by pulling latest image and recreating the container
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the session is not found, not a Docker session, or recreation fails.
+    #[instrument(skip(self), fields(id_or_name = %id_or_name))]
+    pub async fn refresh_session(&self, id_or_name: &str) -> anyhow::Result<()> {
+        // Acquire deletion semaphore (refresh is destructive like delete)
+        let _permit = self
+            .deletion_semaphore
+            .acquire()
+            .await
+            .map_err(|_| anyhow::anyhow!("System is shutting down"))?;
+
+        // Get session and validate it's Docker
+        let session = self
+            .get_session(id_or_name)
+            .await
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {id_or_name}"))?;
+
+        if session.backend != BackendType::Docker {
+            anyhow::bail!("Refresh only supported for Docker sessions");
+        }
+
+        let session_id = session.id;
+
+        // Capture configuration before deletion
+        let (
+            name,
+            _repo_path,
+            worktree_path,
+            subdirectory,
+            initial_prompt,
+            agent,
+            dangerous_skip_checks,
+            _access_mode,
+            proxy_port,
+            old_backend_id,
+        ) = {
+            let sessions = self.sessions.read().await;
+            let s = sessions
+                .iter()
+                .find(|s| s.id == session_id)
+                .ok_or_else(|| anyhow::anyhow!("Session disappeared"))?;
+
+            (
+                s.name.clone(),
+                s.repo_path.clone(),
+                s.worktree_path.clone(),
+                s.subdirectory.clone(),
+                s.initial_prompt.clone(),
+                s.agent,
+                s.dangerous_skip_checks,
+                s.access_mode,
+                s.proxy_port,
+                s.backend_id.clone(),
+            )
+        };
+
+        // Execute refresh: pull + delete + create
+        let result: anyhow::Result<String> = async {
+            // Pull latest image
+            let docker_image = "ghcr.io/shepherdjerred/dotfiles";
+            tracing::info!(image = docker_image, "Pulling Docker image");
+
+            let output = tokio::process::Command::new("docker")
+                .args(["pull", docker_image])
+                .output()
+                .await
+                .context("Failed to execute docker pull")?;
+
+            if !output.status.success() {
+                let stderr = String::from_utf8_lossy(&output.stderr);
+                tracing::error!(
+                    image = docker_image,
+                    stderr = %stderr,
+                    "Failed to pull Docker image"
+                );
+                anyhow::bail!("Failed to pull Docker image: {stderr}");
+            }
+
+            tracing::info!(image = docker_image, "Successfully pulled Docker image");
+
+            // Delete old container
+            if let Some(ref backend_id) = old_backend_id {
+                let _ = self.docker.delete(backend_id).await;
+            }
+
+            // Create new container
+            let create_options = crate::backends::CreateOptions {
+                agent,
+                print_mode: false,
+                plan_mode: false,
+                session_proxy_port: proxy_port,
+                images: vec![],
+                dangerous_skip_checks,
+                session_id: Some(session_id),
+                initial_workdir: subdirectory,
+                http_port: *self.http_port.read().await,
+            };
+
+            let new_backend_id = self
+                .docker
+                .create(&name, &worktree_path, &initial_prompt, create_options)
+                .await
+                .context("Failed to create new container")?;
+
+            Ok(new_backend_id)
+        }
+        .await;
+
+        match result {
+            Ok(new_backend_id) => {
+                // Update session with new backend ID
+                {
+                    let mut sessions = self.sessions.write().await;
+                    if let Some(session) = sessions.iter_mut().find(|s| s.id == session_id) {
+                        session.set_backend_id(new_backend_id.clone());
+                        let _ = self.store.save_session(session).await;
+                    }
+                }
+
+                // Record backend ID event
+                let event = Event::new(session_id, EventType::BackendIdSet {
+                    backend_id: new_backend_id,
+                });
+                let _ = self.store.record_event(&event).await;
+
+                tracing::info!(
+                    session_id = %session_id,
+                    name = %name,
+                    "Successfully refreshed session"
+                );
+
+                Ok(())
+            }
+            Err(e) => {
+                tracing::error!(
+                    session_id = %session_id,
+                    name = %name,
+                    error = %e,
+                    "Failed to refresh session"
+                );
+                Err(e)
+            }
+        }
+    }
+
+    /// Update session metadata (title and description)
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the session is not found or the store update fails.
+    #[instrument(skip(self), fields(id_or_name = %id_or_name))]
+    pub async fn update_metadata(
+        &self,
+        id_or_name: &str,
+        title: Option<String>,
+        description: Option<String>,
+    ) -> anyhow::Result<()> {
+        let mut sessions = self.sessions.write().await;
+        let session = sessions
+            .iter_mut()
+            .find(|s| s.name == id_or_name || s.id.to_string() == id_or_name)
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {id_or_name}"))?;
+
+        let session_id = session.id;
+        session.set_title(title);
+        session.set_description(description);
+        let session_clone = session.clone();
+        drop(sessions);
+
+        // Update in store
+        self.store.save_session(&session_clone).await?;
+
+        tracing::info!(
+            session_id = %session_id,
+            name = %session_clone.name,
+            "Updated session metadata"
+        );
 
         Ok(())
     }
@@ -2072,21 +2293,7 @@ impl SessionManager {
                 masked_value: creds.talos_token.as_ref().map(|v| mask_credential(v)),
             });
 
-            // Collect proxy status
-            proxies.push(ProxyStatus {
-                name: "HTTP Auth Proxy".to_string(),
-                port: pm.http_proxy_port(),
-                active: true,
-                proxy_type: "global".to_string(),
-            });
-
-            proxies.push(ProxyStatus {
-                name: "Kubernetes Proxy".to_string(),
-                port: pm.k8s_proxy_port(),
-                active: pm.is_k8s_proxy_running(),
-                proxy_type: "global".to_string(),
-            });
-
+            // Collect proxy status (only Talos gateway is global)
             if pm.is_talos_configured() {
                 proxies.push(ProxyStatus {
                     name: "Talos mTLS Gateway".to_string(),
@@ -2097,13 +2304,14 @@ impl SessionManager {
             }
 
             // Count session-specific proxies
-            active_session_proxies = pm.active_session_proxy_count().await as u32;
+            active_session_proxies = u32::try_from(pm.active_session_proxy_count().await).unwrap_or(u32::MAX);
         }
 
         Ok(SystemStatus {
             credentials,
             proxies,
             active_session_proxies,
+            claude_usage: None,
         })
     }
 

@@ -1,0 +1,121 @@
+import { useState } from "react";
+import type { Session } from "@clauderon/client";
+import { useSessionContext } from "../contexts/SessionContext";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { X } from "lucide-react";
+import { toast } from "sonner";
+
+type EditSessionDialogProps = {
+  session: Session;
+  onClose: () => void;
+}
+
+export function EditSessionDialog({ session, onClose }: EditSessionDialogProps) {
+  const { updateSession } = useSessionContext();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const [formData, setFormData] = useState({
+    title: session.title || session.name,
+    description: session.description || "",
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      await updateSession(
+        session.id,
+        formData.title,
+        formData.description
+      );
+      toast.success("Session updated successfully");
+      onClose();
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      setError(errorMsg);
+      toast.error(`Failed to update session: ${errorMsg}`);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div className="fixed inset-0 z-40" style={{
+        backgroundColor: 'hsl(220, 90%, 8%)',
+        opacity: 0.85
+      }} />
+
+      {/* Dialog */}
+      <div className="fixed inset-0 flex items-center justify-center p-8 z-50">
+        <div className="max-w-2xl w-full flex flex-col border-4 border-primary" style={{
+          backgroundColor: 'hsl(220, 15%, 95%)',
+          boxShadow: '12px 12px 0 hsl(220, 85%, 25%), 24px 24px 0 hsl(220, 90%, 10%)'
+        }}>
+          {/* Header */}
+          <div className="flex items-center justify-between p-4 border-b-4 border-primary" style={{ backgroundColor: 'hsl(220, 85%, 25%)' }}>
+            <h2 className="text-2xl font-bold font-mono uppercase tracking-wider text-white">
+              Edit Session
+            </h2>
+            <button
+              onClick={onClose}
+              className="p-2 border-2 border-white bg-white/10 hover:bg-red-600 hover:text-white transition-all font-bold text-white"
+              title="Close dialog"
+              aria-label="Close dialog"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Form */}
+          <form onSubmit={(e) => { void handleSubmit(e); }} className="p-6 space-y-6" style={{ backgroundColor: 'hsl(220, 15%, 95%)' }}>
+            {error && (
+              <div className="p-4 border-4 font-mono" style={{ backgroundColor: 'hsl(0, 75%, 95%)', color: 'hsl(0, 75%, 40%)', borderColor: 'hsl(0, 75%, 50%)' }}>
+                <strong className="font-bold">ERROR:</strong> {error}
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="title" className="font-semibold">Title</Label>
+              <input
+                id="title"
+                type="text"
+                value={formData.title}
+                onChange={(e) => { setFormData({ ...formData, title: e.target.value }); }}
+                className="flex w-full rounded-md border-2 border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                placeholder="Enter session title"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description" className="font-semibold">Description</Label>
+              <textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => { setFormData({ ...formData, description: e.target.value }); }}
+                className="flex w-full rounded-md border-2 border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm min-h-[100px]"
+                placeholder="Enter session description"
+              />
+            </div>
+
+            {/* Actions */}
+            <div className="flex justify-end gap-3 pt-4 border-t-4 border-primary">
+              <Button type="button" variant="outline" onClick={onClose}>
+                Cancel
+              </Button>
+              <Button type="submit" variant="brutalist" disabled={isSubmitting}>
+                {isSubmitting ? "Saving..." : "Save Changes"}
+              </Button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </>
+  );
+}

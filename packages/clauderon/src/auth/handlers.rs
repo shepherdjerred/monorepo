@@ -41,47 +41,47 @@ pub enum AuthError {
 
 impl From<anyhow::Error> for AuthError {
     fn from(err: anyhow::Error) -> Self {
-        AuthError::Database(err)
+        Self::Database(err)
     }
 }
 
 impl From<sqlx::Error> for AuthError {
     fn from(err: sqlx::Error) -> Self {
-        AuthError::Database(err.into())
+        Self::Database(err.into())
     }
 }
 
 impl From<serde_json::Error> for AuthError {
     fn from(err: serde_json::Error) -> Self {
-        AuthError::Database(err.into())
+        Self::Database(err.into())
     }
 }
 
 impl From<chrono::ParseError> for AuthError {
     fn from(err: chrono::ParseError) -> Self {
-        AuthError::Database(err.into())
+        Self::Database(err.into())
     }
 }
 
 impl From<uuid::Error> for AuthError {
     fn from(err: uuid::Error) -> Self {
-        AuthError::Database(err.into())
+        Self::Database(err.into())
     }
 }
 
 impl IntoResponse for AuthError {
     fn into_response(self) -> Response {
         let (status, error_message) = match self {
-            AuthError::Database(err) => {
+            Self::Database(err) => {
                 tracing::error!("Database error: {}", err);
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
                     format!("Internal error: {}", err),
                 )
             }
-            AuthError::NotFound(msg) => (StatusCode::NOT_FOUND, msg),
-            AuthError::BadRequest(msg) => (StatusCode::BAD_REQUEST, msg),
-            AuthError::Unauthorized(msg) => (StatusCode::UNAUTHORIZED, msg),
+            Self::NotFound(msg) => (StatusCode::NOT_FOUND, msg),
+            Self::BadRequest(msg) => (StatusCode::BAD_REQUEST, msg),
+            Self::Unauthorized(msg) => (StatusCode::UNAUTHORIZED, msg),
         };
 
         let body = Json(json!({
@@ -456,7 +456,7 @@ pub async fn login_finish(
     // Update passkey counter to prevent replay attacks
     // The counter should increment with each use
     sqlx::query("UPDATE passkeys SET counter = ? WHERE credential_id = ? AND user_id = ?")
-        .bind(result.counter() as i64)
+        .bind(i64::from(result.counter()))
         .bind(result.cred_id().as_slice())
         .bind(user_id.to_string())
         .execute(&state.pool)

@@ -72,7 +72,7 @@ export function DirectoryBrowserDialog({ onClose, onSelect, initialPath }: Direc
       <div className="flex items-center gap-1 text-sm font-mono overflow-x-auto">
         <button
           onClick={() => { setCurrentPath("/"); }}
-          className="px-2 py-1 hover:bg-primary/10 rounded"
+          className="cursor-pointer px-2 py-1 hover:bg-primary/10 rounded transition-all duration-200"
         >
           /
         </button>
@@ -83,7 +83,7 @@ export function DirectoryBrowserDialog({ onClose, onSelect, initialPath }: Direc
               <span className="text-muted-foreground">/</span>
               <button
                 onClick={() => { setCurrentPath(path); }}
-                className="px-2 py-1 hover:bg-primary/10 rounded"
+                className="cursor-pointer px-2 py-1 hover:bg-primary/10 rounded transition-all duration-200"
               >
                 {segment}
               </button>
@@ -115,7 +115,7 @@ export function DirectoryBrowserDialog({ onClose, onSelect, initialPath }: Direc
             </h2>
             <button
               onClick={onClose}
-              className="p-2 border-2 border-white bg-white/10 hover:bg-red-600 hover:text-white transition-all font-bold text-white"
+              className="cursor-pointer p-2 border-2 border-white bg-white/10 hover:bg-red-600 hover:text-white transition-all duration-200 font-bold text-white"
               title="Close dialog"
               aria-label="Close dialog"
             >
@@ -130,7 +130,7 @@ export function DirectoryBrowserDialog({ onClose, onSelect, initialPath }: Direc
             </div>
             <button
               onClick={handleGoHome}
-              className="p-2 border-2 border-primary hover:bg-primary/10 transition-all"
+              className="cursor-pointer p-2 border-2 border-primary hover:bg-primary/10 transition-all duration-200 hover:scale-105"
               title="Go to home directory"
               aria-label="Go to home directory"
             >
@@ -157,7 +157,7 @@ export function DirectoryBrowserDialog({ onClose, onSelect, initialPath }: Direc
                 {parentPath && (
                   <button
                     onClick={handleNavigateToParent}
-                    className="w-full text-left p-3 border-2 border-primary/30 hover:bg-primary/10 hover:border-primary transition-all font-mono flex items-center gap-2"
+                    className="cursor-pointer w-full text-left p-3 border-2 border-primary/30 hover:bg-primary/10 hover:border-primary hover:pl-4 transition-all duration-200 font-mono flex items-center gap-2"
                   >
                     <FolderOpen className="w-5 h-5 flex-shrink-0" />
                     <span>..</span>
@@ -175,9 +175,9 @@ export function DirectoryBrowserDialog({ onClose, onSelect, initialPath }: Direc
                       key={entry.path}
                       onClick={() => { if (entry.is_accessible) handleNavigateToDirectory(entry.path); }}
                       disabled={!entry.is_accessible}
-                      className={`w-full text-left p-3 border-2 font-mono flex items-center gap-2 transition-all ${
+                      className={`w-full text-left p-3 border-2 font-mono flex items-center gap-2 transition-all duration-200 ${
                         entry.is_accessible
-                          ? 'border-primary/30 hover:bg-primary/10 hover:border-primary'
+                          ? 'cursor-pointer border-primary/30 hover:bg-primary/10 hover:border-primary hover:pl-4'
                           : 'border-muted/30 opacity-50 cursor-not-allowed'
                       }`}
                       title={entry.is_accessible ? `Open ${entry.name}` : `Cannot access ${entry.name}`}
@@ -194,7 +194,7 @@ export function DirectoryBrowserDialog({ onClose, onSelect, initialPath }: Direc
 
           {/* Footer Actions */}
           <div className="flex justify-end gap-3 p-4 border-t-4 border-primary" style={{ backgroundColor: 'hsl(220, 15%, 90%)' }}>
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button type="button" variant="outline" onClick={onClose} className="cursor-pointer">
               Cancel
             </Button>
             <Button
@@ -202,6 +202,7 @@ export function DirectoryBrowserDialog({ onClose, onSelect, initialPath }: Direc
               variant="brutalist"
               onClick={handleSelectCurrent}
               disabled={isLoading || Boolean(error)}
+              className="cursor-pointer"
             >
               Select Directory
             </Button>

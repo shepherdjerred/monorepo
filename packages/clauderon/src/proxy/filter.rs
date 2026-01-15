@@ -7,6 +7,7 @@ use http::Method;
 /// For safety in read-only mode, we use an allowlist approach:
 /// only known-safe read methods are allowed. All others (including
 /// unknown/custom methods) are treated as write operations.
+#[must_use] 
 pub fn is_write_operation(method: &Method) -> bool {
     !is_read_operation(method)
 }
@@ -21,6 +22,7 @@ pub fn is_write_operation(method: &Method) -> bool {
 ///
 /// All other methods (POST, PUT, DELETE, PATCH, CONNECT, custom methods)
 /// are treated as write operations for safety.
+#[must_use] 
 pub fn is_read_operation(method: &Method) -> bool {
     matches!(
         method,
