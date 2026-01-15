@@ -21,7 +21,7 @@ fn test_create_session_request_serialization() {
         repo_path: "/home/user/project".to_string(),
         initial_prompt: "Fix the bug".to_string(),
         backend: BackendType::Zellij,
-        agent: AgentType::Claude,
+        agent: AgentType::ClaudeCode,
         dangerous_skip_checks: false,
         print_mode: false,
         plan_mode: true,
@@ -141,7 +141,7 @@ fn test_backend_type_serialization() {
 
 #[test]
 fn test_agent_type_serialization() {
-    let json = serde_json::to_string(&AgentType::Claude).unwrap();
+    let json = serde_json::to_string(&AgentType::ClaudeCode).unwrap();
     assert_eq!(json, r#""Claude""#);
 }
 
@@ -158,7 +158,7 @@ fn test_print_mode_serialization() {
         repo_path: "/tmp/repo".to_string(),
         initial_prompt: "Generate a hello world".to_string(),
         backend: BackendType::Docker,
-        agent: AgentType::Claude,
+        agent: AgentType::ClaudeCode,
         dangerous_skip_checks: true,
         print_mode: true,
         plan_mode: false,

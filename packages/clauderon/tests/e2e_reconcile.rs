@@ -24,7 +24,7 @@ fn create_test_session(name: &str, worktree_path: &std::path::Path) -> Session {
         branch_name: name.to_string(),
         initial_prompt: "Test prompt".to_string(),
         backend: BackendType::Docker,
-        agent: AgentType::Claude,
+        agent: AgentType::ClaudeCode,
         dangerous_skip_checks: true,
         access_mode: Default::default(),
     });
