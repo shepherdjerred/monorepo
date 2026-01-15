@@ -12,6 +12,7 @@ pub struct SessionStore {
 
 impl SessionStore {
     /// Create a new session store
+    #[must_use]
     pub fn new(pool: SqlitePool) -> Self {
         Self { pool }
     }
@@ -104,6 +105,7 @@ impl SessionStore {
             .execute(&self.pool)
             .await?;
 
+        #[allow(clippy::cast_possible_truncation)]
         Ok(result.rows_affected() as usize)
     }
 }

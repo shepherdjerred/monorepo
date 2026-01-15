@@ -164,11 +164,14 @@ pub async fn handle_paste_event(app: &mut App, text: &str) -> anyhow::Result<()>
                 _ => {}
             }
         }
-        AppMode::CopyMode => {
-            // Ignore paste events in copy mode
-        }
-        _ => {
-            // Ignore paste events in other modes
+        AppMode::CopyMode
+        | AppMode::SessionList
+        | AppMode::ConfirmDelete
+        | AppMode::Help
+        | AppMode::Locked
+        | AppMode::Scroll
+        | AppMode::ReconcileError => {
+            // Ignore paste events in these modes
         }
     }
 
@@ -190,12 +193,12 @@ pub async fn handle_key_event(app: &mut App, key: KeyEvent) -> anyhow::Result<()
     match app.mode {
         AppMode::SessionList => handle_session_list_key(app, key).await?,
         AppMode::CreateDialog => handle_create_dialog_key(app, key).await?,
-        AppMode::ConfirmDelete => handle_confirm_delete_key(app, key)?,
+        AppMode::ConfirmDelete => handle_confirm_delete_key(app, key),
         AppMode::Help => handle_help_key(app, key),
         AppMode::Attached => handle_attached_key(app, key).await?,
         AppMode::CopyMode => handle_copy_mode_key(app, key).await?,
         AppMode::Locked => handle_locked_key(app, key).await?,
-        AppMode::Scroll => handle_scroll_mode_key(app, key)?,
+        AppMode::Scroll => handle_scroll_mode_key(app, key),
         AppMode::ReconcileError => handle_reconcile_error_key(app, key).await?,
     }
     Ok(())
@@ -210,6 +213,11 @@ async fn handle_session_list_key(app: &mut App, key: KeyEvent) -> anyhow::Result
         KeyCode::Char('a') => {
             if let Err(e) = app.archive_selected().await {
                 app.status_message = Some(format!("Archive failed: {e}"));
+            }
+        }
+        KeyCode::Char('u') => {
+            if let Err(e) = app.unarchive_selected().await {
+                app.status_message = Some(format!("Unarchive failed: {e}"));
             }
         }
         KeyCode::Char('f') => {
@@ -229,6 +237,13 @@ async fn handle_session_list_key(app: &mut App, key: KeyEvent) -> anyhow::Result
                 app.status_message = Some("Refreshed session list".to_string());
             }
         }
+        // Filter switching with number keys
+        KeyCode::Char('1') => app.set_filter(crate::tui::app::SessionFilter::All),
+        KeyCode::Char('2') => app.set_filter(crate::tui::app::SessionFilter::Running),
+        KeyCode::Char('3') => app.set_filter(crate::tui::app::SessionFilter::Idle),
+        KeyCode::Char('4') => app.set_filter(crate::tui::app::SessionFilter::Completed),
+        KeyCode::Char('5') => app.set_filter(crate::tui::app::SessionFilter::Archived),
+        KeyCode::Tab => app.cycle_filter_next(),
         KeyCode::Up | KeyCode::Char('k') => app.select_previous(),
         KeyCode::Down | KeyCode::Char('j') => app.select_next(),
         // Note: Enter is handled specially by the main loop since it needs to suspend the TUI
@@ -240,7 +255,8 @@ async fn handle_session_list_key(app: &mut App, key: KeyEvent) -> anyhow::Result
 async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
     // If directory picker is active, handle its events first
     if app.create_dialog.directory_picker.is_active {
-        return handle_directory_picker_key(app, key);
+        handle_directory_picker_key(app, key);
+        return Ok(());
     }
 
     // Handle Ctrl+E for opening external editor when Prompt is focused
@@ -551,7 +567,7 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
             CreateDialogFocus::Buttons => {
                 app.create_dialog.button_create_focused = !app.create_dialog.button_create_focused;
             }
-            _ => {}
+            CreateDialogFocus::RepoPath => {}
         },
         KeyCode::Char(' ') => match app.create_dialog.focus {
             CreateDialogFocus::Backend => {
@@ -591,7 +607,7 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                 };
                 app.create_dialog.directory_picker.open(initial_path);
             }
-            _ => {}
+            CreateDialogFocus::Buttons => {}
         },
         KeyCode::Char(c) => match app.create_dialog.focus {
             CreateDialogFocus::Prompt => {
@@ -646,7 +662,7 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
     Ok(())
 }
 
-fn handle_directory_picker_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
+fn handle_directory_picker_key(app: &mut App, key: KeyEvent) {
     let picker = &mut app.create_dialog.directory_picker;
 
     match key.code {
@@ -718,11 +734,9 @@ fn handle_directory_picker_key(app: &mut App, key: KeyEvent) -> anyhow::Result<(
 
         _ => {}
     }
-
-    Ok(())
 }
 
-fn handle_confirm_delete_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
+fn handle_confirm_delete_key(app: &mut App, key: KeyEvent) {
     match key.code {
         KeyCode::Char('y' | 'Y') => {
             app.confirm_delete();
@@ -732,7 +746,6 @@ fn handle_confirm_delete_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()>
         }
         _ => {}
     }
-    Ok(())
 }
 
 fn handle_help_key(app: &mut App, key: KeyEvent) {
@@ -796,7 +809,7 @@ async fn handle_attached_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()>
 
     // Ctrl+Q: instant detach (no double-tap delay)
     if key.modifiers.contains(KeyModifiers::CONTROL) {
-        if let KeyCode::Char('q') = key.code {
+        if key.code == KeyCode::Char('q') {
             app.detach();
             return Ok(());
         }
@@ -816,7 +829,7 @@ async fn handle_attached_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()>
 
     // Toggle locked mode with Ctrl+L
     if key.modifiers.contains(KeyModifiers::CONTROL) {
-        if let KeyCode::Char('l') = key.code {
+        if key.code == KeyCode::Char('l') {
             app.toggle_locked_mode();
             return Ok(());
         }
@@ -824,7 +837,7 @@ async fn handle_attached_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()>
 
     // Enter scroll mode with Ctrl+S
     if key.modifiers.contains(KeyModifiers::CONTROL) {
-        if let KeyCode::Char('s') = key.code {
+        if key.code == KeyCode::Char('s') {
             app.enter_scroll_mode();
             return Ok(());
         }
@@ -881,7 +894,7 @@ async fn handle_locked_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
 
     // Ctrl+L: unlock and return to Attached mode
     if key.modifiers.contains(KeyModifiers::CONTROL) {
-        if let KeyCode::Char('l') = key.code {
+        if key.code == KeyCode::Char('l') {
             app.exit_locked_mode();
             return Ok(());
         }
@@ -900,7 +913,7 @@ async fn handle_locked_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
 ///
 /// In Scroll mode, arrow keys and page keys scroll the terminal buffer.
 /// ESC, q, or Ctrl+S exits scroll mode.
-fn handle_scroll_mode_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
+fn handle_scroll_mode_key(app: &mut App, key: KeyEvent) {
     match key.code {
         KeyCode::Esc | KeyCode::Char('q') => {
             app.exit_scroll_mode();
@@ -942,8 +955,6 @@ fn handle_scroll_mode_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
         }
         _ => {}
     }
-
-    Ok(())
 }
 
 /// Check if a pasted text string is an image file path
@@ -960,11 +971,10 @@ fn is_image_path(text: &str) -> bool {
     // Check extension
     path.extension()
         .and_then(|ext| ext.to_str())
-        .map(|ext| {
+        .is_some_and(|ext| {
             matches!(
                 ext.to_lowercase().as_str(),
                 "jpg" | "jpeg" | "png" | "gif" | "webp"
             )
         })
-        .unwrap_or(false)
 }

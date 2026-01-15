@@ -60,6 +60,18 @@ export interface UsageWindow {
 	resets_at?: string;
 }
 
+/** Error details for usage tracking failures */
+export interface UsageError {
+	/** Error category (invalid_token, api_error, missing_org_id, etc) */
+	error_type: string;
+	/** Human-readable error message */
+	message: string;
+	/** Technical details for debugging */
+	details?: string;
+	/** Suggested action to resolve the error */
+	suggestion?: string;
+}
+
 /** Claude Code usage tracking data */
 export interface ClaudeUsage {
 	/** Organization ID */
@@ -74,6 +86,8 @@ export interface ClaudeUsage {
 	seven_day_sonnet?: UsageWindow;
 	/** When this data was last fetched */
 	fetched_at: string;
+	/** Error information if usage fetch failed */
+	error?: UsageError;
 }
 
 /** Execution backend type */
@@ -369,6 +383,8 @@ export interface Session {
 	claude_status_updated_at: string;
 	/** Whether the session branch has merge conflicts with main */
 	merge_conflict: boolean;
+	/** Whether the worktree has uncommitted changes (dirty working tree) */
+	worktree_dirty: boolean;
 	/** Access mode for proxy filtering */
 	access_mode: AccessMode;
 	/** Port for session-specific HTTP proxy (Docker only) */
@@ -500,6 +516,10 @@ export type EventType =
 	| { type: "ConflictStatusChanged", payload: {
 	has_conflict: boolean;
 }}
+	/** Working tree status changed (dirty/clean) */
+	| { type: "WorktreeStatusChanged", payload: {
+	is_dirty: boolean;
+}}
 	/** Session was archived */
 	| { type: "SessionArchived", payload?: undefined }
 	/** Session was deleted */
@@ -525,6 +545,10 @@ export type Request =
 }}
 	/** Archive a session */
 	| { type: "ArchiveSession", payload: {
+	id: string;
+}}
+	/** Unarchive a session */
+	| { type: "UnarchiveSession", payload: {
 	id: string;
 }}
 	/** Get the attach command for a session */
@@ -573,6 +597,8 @@ export type Response =
 	| { type: "Deleted", payload?: undefined }
 	/** Session archived successfully */
 	| { type: "Archived", payload?: undefined }
+	/** Session unarchived successfully */
+	| { type: "Unarchived", payload?: undefined }
 	/** Session refreshed successfully */
 	| { type: "Refreshed", payload?: undefined }
 	/** Command to attach to a session */

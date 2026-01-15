@@ -152,16 +152,49 @@ impl ColumnWidths {
         }
 
         // Calculate shrink ratio
+        #[allow(clippy::cast_precision_loss)]
         let shrink_ratio = available_for_columns as f64 / total_current as f64;
 
         // Apply proportional shrinking, respecting minimums
-        self.name = ((self.name as f64 * shrink_ratio) as usize).max(Self::NAME_RANGE.0);
-        self.repository =
-            ((self.repository as f64 * shrink_ratio) as usize).max(Self::REPO_RANGE.0);
-        self.status = ((self.status as f64 * shrink_ratio) as usize).max(Self::STATUS_RANGE.0);
-        self.backend = ((self.backend as f64 * shrink_ratio) as usize).max(Self::BACKEND_RANGE.0);
-        self.branch_pr =
-            ((self.branch_pr as f64 * shrink_ratio) as usize).max(Self::BRANCH_PR_RANGE.0);
+        #[allow(
+            clippy::cast_possible_truncation,
+            clippy::cast_sign_loss,
+            clippy::cast_precision_loss
+        )]
+        let name_shrunk = (self.name as f64 * shrink_ratio).max(0.0).round() as usize;
+        self.name = name_shrunk.max(Self::NAME_RANGE.0);
+
+        #[allow(
+            clippy::cast_possible_truncation,
+            clippy::cast_sign_loss,
+            clippy::cast_precision_loss
+        )]
+        let repo_shrunk = (self.repository as f64 * shrink_ratio).max(0.0).round() as usize;
+        self.repository = repo_shrunk.max(Self::REPO_RANGE.0);
+
+        #[allow(
+            clippy::cast_possible_truncation,
+            clippy::cast_sign_loss,
+            clippy::cast_precision_loss
+        )]
+        let status_shrunk = (self.status as f64 * shrink_ratio).max(0.0).round() as usize;
+        self.status = status_shrunk.max(Self::STATUS_RANGE.0);
+
+        #[allow(
+            clippy::cast_possible_truncation,
+            clippy::cast_sign_loss,
+            clippy::cast_precision_loss
+        )]
+        let backend_shrunk = (self.backend as f64 * shrink_ratio).max(0.0).round() as usize;
+        self.backend = backend_shrunk.max(Self::BACKEND_RANGE.0);
+
+        #[allow(
+            clippy::cast_possible_truncation,
+            clippy::cast_sign_loss,
+            clippy::cast_precision_loss
+        )]
+        let branch_pr_shrunk = (self.branch_pr as f64 * shrink_ratio).max(0.0).round() as usize;
+        self.branch_pr = branch_pr_shrunk.max(Self::BRANCH_PR_RANGE.0);
 
         // If still doesn't fit after respecting minimums, force to minimums
         let new_total = self.name + self.repository + self.status + self.backend + self.branch_pr;
@@ -226,34 +259,47 @@ fn pad_to_width(text: &str, width: usize) -> String {
 
 /// Render the session list
 pub fn render(frame: &mut Frame, app: &App, area: Rect) {
+    // Split area vertically: filter header (1 line) + session list
+    let layout = Layout::vertical([Constraint::Length(1), Constraint::Min(0)]).split(area);
+    let filter_area = layout[0];
+    let list_area = layout[1];
+
+    // Render filter header
+    super::filter_header::render(frame, app, filter_area);
+
     let block = Block::default()
         .title(" Clauderon - Sessions ")
-        .title_bottom(" [n]ew  [d]elete  [a]rchive  [f]refresh  [?]help  [q]uit ")
+        .title_bottom(" [1-5]filter  [n]ew  [d]elete  [a]rchive  [f]refresh  [?]help  [q]uit ")
         .borders(Borders::ALL)
         .border_style(Style::default().fg(Color::Cyan));
 
-    if app.sessions.is_empty() {
+    let filtered_sessions = app.get_filtered_sessions();
+
+    if filtered_sessions.is_empty() {
         let empty_msg = Line::from(vec![
-            Span::raw("No sessions. Press "),
+            Span::raw("No sessions in this filter. Press "),
+            Span::styled("1-5", Style::default().fg(Color::Cyan)),
+            Span::raw(" to change filter or "),
             Span::styled("n", Style::default().fg(Color::Green)),
             Span::raw(" to create one."),
         ]);
         let paragraph = Paragraph::new(empty_msg).block(block);
-        frame.render_widget(paragraph, area);
+        frame.render_widget(paragraph, list_area);
         return;
     }
 
     // Render the block and get the inner area
-    let inner_area = block.inner(area);
-    frame.render_widget(block, area);
+    let inner_area = block.inner(list_area);
+    frame.render_widget(block, list_area);
 
     // Split inner area into header and list
     let chunks = Layout::vertical([Constraint::Length(1), Constraint::Min(0)]).split(inner_area);
     let header_area = chunks[0];
-    let list_area = chunks[1];
+    let table_area = chunks[1];
 
-    // Calculate optimal column widths based on actual data
-    let widths = ColumnWidths::calculate(&app.sessions, inner_area.width);
+    // Calculate optimal column widths based on filtered sessions
+    let sessions_slice: Vec<Session> = filtered_sessions.iter().map(|&s| s.clone()).collect();
+    let widths = ColumnWidths::calculate(&sessions_slice, inner_area.width);
 
     // Render header row
     let header = Line::from(vec![
@@ -290,13 +336,13 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
     ]);
     frame.render_widget(Paragraph::new(header), header_area);
 
-    let items: Vec<ListItem> = app
-        .sessions
+    let items: Vec<ListItem> = filtered_sessions
         .iter()
         .map(|session| {
             let status_style = match session.status {
-                SessionStatus::Creating => Style::default().fg(Color::Yellow),
-                SessionStatus::Deleting => Style::default().fg(Color::Yellow),
+                SessionStatus::Creating | SessionStatus::Deleting => {
+                    Style::default().fg(Color::Yellow)
+                }
                 SessionStatus::Running => Style::default().fg(Color::Green),
                 SessionStatus::Idle => Style::default().fg(Color::Blue),
                 SessionStatus::Completed => Style::default().fg(Color::Cyan),
@@ -466,5 +512,5 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
     let mut state = ListState::default();
     state.select(Some(app.selected_index));
 
-    frame.render_stateful_widget(list, list_area, &mut state);
+    frame.render_stateful_widget(list, table_area, &mut state);
 }

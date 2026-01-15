@@ -7,6 +7,7 @@ use std::time::SystemTime;
 /// Get the editor command from environment variables
 ///
 /// Checks $VISUAL, then $EDITOR, then falls back to vim/nano/vi/notepad
+#[must_use]
 pub fn get_editor() -> String {
     // Check VISUAL first (preferred for full-screen editors)
     if let Ok(visual) = std::env::var("VISUAL") {

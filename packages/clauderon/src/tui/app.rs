@@ -7,7 +7,7 @@ use tokio::task::JoinHandle;
 use uuid::Uuid;
 
 use crate::api::{ApiClient, Client};
-use crate::core::{AccessMode, AgentType, BackendType, Session};
+use crate::core::{AccessMode, AgentType, BackendType, Session, SessionStatus};
 use crate::tui::attached::PtySession;
 
 /// Progress update from background session creation task
@@ -32,6 +32,48 @@ pub enum DeleteProgress {
     Done { session_id: String },
     /// Deletion failed
     Error { session_id: String, message: String },
+}
+
+/// Session filter for displaying different subsets of sessions
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum SessionFilter {
+    /// All non-archived sessions (default view)
+    #[default]
+    All,
+    /// Only sessions with Running status
+    Running,
+    /// Only sessions with Idle status
+    Idle,
+    /// Only sessions with Completed status
+    Completed,
+    /// Only archived sessions
+    Archived,
+}
+
+impl SessionFilter {
+    /// Cycle to the next filter in sequence
+    #[must_use]
+    pub fn cycle_next(self) -> Self {
+        match self {
+            Self::All => Self::Running,
+            Self::Running => Self::Idle,
+            Self::Idle => Self::Completed,
+            Self::Completed => Self::Archived,
+            Self::Archived => Self::All,
+        }
+    }
+
+    /// Get the display name for this filter
+    #[must_use]
+    pub fn display_name(self) -> &'static str {
+        match self {
+            Self::All => "All",
+            Self::Running => "Running",
+            Self::Idle => "Idle",
+            Self::Completed => "Completed",
+            Self::Archived => "Archived",
+        }
+    }
 }
 
 /// The current view/mode of the application
@@ -178,17 +220,7 @@ impl DirectoryPickerState {
     /// Create a new directory picker state
     #[must_use]
     pub fn new() -> Self {
-        Self {
-            current_dir: std::env::current_dir().unwrap_or_default(),
-            all_entries: Vec::new(),
-            recent_repos: Vec::new(),
-            filtered_entries: Vec::new(),
-            search_query: String::new(),
-            selected_index: 0,
-            is_active: false,
-            error: None,
-            matcher: nucleo_matcher::Matcher::new(nucleo_matcher::Config::DEFAULT),
-        }
+        Self::default()
     }
 
     /// Load recent repositories from structured data with timestamps
@@ -374,25 +406,26 @@ impl DirectoryPickerState {
     }
 }
 
+impl Default for DirectoryPickerState {
+    fn default() -> Self {
+        Self {
+            current_dir: std::env::current_dir().unwrap_or_default(),
+            all_entries: Vec::new(),
+            recent_repos: Vec::new(),
+            filtered_entries: Vec::new(),
+            search_query: String::new(),
+            selected_index: 0,
+            is_active: false,
+            error: None,
+            matcher: nucleo_matcher::Matcher::new(nucleo_matcher::Config::DEFAULT),
+        }
+    }
+}
+
 impl CreateDialogState {
     #[must_use]
     pub fn new() -> Self {
-        Self {
-            prompt: String::new(),
-            repo_path: String::new(),
-            backend: BackendType::Zellij, // Default to Zellij
-            agent: AgentType::ClaudeCode,
-            skip_checks: false,
-            plan_mode: true,                 // Default to plan mode ON
-            access_mode: Default::default(), // ReadOnly by default (secure)
-            images: Vec::new(),
-            prompt_cursor_line: 0,
-            prompt_cursor_col: 0,
-            prompt_scroll_offset: 0,
-            focus: CreateDialogFocus::default(),
-            button_create_focused: false,
-            directory_picker: DirectoryPickerState::new(),
-        }
+        Self::default()
     }
 
     pub fn reset(&mut self) {
@@ -473,6 +506,7 @@ impl CreateDialogState {
     ///
     /// This matches the logic in create_dialog.rs rendering to ensure scroll
     /// calculations stay in sync with the actual displayed height.
+    #[must_use]
     pub fn prompt_visible_lines(&self) -> usize {
         let prompt_lines = self.prompt.lines().count().max(1);
         prompt_lines.clamp(5, 15) // Min 5, max 15 lines
@@ -505,6 +539,27 @@ impl CreateDialogState {
     }
 }
 
+impl Default for CreateDialogState {
+    fn default() -> Self {
+        Self {
+            prompt: String::new(),
+            repo_path: String::new(),
+            backend: BackendType::Zellij, // Default to Zellij
+            agent: AgentType::ClaudeCode,
+            skip_checks: false,
+            plan_mode: true,                    // Default to plan mode ON
+            access_mode: AccessMode::default(), // ReadOnly by default (secure)
+            images: Vec::new(),
+            prompt_cursor_line: 0,
+            prompt_cursor_col: 0,
+            prompt_scroll_offset: 0,
+            focus: CreateDialogFocus::default(),
+            button_create_focused: false,
+            directory_picker: DirectoryPickerState::new(),
+        }
+    }
+}
+
 /// Main application state
 pub struct App {
     /// Current mode/view
@@ -513,8 +568,11 @@ pub struct App {
     /// All sessions
     pub sessions: Vec<Session>,
 
-    /// Currently selected session index
+    /// Currently selected session index (indexes into filtered session list)
     pub selected_index: usize,
+
+    /// Current session filter
+    pub session_filter: SessionFilter,
 
     /// Create dialog state
     pub create_dialog: CreateDialogState,
@@ -586,6 +644,7 @@ impl App {
             mode: AppMode::SessionList,
             sessions: Vec::new(),
             selected_index: 0,
+            session_filter: SessionFilter::All,
             create_dialog: CreateDialogState::new(),
             pending_delete: None,
             status_message: None,
@@ -649,9 +708,12 @@ impl App {
     pub async fn refresh_sessions(&mut self) -> anyhow::Result<()> {
         if let Some(client) = &mut self.client {
             self.sessions = client.list_sessions().await?;
-            // Clamp selected index
-            if !self.sessions.is_empty() && self.selected_index >= self.sessions.len() {
-                self.selected_index = self.sessions.len() - 1;
+            // Clamp selected index to filtered list bounds
+            let filtered_count = self.get_filtered_sessions().len();
+            if filtered_count > 0 && self.selected_index >= filtered_count {
+                self.selected_index = filtered_count - 1;
+            } else if filtered_count == 0 {
+                self.selected_index = 0;
             }
         }
         Ok(())
@@ -660,11 +722,93 @@ impl App {
     /// Get the currently selected session
     #[must_use]
     pub fn selected_session(&self) -> Option<&Session> {
-        self.sessions.get(self.selected_index)
+        let filtered = self.get_filtered_sessions();
+        filtered.get(self.selected_index).copied()
+    }
+
+    /// Get filtered sessions based on the active filter
+    #[must_use]
+    pub fn get_filtered_sessions(&self) -> Vec<&Session> {
+        match self.session_filter {
+            SessionFilter::All => self
+                .sessions
+                .iter()
+                .filter(|s| s.status != SessionStatus::Archived)
+                .collect(),
+            SessionFilter::Running => self
+                .sessions
+                .iter()
+                .filter(|s| s.status == SessionStatus::Running)
+                .collect(),
+            SessionFilter::Idle => self
+                .sessions
+                .iter()
+                .filter(|s| s.status == SessionStatus::Idle)
+                .collect(),
+            SessionFilter::Completed => self
+                .sessions
+                .iter()
+                .filter(|s| s.status == SessionStatus::Completed)
+                .collect(),
+            SessionFilter::Archived => self
+                .sessions
+                .iter()
+                .filter(|s| s.status == SessionStatus::Archived)
+                .collect(),
+        }
+    }
+
+    /// Get count of sessions for a specific filter
+    #[must_use]
+    pub fn get_filter_count(&self, filter: SessionFilter) -> usize {
+        match filter {
+            SessionFilter::All => self
+                .sessions
+                .iter()
+                .filter(|s| s.status != SessionStatus::Archived)
+                .count(),
+            SessionFilter::Running => self
+                .sessions
+                .iter()
+                .filter(|s| s.status == SessionStatus::Running)
+                .count(),
+            SessionFilter::Idle => self
+                .sessions
+                .iter()
+                .filter(|s| s.status == SessionStatus::Idle)
+                .count(),
+            SessionFilter::Completed => self
+                .sessions
+                .iter()
+                .filter(|s| s.status == SessionStatus::Completed)
+                .count(),
+            SessionFilter::Archived => self
+                .sessions
+                .iter()
+                .filter(|s| s.status == SessionStatus::Archived)
+                .count(),
+        }
+    }
+
+    /// Set the active filter and clamp selection to valid range
+    pub fn set_filter(&mut self, filter: SessionFilter) {
+        self.session_filter = filter;
+        let filtered_count = self.get_filtered_sessions().len();
+        if filtered_count == 0 {
+            self.selected_index = 0;
+        } else if self.selected_index >= filtered_count {
+            self.selected_index = filtered_count - 1;
+        }
+    }
+
+    /// Cycle to the next filter
+    pub fn cycle_filter_next(&mut self) {
+        let next_filter = self.session_filter.cycle_next();
+        self.set_filter(next_filter);
     }
 
     /// Move selection up
-    pub const fn select_previous(&mut self) {
+    pub fn select_previous(&mut self) {
         if self.selected_index > 0 {
             self.selected_index -= 1;
         }
@@ -672,7 +816,8 @@ impl App {
 
     /// Move selection down
     pub fn select_next(&mut self) {
-        if !self.sessions.is_empty() && self.selected_index < self.sessions.len() - 1 {
+        let filtered_count = self.get_filtered_sessions().len();
+        if filtered_count > 0 && self.selected_index < filtered_count - 1 {
             self.selected_index += 1;
         }
     }
@@ -804,6 +949,23 @@ impl App {
         Ok(())
     }
 
+    /// Unarchive the selected session
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if unarchiving fails.
+    pub async fn unarchive_selected(&mut self) -> anyhow::Result<()> {
+        if let Some(session) = self.selected_session() {
+            let id = session.id.to_string();
+            if let Some(client) = &mut self.client {
+                client.unarchive_session(&id).await?;
+                self.status_message = Some(format!("Unarchived session {id}"));
+                self.refresh_sessions().await?;
+            }
+        }
+        Ok(())
+    }
+
     /// Refresh the selected session (pull latest image and recreate container)
     ///
     /// # Errors
@@ -887,8 +1049,9 @@ impl App {
             // Build status message, including any warnings
             let mut status = format!("Created session {name}", name = session.name);
             if let Some(warns) = warnings {
+                use std::fmt::Write;
                 for warn in warns {
-                    status.push_str(&format!(" (Warning: {warn})"));
+                    let _ = write!(status, " (Warning: {warn})");
                 }
             }
             self.status_message = Some(status);
@@ -1233,8 +1396,9 @@ impl App {
             self.pty_sessions.insert(session_id, pty_session);
         }
 
-        // Update selected index in session list to match
-        if let Some(idx) = self.sessions.iter().position(|s| s.id == session_id) {
+        // Update selected index in session list to match (search in filtered list)
+        let filtered_sessions = self.get_filtered_sessions();
+        if let Some(idx) = filtered_sessions.iter().position(|s| s.id == session_id) {
             self.selected_index = idx;
         }
 
@@ -1285,8 +1449,9 @@ impl App {
             self.pty_sessions.insert(session_id, pty_session);
         }
 
-        // Update selected index in session list to match
-        if let Some(idx) = self.sessions.iter().position(|s| s.id == session_id) {
+        // Update selected index in session list to match (search in filtered list)
+        let filtered_sessions = self.get_filtered_sessions();
+        if let Some(idx) = filtered_sessions.iter().position(|s| s.id == session_id) {
             self.selected_index = idx;
         }
 

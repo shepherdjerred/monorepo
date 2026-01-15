@@ -12,9 +12,11 @@ type SessionContextValue = {
   createSession: (request: CreateSessionRequest) => Promise<string>;
   deleteSession: (id: string) => Promise<void>;
   archiveSession: (id: string) => Promise<void>;
+  unarchiveSession: (id: string) => Promise<void>;
   refreshSession: (id: string) => Promise<void>;
   updateAccessMode: (id: string, mode: AccessMode) => Promise<void>;
   updateSession: (id: string, title?: string, description?: string) => Promise<void>;
+  regenerateMetadata: (id: string) => Promise<void>;
   client: ClauderonClient;
 }
 
@@ -73,6 +75,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     [client, refreshSessions]
   );
 
+  const unarchiveSession = useCallback(
+    async (id: string) => {
+      await client.unarchiveSession(id);
+      await refreshSessions();
+    },
+    [client, refreshSessions]
+  );
+
   const refreshSession = useCallback(
     async (id: string) => {
       await client.refreshSession(id);
@@ -95,6 +105,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       // WebSocket event will update state
     },
     [client]
+  );
+
+  const regenerateMetadata = useCallback(
+    async (id: string) => {
+      await client.regenerateMetadata(id);
+      await refreshSessions();
+    },
+    [client, refreshSessions]
   );
 
   // Handle real-time events
@@ -145,9 +163,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         createSession,
         deleteSession,
         archiveSession,
+        unarchiveSession,
         refreshSession,
         updateAccessMode,
         updateSession,
+        regenerateMetadata,
         client,
       }}
     >

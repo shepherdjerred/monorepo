@@ -30,6 +30,7 @@ pub struct PluginManifest {
 
 impl PluginManifest {
     /// Create an empty plugin manifest (used for graceful degradation).
+    #[must_use]
     pub fn empty() -> Self {
         Self {
             marketplace_configs: serde_json::json!({}),
@@ -44,6 +45,7 @@ impl PluginDiscovery {
     /// # Arguments
     ///
     /// * `host_claude_dir` - Path to the host's .claude directory (typically ~/.claude)
+    #[must_use]
     pub fn new(host_claude_dir: PathBuf) -> Self {
         Self { host_claude_dir }
     }

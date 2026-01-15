@@ -38,8 +38,7 @@ fn render_attached_status(app: &App) -> Line<'static> {
     let session_name = app
         .attached_session_id
         .and_then(|id| app.sessions.iter().find(|s| s.id == id))
-        .map(|s| s.name.clone())
-        .unwrap_or_else(|| "Unknown".to_string());
+        .map_or_else(|| "Unknown".to_string(), |s| s.name.clone());
 
     // Check scroll position
     let scroll_indicator = if let Some(pty_session) = app.attached_pty_session() {
@@ -81,11 +80,7 @@ fn render_attached_status(app: &App) -> Line<'static> {
 
 /// Render status bar for copy mode
 fn render_copy_mode_status(app: &App) -> Line<'static> {
-    let is_visual = app
-        .copy_mode_state
-        .as_ref()
-        .map(|s| s.visual_mode)
-        .unwrap_or(false);
+    let is_visual = app.copy_mode_state.as_ref().is_some_and(|s| s.visual_mode);
 
     if is_visual {
         Line::from(vec![
@@ -162,7 +157,13 @@ fn render_scroll_status(_app: &App) -> Line<'static> {
 fn render_normal_status(app: &App) -> Line<'static> {
     let status_text = app.status_message.clone().unwrap_or_else(|| {
         if app.is_connected() {
-            format!("{count} sessions", count = app.sessions.len())
+            let filtered_count = app.get_filtered_sessions().len();
+            let total_count = app.sessions.len();
+            let filter_name = app.session_filter.display_name();
+            format!(
+                "Filter: {} ({}/{} sessions) | Press 1-5 to change filter",
+                filter_name, filtered_count, total_count
+            )
         } else {
             "Disconnected".to_string()
         }

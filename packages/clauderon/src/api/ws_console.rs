@@ -157,7 +157,7 @@ async fn handle_console_socket(socket: WebSocket, session_id: String, state: App
                             }
                         }
                     }
-                    Some(Ok(Message::Close(_))) => break,
+                    Some(Ok(Message::Close(_))) | None => break,
                     Some(Ok(Message::Ping(data))) => {
                         tracing::trace!("Received ping: {} bytes", data.len());
                     }
@@ -165,7 +165,6 @@ async fn handle_console_socket(socket: WebSocket, session_id: String, state: App
                         tracing::error!("WebSocket error: {}", e);
                         break;
                     }
-                    None => break,
                     _ => {}
                 }
             }

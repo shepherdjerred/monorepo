@@ -21,6 +21,7 @@ impl PortAllocator {
     const MAX_SESSIONS: u16 = 500;
 
     /// Create a new port allocator
+    #[must_use]
     pub fn new(start_port: Option<u16>) -> Self {
         let base_port = start_port.unwrap_or(Self::BASE_PORT);
         Self {

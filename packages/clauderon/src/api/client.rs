@@ -231,6 +231,25 @@ impl Client {
         }
     }
 
+    /// Unarchive a session
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the session is not found, not archived, or the request fails.
+    pub async fn unarchive_session(&mut self, id: &str) -> anyhow::Result<()> {
+        let response = self
+            .send_request(Request::UnarchiveSession { id: id.to_string() })
+            .await?;
+
+        match response {
+            Response::Unarchived => Ok(()),
+            Response::Error { code, message } => {
+                anyhow::bail!("[{code}] {message}")
+            }
+            _ => anyhow::bail!("Unexpected response"),
+        }
+    }
+
     /// Refresh a session (pull latest image and recreate container)
     ///
     /// # Errors
@@ -377,6 +396,10 @@ impl ApiClient for Client {
 
     async fn archive_session(&mut self, id: &str) -> anyhow::Result<()> {
         Self::archive_session(self, id).await
+    }
+
+    async fn unarchive_session(&mut self, id: &str) -> anyhow::Result<()> {
+        Self::unarchive_session(self, id).await
     }
 
     async fn refresh_session(&mut self, id: &str) -> anyhow::Result<()> {

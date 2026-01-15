@@ -172,7 +172,7 @@ fn extract_text_between(screen: &vt100::Screen, start: (u16, u16), end: (u16, u1
     if start.0 == end.0 {
         for col in start.1..=end.1 {
             if let Some(cell) = screen.cell(start.0, col) {
-                text.push_str(&cell.contents());
+                text.push_str(cell.contents());
             }
         }
         // Trim trailing whitespace for single line
@@ -183,7 +183,7 @@ fn extract_text_between(screen: &vt100::Screen, start: (u16, u16), end: (u16, u1
         let mut line = String::new();
         for col in start.1..max_col {
             if let Some(cell) = screen.cell(start.0, col) {
-                line.push_str(&cell.contents());
+                line.push_str(cell.contents());
             }
         }
         text.push_str(line.trim_end());
@@ -194,7 +194,7 @@ fn extract_text_between(screen: &vt100::Screen, start: (u16, u16), end: (u16, u1
             let mut line = String::new();
             for col in 0..max_col {
                 if let Some(cell) = screen.cell(row, col) {
-                    line.push_str(&cell.contents());
+                    line.push_str(cell.contents());
                 }
             }
             text.push_str(line.trim_end());
@@ -205,7 +205,7 @@ fn extract_text_between(screen: &vt100::Screen, start: (u16, u16), end: (u16, u1
         let mut line = String::new();
         for col in 0..=end.1 {
             if let Some(cell) = screen.cell(end.0, col) {
-                line.push_str(&cell.contents());
+                line.push_str(cell.contents());
             }
         }
         text.push_str(line.trim_end());

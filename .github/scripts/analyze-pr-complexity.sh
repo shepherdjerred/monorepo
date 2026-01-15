@@ -46,7 +46,7 @@ echo "  Commits: ${COMMITS}"
 if [ "$COMMITS" -eq 0 ]; then
   echo "⚠️  PR has no commits, skipping review"
   echo "should_skip=true" >> $GITHUB_OUTPUT
-  echo "max_turns=30" >> $GITHUB_OUTPUT
+  echo "max_turns=35" >> $GITHUB_OUTPUT
   echo "is_rereview=false" >> $GITHUB_OUTPUT
   echo "previous_state=none" >> $GITHUB_OUTPUT
   echo "previous_was_approved=false" >> $GITHUB_OUTPUT
@@ -138,24 +138,24 @@ echo "Calculating PR complexity..."
 # Use GitHub API stats for complexity calculation (represents full PR scope)
 # Git diff is only used for trivial PR detection (merge/rebase detection)
 TOTAL_CHANGES=$((ADDITIONS + DELETIONS))
-MAX_TURNS=30  # Default
+MAX_TURNS=35  # Default
 COMPLEXITY="complex"
 
 # Complexity thresholds:
-# - Simple: <100 lines AND <5 files → 30 turns
-# - Medium: <250 lines AND <8 files → 30 turns
-# - Complex: >=250 lines OR >=8 files → 30 turns
+# - Simple: <100 lines AND <5 files → 35 turns
+# - Medium: <250 lines AND <8 files → 35 turns
+# - Complex: >=250 lines OR >=8 files → 35 turns
 
 if [ "$TOTAL_CHANGES" -lt 100 ] && [ "$CHANGED_FILES" -lt 5 ]; then
-  MAX_TURNS=30
+  MAX_TURNS=35
   COMPLEXITY="simple"
   echo "  Classification: SIMPLE (<100 lines AND <5 files)"
 elif [ "$TOTAL_CHANGES" -lt 250 ] && [ "$CHANGED_FILES" -lt 8 ]; then
-  MAX_TURNS=30
+  MAX_TURNS=35
   COMPLEXITY="medium"
   echo "  Classification: MEDIUM (<250 lines AND <8 files)"
 else
-  MAX_TURNS=30
+  MAX_TURNS=35
   COMPLEXITY="complex"
   echo "  Classification: COMPLEX (≥250 lines OR ≥8 files)"
 fi
@@ -165,7 +165,7 @@ echo "  Max turns: ${MAX_TURNS}"
 # Validate max_turns
 if ! [[ "$MAX_TURNS" =~ ^[0-9]+$ ]]; then
   echo "⚠️  Invalid max_turns, using default"
-  MAX_TURNS=30
+  MAX_TURNS=35
 fi
 
 # ----------------------------------------------------------------------------

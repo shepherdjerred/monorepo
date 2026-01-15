@@ -4,25 +4,24 @@
 //! so containers can access Kubernetes and Talos without credentials.
 
 use anyhow::Context;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use crate::plugins::PluginManifest;
 use crate::proxy::{dummy_auth_json_string, dummy_config_toml};
 
 /// Generate all container configuration files.
 pub fn generate_container_configs(
-    clauderon_dir: &PathBuf,
+    clauderon_dir: &Path,
     talos_gateway_port: u16,
+    kubectl_proxy_port: u16,
 ) -> anyhow::Result<()> {
     generate_talosconfig(clauderon_dir, talos_gateway_port)?;
+    generate_kubeconfig(clauderon_dir, kubectl_proxy_port)?;
     Ok(())
 }
 
 /// Generate Codex dummy auth/config files for containers.
-pub fn generate_codex_config(
-    clauderon_dir: &PathBuf,
-    account_id: Option<&str>,
-) -> anyhow::Result<()> {
+pub fn generate_codex_config(clauderon_dir: &Path, account_id: Option<&str>) -> anyhow::Result<()> {
     let codex_dir = clauderon_dir.join("codex");
     std::fs::create_dir_all(&codex_dir)?;
 
@@ -40,7 +39,7 @@ pub fn generate_codex_config(
 /// the mounted plugin directories. Plugin files themselves are mounted read-only from
 /// the host, so this only generates the configuration metadata.
 pub fn generate_plugin_config(
-    clauderon_dir: &PathBuf,
+    clauderon_dir: &Path,
     plugin_manifest: &PluginManifest,
 ) -> anyhow::Result<()> {
     let plugins_dir = clauderon_dir.join("plugins");
@@ -108,7 +107,7 @@ fn transform_marketplace_paths_for_container(host_config: &serde_json::Value) ->
 /// IMPORTANT: This config intentionally omits ca, crt, and key fields for zero-credential access.
 /// The gateway terminates TLS using the proxy's CA, then establishes mTLS to real Talos
 /// with the host's credentials. Container never needs private keys.
-fn generate_talosconfig(clauderon_dir: &PathBuf, port: u16) -> anyhow::Result<()> {
+fn generate_talosconfig(clauderon_dir: &Path, port: u16) -> anyhow::Result<()> {
     let talos_dir = clauderon_dir.join("talos");
     std::fs::create_dir_all(&talos_dir)?;
 
@@ -133,6 +132,43 @@ contexts:
     Ok(())
 }
 
+/// Generate kubeconfig for containers.
+///
+/// This kubeconfig points to kubectl proxy running on the host.
+/// IMPORTANT: No credentials needed - kubectl proxy handles all authentication using the host's kubeconfig.
+/// The container connects via HTTP to host-gateway:{port} (or host.docker.internal:{port} for Docker).
+fn generate_kubeconfig(clauderon_dir: &PathBuf, port: u16) -> anyhow::Result<()> {
+    let kube_dir = clauderon_dir.join("kube");
+    std::fs::create_dir_all(&kube_dir)?;
+
+    // Generate minimal kubeconfig pointing to kubectl proxy via host-gateway
+    // kubectl proxy runs on host, containers access via host-gateway:{port}
+    // No TLS needed - kubectl proxy serves plain HTTP
+    let config = format!(
+        r"apiVersion: v1
+kind: Config
+clusters:
+- cluster:
+    server: http://host-gateway:{port}
+  name: clauderon-proxied
+contexts:
+- context:
+    cluster: clauderon-proxied
+    user: clauderon-proxied
+  name: clauderon-proxied
+current-context: clauderon-proxied
+users:
+- name: clauderon-proxied
+"
+    );
+
+    let config_path = kube_dir.join("config");
+    std::fs::write(&config_path, config)?;
+
+    tracing::info!("Generated container kubeconfig at {:?}", config_path);
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -150,6 +186,23 @@ mod tests {
 
         let content = std::fs::read_to_string(&config_path).unwrap();
         assert!(content.contains("host.docker.internal:18082"));
+    }
+
+    #[test]
+    fn test_generate_kubeconfig() {
+        let dir = tempdir().unwrap();
+        let clauderon_dir = dir.path().to_path_buf();
+
+        generate_kubeconfig(&clauderon_dir, 18081).unwrap();
+
+        let config_path = clauderon_dir.join("kube/config");
+        assert!(config_path.exists());
+
+        let content = std::fs::read_to_string(&config_path).unwrap();
+        assert!(content.contains("http://host-gateway:18081"));
+        assert!(content.contains("apiVersion: v1"));
+        assert!(content.contains("kind: Config"));
+        assert!(content.contains("clauderon-proxied"));
     }
 
     #[test]

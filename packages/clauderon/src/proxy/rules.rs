@@ -69,6 +69,7 @@ impl Rule {
     /// If you need to match both apex and subdomains, add two rules:
     /// - `*.example.com` for subdomains
     /// - `example.com` for the apex
+    #[must_use]
     pub fn matches(&self, host: &str) -> bool {
         if self.host_pattern.starts_with('*') {
             // Wildcard prefix match (e.g., "*.docker.io" -> ".docker.io" suffix)
@@ -82,6 +83,7 @@ impl Rule {
     }
 
     /// Format the credential into the header value.
+    #[must_use]
     pub fn format_header(&self, token: &str) -> String {
         match self.encoding {
             AuthEncoding::Simple => self.format.replace("{}", token),
@@ -209,6 +211,7 @@ pub static RULES: &[Rule] = &[
 ];
 
 /// Find the matching rule for a given host.
+#[must_use]
 pub fn find_matching_rule(host: &str) -> Option<&'static Rule> {
     RULES.iter().find(|rule| rule.matches(host))
 }

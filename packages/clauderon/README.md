@@ -66,6 +66,149 @@ You can provide an OpenAI API key via:
 - `OPENAI_API_KEY` or `CODEX_API_KEY` environment variables, or
 - `~/.clauderon/secrets/openai_api_key` (for the clauderon proxy to inject)
 
+## Credential Management
+
+Clauderon supports three methods for providing credentials, with the following priority order:
+
+1. **Environment Variables** (highest priority)
+2. **1Password** (if enabled)
+3. **Files in `~/.clauderon/secrets/`** (lowest priority)
+
+### Using Environment Variables
+
+Set credentials directly as environment variables:
+
+```bash
+export GITHUB_TOKEN="ghp_..."
+export CLAUDE_CODE_OAUTH_TOKEN="sk-ant-..."
+export OPENAI_API_KEY="sk-..."
+```
+
+### Using Files
+
+Store credentials in `~/.clauderon/secrets/` directory:
+
+```bash
+mkdir -p ~/.clauderon/secrets
+echo "ghp_..." > ~/.clauderon/secrets/github_token
+echo "sk-ant-..." > ~/.clauderon/secrets/anthropic_oauth_token
+chmod 600 ~/.clauderon/secrets/*
+```
+
+### Using 1Password (Recommended)
+
+Clauderon can securely retrieve credentials from 1Password instead of storing them in plain text files.
+
+#### Setup
+
+1. Install 1Password CLI:
+   ```bash
+   brew install 1password-cli
+   # or download from https://1password.com/downloads/command-line/
+   ```
+
+2. Authenticate with 1Password:
+   ```bash
+   op signin
+   ```
+
+3. Configure credentials in `~/.clauderon/proxy.toml`:
+   ```toml
+   [onepassword]
+   enabled = true
+
+   [onepassword.credentials]
+   github_token = "op://Production/GitHub/token"
+   anthropic_oauth_token = "op://Production/Anthropic/oauth_token"
+   openai_api_key = "op://Production/OpenAI/api_key"
+   pagerduty_token = "op://Production/PagerDuty/api_token"
+   sentry_auth_token = "op://Production/Sentry/auth_token"
+   grafana_api_key = "op://Production/Grafana/api_key"
+   npm_token = "op://Production/NPM/token"
+   docker_token = "op://Production/Docker/token"
+   k8s_token = "op://Production/Kubernetes/token"
+   talos_token = "op://Production/Talos/token"
+   ```
+
+#### Alternative: Environment Variables with 1Password References
+
+You can also set environment variables to 1Password secret references:
+
+```bash
+export GITHUB_TOKEN="op://Production/GitHub/token"
+export CLAUDE_CODE_OAUTH_TOKEN="op://Production/Anthropic/oauth_token"
+```
+
+When these are set, clauderon will automatically detect the `op://` prefix and fetch values from 1Password at startup.
+
+#### Service Accounts for CI/CD
+
+For automated environments, use 1Password service accounts:
+
+```bash
+export OP_SERVICE_ACCOUNT_TOKEN="ops_..."
+```
+
+Service account tokens are automatically detected by the `op` CLI.
+
+**Best Practices:**
+- Grant service accounts read-only access to specific vaults only
+- Use separate service accounts for production vs. staging environments
+- Rotate service account tokens regularly
+- Never commit service account tokens to version control
+
+#### Credential Priority Examples
+
+When credentials are defined in multiple places, clauderon uses the highest priority source:
+
+```bash
+# Example 1: Env var takes precedence
+export GITHUB_TOKEN="from-env"              # ← Used (highest priority)
+# TOML: github_token = "op://vault/item"   # Ignored
+# File: ~/.clauderon/secrets/github_token  # Ignored
+
+# Example 2: 1Password when no env var
+# No GITHUB_TOKEN env var
+# TOML: github_token = "op://vault/item"   # ← Used
+# File: ~/.clauderon/secrets/github_token  # Ignored
+
+# Example 3: File as fallback
+# No GITHUB_TOKEN env var
+# No 1Password configuration
+# File: ~/.clauderon/secrets/github_token  # ← Used
+```
+
+#### Troubleshooting
+
+**"1Password CLI (op) not found"**
+- Ensure `op` is installed and in your PATH
+- Or set a custom path in `proxy.toml`: `op_path = "/custom/path/to/op"`
+
+**"Failed to fetch credential from 1Password"**
+- Verify you're signed in: `op whoami`
+- Check the vault/item/field names in your references
+- Ensure you have access to the specified vault
+
+**Graceful Degradation**
+- If `op` CLI is not available, clauderon will skip 1Password and use environment variables or files
+- Individual credential fetch failures are logged but don't prevent startup
+- The system continues with credentials from other sources
+
+### Supported Credentials
+
+Clauderon supports the following credentials:
+
+- `github_token` - GitHub personal access token
+- `anthropic_oauth_token` - Claude Code OAuth token (CLAUDE_CODE_OAUTH_TOKEN)
+- `openai_api_key` - OpenAI API key (also accepts CODEX_API_KEY)
+- `pagerduty_token` - PagerDuty API token
+- `sentry_auth_token` - Sentry authentication token
+- `grafana_api_key` - Grafana API key
+- `npm_token` - NPM authentication token
+- `docker_token` - Docker Hub token
+- `k8s_token` - Kubernetes authentication token
+- `talos_token` - Talos mTLS token
+
 ## Custom Container Images
 
 Clauderon uses container images to run isolated Claude Code or Codex sessions. The default image is `ghcr.io/shepherdjerred/dotfiles`.
@@ -127,6 +270,24 @@ Start the daemon with HTTP server enabled:
 ```
 
 Then open http://localhost:3030 in your browser.
+
+### Network Binding
+
+By default, the HTTP server binds to `127.0.0.1` (localhost only). For Docker container hooks to work with specific IP bindings (e.g., Tailscale), Clauderon automatically creates an additional `127.0.0.1` listener:
+
+```bash
+# Default: localhost only (no auth required)
+clauderon daemon
+
+# All interfaces: single listener on 0.0.0.0 (requires auth)
+CLAUDERON_ORIGIN=http://hostname:3030 CLAUDERON_BIND_ADDR=0.0.0.0 clauderon daemon
+
+# Specific IP: Creates BOTH specific IP and 127.0.0.1 listeners (requires auth)
+# (127.0.0.1 listener allows Docker containers to reach daemon via host.docker.internal)
+CLAUDERON_ORIGIN=http://hostname:3030 CLAUDERON_BIND_ADDR=100.64.1.1 clauderon daemon
+```
+
+**Note**: Binding to non-localhost addresses (`0.0.0.0` or specific IPs) requires setting `CLAUDERON_ORIGIN` for WebAuthn authentication, or using `CLAUDERON_DISABLE_AUTH=true` (not recommended for production).
 
 ### CLI Options
 
@@ -205,6 +366,62 @@ clauderon/
 │   └── frontend/     # React UI
 └── build.rs          # Build script (typeshare + embed)
 ```
+
+## Security Architecture
+
+### Zero-Credential Container Design
+
+Clauderon containers run with zero real credentials. The host proxy intercepts HTTPS requests and injects authentication tokens, so containers never see actual API keys.
+
+#### What's Mounted in Containers
+
+Containers receive minimal mounts for functionality:
+
+- **`~/.clauderon/uploads/{session-id}/`** → **`/workspace/.clauderon/uploads/{session-id}/`** (read-write)
+  - Image attachments uploaded via API
+  - Per-session isolation
+
+- **`~/.clauderon/proxy-ca.pem`** → **`/etc/clauderon/proxy-ca.pem`** (read-only)
+  - CA certificate for TLS interception
+  - Required for proxy functionality
+
+- **`~/.clauderon/codex/`** → **`/etc/clauderon/codex/`** (read-only)
+  - Dummy Codex authentication files
+  - Real tokens injected by proxy
+
+- **`~/.clauderon/talos/`** → **`/etc/clauderon/talos/`** (read-only, optional)
+  - Talos kubeconfig for Kubernetes operations
+  - Only mounted if Talos configured
+
+- **`~/.clauderon/claude.json`** → **`/workspace/.claude.json`** (read-write)
+  - Onboarding state and permissions preferences
+  - Claude Code writes to this file
+
+- **`~/.clauderon/managed-settings.json`** → **`/etc/claude-code/managed-settings.json`** (read-only, with proxy)
+  - Enforces bypass permissions mode in proxy environments
+
+#### What's NOT Mounted (Security)
+
+These files remain on the host only:
+
+- **`~/.clauderon/secrets/`** - Real OAuth tokens and API keys
+- **`~/.clauderon/db.sqlite`** - Session database
+- **`~/.clauderon/audit.jsonl`** - HTTP proxy audit logs
+- **`~/.clauderon/*.sock`** - Unix sockets for daemon IPC
+- **`~/.clauderon/proxy-ca-key.pem`** - CA private key
+- **`~/.clauderon/daemon.info`** - Daemon process metadata
+- **`~/.clauderon/logs/`** - Daemon log files
+
+#### Hooks Directory
+
+The `/workspace/.clauderon/hooks/` directory exists inside containers but is NOT mounted from the host. Instead:
+
+1. Container starts with no hooks directory
+2. Daemon uses `docker exec` to create `/workspace/.clauderon/hooks/` inside container
+3. Daemon writes `send_status.sh` script inside container
+4. Claude Code hooks execute the script to send events to daemon via HTTP
+
+This design ensures hooks are isolated per container and don't require host filesystem access.
 
 ## API Endpoints
 

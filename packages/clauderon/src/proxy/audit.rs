@@ -65,6 +65,7 @@ impl AuditLogger {
     }
 
     /// Create a no-op logger (for when audit is disabled).
+    #[must_use]
     pub fn noop() -> Self {
         Self {
             file: Mutex::new(None),
@@ -83,6 +84,7 @@ impl AuditLogger {
             let json = serde_json::to_string(entry)?;
             writeln!(file, "{json}")?;
         }
+        drop(guard);
 
         Ok(())
     }
@@ -97,6 +99,7 @@ impl AuditLogger {
         if let Some(file) = guard.as_mut() {
             file.flush()?;
         }
+        drop(guard);
 
         Ok(())
     }

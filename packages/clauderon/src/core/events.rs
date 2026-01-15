@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use typeshare::typeshare;
 use uuid::Uuid;
 
-use super::session::{BackendType, ClaudeWorkingStatus, Session, SessionStatus};
+use super::session::{AccessMode, BackendType, ClaudeWorkingStatus, Session, SessionStatus};
 
 /// Event representing a state change in the system (database model)
 /// Note: This is not exported to TypeScript. For WebSocket events, see api::protocol::Event
@@ -61,6 +61,9 @@ pub enum EventType {
 
     /// Merge conflict status changed
     ConflictStatusChanged { has_conflict: bool },
+
+    /// Working tree status changed (dirty/clean)
+    WorktreeStatusChanged { is_dirty: bool },
 
     /// Session was archived
     SessionArchived,
@@ -121,7 +124,7 @@ pub fn replay_events(events: &[Event]) -> Option<Session> {
         backend: *backend,
         agent: super::session::AgentType::ClaudeCode,
         dangerous_skip_checks: false,
-        access_mode: Default::default(),
+        access_mode: AccessMode::default(),
     });
 
     // Apply all subsequent events
@@ -148,6 +151,9 @@ pub fn replay_events(events: &[Event]) -> Option<Session> {
             }
             EventType::ConflictStatusChanged { has_conflict } => {
                 session.set_merge_conflict(*has_conflict);
+            }
+            EventType::WorktreeStatusChanged { is_dirty } => {
+                session.set_worktree_dirty(*is_dirty);
             }
             EventType::SessionArchived => {
                 session.set_status(super::session::SessionStatus::Archived);

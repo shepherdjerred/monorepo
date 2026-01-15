@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { Session } from "@clauderon/client";
 import { useSessionContext } from "../contexts/SessionContext";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { X } from "lucide-react";
+import { X, RefreshCw, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 type EditSessionDialogProps = {
@@ -12,14 +12,23 @@ type EditSessionDialogProps = {
 }
 
 export function EditSessionDialog({ session, onClose }: EditSessionDialogProps) {
-  const { updateSession } = useSessionContext();
+  const { updateSession, regenerateMetadata } = useSessionContext();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRegenerating, setIsRegenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     title: session.title || session.name,
     description: session.description || "",
   });
+
+  // Sync form data when session prop changes (e.g., after regeneration via WebSocket)
+  useEffect(() => {
+    setFormData({
+      title: session.title || session.name,
+      description: session.description || "",
+    });
+  }, [session.title, session.description, session.name]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,6 +49,23 @@ export function EditSessionDialog({ session, onClose }: EditSessionDialogProps) 
       toast.error(`Failed to update session: ${errorMsg}`);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleRegenerate = async () => {
+    setIsRegenerating(true);
+    setError(null);
+
+    try {
+      await regenerateMetadata(session.id);
+      toast.success("Metadata regenerated successfully");
+      // Update form data with regenerated values (will come through WebSocket event)
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      setError(errorMsg);
+      toast.error(`Failed to regenerate metadata: ${errorMsg}`);
+    } finally {
+      setIsRegenerating(false);
     }
   };
 
@@ -102,6 +128,37 @@ export function EditSessionDialog({ session, onClose }: EditSessionDialogProps) 
                 className="flex w-full rounded-md border-2 border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm min-h-[100px]"
                 placeholder="Enter session description"
               />
+            </div>
+
+            {/* Regenerate with AI */}
+            <div className="space-y-2">
+              <Label className="font-semibold">AI Generation</Label>
+              <div className="flex items-center gap-3 p-4 border-2 border-input rounded-md bg-muted/50">
+                <div className="flex-1">
+                  <p className="text-sm text-muted-foreground">
+                    Regenerate title and description using AI based on the initial prompt.
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => { void handleRegenerate(); }}
+                  disabled={isRegenerating || isSubmitting}
+                  className="flex items-center gap-2"
+                >
+                  {isRegenerating ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Regenerating...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="w-4 h-4" />
+                      Regenerate with AI
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
 
             {/* Actions */}

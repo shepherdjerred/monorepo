@@ -110,6 +110,13 @@ export class ClauderonClient {
   }
 
   /**
+   * Unarchive a session
+   */
+  async unarchiveSession(id: string): Promise<void> {
+    await this.request("POST", `/api/sessions/${encodeURIComponent(id)}/unarchive`);
+  }
+
+  /**
    * Refresh a session (pull latest image and recreate container)
    */
   async refreshSession(id: string): Promise<void> {
@@ -153,6 +160,15 @@ export class ClauderonClient {
       title,
       description,
     });
+  }
+
+  /**
+   * Regenerate session metadata using AI
+   * Returns the updated session with new title and description
+   */
+  async regenerateMetadata(id: string): Promise<Session> {
+    const response = await this.request<{ session: Session }>("POST", `/api/sessions/${encodeURIComponent(id)}/regenerate-metadata`);
+    return response.session;
   }
 
   /**
