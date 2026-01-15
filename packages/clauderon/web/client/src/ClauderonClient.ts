@@ -167,8 +167,8 @@ export class ClauderonClient {
    * Returns the updated session with new title and description
    */
   async regenerateMetadata(id: string): Promise<Session> {
-    const response = await this.request<Session>("POST", `/api/sessions/${encodeURIComponent(id)}/regenerate-metadata`);
-    return response;
+    const response = await this.request<{ session: Session }>("POST", `/api/sessions/${encodeURIComponent(id)}/regenerate-metadata`);
+    return response.session;
   }
 
   /**
