@@ -1,5 +1,6 @@
 use async_trait::async_trait;
 use chrono::Utc;
+use sqlx::Row;
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePool, SqlitePoolOptions};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
@@ -1387,6 +1388,7 @@ impl TryFrom<SessionRow> for Session {
             progress: None, // Progress is transient and not persisted to database
             created_at,
             updated_at,
+            repositories: None, // Repositories loaded separately via get_session_repositories
         })
     }
 }
