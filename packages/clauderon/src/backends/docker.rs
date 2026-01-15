@@ -5,7 +5,8 @@ use tracing::instrument;
 
 use super::traits::ExecutionBackend;
 use crate::core::AgentType;
-use crate::proxy::{dummy_auth_json_string, dummy_config_toml};
+use crate::plugins::{PluginDiscovery, PluginManifest};
+use crate::proxy::{dummy_auth_json_string, dummy_config_toml, generate_plugin_config};
 
 /// Sanitize git config value to prevent environment variable injection
 ///
@@ -164,6 +165,34 @@ impl DockerBackend {
         }
     }
 
+    /// Pull the latest version of the Docker image
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the docker pull command fails.
+    #[instrument(skip(self))]
+    pub async fn pull_image(&self) -> anyhow::Result<()> {
+        tracing::info!(image = DOCKER_IMAGE, "Pulling Docker image");
+
+        let output = Command::new("docker")
+            .args(["pull", DOCKER_IMAGE])
+            .output()
+            .await?;
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            tracing::error!(
+                image = DOCKER_IMAGE,
+                stderr = %stderr,
+                "Failed to pull Docker image"
+            );
+            anyhow::bail!("Failed to pull Docker image: {stderr}");
+        }
+
+        tracing::info!(image = DOCKER_IMAGE, "Successfully pulled Docker image");
+        Ok(())
+    }
+
     /// Build the docker run command arguments (exposed for testing)
     ///
     /// Returns all arguments that would be passed to `docker run`.
@@ -265,6 +294,17 @@ impl DockerBackend {
         args.extend([
             "-v".to_string(),
             format!("{clauderon_dir}:/workspace/.clauderon"),
+        ]);
+
+        // Mount uploads directory for image attachments
+        // - Read-write: allows bidirectional file communication between app and Claude
+        // - Shared across sessions with per-session subdirectories for isolation
+        // - Images uploaded via API (POST /api/sessions/{id}/upload) are stored here
+        // - Paths are translated from host to container in the agent command below
+        let uploads_dir = format!("{home_dir}/.clauderon/uploads");
+        args.extend([
+            "-v".to_string(),
+            format!("{uploads_dir}:/workspace/.clauderon/uploads"),
         ]);
 
         // Detect if workdir is a git worktree and mount parent .git directory
@@ -506,6 +546,17 @@ impl DockerBackend {
                 temp_dir
             };
 
+            // Discover plugins from host
+            let plugin_discovery = PluginDiscovery::new(
+                dirs::home_dir()
+                    .unwrap_or_else(|| PathBuf::from("/tmp"))
+                    .join(".claude"),
+            );
+            let plugin_manifest = plugin_discovery.discover_plugins().unwrap_or_else(|e| {
+                tracing::warn!("Failed to discover plugins: {}", e);
+                PluginManifest::empty()
+            });
+
             // Create the config directory if it doesn't exist
             if let Err(e) = std::fs::create_dir_all(&config_dir) {
                 tracing::warn!(
@@ -540,6 +591,45 @@ impl DockerBackend {
                             display = claude_json_path.display()
                         ),
                     ]);
+                }
+
+                // Generate and mount plugin configuration if plugins are available
+                if !plugin_manifest.installed_plugins.is_empty() {
+                    if let Err(e) = generate_plugin_config(&config_dir, &plugin_manifest) {
+                        tracing::warn!("Failed to generate plugin config: {}", e);
+                    } else {
+                        // Mount plugin marketplace config
+                        let plugin_config_path = config_dir.join("plugins/known_marketplaces.json");
+                        if plugin_config_path.exists() {
+                            args.extend([
+                                "-v".to_string(),
+                                format!(
+                                    "{}:/workspace/.claude/plugins/known_marketplaces.json:ro",
+                                    plugin_config_path.display()
+                                ),
+                            ]);
+                        }
+
+                        // Mount marketplace directory read-only
+                        let host_plugins_dir = dirs::home_dir()
+                            .unwrap_or_else(|| PathBuf::from("/tmp"))
+                            .join(".claude/plugins/marketplaces");
+
+                        if host_plugins_dir.exists() {
+                            args.extend([
+                                "-v".to_string(),
+                                format!(
+                                    "{}:/workspace/.claude/plugins/marketplaces:ro",
+                                    host_plugins_dir.display()
+                                ),
+                            ]);
+                            tracing::info!(
+                                "Mounted {} plugins from {} to container",
+                                plugin_manifest.installed_plugins.len(),
+                                host_plugins_dir.display()
+                            );
+                        }
+                    }
                 }
 
                 // Proxy-specific configuration (only when proxy is enabled)
@@ -596,11 +686,20 @@ impl DockerBackend {
                 }
             };
 
+            // Translate image paths from host to container
+            // Host: /Users/name/.clauderon/uploads/... → Container: /workspace/.clauderon/uploads/...
+            let translated_images: Vec<String> = images
+                .iter()
+                .map(|image_path| {
+                    crate::utils::paths::translate_image_path_to_container(image_path)
+                })
+                .collect();
+
             match agent {
                 AgentType::ClaudeCode => {
                     let mut cmd_vec = ClaudeCodeAgent::new().start_command(
                         &escaped_prompt,
-                        images,
+                        &translated_images,
                         dangerous_skip_checks,
                         None,
                     ); // Don't pass session_id here, we handle it in the wrapper
@@ -685,7 +784,7 @@ fi"#;
                             cmd_vec.push("--full-auto".to_string());
                         }
                         cmd_vec.push("exec".to_string());
-                        for image in images {
+                        for image in &translated_images {
                             cmd_vec.push("--image".to_string());
                             cmd_vec.push(image.clone());
                         }
@@ -1619,11 +1718,91 @@ mod tests {
         )
         .expect("Failed to build args");
 
-        // Count volume mounts (should have workspace + 3 cargo/sccache cache mounts + clauderon dir + claude.json)
+        // Count volume mounts (should have workspace + 3 cargo/sccache cache mounts + clauderon dir + uploads + claude.json)
         let mount_count = args.iter().filter(|a| *a == "-v").count();
         assert_eq!(
-            mount_count, 6,
-            "Normal git repo should have workspace + 3 cache mounts + clauderon dir + claude.json, got {mount_count} mounts"
+            mount_count, 7,
+            "Normal git repo should have workspace + 3 cache mounts + clauderon dir + uploads + claude.json, got {mount_count} mounts"
+        );
+    }
+
+    /// Test that uploads directory is mounted
+    #[test]
+    fn test_uploads_directory_mounted() {
+        use tempfile::tempdir;
+
+        let temp_dir = tempdir().expect("Failed to create temp dir");
+        let test_dir = temp_dir.path().join("test-repo");
+        std::fs::create_dir_all(&test_dir).expect("Failed to create test dir");
+
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            &test_dir,
+            &PathBuf::new(),
+            "test prompt",
+            1000,
+            None,
+            AgentType::ClaudeCode,
+            false,
+            true,
+            &[],
+            None,
+            None,
+            None,
+            None,
+        )
+        .expect("Failed to build args");
+
+        // Should have uploads mount
+        let has_uploads_mount = args
+            .iter()
+            .any(|a| a.contains("/uploads:/workspace/.clauderon/uploads"));
+        assert!(
+            has_uploads_mount,
+            "Expected uploads directory mount, got: {args:?}"
+        );
+    }
+
+    /// Test that image paths are translated from host to container
+    #[test]
+    fn test_image_path_translation() {
+        use tempfile::tempdir;
+
+        let temp_dir = tempdir().expect("Failed to create temp dir");
+        let home = std::env::var("HOME").unwrap_or_else(|_| "/tmp".to_string());
+        let session_id = uuid::Uuid::new_v4();
+        let host_path = format!("{home}/.clauderon/uploads/{session_id}/test-image.png");
+
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            temp_dir.path(),
+            &PathBuf::new(),
+            "test prompt",
+            1000,
+            None,
+            AgentType::ClaudeCode,
+            false,
+            true,
+            std::slice::from_ref(&host_path),
+            None,
+            None,
+            None,
+            None,
+        )
+        .expect("Failed to build args");
+
+        let cmd_arg = args.last().unwrap();
+
+        // Host path should NOT appear in command
+        assert!(
+            !cmd_arg.contains(&host_path),
+            "Host path should be translated, not passed directly: {cmd_arg}"
+        );
+
+        // Container path SHOULD appear
+        assert!(
+            cmd_arg.contains("/workspace/.clauderon/uploads"),
+            "Container path should be used: {cmd_arg}"
         );
     }
 
@@ -1762,11 +1941,11 @@ mod tests {
         )
         .expect("Failed to build args");
 
-        // Should have workspace + 3 cache mounts + clauderon dir + claude.json (no git parent mount)
+        // Should have workspace + 3 cache mounts + clauderon dir + uploads + claude.json (no git parent mount)
         let mount_count = args.iter().filter(|a| *a == "-v").count();
         assert_eq!(
-            mount_count, 6,
-            "Malformed worktree should have workspace + 3 cache mounts + clauderon dir + claude.json, got {mount_count} mounts"
+            mount_count, 7,
+            "Malformed worktree should have workspace + 3 cache mounts + clauderon dir + uploads + claude.json, got {mount_count} mounts"
         );
     }
 
@@ -1804,11 +1983,11 @@ mod tests {
         )
         .expect("Failed to build args");
 
-        // Should have workspace + 3 cache mounts + clauderon dir + claude.json (no git parent mount due to validation failure)
+        // Should have workspace + 3 cache mounts + clauderon dir + uploads + claude.json (no git parent mount due to validation failure)
         let mount_count = args.iter().filter(|a| *a == "-v").count();
         assert_eq!(
-            mount_count, 6,
-            "Worktree with missing parent should have workspace + 3 cache mounts + clauderon dir + claude.json, got {mount_count} mounts"
+            mount_count, 7,
+            "Worktree with missing parent should have workspace + 3 cache mounts + clauderon dir + uploads + claude.json, got {mount_count} mounts"
         );
     }
 

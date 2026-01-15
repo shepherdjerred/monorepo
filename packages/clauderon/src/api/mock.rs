@@ -239,6 +239,32 @@ impl ApiClient for MockApiClient {
         anyhow::bail!("Session not found: {id}")
     }
 
+    async fn refresh_session(&mut self, id: &str) -> anyhow::Result<()> {
+        if self.should_fail() {
+            let msg = self.error_message.read().await.clone();
+            anyhow::bail!("{msg}");
+        }
+
+        // For mock, just verify the session exists (refresh is a no-op for mock sessions)
+        let sessions = self.sessions.read().await;
+
+        // Try to find by UUID first
+        if let Ok(uuid) = Uuid::parse_str(id)
+            && sessions.contains_key(&uuid)
+        {
+            return Ok(());
+        }
+
+        // Try to find by name
+        for session in sessions.values() {
+            if session.name == id {
+                return Ok(());
+            }
+        }
+
+        anyhow::bail!("Session not found: {id}")
+    }
+
     async fn attach_session(&mut self, id: &str) -> anyhow::Result<Vec<String>> {
         if self.should_fail() {
             let msg = self.error_message.read().await.clone();
