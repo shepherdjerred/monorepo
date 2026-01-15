@@ -338,6 +338,10 @@ pub enum BackendType {
 
     /// Kubernetes pod
     Kubernetes,
+
+    /// Apple Container (macOS 26+ with Apple silicon)
+    #[cfg(target_os = "macos")]
+    AppleContainer,
 }
 
 /// AI agent type

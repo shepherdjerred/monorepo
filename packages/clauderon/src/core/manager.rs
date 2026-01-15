@@ -9,6 +9,9 @@ use crate::backends::{
     DockerBackend, ExecutionBackend, GitBackend, GitOperations, ImageConfig, ImagePullPolicy,
     KubernetesBackend, ResourceLimits, ZellijBackend,
 };
+
+#[cfg(target_os = "macos")]
+use crate::backends::AppleContainerBackend;
 use crate::core::console_manager::ConsoleManager;
 use crate::store::Store;
 
@@ -55,6 +58,8 @@ pub struct SessionManager {
     zellij: Arc<dyn ExecutionBackend>,
     docker: Arc<dyn ExecutionBackend>,
     kubernetes: Arc<dyn ExecutionBackend>,
+    #[cfg(target_os = "macos")]
+    apple_container: Arc<dyn ExecutionBackend>,
     console_manager: Arc<ConsoleManager>,
     sessions: RwLock<Vec<Session>>,
     /// Optional proxy manager for per-session filtering
@@ -86,6 +91,7 @@ impl SessionManager {
         zellij: Arc<dyn ExecutionBackend>,
         docker: Arc<dyn ExecutionBackend>,
         kubernetes: Arc<dyn ExecutionBackend>,
+        #[cfg(target_os = "macos")] apple_container: Arc<dyn ExecutionBackend>,
     ) -> anyhow::Result<Self> {
         let sessions = store.list_sessions().await?;
 
@@ -95,6 +101,8 @@ impl SessionManager {
             zellij,
             docker,
             kubernetes,
+            #[cfg(target_os = "macos")]
+            apple_container,
             console_manager: Arc::new(ConsoleManager::new()),
             sessions: RwLock::new(sessions),
             proxy_manager: None,
@@ -124,6 +132,8 @@ impl SessionManager {
             Arc::new(ZellijBackend::new()),
             Arc::new(DockerBackend::new()),
             Arc::new(kubernetes_backend),
+            #[cfg(target_os = "macos")]
+            Arc::new(AppleContainerBackend::new()),
         )
         .await
     }
@@ -148,6 +158,8 @@ impl SessionManager {
             Arc::new(ZellijBackend::new()),
             Arc::new(docker),
             Arc::new(kubernetes_backend),
+            #[cfg(target_os = "macos")]
+            Arc::new(AppleContainerBackend::new()),
         )
         .await
     }
@@ -647,6 +659,17 @@ impl SessionManager {
                         )
                         .await?
                 }
+                #[cfg(target_os = "macos")]
+                BackendType::AppleContainer => {
+                    self.apple_container
+                        .create(
+                            &full_name,
+                            &worktree_path,
+                            &transformed_prompt,
+                            create_options,
+                        )
+                        .await?
+                }
             };
 
             update_progress(5, "Finalizing session".to_string()).await;
@@ -666,7 +689,13 @@ impl SessionManager {
                 }
             }
 
-            if backend == BackendType::Docker && !print_mode {
+            #[cfg(target_os = "macos")]
+            let is_container_backend =
+                matches!(backend, BackendType::Docker | BackendType::AppleContainer);
+            #[cfg(not(target_os = "macos"))]
+            let is_container_backend = backend == BackendType::Docker;
+
+            if is_container_backend && !print_mode {
                 if let Err(err) = self
                     .console_manager
                     .ensure_session(session_id, backend, &backend_id)
@@ -1138,6 +1167,8 @@ impl SessionManager {
             BackendType::Zellij => Ok(self.zellij.attach_command(backend_id)),
             BackendType::Docker => Ok(self.docker.attach_command(backend_id)),
             BackendType::Kubernetes => Ok(self.kubernetes.attach_command(backend_id)),
+            #[cfg(target_os = "macos")]
+            BackendType::AppleContainer => Ok(self.apple_container.attach_command(backend_id)),
         }
     }
 
@@ -1327,6 +1358,10 @@ impl SessionManager {
                     BackendType::Kubernetes => {
                         let _ = self.kubernetes.delete(backend_id).await;
                     }
+                    #[cfg(target_os = "macos")]
+                    BackendType::AppleContainer => {
+                        let _ = self.apple_container.delete(backend_id).await;
+                    }
                 }
             }
 
@@ -1435,6 +1470,10 @@ impl SessionManager {
                 }
                 BackendType::Kubernetes => {
                     let _ = self.kubernetes.delete(backend_id).await;
+                }
+                #[cfg(target_os = "macos")]
+                BackendType::AppleContainer => {
+                    let _ = self.apple_container.delete(backend_id).await;
                 }
             }
         }
@@ -1678,6 +1717,8 @@ impl SessionManager {
                     BackendType::Zellij => self.zellij.exists(backend_id).await?,
                     BackendType::Docker => self.docker.exists(backend_id).await?,
                     BackendType::Kubernetes => self.kubernetes.exists(backend_id).await?,
+                    #[cfg(target_os = "macos")]
+                    BackendType::AppleContainer => self.apple_container.exists(backend_id).await?,
                 };
 
                 if !exists {
@@ -1800,6 +1841,13 @@ impl SessionManager {
                             BackendType::Zellij => {
                                 let _ = self.zellij.delete(backend_id).await;
                             }
+                            #[cfg(target_os = "macos")]
+                            BackendType::AppleContainer => {
+                                let _ = self.apple_container.delete(backend_id).await;
+                                if let Some(ref proxy_manager) = self.proxy_manager {
+                                    let _ = proxy_manager.destroy_session_proxy(session.id).await;
+                                }
+                            }
                         }
                     }
 
@@ -1875,6 +1923,10 @@ impl SessionManager {
                     let _ = self.kubernetes.delete(backend_id).await;
                 }
                 BackendType::Zellij => {} // Already checked above
+                #[cfg(target_os = "macos")]
+                BackendType::AppleContainer => {
+                    let _ = self.apple_container.delete(backend_id).await;
+                }
             }
         }
 
@@ -1907,6 +1959,17 @@ impl SessionManager {
             }
             BackendType::Kubernetes => {
                 self.kubernetes
+                    .create(
+                        &session.name,
+                        &session.worktree_path,
+                        &session.initial_prompt,
+                        create_options,
+                    )
+                    .await?
+            }
+            #[cfg(target_os = "macos")]
+            BackendType::AppleContainer => {
+                self.apple_container
                     .create(
                         &session.name,
                         &session.worktree_path,
@@ -2256,6 +2319,34 @@ impl SessionManager {
                 // Send prompt via docker exec with stdin (avoids shell injection)
                 let container_name = format!("clauderon-{backend_id}");
                 let mut child = tokio::process::Command::new("docker")
+                    .args(["exec", "-i", &container_name, "claude"])
+                    .stdin(std::process::Stdio::piped())
+                    .stdout(std::process::Stdio::piped())
+                    .stderr(std::process::Stdio::piped())
+                    .spawn()?;
+
+                // Write prompt to stdin
+                if let Some(mut stdin) = child.stdin.take() {
+                    use tokio::io::AsyncWriteExt;
+                    stdin.write_all(prompt.as_bytes()).await?;
+                    stdin.write_all(b"\n").await?;
+                    drop(stdin); // Close stdin to signal end of input
+                }
+
+                let output = child.wait_with_output().await?;
+
+                if !output.status.success() {
+                    anyhow::bail!(
+                        "Failed to send prompt: {}",
+                        String::from_utf8_lossy(&output.stderr)
+                    );
+                }
+            }
+            #[cfg(target_os = "macos")]
+            BackendType::AppleContainer => {
+                // Send prompt via container exec with stdin (similar to Docker)
+                let container_name = format!("clauderon-{backend_id}");
+                let mut child = tokio::process::Command::new("container")
                     .args(["exec", "-i", &container_name, "claude"])
                     .stdin(std::process::Stdio::piped())
                     .stdout(std::process::Stdio::piped())
