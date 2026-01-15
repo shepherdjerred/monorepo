@@ -71,6 +71,7 @@ impl Default for ProxyConfig {
             audit_enabled: true,
             audit_log_path: home.join(".clauderon/audit.jsonl"),
             codex_auth_json_path: Some(home.join(".codex/auth.json")),
+            onepassword: OnePasswordConfig::default(),
         }
     }
 }
