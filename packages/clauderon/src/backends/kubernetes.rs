@@ -17,7 +17,6 @@ use tokio::time::timeout;
 use super::kubernetes_config::{KubernetesConfig, KubernetesProxyConfig};
 use super::traits::{CreateOptions, ExecutionBackend};
 use crate::core::AgentType;
-use crate::plugins::PluginDiscovery;
 use crate::proxy::{dummy_auth_json_string, dummy_config_toml};
 
 /// Sanitize git config value to prevent environment variable injection
@@ -187,13 +186,6 @@ impl KubernetesBackend {
             self.create_shared_pvc("clauderon-sccache", &self.config.sccache_cache_size)
                 .await?;
             tracing::info!("Created shared sccache PVC");
-        }
-
-        // Create uploads PVC for image attachments (shared across sessions)
-        // Unlike workspace PVCs which are per-session, uploads are shared with session-id subdirectories
-        if pvcs.get("clauderon-uploads").await.is_err() {
-            self.create_shared_pvc("clauderon-uploads", "10Gi").await?;
-            tracing::info!("Created shared uploads PVC");
         }
 
         Ok(())
@@ -375,24 +367,6 @@ impl KubernetesBackend {
     /// Create ConfigMap for Claude configuration
     async fn create_claude_config_configmap(&self, pod_name: &str) -> anyhow::Result<()> {
         let cms: Api<ConfigMap> = Api::namespaced(self.client.clone(), &self.config.namespace);
-
-        // Discover plugins from host (where clauderon server runs)
-        // Note: Plugins cannot be mounted in Kubernetes pods without PersistentVolumes
-        let plugin_discovery = PluginDiscovery::new(
-            dirs::home_dir()
-                .unwrap_or_else(|| std::path::PathBuf::from("/tmp"))
-                .join(".claude"),
-        );
-
-        if let Ok(plugin_manifest) = plugin_discovery.discover_plugins() {
-            if !plugin_manifest.installed_plugins.is_empty() {
-                tracing::warn!(
-                    plugin_count = plugin_manifest.installed_plugins.len(),
-                    "Plugins discovered but cannot be mounted in Kubernetes pods. \
-                     Plugin functionality will be limited. Future enhancement: use PersistentVolumes for plugin support."
-                );
-            }
-        }
 
         // Create minimal .claude.json config
         let claude_config = serde_json::json!({
@@ -785,16 +759,6 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
                 }
             };
 
-            // Translate image paths from host to container
-            // Host: /Users/name/.clauderon/uploads/... → Container: /workspace/.clauderon/uploads/...
-            let translated_images: Vec<String> = options
-                .images
-                .iter()
-                .map(|image_path| {
-                    crate::utils::paths::translate_image_path_to_container(image_path)
-                })
-                .collect();
-
             match options.agent {
                 AgentType::ClaudeCode => {
                     // Build base args (without session-id, we add it in wrapper)
@@ -809,7 +773,7 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
                     if options.dangerous_skip_checks {
                         base_args.push("--dangerously-skip-permissions".to_string());
                     }
-                    for image in &translated_images {
+                    for image in &options.images {
                         base_args.push("--image".to_string());
                         base_args.push(image.clone());
                     }
@@ -888,7 +852,7 @@ fi"#;
                             cmd_vec.push("--full-auto".to_string());
                         }
                         cmd_vec.push("exec".to_string());
-                        for image in &translated_images {
+                        for image in &options.images {
                             cmd_vec.push("--image".to_string());
                             cmd_vec.push(image.clone());
                         }
@@ -906,7 +870,7 @@ fi"#;
                         if options.dangerous_skip_checks {
                             create_cmd_vec.push("--full-auto".to_string());
                         }
-                        for image in &translated_images {
+                        for image in &options.images {
                             create_cmd_vec.push("--image".to_string());
                             create_cmd_vec.push(image.clone());
                         }
@@ -972,11 +936,6 @@ fi"#,
                 sub_path: Some("claude.json".to_string()),
                 ..Default::default()
             },
-            VolumeMount {
-                name: "uploads".to_string(),
-                mount_path: "/workspace/.clauderon/uploads".to_string(),
-                ..Default::default()
-            },
         ];
 
         // Add proxy CA mount if enabled
@@ -1004,24 +963,80 @@ fi"#,
             }
         }
 
-        // Resource requirements
-        let mut requests = BTreeMap::new();
-        requests.insert("cpu".to_string(), Quantity(self.config.cpu_request.clone()));
-        requests.insert(
-            "memory".to_string(),
-            Quantity(self.config.memory_request.clone()),
+        // Determine effective image (override > config)
+        let image = options
+            .container_image
+            .as_ref()
+            .map(|ic| ic.image.clone())
+            .unwrap_or_else(|| self.config.image.clone());
+
+        // Determine effective image pull policy (override > config)
+        let image_pull_policy = options
+            .container_image
+            .as_ref()
+            .map(|ic| ic.pull_policy.to_kubernetes_value())
+            .unwrap_or_else(|| self.config.image_pull_policy.to_kubernetes_value());
+
+        tracing::info!(
+            image = %image,
+            pull_policy = %image_pull_policy,
+            has_override = options.container_image.is_some(),
+            "Building Kubernetes pod with image settings"
         );
 
+        // Resource requirements (use override if provided, otherwise use config)
+        let mut requests = BTreeMap::new();
         let mut limits = BTreeMap::new();
-        limits.insert("cpu".to_string(), Quantity(self.config.cpu_limit.clone()));
-        limits.insert(
-            "memory".to_string(),
-            Quantity(self.config.memory_limit.clone()),
-        );
+
+        if let Some(ref resource_override) = options.container_resources {
+            // Use override resources
+            if let Some(ref cpu) = resource_override.cpu {
+                requests.insert("cpu".to_string(), Quantity(cpu.clone()));
+                limits.insert("cpu".to_string(), Quantity(cpu.clone()));
+            } else {
+                // No CPU override, use config
+                requests.insert("cpu".to_string(), Quantity(self.config.cpu_request.clone()));
+                limits.insert("cpu".to_string(), Quantity(self.config.cpu_limit.clone()));
+            }
+
+            if let Some(ref memory) = resource_override.memory {
+                requests.insert("memory".to_string(), Quantity(memory.clone()));
+                limits.insert("memory".to_string(), Quantity(memory.clone()));
+            } else {
+                // No memory override, use config
+                requests.insert(
+                    "memory".to_string(),
+                    Quantity(self.config.memory_request.clone()),
+                );
+                limits.insert(
+                    "memory".to_string(),
+                    Quantity(self.config.memory_limit.clone()),
+                );
+            }
+
+            tracing::info!(
+                cpu = ?resource_override.cpu,
+                memory = ?resource_override.memory,
+                "Using custom resource limits for Kubernetes pod"
+            );
+        } else {
+            // No override, use config defaults
+            requests.insert("cpu".to_string(), Quantity(self.config.cpu_request.clone()));
+            requests.insert(
+                "memory".to_string(),
+                Quantity(self.config.memory_request.clone()),
+            );
+            limits.insert("cpu".to_string(), Quantity(self.config.cpu_limit.clone()));
+            limits.insert(
+                "memory".to_string(),
+                Quantity(self.config.memory_limit.clone()),
+            );
+        }
 
         Container {
             name: "claude".to_string(),
-            image: Some(self.config.image.clone()),
+            image: Some(image),
+            image_pull_policy: Some(image_pull_policy.to_string()),
             stdin: Some(true), // REQUIRED for kubectl attach
             tty: Some(true),   // REQUIRED for kubectl attach
             command: Some(vec!["bash".to_string(), "-c".to_string()]),
@@ -1106,16 +1121,6 @@ fi"#,
                     name: format!("{pod_name}-config"),
                     ..Default::default()
                 }),
-                ..Default::default()
-            },
-            Volume {
-                name: "uploads".to_string(),
-                persistent_volume_claim: Some(
-                    k8s_openapi::api::core::v1::PersistentVolumeClaimVolumeSource {
-                        claim_name: "clauderon-uploads".to_string(),
-                        ..Default::default()
-                    },
-                ),
                 ..Default::default()
             },
         ];
