@@ -603,8 +603,8 @@ impl DockerBackend {
                 proxy.clauderon_dir.clone()
             } else {
                 // Create a temp directory for Claude config when proxy is disabled
-                let temp_dir = std::env::temp_dir().join(format!("clauderon-{name}"));
-                temp_dir
+
+                std::env::temp_dir().join(format!("clauderon-{name}"))
             };
 
             // Discover plugins from host
@@ -861,7 +861,7 @@ fi"#;
                             cmd_vec.push(image.clone());
                         }
                         if !escaped_prompt.is_empty() {
-                            cmd_vec.push(escaped_prompt.clone());
+                            cmd_vec.push(escaped_prompt);
                         }
                         let cmd = cmd_vec
                             .iter()

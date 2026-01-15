@@ -29,8 +29,10 @@ impl ConsoleState {
         session.clients.insert(client_id);
         if session.active_client_id.is_none() {
             session.active_client_id = Some(client_id);
+            drop(sessions);
             return true;
         }
+        drop(sessions);
         false
     }
 
@@ -42,6 +44,7 @@ impl ConsoleState {
             .or_insert_with(SessionConsoleState::default);
         session.clients.insert(client_id);
         session.active_client_id = Some(client_id);
+        drop(sessions);
     }
 
     /// If no active client exists, promote this client.
@@ -53,8 +56,10 @@ impl ConsoleState {
         session.clients.insert(client_id);
         if session.active_client_id.is_none() {
             session.active_client_id = Some(client_id);
+            drop(sessions);
             return true;
         }
+        drop(sessions);
         false
     }
 

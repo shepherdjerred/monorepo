@@ -76,6 +76,7 @@ impl MockApiClient {
     }
 
     /// Create a mock session with the given name
+    #[must_use]
     pub fn create_mock_session(name: &str, status: SessionStatus) -> Session {
         let config = SessionConfig {
             name: name.to_string(),
@@ -128,7 +129,9 @@ impl ApiClient for MockApiClient {
         if let Ok(uuid) = Uuid::parse_str(id)
             && let Some(session) = sessions.get(&uuid)
         {
-            return Ok(session.clone());
+            let session = session.clone();
+            drop(sessions);
+            return Ok(session);
         }
 
         // Try to find by name
@@ -154,6 +157,7 @@ impl ApiClient for MockApiClient {
         let mut counter = self.session_counter.write().await;
         *counter += 1;
         let counter_val = *counter;
+        drop(counter);
         let session_name = format!("mock-session-{counter_val:04}");
 
         let config = SessionConfig {
@@ -195,6 +199,7 @@ impl ApiClient for MockApiClient {
         if let Ok(uuid) = Uuid::parse_str(id)
             && sessions.remove(&uuid).is_some()
         {
+            drop(sessions);
             return Ok(());
         }
 
@@ -225,6 +230,7 @@ impl ApiClient for MockApiClient {
             && let Some(session) = sessions.get_mut(&uuid)
         {
             session.set_status(SessionStatus::Archived);
+            drop(sessions);
             return Ok(());
         }
 
@@ -285,6 +291,7 @@ impl ApiClient for MockApiClient {
         if let Ok(uuid) = Uuid::parse_str(id)
             && sessions.contains_key(&uuid)
         {
+            drop(sessions);
             return Ok(());
         }
 

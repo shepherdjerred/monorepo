@@ -480,9 +480,7 @@ async fn browse_directory(
     // Try to canonicalize the path, or use home directory as fallback
     let current_path = requested_path.canonicalize().unwrap_or_else(|_| {
         // If path doesn't exist, try home directory or root as fallback
-        std::env::var("HOME")
-            .map(PathBuf::from)
-            .unwrap_or_else(|_| PathBuf::from("/"))
+        std::env::var("HOME").map_or_else(|_| PathBuf::from("/"), PathBuf::from)
     });
 
     // Get parent directory if not at root
@@ -594,8 +592,8 @@ async fn upload_file(
         let name = field.name().unwrap_or("").to_string();
 
         if name == "file" {
-            content_type = field.content_type().map(|s| s.to_string());
-            file_name = field.file_name().map(|s| s.to_string());
+            content_type = field.content_type().map(std::string::ToString::to_string);
+            file_name = field.file_name().map(std::string::ToString::to_string);
             file_data = Some(
                 field
                     .bytes()
@@ -633,9 +631,10 @@ async fn upload_file(
         "Image uploaded successfully"
     );
 
+    #[allow(clippy::cast_possible_truncation)]
     Ok(Json(crate::api::protocol::UploadResponse {
         path: file_path.to_string_lossy().to_string(),
-        size: file_data.len() as u32,
+        size: file_data.len() as u32, // Files >4GB are not expected for image uploads
     }))
 }
 
@@ -824,8 +823,7 @@ async fn receive_hook(
     );
 
     let new_status = match msg.event {
-        HookEvent::UserPromptSubmit => ClaudeWorkingStatus::Working,
-        HookEvent::PreToolUse { .. } => ClaudeWorkingStatus::Working,
+        HookEvent::UserPromptSubmit | HookEvent::PreToolUse { .. } => ClaudeWorkingStatus::Working,
         HookEvent::PermissionRequest => ClaudeWorkingStatus::WaitingApproval,
         HookEvent::Stop => ClaudeWorkingStatus::WaitingInput,
         HookEvent::IdlePrompt => ClaudeWorkingStatus::Idle,

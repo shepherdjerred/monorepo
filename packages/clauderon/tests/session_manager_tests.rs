@@ -7,7 +7,7 @@ use std::path::Path;
 use std::sync::Arc;
 
 use clauderon::backends::{ExecutionBackend, GitOperations, MockExecutionBackend, MockGitBackend};
-use clauderon::core::{AgentType, BackendType, SessionManager, SessionStatus};
+use clauderon::core::{AccessMode, AgentType, BackendType, SessionManager, SessionStatus};
 use clauderon::store::SqliteStore;
 use tempfile::TempDir;
 
@@ -110,14 +110,14 @@ async fn test_create_session_zellij_success() {
             BackendType::Zellij,
             AgentType::ClaudeCode,
             true,
-            false,              // print_mode
-            true,               // plan_mode
-            Default::default(), // access_mode
-            vec![],             // images
-            None,               // container_image
-            None,               // pull_policy
-            None,               // cpu_limit
-            None,               // memory_limit
+            false,                 // print_mode
+            true,                  // plan_mode
+            AccessMode::default(), // access_mode
+            vec![],                // images
+            None,                  // container_image
+            None,                  // pull_policy
+            None,                  // cpu_limit
+            None,                  // memory_limit
         )
         .await
         .expect("Failed to create session");
@@ -157,14 +157,14 @@ async fn test_create_session_docker_success() {
             BackendType::Zellij, // Changed from Docker to avoid proxy requirement
             AgentType::ClaudeCode,
             false,
-            false,              // print_mode
-            true,               // plan_mode
-            Default::default(), // access_mode
-            vec![],             // images
-            None,               // container_image
-            None,               // pull_policy
-            None,               // cpu_limit
-            None,               // memory_limit
+            false,                 // print_mode
+            true,                  // plan_mode
+            AccessMode::default(), // access_mode
+            vec![],                // images
+            None,                  // container_image
+            None,                  // pull_policy
+            None,                  // cpu_limit
+            None,                  // memory_limit
         )
         .await
         .expect("Failed to create session");
@@ -197,14 +197,14 @@ async fn test_create_session_git_fails() {
             BackendType::Zellij,
             AgentType::ClaudeCode,
             true,
-            false,              // print_mode
-            true,               // plan_mode
-            Default::default(), // access_mode
-            vec![],             // images
-            None,               // container_image
-            None,               // pull_policy
-            None,               // cpu_limit
-            None,               // memory_limit
+            false,                 // print_mode
+            true,                  // plan_mode
+            AccessMode::default(), // access_mode
+            vec![],                // images
+            None,                  // container_image
+            None,                  // pull_policy
+            None,                  // cpu_limit
+            None,                  // memory_limit
         )
         .await;
 
@@ -235,14 +235,14 @@ async fn test_create_session_backend_fails() {
             BackendType::Zellij,
             AgentType::ClaudeCode,
             true,
-            false,              // print_mode
-            true,               // plan_mode
-            Default::default(), // access_mode
-            vec![],             // images
-            None,               // container_image
-            None,               // pull_policy
-            None,               // cpu_limit
-            None,               // memory_limit
+            false,                 // print_mode
+            true,                  // plan_mode
+            AccessMode::default(), // access_mode
+            vec![],                // images
+            None,                  // container_image
+            None,                  // pull_policy
+            None,                  // cpu_limit
+            None,                  // memory_limit
         )
         .await;
 
@@ -273,14 +273,14 @@ async fn test_get_session_by_name() {
             BackendType::Zellij,
             AgentType::ClaudeCode,
             true,
-            false,              // print_mode
-            true,               // plan_mode
-            Default::default(), // access_mode
-            vec![],             // images
-            None,               // container_image
-            None,               // pull_policy
-            None,               // cpu_limit
-            None,               // memory_limit
+            false,                 // print_mode
+            true,                  // plan_mode
+            AccessMode::default(), // access_mode
+            vec![],                // images
+            None,                  // container_image
+            None,                  // pull_policy
+            None,                  // cpu_limit
+            None,                  // memory_limit
         )
         .await
         .unwrap();
@@ -303,14 +303,14 @@ async fn test_get_session_by_uuid() {
             BackendType::Zellij,
             AgentType::ClaudeCode,
             true,
-            false,              // print_mode
-            true,               // plan_mode
-            Default::default(), // access_mode
-            vec![],             // images
-            None,               // container_image
-            None,               // pull_policy
-            None,               // cpu_limit
-            None,               // memory_limit
+            false,                 // print_mode
+            true,                  // plan_mode
+            AccessMode::default(), // access_mode
+            vec![],                // images
+            None,                  // container_image
+            None,                  // pull_policy
+            None,                  // cpu_limit
+            None,                  // memory_limit
         )
         .await
         .unwrap();
@@ -343,14 +343,14 @@ async fn test_delete_session_success() {
             BackendType::Zellij,
             AgentType::ClaudeCode,
             true,
-            false,              // print_mode
-            true,               // plan_mode
-            Default::default(), // access_mode
-            vec![],             // images
-            None,               // container_image
-            None,               // pull_policy
-            None,               // cpu_limit
-            None,               // memory_limit
+            false,                 // print_mode
+            true,                  // plan_mode
+            AccessMode::default(), // access_mode
+            vec![],                // images
+            None,                  // container_image
+            None,                  // pull_policy
+            None,                  // cpu_limit
+            None,                  // memory_limit
         )
         .await
         .unwrap();
@@ -396,14 +396,14 @@ async fn test_archive_session_success() {
             BackendType::Zellij,
             AgentType::ClaudeCode,
             true,
-            false,              // print_mode
-            true,               // plan_mode
-            Default::default(), // access_mode
-            vec![],             // images
-            None,               // container_image
-            None,               // pull_policy
-            None,               // cpu_limit
-            None,               // memory_limit
+            false,                 // print_mode
+            true,                  // plan_mode
+            AccessMode::default(), // access_mode
+            vec![],                // images
+            None,                  // container_image
+            None,                  // pull_policy
+            None,                  // cpu_limit
+            None,                  // memory_limit
         )
         .await
         .unwrap();
@@ -441,14 +441,14 @@ async fn test_unarchive_session_success() {
             BackendType::Zellij,
             AgentType::ClaudeCode,
             true,
-            false,              // print_mode
-            true,               // plan_mode
-            Default::default(), // access_mode
-            vec![],             // images
-            None,               // container_image
-            None,               // pull_policy
-            None,               // cpu_limit
-            None,               // memory_limit
+            false,                 // print_mode
+            true,                  // plan_mode
+            AccessMode::default(), // access_mode
+            vec![],                // images
+            None,                  // container_image
+            None,                  // pull_policy
+            None,                  // cpu_limit
+            None,                  // memory_limit
         )
         .await
         .unwrap();
@@ -478,14 +478,14 @@ async fn test_unarchive_session_not_archived() {
             BackendType::Zellij,
             AgentType::ClaudeCode,
             true,
-            false,              // print_mode
-            true,               // plan_mode
-            Default::default(), // access_mode
-            vec![],             // images
-            None,               // container_image
-            None,               // pull_policy
-            None,               // cpu_limit
-            None,               // memory_limit
+            false,                 // print_mode
+            true,                  // plan_mode
+            AccessMode::default(), // access_mode
+            vec![],                // images
+            None,                  // container_image
+            None,                  // pull_policy
+            None,                  // cpu_limit
+            None,                  // memory_limit
         )
         .await
         .unwrap();
@@ -519,14 +519,14 @@ async fn test_get_attach_command_zellij() {
             BackendType::Zellij,
             AgentType::ClaudeCode,
             true,
-            false,              // print_mode
-            true,               // plan_mode
-            Default::default(), // access_mode
-            vec![],             // images
-            None,               // container_image
-            None,               // pull_policy
-            None,               // cpu_limit
-            None,               // memory_limit
+            false,                 // print_mode
+            true,                  // plan_mode
+            AccessMode::default(), // access_mode
+            vec![],                // images
+            None,                  // container_image
+            None,                  // pull_policy
+            None,                  // cpu_limit
+            None,                  // memory_limit
         )
         .await
         .unwrap();
@@ -550,10 +550,10 @@ async fn test_get_attach_command_docker() {
             BackendType::Zellij, // Changed from Docker to avoid proxy requirement
             AgentType::ClaudeCode,
             true,
-            false,              // print_mode
-            true,               // plan_mode
-            Default::default(), // access_mode
-            vec![],             // images
+            false,                 // print_mode
+            true,                  // plan_mode
+            AccessMode::default(), // access_mode
+            vec![],                // images
             None,
             None,
             None,
@@ -591,14 +591,14 @@ async fn test_reconcile_healthy_session() {
             BackendType::Zellij,
             AgentType::ClaudeCode,
             true,
-            false,              // print_mode
-            true,               // plan_mode
-            Default::default(), // access_mode
-            vec![],             // images
-            None,               // container_image
-            None,               // pull_policy
-            None,               // cpu_limit
-            None,               // memory_limit
+            false,                 // print_mode
+            true,                  // plan_mode
+            AccessMode::default(), // access_mode
+            vec![],                // images
+            None,                  // container_image
+            None,                  // pull_policy
+            None,                  // cpu_limit
+            None,                  // memory_limit
         )
         .await
         .unwrap();
@@ -624,14 +624,14 @@ async fn test_reconcile_missing_backend() {
             BackendType::Zellij,
             AgentType::ClaudeCode,
             true,
-            false,              // print_mode
-            true,               // plan_mode
-            Default::default(), // access_mode
-            vec![],             // images
-            None,               // container_image
-            None,               // pull_policy
-            None,               // cpu_limit
-            None,               // memory_limit
+            false,                 // print_mode
+            true,                  // plan_mode
+            AccessMode::default(), // access_mode
+            vec![],                // images
+            None,                  // container_image
+            None,                  // pull_policy
+            None,                  // cpu_limit
+            None,                  // memory_limit
         )
         .await
         .unwrap();
@@ -669,14 +669,14 @@ async fn test_list_sessions_multiple() {
             BackendType::Zellij,
             AgentType::ClaudeCode,
             true,
-            false,              // print_mode
-            true,               // plan_mode
-            Default::default(), // access_mode
-            vec![],             // images
-            None,               // container_image
-            None,               // pull_policy
-            None,               // cpu_limit
-            None,               // memory_limit
+            false,                 // print_mode
+            true,                  // plan_mode
+            AccessMode::default(), // access_mode
+            vec![],                // images
+            None,                  // container_image
+            None,                  // pull_policy
+            None,                  // cpu_limit
+            None,                  // memory_limit
         )
         .await
         .unwrap();
@@ -688,14 +688,14 @@ async fn test_list_sessions_multiple() {
             BackendType::Zellij, // Changed from Docker to avoid proxy requirement
             AgentType::ClaudeCode,
             true,
-            false,              // print_mode
-            true,               // plan_mode
-            Default::default(), // access_mode
-            vec![],             // images
-            None,               // container_image
-            None,               // pull_policy
-            None,               // cpu_limit
-            None,               // memory_limit
+            false,                 // print_mode
+            true,                  // plan_mode
+            AccessMode::default(), // access_mode
+            vec![],                // images
+            None,                  // container_image
+            None,                  // pull_policy
+            None,                  // cpu_limit
+            None,                  // memory_limit
         )
         .await
         .unwrap();
@@ -707,14 +707,14 @@ async fn test_list_sessions_multiple() {
             BackendType::Zellij,
             AgentType::ClaudeCode,
             true,
-            false,              // print_mode
-            true,               // plan_mode
-            Default::default(), // access_mode
-            vec![],             // images
-            None,               // container_image
-            None,               // pull_policy
-            None,               // cpu_limit
-            None,               // memory_limit
+            false,                 // print_mode
+            true,                  // plan_mode
+            AccessMode::default(), // access_mode
+            vec![],                // images
+            None,                  // container_image
+            None,                  // pull_policy
+            None,                  // cpu_limit
+            None,                  // memory_limit
         )
         .await
         .unwrap();
@@ -737,14 +737,14 @@ async fn test_update_metadata_success() {
             BackendType::Zellij,
             AgentType::ClaudeCode,
             true,
-            false,              // print_mode
-            true,               // plan_mode
-            Default::default(), // access_mode
-            vec![],             // images
-            None,               // container_image
-            None,               // pull_policy
-            None,               // cpu_limit
-            None,               // memory_limit
+            false,                 // print_mode
+            true,                  // plan_mode
+            AccessMode::default(), // access_mode
+            vec![],                // images
+            None,                  // container_image
+            None,                  // pull_policy
+            None,                  // cpu_limit
+            None,                  // memory_limit
         )
         .await
         .unwrap();
@@ -780,14 +780,14 @@ async fn test_update_metadata_by_uuid() {
             BackendType::Zellij,
             AgentType::ClaudeCode,
             true,
-            false,              // print_mode
-            true,               // plan_mode
-            Default::default(), // access_mode
-            vec![],             // images
-            None,               // container_image
-            None,               // pull_policy
-            None,               // cpu_limit
-            None,               // memory_limit
+            false,                 // print_mode
+            true,                  // plan_mode
+            AccessMode::default(), // access_mode
+            vec![],                // images
+            None,                  // container_image
+            None,                  // pull_policy
+            None,                  // cpu_limit
+            None,                  // memory_limit
         )
         .await
         .unwrap();
@@ -819,14 +819,14 @@ async fn test_update_metadata_partial() {
             BackendType::Zellij,
             AgentType::ClaudeCode,
             true,
-            false,              // print_mode
-            true,               // plan_mode
-            Default::default(), // access_mode
-            vec![],             // images
-            None,               // container_image
-            None,               // pull_policy
-            None,               // cpu_limit
-            None,               // memory_limit
+            false,                 // print_mode
+            true,                  // plan_mode
+            AccessMode::default(), // access_mode
+            vec![],                // images
+            None,                  // container_image
+            None,                  // pull_policy
+            None,                  // cpu_limit
+            None,                  // memory_limit
         )
         .await
         .unwrap();
@@ -883,14 +883,14 @@ async fn test_session_lifecycle() {
             BackendType::Zellij,
             AgentType::ClaudeCode,
             true,
-            false,              // print_mode
-            true,               // plan_mode
-            Default::default(), // access_mode
-            vec![],             // images
-            None,               // container_image
-            None,               // pull_policy
-            None,               // cpu_limit
-            None,               // memory_limit
+            false,                 // print_mode
+            true,                  // plan_mode
+            AccessMode::default(), // access_mode
+            vec![],                // images
+            None,                  // container_image
+            None,                  // pull_policy
+            None,                  // cpu_limit
+            None,                  // memory_limit
         )
         .await
         .unwrap();

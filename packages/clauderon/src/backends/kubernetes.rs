@@ -1,3 +1,4 @@
+use anyhow::Context;
 use async_trait::async_trait;
 use k8s_openapi::api::core::v1::{
     ConfigMap, Container, EnvVar, HostAlias, Namespace, PersistentVolumeClaim,
@@ -467,6 +468,40 @@ impl KubernetesBackend {
         Ok(())
     }
 
+    /// Create ConfigMap for kubeconfig (for kubectl access in containers)
+    async fn create_kube_config_configmap(&self, pod_name: &str) -> anyhow::Result<()> {
+        let cms: Api<ConfigMap> = Api::namespaced(self.client.clone(), &self.config.namespace);
+
+        // Read kubeconfig from ~/.clauderon/kube/config
+        let kube_config_path = dirs::home_dir()
+            .unwrap_or_else(|| std::path::PathBuf::from("/tmp"))
+            .join(".clauderon/kube/config");
+
+        let kube_config_content = std::fs::read_to_string(&kube_config_path)
+            .context("Failed to read kubeconfig from ~/.clauderon/kube/config")?;
+
+        let mut data = BTreeMap::new();
+        data.insert("config".to_string(), kube_config_content);
+
+        let cm = ConfigMap {
+            metadata: ObjectMeta {
+                name: Some(format!("{pod_name}-kube-config")),
+                namespace: Some(self.config.namespace.clone()),
+                labels: Some({
+                    let mut labels = BTreeMap::new();
+                    labels.insert("clauderon.io/managed".to_string(), "true".to_string());
+                    labels
+                }),
+                ..Default::default()
+            },
+            data: Some(data),
+            ..Default::default()
+        };
+
+        cms.create(&PostParams::default(), &cm).await?;
+        Ok(())
+    }
+
     /// Create ConfigMap for proxy CA certificate (if proxy enabled)
     async fn create_proxy_configmap(&self) -> anyhow::Result<()> {
         let Some(ref proxy_config) = self.proxy_config else {
@@ -597,7 +632,10 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
     }
 
     /// Build main container for Claude Code
-    #[allow(clippy::too_many_arguments)]
+    #[allow(
+        clippy::too_many_arguments,
+        reason = "Kubernetes API surface requires many configuration parameters"
+    )]
     fn build_main_container(
         &self,
         _pod_name: &str,
@@ -771,6 +809,13 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
             }
         }
 
+        // Add KUBECONFIG environment variable
+        env.push(EnvVar {
+            name: "KUBECONFIG".to_string(),
+            value: Some("/etc/clauderon/kube/config".to_string()),
+            ..Default::default()
+        });
+
         // Build agent command
         // Build a wrapper script that handles both initial creation and pod restart:
         // - On first run: session file doesn't exist → create new session with prompt
@@ -829,7 +874,7 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
                         create_cmd.insert(1, "--session-id".to_string());
                         create_cmd.insert(2, session_id_str.clone());
                         if !escaped_prompt.is_empty() {
-                            create_cmd.push(escaped_prompt.clone());
+                            create_cmd.push(escaped_prompt);
                         }
                         let create_cmd = create_cmd
                             .iter()
@@ -880,7 +925,7 @@ fi"#,
                         // No session ID - just run the command directly
                         let mut cmd_vec = base_args;
                         if !escaped_prompt.is_empty() {
-                            cmd_vec.push(escaped_prompt.clone());
+                            cmd_vec.push(escaped_prompt);
                         }
                         cmd_vec
                             .iter()
@@ -910,7 +955,7 @@ fi"#;
                             cmd_vec.push(image.clone());
                         }
                         if !escaped_prompt.is_empty() {
-                            cmd_vec.push(escaped_prompt.clone());
+                            cmd_vec.push(escaped_prompt);
                         }
                         let cmd = cmd_vec
                             .iter()
@@ -928,7 +973,7 @@ fi"#;
                             create_cmd_vec.push(image.clone());
                         }
                         if !escaped_prompt.is_empty() {
-                            create_cmd_vec.push(escaped_prompt.clone());
+                            create_cmd_vec.push(escaped_prompt);
                         }
                         let create_cmd = create_cmd_vec
                             .iter()
@@ -988,7 +1033,7 @@ fi"#,
                         create_cmd.insert(1, "--session-id".to_string());
                         create_cmd.insert(2, session_id_str.clone());
                         if !escaped_prompt.is_empty() {
-                            create_cmd.push(escaped_prompt.clone());
+                            create_cmd.push(escaped_prompt);
                         }
                         let create_cmd = create_cmd
                             .iter()
@@ -1039,7 +1084,7 @@ fi"#,
                         // No session ID - just run the command directly
                         let mut cmd_vec = base_args;
                         if !escaped_prompt.is_empty() {
-                            cmd_vec.push(escaped_prompt.clone());
+                            cmd_vec.push(escaped_prompt);
                         }
                         cmd_vec
                             .iter()
@@ -1106,19 +1151,25 @@ fi"#,
             }
         }
 
+        // Add kubeconfig mount for kubectl access
+        volume_mounts.push(VolumeMount {
+            name: "kube-config".to_string(),
+            mount_path: "/etc/clauderon/kube".to_string(),
+            read_only: Some(true),
+            ..Default::default()
+        });
+
         // Determine effective image (override > config)
         let image = options
             .container_image
             .as_ref()
-            .map(|ic| ic.image.clone())
-            .unwrap_or_else(|| self.config.image.clone());
+            .map_or_else(|| self.config.image.clone(), |ic| ic.image.clone());
 
         // Determine effective image pull policy (override > config)
-        let image_pull_policy = options
-            .container_image
-            .as_ref()
-            .map(|ic| ic.pull_policy.to_kubernetes_value())
-            .unwrap_or_else(|| self.config.image_pull_policy.to_kubernetes_value());
+        let image_pull_policy = options.container_image.as_ref().map_or_else(
+            || self.config.image_pull_policy.to_kubernetes_value(),
+            |ic| ic.pull_policy.to_kubernetes_value(),
+        );
 
         tracing::info!(
             image = %image,
@@ -1203,7 +1254,10 @@ fi"#,
     }
 
     /// Build pod specification
-    #[allow(clippy::too_many_arguments)]
+    #[allow(
+        clippy::too_many_arguments,
+        reason = "Kubernetes pod spec requires many configuration parameters"
+    )]
     fn build_pod_spec(
         &self,
         pod_name: &str,
@@ -1305,6 +1359,16 @@ fi"#,
                 }
             }
         }
+
+        // Add kubeconfig volume for kubectl access
+        volumes.push(Volume {
+            name: "kube-config".to_string(),
+            config_map: Some(k8s_openapi::api::core::v1::ConfigMapVolumeSource {
+                name: format!("{pod_name}-kube-config"),
+                ..Default::default()
+            }),
+            ..Default::default()
+        });
 
         let mut labels = BTreeMap::new();
         labels.insert("clauderon.io/managed".to_string(), "true".to_string());
@@ -1455,6 +1519,9 @@ impl ExecutionBackend for KubernetesBackend {
             self.create_codex_config_configmap(&pod_name).await?;
         }
 
+        // Create kubeconfig ConfigMap
+        self.create_kube_config_configmap(&pod_name).await?;
+
         // Create proxy ConfigMap if needed
         self.create_proxy_configmap().await?;
 
@@ -1524,6 +1591,19 @@ impl ExecutionBackend for KubernetesBackend {
                 tracing::debug!("ConfigMap {codex_config_name} already deleted");
             }
             Err(e) => tracing::warn!("Failed to delete ConfigMap {codex_config_name}: {e}"),
+        }
+
+        // Delete kubeconfig ConfigMap
+        let kube_config_name = format!("{id}-kube-config");
+        match cms
+            .delete(&kube_config_name, &DeleteParams::default())
+            .await
+        {
+            Ok(_) => tracing::info!("Deleted ConfigMap {kube_config_name}"),
+            Err(kube::Error::Api(err)) if err.code == 404 => {
+                tracing::debug!("ConfigMap {kube_config_name} already deleted");
+            }
+            Err(e) => tracing::warn!("Failed to delete ConfigMap {kube_config_name}: {e}"),
         }
 
         // Delete workspace PVC (log warning on failure)

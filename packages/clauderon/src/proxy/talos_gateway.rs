@@ -54,6 +54,7 @@ pub struct TalosContext {
 
 impl TalosGateway {
     /// Create a new Talos gateway.
+    #[must_use]
     pub fn new(port: u16, proxy_ca: Arc<ProxyCa>) -> Self {
         Self {
             addr: SocketAddr::from(([127, 0, 0, 1], port)),
@@ -86,6 +87,7 @@ impl TalosGateway {
     }
 
     /// Get the current context.
+    #[must_use]
     pub fn current_context(&self) -> Option<&TalosContext> {
         self.config
             .as_ref()
@@ -93,6 +95,7 @@ impl TalosGateway {
     }
 
     /// Get endpoints from current context.
+    #[must_use]
     pub fn endpoints(&self) -> Vec<String> {
         self.current_context()
             .map(|ctx| ctx.endpoints.clone())
@@ -223,11 +226,13 @@ impl TalosGateway {
     }
 
     /// Get the listen address.
+    #[must_use]
     pub fn addr(&self) -> SocketAddr {
         self.addr
     }
 
     /// Check if the gateway is configured.
+    #[must_use]
     pub fn is_configured(&self) -> bool {
         self.config.is_some()
     }
@@ -285,12 +290,13 @@ fn parse_ed25519_key(pem_bytes: &[u8]) -> anyhow::Result<PrivateKeyDer<'static>>
 
 /// Simple base64 decoder (without PEM detection).
 fn decode_base64_raw(s: &str) -> anyhow::Result<Vec<u8>> {
+    #[allow(clippy::cast_possible_truncation)]
     const DECODE_TABLE: [i8; 256] = {
         let mut table = [-1i8; 256];
         let alphabet = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
         let mut i = 0;
         while i < 64 {
-            table[alphabet[i] as usize] = i as i8;
+            table[alphabet[i] as usize] = i as i8; // i is always < 64, safe to cast to i8
             i += 1;
         }
         table
@@ -317,7 +323,7 @@ fn decode_base64_raw(s: &str) -> anyhow::Result<Vec<u8>> {
             if val < 0 {
                 anyhow::bail!("invalid base64 character at position {}", i + j);
             }
-            chunk[j] = val as u8;
+            chunk[j] = u8::try_from(val).unwrap_or(0);
             valid += 1;
         }
 
