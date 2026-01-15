@@ -23,8 +23,7 @@ pub async fn correlation_id_middleware(mut request: Request, next: Next) -> Resp
         .headers()
         .get(CORRELATION_ID_HEADER)
         .and_then(|v| v.to_str().ok())
-        .and_then(|s| Uuid::parse_str(s).ok())
-        .map_or_else(CorrelationId::new, CorrelationId::from);
+        .and_then(|s| Uuid::parse_str(s).ok()).map_or_else(CorrelationId::new, CorrelationId::from);
 
     // Add to request extensions for downstream handlers
     request.extensions_mut().insert(correlation_id);
