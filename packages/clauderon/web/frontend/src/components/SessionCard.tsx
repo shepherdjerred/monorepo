@@ -1,7 +1,7 @@
 import type { Session } from "@clauderon/client";
 import { SessionStatus, CheckStatus, ClaudeWorkingStatus } from "@clauderon/shared";
 import { formatRelativeTime } from "../lib/utils";
-import { Archive, Trash2, Terminal, CheckCircle2, XCircle, Clock, Loader2, User, Circle, AlertTriangle, Edit, RefreshCw } from "lucide-react";
+import { Archive, ArchiveRestore, Trash2, Terminal, CheckCircle2, XCircle, Clock, Loader2, User, Circle, AlertTriangle, Edit, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,11 +12,12 @@ type SessionCardProps = {
   onAttach: (session: Session) => void;
   onEdit: (session: Session) => void;
   onArchive: (session: Session) => void;
+  onUnarchive: (session: Session) => void;
   onRefresh: (session: Session) => void;
   onDelete: (session: Session) => void;
 }
 
-export function SessionCard({ session, onAttach, onEdit, onArchive, onRefresh, onDelete }: SessionCardProps) {
+export function SessionCard({ session, onAttach, onEdit, onArchive, onUnarchive, onRefresh, onDelete }: SessionCardProps) {
   const statusColors: Record<SessionStatus, string> = {
     [SessionStatus.Creating]: "bg-status-creating",
     [SessionStatus.Deleting]: "bg-status-creating",
@@ -122,6 +123,14 @@ export function SessionCard({ session, onAttach, onEdit, onArchive, onRefresh, o
               <span className="font-mono font-semibold">Merge conflict with main</span>
             </div>
           )}
+
+          {/* Working Tree Dirty Status */}
+          {session.worktree_dirty && (
+            <div className="flex items-center gap-1 text-xs text-orange-500">
+              <Edit className="w-3 h-3" />
+              <span className="font-mono font-semibold">Uncommitted changes</span>
+            </div>
+          )}
         </div>
 
         <div className="flex items-center gap-4 text-xs">
@@ -185,20 +194,37 @@ export function SessionCard({ session, onAttach, onEdit, onArchive, onRefresh, o
             </Tooltip>
           )}
 
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => { onArchive(session); }}
-                aria-label="Archive session"
-                className="cursor-pointer transition-all duration-200 hover:scale-110 hover:shadow-md"
-              >
-                <Archive className="w-4 h-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Archive session</TooltipContent>
-          </Tooltip>
+          {session.status === SessionStatus.Archived ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => { onUnarchive(session); }}
+                  aria-label="Unarchive session"
+                  className="cursor-pointer transition-all duration-200 hover:scale-110 hover:shadow-md"
+                >
+                  <ArchiveRestore className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Restore from archive</TooltipContent>
+            </Tooltip>
+          ) : (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => { onArchive(session); }}
+                  aria-label="Archive session"
+                  className="cursor-pointer transition-all duration-200 hover:scale-110 hover:shadow-md"
+                >
+                  <Archive className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Archive session</TooltipContent>
+            </Tooltip>
+          )}
 
           <Tooltip>
             <TooltipTrigger asChild>
@@ -230,6 +256,8 @@ function getCheckStatusColor(status: CheckStatus): string {
       return "text-red-500";
     case CheckStatus.Pending:
       return "text-yellow-500";
+    default:
+      return "text-gray-500";
   }
 }
 
@@ -243,6 +271,8 @@ function getCheckStatusIcon(status: CheckStatus) {
       return <XCircle className="w-3 h-3" />;
     case CheckStatus.Pending:
       return <Clock className="w-3 h-3" />;
+    default:
+      return <Circle className="w-3 h-3" />;
   }
 }
 

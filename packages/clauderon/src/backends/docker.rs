@@ -440,19 +440,15 @@ impl DockerBackend {
             ]);
         }
 
-        // Mount .clauderon directory for config/cache (hooks use HTTP, not sockets)
-        let home_dir = std::env::var("HOME").unwrap_or_else(|_| "/root".to_string());
-        let clauderon_dir = format!("{home_dir}/.clauderon");
-        args.extend([
-            "-v".to_string(),
-            format!("{clauderon_dir}:/workspace/.clauderon"),
-        ]);
-
         // Mount uploads directory for image attachments
         // - Read-write: allows bidirectional file communication between app and Claude
         // - Shared across sessions with per-session subdirectories for isolation
         // - Images uploaded via API (POST /api/sessions/{id}/upload) are stored here
         // - Paths are translated from host to container in the agent command below
+        // - Note: The base .clauderon directory is NOT mounted for security reasons.
+        //   Only specific subdirectories like uploads/ are mounted. Hooks are created
+        //   inside the container via docker exec (see hooks/installer.rs).
+        let home_dir = std::env::var("HOME").unwrap_or_else(|_| "/root".to_string());
         let uploads_dir = format!("{home_dir}/.clauderon/uploads");
         args.extend([
             "-v".to_string(),
@@ -719,8 +715,8 @@ impl DockerBackend {
                 proxy.clauderon_dir.clone()
             } else {
                 // Create a temp directory for Claude config when proxy is disabled
-                let temp_dir = std::env::temp_dir().join(format!("clauderon-{name}"));
-                temp_dir
+
+                std::env::temp_dir().join(format!("clauderon-{name}"))
             };
 
             // Discover plugins from host
@@ -977,7 +973,7 @@ fi"#;
                             cmd_vec.push(image.clone());
                         }
                         if !escaped_prompt.is_empty() {
-                            cmd_vec.push(escaped_prompt.clone());
+                            cmd_vec.push(escaped_prompt);
                         }
                         let cmd = cmd_vec
                             .iter()
@@ -2056,12 +2052,12 @@ mod tests {
         )
         .expect("Failed to build args");
 
-        // Count volume mounts (should have workspace + 3 cargo/sccache cache mounts + clauderon dir + uploads + claude.json)
+        // Count volume mounts (should have workspace + 3 cargo/sccache cache mounts + uploads + claude.json)
         // Plugin mounts are optional (0-2 depending on environment)
         let mount_count = args.iter().filter(|a| *a == "-v").count();
         assert!(
-            (7..=9).contains(&mount_count),
-            "Normal git repo should have 7-9 mounts (base 7 + optional plugins), got {mount_count} mounts"
+            (6..=8).contains(&mount_count),
+            "Normal git repo should have 6-8 mounts (base 6 + optional plugins), got {mount_count} mounts"
         );
     }
 
@@ -2299,12 +2295,12 @@ mod tests {
         )
         .expect("Failed to build args");
 
-        // Should have workspace + 3 cache mounts + clauderon dir + uploads + claude.json (no git parent mount)
+        // Should have workspace + 3 cache mounts + uploads + claude.json (no git parent mount)
         // Plugin mounts are optional (0-2 depending on environment)
         let mount_count = args.iter().filter(|a| *a == "-v").count();
         assert!(
-            (7..=9).contains(&mount_count),
-            "Malformed worktree should have 7-9 mounts (base 7 + optional plugins), got {mount_count} mounts"
+            (6..=8).contains(&mount_count),
+            "Malformed worktree should have 6-8 mounts (base 6 + optional plugins), got {mount_count} mounts"
         );
     }
 
@@ -2346,12 +2342,12 @@ mod tests {
         )
         .expect("Failed to build args");
 
-        // Should have workspace + 3 cache mounts + clauderon dir + uploads + claude.json (no git parent mount due to validation failure)
+        // Should have workspace + 3 cache mounts + uploads + claude.json (no git parent mount due to validation failure)
         // Plugin mounts are optional (0-2 depending on environment)
         let mount_count = args.iter().filter(|a| *a == "-v").count();
         assert!(
-            (7..=9).contains(&mount_count),
-            "Worktree with missing parent should have 7-9 mounts (base 7 + optional plugins), got {mount_count} mounts"
+            (6..=8).contains(&mount_count),
+            "Worktree with missing parent should have 6-8 mounts (base 6 + optional plugins), got {mount_count} mounts"
         );
     }
 

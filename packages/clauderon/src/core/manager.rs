@@ -1,6 +1,7 @@
 use anyhow::Context;
 use std::path::PathBuf;
 use std::sync::Arc;
+use std::time::{Duration, Instant};
 use tokio::sync::{RwLock, Semaphore};
 use tracing::instrument;
 use uuid::Uuid;
@@ -48,6 +49,44 @@ pub struct ReconcileReport {
     pub gave_up: Vec<Uuid>,
 }
 
+/// Cache for Claude Code usage data
+struct UsageCache {
+    data: Option<crate::api::protocol::ClaudeUsage>,
+    fetched_at: Option<Instant>,
+    ttl: Duration,
+}
+
+impl UsageCache {
+    fn new() -> Self {
+        Self {
+            data: None,
+            fetched_at: None,
+            ttl: Duration::from_secs(5 * 60), // 5 minutes
+        }
+    }
+
+    fn is_valid(&self) -> bool {
+        if let Some(fetched_at) = self.fetched_at {
+            fetched_at.elapsed() < self.ttl
+        } else {
+            false
+        }
+    }
+
+    fn set(&mut self, data: crate::api::protocol::ClaudeUsage) {
+        self.data = Some(data);
+        self.fetched_at = Some(Instant::now());
+    }
+
+    fn get(&self) -> Option<&crate::api::protocol::ClaudeUsage> {
+        if self.is_valid() {
+            self.data.as_ref()
+        } else {
+            None
+        }
+    }
+}
+
 /// Manages session lifecycle and state
 pub struct SessionManager {
     store: Arc<dyn Store>,
@@ -69,6 +108,8 @@ pub struct SessionManager {
     max_sessions: usize,
     /// HTTP server port for hook communication (Docker only)
     http_port: Option<u16>,
+    /// Cache for Claude Code usage data
+    usage_cache: Arc<RwLock<UsageCache>>,
 }
 
 impl SessionManager {
@@ -103,6 +144,7 @@ impl SessionManager {
             deletion_semaphore: Arc::new(Semaphore::new(3)),
             max_sessions: 15,
             http_port: None,
+            usage_cache: Arc::new(RwLock::new(UsageCache::new())),
         })
     }
 
@@ -1398,6 +1440,50 @@ impl SessionManager {
         Ok(())
     }
 
+    /// Unarchive a session
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the session is not found, is not archived, or the store update fails.
+    #[instrument(skip(self), fields(id_or_name = %id_or_name))]
+    pub async fn unarchive_session(&self, id_or_name: &str) -> anyhow::Result<()> {
+        let mut sessions = self.sessions.write().await;
+
+        let session = sessions
+            .iter_mut()
+            .find(|s| s.name == id_or_name || s.id.to_string() == id_or_name)
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {id_or_name}"))?;
+
+        // Validate that the session is currently archived
+        if session.status != SessionStatus::Archived {
+            anyhow::bail!("Session {id_or_name} is not archived");
+        }
+
+        let old_status = session.status;
+        let session_id = session.id;
+        session.set_status(SessionStatus::Idle);
+        let session_clone = session.clone();
+        drop(sessions);
+
+        // Record event
+        let event = Event::new(session_id, EventType::SessionRestored);
+        self.store.record_event(&event).await?;
+
+        let event = Event::new(
+            session_id,
+            EventType::StatusChanged {
+                old_status,
+                new_status: SessionStatus::Idle,
+            },
+        );
+        self.store.record_event(&event).await?;
+
+        // Update in store
+        self.store.save_session(&session_clone).await?;
+
+        Ok(())
+    }
+
     /// Start session deletion asynchronously (returns immediately)
     ///
     /// Marks the session as "Deleting" and spawns a background task to complete
@@ -1423,7 +1509,7 @@ impl SessionManager {
                 anyhow::bail!("Session is already being deleted");
             }
 
-            (session.id, session.name.clone())
+            (session.id, session.name)
         };
 
         // Update to Deleting status
@@ -2065,7 +2151,7 @@ impl SessionManager {
                                     );
                                     // Attempt auto-recreation
                                     let _ = proxy_manager
-                                        .restore_session_proxies(std::slice::from_ref(&session))
+                                        .restore_session_proxies(std::slice::from_ref(session))
                                         .await;
                                 }
                             }
@@ -2274,6 +2360,91 @@ impl SessionManager {
         Ok(())
     }
 
+    /// Regenerate session metadata using AI
+    ///
+    /// Calls the Claude CLI to regenerate the title, description, and branch name
+    /// for a session based on its initial prompt. This is useful when the initial
+    /// generation failed or timed out during session creation.
+    ///
+    /// # Arguments
+    ///
+    /// * `session_id` - The UUID of the session to regenerate metadata for
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the session is not found or the store update fails.
+    ///
+    /// # Note
+    ///
+    /// If AI generation fails and returns default values, existing metadata is preserved
+    /// to avoid overwriting user-edited values with defaults.
+    #[instrument(skip(self), fields(session_id = %session_id))]
+    pub async fn regenerate_session_metadata(&self, session_id: Uuid) -> anyhow::Result<()> {
+        // Get session
+        let sessions = self.sessions.read().await;
+        let session = sessions
+            .iter()
+            .find(|s| s.id == session_id)
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {}", session_id))?;
+
+        let repo_path = session.repo_path.clone();
+        let initial_prompt = session.initial_prompt.clone();
+        let session_name = session.name.clone();
+        drop(sessions);
+
+        tracing::info!(
+            session_id = %session_id,
+            session_name = %session_name,
+            "Regenerating session metadata with AI"
+        );
+
+        // Generate new metadata
+        let repo_path_str = repo_path
+            .to_str()
+            .ok_or_else(|| anyhow::anyhow!("Invalid UTF-8 in repo path"))?;
+        let metadata = crate::utils::generate_session_name_ai(repo_path_str, &initial_prompt).await;
+
+        // Only update if we got non-default values
+        // (avoid overwriting user edits with defaults)
+        if metadata.title == "New Session" {
+            tracing::warn!(
+                session_id = %session_id,
+                "Metadata regeneration returned defaults, preserving existing values"
+            );
+            anyhow::bail!("AI metadata generation returned defaults - possible timeout or failure");
+        }
+
+        // Update session with new metadata
+        let mut sessions = self.sessions.write().await;
+        let session = sessions
+            .iter_mut()
+            .find(|s| s.id == session_id)
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {}", session_id))?;
+
+        session.set_title(Some(metadata.title.clone()));
+        session.set_description(Some(metadata.description.clone()));
+
+        let session_clone = session.clone();
+        drop(sessions);
+
+        // Save updated session
+        self.store.save_session(&session_clone).await?;
+
+        // Broadcast update event
+        if let Some(ref broadcaster) = self.event_broadcaster {
+            broadcast_event(broadcaster, WsEvent::SessionUpdated(session_clone.clone())).await;
+        }
+
+        tracing::info!(
+            session_id = %session_id,
+            title = %metadata.title,
+            description = %metadata.description,
+            "Successfully regenerated session metadata"
+        );
+
+        Ok(())
+    }
+
     /// Update Claude working status from hook message
     ///
     /// # Errors
@@ -2464,6 +2635,53 @@ impl SessionManager {
             session_id = %session_id,
             has_conflict = %has_conflict,
             "Updated merge conflict status"
+        );
+
+        // Broadcast event to WebSocket clients if broadcaster available
+        if let Some(ref broadcaster) = self.event_broadcaster {
+            broadcast_event(broadcaster, WsEvent::SessionUpdated(session_clone)).await;
+        }
+
+        Ok(())
+    }
+
+    /// Update working tree dirty status for a session
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the session is not found or the store update fails.
+    #[tracing::instrument(skip(self))]
+    pub async fn update_worktree_dirty_status(
+        &self,
+        session_id: Uuid,
+        is_dirty: bool,
+    ) -> anyhow::Result<()> {
+        let mut sessions = self.sessions.write().await;
+        let session = sessions
+            .iter_mut()
+            .find(|s| s.id == session_id)
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {}", session_id))?;
+
+        // Don't update if status hasn't changed
+        if session.worktree_dirty == is_dirty {
+            return Ok(());
+        }
+
+        session.set_worktree_dirty(is_dirty);
+        let session_clone = session.clone();
+        drop(sessions);
+
+        // Record event
+        let event = Event::new(session_id, EventType::WorktreeStatusChanged { is_dirty });
+        self.store.record_event(&event).await?;
+
+        // Update in store
+        self.store.save_session(&session_clone).await?;
+
+        tracing::info!(
+            session_id = %session_id,
+            is_dirty = %is_dirty,
+            "Updated worktree dirty status"
         );
 
         // Broadcast event to WebSocket clients if broadcaster available
@@ -2796,22 +3014,73 @@ impl SessionManager {
 
             // Try to fetch Claude Code usage if OAuth token is available
             let claude_usage = if let Some(oauth_token) = creds.anthropic_oauth_token.as_ref() {
-                match Self::fetch_claude_usage(oauth_token).await {
-                    Ok(usage) => {
-                        tracing::info!(
-                            org_id = %usage.organization_id,
-                            five_hour_utilization = %usage.five_hour.utilization,
-                            seven_day_utilization = %usage.seven_day.utilization,
-                            "Successfully fetched Claude Code usage"
-                        );
-                        Some(usage)
-                    }
-                    Err(e) => {
-                        tracing::warn!(
-                            error = %e,
-                            "Failed to fetch Claude Code usage - will continue without usage data"
-                        );
-                        None
+                // Check cache first
+                {
+                    let cache = self.usage_cache.read().await;
+                    if let Some(cached_usage) = cache.get() {
+                        tracing::debug!("Using cached usage data");
+                        Some(cached_usage.clone())
+                    } else {
+                        drop(cache); // Release read lock
+
+                        // Cache miss - fetch fresh data
+                        match Self::fetch_claude_usage(oauth_token).await {
+                            Ok(usage) => {
+                                tracing::info!(
+                                    org_id = %usage.organization_id,
+                                    five_hour_utilization = %usage.five_hour.utilization,
+                                    seven_day_utilization = %usage.seven_day.utilization,
+                                    "Successfully fetched Claude Code usage"
+                                );
+
+                                // Cache successful fetch
+                                let mut cache = self.usage_cache.write().await;
+                                cache.set(usage.clone());
+
+                                Some(usage)
+                            }
+                            Err(usage_error) => {
+                                // Log with appropriate severity based on error type
+                                match usage_error.error_type.as_str() {
+                                    "invalid_token" | "unauthorized" | "invalid_token_format" => {
+                                        tracing::error!(
+                                            error_type = %usage_error.error_type,
+                                            message = %usage_error.message,
+                                            "Usage tracking authentication failed"
+                                        );
+                                    }
+                                    _ => {
+                                        tracing::warn!(
+                                            error_type = %usage_error.error_type,
+                                            message = %usage_error.message,
+                                            "Usage tracking failed - continuing without usage data"
+                                        );
+                                    }
+                                }
+
+                                // Don't cache errors - Return ClaudeUsage with error field populated
+                                use crate::api::protocol::{ClaudeUsage, UsageWindow};
+                                Some(ClaudeUsage {
+                                    organization_id: String::new(),
+                                    organization_name: None,
+                                    five_hour: UsageWindow {
+                                        current: 0.0,
+                                        limit: 0.0,
+                                        utilization: 0.0,
+                                        resets_at: None,
+                                    },
+                                    seven_day: UsageWindow {
+                                        current: 0.0,
+                                        limit: 0.0,
+                                        utilization: 0.0,
+                                        resets_at: None,
+                                    },
+                                    seven_day_sonnet: None,
+                                    fetched_at: chrono::Utc::now().to_rfc3339(),
+                                    error: Some(usage_error),
+                                })
+                            }
+                        }
                     }
                 }
             } else {
@@ -2842,31 +3111,97 @@ impl SessionManager {
     #[instrument(skip(oauth_token))]
     async fn fetch_claude_usage(
         oauth_token: &str,
-    ) -> anyhow::Result<crate::api::protocol::ClaudeUsage> {
+    ) -> Result<crate::api::protocol::ClaudeUsage, crate::api::protocol::UsageError> {
         use crate::api::claude_client::ClaudeApiClient;
+        use crate::api::protocol::UsageError;
+
+        // Validate token format first
+        if let Err(e) = ClaudeApiClient::validate_token_format(oauth_token) {
+            return Err(UsageError {
+                error_type: "invalid_token_format".to_string(),
+                message: "OAuth token has invalid format".to_string(),
+                details: Some(e.to_string()),
+                suggestion: Some(
+                    "Set CLAUDE_CODE_OAUTH_TOKEN to a valid token starting with 'sk-ant-'"
+                        .to_string(),
+                ),
+            });
+        }
 
         let client = ClaudeApiClient::new();
 
-        // First, try to get org ID from current account endpoint
-        let (org_id, org_name) = match client.get_current_account(oauth_token).await {
+        // First, try to get org ID from current account endpoint (with retry)
+        let (org_id, org_name) = match client.get_current_account_with_retry(oauth_token).await {
             Ok(info) => info,
             Err(e) => {
+                // Check if it's an auth error
+                let error_str = e.to_string();
+                if error_str.contains("401") || error_str.contains("403") {
+                    return Err(UsageError {
+                        error_type: "invalid_token".to_string(),
+                        message: "OAuth token is invalid or expired".to_string(),
+                        details: Some(error_str),
+                        suggestion: Some("Get a fresh token from claude.ai settings".to_string()),
+                    });
+                }
+
                 // Fallback to environment variable
                 tracing::warn!(
                     error = %e,
                     "Failed to get org ID from Claude.ai API, trying CLAUDE_ORG_ID env var"
                 );
 
-                let org_id = std::env::var("CLAUDE_ORG_ID")
+                let org_id = match std::env::var("CLAUDE_ORG_ID")
                     .or_else(|_| std::env::var("ANTHROPIC_ORG_ID"))
-                    .context("Failed to get org ID from API and no CLAUDE_ORG_ID env var set")?;
+                {
+                    Ok(id) => id,
+                    Err(_) => {
+                        return Err(UsageError {
+                            error_type: "missing_org_id".to_string(),
+                            message: "Failed to get organization ID".to_string(),
+                            details: Some(format!(
+                                "API error: {}. No CLAUDE_ORG_ID env var set.",
+                                error_str
+                            )),
+                            suggestion: Some("Set CLAUDE_ORG_ID environment variable".to_string()),
+                        });
+                    }
+                };
 
                 (org_id, None)
             }
         };
 
-        // Now fetch usage data
-        let mut usage = client.get_usage(oauth_token, &org_id).await?;
+        // Now fetch usage data (with retry)
+        let mut usage = match client.get_usage_with_retry(oauth_token, &org_id).await {
+            Ok(u) => u,
+            Err(e) => {
+                let error_str = e.to_string();
+                if error_str.contains("401") || error_str.contains("403") {
+                    return Err(UsageError {
+                        error_type: "unauthorized".to_string(),
+                        message: "Not authorized to access usage data".to_string(),
+                        details: Some(error_str),
+                        suggestion: Some(
+                            "Verify token has access to this organization".to_string(),
+                        ),
+                    });
+                } else if error_str.contains("404") {
+                    return Err(UsageError {
+                        error_type: "not_found".to_string(),
+                        message: format!("Organization {} not found", org_id),
+                        details: Some(error_str),
+                        suggestion: Some("Verify CLAUDE_ORG_ID is correct".to_string()),
+                    });
+                }
+                return Err(UsageError {
+                    error_type: "api_error".to_string(),
+                    message: "Failed to fetch usage data from Claude.ai".to_string(),
+                    details: Some(error_str),
+                    suggestion: Some("Check network connectivity and try again".to_string()),
+                });
+            }
+        };
 
         // Fill in org name if we got it
         usage.organization_name = org_name;

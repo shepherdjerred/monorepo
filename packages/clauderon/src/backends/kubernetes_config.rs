@@ -6,19 +6,15 @@ use super::container_config::ImagePullPolicy;
 /// Proxy mode for Kubernetes backend
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
+#[derive(Default)]
 pub enum ProxyMode {
     /// No proxy (default)
+    #[default]
     Disabled,
     /// Use ClusterIP service for proxy access from within cluster
     ClusterIp,
     /// Use host-gateway extra host mapping
     HostGateway,
-}
-
-impl Default for ProxyMode {
-    fn default() -> Self {
-        Self::Disabled
-    }
 }
 
 impl std::fmt::Display for ProxyMode {
@@ -131,7 +127,7 @@ impl KubernetesConfig {
 
         if config_path.exists() {
             let contents = std::fs::read_to_string(&config_path)?;
-            let config: KubernetesConfig = toml::from_str(&contents)?;
+            let config: Self = toml::from_str(&contents)?;
             Ok(config)
         } else {
             // Return default config

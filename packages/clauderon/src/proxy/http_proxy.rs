@@ -241,6 +241,7 @@ impl HttpAuthProxy {
     }
 
     /// Get the listen address.
+    #[must_use]
     pub fn addr(&self) -> SocketAddr {
         self.addr
     }
@@ -351,8 +352,8 @@ impl HttpHandler for AuthInjector {
             start_time,
             timestamp,
             service: host_match.clone(),
-            method: method.clone(),
-            path: path.clone(),
+            method,
+            path,
             auth_injected: auth_injected_flag,
             auth_refresh,
         });
@@ -613,8 +614,8 @@ impl HttpHandler for FilteringHandler {
             start_time,
             timestamp,
             service: host_match.clone(),
-            method: method.clone(),
-            path: path.clone(),
+            method,
+            path,
             auth_injected: auth_injected_flag,
             auth_refresh,
         });
@@ -875,7 +876,7 @@ mod tests {
         };
 
         // Just verify it compiles and can be cloned
-        let _cloned = injector.clone();
+        let _cloned = injector;
     }
 
     #[test]

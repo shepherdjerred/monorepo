@@ -5,7 +5,7 @@
 use std::sync::Arc;
 
 use clauderon::core::events::{Event, EventType, replay_events};
-use clauderon::core::{AgentType, BackendType, Session, SessionConfig, SessionStatus};
+use clauderon::core::{AccessMode, AgentType, BackendType, Session, SessionConfig, SessionStatus};
 use clauderon::store::{SqliteStore, Store};
 use tempfile::TempDir;
 
@@ -23,7 +23,7 @@ fn create_test_session(name: &str) -> Session {
         backend: BackendType::Zellij,
         agent: AgentType::ClaudeCode,
         dangerous_skip_checks: false,
-        access_mode: Default::default(),
+        access_mode: AccessMode::default(),
     })
 }
 

@@ -94,8 +94,7 @@ pub fn find_git_root(path: &Path) -> anyhow::Result<GitRootInfo> {
             // Calculate relative path from git root to original path
             let subdirectory = canonical_path
                 .strip_prefix(&git_root)
-                .map(std::path::Path::to_path_buf)
-                .unwrap_or_else(|_| PathBuf::new());
+                .map_or_else(|_| PathBuf::new(), std::path::Path::to_path_buf);
 
             return Ok(GitRootInfo {
                 git_root,
@@ -250,28 +249,27 @@ pub fn validate_git_repository(path: &Path) -> anyhow::Result<()> {
     Ok(())
 }
 
-/// Get the GitHub owner/repo from a local git repository
+/// Get the GitHub repository in `owner/repo` format from a local git repository
 ///
-/// Runs `git remote get-url origin` and parses the result to extract the
-/// GitHub repository in `owner/repo` format.
+/// Executes `git remote get-url origin` to find the remote URL, then parses it
+/// to extract the owner and repository name.
 ///
 /// # Arguments
 ///
-/// * `repo_path` - Path to a git repository (can be any directory within the repo)
+/// * `repo_path` - Path to the git repository
 ///
 /// # Returns
 ///
-/// Returns the GitHub repository in `owner/repo` format (e.g., "shepherdjerred/monorepo")
+/// Returns the repository in `owner/repo` format (e.g., "anthropics/claude-code")
 ///
 /// # Errors
 ///
 /// Returns an error if:
-/// - The path is not a git repository
-/// - The repository has no `origin` remote
+/// - The git command fails
 /// - The remote URL is not a GitHub URL
-/// - The remote URL cannot be parsed
+/// - The URL format is invalid
 ///
-/// # Examples
+/// # Example
 ///
 /// ```no_run
 /// use std::path::PathBuf;
@@ -344,6 +342,61 @@ pub fn parse_github_repo_from_url(url: &str) -> anyhow::Result<String> {
         "URL is not a GitHub repository URL: {}. Expected format: git@github.com:owner/repo.git or https://github.com/owner/repo",
         url
     )
+}
+
+/// Check if a git worktree has uncommitted changes (dirty status)
+///
+/// Runs `git status --porcelain` to detect:
+/// - Modified files
+/// - Staged changes
+/// - Untracked files
+///
+/// # Arguments
+///
+/// * `worktree_path` - Path to the git worktree to check
+///
+/// # Returns
+///
+/// Returns `true` if the worktree has any uncommitted changes, `false` if clean.
+///
+/// # Errors
+///
+/// Returns an error if:
+/// - The git command fails to execute
+/// - The path is not a git worktree
+///
+/// # Examples
+///
+/// ```no_run
+/// use std::path::PathBuf;
+/// use clauderon::utils::git::check_worktree_dirty;
+///
+/// # async fn example() -> anyhow::Result<()> {
+/// let is_dirty = check_worktree_dirty(&PathBuf::from("/path/to/worktree")).await?;
+/// if is_dirty {
+///     println!("Worktree has uncommitted changes");
+/// }
+/// # Ok(())
+/// # }
+/// ```
+#[tracing::instrument]
+pub async fn check_worktree_dirty(worktree_path: &Path) -> anyhow::Result<bool> {
+    let output = Command::new("git")
+        .current_dir(worktree_path)
+        .args(["status", "--porcelain"])
+        .output()
+        .await
+        .context("Failed to execute git status")?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        anyhow::bail!("git status failed: {}", stderr);
+    }
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+
+    // If output is non-empty, worktree has uncommitted changes
+    Ok(!stdout.trim().is_empty())
 }
 
 #[cfg(test)]

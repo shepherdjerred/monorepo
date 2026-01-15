@@ -31,7 +31,7 @@ impl DockerConfig {
             )
         })?;
 
-        let config: DockerConfig = toml::from_str(&contents).map_err(|e| {
+        let config: Self = toml::from_str(&contents).map_err(|e| {
             anyhow::anyhow!(
                 "Failed to parse Docker config file at {}: {}",
                 config_path.display(),
@@ -158,42 +158,53 @@ mod tests {
 
     #[test]
     fn test_validate_rejects_dangerous_extra_flags() {
-        let mut config = DockerConfig::default();
-        config.extra_flags = vec!["--cap-add=SYS_PTRACE; rm -rf /".to_string()];
+        let config = DockerConfig {
+            extra_flags: vec!["--cap-add=SYS_PTRACE; rm -rf /".to_string()],
+            ..Default::default()
+        };
         assert!(config.validate().is_err());
 
-        config.extra_flags = vec!["--cap-add=SYS_PTRACE && malicious".to_string()];
+        let config = DockerConfig {
+            extra_flags: vec!["--cap-add=SYS_PTRACE && malicious".to_string()],
+            ..Default::default()
+        };
         assert!(config.validate().is_err());
     }
 
     #[test]
     fn test_validate_accepts_safe_extra_flags() {
-        let mut config = DockerConfig::default();
-        config.extra_flags = vec![
-            "--cap-add=SYS_PTRACE".to_string(),
-            "--security-opt=seccomp=unconfined".to_string(),
-        ];
+        let config = DockerConfig {
+            extra_flags: vec![
+                "--cap-add=SYS_PTRACE".to_string(),
+                "--security-opt=seccomp=unconfined".to_string(),
+            ],
+            ..Default::default()
+        };
         assert!(config.validate().is_ok());
     }
 
     #[test]
     fn test_validate_checks_image() {
-        let mut config = DockerConfig::default();
-        config.image = ImageConfig {
-            image: "bad;image".to_string(),
-            pull_policy: ImagePullPolicy::IfNotPresent,
-            registry_auth: None,
+        let config = DockerConfig {
+            image: ImageConfig {
+                image: "bad;image".to_string(),
+                pull_policy: ImagePullPolicy::IfNotPresent,
+                registry_auth: None,
+            },
+            ..Default::default()
         };
         assert!(config.validate().is_err());
     }
 
     #[test]
     fn test_validate_checks_resources() {
-        let mut config = DockerConfig::default();
-        config.resources = Some(ResourceLimits {
-            cpu: Some("invalid".to_string()),
-            memory: Some("2g".to_string()),
-        });
+        let config = DockerConfig {
+            resources: Some(ResourceLimits {
+                cpu: Some("invalid".to_string()),
+                memory: Some("2g".to_string()),
+            }),
+            ..Default::default()
+        };
         assert!(config.validate().is_err());
     }
 
