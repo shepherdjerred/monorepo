@@ -264,10 +264,19 @@ impl Credentials {
     /// 2. 1Password (if enabled)
     /// 3. Files in secrets directory (lowest)
     pub fn load(config: &ProxyConfig) -> Self {
-        // Use block_in_place to allow async operations in sync context
-        tokio::task::block_in_place(|| {
-            tokio::runtime::Handle::current().block_on(Self::load_with_priority(config))
-        })
+        // Try to use existing runtime if available, otherwise create one
+        match tokio::runtime::Handle::try_current() {
+            Ok(handle) => {
+                // We're already in a runtime, use block_in_place
+                tokio::task::block_in_place(|| handle.block_on(Self::load_with_priority(config)))
+            }
+            Err(_) => {
+                // No runtime available, create a new one just for this operation
+                let rt = tokio::runtime::Runtime::new()
+                    .expect("Failed to create tokio runtime for credential loading");
+                rt.block_on(Self::load_with_priority(config))
+            }
+        }
     }
 
     /// Detect if a value contains an op:// reference.
