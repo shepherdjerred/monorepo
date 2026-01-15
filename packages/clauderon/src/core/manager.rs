@@ -2098,9 +2098,11 @@ impl SessionManager {
         self.store.save_session(&session_clone).await?;
 
         // Broadcast update event
-        self.event_bus
-            .send(Event::SessionUpdated(session_clone.clone()))
-            .await;
+        if let Some(ref broadcaster) = self.event_broadcaster {
+            use crate::api::protocol::WsEvent;
+            use crate::api::ws_events::broadcast_event;
+            broadcast_event(broadcaster, WsEvent::SessionUpdated(session_clone.clone())).await;
+        }
 
         tracing::info!(
             session_id = %session_id,
