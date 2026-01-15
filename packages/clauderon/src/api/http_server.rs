@@ -307,14 +307,7 @@ async fn refresh_session(
     Path(id): Path<String>,
 ) -> Result<StatusCode, AppError> {
     validate_session_id(&id)?;
-    state
-        .session_manager
-        .refresh_session(&id)
-        .await
-        .map_err(|e| {
-            tracing::error!(error = %e, "Failed to refresh session");
-            AppError::Internal(e.to_string())
-        })?;
+    state.session_manager.refresh_session(&id).await?;
 
     // Broadcast session updated event (container refreshed)
     if let Some(session) = state.session_manager.get_session(&id).await {

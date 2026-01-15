@@ -1423,10 +1423,26 @@ impl SessionManager {
         // Execute refresh: pull + delete + create
         let result: anyhow::Result<String> = async {
             // Pull latest image
-            self.docker
-                .pull_image()
+            let docker_image = "ghcr.io/shepherdjerred/dotfiles";
+            tracing::info!(image = docker_image, "Pulling Docker image");
+
+            let output = tokio::process::Command::new("docker")
+                .args(["pull", docker_image])
+                .output()
                 .await
-                .context("Failed to pull Docker image")?;
+                .context("Failed to execute docker pull")?;
+
+            if !output.status.success() {
+                let stderr = String::from_utf8_lossy(&output.stderr);
+                tracing::error!(
+                    image = docker_image,
+                    stderr = %stderr,
+                    "Failed to pull Docker image"
+                );
+                anyhow::bail!("Failed to pull Docker image: {stderr}");
+            }
+
+            tracing::info!(image = docker_image, "Successfully pulled Docker image");
 
             // Delete old container
             if let Some(ref backend_id) = old_backend_id {
