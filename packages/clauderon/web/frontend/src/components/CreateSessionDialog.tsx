@@ -193,7 +193,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
       const repoInputs: CreateRepositoryInput[] | undefined = repositories.length > 1
         ? repositories.map(repo => ({
             repo_path: repo.repo_path,
-            mount_name: repo.mount_name ? repo.mount_name : undefined,
+            ...(repo.mount_name && { mount_name: repo.mount_name }),
             is_primary: repo.is_primary
           }))
         : undefined;
