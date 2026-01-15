@@ -2404,6 +2404,53 @@ impl SessionManager {
         Ok(())
     }
 
+    /// Update working tree dirty status for a session
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the session is not found or the store update fails.
+    #[tracing::instrument(skip(self))]
+    pub async fn update_worktree_dirty_status(
+        &self,
+        session_id: Uuid,
+        is_dirty: bool,
+    ) -> anyhow::Result<()> {
+        let mut sessions = self.sessions.write().await;
+        let session = sessions
+            .iter_mut()
+            .find(|s| s.id == session_id)
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {}", session_id))?;
+
+        // Don't update if status hasn't changed
+        if session.worktree_dirty == is_dirty {
+            return Ok(());
+        }
+
+        session.set_worktree_dirty(is_dirty);
+        let session_clone = session.clone();
+        drop(sessions);
+
+        // Record event
+        let event = Event::new(session_id, EventType::WorktreeStatusChanged { is_dirty });
+        self.store.record_event(&event).await?;
+
+        // Update in store
+        self.store.save_session(&session_clone).await?;
+
+        tracing::info!(
+            session_id = %session_id,
+            is_dirty = %is_dirty,
+            "Updated worktree dirty status"
+        );
+
+        // Broadcast event to WebSocket clients if broadcaster available
+        if let Some(ref broadcaster) = self.event_broadcaster {
+            broadcast_event(broadcaster, WsEvent::SessionUpdated(session_clone)).await;
+        }
+
+        Ok(())
+    }
+
     /// Send a prompt to a Claude session (for hotkey triggers)
     ///
     /// # Errors

@@ -98,6 +98,14 @@ export function SessionCard({ session, onAttach, onEdit, onArchive, onUnarchive,
               <span className="font-mono font-semibold">Merge conflict with main</span>
             </div>
           )}
+
+          {/* Working Tree Dirty Status */}
+          {session.worktree_dirty && (
+            <div className="flex items-center gap-1 text-xs text-orange-500">
+              <Edit className="w-3 h-3" />
+              <span className="font-mono font-semibold">Uncommitted changes</span>
+            </div>
+          )}
         </div>
 
         <div className="flex items-center gap-4 text-xs">
