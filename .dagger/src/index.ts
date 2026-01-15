@@ -293,7 +293,7 @@ export class Monorepo {
     npmToken?: Secret,
     version?: string,
     gitSha?: string,
-    registryUsername?: Secret,
+    registryUsername?: string,
     registryPassword?: Secret,
     s3AccessKeyId?: Secret,
     s3SecretAccessKey?: Secret
