@@ -196,7 +196,7 @@ impl ClaudeApiClient {
         if !response.status().is_success() {
             let status = response.status();
             let body = response.text().await.unwrap_or_else(|_| String::new());
-            anyhow::bail!("Claude.ai usage API returned error: {} - {}", status, body);
+            anyhow::bail!("Claude.ai API returned error: {} - {}", status, body);
         }
 
         let usage_response: ClaudeUsageResponse = response
