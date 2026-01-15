@@ -255,6 +255,10 @@ async fn create_session(
             request.plan_mode,
             request.access_mode,
             request.images,
+            request.container_image,
+            request.pull_policy,
+            request.cpu_limit,
+            request.memory_limit,
         )
         .await?;
 
@@ -385,7 +389,6 @@ async fn get_recent_repos(
         .iter()
         .map(|r| crate::api::protocol::RecentRepoDto {
             repo_path: r.repo_path.to_string_lossy().to_string(),
-            subdirectory: r.subdirectory.to_string_lossy().to_string(),
             last_used: r.last_used.to_rfc3339(),
         })
         .collect();

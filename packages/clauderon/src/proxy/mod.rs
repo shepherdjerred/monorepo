@@ -22,9 +22,7 @@ pub use codex::{
     dummy_config_toml, dummy_id_token,
 };
 pub use config::{Credentials, ProxyConfig};
-pub use container_config::{
-    generate_codex_config, generate_container_configs, generate_plugin_config,
-};
+pub use container_config::generate_container_configs;
 pub use filter::{is_read_operation, is_write_operation};
 pub use http_proxy::HttpAuthProxy;
 pub use manager::ProxyManager;
