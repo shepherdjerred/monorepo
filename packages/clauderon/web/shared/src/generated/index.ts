@@ -513,6 +513,10 @@ export type Request =
 	/** Get session ID by name (for hook scripts) */
 	| { type: "GetSessionIdByName", payload: {
 	name: string;
+}}
+	/** Refresh a session (pull latest image and recreate container) */
+	| { type: "RefreshSession", payload: {
+	id: string;
 }};
 
 /** Response types for the API */
@@ -532,6 +536,8 @@ export type Response =
 	| { type: "Deleted", payload?: undefined }
 	/** Session archived successfully */
 	| { type: "Archived", payload?: undefined }
+	/** Session refreshed successfully */
+	| { type: "Refreshed", payload?: undefined }
 	/** Command to attach to a session */
 	| { type: "AttachReady", payload: {
 	command: string[];
