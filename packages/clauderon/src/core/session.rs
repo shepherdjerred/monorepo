@@ -344,7 +344,8 @@ pub enum BackendType {
 
 /// AI agent type
 #[typeshare]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Default)]
 pub enum AgentType {
     /// Claude Code CLI
     #[default]
@@ -356,6 +357,7 @@ pub enum AgentType {
     /// Gemini CLI
     Gemini,
 }
+
 
 /// PR check status
 #[typeshare]
@@ -415,7 +417,8 @@ impl std::str::FromStr for ClaudeWorkingStatus {
 
 /// Access mode for proxy filtering
 #[typeshare]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Default)]
 pub enum AccessMode {
     /// Read-only: GET, HEAD, OPTIONS allowed; POST, PUT, DELETE, PATCH blocked
     #[default]
@@ -423,6 +426,7 @@ pub enum AccessMode {
     /// Read-write: All HTTP methods allowed
     ReadWrite,
 }
+
 
 impl std::fmt::Display for AccessMode {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

@@ -278,9 +278,7 @@ impl ConsoleManager {
         let session = match backend {
             BackendType::Docker => ConsoleSession::spawn_docker(backend_id).await?,
             BackendType::Zellij => ConsoleSession::spawn_zellij(backend_id).await?,
-            BackendType::Kubernetes => {
-                anyhow::bail!("Console manager not supported for backend: {backend:?}")
-            }
+            BackendType::Kubernetes => anyhow::bail!("Console manager not supported for backend: {backend:?}"),
         };
 
         let session = Arc::new(session);

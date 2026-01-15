@@ -607,7 +607,7 @@ impl DockerBackend {
                 proxy.clauderon_dir.clone()
             } else {
                 // Create a temp directory for Claude config when proxy is disabled
-
+                
                 std::env::temp_dir().join(format!("clauderon-{name}"))
             };
 
