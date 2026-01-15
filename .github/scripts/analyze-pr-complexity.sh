@@ -143,7 +143,7 @@ COMPLEXITY="complex"
 
 # Complexity thresholds:
 # - Simple: <100 lines AND <5 files → 30 turns
-# - Medium: <250 lines AND <8 files → 20 turns
+# - Medium: <250 lines AND <8 files → 30 turns
 # - Complex: >=250 lines OR >=8 files → 30 turns
 
 if [ "$TOTAL_CHANGES" -lt 100 ] && [ "$CHANGED_FILES" -lt 5 ]; then
@@ -151,7 +151,7 @@ if [ "$TOTAL_CHANGES" -lt 100 ] && [ "$CHANGED_FILES" -lt 5 ]; then
   COMPLEXITY="simple"
   echo "  Classification: SIMPLE (<100 lines AND <5 files)"
 elif [ "$TOTAL_CHANGES" -lt 250 ] && [ "$CHANGED_FILES" -lt 8 ]; then
-  MAX_TURNS=20
+  MAX_TURNS=30
   COMPLEXITY="medium"
   echo "  Classification: MEDIUM (<250 lines AND <8 files)"
 else
