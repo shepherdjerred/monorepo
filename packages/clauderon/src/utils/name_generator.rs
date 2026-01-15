@@ -315,6 +315,9 @@ mod tests {
         // Verify the response has the expected structure
         assert_eq!(subtype, "error_max_turns");
         assert!(json.get("structured_output").is_none());
-        assert_eq!(json.get("is_error").and_then(serde_json::Value::as_bool), Some(true));
+        assert_eq!(
+            json.get("is_error").and_then(serde_json::Value::as_bool),
+            Some(true)
+        );
     }
 }
