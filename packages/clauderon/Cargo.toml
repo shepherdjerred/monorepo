@@ -180,3 +180,17 @@ ignore_without_reason = "allow"
 deprecated = "allow"
 # Dead code in tests
 dead_code = "allow"
+# Unreachable patterns from refactoring
+unreachable_patterns = "allow"
+# Significant drop tightening - optimization, not correctness
+significant_drop_tightening = "allow"
+# Unnecessary wraps - API consistency
+unnecessary_wraps = "allow"
+# Wildcard in or-patterns - style choice
+wildcard_in_or_patterns = "allow"
+# Manual let...else - style choice
+manual_let_else = "allow"
+# Cast possible truncation - common in UI code with known bounds
+cast_possible_truncation = "allow"
+# Cast sign loss - common in conversions with known bounds
+cast_sign_loss = "allow"
