@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { Session } from "@clauderon/client";
 import { useSessionContext } from "../contexts/SessionContext";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,14 @@ export function EditSessionDialog({ session, onClose }: EditSessionDialogProps) 
     title: session.title || session.name,
     description: session.description || "",
   });
+
+  // Sync form data when session prop changes (e.g., after regeneration via WebSocket)
+  useEffect(() => {
+    setFormData({
+      title: session.title || session.name,
+      description: session.description || "",
+    });
+  }, [session.title, session.description, session.name]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
