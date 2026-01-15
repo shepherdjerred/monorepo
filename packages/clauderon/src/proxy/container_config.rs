@@ -13,9 +13,10 @@ use crate::proxy::{dummy_auth_json_string, dummy_config_toml};
 pub fn generate_container_configs(
     clauderon_dir: &PathBuf,
     talos_gateway_port: u16,
+    kubectl_proxy_port: u16,
 ) -> anyhow::Result<()> {
     generate_talosconfig(clauderon_dir, talos_gateway_port)?;
-    generate_kubeconfig(clauderon_dir, 18081)?;
+    generate_kubeconfig(clauderon_dir, kubectl_proxy_port)?;
     Ok(())
 }
 

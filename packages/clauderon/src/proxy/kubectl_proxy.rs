@@ -55,7 +55,7 @@ impl KubectlProxy {
         }
 
         // Check if already running
-        if self.process.is_some() {
+        if self.is_running() {
             tracing::warn!("kubectl proxy already running on port {}", self.port);
             return Ok(());
         }
@@ -74,7 +74,30 @@ impl KubectlProxy {
             .map_err(|e| anyhow::anyhow!("Failed to start kubectl proxy: {}", e))?;
 
         self.process = Some(child);
-        tracing::info!("kubectl proxy started on port {}", self.port);
+
+        // Verify proxy is bound and responding
+        let mut bound = false;
+        for attempt in 1..=10 {
+            std::thread::sleep(std::time::Duration::from_millis(50));
+            if std::net::TcpStream::connect(format!("127.0.0.1:{}", self.port)).is_ok() {
+                tracing::info!("kubectl proxy started on port {}", self.port);
+                bound = true;
+                break;
+            }
+            if attempt == 10 {
+                tracing::warn!(
+                    port = self.port,
+                    "kubectl proxy may not be ready (could not verify binding)"
+                );
+            }
+        }
+
+        if !bound {
+            // Clean up on failure
+            self.stop();
+            anyhow::bail!("kubectl proxy failed to bind on port {}", self.port);
+        }
+
         Ok(())
     }
 
@@ -97,8 +120,32 @@ impl KubectlProxy {
     }
 
     /// Check if kubectl proxy is currently running.
-    pub fn is_running(&self) -> bool {
-        self.process.is_some()
+    ///
+    /// This method actually verifies the process is still alive by checking its status.
+    /// If the process has exited, it will be removed from the internal state.
+    pub fn is_running(&mut self) -> bool {
+        if let Some(ref mut process) = self.process {
+            match process.try_wait() {
+                Ok(Some(_status)) => {
+                    // Process has exited
+                    tracing::debug!("kubectl proxy process has exited");
+                    self.process = None;
+                    false
+                }
+                Ok(None) => {
+                    // Process is still running
+                    true
+                }
+                Err(e) => {
+                    // Error checking status - assume not running
+                    tracing::warn!("Failed to check kubectl proxy status: {}", e);
+                    self.process = None;
+                    false
+                }
+            }
+        } else {
+            false
+        }
     }
 }
 
@@ -114,7 +161,7 @@ mod tests {
 
     #[test]
     fn test_new() {
-        let proxy = KubectlProxy::new(18081);
+        let mut proxy = KubectlProxy::new(18081);
         assert_eq!(proxy.port(), 18081);
         assert!(!proxy.is_running());
     }

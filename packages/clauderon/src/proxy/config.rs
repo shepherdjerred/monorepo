@@ -17,6 +17,9 @@ pub struct ProxyConfig {
     /// Talos mTLS gateway port (default: 18082).
     pub talos_gateway_port: u16,
 
+    /// kubectl proxy port (default: 18081).
+    pub kubectl_proxy_port: u16,
+
     /// Enable audit logging.
     pub audit_enabled: bool,
 
@@ -33,6 +36,7 @@ impl Default for ProxyConfig {
         Self {
             secrets_dir: home.join(".clauderon/secrets"),
             talos_gateway_port: 18082,
+            kubectl_proxy_port: 18081,
             audit_enabled: true,
             audit_log_path: home.join(".clauderon/audit.jsonl"),
             codex_auth_json_path: Some(home.join(".codex/auth.json")),
@@ -476,6 +480,7 @@ mod tests {
     fn test_default_config() {
         let config = ProxyConfig::default();
         assert_eq!(config.talos_gateway_port, 18082);
+        assert_eq!(config.kubectl_proxy_port, 18081);
     }
 
     #[test]
