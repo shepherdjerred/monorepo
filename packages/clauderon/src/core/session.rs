@@ -253,7 +253,7 @@ impl Session {
 
     /// Check if we should attempt reconciliation based on backoff timing
     /// Returns true if enough time has passed since last attempt
-    #[must_use] 
+    #[must_use]
     pub fn should_attempt_reconcile(&self) -> bool {
         use std::time::Duration;
 
@@ -277,7 +277,7 @@ impl Session {
     }
 
     /// Check if we've exceeded maximum reconciliation attempts
-    #[must_use] 
+    #[must_use]
     pub fn exceeded_max_reconcile_attempts(&self) -> bool {
         self.reconcile_attempts >= 3
     }

@@ -309,7 +309,7 @@ impl ConsoleSessionHandle {
         Self { session }
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn subscribe(&self) -> broadcast::Receiver<Vec<u8>> {
         self.session.subscribe()
     }

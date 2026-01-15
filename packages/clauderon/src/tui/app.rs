@@ -464,7 +464,7 @@ impl CreateDialogState {
     ///
     /// This matches the logic in create_dialog.rs rendering to ensure scroll
     /// calculations stay in sync with the actual displayed height.
-    #[must_use] 
+    #[must_use]
     pub fn prompt_visible_lines(&self) -> usize {
         let prompt_lines = self.prompt.lines().count().max(1);
         prompt_lines.clamp(5, 15) // Min 5, max 15 lines

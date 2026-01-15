@@ -8,7 +8,7 @@ pub const DUMMY_ACCESS_TOKEN: &str = "clauderon-codex-proxy-access-token";
 pub const DUMMY_REFRESH_TOKEN: &str = "clauderon-codex-proxy-refresh-token";
 pub const DUMMY_ACCOUNT_ID: &str = "clauderon-codex-proxy-account";
 
-#[must_use] 
+#[must_use]
 pub fn dummy_id_token(account_id: Option<&str>) -> String {
     let header = json!({ "alg": "none", "typ": "JWT" });
     let payload = json!({
@@ -41,7 +41,7 @@ pub fn dummy_auth_json_string(account_id: Option<&str>) -> anyhow::Result<String
     Ok(serde_json::to_string_pretty(&auth_json)?)
 }
 
-#[must_use] 
+#[must_use]
 pub fn dummy_config_toml() -> &'static str {
     "cli_auth_credentials_store = \"file\"\n"
 }

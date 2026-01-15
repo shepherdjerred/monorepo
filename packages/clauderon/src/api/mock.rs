@@ -76,7 +76,7 @@ impl MockApiClient {
     }
 
     /// Create a mock session with the given name
-    #[must_use] 
+    #[must_use]
     pub fn create_mock_session(name: &str, status: SessionStatus) -> Session {
         let config = SessionConfig {
             name: name.to_string(),
