@@ -248,6 +248,10 @@ pub async fn handle_create_session_with_progress(
             req.plan_mode,
             req.access_mode,
             req.images,
+            req.container_image,
+            req.pull_policy,
+            req.cpu_limit,
+            req.memory_limit,
         )
         .await
     {

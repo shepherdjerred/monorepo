@@ -810,6 +810,10 @@ impl SessionManager {
         plan_mode: bool,
         access_mode: super::session::AccessMode,
         images: Vec<String>,
+        container_image: Option<String>,
+        pull_policy: Option<String>,
+        cpu_limit: Option<String>,
+        memory_limit: Option<String>,
     ) -> anyhow::Result<(Session, Option<Vec<String>>)> {
         // Validate and resolve git repository path
         let repo_path_buf = std::path::PathBuf::from(&repo_path);
@@ -959,6 +963,45 @@ impl SessionManager {
             initial_prompt.clone()
         };
 
+        // Parse container image configuration
+        let container_image_config = if let Some(image) = container_image {
+            let policy = if let Some(policy_str) = pull_policy {
+                policy_str.parse::<ImagePullPolicy>().map_err(|e| {
+                    anyhow::anyhow!("Invalid pull policy '{}': {}", policy_str, e)
+                })?
+            } else {
+                ImagePullPolicy::default()
+            };
+
+            let image_config = ImageConfig {
+                image,
+                pull_policy: policy,
+                registry_auth: None, // Registry auth via docker login or config file
+            };
+
+            // Validate the image configuration
+            image_config.validate()?;
+
+            Some(image_config)
+        } else {
+            None
+        };
+
+        // Parse container resource limits
+        let container_resource_limits = if cpu_limit.is_some() || memory_limit.is_some() {
+            let limits = ResourceLimits {
+                cpu: cpu_limit,
+                memory: memory_limit,
+            };
+
+            // Validate the resource limits
+            limits.validate()?;
+
+            Some(limits)
+        } else {
+            None
+        };
+
         // Create backend resource
         let create_options = crate::backends::CreateOptions {
             agent,
@@ -970,6 +1013,8 @@ impl SessionManager {
             session_id: Some(session.id), // Pass session ID for Kubernetes PVC labeling
             initial_workdir: subdirectory.clone(),
             http_port: self.http_port,
+            container_image: container_image_config,
+            container_resources: container_resource_limits,
         };
         let backend_id = match backend {
             BackendType::Zellij => {
