@@ -261,8 +261,10 @@ impl Credentials {
         // Try to use existing runtime if available, otherwise create one
         match tokio::runtime::Handle::try_current() {
             Ok(handle) => {
-                // We're already in a runtime, use block_in_place
-                tokio::task::block_in_place(|| handle.block_on(Self::load_with_priority(config)))
+                // We're already in a runtime, just use block_on directly
+                // Note: block_in_place only works with multi-threaded runtimes,
+                // so we use block_on which works with both single and multi-threaded
+                handle.block_on(Self::load_with_priority(config))
             }
             Err(_) => {
                 // No runtime available, create a new one just for this operation
