@@ -78,7 +78,7 @@ impl ProxyManager {
         let _ = talos_gateway.load_config(); // Ignore errors, just won't have Talos support
 
         // Create kubectl proxy
-        let kubectl_proxy = KubectlProxy::new(18081);
+        let kubectl_proxy = KubectlProxy::new(config.kubectl_proxy_port);
 
         Ok(Self {
             config,
@@ -96,7 +96,11 @@ impl ProxyManager {
 
     /// Generate container configuration files.
     pub fn generate_configs(&self) -> anyhow::Result<()> {
-        generate_container_configs(&self.clauderon_dir, self.config.talos_gateway_port)?;
+        generate_container_configs(
+            &self.clauderon_dir,
+            self.config.talos_gateway_port,
+            self.config.kubectl_proxy_port,
+        )?;
         let account_id = self.credentials.codex_account_id();
         generate_codex_config(&self.clauderon_dir, account_id.as_deref())?;
 
