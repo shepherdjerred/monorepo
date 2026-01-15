@@ -12,6 +12,7 @@ pub struct CIPoller {
     ci_poll_interval: Duration,
     pr_discovery_interval: Duration,
     conflict_check_interval: Duration,
+    dirty_check_interval: Duration,
 }
 
 impl CIPoller {
@@ -23,6 +24,7 @@ impl CIPoller {
             ci_poll_interval: Duration::from_secs(30), // Poll CI checks every 30 seconds
             pr_discovery_interval: Duration::from_secs(60), // Discover PRs every 60 seconds
             conflict_check_interval: Duration::from_secs(60), // Check for conflicts every 60 seconds
+            dirty_check_interval: Duration::from_secs(60),    // Check dirty status every 60 seconds
         }
     }
 
@@ -31,6 +33,7 @@ impl CIPoller {
         let mut ci_ticker = interval(self.ci_poll_interval);
         let mut pr_discovery_ticker = interval(self.pr_discovery_interval);
         let mut conflict_ticker = interval(self.conflict_check_interval);
+        let mut dirty_ticker = interval(self.dirty_check_interval);
 
         loop {
             tokio::select! {
@@ -42,6 +45,9 @@ impl CIPoller {
                 }
                 _ = conflict_ticker.tick() => {
                     self.check_conflicts().await;
+                }
+                _ = dirty_ticker.tick() => {
+                    self.check_dirty_status().await;
                 }
             }
         }
@@ -294,6 +300,43 @@ impl CIPoller {
                     .await?;
             }
         }
+
+        Ok(())
+    }
+
+    /// Check working tree dirty status for all sessions
+    async fn check_dirty_status(&self) {
+        let sessions = self.manager.list_sessions().await;
+
+        for session in sessions {
+            // Check all sessions (not just those with PRs)
+            if let Err(e) = self
+                .check_session_dirty_status(&session.id, &session.worktree_path)
+                .await
+            {
+                tracing::debug!(
+                    session_id = %session.id,
+                    worktree_path = %session.worktree_path.display(),
+                    error = %e,
+                    "Failed to check worktree dirty status"
+                );
+            }
+        }
+    }
+
+    /// Check dirty status for a specific session
+    async fn check_session_dirty_status(
+        &self,
+        session_id: &Uuid,
+        worktree_path: &Path,
+    ) -> anyhow::Result<()> {
+        use crate::utils::git;
+
+        let is_dirty = git::check_worktree_dirty(worktree_path).await?;
+
+        self.manager
+            .update_worktree_dirty_status(*session_id, is_dirty)
+            .await?;
 
         Ok(())
     }

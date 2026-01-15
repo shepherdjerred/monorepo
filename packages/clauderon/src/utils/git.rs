@@ -346,6 +346,61 @@ pub fn parse_github_repo_from_url(url: &str) -> anyhow::Result<String> {
     )
 }
 
+/// Check if a git worktree has uncommitted changes (dirty status)
+///
+/// Runs `git status --porcelain` to detect:
+/// - Modified files
+/// - Staged changes
+/// - Untracked files
+///
+/// # Arguments
+///
+/// * `worktree_path` - Path to the git worktree to check
+///
+/// # Returns
+///
+/// Returns `true` if the worktree has any uncommitted changes, `false` if clean.
+///
+/// # Errors
+///
+/// Returns an error if:
+/// - The git command fails to execute
+/// - The path is not a git worktree
+///
+/// # Examples
+///
+/// ```no_run
+/// use std::path::PathBuf;
+/// use clauderon::utils::git::check_worktree_dirty;
+///
+/// # async fn example() -> anyhow::Result<()> {
+/// let is_dirty = check_worktree_dirty(&PathBuf::from("/path/to/worktree")).await?;
+/// if is_dirty {
+///     println!("Worktree has uncommitted changes");
+/// }
+/// # Ok(())
+/// # }
+/// ```
+#[tracing::instrument]
+pub async fn check_worktree_dirty(worktree_path: &Path) -> anyhow::Result<bool> {
+    let output = Command::new("git")
+        .current_dir(worktree_path)
+        .args(["status", "--porcelain"])
+        .output()
+        .await
+        .context("Failed to execute git status")?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        anyhow::bail!("git status failed: {}", stderr);
+    }
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+
+    // If output is non-empty, worktree has uncommitted changes
+    Ok(!stdout.trim().is_empty())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
