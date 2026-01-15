@@ -21,6 +21,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::sync::Arc;
 use tower_http::cors::{Any, CorsLayer};
+use uuid::Uuid;
 
 /// Shared state for HTTP handlers
 #[derive(Clone)]
@@ -57,6 +58,10 @@ pub fn create_router(auth_state: &Option<AuthState>, dev_mode: bool) -> Router<A
         .route("/api/sessions/{id}/refresh", post(refresh_session))
         .route("/api/sessions/{id}/access-mode", post(update_access_mode))
         .route("/api/sessions/{id}/metadata", post(update_metadata))
+        .route(
+            "/api/sessions/{id}/regenerate-metadata",
+            post(regenerate_metadata),
+        )
         .route("/api/sessions/{id}/history", get(get_session_history))
         .route("/api/sessions/{id}/upload", post(upload_file))
         .route("/api/recent-repos", get(get_recent_repos))
@@ -409,6 +414,38 @@ async fn update_metadata(
     }
 
     Ok(StatusCode::NO_CONTENT)
+}
+
+/// Regenerate session metadata using AI
+async fn regenerate_metadata(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+) -> Result<Json<serde_json::Value>, AppError> {
+    validate_session_id(&id)?;
+    let session_id = Uuid::parse_str(&id)
+        .map_err(|e| AppError::BadRequest(format!("Invalid session ID: {}", e)))?;
+
+    // Regenerate metadata
+    state
+        .session_manager
+        .regenerate_session_metadata(session_id)
+        .await?;
+
+    // Get updated session
+    let session = state
+        .session_manager
+        .get_session(&id)
+        .await
+        .ok_or_else(|| AppError::NotFound(format!("Session not found after regeneration: {id}")))?;
+
+    // Broadcast session updated event
+    broadcast_event(
+        &state.event_broadcaster,
+        Event::SessionUpdated(session.clone()),
+    )
+    .await;
+
+    Ok(Json(json!({ "session": session })))
 }
 
 /// Get recent repositories

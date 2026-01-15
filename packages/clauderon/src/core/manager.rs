@@ -1,6 +1,7 @@
 use anyhow::Context;
 use std::path::PathBuf;
 use std::sync::Arc;
+use std::time::{Duration, Instant};
 use tokio::sync::{RwLock, Semaphore};
 use tracing::instrument;
 use uuid::Uuid;
@@ -48,6 +49,44 @@ pub struct ReconcileReport {
     pub gave_up: Vec<Uuid>,
 }
 
+/// Cache for Claude Code usage data
+struct UsageCache {
+    data: Option<crate::api::protocol::ClaudeUsage>,
+    fetched_at: Option<Instant>,
+    ttl: Duration,
+}
+
+impl UsageCache {
+    fn new() -> Self {
+        Self {
+            data: None,
+            fetched_at: None,
+            ttl: Duration::from_secs(5 * 60), // 5 minutes
+        }
+    }
+
+    fn is_valid(&self) -> bool {
+        if let Some(fetched_at) = self.fetched_at {
+            fetched_at.elapsed() < self.ttl
+        } else {
+            false
+        }
+    }
+
+    fn set(&mut self, data: crate::api::protocol::ClaudeUsage) {
+        self.data = Some(data);
+        self.fetched_at = Some(Instant::now());
+    }
+
+    fn get(&self) -> Option<&crate::api::protocol::ClaudeUsage> {
+        if self.is_valid() {
+            self.data.as_ref()
+        } else {
+            None
+        }
+    }
+}
+
 /// Manages session lifecycle and state
 pub struct SessionManager {
     store: Arc<dyn Store>,
@@ -55,21 +94,22 @@ pub struct SessionManager {
     zellij: Arc<dyn ExecutionBackend>,
     docker: Arc<dyn ExecutionBackend>,
     kubernetes: Arc<dyn ExecutionBackend>,
+    console_manager: Arc<ConsoleManager>,
     sessions: RwLock<Vec<Session>>,
     /// Optional proxy manager for per-session filtering
     proxy_manager: Option<Arc<crate::proxy::ProxyManager>>,
     /// Optional event broadcaster for real-time WebSocket updates
     event_broadcaster: Option<EventBroadcaster>,
-    /// HTTP server port for hook communication
-    http_port: RwLock<Option<u16>>,
-    /// Console manager for WebSocket-based PTY access
-    console_manager: Arc<ConsoleManager>,
     /// Semaphore to limit concurrent creations (max 3)
     creation_semaphore: Arc<Semaphore>,
     /// Semaphore to limit concurrent deletions (max 3)
     deletion_semaphore: Arc<Semaphore>,
     /// Maximum total sessions allowed
     max_sessions: usize,
+    /// HTTP server port for hook communication (Docker only)
+    http_port: Option<u16>,
+    /// Cache for Claude Code usage data
+    usage_cache: Arc<RwLock<UsageCache>>,
 }
 
 impl SessionManager {
@@ -96,14 +136,15 @@ impl SessionManager {
             zellij,
             docker,
             kubernetes,
+            console_manager: Arc::new(ConsoleManager::new()),
             sessions: RwLock::new(sessions),
             proxy_manager: None,
             event_broadcaster: None,
-            http_port: RwLock::new(None),
-            console_manager: Arc::new(ConsoleManager::new()),
             creation_semaphore: Arc::new(Semaphore::new(3)),
             deletion_semaphore: Arc::new(Semaphore::new(3)),
             max_sessions: 15,
+            http_port: None,
+            usage_cache: Arc::new(RwLock::new(UsageCache::new())),
         })
     }
 
@@ -160,26 +201,26 @@ impl SessionManager {
         self.proxy_manager = Some(proxy_manager);
     }
 
-    /// Set the HTTP server port for hook communication
-    ///
-    /// This should be called after construction to enable Docker/K8s hook communication.
-    pub fn set_http_port(&self, port: u16) {
-        *self.http_port.blocking_write() = Some(port);
-    }
-
-    /// Get the console manager for WebSocket-based PTY access
-    ///
-    /// The console manager maintains PTY connections for WebSocket clients.
-    pub fn console_manager(&self) -> Arc<ConsoleManager> {
-        Arc::clone(&self.console_manager)
-    }
-
     /// Set the event broadcaster for real-time WebSocket updates
     ///
     /// This should be called after construction to enable real-time event broadcasting
     /// to WebSocket clients when session status changes occur.
     pub fn set_event_broadcaster(&mut self, broadcaster: EventBroadcaster) {
         self.event_broadcaster = Some(broadcaster);
+    }
+
+    /// Set the HTTP server port for hook communication
+    ///
+    /// This should be called after construction to enable HTTP-based hook communication
+    /// for Docker and Kubernetes containers (required since Unix sockets don't work
+    /// across VM/network boundaries).
+    pub fn set_http_port(&mut self, port: u16) {
+        self.http_port = Some(port);
+    }
+
+    #[must_use]
+    pub fn console_manager(&self) -> Arc<ConsoleManager> {
+        Arc::clone(&self.console_manager)
     }
 
     /// List all sessions
@@ -302,9 +343,7 @@ impl SessionManager {
             loop {
                 let candidate = crate::utils::random::generate_session_name(&metadata.branch_name);
                 let sessions = self.sessions.read().await;
-                let is_unique = !sessions.iter().any(|s| s.name == candidate);
-                drop(sessions);
-                if is_unique {
+                if !sessions.iter().any(|s| s.name == candidate) {
                     break candidate;
                 }
                 attempts += 1;
@@ -333,11 +372,13 @@ impl SessionManager {
             access_mode,
         });
 
-        // Set history file path
-        session.history_file_path = Some(super::session::get_history_file_path(
-            &worktree_path,
-            &session.id,
-        ));
+        // Set history file path for Claude Code sessions
+        if session.agent == super::session::AgentType::ClaudeCode {
+            session.history_file_path = Some(super::session::get_history_file_path(
+                &worktree_path,
+                &session.id,
+            ));
+        }
 
         // Set initial progress
         session.set_progress(crate::api::protocol::ProgressStep {
@@ -368,11 +409,12 @@ impl SessionManager {
             let mut sessions = self.sessions.write().await;
 
             // Re-check limit with lock held (defense against race)
-            let active_count = sessions
+            if sessions
                 .iter()
                 .filter(|s| s.status != SessionStatus::Archived)
-                .count();
-            if active_count >= self.max_sessions {
+                .count()
+                >= self.max_sessions
+            {
                 // Rollback database save
                 let _ = self.store.delete_session(session.id).await;
                 anyhow::bail!("Maximum session limit reached (prevented race condition)");
@@ -449,7 +491,6 @@ impl SessionManager {
                     tracing::error!("Failed to save shutdown error: {}", e);
                 }
             }
-            drop(sessions);
             return;
         };
 
@@ -504,34 +545,35 @@ impl SessionManager {
             }
 
             update_progress(2, "Setting up session proxy".to_string()).await;
-            // Create per-session proxy for Docker backends
+            // Create per-session proxy for Docker backends (required, no fallback)
             let proxy_port = if backend == BackendType::Docker {
-                if let Some(ref proxy_manager) = self.proxy_manager {
-                    let port = proxy_manager
-                        .create_session_proxy(session_id, access_mode)
-                        .await
-                        .context("Session proxy creation failed - cannot create session")?;
+                let proxy_manager = self
+                    .proxy_manager
+                    .as_ref()
+                    .ok_or_else(|| anyhow::anyhow!("Proxy manager required for Docker backend"))?;
 
-                    if let Some(session) = self
-                        .sessions
-                        .write()
-                        .await
-                        .iter_mut()
-                        .find(|s| s.id == session_id)
-                    {
-                        session.set_proxy_port(port);
-                    }
+                let port = proxy_manager
+                    .create_session_proxy(session_id, access_mode)
+                    .await
+                    .context("Session proxy creation failed - cannot create session")?;
 
-                    tracing::info!(
-                        session_id = %session_id,
-                        name = %full_name,
-                        port = port,
-                        "Created required session proxy"
-                    );
-                    Some(port)
-                } else {
-                    None
+                if let Some(session) = self
+                    .sessions
+                    .write()
+                    .await
+                    .iter_mut()
+                    .find(|s| s.id == session_id)
+                {
+                    session.set_proxy_port(port);
                 }
+
+                tracing::info!(
+                    session_id = %session_id,
+                    name = %full_name,
+                    port = port,
+                    "Created required session proxy"
+                );
+                Some(port)
             } else {
                 None // Non-Docker backends don't need proxy
             };
@@ -612,7 +654,7 @@ impl SessionManager {
                 dangerous_skip_checks,
                 session_id: Some(session_id),
                 initial_workdir: subdirectory.clone(),
-                http_port: *self.http_port.read().await,
+                http_port: self.http_port,
                 container_image: container_image_config,
                 container_resources: container_resource_limits,
             };
@@ -663,6 +705,20 @@ impl SessionManager {
                     if let Err(e) = self.store.save_session(session).await {
                         tracing::error!("Failed to save session after creation: {}", e);
                     }
+                }
+            }
+
+            if backend == BackendType::Docker && !print_mode {
+                if let Err(err) = self
+                    .console_manager
+                    .ensure_session(session_id, backend, &backend_id)
+                    .await
+                {
+                    tracing::warn!(
+                        session_id = %session_id,
+                        error = %err,
+                        "Failed to start console session"
+                    );
                 }
             }
 
@@ -851,9 +907,7 @@ impl SessionManager {
             loop {
                 let candidate = crate::utils::random::generate_session_name(&metadata.branch_name);
                 let sessions = self.sessions.read().await;
-                let is_unique = !sessions.iter().any(|s| s.name == candidate);
-                drop(sessions);
-                if is_unique {
+                if !sessions.iter().any(|s| s.name == candidate) {
                     break candidate;
                 }
                 attempts += 1;
@@ -882,11 +936,13 @@ impl SessionManager {
             access_mode,
         });
 
-        // Set history file path (directory created after worktree exists)
-        session.history_file_path = Some(super::session::get_history_file_path(
-            &worktree_path,
-            &session.id,
-        ));
+        // Set history file path for Claude Code sessions (directory created after worktree exists)
+        if session.agent == super::session::AgentType::ClaudeCode {
+            session.history_file_path = Some(super::session::get_history_file_path(
+                &worktree_path,
+                &session.id,
+            ));
+        }
 
         // Record creation event
         let event = Event::new(
@@ -927,27 +983,28 @@ impl SessionManager {
             }
         }
 
-        // Create per-session proxy for Docker backends BEFORE creating container
+        // Create per-session proxy for Docker backends BEFORE creating container (required, no fallback)
         let proxy_port = if backend == BackendType::Docker {
-            if let Some(ref proxy_manager) = self.proxy_manager {
-                let port = proxy_manager
-                    .create_session_proxy(session.id, access_mode)
-                    .await
-                    .context("Session proxy creation failed - cannot create session")?;
+            let proxy_manager = self
+                .proxy_manager
+                .as_ref()
+                .ok_or_else(|| anyhow::anyhow!("Proxy manager required for Docker backend"))?;
 
-                session.set_proxy_port(port);
-                tracing::info!(
-                    session_id = %session.id,
-                    name = %session.name,
-                    port = port,
-                    "Created required session proxy"
-                );
-                Some(port)
-            } else {
-                None
-            }
+            let port = proxy_manager
+                .create_session_proxy(session.id, access_mode)
+                .await
+                .context("Session proxy creation failed - cannot create session")?;
+
+            session.set_proxy_port(port);
+            tracing::info!(
+                session_id = %session.id,
+                name = %session.name,
+                port = port,
+                "Created required session proxy"
+            );
+            Some(port)
         } else {
-            None
+            None // Non-Docker backends don't need proxy
         };
 
         // Prepend plan mode instruction if enabled
@@ -1009,7 +1066,7 @@ impl SessionManager {
             dangerous_skip_checks,
             session_id: Some(session.id), // Pass session ID for Kubernetes PVC labeling
             initial_workdir: subdirectory.clone(),
-            http_port: *self.http_port.read().await,
+            http_port: self.http_port,
             container_image: container_image_config,
             container_resources: container_resource_limits,
         };
@@ -1048,6 +1105,20 @@ impl SessionManager {
 
         session.set_backend_id(backend_id.clone());
         session.set_status(SessionStatus::Running);
+
+        if backend == BackendType::Docker && !print_mode {
+            if let Err(err) = self
+                .console_manager
+                .ensure_session(session.id, backend, &backend_id)
+                .await
+            {
+                tracing::warn!(
+                    session_id = %session.id,
+                    error = %err,
+                    "Failed to start console session"
+                );
+            }
+        }
 
         // Record backend ID event
         let event = Event::new(session.id, EventType::BackendIdSet { backend_id });
@@ -1101,6 +1172,10 @@ impl SessionManager {
             .as_ref()
             .ok_or_else(|| anyhow::anyhow!("Session has no backend ID"))?;
 
+        if session.agent == super::session::AgentType::Codex {
+            anyhow::bail!("Send prompt is only supported for Claude Code sessions");
+        }
+
         match session.backend {
             BackendType::Zellij => Ok(self.zellij.attach_command(backend_id)),
             BackendType::Docker => Ok(self.docker.attach_command(backend_id)),
@@ -1143,6 +1218,7 @@ impl SessionManager {
 
         // Update in store
         self.store.save_session(&session_clone).await?;
+        self.console_manager.remove_session(session_id).await;
 
         Ok(())
     }
@@ -1216,7 +1292,7 @@ impl SessionManager {
                 anyhow::bail!("Session is already being deleted");
             }
 
-            (session.id, session.name)
+            (session.id, session.name.clone())
         };
 
         // Update to Deleting status
@@ -1247,6 +1323,8 @@ impl SessionManager {
             }
         }
 
+        self.console_manager.remove_session(session_id).await;
+
         // Spawn background deletion task
         let manager_clone = Arc::clone(self);
         tokio::spawn(async move {
@@ -1275,7 +1353,6 @@ impl SessionManager {
                     tracing::error!("Failed to save shutdown error: {}", e);
                 }
             }
-            drop(sessions);
             return;
         };
 
@@ -1358,7 +1435,7 @@ impl SessionManager {
             // Delete git worktree
             let _ = self.git.delete_worktree(&repo_path, &worktree_path).await;
 
-            // Clean up session uploads
+            // Clean up uploaded files
             if let Err(e) = crate::uploads::cleanup_session_uploads(session_id) {
                 tracing::warn!(
                     session_id = %session_id,
@@ -1415,7 +1492,6 @@ impl SessionManager {
                         });
                     }
                 }
-                drop(sessions);
 
                 tracing::error!(session_id = %session_id, error = %e, "Session deletion failed");
             }
@@ -1469,15 +1545,6 @@ impl SessionManager {
             .delete_worktree(&session.repo_path, &session.worktree_path)
             .await;
 
-        // Clean up session uploads
-        if let Err(e) = crate::uploads::cleanup_session_uploads(session.id) {
-            tracing::warn!(
-                session_id = %session.id,
-                error = %e,
-                "Failed to clean up session uploads"
-            );
-        }
-
         // Record deletion event
         let event = Event::new(session.id, EventType::SessionDeleted { reason: None });
         self.store.record_event(&event).await?;
@@ -1487,6 +1554,7 @@ impl SessionManager {
 
         // Remove from in-memory list
         self.sessions.write().await.retain(|s| s.id != session.id);
+        self.console_manager.remove_session(session.id).await;
 
         Ok(())
     }
@@ -1599,7 +1667,7 @@ impl SessionManager {
                 dangerous_skip_checks,
                 session_id: Some(session_id),
                 initial_workdir: subdirectory,
-                http_port: *self.http_port.read().await,
+                http_port: self.http_port,
                 container_image: None,
                 container_resources: None,
             };
@@ -1840,7 +1908,7 @@ impl SessionManager {
                                     );
                                     // Attempt auto-recreation
                                     let _ = proxy_manager
-                                        .restore_session_proxies(std::slice::from_ref(session))
+                                        .restore_session_proxies(std::slice::from_ref(&session))
                                         .await;
                                 }
                             }
@@ -1906,7 +1974,7 @@ impl SessionManager {
             dangerous_skip_checks: session.dangerous_skip_checks,
             session_id: Some(session.id),
             initial_workdir: session.subdirectory.clone(),
-            http_port: *self.http_port.read().await,
+            http_port: self.http_port,
             container_image: None,
             container_resources: None,
         };
@@ -1963,42 +2031,6 @@ impl SessionManager {
         Ok(())
     }
 
-    /// Update session metadata (title and description)
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if the session is not found or the store update fails.
-    #[instrument(skip(self), fields(id_or_name = %id_or_name))]
-    pub async fn update_metadata(
-        &self,
-        id_or_name: &str,
-        title: Option<String>,
-        description: Option<String>,
-    ) -> anyhow::Result<()> {
-        let mut sessions = self.sessions.write().await;
-        let session = sessions
-            .iter_mut()
-            .find(|s| s.name == id_or_name || s.id.to_string() == id_or_name)
-            .ok_or_else(|| anyhow::anyhow!("Session not found: {id_or_name}"))?;
-
-        let session_id = session.id;
-        session.set_title(title);
-        session.set_description(description);
-        let session_clone = session.clone();
-        drop(sessions);
-
-        // Update in store
-        self.store.save_session(&session_clone).await?;
-
-        tracing::info!(
-            session_id = %session_id,
-            name = %session_clone.name,
-            "Updated session metadata"
-        );
-
-        Ok(())
-    }
-
     /// Update the access mode for a session
     ///
     /// # Errors
@@ -2043,6 +2075,127 @@ impl SessionManager {
             name = %session_clone.name,
             mode = ?new_mode,
             "Updated session access mode"
+        );
+
+        Ok(())
+    }
+
+    /// Update session metadata (title and description)
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the session is not found or the store update fails.
+    #[instrument(skip(self), fields(id_or_name = %id_or_name, title = ?title, description = ?description))]
+    pub async fn update_metadata(
+        &self,
+        id_or_name: &str,
+        title: Option<String>,
+        description: Option<String>,
+    ) -> anyhow::Result<()> {
+        let mut sessions = self.sessions.write().await;
+        let session = sessions
+            .iter_mut()
+            .find(|s| s.name == id_or_name || s.id.to_string() == id_or_name)
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {id_or_name}"))?;
+
+        let session_id = session.id;
+        session.set_title(title);
+        session.set_description(description);
+        let session_clone = session.clone();
+        drop(sessions);
+
+        // Update in store
+        self.store.save_session(&session_clone).await?;
+
+        tracing::info!(
+            session_id = %session_id,
+            name = %session_clone.name,
+            "Updated session metadata"
+        );
+
+        Ok(())
+    }
+
+    /// Regenerate session metadata using AI
+    ///
+    /// Calls the Claude CLI to regenerate the title, description, and branch name
+    /// for a session based on its initial prompt. This is useful when the initial
+    /// generation failed or timed out during session creation.
+    ///
+    /// # Arguments
+    ///
+    /// * `session_id` - The UUID of the session to regenerate metadata for
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the session is not found or the store update fails.
+    ///
+    /// # Note
+    ///
+    /// If AI generation fails and returns default values, existing metadata is preserved
+    /// to avoid overwriting user-edited values with defaults.
+    #[instrument(skip(self), fields(session_id = %session_id))]
+    pub async fn regenerate_session_metadata(&self, session_id: Uuid) -> anyhow::Result<()> {
+        // Get session
+        let sessions = self.sessions.read().await;
+        let session = sessions
+            .iter()
+            .find(|s| s.id == session_id)
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {}", session_id))?;
+
+        let repo_path = session.repo_path.clone();
+        let initial_prompt = session.initial_prompt.clone();
+        let session_name = session.name.clone();
+        drop(sessions);
+
+        tracing::info!(
+            session_id = %session_id,
+            session_name = %session_name,
+            "Regenerating session metadata with AI"
+        );
+
+        // Generate new metadata
+        let repo_path_str = repo_path
+            .to_str()
+            .ok_or_else(|| anyhow::anyhow!("Invalid UTF-8 in repo path"))?;
+        let metadata = crate::utils::generate_session_name_ai(repo_path_str, &initial_prompt).await;
+
+        // Only update if we got non-default values
+        // (avoid overwriting user edits with defaults)
+        if metadata.title == "New Session" {
+            tracing::warn!(
+                session_id = %session_id,
+                "Metadata regeneration returned defaults, preserving existing values"
+            );
+            anyhow::bail!("AI metadata generation returned defaults - possible timeout or failure");
+        }
+
+        // Update session with new metadata
+        let mut sessions = self.sessions.write().await;
+        let session = sessions
+            .iter_mut()
+            .find(|s| s.id == session_id)
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {}", session_id))?;
+
+        session.set_title(Some(metadata.title.clone()));
+        session.set_description(Some(metadata.description.clone()));
+
+        let session_clone = session.clone();
+        drop(sessions);
+
+        // Save updated session
+        self.store.save_session(&session_clone).await?;
+
+        // Broadcast update event
+        if let Some(ref broadcaster) = self.event_broadcaster {
+            broadcast_event(broadcaster, WsEvent::SessionUpdated(session_clone.clone())).await;
+        }
+
+        tracing::info!(
+            session_id = %session_id,
+            title = %metadata.title,
+            description = %metadata.description,
+            "Successfully regenerated session metadata"
         );
 
         Ok(())
@@ -2097,9 +2250,7 @@ impl SessionManager {
 
         // Broadcast event to WebSocket clients if broadcaster available
         if let Some(ref broadcaster) = self.event_broadcaster {
-            if let Some(session) = self.get_session(&session_id.to_string()).await {
-                broadcast_event(broadcaster, WsEvent::SessionUpdated(session)).await;
-            }
+            broadcast_event(broadcaster, WsEvent::SessionUpdated(session_clone)).await;
         }
 
         Ok(())
@@ -2148,9 +2299,7 @@ impl SessionManager {
 
         // Broadcast event to WebSocket clients if broadcaster available
         if let Some(ref broadcaster) = self.event_broadcaster {
-            if let Some(session) = self.get_session(&session_id.to_string()).await {
-                broadcast_event(broadcaster, WsEvent::SessionUpdated(session)).await;
-            }
+            broadcast_event(broadcaster, WsEvent::SessionUpdated(session_clone)).await;
         }
 
         Ok(())
@@ -2197,9 +2346,7 @@ impl SessionManager {
 
         // Broadcast event to WebSocket clients if broadcaster available
         if let Some(ref broadcaster) = self.event_broadcaster {
-            if let Some(session) = self.get_session(&session_id.to_string()).await {
-                broadcast_event(broadcaster, WsEvent::SessionUpdated(session)).await;
-            }
+            broadcast_event(broadcaster, WsEvent::SessionUpdated(session_clone)).await;
         }
 
         Ok(())
@@ -2248,9 +2395,7 @@ impl SessionManager {
 
         // Broadcast event to WebSocket clients if broadcaster available
         if let Some(ref broadcaster) = self.event_broadcaster {
-            if let Some(session) = self.get_session(&session_id.to_string()).await {
-                broadcast_event(broadcaster, WsEvent::SessionUpdated(session)).await;
-            }
+            broadcast_event(broadcaster, WsEvent::SessionUpdated(session_clone)).await;
         }
 
         Ok(())
@@ -2403,6 +2548,20 @@ impl SessionManager {
                     }
                 }
             };
+            let codex_env_present = [
+                "CODEX_ACCESS_TOKEN",
+                "CODEX_REFRESH_TOKEN",
+                "CODEX_ID_TOKEN",
+            ]
+            .iter()
+            .any(|name| std::env::var(name).is_ok());
+            let codex_auth_source = creds.codex_auth_json_path.as_ref().and_then(|path| {
+                if path.exists() {
+                    Some(format!("auth.json:{}", path.display()))
+                } else {
+                    None
+                }
+            });
 
             // GitHub
             let (source, readonly) = credential_source("GITHUB_TOKEN", "github_token");
@@ -2426,6 +2585,48 @@ impl SessionManager {
                 readonly,
                 masked_value: creds
                     .anthropic_oauth_token
+                    .as_ref()
+                    .map(|v| mask_credential(v)),
+            });
+
+            // OpenAI
+            let (source, readonly) = if std::env::var("OPENAI_API_KEY").is_ok()
+                || std::env::var("CODEX_API_KEY").is_ok()
+            {
+                (Some("environment".to_string()), true)
+            } else {
+                let path = secrets_dir.join("openai_api_key");
+                if path.exists() {
+                    (Some("file".to_string()), false)
+                } else if codex_auth_source.is_some() && creds.openai_api_key.is_some() {
+                    (codex_auth_source.clone(), true)
+                } else {
+                    (None, false)
+                }
+            };
+            credentials.push(CredentialStatus {
+                name: "OpenAI".to_string(),
+                service_id: "openai".to_string(),
+                available: creds.openai_api_key.is_some(),
+                source,
+                readonly,
+                masked_value: creds.openai_api_key.as_ref().map(|v| mask_credential(v)),
+            });
+            let (source, readonly) = if codex_env_present {
+                (Some("environment".to_string()), true)
+            } else if codex_auth_source.is_some() {
+                (codex_auth_source.clone(), true)
+            } else {
+                (None, true)
+            };
+            credentials.push(CredentialStatus {
+                name: "ChatGPT".to_string(),
+                service_id: "chatgpt".to_string(),
+                available: creds.codex_access_token().is_some(),
+                source,
+                readonly,
+                masked_value: creds
+                    .codex_access_token()
                     .as_ref()
                     .map(|v| mask_credential(v)),
             });
@@ -2518,8 +2719,90 @@ impl SessionManager {
             }
 
             // Count session-specific proxies
-            active_session_proxies =
-                u32::try_from(pm.active_session_proxy_count().await).unwrap_or(u32::MAX);
+            active_session_proxies = pm.active_session_proxy_count().await as u32;
+
+            // Try to fetch Claude Code usage if OAuth token is available
+            let claude_usage = if let Some(oauth_token) = creds.anthropic_oauth_token.as_ref() {
+                // Check cache first
+                {
+                    let cache = self.usage_cache.read().await;
+                    if let Some(cached_usage) = cache.get() {
+                        tracing::debug!("Using cached usage data");
+                        Some(cached_usage.clone())
+                    } else {
+                        drop(cache); // Release read lock
+
+                        // Cache miss - fetch fresh data
+                        match Self::fetch_claude_usage(oauth_token).await {
+                            Ok(usage) => {
+                                tracing::info!(
+                                    org_id = %usage.organization_id,
+                                    five_hour_utilization = %usage.five_hour.utilization,
+                                    seven_day_utilization = %usage.seven_day.utilization,
+                                    "Successfully fetched Claude Code usage"
+                                );
+
+                                // Cache successful fetch
+                                let mut cache = self.usage_cache.write().await;
+                                cache.set(usage.clone());
+
+                                Some(usage)
+                            }
+                            Err(usage_error) => {
+                                // Log with appropriate severity based on error type
+                                match usage_error.error_type.as_str() {
+                                    "invalid_token" | "unauthorized" | "invalid_token_format" => {
+                                        tracing::error!(
+                                            error_type = %usage_error.error_type,
+                                            message = %usage_error.message,
+                                            "Usage tracking authentication failed"
+                                        );
+                                    }
+                                    _ => {
+                                        tracing::warn!(
+                                            error_type = %usage_error.error_type,
+                                            message = %usage_error.message,
+                                            "Usage tracking failed - continuing without usage data"
+                                        );
+                                    }
+                                }
+
+                                // Don't cache errors - Return ClaudeUsage with error field populated
+                                use crate::api::protocol::{ClaudeUsage, UsageWindow};
+                                Some(ClaudeUsage {
+                                    organization_id: String::new(),
+                                    organization_name: None,
+                                    five_hour: UsageWindow {
+                                        current: 0.0,
+                                        limit: 0.0,
+                                        utilization: 0.0,
+                                        resets_at: None,
+                                    },
+                                    seven_day: UsageWindow {
+                                        current: 0.0,
+                                        limit: 0.0,
+                                        utilization: 0.0,
+                                        resets_at: None,
+                                    },
+                                    seven_day_sonnet: None,
+                                    fetched_at: chrono::Utc::now().to_rfc3339(),
+                                    error: Some(usage_error),
+                                })
+                            }
+                        }
+                    }
+                }
+            } else {
+                tracing::debug!("No Anthropic OAuth token available - skipping usage fetch");
+                None
+            };
+
+            return Ok(SystemStatus {
+                credentials,
+                proxies,
+                active_session_proxies,
+                claude_usage,
+            });
         }
 
         Ok(SystemStatus {
@@ -2528,6 +2811,112 @@ impl SessionManager {
             active_session_proxies,
             claude_usage: None,
         })
+    }
+
+    /// Fetch Claude Code usage data from Claude.ai API
+    ///
+    /// This attempts to get the org ID and usage data in one flow.
+    /// Falls back to environment variable if API calls fail.
+    #[instrument(skip(oauth_token))]
+    async fn fetch_claude_usage(
+        oauth_token: &str,
+    ) -> Result<crate::api::protocol::ClaudeUsage, crate::api::protocol::UsageError> {
+        use crate::api::claude_client::ClaudeApiClient;
+        use crate::api::protocol::UsageError;
+
+        // Validate token format first
+        if let Err(e) = ClaudeApiClient::validate_token_format(oauth_token) {
+            return Err(UsageError {
+                error_type: "invalid_token_format".to_string(),
+                message: "OAuth token has invalid format".to_string(),
+                details: Some(e.to_string()),
+                suggestion: Some(
+                    "Set CLAUDE_CODE_OAUTH_TOKEN to a valid token starting with 'sk-ant-'"
+                        .to_string(),
+                ),
+            });
+        }
+
+        let client = ClaudeApiClient::new();
+
+        // First, try to get org ID from current account endpoint (with retry)
+        let (org_id, org_name) = match client.get_current_account_with_retry(oauth_token).await {
+            Ok(info) => info,
+            Err(e) => {
+                // Check if it's an auth error
+                let error_str = e.to_string();
+                if error_str.contains("401") || error_str.contains("403") {
+                    return Err(UsageError {
+                        error_type: "invalid_token".to_string(),
+                        message: "OAuth token is invalid or expired".to_string(),
+                        details: Some(error_str),
+                        suggestion: Some("Get a fresh token from claude.ai settings".to_string()),
+                    });
+                }
+
+                // Fallback to environment variable
+                tracing::warn!(
+                    error = %e,
+                    "Failed to get org ID from Claude.ai API, trying CLAUDE_ORG_ID env var"
+                );
+
+                let org_id = match std::env::var("CLAUDE_ORG_ID")
+                    .or_else(|_| std::env::var("ANTHROPIC_ORG_ID"))
+                {
+                    Ok(id) => id,
+                    Err(_) => {
+                        return Err(UsageError {
+                            error_type: "missing_org_id".to_string(),
+                            message: "Failed to get organization ID".to_string(),
+                            details: Some(format!(
+                                "API error: {}. No CLAUDE_ORG_ID env var set.",
+                                error_str
+                            )),
+                            suggestion: Some("Set CLAUDE_ORG_ID environment variable".to_string()),
+                        });
+                    }
+                };
+
+                (org_id, None)
+            }
+        };
+
+        // Now fetch usage data (with retry)
+        let mut usage = match client.get_usage_with_retry(oauth_token, &org_id).await {
+            Ok(u) => u,
+            Err(e) => {
+                let error_str = e.to_string();
+                if error_str.contains("401") || error_str.contains("403") {
+                    return Err(UsageError {
+                        error_type: "unauthorized".to_string(),
+                        message: "Not authorized to access usage data".to_string(),
+                        details: Some(error_str),
+                        suggestion: Some(
+                            "Verify token has access to this organization".to_string(),
+                        ),
+                    });
+                } else if error_str.contains("404") {
+                    return Err(UsageError {
+                        error_type: "not_found".to_string(),
+                        message: format!("Organization {} not found", org_id),
+                        details: Some(error_str),
+                        suggestion: Some("Verify CLAUDE_ORG_ID is correct".to_string()),
+                    });
+                } else {
+                    return Err(UsageError {
+                        error_type: "api_error".to_string(),
+                        message: "Failed to fetch usage data from Claude.ai".to_string(),
+                        details: Some(error_str),
+                        suggestion: Some("Check network connectivity and try again".to_string()),
+                    });
+                }
+            }
+        };
+
+        // Fill in org name if we got it
+        usage.organization_name = org_name;
+
+        Ok(usage)
     }
 
     /// Update a credential value.
@@ -2613,6 +3002,7 @@ impl SessionManager {
         match service_id {
             "github" => Ok("github_token"),
             "anthropic" => Ok("anthropic_oauth_token"),
+            "openai" => Ok("openai_api_key"),
             "pagerduty" => Ok("pagerduty_token"),
             "sentry" => Ok("sentry_auth_token"),
             "grafana" => Ok("grafana_api_key"),
@@ -2629,6 +3019,7 @@ impl SessionManager {
         match service_id {
             "github" => Ok("GITHUB_TOKEN"),
             "anthropic" => Ok("CLAUDE_CODE_OAUTH_TOKEN"),
+            "openai" => Ok("OPENAI_API_KEY"),
             "pagerduty" => Ok("PAGERDUTY_TOKEN"),
             "sentry" => Ok("SENTRY_AUTH_TOKEN"),
             "grafana" => Ok("GRAFANA_API_KEY"),

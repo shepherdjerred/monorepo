@@ -28,7 +28,8 @@ ENVIRONMENT VARIABLES:
     RUST_LOG                    Log level filter (default: clauderon=info)
     VISUAL, EDITOR              Preferred editor for prompts
     CLAUDERON_BIND_ADDR         HTTP server bind address (default: 127.0.0.1)
-    CLAUDERON_ORIGIN            WebAuthn origin URL (required if BIND_ADDR=0.0.0.0)
+                                Specific IPs auto-add 127.0.0.1 listener for Docker
+    CLAUDERON_ORIGIN            WebAuthn origin URL (required for non-localhost bindings)
                                 Example: http://192.168.1.100:3030
     CLAUDERON_RP_ID             WebAuthn RP ID (default: hostname from ORIGIN)
 
@@ -97,12 +98,16 @@ EXAMPLES:
     # Start daemon on custom HTTP port
     clauderon daemon --http-port 8080
 
-    # Bind to all interfaces (requires CLAUDERON_ORIGIN)
+    # Bind to all interfaces (requires CLAUDERON_ORIGIN for auth)
     CLAUDERON_ORIGIN=http://myhost.local:3030 CLAUDERON_BIND_ADDR=0.0.0.0 clauderon daemon
+
+    # Bind to specific IP (auto-adds 127.0.0.1 for Docker)
+    CLAUDERON_ORIGIN=http://myhost.local:3030 CLAUDERON_BIND_ADDR=100.64.1.1 clauderon daemon
 
 ENVIRONMENT:
     CLAUDERON_BIND_ADDR  Bind address (default: 127.0.0.1)
-    CLAUDERON_ORIGIN     WebAuthn origin URL (required if binding to 0.0.0.0)
+                         Specific IPs automatically add 127.0.0.1 listener for Docker
+    CLAUDERON_ORIGIN     WebAuthn origin URL (required for non-localhost bindings)
     CLAUDERON_RP_ID      WebAuthn RP ID (default: hostname from ORIGIN)")]
     Daemon {
         /// Disable proxy services (credential injection, TLS interception)
