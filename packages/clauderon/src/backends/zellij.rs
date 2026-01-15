@@ -354,7 +354,6 @@ mod tests {
             &[],
             AgentType::ClaudeCode,
             None,
-            crate::core::AgentType::Claude,
         );
 
         assert_eq!(args[0], "action", "Expected 'action' as first arg");
@@ -372,7 +371,6 @@ mod tests {
             &[],
             AgentType::ClaudeCode,
             None,
-            crate::core::AgentType::Claude,
         );
 
         // Find the command argument (last one containing the prompt)
@@ -406,7 +404,6 @@ mod tests {
             &[],
             AgentType::ClaudeCode,
             None,
-            crate::core::AgentType::Claude,
         );
 
         assert!(
@@ -425,7 +422,6 @@ mod tests {
             &[],
             AgentType::ClaudeCode,
             None,
-            crate::core::AgentType::Claude,
         );
 
         assert!(
@@ -449,7 +445,6 @@ mod tests {
             &[],
             AgentType::ClaudeCode,
             None,
-            crate::core::AgentType::Claude,
         );
 
         let cmd_arg = args.last().unwrap();
@@ -473,7 +468,6 @@ mod tests {
             &images,
             AgentType::ClaudeCode,
             None,
-            crate::core::AgentType::Claude,
         );
 
         let cmd_arg = args.last().unwrap();
@@ -499,7 +493,6 @@ mod tests {
             &images,
             AgentType::ClaudeCode,
             None,
-            crate::core::AgentType::Claude,
         );
 
         let cmd_arg = args.last().unwrap();
@@ -520,7 +513,6 @@ mod tests {
             &[],
             AgentType::ClaudeCode,
             None,
-            crate::core::AgentType::Claude,
         );
 
         let cmd_arg = args.last().unwrap();

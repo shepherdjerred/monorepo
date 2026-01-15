@@ -465,6 +465,13 @@ impl DockerBackend {
                         "CODEX_API_KEY=sk-openai-clauderon-proxy-placeholder".to_string(),
                     ]);
                 }
+                AgentType::Gemini => {
+                    // Gemini uses Gemini API key
+                    args.extend([
+                        "-e".to_string(),
+                        "GEMINI_API_KEY=sk-gemini-clauderon-proxy-placeholder".to_string(),
+                    ]);
+                }
             }
 
             // SSL/TLS environment variables for CA trust
