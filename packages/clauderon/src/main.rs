@@ -274,6 +274,31 @@ EXAMPLES:
         session: String,
     },
 
+    /// Refresh a session (pull latest image and recreate container)
+    ///
+    /// Recreates the container from scratch to apply plugin changes or pull image updates.
+    #[command(after_help = "\
+EXAMPLES:
+    # Refresh a session by name
+    clauderon refresh my-session
+
+    # Refresh a session by UUID
+    clauderon refresh 550e8400-e29b-41d4-a716-446655440000
+
+USE CASES:
+    - Apply changes to Claude Code plugins
+    - Pull latest Docker image with bug fixes
+    - Fix containers stuck in bad state
+
+NOTES:
+    - Only works with Docker backend sessions
+    - Session UUID and history are preserved
+    - All configuration is maintained")]
+    Refresh {
+        /// Session name or UUID
+        session: String,
+    },
+
     /// Delete a session
     ///
     /// Permanently removes a session, its worktree, and backend resources.
@@ -550,6 +575,15 @@ async fn main() -> anyhow::Result<()> {
             let mut client = api::client::Client::connect().await?;
             client.archive_session(&session).await?;
             println!("Archived session: {session}");
+        }
+        Commands::Refresh { session } => {
+            let mut client = api::client::Client::connect().await?;
+
+            println!("Refreshing session '{session}'...");
+            println!("This will pull the latest image and recreate the container.");
+
+            client.refresh_session(&session).await?;
+            println!("Successfully refreshed session: {session}");
         }
         Commands::Delete { session, force } => {
             if !force {

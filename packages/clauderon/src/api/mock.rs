@@ -239,6 +239,32 @@ impl ApiClient for MockApiClient {
         anyhow::bail!("Session not found: {id}")
     }
 
+    async fn refresh_session(&mut self, id: &str) -> anyhow::Result<()> {
+        if self.should_fail() {
+            let msg = self.error_message.read().await.clone();
+            anyhow::bail!("{msg}");
+        }
+
+        // For mock, just verify the session exists (refresh is a no-op for mock sessions)
+        let sessions = self.sessions.read().await;
+
+        // Try to find by UUID first
+        if let Ok(uuid) = Uuid::parse_str(id)
+            && sessions.contains_key(&uuid)
+        {
+            return Ok(());
+        }
+
+        // Try to find by name
+        for session in sessions.values() {
+            if session.name == id {
+                return Ok(());
+            }
+        }
+
+        anyhow::bail!("Session not found: {id}")
+    }
+
     async fn attach_session(&mut self, id: &str) -> anyhow::Result<Vec<String>> {
         if self.should_fail() {
             let msg = self.error_message.read().await.clone();
@@ -294,10 +320,12 @@ impl ApiClient for MockApiClient {
         Ok(vec![
             super::protocol::RecentRepoDto {
                 repo_path: "/home/user/projects/repo1".to_string(),
+                subdirectory: String::new(),
                 last_used: Utc::now().to_rfc3339(),
             },
             super::protocol::RecentRepoDto {
                 repo_path: "/home/user/projects/repo2".to_string(),
+                subdirectory: "packages/foo".to_string(),
                 last_used: (Utc::now() - chrono::Duration::hours(1)).to_rfc3339(),
             },
         ])

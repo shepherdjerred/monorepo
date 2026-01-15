@@ -10,6 +10,9 @@ use unicode_width::UnicodeWidthStr;
 use crate::core::{CheckStatus, ClaudeWorkingStatus, Session, SessionStatus};
 use crate::tui::app::App;
 
+/// Number of spaces between columns
+const COLUMN_PADDING: usize = 2;
+
 /// Column width configuration with min/max constraints
 #[derive(Copy, Clone)]
 struct ColumnWidths {
@@ -116,6 +119,9 @@ impl ColumnWidths {
 
     /// Get total required width
     fn total_width(&self) -> usize {
+        // 4 gaps between the 5 main columns (name, repo, status, backend, branch)
+        let padding_width = 4 * COLUMN_PADDING;
+
         self.prefix_width
             + self.name
             + self.repository
@@ -125,12 +131,17 @@ impl ColumnWidths {
             + self.claude_indicator
             + self.ci_indicator
             + self.conflict_indicator
+            + padding_width
     }
 
     /// Shrink proportionally if total exceeds available width
     fn fit_to_width(&mut self, available_width: u16) {
-        let fixed_width =
-            self.prefix_width + self.claude_indicator + self.ci_indicator + self.conflict_indicator;
+        let padding_width = 4 * COLUMN_PADDING;
+        let fixed_width = self.prefix_width
+            + self.claude_indicator
+            + self.ci_indicator
+            + self.conflict_indicator
+            + padding_width;
         let available_for_columns = (available_width as usize).saturating_sub(fixed_width);
 
         let total_current =
@@ -217,7 +228,7 @@ fn pad_to_width(text: &str, width: usize) -> String {
 pub fn render(frame: &mut Frame, app: &App, area: Rect) {
     let block = Block::default()
         .title(" Clauderon - Sessions ")
-        .title_bottom(" [n]ew  [d]elete  [a]rchive  [?]help  [q]uit ")
+        .title_bottom(" [n]ew  [d]elete  [a]rchive  [f]refresh  [?]help  [q]uit ")
         .borders(Borders::ALL)
         .border_style(Style::default().fg(Color::Cyan));
 
@@ -251,18 +262,22 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
             pad_to_width("Name", widths.name),
             Style::default().fg(Color::DarkGray),
         ),
+        Span::raw("  "), // Column padding
         Span::styled(
             pad_to_width("Repository", widths.repository),
             Style::default().fg(Color::DarkGray),
         ),
+        Span::raw("  "), // Column padding
         Span::styled(
             pad_to_width("Status", widths.status),
             Style::default().fg(Color::DarkGray),
         ),
+        Span::raw("  "), // Column padding
         Span::styled(
             pad_to_width("Backend", widths.backend),
             Style::default().fg(Color::DarkGray),
         ),
+        Span::raw("  "), // Column padding
         Span::styled(
             pad_to_width("Branch/PR", widths.branch_pr),
             Style::default().fg(Color::DarkGray),
@@ -414,9 +429,13 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
 
             spans.extend(vec![
                 Span::styled(name_padded, name_style),
+                Span::raw("  "), // Column padding
                 Span::raw(repo_padded),
+                Span::raw("  "), // Column padding
                 Span::styled(status_padded, status_style),
+                Span::raw("  "), // Column padding
                 Span::raw(backend_padded),
+                Span::raw("  "), // Column padding
                 Span::raw(pr_padded),
                 claude_indicator,
                 Span::raw(" "),

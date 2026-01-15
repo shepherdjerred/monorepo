@@ -45,14 +45,20 @@ pub enum Request {
 
     /// Get session ID by name (for hook scripts)
     GetSessionIdByName { name: String },
+
+    /// Refresh a session (pull latest image and recreate container)
+    RefreshSession { id: String },
 }
 
 /// Recent repository entry with timestamp
 #[typeshare]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RecentRepoDto {
-    /// Path to the repository
+    /// Path to the repository (git root)
     pub repo_path: String,
+
+    /// Subdirectory path relative to git root (empty string if at root)
+    pub subdirectory: String,
 
     /// When this repository was last used (ISO 8601 timestamp)
     pub last_used: String,
@@ -226,6 +232,9 @@ pub enum Response {
 
     /// Session archived successfully
     Archived,
+
+    /// Session refreshed successfully
+    Refreshed,
 
     /// Command to attach to a session
     AttachReady { command: Vec<String> },
