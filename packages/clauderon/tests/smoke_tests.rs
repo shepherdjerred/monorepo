@@ -47,7 +47,7 @@ async fn test_claude_starts_in_docker() {
             temp_dir.path(),
             "echo 'smoke test' && exit",
             CreateOptions {
-                agent_type: AgentType::Claude,
+                agent: AgentType::ClaudeCode,
                 print_mode: false,
                 plan_mode: true,
                 session_proxy_port: None,
@@ -120,7 +120,7 @@ async fn test_claude_writes_debug_files() {
             temp_dir.path(),
             "echo 'testing debug write'",
             CreateOptions {
-                agent_type: AgentType::Claude,
+                agent: AgentType::ClaudeCode,
                 print_mode: false,
                 plan_mode: true,
                 session_proxy_port: None,
@@ -181,7 +181,7 @@ async fn test_container_runs_as_non_root() {
             temp_dir.path(),
             "id -u",
             CreateOptions {
-                agent_type: AgentType::Claude,
+                agent: AgentType::ClaudeCode,
                 print_mode: false,
                 plan_mode: true,
                 session_proxy_port: None,
@@ -254,7 +254,7 @@ async fn test_initial_prompt_executed() {
             temp_dir.path(),
             "read the file test-file.txt and print its contents exactly",
             CreateOptions {
-                agent_type: AgentType::Claude,
+                agent: AgentType::ClaudeCode,
                 print_mode: false,
                 plan_mode: true,
                 session_proxy_port: None,
