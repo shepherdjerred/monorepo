@@ -738,20 +738,27 @@ impl App {
             self.delete_progress_rx = Some(rx);
             self.deleting_session_id = Some(id.clone());
 
+            // Take the stored client if available (for testing with mock clients)
+            // If not available, we'll connect to daemon in the task
+            let injected_client = self.client.take();
+
             // Spawn background task
             let task = tokio::spawn(async move {
-                // Connect to daemon
-                let mut client = match Client::connect().await {
-                    Ok(c) => c,
-                    Err(e) => {
-                        let _ = tx
-                            .send(DeleteProgress::Error {
-                                session_id: id.clone(),
-                                message: format!("Failed to connect to daemon: {e}"),
-                            })
-                            .await;
-                        return;
-                    }
+                // Use injected client or connect to daemon
+                let mut client: Box<dyn ApiClient> = match injected_client {
+                    Some(c) => c,
+                    None => match Client::connect().await {
+                        Ok(c) => Box::new(c),
+                        Err(e) => {
+                            let _ = tx
+                                .send(DeleteProgress::Error {
+                                    session_id: id.clone(),
+                                    message: format!("Failed to connect to daemon: {e}"),
+                                })
+                                .await;
+                            return;
+                        }
+                    },
                 };
 
                 // Perform deletion
@@ -767,7 +774,7 @@ impl App {
                         let _ = tx
                             .send(DeleteProgress::Error {
                                 session_id: id.clone(),
-                                message: e.to_string(),
+                                message: format!("[DELETE_ERROR] {e}"),
                             })
                             .await;
                     }
