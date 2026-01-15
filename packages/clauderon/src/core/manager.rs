@@ -1243,7 +1243,7 @@ impl SessionManager {
             http_port: self.http_port,
             container_image: container_image_config,
             container_resources: container_resource_limits,
-            repositories: &[], // Legacy single-repo mode (synchronous creation)
+            repositories: vec![], // Legacy single-repo mode (synchronous creation)
         };
         let backend_id = match backend {
             BackendType::Zellij => {
@@ -1826,7 +1826,7 @@ impl SessionManager {
                 http_port: self.http_port,
                 container_image: None,
                 container_resources: None,
-                repositories: &[], // Legacy single-repo mode (refresh operation)
+                repositories: vec![], // Legacy single-repo mode (refresh operation)
             };
 
             let new_backend_id = self
@@ -2134,6 +2134,7 @@ impl SessionManager {
             http_port: self.http_port,
             container_image: None,
             container_resources: None,
+            repositories: vec![], // Legacy single-repo mode (recreation)
         };
 
         // Recreate container
