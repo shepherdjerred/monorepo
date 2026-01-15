@@ -76,7 +76,7 @@ impl CommonAgentLogic {
     }
 
     /// Detect the state of the agent based on the output.
-    #[must_use] 
+    #[must_use]
     pub fn detect_state(&self, output: &str) -> AgentState {
         // Check for working patterns first (higher priority)
         if WORKING_PATTERNS.iter().any(|p| output.contains(p)) {
