@@ -16,6 +16,16 @@ export function Console({ sessionId, sessionName, onClose, onSwitchToChat }: Con
   const initializingRef = useRef<boolean>(false);
   const { client, isConnected } = useConsole(sessionId);
   const [error, setError] = useState<string | null>(null);
+  const errorTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [errorKey, setErrorKey] = useState<number>(0);
+
+  // Dismiss error function
+  const dismissError = () => {
+    setError(null);
+    if (errorTimeoutRef.current) {
+      clearTimeout(errorTimeoutRef.current);
+    }
+  };
 
   // Track current client and connection state for terminal input handler
   const clientRef = useRef({ client, isConnected });
@@ -192,20 +202,37 @@ export function Console({ sessionId, sessionName, onClose, onSwitchToChat }: Con
       return;
     }
 
-    const unsubscribe = client.onData((data) => {
+    const unsubscribe = client.onData((data: string) => {
       const terminal = terminalInstanceRef.current;
       if (terminal) {
         terminal.write(data);
       }
     });
 
-    const unsubscribeError = client.onError((err) => {
+    const unsubscribeError = client.onError((err: Error) => {
+      // Set new error and increment key for re-rendering
       setError(err.message);
+      setErrorKey(prev => prev + 1);
+
+      // Clear any existing timeout
+      if (errorTimeoutRef.current) {
+        clearTimeout(errorTimeoutRef.current);
+      }
+
+      // Auto-dismiss error after 10 seconds to prevent UI clutter
+      errorTimeoutRef.current = setTimeout(() => {
+        setError(null);
+      }, 10000);
     });
 
     return () => {
       unsubscribe();
       unsubscribeError();
+
+      // Clean up timeout on unmount
+      if (errorTimeoutRef.current) {
+        clearTimeout(errorTimeoutRef.current);
+      }
     };
   }, [client]);
 
@@ -272,8 +299,29 @@ export function Console({ sessionId, sessionName, onClose, onSwitchToChat }: Con
 
         {/* Error display */}
         {error && (
-          <div className="p-4 border-b-4 font-mono" style={{ backgroundColor: 'hsl(0, 75%, 95%)', color: 'hsl(0, 75%, 40%)', borderColor: 'hsl(0, 75%, 50%)' }}>
-            <strong className="font-bold">ERROR:</strong> {error}
+          <div
+            key={errorKey}
+            className="p-4 border-b-4 font-mono flex items-start justify-between gap-4"
+            style={{
+              backgroundColor: 'hsl(0, 75%, 95%)',
+              color: 'hsl(0, 75%, 40%)',
+              borderColor: 'hsl(0, 75%, 50%)'
+            }}
+          >
+            <div className="flex-1">
+              <strong className="font-bold">ERROR:</strong> {error}
+              <div className="text-xs mt-1 opacity-70">
+                Auto-dismisses in 10s or click × to dismiss
+              </div>
+            </div>
+            <button
+              onClick={dismissError}
+              className="cursor-pointer p-1 hover:bg-red-600 hover:text-white transition-all duration-200 font-bold"
+              title="Dismiss error"
+              aria-label="Dismiss error"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
         )}
 

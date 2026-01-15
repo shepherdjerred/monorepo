@@ -4,6 +4,7 @@
 //! to Docker container arguments.
 
 use clauderon::backends::{DockerBackend, DockerProxyConfig};
+use clauderon::core::AgentType;
 use std::path::PathBuf;
 use tempfile::tempdir;
 
@@ -31,12 +32,14 @@ fn test_proxy_config_flows_to_container_args() {
         "test prompt",
         1000,
         Some(&proxy_config),
+        AgentType::ClaudeCode,
         false, // print mode
-        false, // plan mode
+        false, // dangerous_skip_checks
         &[],   // images
         None,  // git user name
         None,  // git user email
         None,  // session_id
+        None,  // http_port
     )
     .expect("Failed to build args");
 
@@ -87,13 +90,7 @@ fn test_proxy_config_flows_to_container_args() {
         "Expected REQUESTS_CA_BUNDLE env var, got: {args:?}"
     );
 
-    // Verify kubeconfig path
-    assert!(
-        args.iter()
-            .any(|a| a.contains("KUBECONFIG=/etc/clauderon/kube/config")),
-        "Expected KUBECONFIG env var, got: {args:?}"
-    );
-
+    // Kubeconfig is no longer mounted (K8s traffic goes through HTTP proxy)
     // Verify talosconfig path
     assert!(
         args.iter()
@@ -101,12 +98,7 @@ fn test_proxy_config_flows_to_container_args() {
         "Expected TALOSCONFIG env var, got: {args:?}"
     );
 
-    // Verify kube config volume mount (read-only)
-    assert!(
-        args.iter().any(|a| a.contains("/etc/clauderon/kube:ro")),
-        "Expected kube config volume mount, got: {args:?}"
-    );
-
+    // Kubeconfig volume mount removed (K8s traffic goes through HTTP proxy)
     // Verify talos config volume mount (read-only)
     assert!(
         args.iter().any(|a| a.contains("/etc/clauderon/talos:ro")),
@@ -117,21 +109,21 @@ fn test_proxy_config_flows_to_container_args() {
 /// Test that disabled proxy config doesn't add proxy args.
 #[test]
 fn test_disabled_proxy_config_no_args() {
-    let proxy_config = DockerProxyConfig::disabled();
-
     let args = DockerBackend::build_create_args(
         "test-session",
         &PathBuf::from("/workspace"),
         &PathBuf::new(),
         "test prompt",
         1000,
-        Some(&proxy_config),
+        None, // No proxy config
+        AgentType::ClaudeCode,
         false, // print mode
-        false, // plan mode
+        false, // dangerous_skip_checks
         &[],   // images
         None,  // git user name
         None,  // git user email
         None,  // session_id
+        None,  // http_port
     )
     .expect("Failed to build args");
 
@@ -158,13 +150,15 @@ fn test_none_proxy_config_no_args() {
         &PathBuf::new(),
         "test prompt",
         1000,
-        None,  // No proxy config
+        None, // No proxy config
+        AgentType::ClaudeCode,
         false, // print mode
-        false, // plan mode
+        false, // dangerous_skip_checks
         &[],   // images
         None,  // git user name
         None,  // git user email
         None,  // session_id
+        None,  // http_port
     )
     .expect("Failed to build args");
 
@@ -195,12 +189,14 @@ fn test_proxy_port_in_env_vars() {
         "test prompt",
         1000,
         Some(&proxy_config),
+        AgentType::ClaudeCode,
         false, // print mode
-        false, // plan mode
+        false, // dangerous_skip_checks
         &[],   // images
         None,  // git user name
         None,  // git user email
         None,  // session_id
+        None,  // http_port
     )
     .expect("Failed to build args");
 
@@ -238,12 +234,14 @@ fn test_clauderon_dir_in_volume_mounts() {
         "test prompt",
         1000,
         Some(&proxy_config),
+        AgentType::ClaudeCode,
         false, // print mode
-        false, // plan mode
+        false, // dangerous_skip_checks
         &[],   // images
         None,  // git user name
         None,  // git user email
         None,  // session_id
+        None,  // http_port
     )
     .expect("Failed to build args");
 
@@ -254,9 +252,5 @@ fn test_clauderon_dir_in_volume_mounts() {
             .any(|a| a.contains(&format!("{clauderon_path}/proxy-ca.pem"))),
         "Expected clauderon dir in CA cert mount, got: {args:?}"
     );
-    assert!(
-        args.iter()
-            .any(|a| a.contains(&format!("{clauderon_path}/kube"))),
-        "Expected clauderon dir in kube mount, got: {args:?}"
-    );
+    // Kubeconfig mount removed - K8s traffic goes through HTTP proxy instead
 }

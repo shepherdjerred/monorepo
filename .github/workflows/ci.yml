@@ -64,9 +64,41 @@ jobs:
           DAGGER_VERSION="${DAGGER_IMAGE##*:v}"
           echo "version=$DAGGER_VERSION" >> "$GITHUB_OUTPUT"
 
+      - name: Cache Dagger CLI
+        uses: actions/cache@v4
+        id: dagger-cache
+        with:
+          path: ~/.local/bin/dagger
+          key: dagger-${{ steps.dagger-version.outputs.version }}-linux-amd64
+
       - name: Install Dagger CLI
+        if: steps.dagger-cache.outputs.cache-hit != 'true'
         run: |
-          curl -fsSL https://dl.dagger.io/dagger/install.sh | DAGGER_VERSION=${{ steps.dagger-version.outputs.version }} BIN_DIR=$HOME/.local/bin sh
+          set -euo pipefail
+          DAGGER_VERSION="${{ steps.dagger-version.outputs.version }}"
+          BIN_DIR="$HOME/.local/bin"
+
+          # Try primary source first
+          if ! curl -fsSL https://dl.dagger.io/dagger/install.sh | DAGGER_VERSION="$DAGGER_VERSION" BIN_DIR="$BIN_DIR" sh; then
+            echo "WARNING: Primary source (dl.dagger.io) failed, trying GitHub releases..."
+
+            # Fallback to GitHub releases
+            mkdir -p "$BIN_DIR"
+            DAGGER_URL="https://github.com/dagger/dagger/releases/download/v${DAGGER_VERSION}/dagger_v${DAGGER_VERSION}_linux_amd64.tar.gz"
+
+            echo "Downloading from: $DAGGER_URL"
+            curl -fsSL "$DAGGER_URL" | tar xz -C /tmp
+            mv /tmp/dagger "$BIN_DIR/dagger"
+            chmod +x "$BIN_DIR/dagger"
+          fi
+
+          # Verify installation
+          if [ ! -f "$BIN_DIR/dagger" ]; then
+            echo "ERROR: Dagger CLI installation failed"
+            exit 1
+          fi
+
+          "$BIN_DIR/dagger" version
 
       - name: Get Dagger Engine Pod Name
         run: |

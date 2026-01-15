@@ -6,7 +6,7 @@ use ratatui::{
     widgets::{Block, Borders, Clear, Paragraph, Wrap},
 };
 
-use crate::core::{AccessMode, BackendType};
+use crate::core::{AccessMode, AgentType, BackendType};
 use crate::tui::app::{App, CreateDialogFocus};
 
 /// Render the create session dialog
@@ -36,14 +36,23 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
     let prompt_lines = dialog.prompt.lines().count().max(1);
     let prompt_height = prompt_lines.clamp(5, 15); // Min 5, max 15 lines
 
+    // Calculate images height (0 if no images, or limited height if images present)
+    let images_height = if dialog.images.is_empty() {
+        0
+    } else {
+        dialog.images.len().min(3) as u16 + 2 // Show up to 3 images, +2 for borders
+    };
+
     // Inner area (with padding)
     let inner = Layout::default()
         .direction(Direction::Vertical)
         .margin(1)
         .constraints([
             Constraint::Length(prompt_height as u16 + 2), // Prompt (dynamic + borders)
+            Constraint::Length(images_height),            // Images (dynamic)
             Constraint::Length(3),                        // Repo path
             Constraint::Length(2),                        // Backend
+            Constraint::Length(2),                        // Agent
             Constraint::Length(2),                        // Access mode
             Constraint::Length(2),                        // Skip checks
             Constraint::Length(2),                        // Plan mode
@@ -51,6 +60,28 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
             Constraint::Length(1),                        // Buttons
         ])
         .split(area);
+
+    // Explicit layout indices to prevent indexing errors
+    let mut layout_idx = 0;
+    let prompt_idx = layout_idx;
+    layout_idx += 1;
+    let images_idx = layout_idx;
+    layout_idx += 1;
+    let repo_idx = layout_idx;
+    layout_idx += 1;
+    let backend_idx = layout_idx;
+    layout_idx += 1;
+    let agent_idx = layout_idx;
+    layout_idx += 1;
+    let access_idx = layout_idx;
+    layout_idx += 1;
+    let skip_checks_idx = layout_idx;
+    layout_idx += 1;
+    let plan_mode_idx = layout_idx;
+    layout_idx += 1;
+    let _spacer_idx = layout_idx;
+    layout_idx += 1;
+    let buttons_idx = layout_idx;
 
     // Prompt field (multiline with scrolling)
     render_multiline_field(
@@ -62,8 +93,13 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         dialog.prompt_cursor_col,
         dialog.prompt_scroll_offset,
         prompt_height,
-        inner[0],
+        inner[prompt_idx],
     );
+
+    // Images field (if any images attached)
+    if !dialog.images.is_empty() {
+        render_images_field(frame, &dialog.images, inner[images_idx]);
+    }
 
     // Repo path field (clickable to open directory picker)
     render_repo_path_field(
@@ -71,7 +107,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         "Repository",
         &dialog.repo_path,
         dialog.focus == CreateDialogFocus::RepoPath,
-        inner[1],
+        inner[repo_idx],
     );
 
     // Backend selection
@@ -84,7 +120,19 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
             ("Kubernetes", dialog.backend == BackendType::Kubernetes),
         ],
         dialog.focus == CreateDialogFocus::Backend,
-        inner[2],
+        inner[backend_idx],
+    );
+
+    // Agent selection
+    render_radio_field(
+        frame,
+        "Agent",
+        &[
+            ("Claude Code", dialog.agent == AgentType::ClaudeCode),
+            ("Codex", dialog.agent == AgentType::Codex),
+        ],
+        dialog.focus == CreateDialogFocus::Agent,
+        inner[agent_idx],
     );
 
     // Access mode selection
@@ -96,7 +144,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
             ("Read-Write", dialog.access_mode == AccessMode::ReadWrite),
         ],
         dialog.focus == CreateDialogFocus::AccessMode,
-        inner[3],
+        inner[access_idx],
     );
 
     // Skip checks checkbox
@@ -105,7 +153,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         "Dangerously skip checks",
         dialog.skip_checks,
         dialog.focus == CreateDialogFocus::SkipChecks,
-        inner[4],
+        inner[skip_checks_idx],
     );
 
     // Plan mode checkbox
@@ -114,7 +162,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         "Start in plan mode",
         dialog.plan_mode,
         dialog.focus == CreateDialogFocus::PlanMode,
-        inner[5],
+        inner[plan_mode_idx],
     );
 
     // Buttons
@@ -122,7 +170,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         frame,
         dialog.focus == CreateDialogFocus::Buttons,
         dialog.button_create_focused,
-        inner[7],
+        inner[buttons_idx],
     );
 
     // Render directory picker overlay if active
@@ -167,6 +215,37 @@ fn render_repo_path_field(frame: &mut Frame, label: &str, value: &str, focused: 
     };
 
     let paragraph = Paragraph::new(Span::styled(display_value, value_style)).block(block);
+    frame.render_widget(paragraph, area);
+}
+
+fn render_images_field(frame: &mut Frame, images: &[String], area: Rect) {
+    let block = Block::default()
+        .title(" 📎 Attached Images (Ctrl+Backspace to remove last) ")
+        .borders(Borders::ALL)
+        .border_style(Style::default().fg(Color::Blue));
+
+    // Create list of image file names
+    let image_lines: Vec<Line> = images
+        .iter()
+        .enumerate()
+        .map(|(i, path)| {
+            let filename = std::path::Path::new(path)
+                .file_name()
+                .and_then(|n| n.to_str())
+                .unwrap_or(path);
+            Line::from(vec![
+                Span::styled(
+                    format!("  [{}] ", i + 1),
+                    Style::default()
+                        .fg(Color::Blue)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::raw(filename),
+            ])
+        })
+        .collect();
+
+    let paragraph = Paragraph::new(image_lines).block(block);
     frame.render_widget(paragraph, area);
 }
 

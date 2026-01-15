@@ -16,6 +16,7 @@ import type {
   LoginFinishResponse,
   BrowseDirectoryRequest,
   BrowseDirectoryResponse,
+  UploadResponse,
 } from "@clauderon/shared";
 import { ApiError, NetworkError, SessionNotFoundError } from "./errors.js";
 
@@ -106,6 +107,13 @@ export class ClauderonClient {
    */
   async archiveSession(id: string): Promise<void> {
     await this.request("POST", `/api/sessions/${encodeURIComponent(id)}/archive`);
+  }
+
+  /**
+   * Refresh a session (pull latest image and recreate container)
+   */
+  async refreshSession(id: string): Promise<void> {
+    await this.request("POST", `/api/sessions/${encodeURIComponent(id)}/refresh`);
   }
 
   /**
@@ -249,6 +257,46 @@ export class ClauderonClient {
    */
   async logout(): Promise<void> {
     await this.request("POST", "/api/auth/logout");
+  }
+
+  /**
+   * Upload an image file for a session
+   * @param sessionId Session ID
+   * @param file Image file to upload
+   */
+  async uploadImage(sessionId: string, file: File): Promise<UploadResponse> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const url = `${this.baseUrl}/api/sessions/${encodeURIComponent(sessionId)}/upload`;
+
+    try {
+      const response = await this.fetch(url, {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+        // Don't set Content-Type header - browser will set it with boundary for multipart
+      });
+
+      if (!response.ok) {
+        const data = await response.json() as { error?: string };
+        throw new ApiError(
+          data.error ?? `HTTP ${String(response.status)}: ${response.statusText}`,
+          undefined,
+          response.status
+        );
+      }
+
+      return await response.json() as UploadResponse;
+    } catch (error) {
+      if (error instanceof ApiError) {
+        throw error;
+      }
+      throw new NetworkError(
+        `Failed to upload image: ${error instanceof Error ? error.message : String(error)}`,
+        error
+      );
+    }
   }
 
   /**

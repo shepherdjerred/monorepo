@@ -16,6 +16,7 @@
 mod common;
 
 use clauderon::backends::{CreateOptions, DockerBackend, DockerProxyConfig, ExecutionBackend};
+use clauderon::core::AgentType;
 use clauderon::proxy::{Credentials, ProxyCa};
 use std::time::Duration;
 use tempfile::TempDir;
@@ -324,9 +325,8 @@ async fn test_claude_print_mode_e2e() {
     // Give proxy time to start
     sleep(Duration::from_millis(500)).await;
 
-    // Create Docker backend with proxy config
-    let proxy_config = DockerProxyConfig::new(proxy_port, clauderon_dir.clone());
-    let docker = DockerBackend::with_proxy(proxy_config);
+    // Create Docker backend with clauderon directory
+    let docker = DockerBackend::with_clauderon_dir(clauderon_dir.clone());
 
     let container_name = format!("print-mode-e2e-{}", &uuid::Uuid::new_v4().to_string()[..8]);
 
@@ -336,13 +336,15 @@ async fn test_claude_print_mode_e2e() {
 
     // Use print mode - Claude will output response and exit
     let options = CreateOptions {
+        agent: AgentType::ClaudeCode,
         print_mode: true,
         plan_mode: false, // Don't need plan mode for this test
-        session_proxy_port: None,
+        session_proxy_port: Some(proxy_port),
         images: vec![],
         dangerous_skip_checks: true,
         session_id: None,
         initial_workdir: std::path::PathBuf::new(),
+        http_port: None,
     };
 
     // Simple prompt that should produce predictable-ish output
