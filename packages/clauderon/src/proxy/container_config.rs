@@ -19,10 +19,7 @@ pub fn generate_container_configs(
 }
 
 /// Generate Codex dummy auth/config files for containers.
-pub fn generate_codex_config(
-    clauderon_dir: &Path,
-    account_id: Option<&str>,
-) -> anyhow::Result<()> {
+pub fn generate_codex_config(clauderon_dir: &Path, account_id: Option<&str>) -> anyhow::Result<()> {
     let codex_dir = clauderon_dir.join("codex");
     std::fs::create_dir_all(&codex_dir)?;
 
