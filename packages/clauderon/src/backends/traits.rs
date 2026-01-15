@@ -1,6 +1,7 @@
 use async_trait::async_trait;
 use std::path::{Path, PathBuf};
 
+use super::container_config::{ImageConfig, ResourceLimits};
 use crate::core::AgentType;
 
 /// Trait for git worktree operations
@@ -68,6 +69,19 @@ pub struct CreateOptions {
     /// HTTP server port for hook communication.
     /// Required for Docker containers to send status updates via HTTP.
     pub http_port: Option<u16>,
+
+    /// Optional: Override container image settings.
+    ///
+    /// When provided, overrides the default image configuration from the backend's config file.
+    /// Applies to both Docker and Kubernetes backends.
+    pub container_image: Option<ImageConfig>,
+
+    /// Optional: Override container resource limits.
+    ///
+    /// When provided, overrides the default resource limits from the backend's config file.
+    /// For Docker: sets --cpus and --memory flags.
+    /// For Kubernetes: sets CPU/memory requests and limits in pod spec.
+    pub container_resources: Option<ResourceLimits>,
 }
 
 /// Trait for execution backends (Zellij, Docker, etc.)
