@@ -212,6 +212,11 @@ async fn handle_session_list_key(app: &mut App, key: KeyEvent) -> anyhow::Result
                 app.status_message = Some(format!("Archive failed: {e}"));
             }
         }
+        KeyCode::Char('u') => {
+            if let Err(e) = app.unarchive_selected().await {
+                app.status_message = Some(format!("Unarchive failed: {e}"));
+            }
+        }
         KeyCode::Char('f') => {
             if let Err(e) = app.refresh_selected().await {
                 app.status_message = Some(format!("Refresh failed: {e}"));

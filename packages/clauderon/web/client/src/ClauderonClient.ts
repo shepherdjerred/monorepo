@@ -110,6 +110,13 @@ export class ClauderonClient {
   }
 
   /**
+   * Unarchive a session
+   */
+  async unarchiveSession(id: string): Promise<void> {
+    await this.request("POST", `/api/sessions/${encodeURIComponent(id)}/unarchive`);
+  }
+
+  /**
    * Refresh a session (pull latest image and recreate container)
    */
   async refreshSession(id: string): Promise<void> {
