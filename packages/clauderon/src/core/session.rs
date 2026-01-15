@@ -73,6 +73,9 @@ pub struct Session {
     /// Whether the session branch has merge conflicts with main
     pub merge_conflict: bool,
 
+    /// Whether the worktree has uncommitted changes (dirty working tree)
+    pub worktree_dirty: bool,
+
     /// Access mode for proxy filtering
     pub access_mode: AccessMode,
 
@@ -161,6 +164,7 @@ impl Session {
             claude_status: ClaudeWorkingStatus::Unknown,
             claude_status_updated_at: None,
             merge_conflict: false,
+            worktree_dirty: false,
             access_mode: config.access_mode,
             proxy_port: None,
             history_file_path: None,
@@ -232,6 +236,12 @@ impl Session {
     /// Set the merge conflict status
     pub fn set_merge_conflict(&mut self, has_conflict: bool) {
         self.merge_conflict = has_conflict;
+        self.updated_at = Utc::now();
+    }
+
+    /// Set the working tree dirty status
+    pub fn set_worktree_dirty(&mut self, is_dirty: bool) {
+        self.worktree_dirty = is_dirty;
         self.updated_at = Utc::now();
     }
 

@@ -62,6 +62,9 @@ pub enum EventType {
     /// Merge conflict status changed
     ConflictStatusChanged { has_conflict: bool },
 
+    /// Working tree status changed (dirty/clean)
+    WorktreeStatusChanged { is_dirty: bool },
+
     /// Session was archived
     SessionArchived,
 
@@ -148,6 +151,9 @@ pub fn replay_events(events: &[Event]) -> Option<Session> {
             }
             EventType::ConflictStatusChanged { has_conflict } => {
                 session.set_merge_conflict(*has_conflict);
+            }
+            EventType::WorktreeStatusChanged { is_dirty } => {
+                session.set_worktree_dirty(*is_dirty);
             }
             EventType::SessionArchived => {
                 session.set_status(super::session::SessionStatus::Archived);
