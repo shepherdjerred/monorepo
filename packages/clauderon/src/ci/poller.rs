@@ -197,8 +197,7 @@ impl CIPoller {
         // GitHub mergeable values: "MERGEABLE", "CONFLICTING", "UNKNOWN"
         let has_conflict = match data["mergeable"].as_str() {
             Some("CONFLICTING") => true,
-            Some("MERGEABLE" | "UNKNOWN") | None => false,
-            _ => false,
+            Some("MERGEABLE" | "UNKNOWN") | None | _ => false,
         };
 
         // Update session if conflict status changed

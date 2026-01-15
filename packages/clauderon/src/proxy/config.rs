@@ -191,8 +191,8 @@ impl Credentials {
     }
 
     /// Load credentials from files in the secrets directory.
-    #[must_use] 
-    pub fn load_from_files(secrets_dir: &PathBuf) -> Self {
+    #[must_use]
+    pub fn load_from_files(secrets_dir: &Path) -> Self {
         let read_secret = |name: &str| -> Option<String> {
             let path = secrets_dir.join(name);
             std::fs::read_to_string(&path)
@@ -418,7 +418,7 @@ fn persist_codex_auth_json(
 ) -> anyhow::Result<()> {
     let auth_json = if path.exists() {
         let content = std::fs::read_to_string(path)?;
-        serde_json::from_str::<CodexAuthJson>(&content).unwrap_or(CodexAuthJson {
+        serde_json::from_str::<CodexAuthJson>(&content).unwrap_or_else(|_| CodexAuthJson {
             openai_api_key: openai_api_key.cloned(),
             tokens: None,
             last_refresh: None,

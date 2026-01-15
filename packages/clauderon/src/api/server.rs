@@ -338,21 +338,18 @@ async fn run_http_server(
         let rp_origin = std::env::var("CLAUDERON_ORIGIN").ok();
 
         // Validate origin is set when binding externally
-        let rp_origin = match rp_origin {
-            Some(origin) => origin,
-            None => {
-                anyhow::bail!(
-                    "CLAUDERON_ORIGIN environment variable is required when binding to 0.0.0.0\n\
-                    \n\
-                    WebAuthn authentication requires a valid origin URL that clients will use.\n\
-                    \n\
-                    Example:\n\
-                      CLAUDERON_ORIGIN=http://192.168.1.100:3030 clauderon daemon\n\
-                    \n\
-                    For HTTPS behind a reverse proxy:\n\
-                      CLAUDERON_ORIGIN=https://clauderon.example.com clauderon daemon"
-                );
-            }
+        let Some(rp_origin) = rp_origin else {
+            anyhow::bail!(
+                "CLAUDERON_ORIGIN environment variable is required when binding to 0.0.0.0\n\
+                \n\
+                WebAuthn authentication requires a valid origin URL that clients will use.\n\
+                \n\
+                Example:\n\
+                  CLAUDERON_ORIGIN=http://192.168.1.100:3030 clauderon daemon\n\
+                \n\
+                For HTTPS behind a reverse proxy:\n\
+                  CLAUDERON_ORIGIN=https://clauderon.example.com clauderon daemon"
+            );
         };
 
         // Validate origin is a proper URL

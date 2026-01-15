@@ -63,16 +63,13 @@ async fn handle_console_connection(
     }
 
     let attach_msg: ConsoleMessage = serde_json::from_str(line.trim())?;
-    let (session_id, rows, cols) = match attach_msg {
-        ConsoleMessage::Attach {
-            session_id,
-            rows,
-            cols,
-        } => (session_id, rows, cols),
-        _ => {
-            send_console_error(&mut writer, "Expected attach message").await?;
-            anyhow::bail!("Unexpected console message");
-        }
+    let ConsoleMessage::Attach {
+        session_id,
+        rows,
+        cols,
+    } = attach_msg else {
+        send_console_error(&mut writer, "Expected attach message").await?;
+        anyhow::bail!("Unexpected console message");
     };
 
     let session = manager

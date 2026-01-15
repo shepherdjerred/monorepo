@@ -245,7 +245,9 @@ impl ProxyManager {
 
     /// Destroy a session-specific proxy
     pub async fn destroy_session_proxy(&self, session_id: Uuid) -> anyhow::Result<()> {
-        if let Some(handle) = self.session_proxies.write().await.remove(&session_id) {
+        let mut proxies = self.session_proxies.write().await;
+        if let Some(handle) = proxies.remove(&session_id) {
+            drop(proxies);
             handle.task.abort();
             self.port_allocator.release(handle.port).await;
             tracing::info!(

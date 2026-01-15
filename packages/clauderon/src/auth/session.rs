@@ -105,6 +105,7 @@ impl SessionStore {
             .execute(&self.pool)
             .await?;
 
+        #[allow(clippy::cast_possible_truncation)]
         Ok(result.rows_affected() as usize)
     }
 }

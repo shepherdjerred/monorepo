@@ -457,7 +457,7 @@ impl std::str::FromStr for AccessMode {
 /// # Returns
 /// The path to the history file (may not exist yet)
 #[must_use]
-pub fn get_history_file_path(worktree_path: &PathBuf, session_id: &Uuid) -> PathBuf {
+pub fn get_history_file_path(worktree_path: &Path, session_id: &Uuid) -> PathBuf {
     worktree_path
         .join(".claude")
         .join("projects")

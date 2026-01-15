@@ -1270,10 +1270,10 @@ fi"#,
     }
 
     /// Get pod events for diagnostics
-    fn get_pod_events(&self, pod_name: &str) -> anyhow::Result<Vec<String>> {
+    fn get_pod_events(&self, pod_name: &str) -> Vec<String> {
         // For simplicity, return empty events list
         // In a full implementation, you would fetch events from the Events API
-        Ok(vec![format!("Pod: {pod_name}")])
+        vec![format!("Pod: {pod_name}")]
     }
 }
 

@@ -178,6 +178,12 @@ impl DirectoryPickerState {
     /// Create a new directory picker state
     #[must_use]
     pub fn new() -> Self {
+        Self::default()
+    }
+}
+
+impl Default for DirectoryPickerState {
+    fn default() -> Self {
         Self {
             current_dir: std::env::current_dir().unwrap_or_default(),
             all_entries: Vec::new(),
@@ -190,6 +196,7 @@ impl DirectoryPickerState {
             matcher: nucleo_matcher::Matcher::new(nucleo_matcher::Config::DEFAULT),
         }
     }
+}
 
     /// Load recent repositories from structured data with timestamps
     pub fn load_recent_repos(&mut self, repo_dtos: Vec<crate::api::protocol::RecentRepoDto>) {
@@ -377,14 +384,20 @@ impl DirectoryPickerState {
 impl CreateDialogState {
     #[must_use]
     pub fn new() -> Self {
+        Self::default()
+    }
+}
+
+impl Default for CreateDialogState {
+    fn default() -> Self {
         Self {
             prompt: String::new(),
             repo_path: String::new(),
             backend: BackendType::Zellij, // Default to Zellij
             agent: AgentType::ClaudeCode,
             skip_checks: false,
-            plan_mode: true,                 // Default to plan mode ON
-            access_mode: Default::default(), // ReadOnly by default (secure)
+            plan_mode: true,                   // Default to plan mode ON
+            access_mode: AccessMode::default(), // ReadOnly by default (secure)
             images: Vec::new(),
             prompt_cursor_line: 0,
             prompt_cursor_col: 0,
@@ -394,6 +407,7 @@ impl CreateDialogState {
             directory_picker: DirectoryPickerState::new(),
         }
     }
+}
 
     pub fn reset(&mut self) {
         *self = Self::new();
@@ -875,8 +889,9 @@ impl App {
             // Build status message, including any warnings
             let mut status = format!("Created session {name}", name = session.name);
             if let Some(warns) = warnings {
+                use std::fmt::Write;
                 for warn in warns {
-                    status.push_str(&format!(" (Warning: {warn})"));
+                    let _ = write!(status, " (Warning: {warn})");
                 }
             }
             self.status_message = Some(status);
