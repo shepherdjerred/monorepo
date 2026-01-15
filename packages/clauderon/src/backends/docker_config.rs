@@ -31,7 +31,7 @@ impl DockerConfig {
             )
         })?;
 
-        let config: DockerConfig = toml::from_str(&contents).map_err(|e| {
+        let config: Self = toml::from_str(&contents).map_err(|e| {
             anyhow::anyhow!(
                 "Failed to parse Docker config file at {}: {}",
                 config_path.display(),
