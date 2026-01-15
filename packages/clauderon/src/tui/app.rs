@@ -816,7 +816,8 @@ impl App {
                 self.status_message = Some(format!("Refreshing session {name}..."));
                 match client.refresh_session(&id).await {
                     Ok(()) => {
-                        self.status_message = Some(format!("Successfully refreshed session {name}"));
+                        self.status_message =
+                            Some(format!("Successfully refreshed session {name}"));
                         self.refresh_sessions().await?;
                     }
                     Err(e) => {
