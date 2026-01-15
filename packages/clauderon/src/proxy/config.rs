@@ -160,7 +160,7 @@ impl Default for Credentials {
 
 impl Credentials {
     /// Load credentials from environment variables.
-    #[must_use] 
+    #[must_use]
     pub fn load_from_env() -> Self {
         let mut codex_tokens = CodexTokens {
             access_token: std::env::var("CODEX_ACCESS_TOKEN").ok(),
@@ -286,7 +286,7 @@ impl Credentials {
     }
 
     /// Get a credential by service name.
-    #[must_use] 
+    #[must_use]
     pub fn get(&self, service: &str) -> Option<String> {
         match service {
             "github" => self.github_token.clone(),
@@ -306,7 +306,7 @@ impl Credentials {
         }
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn codex_access_token(&self) -> Option<String> {
         self.codex_tokens
             .read()
@@ -314,7 +314,7 @@ impl Credentials {
             .and_then(|t| t.access_token.clone())
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn codex_refresh_token(&self) -> Option<String> {
         self.codex_tokens
             .read()
@@ -322,7 +322,7 @@ impl Credentials {
             .and_then(|t| t.refresh_token.clone())
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn codex_account_id(&self) -> Option<String> {
         self.codex_tokens
             .read()

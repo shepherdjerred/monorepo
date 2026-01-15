@@ -49,7 +49,7 @@ pub fn delete_char_at_cursor(text: &mut String, cursor_pos: usize) -> usize {
 /// Move the cursor left by one character.
 ///
 /// Returns the new cursor position (in bytes).
-#[must_use] 
+#[must_use]
 pub fn move_cursor_left(text: &str, cursor_pos: usize) -> usize {
     if cursor_pos == 0 {
         return 0;
@@ -66,7 +66,7 @@ pub fn move_cursor_left(text: &str, cursor_pos: usize) -> usize {
 /// Move the cursor right by one character.
 ///
 /// Returns the new cursor position (in bytes).
-#[must_use] 
+#[must_use]
 pub fn move_cursor_right(text: &str, cursor_pos: usize) -> usize {
     if cursor_pos >= text.len() {
         return text.len();
@@ -81,13 +81,13 @@ pub fn move_cursor_right(text: &str, cursor_pos: usize) -> usize {
 }
 
 /// Move the cursor to the start of the text.
-#[must_use] 
+#[must_use]
 pub fn move_cursor_to_start() -> usize {
     0
 }
 
 /// Move the cursor to the end of the text.
-#[must_use] 
+#[must_use]
 pub fn move_cursor_to_end(text: &str) -> usize {
     text.len()
 }
@@ -107,7 +107,7 @@ fn clamp_to_char_boundary(text: &str, pos: usize) -> usize {
 /// Split a string at a character boundary, returning (before_cursor, after_cursor).
 ///
 /// Used for rendering the cursor in the correct position.
-#[must_use] 
+#[must_use]
 pub fn split_at_char_boundary(text: &str, pos: usize) -> (&str, &str) {
     let pos = clamp_to_char_boundary(text, pos);
     text.split_at(pos)
@@ -310,7 +310,7 @@ pub fn delete_char_at_cursor_multiline(
 /// Move cursor left in multiline text, wrapping to previous line if needed.
 ///
 /// Returns the new cursor position (line, column).
-#[must_use] 
+#[must_use]
 pub fn move_cursor_left_multiline(text: &str, line: usize, col: usize) -> (usize, usize) {
     if col > 0 {
         // Move left on current line
@@ -331,7 +331,7 @@ pub fn move_cursor_left_multiline(text: &str, line: usize, col: usize) -> (usize
 /// Move cursor right in multiline text, wrapping to next line if needed.
 ///
 /// Returns the new cursor position (line, column).
-#[must_use] 
+#[must_use]
 pub fn move_cursor_right_multiline(text: &str, line: usize, col: usize) -> (usize, usize) {
     let lines: Vec<&str> = text.lines().collect();
 
@@ -358,7 +358,7 @@ pub fn move_cursor_right_multiline(text: &str, line: usize, col: usize) -> (usiz
 /// Move cursor up one line in multiline text.
 ///
 /// Returns the new cursor position (line, column).
-#[must_use] 
+#[must_use]
 pub fn move_cursor_up_multiline(text: &str, line: usize, col: usize) -> (usize, usize) {
     if line == 0 {
         return (0, col); // Already at top
@@ -374,7 +374,7 @@ pub fn move_cursor_up_multiline(text: &str, line: usize, col: usize) -> (usize, 
 /// Move cursor down one line in multiline text.
 ///
 /// Returns the new cursor position (line, column).
-#[must_use] 
+#[must_use]
 pub fn move_cursor_down_multiline(text: &str, line: usize, col: usize) -> (usize, usize) {
     let lines: Vec<&str> = text.lines().collect();
 

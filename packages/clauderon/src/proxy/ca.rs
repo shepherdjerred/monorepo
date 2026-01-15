@@ -108,7 +108,7 @@ impl ProxyCa {
     }
 
     /// Get the path to the CA certificate PEM file.
-    #[must_use] 
+    #[must_use]
     pub fn cert_path(&self) -> &PathBuf {
         &self.cert_path
     }

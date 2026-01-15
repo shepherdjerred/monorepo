@@ -19,7 +19,7 @@ pub const ALLOWED_EXTENSIONS: &[&str] = &["jpg", "jpeg", "png", "gif", "webp"];
 /// Get the upload directory for a specific session
 ///
 /// Returns: `~/.clauderon/uploads/{session-id}/`
-#[must_use] 
+#[must_use]
 pub fn upload_dir_for_session(session_id: Uuid) -> PathBuf {
     crate::utils::paths::base_dir()
         .join("uploads")

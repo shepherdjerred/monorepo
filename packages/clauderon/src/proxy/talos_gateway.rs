@@ -54,7 +54,7 @@ pub struct TalosContext {
 
 impl TalosGateway {
     /// Create a new Talos gateway.
-    #[must_use] 
+    #[must_use]
     pub fn new(port: u16, proxy_ca: Arc<ProxyCa>) -> Self {
         Self {
             addr: SocketAddr::from(([127, 0, 0, 1], port)),
@@ -87,7 +87,7 @@ impl TalosGateway {
     }
 
     /// Get the current context.
-    #[must_use] 
+    #[must_use]
     pub fn current_context(&self) -> Option<&TalosContext> {
         self.config
             .as_ref()
@@ -95,7 +95,7 @@ impl TalosGateway {
     }
 
     /// Get endpoints from current context.
-    #[must_use] 
+    #[must_use]
     pub fn endpoints(&self) -> Vec<String> {
         self.current_context()
             .map(|ctx| ctx.endpoints.clone())
@@ -226,13 +226,13 @@ impl TalosGateway {
     }
 
     /// Get the listen address.
-    #[must_use] 
+    #[must_use]
     pub fn addr(&self) -> SocketAddr {
         self.addr
     }
 
     /// Check if the gateway is configured.
-    #[must_use] 
+    #[must_use]
     pub fn is_configured(&self) -> bool {
         self.config.is_some()
     }

@@ -65,7 +65,7 @@ impl AuditLogger {
     }
 
     /// Create a no-op logger (for when audit is disabled).
-    #[must_use] 
+    #[must_use]
     pub fn noop() -> Self {
         Self {
             file: Mutex::new(None),
