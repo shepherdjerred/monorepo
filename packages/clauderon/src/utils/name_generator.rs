@@ -134,16 +134,13 @@ async fn call_claude_cli(repo_path: &str, initial_prompt: &str) -> anyhow::Resul
     let json: serde_json::Value = serde_json::from_str(&stdout)
         .map_err(|e| anyhow::anyhow!("Failed to parse JSON output: {e}"))?;
 
-    // Log the subtype for debugging
-    if let Some(subtype) = json.get("subtype").and_then(|v| v.as_str()) {
-        tracing::debug!("Claude CLI response subtype: {}", subtype);
-    }
-
     // Check subtype before extracting structured_output
     let subtype = json
         .get("subtype")
         .and_then(|v| v.as_str())
         .unwrap_or("unknown");
+
+    tracing::debug!("Claude CLI response subtype: {}", subtype);
 
     if subtype != "success" {
         // Special handling for error_max_turns with --json-schema
@@ -300,8 +297,10 @@ mod tests {
     }
 
     #[test]
-    fn test_error_max_turns_handling() {
-        // Test that we correctly parse error_max_turns response format
+    fn test_error_max_turns_response_format() {
+        // Verify that error_max_turns responses have the expected format
+        // Note: This tests response parsing, not the full error handling path
+        // which happens in the private call_claude_cli function
         let json_response = r#"{
             "type": "result",
             "subtype": "error_max_turns",
@@ -313,7 +312,9 @@ mod tests {
         let json: serde_json::Value = serde_json::from_str(json_response).unwrap();
         let subtype = json.get("subtype").and_then(|v| v.as_str()).unwrap();
 
+        // Verify the response has the expected structure
         assert_eq!(subtype, "error_max_turns");
         assert!(json.get("structured_output").is_none());
+        assert_eq!(json.get("is_error").and_then(|v| v.as_bool()), Some(true));
     }
 }
