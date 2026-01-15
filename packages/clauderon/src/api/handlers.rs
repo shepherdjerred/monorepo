@@ -13,7 +13,10 @@ use super::types::ReconcileReportDto;
     reason = "Protocol handler with many request types - splitting would reduce clarity"
 )]
 #[instrument(skip(manager), fields(request_type = ?std::mem::discriminant(&request)))]
-pub async fn handle_request(request: Request, manager: &SessionManager) -> Response {
+pub async fn handle_request(
+    request: Request,
+    manager: &std::sync::Arc<SessionManager>,
+) -> Response {
     match request {
         Request::ListSessions => {
             let sessions = manager.list_sessions().await;
