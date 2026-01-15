@@ -1,6 +1,7 @@
 //! Port allocation for per-session HTTP proxies.
 
 use std::collections::HashMap;
+use std::net::TcpListener;
 use tokio::sync::RwLock;
 use uuid::Uuid;
 
@@ -28,6 +29,11 @@ impl PortAllocator {
         }
     }
 
+    /// Check if a port is actually available in the OS by trying to bind to it.
+    fn is_port_available(port: u16) -> bool {
+        TcpListener::bind(("127.0.0.1", port)).is_ok()
+    }
+
     /// Allocate a port for a session
     pub async fn allocate(&self, session_id: Uuid) -> anyhow::Result<u16> {
         let mut state = self.state.write().await;
@@ -35,14 +41,15 @@ impl PortAllocator {
         for _ in 0..Self::MAX_SESSIONS {
             let port = Self::BASE_PORT + (state.next_port % Self::MAX_SESSIONS);
 
-            if !state.allocated.contains_key(&port) {
+            // Check if port is not already allocated internally AND is actually available in the OS
+            if !state.allocated.contains_key(&port) && Self::is_port_available(port) {
                 state.allocated.insert(port, session_id);
                 state.next_port = state.next_port.wrapping_add(1);
                 tracing::info!(port, session_id = %session_id, "Allocated proxy port");
                 return Ok(port);
             }
 
-            // Port already allocated, try next one
+            // Port already allocated or in use by another process, try next one
             state.next_port = state.next_port.wrapping_add(1);
         }
 

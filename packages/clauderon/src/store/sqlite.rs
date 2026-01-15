@@ -720,10 +720,10 @@ impl SqliteStore {
             .execute(pool)
             .await?;
 
-        // Step 9: Create index on last_used
+        // Step 9: Create index on last_used (IF NOT EXISTS for idempotency on retry)
         sqlx::query(
             r"
-            CREATE INDEX idx_recent_repos_last_used
+            CREATE INDEX IF NOT EXISTS idx_recent_repos_last_used
             ON recent_repos(last_used DESC)
             ",
         )
