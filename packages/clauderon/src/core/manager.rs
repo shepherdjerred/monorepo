@@ -912,7 +912,6 @@ impl SessionManager {
             dangerous_skip_checks,
             session_id: Some(session.id), // Pass session ID for Kubernetes PVC labeling
             initial_workdir: subdirectory.clone(),
-            agent,
             http_port: self.http_port,
         };
         let backend_id = match backend {
