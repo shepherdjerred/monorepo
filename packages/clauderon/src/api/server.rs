@@ -306,7 +306,7 @@ async fn run_http_server(
     // Determine if authentication is required (for any non-localhost binding)
     let is_localhost = bind_addr == "127.0.0.1" || bind_addr == "localhost";
     let is_all_interfaces = bind_addr == "0.0.0.0" || bind_addr == "::";
-    let requires_auth = !is_localhost && !is_all_interfaces && !auth_disabled;
+    let requires_auth = !is_localhost && !auth_disabled;
 
     // Warn if auth is disabled on a non-localhost binding
     if !is_localhost && auth_disabled {
@@ -331,9 +331,11 @@ async fn run_http_server(
             Some(origin) => origin,
             None => {
                 anyhow::bail!(
-                    "CLAUDERON_ORIGIN environment variable is required when binding to a specific IP\n\
+                    "CLAUDERON_ORIGIN environment variable is required for non-localhost bindings\n\
                     \n\
                     WebAuthn authentication requires a valid origin URL that clients will use.\n\
+                    \n\
+                    Current binding: {}\n\
                     \n\
                     Example:\n\
                       CLAUDERON_ORIGIN=http://192.168.1.100:3030 clauderon daemon\n\
@@ -341,8 +343,9 @@ async fn run_http_server(
                     For HTTPS behind a reverse proxy:\n\
                       CLAUDERON_ORIGIN=https://clauderon.example.com clauderon daemon\n\
                     \n\
-                    Or disable authentication (not recommended):\n\
-                      CLAUDERON_DISABLE_AUTH=true clauderon daemon"
+                    Or disable authentication (not recommended for production):\n\
+                      CLAUDERON_DISABLE_AUTH=true clauderon daemon",
+                    bind_addr
                 );
             }
         };
@@ -466,12 +469,6 @@ async fn run_http_server(
     } else {
         None
     };
-
-    // Log info message for 0.0.0.0 binding
-    if is_all_interfaces && !requires_auth && !auth_disabled {
-        tracing::info!("Binding to all interfaces - accessible from Docker and all networks");
-        tracing::info!("To enable authentication, set CLAUDERON_ORIGIN environment variable");
-    }
 
     // Start the server (on both listeners if applicable)
     match localhost_listener {
