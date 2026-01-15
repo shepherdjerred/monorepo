@@ -2099,8 +2099,6 @@ impl SessionManager {
 
         // Broadcast update event
         if let Some(ref broadcaster) = self.event_broadcaster {
-            use crate::api::protocol::WsEvent;
-            use crate::api::ws_events::broadcast_event;
             broadcast_event(broadcaster, WsEvent::SessionUpdated(session_clone.clone())).await;
         }
 
