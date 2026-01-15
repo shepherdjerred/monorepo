@@ -142,7 +142,7 @@ fn test_backend_type_serialization() {
 #[test]
 fn test_agent_type_serialization() {
     let json = serde_json::to_string(&AgentType::ClaudeCode).unwrap();
-    assert_eq!(json, r#""Claude""#);
+    assert_eq!(json, r#""ClaudeCode""#);
 }
 
 // ========== Print Mode Flow Tests ==========
@@ -193,7 +193,7 @@ fn test_print_mode_serialization() {
 #[test]
 fn test_print_mode_default_false() {
     // JSON without print_mode field - should default to false
-    let json = r#"{"type":"CreateSession","payload":{"repo_path":"/tmp","initial_prompt":"test","backend":"Docker","agent":"Claude","dangerous_skip_checks":false}}"#;
+    let json = r#"{"type":"CreateSession","payload":{"repo_path":"/tmp","initial_prompt":"test","backend":"Docker","agent":"ClaudeCode","dangerous_skip_checks":false}}"#;
 
     let parsed: Request = serde_json::from_str(json).unwrap();
     match parsed {
