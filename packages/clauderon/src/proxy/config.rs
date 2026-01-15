@@ -566,14 +566,6 @@ impl Credentials {
             tracing::warn!("Failed to persist Codex auth.json: {}", err);
         }
     }
-
-    fn codex_tokens_snapshot(&self) -> CodexTokens {
-        self.codex_tokens
-            .read()
-            .ok()
-            .map(|guard| guard.clone())
-            .unwrap_or_default()
-    }
 }
 
 fn load_codex_tokens_from_auth_json(path: Option<&Path>) -> (CodexTokens, Option<String>) {
