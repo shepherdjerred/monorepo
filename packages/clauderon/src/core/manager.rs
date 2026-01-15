@@ -2026,9 +2026,12 @@ impl SessionManager {
                 }
 
                 // Record backend ID event
-                let event = Event::new(session_id, EventType::BackendIdSet {
-                    backend_id: new_backend_id,
-                });
+                let event = Event::new(
+                    session_id,
+                    EventType::BackendIdSet {
+                        backend_id: new_backend_id,
+                    },
+                );
                 let _ = self.store.record_event(&event).await;
 
                 tracing::info!(
@@ -2606,7 +2609,8 @@ impl SessionManager {
             }
 
             // Count session-specific proxies
-            active_session_proxies = u32::try_from(pm.active_session_proxy_count().await).unwrap_or(u32::MAX);
+            active_session_proxies =
+                u32::try_from(pm.active_session_proxy_count().await).unwrap_or(u32::MAX);
         }
 
         Ok(SystemStatus {
