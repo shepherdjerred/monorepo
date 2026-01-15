@@ -759,6 +759,13 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
                                 ..Default::default()
                             });
                         }
+                        AgentType::Gemini => {
+                            env.push(EnvVar {
+                                name: "GEMINI_API_KEY".to_string(),
+                                value: Some("sk-gemini-clauderon-proxy-placeholder".to_string()),
+                                ..Default::default()
+                            });
+                        }
                     }
                 }
             }
