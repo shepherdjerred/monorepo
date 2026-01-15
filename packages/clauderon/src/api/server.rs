@@ -331,7 +331,7 @@ async fn run_http_server(
             Some(origin) => origin,
             None => {
                 anyhow::bail!(
-                    "CLAUDERON_ORIGIN environment variable is required when binding to 0.0.0.0\n\
+                    "CLAUDERON_ORIGIN environment variable is required when binding to a specific IP\n\
                     \n\
                     WebAuthn authentication requires a valid origin URL that clients will use.\n\
                     \n\
@@ -339,7 +339,10 @@ async fn run_http_server(
                       CLAUDERON_ORIGIN=http://192.168.1.100:3030 clauderon daemon\n\
                     \n\
                     For HTTPS behind a reverse proxy:\n\
-                      CLAUDERON_ORIGIN=https://clauderon.example.com clauderon daemon"
+                      CLAUDERON_ORIGIN=https://clauderon.example.com clauderon daemon\n\
+                    \n\
+                    Or disable authentication (not recommended):\n\
+                      CLAUDERON_DISABLE_AUTH=true clauderon daemon"
                 );
             }
         };
