@@ -162,7 +162,13 @@ fn render_scroll_status(_app: &App) -> Line<'static> {
 fn render_normal_status(app: &App) -> Line<'static> {
     let status_text = app.status_message.clone().unwrap_or_else(|| {
         if app.is_connected() {
-            format!("{count} sessions", count = app.sessions.len())
+            let filtered_count = app.get_filtered_sessions().len();
+            let total_count = app.sessions.len();
+            let filter_name = app.session_filter.display_name();
+            format!(
+                "Filter: {} ({}/{} sessions) | Press 1-5 to change filter",
+                filter_name, filtered_count, total_count
+            )
         } else {
             "Disconnected".to_string()
         }
