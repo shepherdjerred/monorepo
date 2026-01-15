@@ -6,15 +6,17 @@ A Claude skill that provides comprehensive access to Apple's Human Interface Gui
 
 ```
 apple-hig-helper/
-├── README.md          # This file
-├── skill.md           # The Claude skill definition
-├── data/              # Downloaded HIG documentation (174 HTML files, 23 MB)
+├── README.md                # This file
+├── skill.md                 # The Claude skill definition
+├── data/                    # Downloaded HIG documentation (174 HTML files, 23 MB)
 │   ├── accessibility/
 │   ├── buttons/
 │   ├── color/
 │   ├── ...
-│   └── .visited.json  # List of downloaded URLs
-└── scrape.sh          # Script to re-download HIG data
+│   └── .visited.json        # List of downloaded URLs
+├── markdown/                # Processed Markdown files (optional, gitignored)
+├── scrape.sh                # Script to download/update HIG data
+└── process-to-markdown.py   # Script to convert HTML to Markdown
 ```
 
 ## Skill Definition
@@ -98,8 +100,56 @@ The scraper will:
 - Save all pages to the `data/` directory
 - Take approximately 90 minutes for a full download
 
+## Converting to Markdown
+
+The HTML files can be converted to Markdown format for easier reading:
+
+**File**: `process-to-markdown.py`
+
+### Simple Mode (Fast - Metadata Only)
+
+Extracts just the title and description from each page:
+
+```bash
+# From the skill directory
+./process-to-markdown.py --simple
+
+# Or from repository root
+cd /workspace
+export PATH="/workspace/.local/bin:$PATH"
+uv run packages/claude-plugin/agents/apple-hig-helper/process-to-markdown.py --simple
+```
+
+**Output**:
+- **Location**: `markdown/` directory
+- **Size**: ~700 KB (174 files)
+- **Time**: ~30 seconds
+- **Content**: Title, description, and source URL only
+
+### Full Mode (Slow - Complete Content)
+
+Uses Playwright to render pages and extract full content:
+
+```bash
+# From the skill directory
+./process-to-markdown.py
+
+# Or specify directories
+./process-to-markdown.py --input data --output markdown
+```
+
+**Output**:
+- **Location**: `markdown/` directory
+- **Size**: ~50-100 MB (174 files with full content)
+- **Time**: ~90-120 minutes
+- **Content**: Complete rendered page content in Markdown format
+
+**Note**: The `markdown/` directory is gitignored to avoid committing large files.
+
 ## Size
 
 - **Skill file**: 20 KB (576 lines)
-- **Data**: 23 MB (174 HTML files)
-- **Total**: ~23 MB
+- **HTML Data**: 23 MB (174 HTML files)
+- **Markdown (simple)**: ~700 KB (174 MD files, metadata only)
+- **Markdown (full)**: ~50-100 MB (174 MD files, complete content)
+- **Total (with HTML only)**: ~23 MB
