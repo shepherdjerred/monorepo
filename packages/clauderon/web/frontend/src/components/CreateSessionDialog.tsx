@@ -200,7 +200,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
 
       const request: CreateSessionRequest = {
         repo_path: repositories[0]!.repo_path, // Legacy field for backward compat
-        repositories: repoInputs, // New multi-repo field
+        ...(repoInputs && { repositories: repoInputs }), // New multi-repo field
         initial_prompt: formData.initial_prompt,
         backend: formData.backend,
         agent: formData.agent,
