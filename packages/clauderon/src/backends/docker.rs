@@ -3,10 +3,10 @@ use std::path::{Path, PathBuf};
 use tokio::process::Command;
 use tracing::instrument;
 
-use super::container_config::{DockerConfig, ImageConfig, ResourceLimits};
 use super::traits::ExecutionBackend;
 use crate::core::AgentType;
-use crate::proxy::{dummy_auth_json_string, dummy_config_toml};
+use crate::plugins::{PluginDiscovery, PluginManifest};
+use crate::proxy::{dummy_auth_json_string, dummy_config_toml, generate_plugin_config};
 
 /// Sanitize git config value to prevent environment variable injection
 ///
@@ -58,11 +58,7 @@ async fn read_git_user_config() -> (Option<String>, Option<String>) {
     (name, email)
 }
 
-/// Docker container image to use (deprecated - use DockerConfig instead)
-///
-/// This constant is kept for backward compatibility but is no longer used directly.
-/// The actual image is now loaded from DockerConfig.
-#[deprecated(note = "Use DockerConfig.image instead")]
+/// Docker container image to use
 const DOCKER_IMAGE: &str = "ghcr.io/shepherdjerred/dotfiles";
 
 /// Shared cache volumes used across all clauderon Docker containers for faster Rust builds:
@@ -101,44 +97,22 @@ impl DockerProxyConfig {
 pub struct DockerBackend {
     /// Path to clauderon directory for proxy CA and configs.
     clauderon_dir: PathBuf,
-    /// Docker backend configuration (loaded from ~/.clauderon/docker-config.toml or defaults)
-    config: DockerConfig,
 }
 
 impl DockerBackend {
     /// Create a new Docker backend.
-    ///
-    /// Loads configuration from `~/.clauderon/docker-config.toml` if present,
-    /// otherwise uses default configuration.
     #[must_use]
     pub fn new() -> Self {
         let home = dirs::home_dir().unwrap_or_else(|| PathBuf::from("/tmp"));
-        let config = DockerConfig::load_or_default();
         Self {
             clauderon_dir: home.join(".clauderon"),
-            config,
         }
     }
 
     /// Create a Docker backend with a specific clauderon directory.
     #[must_use]
     pub fn with_clauderon_dir(clauderon_dir: PathBuf) -> Self {
-        let config = DockerConfig::load_or_default();
-        Self {
-            clauderon_dir,
-            config,
-        }
-    }
-
-    /// Create a Docker backend with custom configuration (for testing).
-    #[cfg(test)]
-    #[must_use]
-    pub fn with_config(config: DockerConfig) -> Self {
-        let home = dirs::home_dir().unwrap_or_else(|| PathBuf::from("/tmp"));
-        Self {
-            clauderon_dir: home.join(".clauderon"),
-            config,
-        }
+        Self { clauderon_dir }
     }
 
     /// Check if a container is running
@@ -220,45 +194,17 @@ impl DockerBackend {
         git_user_email: Option<&str>,
         session_id: Option<&uuid::Uuid>,
         http_port: Option<u16>,
-        config: &DockerConfig,
-        image_override: Option<&ImageConfig>,
-        resource_override: Option<&ResourceLimits>,
     ) -> anyhow::Result<Vec<String>> {
         let container_name = format!("clauderon-{name}");
         let escaped_prompt = initial_prompt.replace('\'', "'\\''");
 
-        // Determine effective image configuration (override > config > default)
-        let image_config = image_override.unwrap_or(&config.image);
-
-        // Validate the effective image
-        image_config.validate()?;
-
         let mut args = vec![
             "run".to_string(),
             "-dit".to_string(),
-        ];
-
-        // Add pull policy flag if not default (IfNotPresent is Docker's default)
-        if let Some(pull_flag) = image_config.pull_policy.to_docker_flag() {
-            args.push("--pull".to_string());
-            args.push(pull_flag.to_string());
-        }
-
-        args.extend([
             "--name".to_string(),
             container_name,
             "--user".to_string(),
             uid.to_string(),
-        ]);
-
-        // Add resource limits if configured
-        let resource_limits = resource_override.or(config.resources.as_ref());
-        if let Some(resources) = resource_limits {
-            resources.validate()?;
-            args.extend(resources.to_docker_args());
-        }
-
-        args.extend([
             "-v".to_string(),
             format!("{display}:/workspace", display = workdir.display()),
             "-w".to_string(),
@@ -271,13 +217,7 @@ impl DockerBackend {
             "TERM=xterm-256color".to_string(),
             "-e".to_string(),
             "HOME=/workspace".to_string(),
-        ]);
-
-        // Add extra flags from config (advanced users only)
-        for flag in &config.extra_flags {
-            args.push(flag.clone());
-        }
-
+        ];
         if agent == AgentType::Codex {
             args.extend(["-e".to_string(), "CODEX_HOME=/workspace/.codex".to_string()]);
         }
@@ -326,6 +266,17 @@ impl DockerBackend {
         args.extend([
             "-v".to_string(),
             format!("{clauderon_dir}:/workspace/.clauderon"),
+        ]);
+
+        // Mount uploads directory for image attachments
+        // - Read-write: allows bidirectional file communication between app and Claude
+        // - Shared across sessions with per-session subdirectories for isolation
+        // - Images uploaded via API (POST /api/sessions/{id}/upload) are stored here
+        // - Paths are translated from host to container in the agent command below
+        let uploads_dir = format!("{home_dir}/.clauderon/uploads");
+        args.extend([
+            "-v".to_string(),
+            format!("{uploads_dir}:/workspace/.clauderon/uploads"),
         ]);
 
         // Detect if workdir is a git worktree and mount parent .git directory
@@ -567,6 +518,17 @@ impl DockerBackend {
                 temp_dir
             };
 
+            // Discover plugins from host
+            let plugin_discovery = PluginDiscovery::new(
+                dirs::home_dir()
+                    .unwrap_or_else(|| PathBuf::from("/tmp"))
+                    .join(".claude"),
+            );
+            let plugin_manifest = plugin_discovery.discover_plugins().unwrap_or_else(|e| {
+                tracing::warn!("Failed to discover plugins: {}", e);
+                PluginManifest::empty()
+            });
+
             // Create the config directory if it doesn't exist
             if let Err(e) = std::fs::create_dir_all(&config_dir) {
                 tracing::warn!(
@@ -601,6 +563,45 @@ impl DockerBackend {
                             display = claude_json_path.display()
                         ),
                     ]);
+                }
+
+                // Generate and mount plugin configuration if plugins are available
+                if !plugin_manifest.installed_plugins.is_empty() {
+                    if let Err(e) = generate_plugin_config(&config_dir, &plugin_manifest) {
+                        tracing::warn!("Failed to generate plugin config: {}", e);
+                    } else {
+                        // Mount plugin marketplace config
+                        let plugin_config_path = config_dir.join("plugins/known_marketplaces.json");
+                        if plugin_config_path.exists() {
+                            args.extend([
+                                "-v".to_string(),
+                                format!(
+                                    "{}:/workspace/.claude/plugins/known_marketplaces.json:ro",
+                                    plugin_config_path.display()
+                                ),
+                            ]);
+                        }
+
+                        // Mount marketplace directory read-only
+                        let host_plugins_dir = dirs::home_dir()
+                            .unwrap_or_else(|| PathBuf::from("/tmp"))
+                            .join(".claude/plugins/marketplaces");
+
+                        if host_plugins_dir.exists() {
+                            args.extend([
+                                "-v".to_string(),
+                                format!(
+                                    "{}:/workspace/.claude/plugins/marketplaces:ro",
+                                    host_plugins_dir.display()
+                                ),
+                            ]);
+                            tracing::info!(
+                                "Mounted {} plugins from {} to container",
+                                plugin_manifest.installed_plugins.len(),
+                                host_plugins_dir.display()
+                            );
+                        }
+                    }
                 }
 
                 // Proxy-specific configuration (only when proxy is enabled)
@@ -657,11 +658,20 @@ impl DockerBackend {
                 }
             };
 
+            // Translate image paths from host to container
+            // Host: /Users/name/.clauderon/uploads/... → Container: /workspace/.clauderon/uploads/...
+            let translated_images: Vec<String> = images
+                .iter()
+                .map(|image_path| {
+                    crate::utils::paths::translate_image_path_to_container(image_path)
+                })
+                .collect();
+
             match agent {
                 AgentType::ClaudeCode => {
                     let mut cmd_vec = ClaudeCodeAgent::new().start_command(
                         &escaped_prompt,
-                        images,
+                        &translated_images,
                         dangerous_skip_checks,
                         None,
                     ); // Don't pass session_id here, we handle it in the wrapper
@@ -746,7 +756,7 @@ fi"#;
                             cmd_vec.push("--full-auto".to_string());
                         }
                         cmd_vec.push("exec".to_string());
-                        for image in images {
+                        for image in &translated_images {
                             cmd_vec.push("--image".to_string());
                             cmd_vec.push(image.clone());
                         }
@@ -803,18 +813,11 @@ fi"#,
         };
 
         args.extend([
-            image_config.image.clone(),
+            DOCKER_IMAGE.to_string(),
             "bash".to_string(),
             "-c".to_string(),
             agent_cmd,
         ]);
-
-        tracing::info!(
-            image = %image_config.image,
-            pull_policy = %image_config.pull_policy,
-            has_resources = resource_limits.is_some(),
-            "Building Docker container with configured image settings"
-        );
 
         Ok(args)
     }
@@ -887,9 +890,6 @@ impl ExecutionBackend for DockerBackend {
             git_user_email.as_deref(),
             options.session_id.as_ref(),
             options.http_port,
-            &self.config,
-            options.container_image.as_ref(),
-            options.container_resources.as_ref(),
         )?;
         let output = Command::new("docker").args(&args).output().await?;
 
@@ -1065,9 +1065,6 @@ mod tests {
             None,  // git user email
             None,  // session_id
             None,  // http_port
-                &DockerConfig::default(),
-            None, // image_override
-            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -1139,9 +1136,6 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
-                &DockerConfig::default(),
-            None, // image_override
-            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -1174,9 +1168,6 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
-                &DockerConfig::default(),
-            None, // image_override
-            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -1212,9 +1203,6 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
-            &DockerConfig::default(),
-            None, // image_override
-            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -1250,9 +1238,6 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
-            &DockerConfig::default(),
-            None, // image_override
-            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -1349,9 +1334,6 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
-            &DockerConfig::default(),
-            None, // image_override
-            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -1383,9 +1365,6 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
-            &DockerConfig::default(),
-            None, // image_override
-            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -1430,9 +1409,6 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
-            &DockerConfig::default(),
-            None, // image_override
-            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -1475,9 +1451,6 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
-            &DockerConfig::default(),
-            None, // image_override
-            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -1504,9 +1477,6 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
-            &DockerConfig::default(),
-            None, // image_override
-            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -1543,9 +1513,6 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
-            &DockerConfig::default(),
-            None, // image_override
-            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -1581,9 +1548,6 @@ mod tests {
             None, // git_user_email
             None, // session_id
             None, // http_port
-            &DockerConfig::default(),
-            None, // image_override
-            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -1616,9 +1580,6 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
-            &DockerConfig::default(),
-            None, // image_override
-            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -1673,9 +1634,6 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
-            &DockerConfig::default(),
-            None, // image_override
-            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -1729,17 +1687,94 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
-            &DockerConfig::default(),
-            None, // image_override
-            None, // resource_override
         )
         .expect("Failed to build args");
 
-        // Count volume mounts (should have workspace + 3 cargo/sccache cache mounts + clauderon dir + claude.json)
+        // Count volume mounts (should have workspace + 3 cargo/sccache cache mounts + clauderon dir + uploads + claude.json)
         let mount_count = args.iter().filter(|a| *a == "-v").count();
         assert_eq!(
-            mount_count, 6,
-            "Normal git repo should have workspace + 3 cache mounts + clauderon dir + claude.json, got {mount_count} mounts"
+            mount_count, 7,
+            "Normal git repo should have workspace + 3 cache mounts + clauderon dir + uploads + claude.json, got {mount_count} mounts"
+        );
+    }
+
+    /// Test that uploads directory is mounted
+    #[test]
+    fn test_uploads_directory_mounted() {
+        use tempfile::tempdir;
+
+        let temp_dir = tempdir().expect("Failed to create temp dir");
+        let test_dir = temp_dir.path().join("test-repo");
+        std::fs::create_dir_all(&test_dir).expect("Failed to create test dir");
+
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            &test_dir,
+            &PathBuf::new(),
+            "test prompt",
+            1000,
+            None,
+            AgentType::ClaudeCode,
+            false,
+            true,
+            &[],
+            None,
+            None,
+            None,
+            None,
+        )
+        .expect("Failed to build args");
+
+        // Should have uploads mount
+        let has_uploads_mount = args
+            .iter()
+            .any(|a| a.contains("/uploads:/workspace/.clauderon/uploads"));
+        assert!(
+            has_uploads_mount,
+            "Expected uploads directory mount, got: {args:?}"
+        );
+    }
+
+    /// Test that image paths are translated from host to container
+    #[test]
+    fn test_image_path_translation() {
+        use tempfile::tempdir;
+
+        let temp_dir = tempdir().expect("Failed to create temp dir");
+        let home = std::env::var("HOME").unwrap_or_else(|_| "/tmp".to_string());
+        let session_id = uuid::Uuid::new_v4();
+        let host_path = format!("{home}/.clauderon/uploads/{session_id}/test-image.png");
+
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            temp_dir.path(),
+            &PathBuf::new(),
+            "test prompt",
+            1000,
+            None,
+            AgentType::ClaudeCode,
+            false,
+            true,
+            std::slice::from_ref(&host_path),
+            None,
+            None,
+            None,
+            None,
+        )
+        .expect("Failed to build args");
+
+        let cmd_arg = args.last().unwrap();
+
+        // Host path should NOT appear in command
+        assert!(
+            !cmd_arg.contains(&host_path),
+            "Host path should be translated, not passed directly: {cmd_arg}"
+        );
+
+        // Container path SHOULD appear
+        assert!(
+            cmd_arg.contains("/workspace/.clauderon/uploads"),
+            "Container path should be used: {cmd_arg}"
         );
     }
 
@@ -1781,9 +1816,6 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
-            &DockerConfig::default(),
-            None, // image_override
-            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -1836,9 +1868,6 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
-            &DockerConfig::default(),
-            None, // image_override
-            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -1881,17 +1910,14 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
-            &DockerConfig::default(),
-            None, // image_override
-            None, // resource_override
         )
         .expect("Failed to build args");
 
-        // Should have workspace + 3 cache mounts + clauderon dir + claude.json (no git parent mount)
+        // Should have workspace + 3 cache mounts + clauderon dir + uploads + claude.json (no git parent mount)
         let mount_count = args.iter().filter(|a| *a == "-v").count();
         assert_eq!(
-            mount_count, 6,
-            "Malformed worktree should have workspace + 3 cache mounts + clauderon dir + claude.json, got {mount_count} mounts"
+            mount_count, 7,
+            "Malformed worktree should have workspace + 3 cache mounts + clauderon dir + uploads + claude.json, got {mount_count} mounts"
         );
     }
 
@@ -1926,17 +1952,14 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
-            &DockerConfig::default(),
-            None, // image_override
-            None, // resource_override
         )
         .expect("Failed to build args");
 
-        // Should have workspace + 3 cache mounts + clauderon dir + claude.json (no git parent mount due to validation failure)
+        // Should have workspace + 3 cache mounts + clauderon dir + uploads + claude.json (no git parent mount due to validation failure)
         let mount_count = args.iter().filter(|a| *a == "-v").count();
         assert_eq!(
-            mount_count, 6,
-            "Worktree with missing parent should have workspace + 3 cache mounts + clauderon dir + claude.json, got {mount_count} mounts"
+            mount_count, 7,
+            "Worktree with missing parent should have workspace + 3 cache mounts + clauderon dir + uploads + claude.json, got {mount_count} mounts"
         );
     }
 
@@ -1958,9 +1981,6 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
-            &DockerConfig::default(),
-            None, // image_override
-            None, // resource_override
         )
         .expect("Failed to build args");
 
@@ -2004,9 +2024,6 @@ mod tests {
             None,  // git_user_email
             None,  // session_id
             None,  // http_port
-            &DockerConfig::default(),
-            None, // image_override
-            None, // resource_override
         )
         .expect("Failed to build args");
 

@@ -57,10 +57,10 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
         access_mode: formData.access_mode,
         images: [],
         // Include container settings if specified
+        container_image: formData.container_image || undefined,
         pull_policy: formData.pull_policy,
-        ...(formData.container_image && { container_image: formData.container_image }),
-        ...(formData.cpu_limit && { cpu_limit: formData.cpu_limit }),
-        ...(formData.memory_limit && { memory_limit: formData.memory_limit }),
+        cpu_limit: formData.cpu_limit || undefined,
+        memory_limit: formData.memory_limit || undefined,
       };
 
       const result = await createSession(request);
@@ -259,7 +259,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                 />
                 <p className="text-xs text-muted-foreground mt-1">
                   Image must include: <code className="font-mono bg-muted px-1 py-0.5 rounded">claude</code>/<code className="font-mono bg-muted px-1 py-0.5 rounded">codex</code> CLI, <code className="font-mono bg-muted px-1 py-0.5 rounded">bash</code>, <code className="font-mono bg-muted px-1 py-0.5 rounded">curl</code>, <code className="font-mono bg-muted px-1 py-0.5 rounded">git</code> (recommended)
-                  {' '}<a href="https://github.com/shepherdjerred/monorepo/blob/main/packages/clauderon/docs/IMAGE_COMPATIBILITY.md" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">View requirements</a>
+                  {' '}<a href="/docs/IMAGE_COMPATIBILITY.md" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">View requirements</a>
                 </p>
               </div>
 

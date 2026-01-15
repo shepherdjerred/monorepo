@@ -107,8 +107,7 @@ async fn test_recent_repo_tracked_on_session_create() {
             false,              // print_mode
             false,              // plan_mode
             Default::default(), // access_mode
-            vec![], // images
-            None, None, None, None, // container settings
+            vec![],             // images
         )
         .await
         .expect("Failed to create session");
@@ -186,8 +185,8 @@ async fn test_path_canonicalization_prevents_duplicates() {
 async fn test_limit_enforcement_removes_oldest() {
     let (manager, _temp_dir, repos_dir) = create_test_manager().await;
 
-    // Create 11 different repos to exceed the limit of 10
-    for i in 0..11 {
+    // Create 21 different repos to exceed the limit of 20
+    for i in 0..21 {
         let repo_path = repos_dir.path().join(format!("repo-{i}"));
         std::fs::create_dir_all(&repo_path).expect("Failed to create repo dir");
         init_git_repo(&repo_path);
@@ -208,12 +207,12 @@ async fn test_limit_enforcement_removes_oldest() {
             .expect("Failed to create session");
     }
 
-    // Should only have 10 repos (the limit)
+    // Should only have 20 repos (the limit)
     let recent = manager
         .get_recent_repos()
         .await
         .expect("Failed to get recent repos");
-    assert_eq!(recent.len(), 10, "Should enforce limit of 10 repos");
+    assert_eq!(recent.len(), 20, "Should enforce limit of 20 repos");
 
     // The first repo (repo-0) should not be in the list
     let first_repo = repos_dir.path().join("repo-0").canonicalize().unwrap();
@@ -373,7 +372,7 @@ async fn test_nonexistent_repo_handles_gracefully() {
     // but will not store the path since it can't be canonicalized
     let nonexistent = PathBuf::from("/definitely/does/not/exist");
     store
-        .add_recent_repo(nonexistent.clone())
+        .add_recent_repo(nonexistent.clone(), PathBuf::new())
         .await
         .expect("Should handle nonexistent paths gracefully");
 

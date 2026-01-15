@@ -1,6 +1,4 @@
-pub mod container_config;
 pub mod docker;
-pub mod docker_config;
 pub mod git;
 pub mod kubernetes;
 pub mod kubernetes_config;
@@ -8,9 +6,6 @@ pub mod mock;
 pub mod traits;
 pub mod zellij;
 
-pub use container_config::{
-    DockerConfig, ImageConfig, ImagePullPolicy, RegistryAuth, ResourceLimits,
-};
 pub use docker::{DockerBackend, DockerProxyConfig};
 pub use git::GitBackend;
 pub use kubernetes::KubernetesBackend;
