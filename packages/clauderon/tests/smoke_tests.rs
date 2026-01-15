@@ -372,6 +372,7 @@ async fn test_claude_print_mode_e2e() {
 
     // Use print mode - Claude will output response and exit
     let options = CreateOptions {
+        agent: AgentType::ClaudeCode,
         print_mode: true,
         plan_mode: false, // Don't need plan mode for this test
         session_proxy_port: Some(proxy_port),

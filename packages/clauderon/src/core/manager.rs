@@ -8,6 +8,7 @@ use uuid::Uuid;
 use crate::backends::{
     DockerBackend, ExecutionBackend, GitBackend, GitOperations, KubernetesBackend, ZellijBackend,
 };
+use crate::core::console_manager::ConsoleManager;
 use crate::store::Store;
 
 use super::events::{Event, EventType};
@@ -53,6 +54,7 @@ pub struct SessionManager {
     zellij: Arc<dyn ExecutionBackend>,
     docker: Arc<dyn ExecutionBackend>,
     kubernetes: Arc<dyn ExecutionBackend>,
+    console_manager: Arc<ConsoleManager>,
     sessions: RwLock<Vec<Session>>,
     /// Optional proxy manager for per-session filtering
     proxy_manager: Option<Arc<crate::proxy::ProxyManager>>,
@@ -92,6 +94,7 @@ impl SessionManager {
             zellij,
             docker,
             kubernetes,
+            console_manager: Arc::new(ConsoleManager::new()),
             sessions: RwLock::new(sessions),
             proxy_manager: None,
             event_broadcaster: None,
@@ -172,6 +175,11 @@ impl SessionManager {
         self.http_port = Some(port);
     }
 
+    #[must_use]
+    pub fn console_manager(&self) -> Arc<ConsoleManager> {
+        Arc::clone(&self.console_manager)
+    }
+
     /// List all sessions
     #[instrument(skip(self))]
     pub async fn list_sessions(&self) -> Vec<Session> {
@@ -231,11 +239,28 @@ impl SessionManager {
         images: Vec<String>,
     ) -> anyhow::Result<Uuid> {
         // Validate session count limit
-        let session_count = self.sessions.read().await.len();
-        if session_count >= self.max_sessions {
+        let sessions_guard = self.sessions.read().await;
+        let active_count = sessions_guard
+            .iter()
+            .filter(|s| s.status != SessionStatus::Archived)
+            .count();
+        let archived_count = sessions_guard
+            .iter()
+            .filter(|s| s.status == SessionStatus::Archived)
+            .count();
+        drop(sessions_guard);
+
+        if active_count >= self.max_sessions {
+            tracing::warn!(
+                active_sessions = active_count,
+                archived_sessions = archived_count,
+                max_sessions = self.max_sessions,
+                "Session creation blocked - maximum active sessions reached"
+            );
             anyhow::bail!(
-                "Maximum session limit reached ({}/{}). Delete or archive sessions before creating new ones.",
-                session_count,
+                "Maximum session limit reached ({} active / {} total, max {}). Archive or delete sessions before creating new ones.",
+                active_count,
+                active_count + archived_count,
                 self.max_sessions
             );
         }
@@ -300,11 +325,13 @@ impl SessionManager {
             access_mode,
         });
 
-        // Set history file path
-        session.history_file_path = Some(super::session::get_history_file_path(
-            &worktree_path,
-            &session.id,
-        ));
+        // Set history file path for Claude Code sessions
+        if session.agent == super::session::AgentType::ClaudeCode {
+            session.history_file_path = Some(super::session::get_history_file_path(
+                &worktree_path,
+                &session.id,
+            ));
+        }
 
         // Set initial progress
         session.set_progress(crate::api::protocol::ProgressStep {
@@ -335,7 +362,12 @@ impl SessionManager {
             let mut sessions = self.sessions.write().await;
 
             // Re-check limit with lock held (defense against race)
-            if sessions.len() >= self.max_sessions {
+            if sessions
+                .iter()
+                .filter(|s| s.status != SessionStatus::Archived)
+                .count()
+                >= self.max_sessions
+            {
                 // Rollback database save
                 let _ = self.store.delete_session(session.id).await;
                 anyhow::bail!("Maximum session limit reached (prevented race condition)");
@@ -505,6 +537,7 @@ impl SessionManager {
             update_progress(4, "Starting backend resource".to_string()).await;
             // Create backend resource
             let create_options = crate::backends::CreateOptions {
+                agent,
                 print_mode,
                 plan_mode,
                 session_proxy_port: proxy_port,
@@ -565,6 +598,20 @@ impl SessionManager {
                 }
             }
 
+            if backend == BackendType::Docker && !print_mode {
+                if let Err(err) = self
+                    .console_manager
+                    .ensure_session(session_id, backend, &backend_id)
+                    .await
+                {
+                    tracing::warn!(
+                        session_id = %session_id,
+                        error = %err,
+                        "Failed to start console session"
+                    );
+                }
+            }
+
             // Record backend ID event
             let event = Event::new(session_id, EventType::BackendIdSet { backend_id });
             self.store.record_event(&event).await?;
@@ -581,7 +628,11 @@ impl SessionManager {
 
             // Track this repo in recent repos
             let repo_path_buf = PathBuf::from(&repo_path);
-            if let Err(e) = self.store.add_recent_repo(repo_path_buf).await {
+            if let Err(e) = self
+                .store
+                .add_recent_repo(repo_path_buf, subdirectory.clone())
+                .await
+            {
                 tracing::warn!("Failed to add repo to recent list: {e}");
             }
 
@@ -771,11 +822,13 @@ impl SessionManager {
             access_mode,
         });
 
-        // Set history file path (directory created after worktree exists)
-        session.history_file_path = Some(super::session::get_history_file_path(
-            &worktree_path,
-            &session.id,
-        ));
+        // Set history file path for Claude Code sessions (directory created after worktree exists)
+        if session.agent == super::session::AgentType::ClaudeCode {
+            session.history_file_path = Some(super::session::get_history_file_path(
+                &worktree_path,
+                &session.id,
+            ));
+        }
 
         // Record creation event
         let event = Event::new(
@@ -852,6 +905,7 @@ impl SessionManager {
 
         // Create backend resource
         let create_options = crate::backends::CreateOptions {
+            agent,
             print_mode,
             plan_mode,
             session_proxy_port: proxy_port,
@@ -898,6 +952,20 @@ impl SessionManager {
         session.set_backend_id(backend_id.clone());
         session.set_status(SessionStatus::Running);
 
+        if backend == BackendType::Docker && !print_mode {
+            if let Err(err) = self
+                .console_manager
+                .ensure_session(session.id, backend, &backend_id)
+                .await
+            {
+                tracing::warn!(
+                    session_id = %session.id,
+                    error = %err,
+                    "Failed to start console session"
+                );
+            }
+        }
+
         // Record backend ID event
         let event = Event::new(session.id, EventType::BackendIdSet { backend_id });
         self.store.record_event(&event).await?;
@@ -919,7 +987,11 @@ impl SessionManager {
         self.sessions.write().await.push(session.clone());
 
         // Track this repo in recent repos
-        if let Err(e) = self.store.add_recent_repo(repo_path_buf.clone()).await {
+        if let Err(e) = self
+            .store
+            .add_recent_repo(repo_path_buf.clone(), subdirectory.clone())
+            .await
+        {
             tracing::warn!("Failed to add repo to recent list: {e}");
         }
 
@@ -945,6 +1017,10 @@ impl SessionManager {
             .backend_id
             .as_ref()
             .ok_or_else(|| anyhow::anyhow!("Session has no backend ID"))?;
+
+        if session.agent == super::session::AgentType::Codex {
+            anyhow::bail!("Send prompt is only supported for Claude Code sessions");
+        }
 
         match session.backend {
             BackendType::Zellij => Ok(self.zellij.attach_command(backend_id)),
@@ -988,6 +1064,7 @@ impl SessionManager {
 
         // Update in store
         self.store.save_session(&session_clone).await?;
+        self.console_manager.remove_session(session_id).await;
 
         Ok(())
     }
@@ -1047,6 +1124,8 @@ impl SessionManager {
                 }
             }
         }
+
+        self.console_manager.remove_session(session_id).await;
 
         // Spawn background deletion task
         let manager_clone = Arc::clone(self);
@@ -1277,8 +1356,184 @@ impl SessionManager {
 
         // Remove from in-memory list
         self.sessions.write().await.retain(|s| s.id != session.id);
+        self.console_manager.remove_session(session.id).await;
 
         Ok(())
+    }
+
+    /// Refresh a session by recreating its container with the latest image
+    ///
+    /// This operation:
+    /// 1. Pulls the latest Docker image
+    /// 2. Stops and removes the old container
+    /// 3. Creates a new container with the same configuration
+    /// 4. Preserves all session metadata and history
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - Session not found
+    /// - Session is not Docker-based
+    /// - Image pull fails
+    /// - Container recreation fails
+    #[instrument(skip(self), fields(id_or_name = %id_or_name))]
+    pub async fn refresh_session(&self, id_or_name: &str) -> anyhow::Result<()> {
+        // Acquire deletion semaphore (refresh is destructive like delete)
+        let _permit = self
+            .deletion_semaphore
+            .acquire()
+            .await
+            .map_err(|_| anyhow::anyhow!("System is shutting down"))?;
+
+        // Get session and validate it's Docker
+        let session = self
+            .get_session(id_or_name)
+            .await
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {id_or_name}"))?;
+
+        if session.backend != BackendType::Docker {
+            anyhow::bail!("Refresh only supported for Docker sessions");
+        }
+
+        let session_id = session.id;
+
+        // Capture configuration before deletion
+        let (
+            name,
+            _repo_path,
+            worktree_path,
+            subdirectory,
+            initial_prompt,
+            agent,
+            dangerous_skip_checks,
+            _access_mode,
+            proxy_port,
+            old_backend_id,
+        ) = {
+            let sessions = self.sessions.read().await;
+            let s = sessions
+                .iter()
+                .find(|s| s.id == session_id)
+                .ok_or_else(|| anyhow::anyhow!("Session disappeared"))?;
+
+            (
+                s.name.clone(),
+                s.repo_path.clone(),
+                s.worktree_path.clone(),
+                s.subdirectory.clone(),
+                s.initial_prompt.clone(),
+                s.agent,
+                s.dangerous_skip_checks,
+                s.access_mode,
+                s.proxy_port,
+                s.backend_id.clone(),
+            )
+        };
+
+        // Execute refresh: pull + delete + create
+        let result: anyhow::Result<String> = async {
+            // Pull latest image
+            let docker_image = "ghcr.io/shepherdjerred/dotfiles";
+            tracing::info!(image = docker_image, "Pulling Docker image");
+
+            let output = tokio::process::Command::new("docker")
+                .args(["pull", docker_image])
+                .output()
+                .await
+                .context("Failed to execute docker pull")?;
+
+            if !output.status.success() {
+                let stderr = String::from_utf8_lossy(&output.stderr);
+                tracing::error!(
+                    image = docker_image,
+                    stderr = %stderr,
+                    "Failed to pull Docker image"
+                );
+                anyhow::bail!("Failed to pull Docker image: {stderr}");
+            }
+
+            tracing::info!(image = docker_image, "Successfully pulled Docker image");
+
+            // Delete old container
+            if let Some(ref backend_id) = old_backend_id {
+                let _ = self.docker.delete(backend_id).await;
+            }
+
+            // Create new container
+            let create_options = crate::backends::CreateOptions {
+                agent,
+                print_mode: false,
+                plan_mode: false,
+                session_proxy_port: proxy_port,
+                images: vec![],
+                dangerous_skip_checks,
+                session_id: Some(session_id),
+                initial_workdir: subdirectory,
+                http_port: self.http_port,
+            };
+
+            let new_backend_id = self
+                .docker
+                .create(&name, &worktree_path, &initial_prompt, create_options)
+                .await
+                .context("Failed to create new container")?;
+
+            // Reinstall hooks for Claude Code
+            if agent == super::session::AgentType::ClaudeCode {
+                let container_name = format!("clauderon-{name}");
+                if let Err(e) = crate::hooks::install_hooks_in_container(&container_name).await {
+                    tracing::warn!(error = %e, "Failed to install hooks (non-fatal)");
+                }
+            }
+
+            Ok(new_backend_id)
+        }
+        .await;
+
+        // Update session based on result
+        match result {
+            Ok(new_backend_id) => {
+                let mut sessions = self.sessions.write().await;
+                if let Some(session) = sessions.iter_mut().find(|s| s.id == session_id) {
+                    session.set_backend_id(new_backend_id.clone());
+                    session.set_status(SessionStatus::Running);
+                    session.reset_reconcile_state();
+
+                    let session_clone = session.clone();
+                    drop(sessions);
+
+                    self.store.save_session(&session_clone).await?;
+
+                    let event = Event::new(
+                        session_id,
+                        EventType::BackendIdSet {
+                            backend_id: new_backend_id.clone(),
+                        },
+                    );
+                    self.store.record_event(&event).await?;
+
+                    // Restart console session
+                    if let Err(err) = self
+                        .console_manager
+                        .ensure_session(session_id, BackendType::Docker, &new_backend_id)
+                        .await
+                    {
+                        tracing::warn!(error = %err, "Failed to start console session");
+                    }
+                }
+                Ok(())
+            }
+            Err(e) => {
+                // Mark as failed
+                let error_msg = format!("{:#}", e);
+                let mut sessions = self.sessions.write().await;
+                if let Some(session) = sessions.iter_mut().find(|s| s.id == session_id) {
+                    session.set_error(SessionStatus::Failed, error_msg.clone());
+                    self.store.save_session(session).await?;
+                }
+                Err(e)
+            }
+        }
     }
 
     /// Reconcile expected state with reality
@@ -1511,6 +1766,7 @@ impl SessionManager {
 
         // Build creation options from session state
         let create_options = crate::backends::CreateOptions {
+            agent: session.agent,
             print_mode: false, // Never use print mode for recreation
             plan_mode: false,  // Don't enter plan mode - session already has context
             session_proxy_port: session.proxy_port,
@@ -1618,6 +1874,42 @@ impl SessionManager {
             name = %session_clone.name,
             mode = ?new_mode,
             "Updated session access mode"
+        );
+
+        Ok(())
+    }
+
+    /// Update session metadata (title and description)
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the session is not found or the store update fails.
+    #[instrument(skip(self), fields(id_or_name = %id_or_name, title = ?title, description = ?description))]
+    pub async fn update_metadata(
+        &self,
+        id_or_name: &str,
+        title: Option<String>,
+        description: Option<String>,
+    ) -> anyhow::Result<()> {
+        let mut sessions = self.sessions.write().await;
+        let session = sessions
+            .iter_mut()
+            .find(|s| s.name == id_or_name || s.id.to_string() == id_or_name)
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {id_or_name}"))?;
+
+        let session_id = session.id;
+        session.set_title(title);
+        session.set_description(description);
+        let session_clone = session.clone();
+        drop(sessions);
+
+        // Update in store
+        self.store.save_session(&session_clone).await?;
+
+        tracing::info!(
+            session_id = %session_id,
+            name = %session_clone.name,
+            "Updated session metadata"
         );
 
         Ok(())
@@ -1970,6 +2262,20 @@ impl SessionManager {
                     }
                 }
             };
+            let codex_env_present = [
+                "CODEX_ACCESS_TOKEN",
+                "CODEX_REFRESH_TOKEN",
+                "CODEX_ID_TOKEN",
+            ]
+            .iter()
+            .any(|name| std::env::var(name).is_ok());
+            let codex_auth_source = creds.codex_auth_json_path.as_ref().and_then(|path| {
+                if path.exists() {
+                    Some(format!("auth.json:{}", path.display()))
+                } else {
+                    None
+                }
+            });
 
             // GitHub
             let (source, readonly) = credential_source("GITHUB_TOKEN", "github_token");
@@ -1993,6 +2299,48 @@ impl SessionManager {
                 readonly,
                 masked_value: creds
                     .anthropic_oauth_token
+                    .as_ref()
+                    .map(|v| mask_credential(v)),
+            });
+
+            // OpenAI
+            let (source, readonly) = if std::env::var("OPENAI_API_KEY").is_ok()
+                || std::env::var("CODEX_API_KEY").is_ok()
+            {
+                (Some("environment".to_string()), true)
+            } else {
+                let path = secrets_dir.join("openai_api_key");
+                if path.exists() {
+                    (Some("file".to_string()), false)
+                } else if codex_auth_source.is_some() && creds.openai_api_key.is_some() {
+                    (codex_auth_source.clone(), true)
+                } else {
+                    (None, false)
+                }
+            };
+            credentials.push(CredentialStatus {
+                name: "OpenAI".to_string(),
+                service_id: "openai".to_string(),
+                available: creds.openai_api_key.is_some(),
+                source,
+                readonly,
+                masked_value: creds.openai_api_key.as_ref().map(|v| mask_credential(v)),
+            });
+            let (source, readonly) = if codex_env_present {
+                (Some("environment".to_string()), true)
+            } else if codex_auth_source.is_some() {
+                (codex_auth_source.clone(), true)
+            } else {
+                (None, true)
+            };
+            credentials.push(CredentialStatus {
+                name: "ChatGPT".to_string(),
+                service_id: "chatgpt".to_string(),
+                available: creds.codex_access_token().is_some(),
+                source,
+                readonly,
+                masked_value: creds
+                    .codex_access_token()
                     .as_ref()
                     .map(|v| mask_credential(v)),
             });
@@ -2086,13 +2434,85 @@ impl SessionManager {
 
             // Count session-specific proxies
             active_session_proxies = pm.active_session_proxy_count().await as u32;
+
+            // Try to fetch Claude Code usage if OAuth token is available
+            let claude_usage = if let Some(oauth_token) = creds.anthropic_oauth_token.as_ref() {
+                match Self::fetch_claude_usage(oauth_token).await {
+                    Ok(usage) => {
+                        tracing::info!(
+                            org_id = %usage.organization_id,
+                            five_hour_utilization = %usage.five_hour.utilization,
+                            seven_day_utilization = %usage.seven_day.utilization,
+                            "Successfully fetched Claude Code usage"
+                        );
+                        Some(usage)
+                    }
+                    Err(e) => {
+                        tracing::warn!(
+                            error = %e,
+                            "Failed to fetch Claude Code usage - will continue without usage data"
+                        );
+                        None
+                    }
+                }
+            } else {
+                tracing::debug!("No Anthropic OAuth token available - skipping usage fetch");
+                None
+            };
+
+            return Ok(SystemStatus {
+                credentials,
+                proxies,
+                active_session_proxies,
+                claude_usage,
+            });
         }
 
         Ok(SystemStatus {
             credentials,
             proxies,
             active_session_proxies,
+            claude_usage: None,
         })
+    }
+
+    /// Fetch Claude Code usage data from Claude.ai API
+    ///
+    /// This attempts to get the org ID and usage data in one flow.
+    /// Falls back to environment variable if API calls fail.
+    #[instrument(skip(oauth_token))]
+    async fn fetch_claude_usage(
+        oauth_token: &str,
+    ) -> anyhow::Result<crate::api::protocol::ClaudeUsage> {
+        use crate::api::claude_client::ClaudeApiClient;
+
+        let client = ClaudeApiClient::new();
+
+        // First, try to get org ID from current account endpoint
+        let (org_id, org_name) = match client.get_current_account(oauth_token).await {
+            Ok(info) => info,
+            Err(e) => {
+                // Fallback to environment variable
+                tracing::warn!(
+                    error = %e,
+                    "Failed to get org ID from Claude.ai API, trying CLAUDE_ORG_ID env var"
+                );
+
+                let org_id = std::env::var("CLAUDE_ORG_ID")
+                    .or_else(|_| std::env::var("ANTHROPIC_ORG_ID"))
+                    .context("Failed to get org ID from API and no CLAUDE_ORG_ID env var set")?;
+
+                (org_id, None)
+            }
+        };
+
+        // Now fetch usage data
+        let mut usage = client.get_usage(oauth_token, &org_id).await?;
+
+        // Fill in org name if we got it
+        usage.organization_name = org_name;
+
+        Ok(usage)
     }
 
     /// Update a credential value.
@@ -2178,6 +2598,7 @@ impl SessionManager {
         match service_id {
             "github" => Ok("github_token"),
             "anthropic" => Ok("anthropic_oauth_token"),
+            "openai" => Ok("openai_api_key"),
             "pagerduty" => Ok("pagerduty_token"),
             "sentry" => Ok("sentry_auth_token"),
             "grafana" => Ok("grafana_api_key"),
@@ -2194,6 +2615,7 @@ impl SessionManager {
         match service_id {
             "github" => Ok("GITHUB_TOKEN"),
             "anthropic" => Ok("CLAUDE_CODE_OAUTH_TOKEN"),
+            "openai" => Ok("OPENAI_API_KEY"),
             "pagerduty" => Ok("PAGERDUTY_TOKEN"),
             "sentry" => Ok("SENTRY_AUTH_TOKEN"),
             "grafana" => Ok("GRAFANA_API_KEY"),

@@ -585,6 +585,139 @@ async fn test_list_sessions_multiple() {
     assert_eq!(sessions.len(), 3);
 }
 
+// ========== update_metadata tests ==========
+
+#[tokio::test]
+async fn test_update_metadata_success() {
+    let repo_dir = create_temp_git_repo();
+    let (manager, _temp_dir, _git, _zellij, _docker) = create_test_manager().await;
+
+    let (session, _) = manager
+        .create_session(
+            repo_dir.path().to_string_lossy().to_string(),
+            "prompt".to_string(),
+            BackendType::Zellij,
+            AgentType::ClaudeCode,
+            true,
+            false,              // print_mode
+            true,               // plan_mode
+            Default::default(), // access_mode
+            vec![],             // images
+        )
+        .await
+        .unwrap();
+
+    // Note: Sessions may have auto-generated titles from main branch changes
+    // The important test is that we can update them
+
+    // Update metadata
+    manager
+        .update_metadata(
+            &session.name,
+            Some("Test Title".to_string()),
+            Some("Test Description".to_string()),
+        )
+        .await
+        .unwrap();
+
+    // Verify metadata was updated
+    let updated = manager.get_session(&session.name).await.unwrap();
+    assert_eq!(updated.title, Some("Test Title".to_string()));
+    assert_eq!(updated.description, Some("Test Description".to_string()));
+}
+
+#[tokio::test]
+async fn test_update_metadata_by_uuid() {
+    let repo_dir = create_temp_git_repo();
+    let (manager, _temp_dir, _git, _zellij, _docker) = create_test_manager().await;
+
+    let (session, _) = manager
+        .create_session(
+            repo_dir.path().to_string_lossy().to_string(),
+            "prompt".to_string(),
+            BackendType::Zellij,
+            AgentType::ClaudeCode,
+            true,
+            false,              // print_mode
+            true,               // plan_mode
+            Default::default(), // access_mode
+            vec![],             // images
+        )
+        .await
+        .unwrap();
+
+    // Update by UUID instead of name
+    manager
+        .update_metadata(
+            &session.id.to_string(),
+            Some("UUID Title".to_string()),
+            None,
+        )
+        .await
+        .unwrap();
+
+    let updated = manager.get_session(&session.id.to_string()).await.unwrap();
+    assert_eq!(updated.title, Some("UUID Title".to_string()));
+    assert!(updated.description.is_none());
+}
+
+#[tokio::test]
+async fn test_update_metadata_partial() {
+    let repo_dir = create_temp_git_repo();
+    let (manager, _temp_dir, _git, _zellij, _docker) = create_test_manager().await;
+
+    let (session, _) = manager
+        .create_session(
+            repo_dir.path().to_string_lossy().to_string(),
+            "prompt".to_string(),
+            BackendType::Zellij,
+            AgentType::ClaudeCode,
+            true,
+            false,              // print_mode
+            true,               // plan_mode
+            Default::default(), // access_mode
+            vec![],             // images
+        )
+        .await
+        .unwrap();
+
+    // Update only title
+    manager
+        .update_metadata(&session.name, Some("Just Title".to_string()), None)
+        .await
+        .unwrap();
+
+    let updated = manager.get_session(&session.name).await.unwrap();
+    assert_eq!(updated.title, Some("Just Title".to_string()));
+    assert!(updated.description.is_none());
+
+    // Update only description
+    manager
+        .update_metadata(&session.name, None, Some("Just Description".to_string()))
+        .await
+        .unwrap();
+
+    let updated = manager.get_session(&session.name).await.unwrap();
+    assert!(updated.title.is_none()); // Was set to None
+    assert_eq!(updated.description, Some("Just Description".to_string()));
+}
+
+#[tokio::test]
+async fn test_update_metadata_session_not_found() {
+    let (manager, _temp_dir, _git, _zellij, _docker) = create_test_manager().await;
+
+    let result = manager
+        .update_metadata(
+            "nonexistent",
+            Some("Title".to_string()),
+            Some("Description".to_string()),
+        )
+        .await;
+
+    assert!(result.is_err());
+    assert!(result.unwrap_err().to_string().contains("not found"));
+}
+
 // ========== session state transitions ==========
 
 #[tokio::test]

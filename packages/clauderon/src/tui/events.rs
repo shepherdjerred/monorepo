@@ -212,6 +212,11 @@ async fn handle_session_list_key(app: &mut App, key: KeyEvent) -> anyhow::Result
                 app.status_message = Some(format!("Archive failed: {e}"));
             }
         }
+        KeyCode::Char('f') => {
+            if let Err(e) = app.refresh_selected().await {
+                app.status_message = Some(format!("Refresh failed: {e}"));
+            }
+        }
         KeyCode::Char('r') => {
             if let Err(e) = app.reconcile().await {
                 app.status_message = Some(format!("Reconcile failed: {e}"));
@@ -825,13 +830,13 @@ async fn handle_attached_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()>
     if key.modifiers.contains(KeyModifiers::CONTROL) {
         match key.code {
             KeyCode::Char('p') => {
-                if app.switch_to_previous_session()? {
+                if app.switch_to_previous_session().await? {
                     app.status_message = Some("Switched to previous session".to_string());
                 }
                 return Ok(());
             }
             KeyCode::Char('n') => {
-                if app.switch_to_next_session()? {
+                if app.switch_to_next_session().await? {
                     app.status_message = Some("Switched to next session".to_string());
                 }
                 return Ok(());

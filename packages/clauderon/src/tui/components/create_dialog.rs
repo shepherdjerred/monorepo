@@ -6,7 +6,7 @@ use ratatui::{
     widgets::{Block, Borders, Clear, Paragraph, Wrap},
 };
 
-use crate::core::{AccessMode, BackendType};
+use crate::core::{AccessMode, AgentType, BackendType};
 use crate::tui::app::{App, CreateDialogFocus};
 
 /// Render the create session dialog
@@ -61,6 +61,28 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         ])
         .split(area);
 
+    // Explicit layout indices to prevent indexing errors
+    let mut layout_idx = 0;
+    let prompt_idx = layout_idx;
+    layout_idx += 1;
+    let images_idx = layout_idx;
+    layout_idx += 1;
+    let repo_idx = layout_idx;
+    layout_idx += 1;
+    let backend_idx = layout_idx;
+    layout_idx += 1;
+    let agent_idx = layout_idx;
+    layout_idx += 1;
+    let access_idx = layout_idx;
+    layout_idx += 1;
+    let skip_checks_idx = layout_idx;
+    layout_idx += 1;
+    let plan_mode_idx = layout_idx;
+    layout_idx += 1;
+    let _spacer_idx = layout_idx;
+    layout_idx += 1;
+    let buttons_idx = layout_idx;
+
     // Prompt field (multiline with scrolling)
     render_multiline_field(
         frame,
@@ -71,12 +93,12 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         dialog.prompt_cursor_col,
         dialog.prompt_scroll_offset,
         prompt_height,
-        inner[0],
+        inner[prompt_idx],
     );
 
     // Images field (if any images attached)
     if !dialog.images.is_empty() {
-        render_images_field(frame, &dialog.images, inner[1]);
+        render_images_field(frame, &dialog.images, inner[images_idx]);
     }
 
     // Repo path field (clickable to open directory picker)
@@ -85,7 +107,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         "Repository",
         &dialog.repo_path,
         dialog.focus == CreateDialogFocus::RepoPath,
-        inner[2],
+        inner[repo_idx],
     );
 
     // Backend selection
@@ -98,7 +120,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
             ("Kubernetes", dialog.backend == BackendType::Kubernetes),
         ],
         dialog.focus == CreateDialogFocus::Backend,
-        inner[3],
+        inner[backend_idx],
     );
 
     // Agent selection
@@ -106,11 +128,12 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         frame,
         "Agent",
         &[
-            ("Claude", dialog.agent == crate::core::AgentType::Claude),
-            ("Gemini", dialog.agent == crate::core::AgentType::Gemini),
+            ("Claude Code", dialog.agent == AgentType::ClaudeCode),
+            ("Codex", dialog.agent == AgentType::Codex),
+            ("Gemini", dialog.agent == AgentType::Gemini),
         ],
         dialog.focus == CreateDialogFocus::Agent,
-        inner[4],
+        inner[agent_idx],
     );
 
     // Access mode selection
@@ -122,7 +145,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
             ("Read-Write", dialog.access_mode == AccessMode::ReadWrite),
         ],
         dialog.focus == CreateDialogFocus::AccessMode,
-        inner[5],
+        inner[access_idx],
     );
 
     // Skip checks checkbox
@@ -131,7 +154,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         "Dangerously skip checks",
         dialog.skip_checks,
         dialog.focus == CreateDialogFocus::SkipChecks,
-        inner[6],
+        inner[skip_checks_idx],
     );
 
     // Plan mode checkbox
@@ -140,7 +163,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         "Start in plan mode",
         dialog.plan_mode,
         dialog.focus == CreateDialogFocus::PlanMode,
-        inner[7],
+        inner[plan_mode_idx],
     );
 
     // Buttons
@@ -148,7 +171,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         frame,
         dialog.focus == CreateDialogFocus::Buttons,
         dialog.button_create_focused,
-        inner[9],
+        inner[buttons_idx],
     );
 
     // Render directory picker overlay if active

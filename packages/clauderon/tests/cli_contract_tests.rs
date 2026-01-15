@@ -18,6 +18,7 @@ fn test_git_config_env_vars() {
         "test prompt",
         1000,
         None,
+        AgentType::ClaudeCode,
         false,
         false,
         &[],
@@ -66,6 +67,7 @@ fn test_git_config_omitted_when_none() {
         "test prompt",
         1000,
         None,
+        AgentType::ClaudeCode,
         false,
         false,
         &[],
@@ -99,8 +101,9 @@ fn test_docker_run_arg_order() {
         "test prompt",
         1000,
         None,
+        AgentType::ClaudeCode,
         false, // print mode
-        false, // plan mode
+        false, // dangerous_skip_checks
         &[],   // images
         None,  // git user name
         None,  // git user email
@@ -143,8 +146,9 @@ fn test_docker_env_vars() {
         "test prompt",
         1000,
         None,
+        AgentType::ClaudeCode,
         false, // print mode
-        false, // plan mode
+        false, // dangerous_skip_checks
         &[],   // images
         None,  // git user name
         None,  // git user email
@@ -236,6 +240,7 @@ fn test_zellij_action_schema() {
         "test prompt",
         false,
         &[],
+        AgentType::ClaudeCode,
         None,
         AgentType::Claude,
     );
@@ -261,8 +266,9 @@ fn test_volume_mount_format() {
         "test prompt",
         1000,
         None,
+        AgentType::ClaudeCode,
         false, // print mode
-        false, // plan mode
+        false, // dangerous_skip_checks
         &[],   // images
         None,  // git user name
         None,  // git user email
@@ -320,8 +326,9 @@ fn test_workspace_mount_destination() {
         "test prompt",
         1000,
         None,
+        AgentType::ClaudeCode,
         false, // print mode
-        false, // plan mode
+        false, // dangerous_skip_checks
         &[],   // images
         None,  // git user name
         None,  // git user email
@@ -361,6 +368,7 @@ fn test_final_command_format() {
         prompt,
         1000,
         None,
+        AgentType::ClaudeCode,
         false, // print mode
         true,  // dangerous_skip_checks - pass true to get --dangerously-skip-permissions
         &[],   // images

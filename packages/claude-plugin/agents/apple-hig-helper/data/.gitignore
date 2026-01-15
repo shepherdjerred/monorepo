@@ -1,0 +1,7 @@
+# Resume state (machine-specific)
+.visited.json
+
+# Optionally: Uncomment to exclude all HTML if data is too large
+# *.html
+# */
+# !.gitignore

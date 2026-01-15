@@ -98,6 +98,20 @@ pub async fn handle_request(request: Request, manager: &SessionManager) -> Respo
             }
         },
 
+        Request::RefreshSession { id } => match manager.refresh_session(&id).await {
+            Ok(()) => {
+                tracing::info!(id = %id, "Session refreshed");
+                Response::Refreshed
+            }
+            Err(e) => {
+                tracing::error!(id = %id, error = %e, "Failed to refresh session");
+                Response::Error {
+                    code: "REFRESH_ERROR".to_string(),
+                    message: e.to_string(),
+                }
+            }
+        },
+
         Request::AttachSession { id } => match manager.get_attach_command(&id).await {
             Ok(command) => {
                 tracing::info!(id = %id, "Attach command retrieved");
@@ -158,6 +172,7 @@ pub async fn handle_request(request: Request, manager: &SessionManager) -> Respo
                     .into_iter()
                     .map(|r| super::protocol::RecentRepoDto {
                         repo_path: r.repo_path.to_string_lossy().to_string(),
+                        subdirectory: r.subdirectory.to_string_lossy().to_string(),
                         last_used: r.last_used.to_rfc3339(),
                     })
                     .collect();

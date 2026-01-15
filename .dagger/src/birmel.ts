@@ -210,7 +210,7 @@ export function buildBirmelImage(workspaceSource: Directory, version: string, gi
     .withEnvVariable("VERSION", version)
     .withEnvVariable("GIT_SHA", gitSha)
     .withEnvVariable("NODE_ENV", "production")
-    .withEntrypoint(["bun", "run", "start"])
+    .withEntrypoint(["sh", "-c", "bunx prisma db push --skip-generate && bun run src/index.ts"])
     .withLabel("org.opencontainers.image.title", "birmel")
     .withLabel("org.opencontainers.image.description", "AI-powered Discord server management bot");
 }

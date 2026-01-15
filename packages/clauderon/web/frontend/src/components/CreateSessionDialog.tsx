@@ -131,7 +131,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                 { setFormData({ ...formData, initial_prompt: e.target.value }); }
               }
               className="flex w-full rounded-md border-2 border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm min-h-[100px]"
-              placeholder="What should Claude Code do?"
+              placeholder={formData.agent === "Codex" ? "What should Codex do?" : "What should Claude Code do?"}
               required
             />
           </div>
@@ -163,7 +163,8 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                 }
                 className="cursor-pointer flex h-10 w-full rounded-md border-2 border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <option value="Claude">Claude</option>
+                <option value="ClaudeCode">Claude Code</option>
+                <option value="Codex">Codex</option>
                 <option value="Gemini">Gemini</option>
               </select>
             </div>

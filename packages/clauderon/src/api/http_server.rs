@@ -28,6 +28,7 @@ pub struct AppState {
     pub session_manager: Arc<SessionManager>,
     pub event_broadcaster: EventBroadcaster,
     pub auth_state: Option<AuthState>,
+    pub console_state: Arc<crate::api::console_state::ConsoleState>,
 }
 
 /// Create the HTTP router with all endpoints (without state)
@@ -52,7 +53,9 @@ pub fn create_router(auth_state: &Option<AuthState>, dev_mode: bool) -> Router<A
         .route("/api/sessions/{id}", get(get_session))
         .route("/api/sessions/{id}", delete(delete_session))
         .route("/api/sessions/{id}/archive", post(archive_session))
+        .route("/api/sessions/{id}/refresh", post(refresh_session))
         .route("/api/sessions/{id}/access-mode", post(update_access_mode))
+        .route("/api/sessions/{id}/metadata", post(update_metadata))
         .route("/api/sessions/{id}/history", get(get_session_history))
         .route("/api/sessions/{id}/upload", post(upload_file))
         .route("/api/recent-repos", get(get_recent_repos))
@@ -299,10 +302,32 @@ async fn archive_session(
     Ok(StatusCode::NO_CONTENT)
 }
 
+async fn refresh_session(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+) -> Result<StatusCode, AppError> {
+    validate_session_id(&id)?;
+    state.session_manager.refresh_session(&id).await?;
+
+    // Broadcast session updated event (container refreshed)
+    if let Some(session) = state.session_manager.get_session(&id).await {
+        broadcast_event(&state.event_broadcaster, Event::SessionUpdated(session)).await;
+    }
+
+    Ok(StatusCode::NO_CONTENT)
+}
+
 /// Request to update access mode
 #[derive(Debug, Deserialize, Serialize)]
 struct UpdateAccessModeRequest {
     access_mode: AccessMode,
+}
+
+/// Request to update session metadata
+#[derive(Debug, Deserialize, Serialize)]
+struct UpdateMetadataRequest {
+    title: Option<String>,
+    description: Option<String>,
 }
 
 /// Query parameters for session history endpoint
@@ -345,6 +370,26 @@ async fn update_access_mode(
     Ok(StatusCode::NO_CONTENT)
 }
 
+/// Update session metadata (title and description)
+async fn update_metadata(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+    Json(request): Json<UpdateMetadataRequest>,
+) -> Result<StatusCode, AppError> {
+    validate_session_id(&id)?;
+    state
+        .session_manager
+        .update_metadata(&id, request.title, request.description)
+        .await?;
+
+    // Broadcast session updated event
+    if let Some(session) = state.session_manager.get_session(&id).await {
+        broadcast_event(&state.event_broadcaster, Event::SessionUpdated(session)).await;
+    }
+
+    Ok(StatusCode::NO_CONTENT)
+}
+
 /// Get recent repositories
 async fn get_recent_repos(
     State(state): State<AppState>,
@@ -356,6 +401,7 @@ async fn get_recent_repos(
         .iter()
         .map(|r| crate::api::protocol::RecentRepoDto {
             repo_path: r.repo_path.to_string_lossy().to_string(),
+            subdirectory: r.subdirectory.to_string_lossy().to_string(),
             last_used: r.last_used.to_rfc3339(),
         })
         .collect();
