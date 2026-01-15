@@ -383,6 +383,8 @@ export interface Session {
 	claude_status_updated_at: string;
 	/** Whether the session branch has merge conflicts with main */
 	merge_conflict: boolean;
+	/** Whether the worktree has uncommitted changes (dirty working tree) */
+	worktree_dirty: boolean;
 	/** Access mode for proxy filtering */
 	access_mode: AccessMode;
 	/** Port for session-specific HTTP proxy (Docker only) */
@@ -513,6 +515,10 @@ export type EventType =
 	/** Merge conflict status changed */
 	| { type: "ConflictStatusChanged", payload: {
 	has_conflict: boolean;
+}}
+	/** Working tree status changed (dirty/clean) */
+	| { type: "WorktreeStatusChanged", payload: {
+	is_dirty: boolean;
 }}
 	/** Session was archived */
 	| { type: "SessionArchived", payload?: undefined }
