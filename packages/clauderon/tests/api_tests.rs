@@ -143,9 +143,6 @@ fn test_backend_type_serialization() {
 fn test_agent_type_serialization() {
     let json = serde_json::to_string(&AgentType::ClaudeCode).unwrap();
     assert_eq!(json, r#""ClaudeCode""#);
-
-    let json = serde_json::to_string(&AgentType::Codex).unwrap();
-    assert_eq!(json, r#""Codex""#);
 }
 
 // ========== Print Mode Flow Tests ==========

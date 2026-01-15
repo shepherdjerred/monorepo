@@ -146,7 +146,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="backend" className="font-semibold">Backend</Label>
               <select
@@ -175,6 +175,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
               >
                 <option value="ClaudeCode">Claude Code</option>
                 <option value="Codex">Codex</option>
+                <option value="Gemini">Gemini</option>
               </select>
             </div>
 

@@ -421,11 +421,12 @@ impl CreateDialogState {
         };
     }
 
-    /// Toggle between Claude Code and Codex agents
+    /// Cycle through agents: ClaudeCode -> Codex -> Gemini -> ClaudeCode
     pub fn toggle_agent(&mut self) {
         self.agent = match self.agent {
             AgentType::ClaudeCode => AgentType::Codex,
-            AgentType::Codex => AgentType::ClaudeCode,
+            AgentType::Codex => AgentType::Gemini,
+            AgentType::Gemini => AgentType::ClaudeCode,
         };
     }
 

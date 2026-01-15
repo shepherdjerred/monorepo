@@ -1,9 +1,8 @@
+use crate::core::session::AgentType;
 use async_trait::async_trait;
 use std::path::{Path, PathBuf};
 
 use super::container_config::{ImageConfig, ResourceLimits};
-use crate::core::AgentType;
-
 /// Trait for git worktree operations
 #[async_trait]
 pub trait GitOperations: Send + Sync {
@@ -37,7 +36,7 @@ pub trait GitOperations: Send + Sync {
 /// Options for creating an execution backend session.
 #[derive(Debug, Clone, Default)]
 pub struct CreateOptions {
-    /// Agent to run (Claude Code or Codex).
+    /// Agent to run (Claude Code, Codex, or Gemini).
     pub agent: AgentType,
 
     /// Run in print mode (non-interactive, outputs response and exits).

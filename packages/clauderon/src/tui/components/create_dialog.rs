@@ -130,6 +130,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         &[
             ("Claude Code", dialog.agent == AgentType::ClaudeCode),
             ("Codex", dialog.agent == AgentType::Codex),
+            ("Gemini", dialog.agent == AgentType::Gemini),
         ],
         dialog.focus == CreateDialogFocus::Agent,
         inner[agent_idx],

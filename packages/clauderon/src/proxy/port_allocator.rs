@@ -11,6 +11,7 @@ pub struct PortAllocator {
 }
 
 struct AllocatorState {
+    base_port: u16,
     next_port: u16,
     allocated: HashMap<u16, Uuid>,
 }
@@ -20,9 +21,11 @@ impl PortAllocator {
     const MAX_SESSIONS: u16 = 500;
 
     /// Create a new port allocator
-    pub fn new() -> Self {
+    pub fn new(start_port: Option<u16>) -> Self {
+        let base_port = start_port.unwrap_or(Self::BASE_PORT);
         Self {
             state: RwLock::new(AllocatorState {
+                base_port,
                 next_port: 0,
                 allocated: HashMap::new(),
             }),
@@ -39,7 +42,7 @@ impl PortAllocator {
         let mut state = self.state.write().await;
 
         for _ in 0..Self::MAX_SESSIONS {
-            let port = Self::BASE_PORT + (state.next_port % Self::MAX_SESSIONS);
+            let port = state.base_port + (state.next_port % Self::MAX_SESSIONS);
 
             // Check if port is not already allocated internally AND is actually available in the OS
             if !state.allocated.contains_key(&port) && Self::is_port_available(port) {
@@ -79,7 +82,7 @@ impl PortAllocator {
 
         for (port, session_id) in allocations {
             // Validate port is in our range
-            if port < Self::BASE_PORT || port >= Self::BASE_PORT + Self::MAX_SESSIONS {
+            if port < state.base_port || port >= state.base_port + Self::MAX_SESSIONS {
                 tracing::warn!(
                     port,
                     session_id = %session_id,
@@ -94,7 +97,7 @@ impl PortAllocator {
 
         // Update next_port to avoid collisions with restored allocations
         if let Some(&max_port) = state.allocated.keys().max() {
-            state.next_port = (max_port - Self::BASE_PORT + 1) % Self::MAX_SESSIONS;
+            state.next_port = (max_port - state.base_port + 1) % Self::MAX_SESSIONS;
         }
 
         tracing::info!(
@@ -109,7 +112,7 @@ impl PortAllocator {
 
 impl Default for PortAllocator {
     fn default() -> Self {
-        Self::new()
+        Self::new(None)
     }
 }
 
@@ -119,7 +122,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_allocation() {
-        let allocator = PortAllocator::new();
+        let allocator = PortAllocator::new(None);
         let session1 = Uuid::new_v4();
         let session2 = Uuid::new_v4();
 
@@ -133,7 +136,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_release() {
-        let allocator = PortAllocator::new();
+        let allocator = PortAllocator::new(None);
         let session = Uuid::new_v4();
 
         let port = allocator.allocate(session).await.unwrap();
@@ -145,7 +148,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_wraparound() {
-        let allocator = PortAllocator::new();
+        let allocator = PortAllocator::new(None);
 
         // Allocate many ports
         for _ in 0..10 {

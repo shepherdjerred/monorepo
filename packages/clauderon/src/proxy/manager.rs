@@ -49,7 +49,10 @@ struct SessionProxyHandle {
 
 impl ProxyManager {
     /// Create a new proxy manager.
-    pub fn new(config: ProxyConfig) -> anyhow::Result<Self> {
+    pub fn new(
+        config: ProxyConfig,
+        port_allocator_start_port: Option<u16>,
+    ) -> anyhow::Result<Self> {
         let home = dirs::home_dir().unwrap_or_else(|| PathBuf::from("/tmp"));
         let clauderon_dir = home.join(".clauderon");
         std::fs::create_dir_all(&clauderon_dir)?;
@@ -79,7 +82,7 @@ impl ProxyManager {
             audit_logger,
             clauderon_dir,
             talos_task: None,
-            port_allocator: Arc::new(PortAllocator::new()),
+            port_allocator: Arc::new(PortAllocator::new(port_allocator_start_port)),
             session_proxies: RwLock::new(HashMap::new()),
         })
     }
