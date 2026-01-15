@@ -164,11 +164,8 @@ pub async fn handle_paste_event(app: &mut App, text: &str) -> anyhow::Result<()>
                 _ => {}
             }
         }
-        AppMode::CopyMode => {
-            // Ignore paste events in copy mode
-        }
-        _ => {
-            // Ignore paste events in other modes
+        AppMode::CopyMode | _ => {
+            // Ignore paste events in copy mode and other modes
         }
     }
 
@@ -190,12 +187,12 @@ pub async fn handle_key_event(app: &mut App, key: KeyEvent) -> anyhow::Result<()
     match app.mode {
         AppMode::SessionList => handle_session_list_key(app, key).await?,
         AppMode::CreateDialog => handle_create_dialog_key(app, key).await?,
-        AppMode::ConfirmDelete => handle_confirm_delete_key(app, key)?,
+        AppMode::ConfirmDelete => handle_confirm_delete_key(app, key),
         AppMode::Help => handle_help_key(app, key),
         AppMode::Attached => handle_attached_key(app, key).await?,
         AppMode::CopyMode => handle_copy_mode_key(app, key).await?,
         AppMode::Locked => handle_locked_key(app, key).await?,
-        AppMode::Scroll => handle_scroll_mode_key(app, key)?,
+        AppMode::Scroll => handle_scroll_mode_key(app, key),
         AppMode::ReconcileError => handle_reconcile_error_key(app, key).await?,
     }
     Ok(())
@@ -240,7 +237,8 @@ async fn handle_session_list_key(app: &mut App, key: KeyEvent) -> anyhow::Result
 async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
     // If directory picker is active, handle its events first
     if app.create_dialog.directory_picker.is_active {
-        return handle_directory_picker_key(app, key);
+        handle_directory_picker_key(app, key);
+        return Ok(());
     }
 
     // Handle Ctrl+E for opening external editor when Prompt is focused
@@ -550,7 +548,7 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
             CreateDialogFocus::Buttons => {
                 app.create_dialog.button_create_focused = !app.create_dialog.button_create_focused;
             }
-            _ => {}
+            CreateDialogFocus::RepoPath => {}
         },
         KeyCode::Char(' ') => match app.create_dialog.focus {
             CreateDialogFocus::Backend => {
@@ -590,7 +588,7 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                 };
                 app.create_dialog.directory_picker.open(initial_path);
             }
-            _ => {}
+            CreateDialogFocus::Buttons => {}
         },
         KeyCode::Char(c) => match app.create_dialog.focus {
             CreateDialogFocus::Prompt => {
@@ -645,7 +643,7 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
     Ok(())
 }
 
-fn handle_directory_picker_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
+fn handle_directory_picker_key(app: &mut App, key: KeyEvent) {
     let picker = &mut app.create_dialog.directory_picker;
 
     match key.code {
@@ -717,11 +715,9 @@ fn handle_directory_picker_key(app: &mut App, key: KeyEvent) -> anyhow::Result<(
 
         _ => {}
     }
-
-    Ok(())
 }
 
-fn handle_confirm_delete_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
+fn handle_confirm_delete_key(app: &mut App, key: KeyEvent) {
     match key.code {
         KeyCode::Char('y' | 'Y') => {
             app.confirm_delete();
@@ -731,7 +727,6 @@ fn handle_confirm_delete_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()>
         }
         _ => {}
     }
-    Ok(())
 }
 
 fn handle_help_key(app: &mut App, key: KeyEvent) {
@@ -899,7 +894,7 @@ async fn handle_locked_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
 ///
 /// In Scroll mode, arrow keys and page keys scroll the terminal buffer.
 /// ESC, q, or Ctrl+S exits scroll mode.
-fn handle_scroll_mode_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
+fn handle_scroll_mode_key(app: &mut App, key: KeyEvent) {
     match key.code {
         KeyCode::Esc | KeyCode::Char('q') => {
             app.exit_scroll_mode();
@@ -941,8 +936,6 @@ fn handle_scroll_mode_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
         }
         _ => {}
     }
-
-    Ok(())
 }
 
 /// Check if a pasted text string is an image file path

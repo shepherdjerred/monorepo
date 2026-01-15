@@ -352,8 +352,8 @@ impl HttpHandler for AuthInjector {
             start_time,
             timestamp,
             service: host_match.clone(),
-            method: method,
-            path: path,
+            method,
+            path,
             auth_injected: auth_injected_flag,
             auth_refresh,
         });
@@ -614,8 +614,8 @@ impl HttpHandler for FilteringHandler {
             start_time,
             timestamp,
             service: host_match.clone(),
-            method: method,
-            path: path,
+            method,
+            path,
             auth_injected: auth_injected_flag,
             auth_refresh,
         });
