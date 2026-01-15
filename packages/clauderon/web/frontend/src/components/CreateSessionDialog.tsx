@@ -21,7 +21,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
     repo_path: "",
     initial_prompt: "",
     backend: "Docker" as BackendType,
-    agent: "Claude" as AgentType,
+    agent: "ClaudeCode" as AgentType,
     access_mode: "ReadWrite" as AccessMode,
     plan_mode: true,
     dangerous_skip_checks: true, // Docker/Kubernetes default

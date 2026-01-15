@@ -89,7 +89,9 @@ export enum BackendType {
 /** AI agent type */
 export enum AgentType {
 	/** Claude Code CLI */
-	Claude = "Claude",
+	ClaudeCode = "ClaudeCode",
+	/** OpenAI Codex */
+	Codex = "Codex",
 	/** Gemini CLI */
 	Gemini = "Gemini",
 }
