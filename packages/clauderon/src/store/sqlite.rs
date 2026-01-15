@@ -914,10 +914,12 @@ impl Store for SqliteStore {
 
     #[instrument(skip(self))]
     async fn get_recent_repos(&self) -> anyhow::Result<Vec<RecentRepo>> {
-        // Use compile-time constant instead of format!() for cleaner SQL
-        const QUERY: &str = "SELECT * FROM recent_repos ORDER BY last_used DESC LIMIT 20";
+        let query = format!(
+            "SELECT * FROM recent_repos ORDER BY last_used DESC LIMIT {}",
+            super::MAX_RECENT_REPOS
+        );
 
-        let rows = sqlx::query_as::<_, RecentRepoRow>(QUERY)
+        let rows = sqlx::query_as::<_, RecentRepoRow>(&query)
             .fetch_all(&self.pool)
             .await?;
 
