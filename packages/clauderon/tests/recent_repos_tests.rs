@@ -107,8 +107,11 @@ async fn test_recent_repo_tracked_on_session_create() {
             false,              // print_mode
             false,              // plan_mode
             Default::default(), // access_mode
-            vec![], // images
-            None, None, None, None, // container settings
+            vec![],             // images
+            None,
+            None,
+            None,
+            None, // container settings
         )
         .await
         .expect("Failed to create session");

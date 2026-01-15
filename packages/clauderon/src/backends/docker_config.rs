@@ -77,7 +77,8 @@ impl DockerConfig {
     ///
     /// Returns `~/.clauderon/docker-config.toml`
     pub fn config_path() -> anyhow::Result<PathBuf> {
-        let home = dirs::home_dir().ok_or_else(|| anyhow::anyhow!("Failed to determine home directory"))?;
+        let home = dirs::home_dir()
+            .ok_or_else(|| anyhow::anyhow!("Failed to determine home directory"))?;
         Ok(home.join(".clauderon").join("docker-config.toml"))
     }
 
@@ -113,7 +114,11 @@ impl DockerConfig {
     pub fn create_example(path: &std::path::Path) -> anyhow::Result<()> {
         let example = include_str!("../../docs/docker-config.toml.example");
         std::fs::write(path, example).map_err(|e| {
-            anyhow::anyhow!("Failed to write example config to {}: {}", path.display(), e)
+            anyhow::anyhow!(
+                "Failed to write example config to {}: {}",
+                path.display(),
+                e
+            )
         })?;
         Ok(())
     }
