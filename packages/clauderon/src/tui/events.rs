@@ -107,6 +107,31 @@ pub async fn handle_paste_event(app: &mut App, text: &str) -> anyhow::Result<()>
 
             match app.create_dialog.focus {
                 CreateDialogFocus::Prompt => {
+                    // Check if pasted text is an image file path (drag-and-drop support)
+                    let trimmed = text.trim();
+                    if is_image_path(trimmed) {
+                        app.create_dialog.images.push(trimmed.to_string());
+                        app.status_message = Some(format!("Image attached: {}", trimmed));
+                        return Ok(());
+                    }
+
+                    // Handle multiple lines (e.g., multiple files pasted)
+                    let lines: Vec<&str> = text.lines().collect();
+                    if lines.len() > 1 {
+                        let mut added_images = 0;
+                        for line in lines {
+                            let line = line.trim();
+                            if is_image_path(line) {
+                                app.create_dialog.images.push(line.to_string());
+                                added_images += 1;
+                            }
+                        }
+                        if added_images > 0 {
+                            app.status_message = Some(format!("Added {} image(s)", added_images));
+                            return Ok(());
+                        }
+                    }
+
                     // For prompt field, normalize line endings to \n
                     let normalized_text = text.replace("\r\n", "\n").replace('\r', "\n");
 
@@ -187,6 +212,11 @@ async fn handle_session_list_key(app: &mut App, key: KeyEvent) -> anyhow::Result
                 app.status_message = Some(format!("Archive failed: {e}"));
             }
         }
+        KeyCode::Char('f') => {
+            if let Err(e) = app.refresh_selected().await {
+                app.status_message = Some(format!("Refresh failed: {e}"));
+            }
+        }
         KeyCode::Char('r') => {
             if let Err(e) = app.reconcile().await {
                 app.status_message = Some(format!("Reconcile failed: {e}"));
@@ -197,61 +227,6 @@ async fn handle_session_list_key(app: &mut App, key: KeyEvent) -> anyhow::Result
                 app.status_message = Some(format!("Refresh failed: {e}"));
             } else {
                 app.status_message = Some("Refreshed session list".to_string());
-            }
-        }
-        KeyCode::Char('p') => {
-            // Create PR hotkey
-            if let Some(session) = app.sessions.get(app.selected_index) {
-                let session_name = session.name.clone();
-                match Client::connect().await {
-                    Ok(mut client) => {
-                        if let Err(e) = client
-                            .send_prompt(&session_name, "Create a pull request")
-                            .await
-                        {
-                            app.status_message = Some(format!("Failed to send prompt: {e}"));
-                        } else {
-                            app.status_message =
-                                Some(format!("Sent 'Create PR' prompt to {session_name}"));
-                        }
-                    }
-                    Err(e) => {
-                        app.status_message = Some(format!("Failed to connect: {e}"));
-                    }
-                }
-            }
-        }
-        KeyCode::Char('f') => {
-            // Fix CI failures hotkey
-            if let Some(session) = app.sessions.get(app.selected_index) {
-                let session_name = session.name.clone();
-
-                // Warn if CI is not failing, but still allow sending the prompt
-                let warning = if !matches!(
-                    session.pr_check_status,
-                    Some(crate::core::CheckStatus::Failing)
-                ) {
-                    " (Warning: CI is not currently failing)"
-                } else {
-                    ""
-                };
-
-                match Client::connect().await {
-                    Ok(mut client) => {
-                        if let Err(e) = client
-                            .send_prompt(&session_name, "Fix the CI failures")
-                            .await
-                        {
-                            app.status_message = Some(format!("Failed to send prompt: {e}"));
-                        } else {
-                            app.status_message =
-                                Some(format!("Sent 'Fix CI' prompt to {session_name}{warning}"));
-                        }
-                    }
-                    Err(e) => {
-                        app.status_message = Some(format!("Failed to connect: {e}"));
-                    }
-                }
             }
         }
         KeyCode::Up | KeyCode::Char('k') => app.select_previous(),
@@ -274,6 +249,17 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
         && app.create_dialog.focus == CreateDialogFocus::Prompt
     {
         app.launch_editor = true;
+        return Ok(());
+    }
+
+    // Handle Ctrl+Backspace to remove last attached image
+    if key.modifiers.contains(KeyModifiers::CONTROL)
+        && key.code == KeyCode::Backspace
+        && !app.create_dialog.images.is_empty()
+    {
+        let last_idx = app.create_dialog.images.len() - 1;
+        app.create_dialog.remove_image(last_idx);
+        app.status_message = Some("Image removed".to_string());
         return Ok(());
     }
 
@@ -322,7 +308,8 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
             app.create_dialog.focus = match app.create_dialog.focus {
                 CreateDialogFocus::Prompt => CreateDialogFocus::RepoPath,
                 CreateDialogFocus::RepoPath => CreateDialogFocus::Backend,
-                CreateDialogFocus::Backend => CreateDialogFocus::AccessMode,
+                CreateDialogFocus::Backend => CreateDialogFocus::Agent,
+                CreateDialogFocus::Agent => CreateDialogFocus::AccessMode,
                 CreateDialogFocus::AccessMode => CreateDialogFocus::SkipChecks,
                 CreateDialogFocus::SkipChecks => CreateDialogFocus::PlanMode,
                 CreateDialogFocus::PlanMode => CreateDialogFocus::Buttons,
@@ -335,7 +322,8 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                 CreateDialogFocus::Prompt => CreateDialogFocus::Buttons,
                 CreateDialogFocus::RepoPath => CreateDialogFocus::Prompt,
                 CreateDialogFocus::Backend => CreateDialogFocus::RepoPath,
-                CreateDialogFocus::AccessMode => CreateDialogFocus::Backend,
+                CreateDialogFocus::Agent => CreateDialogFocus::Backend,
+                CreateDialogFocus::AccessMode => CreateDialogFocus::Agent,
                 CreateDialogFocus::SkipChecks => CreateDialogFocus::AccessMode,
                 CreateDialogFocus::PlanMode => CreateDialogFocus::SkipChecks,
                 CreateDialogFocus::Buttons => CreateDialogFocus::PlanMode,
@@ -376,12 +364,8 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                     let request = CreateSessionRequest {
                         repo_path: app.create_dialog.repo_path.clone(),
                         initial_prompt: app.create_dialog.prompt.clone(),
-                        backend: if app.create_dialog.backend_zellij {
-                            BackendType::Zellij
-                        } else {
-                            BackendType::Docker
-                        },
-                        agent: AgentType::ClaudeCode,
+                        backend: app.create_dialog.backend,
+                        agent: app.create_dialog.agent,
                         dangerous_skip_checks: app.create_dialog.skip_checks,
                         print_mode: false, // TUI always uses interactive mode
                         plan_mode: app.create_dialog.plan_mode,
@@ -483,7 +467,8 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                     CreateDialogFocus::Prompt => CreateDialogFocus::Buttons,
                     CreateDialogFocus::RepoPath => CreateDialogFocus::Prompt,
                     CreateDialogFocus::Backend => CreateDialogFocus::RepoPath,
-                    CreateDialogFocus::AccessMode => CreateDialogFocus::Backend,
+                    CreateDialogFocus::Agent => CreateDialogFocus::Backend,
+                    CreateDialogFocus::AccessMode => CreateDialogFocus::Agent,
                     CreateDialogFocus::SkipChecks => CreateDialogFocus::AccessMode,
                     CreateDialogFocus::PlanMode => CreateDialogFocus::SkipChecks,
                     CreateDialogFocus::Buttons => CreateDialogFocus::PlanMode,
@@ -514,7 +499,8 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                 app.create_dialog.focus = match app.create_dialog.focus {
                     CreateDialogFocus::Prompt => CreateDialogFocus::RepoPath,
                     CreateDialogFocus::RepoPath => CreateDialogFocus::Backend,
-                    CreateDialogFocus::Backend => CreateDialogFocus::AccessMode,
+                    CreateDialogFocus::Backend => CreateDialogFocus::Agent,
+                    CreateDialogFocus::Agent => CreateDialogFocus::AccessMode,
                     CreateDialogFocus::AccessMode => CreateDialogFocus::SkipChecks,
                     CreateDialogFocus::SkipChecks => CreateDialogFocus::PlanMode,
                     CreateDialogFocus::PlanMode => CreateDialogFocus::Buttons,
@@ -545,6 +531,9 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
             CreateDialogFocus::Backend => {
                 app.create_dialog.toggle_backend();
             }
+            CreateDialogFocus::Agent => {
+                app.create_dialog.toggle_agent();
+            }
             CreateDialogFocus::AccessMode => {
                 app.create_dialog.toggle_access_mode();
             }
@@ -562,6 +551,9 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
         KeyCode::Char(' ') => match app.create_dialog.focus {
             CreateDialogFocus::Backend => {
                 app.create_dialog.toggle_backend();
+            }
+            CreateDialogFocus::Agent => {
+                app.create_dialog.toggle_agent();
             }
             CreateDialogFocus::AccessMode => {
                 app.create_dialog.toggle_access_mode();
@@ -799,7 +791,7 @@ async fn handle_attached_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()>
 
     // Ctrl+Q: instant detach (no double-tap delay)
     if key.modifiers.contains(KeyModifiers::CONTROL) {
-        if let KeyCode::Char('q') = key.code {
+        if key.code == KeyCode::Char('q') {
             app.detach();
             return Ok(());
         }
@@ -819,7 +811,7 @@ async fn handle_attached_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()>
 
     // Toggle locked mode with Ctrl+L
     if key.modifiers.contains(KeyModifiers::CONTROL) {
-        if let KeyCode::Char('l') = key.code {
+        if key.code == KeyCode::Char('l') {
             app.toggle_locked_mode();
             return Ok(());
         }
@@ -827,7 +819,7 @@ async fn handle_attached_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()>
 
     // Enter scroll mode with Ctrl+S
     if key.modifiers.contains(KeyModifiers::CONTROL) {
-        if let KeyCode::Char('s') = key.code {
+        if key.code == KeyCode::Char('s') {
             app.enter_scroll_mode();
             return Ok(());
         }
@@ -838,13 +830,13 @@ async fn handle_attached_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()>
     if key.modifiers.contains(KeyModifiers::CONTROL) {
         match key.code {
             KeyCode::Char('p') => {
-                if app.switch_to_previous_session()? {
+                if app.switch_to_previous_session().await? {
                     app.status_message = Some("Switched to previous session".to_string());
                 }
                 return Ok(());
             }
             KeyCode::Char('n') => {
-                if app.switch_to_next_session()? {
+                if app.switch_to_next_session().await? {
                     app.status_message = Some("Switched to next session".to_string());
                 }
                 return Ok(());
@@ -884,7 +876,7 @@ async fn handle_locked_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
 
     // Ctrl+L: unlock and return to Attached mode
     if key.modifiers.contains(KeyModifiers::CONTROL) {
-        if let KeyCode::Char('l') = key.code {
+        if key.code == KeyCode::Char('l') {
             app.exit_locked_mode();
             return Ok(());
         }
@@ -947,4 +939,26 @@ fn handle_scroll_mode_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
     }
 
     Ok(())
+}
+
+/// Check if a pasted text string is an image file path
+///
+/// This enables drag-and-drop support in terminals that convert drops to paste events.
+fn is_image_path(text: &str) -> bool {
+    let path = std::path::Path::new(text);
+
+    // Must exist as a file
+    if !path.is_file() {
+        return false;
+    }
+
+    // Check extension
+    path.extension()
+        .and_then(|ext| ext.to_str())
+        .is_some_and(|ext| {
+            matches!(
+                ext.to_lowercase().as_str(),
+                "jpg" | "jpeg" | "png" | "gif" | "webp"
+            )
+        })
 }

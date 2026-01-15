@@ -69,6 +69,7 @@ impl Rule {
     /// If you need to match both apex and subdomains, add two rules:
     /// - `*.example.com` for subdomains
     /// - `example.com` for the apex
+    #[must_use] 
     pub fn matches(&self, host: &str) -> bool {
         if self.host_pattern.starts_with('*') {
             // Wildcard prefix match (e.g., "*.docker.io" -> ".docker.io" suffix)
@@ -82,6 +83,7 @@ impl Rule {
     }
 
     /// Format the credential into the header value.
+    #[must_use] 
     pub fn format_header(&self, token: &str) -> String {
         match self.encoding {
             AuthEncoding::Simple => self.format.replace("{}", token),
@@ -119,6 +121,43 @@ pub static RULES: &[Rule] = &[
         header_name: "Authorization",
         format: "Bearer {}",
         credential_key: "anthropic",
+        encoding: AuthEncoding::Simple,
+    },
+    // ChatGPT backend (WHAM)
+    Rule {
+        host_pattern: "chatgpt.com",
+        header_name: "Authorization",
+        format: "Bearer {}",
+        credential_key: "chatgpt",
+        encoding: AuthEncoding::Simple,
+    },
+    Rule {
+        host_pattern: "*.chatgpt.com",
+        header_name: "Authorization",
+        format: "Bearer {}",
+        credential_key: "chatgpt",
+        encoding: AuthEncoding::Simple,
+    },
+    Rule {
+        host_pattern: "chat.openai.com",
+        header_name: "Authorization",
+        format: "Bearer {}",
+        credential_key: "chatgpt",
+        encoding: AuthEncoding::Simple,
+    },
+    Rule {
+        host_pattern: "*.chat.openai.com",
+        header_name: "Authorization",
+        format: "Bearer {}",
+        credential_key: "chatgpt",
+        encoding: AuthEncoding::Simple,
+    },
+    // OpenAI API
+    Rule {
+        host_pattern: "api.openai.com",
+        header_name: "Authorization",
+        format: "Bearer {}",
+        credential_key: "openai",
         encoding: AuthEncoding::Simple,
     },
     // PagerDuty API (uses "Token token=" format)
@@ -172,6 +211,7 @@ pub static RULES: &[Rule] = &[
 ];
 
 /// Find the matching rule for a given host.
+#[must_use] 
 pub fn find_matching_rule(host: &str) -> Option<&'static Rule> {
     RULES.iter().find(|rule| rule.matches(host))
 }
@@ -225,6 +265,26 @@ mod tests {
         let rule = rule.unwrap();
         assert_eq!(rule.credential_key, "sentry");
         assert_eq!(rule.encoding, AuthEncoding::Simple);
+    }
+
+    #[test]
+    fn test_chatgpt_rules() {
+        let rule = find_matching_rule("chatgpt.com");
+        assert!(rule.is_some());
+        let rule = rule.unwrap();
+        assert_eq!(rule.credential_key, "chatgpt");
+
+        let rule = find_matching_rule("api.chatgpt.com");
+        assert!(rule.is_some());
+        assert_eq!(rule.unwrap().credential_key, "chatgpt");
+
+        let rule = find_matching_rule("chat.openai.com");
+        assert!(rule.is_some());
+        assert_eq!(rule.unwrap().credential_key, "chatgpt");
+
+        let rule = find_matching_rule("sub.chat.openai.com");
+        assert!(rule.is_some());
+        assert_eq!(rule.unwrap().credential_key, "chatgpt");
     }
 
     #[test]

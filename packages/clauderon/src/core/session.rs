@@ -211,6 +211,18 @@ impl Session {
         self.updated_at = Utc::now();
     }
 
+    /// Set the session title
+    pub fn set_title(&mut self, title: Option<String>) {
+        self.title = title;
+        self.updated_at = Utc::now();
+    }
+
+    /// Set the session description
+    pub fn set_description(&mut self, description: Option<String>) {
+        self.description = description;
+        self.updated_at = Utc::now();
+    }
+
     /// Set the proxy port
     pub fn set_proxy_port(&mut self, port: u16) {
         self.proxy_port = Some(port);
@@ -241,6 +253,7 @@ impl Session {
 
     /// Check if we should attempt reconciliation based on backoff timing
     /// Returns true if enough time has passed since last attempt
+    #[must_use] 
     pub fn should_attempt_reconcile(&self) -> bool {
         use std::time::Duration;
 
@@ -264,6 +277,7 @@ impl Session {
     }
 
     /// Check if we've exceeded maximum reconciliation attempts
+    #[must_use] 
     pub fn exceeded_max_reconcile_attempts(&self) -> bool {
         self.reconcile_attempts >= 3
     }
@@ -331,13 +345,16 @@ pub enum BackendType {
 /// AI agent type
 #[typeshare]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Default)]
 pub enum AgentType {
     /// Claude Code CLI
+    #[default]
     ClaudeCode,
 
     /// `OpenAI` Codex
     Codex,
 }
+
 
 /// PR check status
 #[typeshare]
@@ -398,18 +415,15 @@ impl std::str::FromStr for ClaudeWorkingStatus {
 /// Access mode for proxy filtering
 #[typeshare]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Default)]
 pub enum AccessMode {
     /// Read-only: GET, HEAD, OPTIONS allowed; POST, PUT, DELETE, PATCH blocked
+    #[default]
     ReadOnly,
     /// Read-write: All HTTP methods allowed
     ReadWrite,
 }
 
-impl Default for AccessMode {
-    fn default() -> Self {
-        Self::ReadOnly // Principle of least privilege - secure default
-    }
-}
 
 impl std::fmt::Display for AccessMode {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

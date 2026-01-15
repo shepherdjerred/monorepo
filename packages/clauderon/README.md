@@ -1,10 +1,10 @@
 # Clauderon
 
-A Rust-based session manager for running isolated Claude Code sessions in Docker containers or Kubernetes pods.
+A Rust-based session manager for running isolated Claude Code or Codex sessions in Docker containers or Kubernetes pods.
 
 ## Features
 
-- **Session Isolation**: Run Claude Code in isolated Docker containers or K8s pods with Git worktrees
+- **Session Isolation**: Run Claude Code or Codex in isolated Docker containers or K8s pods with Git worktrees
 - **Zero-Credential Proxy**: Containers have access to zero credentials (even Claude Code creds), enabling safer use of bypass-all-permissions mode
 - **Multiple Interfaces**: Manage sessions via CLI, TUI, web UI, or mobile app
 - **Direct Terminal Access**: Attach to sessions directly via Docker attach or through the web browser
@@ -55,6 +55,46 @@ A Rust-based session manager for running isolated Claude Code sessions in Docker
 - **Rust** (1.85+) - Install via [rustup](https://rustup.rs/)
 - **Bun** (1.3.5+) - Install via [bun.sh](https://bun.sh/)
 - **typeshare-cli** - Install via `cargo install typeshare-cli`
+- **Claude Code CLI** - `claude` on PATH (for Claude sessions)
+- **Codex CLI** - `codex` on PATH (for Codex sessions)
+
+If you use Codex with the proxy enabled, clauderon reads the host Codex auth file:
+- `~/.codex/auth.json` (override with `CODEX_AUTH_JSON_PATH`)
+- or `CODEX_ACCESS_TOKEN`, `CODEX_REFRESH_TOKEN`, `CODEX_ID_TOKEN`, `CODEX_ACCOUNT_ID` env vars
+
+You can provide an OpenAI API key via:
+- `OPENAI_API_KEY` or `CODEX_API_KEY` environment variables, or
+- `~/.clauderon/secrets/openai_api_key` (for the clauderon proxy to inject)
+
+## Custom Container Images
+
+Clauderon uses container images to run isolated Claude Code or Codex sessions. The default image is `ghcr.io/shepherdjerred/dotfiles`.
+
+### Using a custom image
+
+You can use any Docker image that meets Clauderon's requirements:
+
+```bash
+clauderon create --image your-image:tag --name session-name --repository /path/to/repo
+```
+
+### Image requirements
+
+Your image must have:
+- `claude` or `codex` CLI in PATH
+- `bash` shell (not just `/bin/sh`)
+- Writable `/workspace` directory
+- `curl` binary
+- Standard Unix utilities: `mkdir`, `chmod`, `cat`, `date`
+
+Strongly recommended:
+- `git` CLI (for git operations)
+
+See [`docs/IMAGE_COMPATIBILITY.md`](docs/IMAGE_COMPATIBILITY.md) for complete requirements and troubleshooting.
+
+### Example Dockerfiles
+
+See [`examples/`](examples/) for minimal and recommended Dockerfile examples.
 
 ## Build Order
 
@@ -182,3 +222,10 @@ clauderon/
 
 - `/ws/console/:session_id` - Terminal console stream
 - `/ws/events` - Real-time session events
+
+## Alternatives
+
+- [hapi](https://github.com/tiann/hapi/) - Headless API for Claude Code
+- [Happy Engineering](https://happy.engineering/) - Claude Code session management
+- [Omnara](https://www.omnara.com/) - AI coding assistant platform
+- [ClawdBot](https://github.com/clawdbot/clawdbot) - Claude Code automation tool

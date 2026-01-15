@@ -2,7 +2,7 @@ module.exports = {
   project: {
     ios: {
       sourceDir: './ios',
-      automaticPodsInstallation: true,
+      automaticPodsInstallation: false,
     },
     android: {
       sourceDir: './android',

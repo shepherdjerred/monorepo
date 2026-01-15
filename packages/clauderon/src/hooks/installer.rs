@@ -62,74 +62,46 @@ const SETTINGS_JSON_CONTENT: &str = r#"{
 }"#;
 
 const SEND_STATUS_SCRIPT: &str = r#"#!/usr/bin/env bash
-# Send hook event to clauderon daemon
+# Send hook event to clauderon daemon via HTTP
 # Usage: send_status.sh <event_type>
+#
+# Required env vars (set by clauderon for Docker backend):
+#   CLAUDERON_SESSION_ID - UUID of the session
+#   CLAUDERON_HTTP_PORT - HTTP port of the daemon
+#
+# Note: This script uses host.docker.internal which only works with Docker.
+# For Kubernetes, a different mechanism would be needed (e.g., Service discovery).
 
 set -euo pipefail
 
 EVENT_TYPE="$1"
 
-# Validate HOME is set
-if [ -z "${HOME:-}" ]; then
-    exit 0
-fi
-
-HOOKS_SOCKET="${HOME}/.clauderon/hooks.sock"
-DAEMON_SOCKET="${HOME}/.clauderon/clauderon.sock"
-
-# Validate sockets exist
-if [ ! -S "$HOOKS_SOCKET" ]; then
-    # Hooks socket doesn't exist yet (daemon not started), exit silently
-    exit 0
-fi
-
-if [ ! -S "$DAEMON_SOCKET" ]; then
-    # Daemon socket doesn't exist, exit silently
-    exit 0
-fi
-
-# Extract session name from worktree path
-# Worktree path format: ~/.clauderon/worktrees/<session-name>
-# CLAUDE_CWD is provided by Claude Code hooks
-WORKTREE_PATH="${CLAUDE_CWD:-}"
-
-if [ -z "$WORKTREE_PATH" ]; then
-    # Not running in Claude Code context, exit silently
-    exit 0
-fi
-
-# Check if this is a clauderon worktree
-if [[ "$WORKTREE_PATH" != *"/.clauderon/worktrees/"* ]]; then
-    # Not a clauderon session, exit silently
-    exit 0
-fi
-
-# Parse session name from path (last component)
-SESSION_NAME=$(basename "$WORKTREE_PATH")
-
-# Query daemon for session ID by name
-# Using the Unix socket API
-SESSION_ID=$(echo '{"type":"GetSessionIdByName","payload":{"name":"'"$SESSION_NAME"'"}}' | \
-    nc -U "$DAEMON_SOCKET" 2>/dev/null | \
-    jq -r '.payload.session_id // empty' 2>/dev/null)
-
-if [ -z "$SESSION_ID" ]; then
-    # Session not found in daemon, exit silently
+# Check if running with HTTP transport (Docker/K8s mode)
+# These env vars are set by clauderon when creating containers
+if [ -z "${CLAUDERON_SESSION_ID:-}" ] || [ -z "${CLAUDERON_HTTP_PORT:-}" ]; then
+    # Not running in a clauderon-managed container, exit silently
     exit 0
 fi
 
 # Build hook message
 MESSAGE=$(cat <<EOF
 {
-  "session_id": "$SESSION_ID",
+  "session_id": "$CLAUDERON_SESSION_ID",
   "event": {"type": "$EVENT_TYPE"},
   "timestamp": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 }
 EOF
 )
 
-# Send to hook socket (with timeout)
-echo "$MESSAGE" | timeout 1s nc -U "$HOOKS_SOCKET" 2>/dev/null || true
+# Send via HTTP to host (curl is available in our container images)
+# Use host.docker.internal which works for both Docker Desktop and OrbStack
+curl -s -X POST \
+    -H "Content-Type: application/json" \
+    -d "$MESSAGE" \
+    "http://host.docker.internal:${CLAUDERON_HTTP_PORT}/api/hooks" \
+    --connect-timeout 2 \
+    --max-time 5 \
+    >/dev/null 2>&1 || true
 
 exit 0
 "#;

@@ -50,6 +50,12 @@ export {
   type CloudflareWorkerDeployOptions,
 } from "./cloudflare";
 export {
+  getS3Container,
+  getS3SyncContainer,
+  syncToS3,
+  type S3SyncOptions,
+} from "./s3";
+export {
   getReleasePleaseContainer,
   releasePr,
   githubRelease,

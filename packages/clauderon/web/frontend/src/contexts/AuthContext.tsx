@@ -21,8 +21,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const status = await client.getAuthStatus();
       setAuthStatus(status);
     } catch (error) {
-      console.error("Failed to get auth status:", error);
-      setAuthStatus(null);
+      // 404 means auth is not enabled (localhost mode) - this is expected
+      if (error instanceof Error && error.message.includes("Authentication not enabled")) {
+        setAuthStatus({
+          requires_auth: false,
+          has_users: false,
+        });
+      } else {
+        console.error("Failed to get auth status:", error);
+        setAuthStatus(null);
+      }
     } finally {
       setIsLoading(false);
     }

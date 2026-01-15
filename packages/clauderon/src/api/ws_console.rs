@@ -140,7 +140,10 @@ async fn handle_console_socket(socket: WebSocket, session_id: String, state: App
                                 if let (Some(rows), Some(cols)) =
                                     (message["rows"].as_u64(), message["cols"].as_u64())
                                 {
-                                    let size = pty_process::Size::new(rows as u16, cols as u16);
+                                    let size = pty_process::Size::new(
+                                        u16::try_from(rows).unwrap_or(24),
+                                        u16::try_from(cols).unwrap_or(80),
+                                    );
                                     let writer = pty_writer.lock().await;
                                     if let Err(e) = writer.resize(size) {
                                         tracing::error!("Failed to resize PTY: {}", e);

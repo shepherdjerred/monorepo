@@ -15,6 +15,14 @@ pub struct SqliteStore {
 }
 
 impl SqliteStore {
+    /// Get a clone of the database connection pool
+    ///
+    /// This is useful for accessing the database directly from other parts of the application.
+    #[must_use]
+    pub fn pool(&self) -> SqlitePool {
+        self.pool.clone()
+    }
+
     /// Create a new `SQLite` store at the given path
     ///
     /// # Errors
@@ -182,6 +190,7 @@ impl SqliteStore {
             r"
             CREATE TABLE IF NOT EXISTS recent_repos (
                 repo_path TEXT PRIMARY KEY,
+                subdirectory TEXT NOT NULL DEFAULT '',
                 last_used TEXT NOT NULL
             )
             ",
@@ -711,7 +720,7 @@ impl Store for SqliteStore {
         .bind(session.claude_status_updated_at.map(|t| t.to_rfc3339()))
         .bind(session.merge_conflict)
         .bind(session.access_mode.to_string())
-        .bind(session.proxy_port.map(|p| p as i64))
+        .bind(session.proxy_port.map(|p| i64::from(p)))
         .bind(
             session
                 .history_file_path
@@ -719,7 +728,7 @@ impl Store for SqliteStore {
                 .and_then(|p| p.to_str())
                 .map(String::from),
         )
-        .bind(session.reconcile_attempts as i64)
+        .bind(i64::from(session.reconcile_attempts))
         .bind(&session.last_reconcile_error)
         .bind(session.last_reconcile_at.map(|t| t.to_rfc3339()))
         .bind(&session.error_message)
@@ -780,8 +789,12 @@ impl Store for SqliteStore {
         rows.into_iter().map(TryInto::try_into).collect()
     }
 
-    #[instrument(skip(self), fields(repo_path = %repo_path.display()))]
-    async fn add_recent_repo(&self, repo_path: PathBuf) -> anyhow::Result<()> {
+    #[instrument(skip(self), fields(repo_path = %repo_path.display(), subdirectory = %subdirectory.display()))]
+    async fn add_recent_repo(
+        &self,
+        repo_path: PathBuf,
+        subdirectory: PathBuf,
+    ) -> anyhow::Result<()> {
         // Canonicalize the path to prevent duplicates from different representations
         // (e.g., /home/user/repo vs /home/user/./repo vs ~/repo)
         let canonical = repo_path
@@ -791,11 +804,12 @@ impl Store for SqliteStore {
         let now = Utc::now();
         sqlx::query(
             r"
-            INSERT OR REPLACE INTO recent_repos (repo_path, last_used)
-            VALUES (?, ?)
+            INSERT OR REPLACE INTO recent_repos (repo_path, subdirectory, last_used)
+            VALUES (?, ?, ?)
             ",
         )
         .bind(canonical.to_string_lossy().to_string())
+        .bind(subdirectory.to_string_lossy().to_string())
         .bind(now.to_rfc3339())
         .execute(&self.pool)
         .await?;
@@ -1035,9 +1049,9 @@ impl TryFrom<SessionRow> for Session {
             claude_status_updated_at,
             merge_conflict: row.merge_conflict,
             access_mode: row.access_mode.parse().unwrap_or_default(),
-            proxy_port: row.proxy_port.map(|p| p as u16),
+            proxy_port: row.proxy_port.and_then(|p| u16::try_from(p).ok()),
             history_file_path: row.history_file_path.map(PathBuf::from),
-            reconcile_attempts: row.reconcile_attempts as u32,
+            reconcile_attempts: u32::try_from(row.reconcile_attempts).unwrap_or(0),
             last_reconcile_error: row.last_reconcile_error,
             last_reconcile_at,
             error_message: row.error_message,
@@ -1076,6 +1090,7 @@ impl TryFrom<EventRow> for Event {
 #[derive(sqlx::FromRow)]
 struct RecentRepoRow {
     repo_path: String,
+    subdirectory: String,
     last_used: String,
 }
 
@@ -1085,6 +1100,7 @@ impl TryFrom<RecentRepoRow> for RecentRepo {
     fn try_from(row: RecentRepoRow) -> Result<Self, Self::Error> {
         Ok(Self {
             repo_path: row.repo_path.into(),
+            subdirectory: row.subdirectory.into(),
             last_used: chrono::DateTime::parse_from_rfc3339(&row.last_used)?.into(),
         })
     }

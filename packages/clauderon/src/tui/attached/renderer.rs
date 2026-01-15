@@ -14,7 +14,10 @@ use super::terminal_buffer::TerminalBuffer;
 /// Render a terminal buffer to a ratatui frame area.
 pub fn render_terminal(buffer: &TerminalBuffer, area: Rect, buf: &mut Buffer) {
     let screen = buffer.screen();
-    let (rows, cols) = (screen.size().0 as u16, screen.size().1 as u16);
+    let (rows, cols) = (
+        u16::try_from(screen.size().0).unwrap_or(u16::MAX),
+        u16::try_from(screen.size().1).unwrap_or(u16::MAX),
+    );
 
     // Calculate visible area
     let visible_rows = area.height.min(rows);
@@ -40,7 +43,7 @@ pub fn render_terminal(buffer: &TerminalBuffer, area: Rect, buf: &mut Buffer) {
                     if let Some(buf_cell) = buf.cell_mut((x, y)) {
                         buf_cell.set_style(style);
                         if !ch.is_empty() {
-                            buf_cell.set_symbol(&ch);
+                            buf_cell.set_symbol(ch);
                         } else {
                             buf_cell.set_symbol(" ");
                         }

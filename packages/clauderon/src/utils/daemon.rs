@@ -152,13 +152,10 @@ pub async fn ensure_daemon_running() -> anyhow::Result<()> {
 
     // Try to acquire the spawn lock
     // If another process holds it, they're spawning - just wait for daemon
-    let _lock = match acquire_spawn_lock() {
-        Ok(lock) => lock,
-        Err(_) => {
-            // Another process is spawning, wait for daemon to be ready
-            tracing::info!("Another process is spawning daemon, waiting...");
-            return wait_for_daemon(DEFAULT_DAEMON_TIMEOUT).await;
-        }
+    let Ok(_lock) = acquire_spawn_lock() else {
+        // Another process is spawning, wait for daemon to be ready
+        tracing::info!("Another process is spawning daemon, waiting...");
+        return wait_for_daemon(DEFAULT_DAEMON_TIMEOUT).await;
     };
 
     // Double-check after acquiring lock (another process may have just finished)
@@ -188,7 +185,7 @@ pub async fn wait_for_daemon(timeout: Duration) -> anyhow::Result<()> {
         // Try to actually connect to verify daemon is responsive
         if UnixStream::connect(&socket_path).await.is_ok() {
             tracing::info!(
-                elapsed_ms = start.elapsed().as_millis() as u64,
+                elapsed_ms = u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX),
                 "Daemon is ready"
             );
             return Ok(());

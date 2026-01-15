@@ -22,7 +22,7 @@ type EventsMessage = {
 export type EventsClientConfig = {
   /**
    * WebSocket URL for events
-   * @default "ws://localhost:3030/ws/events"
+   * @default Derived from window.location in browser, "ws://localhost:3030/ws/events" otherwise
    */
   url?: string;
 
@@ -37,6 +37,19 @@ export type EventsClientConfig = {
    * @default 1000
    */
   reconnectDelay?: number;
+}
+
+/**
+ * Get the default WebSocket URL based on the current environment.
+ * In browser context, derives from window.location.
+ * In non-browser context, defaults to localhost:3030.
+ */
+function getDefaultWebSocketUrl(): string {
+  if (typeof window !== "undefined") {
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    return `${protocol}//${window.location.host}/ws/events`;
+  }
+  return "ws://localhost:3030/ws/events";
 }
 
 /**
@@ -63,7 +76,7 @@ export class EventsClient {
   };
 
   constructor(config: EventsClientConfig = {}) {
-    this.url = config.url ?? "ws://localhost:3030/ws/events";
+    this.url = config.url ?? getDefaultWebSocketUrl();
     this.autoReconnect = config.autoReconnect ?? true;
     this.reconnectDelay = config.reconnectDelay ?? 1000;
   }

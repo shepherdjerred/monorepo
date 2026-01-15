@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.6.0](https://github.com/shepherdjerred/monorepo/compare/dagger-utils-v0.5.0...dagger-utils-v0.6.0) (2026-01-05)
+
+
+### Features
+
+* **dagger-utils:** add S3 deployment utilities ([1996433](https://github.com/shepherdjerred/monorepo/commit/1996433df6f8df560b623e82be1736c7e030b9c1))
+* auto-generated README system with AI summaries ([8cfd338](https://github.com/shepherdjerred/monorepo/commit/8cfd338ed5dcb7d2e0ed9c4a7f6e0aeadacdd51c))
+
+
+### Bug Fixes
+
+* **dagger-utils:** handle no-changes case in updateHomelabVersion ([d93c717](https://github.com/shepherdjerred/monorepo/commit/d93c717d8732c5b9896feb8d6cf6520758804168))
+
 ## [0.5.0](https://github.com/shepherdjerred/monorepo/compare/dagger-utils-v0.4.0...dagger-utils-v0.5.0) (2025-12-25)
 
 

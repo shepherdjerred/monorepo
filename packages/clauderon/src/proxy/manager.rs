@@ -11,12 +11,12 @@ use uuid::Uuid;
 use super::audit::AuditLogger;
 use super::ca::ProxyCa;
 use super::config::{Credentials, ProxyConfig};
-use super::container_config::generate_container_configs;
 use super::http_proxy::HttpAuthProxy;
-use super::k8s_proxy::KubernetesProxy;
 use super::port_allocator::PortAllocator;
 use super::talos_gateway::TalosGateway;
+use super::{generate_codex_config, generate_container_configs, generate_plugin_config};
 use crate::core::session::AccessMode;
+use crate::plugins::PluginDiscovery;
 
 /// Manages all proxy services.
 pub struct ProxyManager {
@@ -26,16 +26,12 @@ pub struct ProxyManager {
     credentials: Arc<Credentials>,
     /// Proxy CA.
     ca: ProxyCa,
-    /// Kubernetes proxy.
-    k8s_proxy: KubernetesProxy,
     /// Talos gateway.
     talos_gateway: TalosGateway,
     /// Audit logger.
     audit_logger: Arc<AuditLogger>,
     /// Clauderon directory.
     clauderon_dir: PathBuf,
-    /// HTTP proxy task handle.
-    http_task: Option<JoinHandle<()>>,
     /// Talos gateway task handle.
     talos_task: Option<JoinHandle<()>>,
     /// Port allocator for session proxies.
@@ -62,7 +58,7 @@ impl ProxyManager {
         let ca = ProxyCa::load_or_generate(&clauderon_dir)?;
 
         // Load credentials
-        let credentials = Arc::new(Credentials::load(&config.secrets_dir));
+        let credentials = Arc::new(Credentials::load(&config));
 
         // Create audit logger
         let audit_logger = if config.audit_enabled {
@@ -70,9 +66,6 @@ impl ProxyManager {
         } else {
             Arc::new(AuditLogger::noop())
         };
-
-        // Create Kubernetes proxy
-        let k8s_proxy = KubernetesProxy::new(config.k8s_proxy_port);
 
         // Create Talos gateway
         let mut talos_gateway = TalosGateway::new(config.talos_gateway_port, Arc::new(ca.clone()));
@@ -82,11 +75,9 @@ impl ProxyManager {
             config,
             credentials,
             ca,
-            k8s_proxy,
             talos_gateway,
             audit_logger,
             clauderon_dir,
-            http_task: None,
             talos_task: None,
             port_allocator: Arc::new(PortAllocator::new()),
             session_proxies: RwLock::new(HashMap::new()),
@@ -95,57 +86,36 @@ impl ProxyManager {
 
     /// Generate container configuration files.
     pub fn generate_configs(&self) -> anyhow::Result<()> {
-        generate_container_configs(
-            &self.clauderon_dir,
-            self.config.k8s_proxy_port,
-            self.config.talos_gateway_port,
-        )?;
+        generate_container_configs(&self.clauderon_dir, self.config.talos_gateway_port)?;
+        let account_id = self.credentials.codex_account_id();
+        generate_codex_config(&self.clauderon_dir, account_id.as_deref())?;
+
+        // Generate plugin configuration
+        let plugin_discovery = PluginDiscovery::new(
+            dirs::home_dir()
+                .unwrap_or_else(|| PathBuf::from("/tmp"))
+                .join(".claude"),
+        );
+        if let Ok(plugin_manifest) = plugin_discovery.discover_plugins() {
+            if let Err(e) = generate_plugin_config(&self.clauderon_dir, &plugin_manifest) {
+                tracing::warn!("Failed to generate plugin config: {}", e);
+            } else if !plugin_manifest.installed_plugins.is_empty() {
+                tracing::info!(
+                    "Generated plugin config with {} plugins",
+                    plugin_manifest.installed_plugins.len()
+                );
+            }
+        }
+
         Ok(())
     }
 
     /// Start all proxy services.
     pub async fn start(&mut self) -> anyhow::Result<()> {
-        tracing::info!("Starting proxy services with TLS interception...");
+        tracing::info!("Starting proxy services...");
 
         // Generate container configs
         self.generate_configs()?;
-
-        // Create RcgenAuthority from CA
-        let authority = self.ca.to_rcgen_authority()?;
-
-        // Create HTTP auth proxy
-        let http_proxy = HttpAuthProxy::new(
-            self.config.http_proxy_port,
-            authority,
-            Arc::clone(&self.credentials),
-            Arc::clone(&self.audit_logger),
-        );
-
-        // Start HTTP auth proxy
-        let http_port = self.config.http_proxy_port;
-        self.http_task = Some(tokio::spawn(async move {
-            if let Err(e) = http_proxy.run().await {
-                tracing::error!("HTTP auth proxy error: {}", e);
-            }
-        }));
-
-        // Wait for HTTP proxy to be ready
-        for attempt in 1..=10 {
-            tokio::time::sleep(std::time::Duration::from_millis(50)).await;
-            if tokio::net::TcpStream::connect(format!("127.0.0.1:{http_port}"))
-                .await
-                .is_ok()
-            {
-                tracing::debug!("HTTP proxy ready on port {}", http_port);
-                break;
-            }
-            if attempt == 10 {
-                tracing::warn!("HTTP proxy may not be ready (could not verify binding)");
-            }
-        }
-
-        // Start Kubernetes proxy
-        self.k8s_proxy.start().await?;
 
         // Start Talos gateway if configured
         if self.talos_gateway.is_configured() {
@@ -167,14 +137,6 @@ impl ProxyManager {
     pub fn stop(&mut self) -> anyhow::Result<()> {
         tracing::info!("Stopping proxy services...");
 
-        // Stop kubectl proxy
-        self.k8s_proxy.stop()?;
-
-        // Abort HTTP proxy task
-        if let Some(task) = self.http_task.take() {
-            task.abort();
-        }
-
         // Abort Talos gateway task
         if let Some(task) = self.talos_task.take() {
             task.abort();
@@ -189,13 +151,9 @@ impl ProxyManager {
 
     /// Check if all services are healthy.
     pub fn is_healthy(&mut self) -> bool {
-        // Check if tasks are still running
-        let http_healthy = self.http_task.as_ref().is_none_or(|t| !t.is_finished());
-
-        // Check kubectl proxy
-        let k8s_healthy = self.k8s_proxy.is_running();
-
-        http_healthy && k8s_healthy
+        // No global proxies to check - always healthy
+        // Session proxies are managed separately
+        true
     }
 
     /// Get the proxy CA certificate path.
@@ -206,16 +164,6 @@ impl ProxyManager {
     /// Get the clauderon directory.
     pub fn clauderon_dir(&self) -> &PathBuf {
         &self.clauderon_dir
-    }
-
-    /// Get the HTTP proxy port.
-    pub fn http_proxy_port(&self) -> u16 {
-        self.config.http_proxy_port
-    }
-
-    /// Get the Kubernetes proxy port.
-    pub fn k8s_proxy_port(&self) -> u16 {
-        self.config.k8s_proxy_port
     }
 
     /// Get the Talos gateway port.
@@ -334,12 +282,6 @@ impl ProxyManager {
         &self.credentials
     }
 
-    /// Check if Kubernetes proxy was started.
-    /// Note: This checks if the proxy process exists, not if it's currently alive.
-    pub fn is_k8s_proxy_running(&self) -> bool {
-        self.k8s_proxy.has_process()
-    }
-
     /// Check if Talos gateway is configured.
     pub fn is_talos_configured(&self) -> bool {
         self.talos_gateway.is_configured()
@@ -357,7 +299,7 @@ impl ProxyManager {
     /// credential references. New proxies created after this call will
     /// use the updated credentials.
     pub fn reload_credentials(&mut self) {
-        self.credentials = Arc::new(Credentials::load(&self.config.secrets_dir));
+        self.credentials = Arc::new(Credentials::load(&self.config));
         tracing::info!("Credentials reloaded from disk");
     }
 
@@ -503,16 +445,7 @@ impl ProxyManager {
 
 impl Drop for ProxyManager {
     fn drop(&mut self) {
-        // Best-effort cleanup.
-        //
-        // WARNING: k8s_proxy.stop() performs blocking I/O (child.wait()).
-        // In async contexts, call stop() explicitly before dropping to avoid
-        // blocking the tokio runtime. This Drop is for safety in non-async
-        // contexts or when stop() wasn't called.
-        let _ = self.k8s_proxy.stop();
-        if let Some(task) = self.http_task.take() {
-            task.abort();
-        }
+        // Best-effort cleanup of Talos gateway task
         if let Some(task) = self.talos_task.take() {
             task.abort();
         }

@@ -1,11 +1,13 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import type { Session } from "@clauderon/client";
 import { SessionStatus } from "@clauderon/shared";
 import { SessionCard } from "./SessionCard";
 import { ThemeToggle } from "./ThemeToggle";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { StatusDialog } from "./StatusDialog";
+import { EditSessionDialog } from "./EditSessionDialog";
 import { useSessionContext } from "../contexts/SessionContext";
+import { toast } from "sonner";
 import { Plus, RefreshCw, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -19,15 +21,31 @@ type SessionListProps = {
 
 type FilterStatus = "all" | "running" | "idle" | "completed" | "archived";
 
+const TAB_TRIGGER_CLASS = "cursor-pointer transition-all duration-200 hover:bg-primary/20 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-b-4 data-[state=active]:border-foreground";
+
 export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
-  const { sessions, isLoading, error, refreshSessions, archiveSession, deleteSession } =
+  const { sessions, isLoading, error, refreshSessions, archiveSession, refreshSession, deleteSession } =
     useSessionContext();
-  const [filter, setFilter] = useState<FilterStatus>("all");
+
+  // Initialize filter from URL parameter
+  const getInitialFilter = (): FilterStatus => {
+    const params = new URLSearchParams(window.location.search);
+    const tabParam = params.get("tab");
+    if (tabParam && ["all", "running", "idle", "completed", "archived"].includes(tabParam)) {
+      return tabParam as FilterStatus;
+    }
+    return "all";
+  };
+
+  const [filter, setFilter] = useState<FilterStatus>(getInitialFilter);
   const [confirmDialog, setConfirmDialog] = useState<{
-    type: "archive" | "delete";
+    type: "archive" | "delete" | "refresh";
     session: Session;
   } | null>(null);
+  const [editingSession, setEditingSession] = useState<Session | null>(null);
   const [showStatusDialog, setShowStatusDialog] = useState(false);
+  const [lastRefreshTime, setLastRefreshTime] = useState<Date>(new Date());
+  const [, setTickCounter] = useState(0); // Force re-render for time display
 
   const filteredSessions = useMemo(() => {
     const sessionArray = Array.from(sessions.values());
@@ -42,9 +60,50 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
       case "archived":
         return sessionArray.filter((s) => s.status === SessionStatus.Archived);
       default:
-        return sessionArray;
+        // "all" tab - exclude archived sessions
+        return sessionArray.filter((s) => s.status !== SessionStatus.Archived);
     }
   }, [sessions, filter]);
+
+  // Update URL when filter changes
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    url.searchParams.set("tab", filter);
+    window.history.pushState({}, "", url.toString());
+  }, [filter]);
+
+  // Auto-refresh every 2 seconds (silent - no loading indicators)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      void refreshSessions(false).then(() => {
+        setLastRefreshTime(new Date());
+      });
+    }, 2000);
+
+    return () => { clearInterval(interval); };
+  }, [refreshSessions]);
+
+  // Update time display every second
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTickCounter(prev => prev + 1);
+    }, 1000);
+
+    return () => { clearInterval(interval); };
+  }, []);
+
+  // Format last refresh time for display
+  const getTimeSinceRefresh = (): string => {
+    const seconds = Math.floor((Date.now() - lastRefreshTime.getTime()) / 1000);
+    if (seconds < 5) return "just now";
+    if (seconds < 60) return `${seconds}s ago`;
+    const minutes = Math.floor(seconds / 60);
+    return `${minutes}m ago`;
+  };
+
+  const handleEdit = (session: Session) => {
+    setEditingSession(session);
+  };
 
   const handleArchive = (session: Session) => {
     setConfirmDialog({ type: "archive", session });
@@ -54,13 +113,31 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
     setConfirmDialog({ type: "delete", session });
   };
 
+  const handleRefresh = (session: Session) => {
+    setConfirmDialog({ type: "refresh", session });
+  };
+
   const handleConfirm = () => {
     if (!confirmDialog) return;
 
     if (confirmDialog.type === "archive") {
-      void archiveSession(confirmDialog.session.id);
+      void archiveSession(confirmDialog.session.id).then(() => {
+        toast.success(`Session "${confirmDialog.session.name}" archived`);
+      }).catch((err) => {
+        toast.error(`Failed to archive: ${err instanceof Error ? err.message : String(err)}`);
+      });
+    } else if (confirmDialog.type === "refresh") {
+      void refreshSession(confirmDialog.session.id).then(() => {
+        toast.success(`Session "${confirmDialog.session.name}" is being refreshed`);
+      }).catch((err) => {
+        toast.error(`Failed to refresh: ${err instanceof Error ? err.message : String(err)}`);
+      });
     } else {
-      void deleteSession(confirmDialog.session.id);
+      void deleteSession(confirmDialog.session.id).then(() => {
+        toast.info(`Deleting session "${confirmDialog.session.name}"...`);
+      }).catch((err) => {
+        toast.error(`Failed to delete: ${err instanceof Error ? err.message : String(err)}`);
+      });
     }
   };
 
@@ -69,14 +146,24 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
       {/* Header */}
       <header className="flex items-center justify-between p-4 border-b-4 border-primary">
         <h1 className="text-3xl font-bold font-mono uppercase tracking-wider">Sessions</h1>
-        <div className="flex gap-3">
+        <div className="flex items-center gap-3">
+          {/* Auto-refresh indicator */}
+          <div className="flex items-center gap-2 px-3 py-1 border-2 border-primary bg-background text-xs font-mono">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+            <span className="text-muted-foreground">Auto-refresh: {getTimeSinceRefresh()}</span>
+          </div>
           <ThemeToggle />
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => { void refreshSessions(); }}
+            onClick={() => {
+              void refreshSessions(false).then(() => {
+                setLastRefreshTime(new Date());
+              });
+            }}
             disabled={isLoading}
             aria-label="Refresh sessions"
+            className="cursor-pointer transition-all duration-200 hover:scale-110 hover:shadow-md"
           >
             <RefreshCw className={`w-5 h-5 ${isLoading ? "animate-spin" : ""}`} />
           </Button>
@@ -85,10 +172,15 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
             size="icon"
             onClick={() => { setShowStatusDialog(true); }}
             aria-label="System status"
+            className="cursor-pointer transition-all duration-200 hover:scale-110 hover:shadow-md"
           >
             <Info className="w-5 h-5" />
           </Button>
-          <Button variant="brutalist" onClick={onCreateNew}>
+          <Button
+            variant="brutalist"
+            onClick={onCreateNew}
+            className="cursor-pointer"
+          >
             <Plus className="w-5 h-5 mr-2" />
             New Session
           </Button>
@@ -99,11 +191,36 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
       <nav className="p-4 border-b-2" aria-label="Session filters">
         <Tabs value={filter} onValueChange={(v) => { setFilter(v as FilterStatus); }}>
           <TabsList className="grid w-full grid-cols-5 border-2">
-            <TabsTrigger value="all" className="font-semibold">All</TabsTrigger>
-            <TabsTrigger value="running">Running</TabsTrigger>
-            <TabsTrigger value="idle">Idle</TabsTrigger>
-            <TabsTrigger value="completed">Completed</TabsTrigger>
-            <TabsTrigger value="archived">Archived</TabsTrigger>
+            <TabsTrigger
+              value="all"
+              className={`font-semibold ${TAB_TRIGGER_CLASS}`}
+            >
+              All
+            </TabsTrigger>
+            <TabsTrigger
+              value="running"
+              className={TAB_TRIGGER_CLASS}
+            >
+              Running
+            </TabsTrigger>
+            <TabsTrigger
+              value="idle"
+              className={TAB_TRIGGER_CLASS}
+            >
+              Idle
+            </TabsTrigger>
+            <TabsTrigger
+              value="completed"
+              className={TAB_TRIGGER_CLASS}
+            >
+              Completed
+            </TabsTrigger>
+            <TabsTrigger
+              value="archived"
+              className={TAB_TRIGGER_CLASS}
+            >
+              Archived
+            </TabsTrigger>
           </TabsList>
         </Tabs>
       </nav>
@@ -157,7 +274,9 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
                 key={session.id}
                 session={session}
                 onAttach={onAttach}
+                onEdit={handleEdit}
                 onArchive={handleArchive}
+                onRefresh={handleRefresh}
                 onDelete={handleDelete}
               />
             ))}
@@ -174,15 +293,37 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
               setConfirmDialog(null);
             }
           }}
-          title={confirmDialog.type === "archive" ? "Archive Session" : "Delete Session"}
+          title={
+            confirmDialog.type === "archive"
+              ? "Archive Session"
+              : confirmDialog.type === "refresh"
+                ? "Refresh Session"
+                : "Delete Session"
+          }
           description={
             confirmDialog.type === "archive"
               ? `Are you sure you want to archive "${confirmDialog.session.name}"?`
-              : `Are you sure you want to delete "${confirmDialog.session.name}"? This action cannot be undone.`
+              : confirmDialog.type === "refresh"
+                ? `This will pull the latest image and recreate the container for "${confirmDialog.session.name}". The session history will be preserved.`
+                : `Are you sure you want to delete "${confirmDialog.session.name}"? This action cannot be undone.`
           }
-          confirmLabel={confirmDialog.type === "archive" ? "Archive" : "Delete"}
+          confirmLabel={
+            confirmDialog.type === "archive"
+              ? "Archive"
+              : confirmDialog.type === "refresh"
+                ? "Refresh"
+                : "Delete"
+          }
           variant={confirmDialog.type === "delete" ? "destructive" : "default"}
           onConfirm={handleConfirm}
+        />
+      )}
+
+      {/* Edit Dialog */}
+      {editingSession && (
+        <EditSessionDialog
+          session={editingSession}
+          onClose={() => { setEditingSession(null); }}
         />
       )}
 
