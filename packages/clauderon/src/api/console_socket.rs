@@ -67,7 +67,8 @@ async fn handle_console_connection(
         session_id,
         rows,
         cols,
-    } = attach_msg else {
+    } = attach_msg
+    else {
         send_console_error(&mut writer, "Expected attach message").await?;
         anyhow::bail!("Unexpected console message");
     };
