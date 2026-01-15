@@ -239,6 +239,39 @@ impl ApiClient for MockApiClient {
         anyhow::bail!("Session not found: {id}")
     }
 
+    async fn unarchive_session(&mut self, id: &str) -> anyhow::Result<()> {
+        if self.should_fail() {
+            let msg = self.error_message.read().await.clone();
+            anyhow::bail!("{msg}");
+        }
+
+        let mut sessions = self.sessions.write().await;
+
+        // Try to find by UUID first
+        if let Ok(uuid) = Uuid::parse_str(id)
+            && let Some(session) = sessions.get_mut(&uuid)
+        {
+            if session.status != SessionStatus::Archived {
+                anyhow::bail!("Session {id} is not archived");
+            }
+            session.set_status(SessionStatus::Idle);
+            return Ok(());
+        }
+
+        // Try to find by name
+        for session in sessions.values_mut() {
+            if session.name == id {
+                if session.status != SessionStatus::Archived {
+                    anyhow::bail!("Session {id} is not archived");
+                }
+                session.set_status(SessionStatus::Idle);
+                return Ok(());
+            }
+        }
+
+        anyhow::bail!("Session not found: {id}")
+    }
+
     async fn refresh_session(&mut self, id: &str) -> anyhow::Result<()> {
         if self.should_fail() {
             let msg = self.error_message.read().await.clone();
@@ -430,6 +463,33 @@ mod tests {
 
         let found = client.get_session(&name).await.unwrap();
         assert_eq!(found.status, SessionStatus::Archived);
+    }
+
+    #[tokio::test]
+    async fn test_mock_api_unarchive_session() {
+        let mut client = MockApiClient::new();
+
+        let session = MockApiClient::create_mock_session("to-unarchive", SessionStatus::Archived);
+        let name = session.name.clone();
+        client.add_session(session).await;
+
+        client.unarchive_session(&name).await.unwrap();
+
+        let found = client.get_session(&name).await.unwrap();
+        assert_eq!(found.status, SessionStatus::Idle);
+    }
+
+    #[tokio::test]
+    async fn test_mock_api_unarchive_not_archived() {
+        let mut client = MockApiClient::new();
+
+        let session = MockApiClient::create_mock_session("running-session", SessionStatus::Running);
+        let name = session.name.clone();
+        client.add_session(session).await;
+
+        let result = client.unarchive_session(&name).await;
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("not archived"));
     }
 
     #[tokio::test]
