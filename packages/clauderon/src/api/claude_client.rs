@@ -257,6 +257,7 @@ impl ClaudeApiClient {
                 }
             }),
             fetched_at: now,
+            error: None,
         })
     }
 }
