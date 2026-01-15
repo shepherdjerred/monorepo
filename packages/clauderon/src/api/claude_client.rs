@@ -63,6 +63,71 @@ impl ClaudeApiClient {
         }
     }
 
+    /// Validate OAuth token format (basic sanity check)
+    pub fn validate_token_format(token: &str) -> Result<()> {
+        if !token.starts_with("sk-ant-") {
+            anyhow::bail!("Invalid token format: must start with 'sk-ant-'");
+        }
+        if token.len() < 20 {
+            anyhow::bail!("Invalid token format: token too short");
+        }
+        Ok(())
+    }
+
+    /// Retry API calls with exponential backoff
+    async fn retry_with_backoff<F, T, Fut>(operation: F, max_attempts: u32) -> Result<T>
+    where
+        F: Fn() -> Fut,
+        Fut: std::future::Future<Output = Result<T>>,
+    {
+        let mut attempts = 0;
+        let mut delay_ms = 100;
+
+        loop {
+            attempts += 1;
+            match operation().await {
+                Ok(result) => return Ok(result),
+                Err(e) => {
+                    // Don't retry auth errors (401, 403)
+                    let error_str = e.to_string();
+                    if error_str.contains("401") || error_str.contains("403") {
+                        return Err(e);
+                    }
+
+                    if attempts >= max_attempts {
+                        return Err(e.context(format!("Failed after {} attempts", attempts)));
+                    }
+
+                    tracing::debug!(
+                        attempt = attempts,
+                        delay_ms = delay_ms,
+                        "API call failed, retrying"
+                    );
+
+                    tokio::time::sleep(Duration::from_millis(delay_ms)).await;
+                    delay_ms = (delay_ms * 2).min(5000); // Cap at 5s
+                }
+            }
+        }
+    }
+
+    /// Get current account with retry
+    pub async fn get_current_account_with_retry(
+        &self,
+        oauth_token: &str,
+    ) -> Result<(String, Option<String>)> {
+        Self::retry_with_backoff(|| self.get_current_account(oauth_token), 3).await
+    }
+
+    /// Get usage with retry
+    pub async fn get_usage_with_retry(
+        &self,
+        oauth_token: &str,
+        org_id: &str,
+    ) -> Result<crate::api::protocol::ClaudeUsage> {
+        Self::retry_with_backoff(|| self.get_usage(oauth_token, org_id), 3).await
+    }
+
     /// Get current account and organization information
     #[instrument(skip(self, oauth_token))]
     pub async fn get_current_account(&self, oauth_token: &str) -> Result<(String, Option<String>)> {
