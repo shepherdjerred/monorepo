@@ -329,6 +329,10 @@ mod tests {
             plan_mode: true,
             access_mode: crate::core::AccessMode::default(),
             images: vec![],
+            container_image: None,
+            pull_policy: None,
+            cpu_limit: None,
+            memory_limit: None,
         };
 
         let (session, warnings) = client.create_session(request).await.unwrap();
