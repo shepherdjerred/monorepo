@@ -1574,6 +1574,8 @@ impl SessionManager {
                 session_id: Some(session_id),
                 initial_workdir: subdirectory,
                 http_port: self.http_port,
+                container_image: None,
+                container_resources: None,
             };
 
             let new_backend_id = self
@@ -1879,6 +1881,8 @@ impl SessionManager {
             session_id: Some(session.id),
             initial_workdir: session.subdirectory.clone(),
             http_port: self.http_port,
+            container_image: None,
+            container_resources: None,
         };
 
         // Recreate container

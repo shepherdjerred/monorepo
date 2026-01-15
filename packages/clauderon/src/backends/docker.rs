@@ -1120,6 +1120,8 @@ impl DockerBackend {
                 session_id: None,
                 initial_workdir: std::path::PathBuf::new(),
                 http_port: None,
+                container_image: None,
+                container_resources: None,
             },
         )
         .await
