@@ -358,6 +358,25 @@ pub struct UpdateCredentialRequest {
     pub value: String,
 }
 
+/// Error details for usage tracking failures
+#[typeshare]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UsageError {
+    /// Error category (invalid_token, api_error, missing_org_id, etc)
+    pub error_type: String,
+
+    /// Human-readable error message
+    pub message: String,
+
+    /// Technical details for debugging
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub details: Option<String>,
+
+    /// Suggested action to resolve the error
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub suggestion: Option<String>,
+}
+
 /// Claude Code usage data for a specific time window
 #[typeshare]
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -396,4 +415,8 @@ pub struct ClaudeUsage {
 
     /// When this data was last fetched
     pub fetched_at: String,
+
+    /// Error information if usage fetch failed
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error: Option<UsageError>,
 }
