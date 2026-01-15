@@ -14,7 +14,7 @@ apple-hig-helper/
 │   ├── color/
 │   ├── ...
 │   └── .visited.json        # List of downloaded URLs
-├── markdown/                # Processed Markdown files (optional, gitignored)
+├── markdown/                # Processed Markdown files (174 MD files, 2.6 MB)
 ├── scrape.sh                # Script to download/update HIG data
 └── process-to-markdown.py   # Script to convert HTML to Markdown
 ```
@@ -126,7 +126,7 @@ uv run packages/claude-plugin/agents/apple-hig-helper/process-to-markdown.py --s
 - **Time**: ~30 seconds
 - **Content**: Title, description, and source URL only
 
-### Full Mode (Slow - Complete Content)
+### Full Mode (Complete Content)
 
 Uses Playwright to render pages and extract full content:
 
@@ -140,16 +140,13 @@ Uses Playwright to render pages and extract full content:
 
 **Output**:
 - **Location**: `markdown/` directory
-- **Size**: ~50-100 MB (174 files with full content)
-- **Time**: ~90-120 minutes
-- **Content**: Complete rendered page content in Markdown format
-
-**Note**: The `markdown/` directory is gitignored to avoid committing large files.
+- **Size**: ~2.6 MB (174 files with full content, 24,459 lines)
+- **Time**: ~8-10 minutes
+- **Content**: Complete rendered page content in Markdown format including text, images, tables, and best practices
 
 ## Size
 
 - **Skill file**: 20 KB (576 lines)
 - **HTML Data**: 23 MB (174 HTML files)
-- **Markdown (simple)**: ~700 KB (174 MD files, metadata only)
-- **Markdown (full)**: ~50-100 MB (174 MD files, complete content)
-- **Total (with HTML only)**: ~23 MB
+- **Markdown**: 2.6 MB (174 MD files, complete content with 24,459 lines)
+- **Total**: ~26 MB
