@@ -357,7 +357,6 @@ pub enum AgentType {
     Gemini,
 }
 
-
 /// PR check status
 #[typeshare]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
