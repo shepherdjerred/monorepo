@@ -128,6 +128,24 @@ Start the daemon with HTTP server enabled:
 
 Then open http://localhost:3030 in your browser.
 
+### Network Binding
+
+By default, the HTTP server binds to `127.0.0.1` (localhost only). For Docker container hooks to work with specific IP bindings (e.g., Tailscale), Clauderon automatically creates an additional `127.0.0.1` listener:
+
+```bash
+# Default: localhost only
+clauderon daemon
+
+# All interfaces: single listener on 0.0.0.0
+CLAUDERON_BIND_ADDR=0.0.0.0 clauderon daemon
+
+# Specific IP: Creates BOTH specific IP and 127.0.0.1 listeners
+# (127.0.0.1 listener allows Docker containers to reach daemon via host.docker.internal)
+CLAUDERON_BIND_ADDR=100.64.1.1 CLAUDERON_ORIGIN=http://hostname:3030 clauderon daemon
+```
+
+**Note**: Binding to a specific IP (not `127.0.0.1` or `0.0.0.0`) requires setting `CLAUDERON_ORIGIN` for WebAuthn authentication, or using `CLAUDERON_DISABLE_AUTH=true` (not recommended for production).
+
 ### CLI Options
 
 ```bash
