@@ -1292,7 +1292,7 @@ impl SessionManager {
                 anyhow::bail!("Session is already being deleted");
             }
 
-            (session.id, session.name.clone())
+            (session.id, session.name)
         };
 
         // Update to Deleting status
@@ -1908,7 +1908,7 @@ impl SessionManager {
                                     );
                                     // Attempt auto-recreation
                                     let _ = proxy_manager
-                                        .restore_session_proxies(std::slice::from_ref(&session))
+                                        .restore_session_proxies(std::slice::from_ref(session))
                                         .await;
                                 }
                             }
@@ -2902,14 +2902,13 @@ impl SessionManager {
                         details: Some(error_str),
                         suggestion: Some("Verify CLAUDE_ORG_ID is correct".to_string()),
                     });
-                } else {
-                    return Err(UsageError {
-                        error_type: "api_error".to_string(),
-                        message: "Failed to fetch usage data from Claude.ai".to_string(),
-                        details: Some(error_str),
-                        suggestion: Some("Check network connectivity and try again".to_string()),
-                    });
                 }
+                return Err(UsageError {
+                    error_type: "api_error".to_string(),
+                    message: "Failed to fetch usage data from Claude.ai".to_string(),
+                    details: Some(error_str),
+                    suggestion: Some("Check network connectivity and try again".to_string()),
+                });
             }
         };
 

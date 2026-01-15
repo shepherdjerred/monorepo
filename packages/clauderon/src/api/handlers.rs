@@ -8,7 +8,10 @@ use super::protocol::{CreateSessionRequest, ProgressStep, Request, Response};
 use super::types::ReconcileReportDto;
 
 /// Handle an API request
-#[allow(clippy::too_many_lines)]
+#[allow(
+    clippy::too_many_lines,
+    reason = "Protocol handler with many request types - splitting would reduce clarity"
+)]
 #[instrument(skip(manager), fields(request_type = ?std::mem::discriminant(&request)))]
 pub async fn handle_request(request: Request, manager: &SessionManager) -> Response {
     match request {

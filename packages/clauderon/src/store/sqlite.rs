@@ -815,7 +815,7 @@ impl Store for SqliteStore {
         .bind(session.claude_status_updated_at.map(|t| t.to_rfc3339()))
         .bind(session.merge_conflict)
         .bind(session.access_mode.to_string())
-        .bind(session.proxy_port.map(|p| p as i64))
+        .bind(session.proxy_port.map(i64::from))
         .bind(
             session
                 .history_file_path
@@ -823,7 +823,7 @@ impl Store for SqliteStore {
                 .and_then(|p| p.to_str())
                 .map(String::from),
         )
-        .bind(session.reconcile_attempts as i64)
+        .bind(i64::from(session.reconcile_attempts))
         .bind(&session.last_reconcile_error)
         .bind(session.last_reconcile_at.map(|t| t.to_rfc3339()))
         .bind(&session.error_message)

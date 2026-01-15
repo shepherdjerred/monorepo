@@ -4,14 +4,14 @@
 //! so containers can access Kubernetes and Talos without credentials.
 
 use anyhow::Context;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use crate::plugins::PluginManifest;
 use crate::proxy::{dummy_auth_json_string, dummy_config_toml};
 
 /// Generate all container configuration files.
 pub fn generate_container_configs(
-    clauderon_dir: &PathBuf,
+    clauderon_dir: &Path,
     talos_gateway_port: u16,
     kubectl_proxy_port: u16,
 ) -> anyhow::Result<()> {
@@ -21,10 +21,7 @@ pub fn generate_container_configs(
 }
 
 /// Generate Codex dummy auth/config files for containers.
-pub fn generate_codex_config(
-    clauderon_dir: &PathBuf,
-    account_id: Option<&str>,
-) -> anyhow::Result<()> {
+pub fn generate_codex_config(clauderon_dir: &Path, account_id: Option<&str>) -> anyhow::Result<()> {
     let codex_dir = clauderon_dir.join("codex");
     std::fs::create_dir_all(&codex_dir)?;
 
@@ -42,7 +39,7 @@ pub fn generate_codex_config(
 /// the mounted plugin directories. Plugin files themselves are mounted read-only from
 /// the host, so this only generates the configuration metadata.
 pub fn generate_plugin_config(
-    clauderon_dir: &PathBuf,
+    clauderon_dir: &Path,
     plugin_manifest: &PluginManifest,
 ) -> anyhow::Result<()> {
     let plugins_dir = clauderon_dir.join("plugins");
@@ -110,7 +107,7 @@ fn transform_marketplace_paths_for_container(host_config: &serde_json::Value) ->
 /// IMPORTANT: This config intentionally omits ca, crt, and key fields for zero-credential access.
 /// The gateway terminates TLS using the proxy's CA, then establishes mTLS to real Talos
 /// with the host's credentials. Container never needs private keys.
-fn generate_talosconfig(clauderon_dir: &PathBuf, port: u16) -> anyhow::Result<()> {
+fn generate_talosconfig(clauderon_dir: &Path, port: u16) -> anyhow::Result<()> {
     let talos_dir = clauderon_dir.join("talos");
     std::fs::create_dir_all(&talos_dir)?;
 

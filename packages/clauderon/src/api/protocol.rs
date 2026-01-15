@@ -214,6 +214,7 @@ pub struct UploadResponse {
 #[typeshare]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type", content = "payload")]
+#[allow(clippy::large_enum_variant)]
 pub enum Response {
     /// List of sessions
     Sessions(Vec<Session>),

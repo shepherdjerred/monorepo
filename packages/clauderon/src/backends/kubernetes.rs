@@ -632,7 +632,10 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
     }
 
     /// Build main container for Claude Code
-    #[allow(clippy::too_many_arguments)]
+    #[allow(
+        clippy::too_many_arguments,
+        reason = "Kubernetes API surface requires many configuration parameters"
+    )]
     fn build_main_container(
         &self,
         _pod_name: &str,
@@ -871,7 +874,7 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
                         create_cmd.insert(1, "--session-id".to_string());
                         create_cmd.insert(2, session_id_str.clone());
                         if !escaped_prompt.is_empty() {
-                            create_cmd.push(escaped_prompt.clone());
+                            create_cmd.push(escaped_prompt);
                         }
                         let create_cmd = create_cmd
                             .iter()
@@ -922,7 +925,7 @@ fi"#,
                         // No session ID - just run the command directly
                         let mut cmd_vec = base_args;
                         if !escaped_prompt.is_empty() {
-                            cmd_vec.push(escaped_prompt.clone());
+                            cmd_vec.push(escaped_prompt);
                         }
                         cmd_vec
                             .iter()
@@ -952,7 +955,7 @@ fi"#;
                             cmd_vec.push(image.clone());
                         }
                         if !escaped_prompt.is_empty() {
-                            cmd_vec.push(escaped_prompt.clone());
+                            cmd_vec.push(escaped_prompt);
                         }
                         let cmd = cmd_vec
                             .iter()
@@ -970,7 +973,7 @@ fi"#;
                             create_cmd_vec.push(image.clone());
                         }
                         if !escaped_prompt.is_empty() {
-                            create_cmd_vec.push(escaped_prompt.clone());
+                            create_cmd_vec.push(escaped_prompt);
                         }
                         let create_cmd = create_cmd_vec
                             .iter()
@@ -1030,7 +1033,7 @@ fi"#,
                         create_cmd.insert(1, "--session-id".to_string());
                         create_cmd.insert(2, session_id_str.clone());
                         if !escaped_prompt.is_empty() {
-                            create_cmd.push(escaped_prompt.clone());
+                            create_cmd.push(escaped_prompt);
                         }
                         let create_cmd = create_cmd
                             .iter()
@@ -1081,7 +1084,7 @@ fi"#,
                         // No session ID - just run the command directly
                         let mut cmd_vec = base_args;
                         if !escaped_prompt.is_empty() {
-                            cmd_vec.push(escaped_prompt.clone());
+                            cmd_vec.push(escaped_prompt);
                         }
                         cmd_vec
                             .iter()
@@ -1160,15 +1163,13 @@ fi"#,
         let image = options
             .container_image
             .as_ref()
-            .map(|ic| ic.image.clone())
-            .unwrap_or_else(|| self.config.image.clone());
+            .map_or_else(|| self.config.image.clone(), |ic| ic.image.clone());
 
         // Determine effective image pull policy (override > config)
-        let image_pull_policy = options
-            .container_image
-            .as_ref()
-            .map(|ic| ic.pull_policy.to_kubernetes_value())
-            .unwrap_or_else(|| self.config.image_pull_policy.to_kubernetes_value());
+        let image_pull_policy = options.container_image.as_ref().map_or_else(
+            || self.config.image_pull_policy.to_kubernetes_value(),
+            |ic| ic.pull_policy.to_kubernetes_value(),
+        );
 
         tracing::info!(
             image = %image,
@@ -1253,7 +1254,10 @@ fi"#,
     }
 
     /// Build pod specification
-    #[allow(clippy::too_many_arguments)]
+    #[allow(
+        clippy::too_many_arguments,
+        reason = "Kubernetes pod spec requires many configuration parameters"
+    )]
     fn build_pod_spec(
         &self,
         pod_name: &str,

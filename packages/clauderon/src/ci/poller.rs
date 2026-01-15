@@ -174,7 +174,7 @@ impl CIPoller {
         // Parse PR number from URL
         let pr_number = pr_url
             .split('/')
-            .last()
+            .next_back()
             .and_then(|s| s.parse::<u32>().ok())
             .ok_or_else(|| anyhow::anyhow!("Invalid PR URL: {}", pr_url))?;
 
@@ -197,8 +197,7 @@ impl CIPoller {
         // GitHub mergeable values: "MERGEABLE", "CONFLICTING", "UNKNOWN"
         let has_conflict = match data["mergeable"].as_str() {
             Some("CONFLICTING") => true,
-            Some("MERGEABLE" | "UNKNOWN") | None => false,
-            _ => false,
+            Some("MERGEABLE" | "UNKNOWN") | None | _ => false,
         };
 
         // Update session if conflict status changed
@@ -219,7 +218,7 @@ impl CIPoller {
         // Parse PR number from URL
         let pr_number = pr_url
             .split('/')
-            .last()
+            .next_back()
             .and_then(|s| s.parse::<u32>().ok())
             .ok_or_else(|| anyhow::anyhow!("Invalid PR URL: {}", pr_url))?;
 
