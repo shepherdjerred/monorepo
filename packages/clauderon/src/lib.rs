@@ -7,6 +7,7 @@ pub mod config;
 pub mod core;
 pub mod hooks;
 pub mod observability;
+pub mod plugins;
 pub mod proxy;
 pub mod store;
 pub mod tui;
