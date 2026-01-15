@@ -234,6 +234,13 @@ async fn handle_session_list_key(app: &mut App, key: KeyEvent) -> anyhow::Result
                 app.status_message = Some("Refreshed session list".to_string());
             }
         }
+        // Filter switching with number keys
+        KeyCode::Char('1') => app.set_filter(crate::tui::app::SessionFilter::All),
+        KeyCode::Char('2') => app.set_filter(crate::tui::app::SessionFilter::Running),
+        KeyCode::Char('3') => app.set_filter(crate::tui::app::SessionFilter::Idle),
+        KeyCode::Char('4') => app.set_filter(crate::tui::app::SessionFilter::Completed),
+        KeyCode::Char('5') => app.set_filter(crate::tui::app::SessionFilter::Archived),
+        KeyCode::Tab => app.cycle_filter_next(),
         KeyCode::Up | KeyCode::Char('k') => app.select_previous(),
         KeyCode::Down | KeyCode::Char('j') => app.select_next(),
         // Note: Enter is handled specially by the main loop since it needs to suspend the TUI

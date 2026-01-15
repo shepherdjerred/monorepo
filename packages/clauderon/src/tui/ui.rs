@@ -226,6 +226,8 @@ fn render_help(frame: &mut Frame, app: &App, area: Rect) {
                 ("↑/k", "Move up"),
                 ("↓/j", "Move down"),
                 ("Enter", "Attach to session"),
+                ("1-5", "Switch filter view"),
+                ("Tab", "Cycle through filters"),
                 ("n", "New session"),
                 ("d", "Delete session"),
                 ("a", "Archive session"),
