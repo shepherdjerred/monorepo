@@ -33,6 +33,9 @@ pub trait ApiClient: Send + Sync {
     /// Archive a session.
     async fn archive_session(&mut self, id: &str) -> anyhow::Result<()>;
 
+    /// Unarchive a session.
+    async fn unarchive_session(&mut self, id: &str) -> anyhow::Result<()>;
+
     /// Refresh a session (pull latest image and recreate container).
     async fn refresh_session(&mut self, id: &str) -> anyhow::Result<()>;
 

@@ -229,6 +229,7 @@ fn render_help(frame: &mut Frame, app: &App, area: Rect) {
                 ("n", "New session"),
                 ("d", "Delete session"),
                 ("a", "Archive session"),
+                ("u", "Unarchive session"),
                 ("f", "Refresh session (Docker only)"),
                 ("r", "Reconcile state"),
                 ("R", "Refresh list"),
