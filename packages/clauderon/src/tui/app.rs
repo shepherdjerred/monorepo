@@ -796,6 +796,38 @@ impl App {
         Ok(())
     }
 
+    /// Refresh the selected session (pull latest image and recreate container)
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the refresh fails.
+    pub async fn refresh_selected(&mut self) -> anyhow::Result<()> {
+        if let Some(session) = self.selected_session() {
+            // Only allow for Docker sessions
+            if session.backend != crate::core::session::BackendType::Docker {
+                self.status_message = Some("Refresh only works with Docker sessions".to_string());
+                return Ok(());
+            }
+
+            let id = session.id.to_string();
+            let name = session.name.clone();
+
+            if let Some(client) = &mut self.client {
+                self.status_message = Some(format!("Refreshing session {name}..."));
+                match client.refresh_session(&id).await {
+                    Ok(()) => {
+                        self.status_message = Some(format!("Successfully refreshed session {name}"));
+                        self.refresh_sessions().await?;
+                    }
+                    Err(e) => {
+                        self.status_message = Some(format!("Refresh failed: {e}"));
+                    }
+                }
+            }
+        }
+        Ok(())
+    }
+
     /// Get the attach command for the selected session
     ///
     /// # Errors
