@@ -272,6 +272,6 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           trigger_phrase: "@claude"
           track_progress: true
-          claude_args: "--max-turns 30 --model claude-opus-4-5-20251101"
+          claude_args: "--max-turns 35 --model claude-opus-4-5-20251101"
           prompt: |
             Respond to the question or request. Read CLAUDE.md and relevant code for context. Be direct and concise.
