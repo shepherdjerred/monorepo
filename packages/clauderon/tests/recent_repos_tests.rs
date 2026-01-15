@@ -559,6 +559,10 @@ async fn test_same_subdir_updates_timestamp() {
             false,
             Default::default(),
             vec![],
+            None,
+            None,
+            None,
+            None,
         )
         .await
         .expect("Failed to create session 2");
