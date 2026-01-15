@@ -545,7 +545,6 @@ impl SessionManager {
                 dangerous_skip_checks,
                 session_id: Some(session_id),
                 initial_workdir: subdirectory.clone(),
-                agent,
                 http_port: self.http_port,
             };
             let backend_id = match backend {
@@ -913,7 +912,7 @@ impl SessionManager {
             dangerous_skip_checks,
             session_id: Some(session.id), // Pass session ID for Kubernetes PVC labeling
             initial_workdir: subdirectory.clone(),
-            agent_type: agent,
+            agent,
             http_port: self.http_port,
         };
         let backend_id = match backend {
@@ -1775,7 +1774,6 @@ impl SessionManager {
             session_id: Some(session.id),
             initial_workdir: session.subdirectory.clone(),
             http_port: self.http_port,
-            agent: session.agent,
         };
 
         // Recreate container
