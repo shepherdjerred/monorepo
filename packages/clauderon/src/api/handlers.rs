@@ -309,6 +309,7 @@ pub async fn handle_create_session_with_progress(
     match manager
         .create_session(
             req.repo_path.clone(),
+            req.repositories.clone(),
             req.initial_prompt,
             req.backend,
             req.agent,

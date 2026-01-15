@@ -153,7 +153,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
         return "All repositories must have a mount name";
       }
 
-      if (!/^[a-z0-9][a-z0-9-_]{0,62}[a-z0-9]$/.test(name) && name.length > 1) {
+      if (!/^[a-z0-9]([a-z0-9-_]{0,62}[a-z0-9])?$/.test(name)) {
         return `Invalid mount name "${name}": must be alphanumeric with hyphens/underscores, 1-64 characters`;
       }
 
@@ -165,7 +165,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
     }
 
     // Check for reserved names
-    const reserved = ['workspace', 'clauderon', 'repos'];
+    const reserved = ['workspace', 'clauderon', 'repos', 'primary'];
     for (const repo of repositories) {
       if (reserved.includes(repo.mount_name.toLowerCase())) {
         return `Mount name "${repo.mount_name}" is reserved`;
