@@ -110,7 +110,10 @@ export function ChatScreen({ route, navigation }: ChatScreenProps) {
     }
 
     // Send input to console
-    client.write(input + "\n");
+    const textToSend = input + "\r";
+    console.log("[ChatScreen] Sending text:", input);
+    console.log("[ChatScreen] Sending bytes:", Array.from(textToSend).map(c => c.charCodeAt(0)));
+    client.write(textToSend);
     setInput("");
   };
 
