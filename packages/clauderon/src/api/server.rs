@@ -76,7 +76,7 @@ pub async fn run_daemon_with_http(
 
     // Initialize proxy services if enabled
     let proxy_manager: Option<Arc<ProxyManager>> = if enable_proxy {
-        match ProxyManager::new(ProxyConfig::default()) {
+        match ProxyManager::new(ProxyConfig::default(), None) {
             Ok(mut pm) => {
                 if let Err(e) = pm.start().await {
                     tracing::error!("Failed to start proxy services: {}", e);

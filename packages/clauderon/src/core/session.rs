@@ -347,8 +347,11 @@ pub enum AgentType {
     /// Claude Code CLI
     ClaudeCode,
 
-    /// `OpenAI` Codex
+    /// OpenAI Codex
     Codex,
+
+    /// Gemini CLI
+    Gemini,
 }
 
 impl Default for AgentType {

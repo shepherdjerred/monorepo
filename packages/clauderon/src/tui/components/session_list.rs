@@ -357,6 +357,11 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
             };
 
             let backend_text = format!("{:?}", session.backend);
+            let _agent_text = match session.agent {
+                crate::core::AgentType::ClaudeCode => "Claude",
+                crate::core::AgentType::Codex => "Codex",
+                crate::core::AgentType::Gemini => "Gemini",
+            };
             let pr_text = session
                 .pr_url
                 .as_ref()

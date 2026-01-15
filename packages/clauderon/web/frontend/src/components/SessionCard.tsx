@@ -38,6 +38,9 @@ export function SessionCard({ session, onAttach, onEdit, onArchive, onRefresh, o
           <Badge variant="outline" className="border-2 font-mono text-xs">
             {session.backend}
           </Badge>
+          <Badge variant="outline" className="border-2 font-mono text-xs">
+            {session.agent}
+          </Badge>
         </div>
       </CardHeader>
       <CardContent>

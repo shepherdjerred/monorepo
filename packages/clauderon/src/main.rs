@@ -179,7 +179,7 @@ BACKENDS:
         #[arg(short, long, default_value = "zellij", value_parser = ["zellij", "docker"])]
         backend: String,
 
-        /// Agent to use (claude or codex)
+        /// Agent to use (claude, codex, or gemini)
         #[arg(short, long, default_value = "claude")]
         agent: String,
 
@@ -518,7 +518,8 @@ async fn main() -> anyhow::Result<()> {
             let agent_type = match agent.to_lowercase().as_str() {
                 "claude" | "claude-code" | "claude_code" => core::session::AgentType::ClaudeCode,
                 "codex" => core::session::AgentType::Codex,
-                _ => anyhow::bail!("Unknown agent: {agent}. Use 'claude' or 'codex'"),
+                "gemini" => core::session::AgentType::Gemini,
+                _ => anyhow::bail!("Unknown agent: {agent}. Use 'claude', 'codex', or 'gemini'"),
             };
 
             let access_mode = access_mode.parse::<core::session::AccessMode>()?;

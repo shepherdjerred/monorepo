@@ -522,6 +522,13 @@ impl DockerBackend {
                         "CODEX_API_KEY=sk-openai-clauderon-proxy-placeholder".to_string(),
                     ]);
                 }
+                AgentType::Gemini => {
+                    // Gemini uses Gemini API key
+                    args.extend([
+                        "-e".to_string(),
+                        "GEMINI_API_KEY=sk-gemini-clauderon-proxy-placeholder".to_string(),
+                    ]);
+                }
             }
 
             // SSL/TLS environment variables for CA trust
@@ -727,7 +734,7 @@ impl DockerBackend {
         // - On restart: session file exists → resume session
         let agent_cmd = {
             use crate::agents::traits::Agent;
-            use crate::agents::{ClaudeCodeAgent, CodexAgent};
+            use crate::agents::{ClaudeCodeAgent, CodexAgent, GeminiCodeAgent};
 
             // Helper to quote shell arguments
             let quote_arg = |arg: &str| -> String {
@@ -904,6 +911,82 @@ fi"#,
                             resume_cmd = resume_cmd_str,
                             create_cmd = create_cmd_str,
                         )
+                    }
+                }
+                AgentType::Gemini => {
+                    let mut cmd_vec = GeminiCodeAgent::new().start_command(
+                        &escaped_prompt,
+                        &translated_images,
+                        dangerous_skip_checks,
+                        None,
+                    );
+
+                    // Add print mode flags if enabled
+                    if print_mode {
+                        cmd_vec.insert(1, "--print".to_string());
+                    }
+
+                    // If we have a session ID, generate a wrapper script that handles restart
+                    if let Some(sid) = session_id {
+                        let session_id_str = sid.to_string();
+
+                        // Build the create command (for first run)
+                        let mut create_cmd = vec!["gemini".to_string()];
+                        create_cmd.push("--session-id".to_string());
+                        create_cmd.push(session_id_str.clone());
+                        // Add remaining args (skip "gemini" at index 0)
+                        create_cmd.extend(cmd_vec.iter().skip(1).cloned());
+                        let create_cmd_str = create_cmd
+                            .iter()
+                            .map(|a| quote_arg(a))
+                            .collect::<Vec<_>>()
+                            .join(" ");
+
+                        // Build the resume command (for restart)
+                        let resume_cmd_str = if dangerous_skip_checks {
+                            format!(
+                                "gemini --dangerously-skip-permissions --resume {} --fork-session",
+                                quote_arg(&session_id_str)
+                            )
+                        } else {
+                            format!(
+                                "gemini --resume {} --fork-session",
+                                quote_arg(&session_id_str)
+                            )
+                        };
+
+                        // Generate wrapper script that detects restart via session history file
+                        let project_path = if initial_workdir.as_os_str().is_empty() {
+                            "-workspace".to_string()
+                        } else {
+                            format!(
+                                "-workspace-{}",
+                                initial_workdir.display().to_string().replace('/', "-")
+                            )
+                        };
+
+                        format!(
+                            r#"SESSION_ID="{session_id}"
+HISTORY_FILE="/workspace/.claude/projects/{project_path}/${{SESSION_ID}}.jsonl"
+if [ -f "$HISTORY_FILE" ]; then
+    echo "Resuming existing session $SESSION_ID"
+    exec {resume_cmd}
+else
+    echo "Creating new session $SESSION_ID"
+    exec {create_cmd}
+fi"#,
+                            session_id = session_id_str,
+                            project_path = project_path,
+                            resume_cmd = resume_cmd_str,
+                            create_cmd = create_cmd_str,
+                        )
+                    } else {
+                        // No session ID - just run the command directly
+                        cmd_vec
+                            .iter()
+                            .map(|arg| quote_arg(arg))
+                            .collect::<Vec<_>>()
+                            .join(" ")
                     }
                 }
             }
