@@ -26,7 +26,9 @@ fn test_git_config_env_vars() {
         Some("john@example.com"),
         None, // session_id
         None, // http_port
-        AgentType::Claude,
+        &clauderon::backends::DockerConfig::default(),
+        None,
+        None,
     )
     .expect("Failed to build args");
 
@@ -75,7 +77,9 @@ fn test_git_config_omitted_when_none() {
         None,
         None,
         None, // http_port
-        AgentType::Claude,
+        &clauderon::backends::DockerConfig::default(),
+        None,
+        None,
     )
     .expect("Failed to build args");
 
@@ -109,7 +113,9 @@ fn test_docker_run_arg_order() {
         None,  // git user email
         None,  // session_id
         None,  // http_port
-        AgentType::Claude,
+        &clauderon::backends::DockerConfig::default(),
+        None,
+        None,
     )
     .expect("Failed to build args");
 
@@ -154,7 +160,9 @@ fn test_docker_env_vars() {
         None,  // git user email
         None,  // session_id
         None,  // http_port
-        AgentType::Claude,
+        &clauderon::backends::DockerConfig::default(),
+        None,
+        None,
     )
     .expect("Failed to build args");
 
@@ -274,7 +282,9 @@ fn test_volume_mount_format() {
         None,  // git user email
         None,  // session_id
         None,  // http_port
-        AgentType::Claude,
+        &clauderon::backends::DockerConfig::default(),
+        None,
+        None,
     )
     .expect("Failed to build args");
 
@@ -334,7 +344,9 @@ fn test_workspace_mount_destination() {
         None,  // git user email
         None,  // session_id
         None,  // http_port
-        AgentType::Claude,
+        &clauderon::backends::DockerConfig::default(),
+        None,
+        None,
     )
     .expect("Failed to build args");
 
@@ -376,7 +388,9 @@ fn test_final_command_format() {
         None,  // git user email
         None,  // session_id
         None,  // http_port
-        AgentType::Claude,
+        &clauderon::backends::DockerConfig::default(),
+        None,
+        None,
     )
     .expect("Failed to build args");
 

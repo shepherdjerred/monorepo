@@ -865,6 +865,10 @@ impl App {
             plan_mode: self.create_dialog.plan_mode,
             access_mode: self.create_dialog.access_mode,
             images: self.create_dialog.images.clone(),
+            container_image: None, // TODO: Add TUI fields for container customization
+            pull_policy: None,
+            cpu_limit: None,
+            memory_limit: None,
         };
 
         if let Some(client) = &mut self.client {

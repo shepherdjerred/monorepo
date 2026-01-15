@@ -152,6 +152,10 @@ async fn test_create_session_with_read_only_mode() {
             false, // plan_mode
             AccessMode::ReadOnly,
             vec![], // images
+            None,   // container_image
+            None,   // pull_policy
+            None,   // cpu_limit
+            None,   // memory_limit
         )
         .await
         .expect("Failed to create session");
@@ -182,6 +186,10 @@ async fn test_create_session_with_read_write_mode() {
             false, // plan_mode
             AccessMode::ReadWrite,
             vec![], // images
+            None,   // container_image
+            None,   // pull_policy
+            None,   // cpu_limit
+            None,   // memory_limit
         )
         .await
         .expect("Failed to create session");
@@ -208,6 +216,10 @@ async fn test_zellij_backend_ignores_proxy_port() {
             false, // plan_mode
             AccessMode::ReadOnly,
             vec![], // images
+            None,   // container_image
+            None,   // pull_policy
+            None,   // cpu_limit
+            None,   // memory_limit
         )
         .await
         .expect("Failed to create session");
@@ -236,6 +248,10 @@ async fn test_update_access_mode_by_name() {
             false, // plan_mode
             AccessMode::ReadOnly,
             vec![], // images
+            None,   // container_image
+            None,   // pull_policy
+            None,   // cpu_limit
+            None,   // memory_limit
         )
         .await
         .expect("Failed to create session");
@@ -274,6 +290,10 @@ async fn test_update_access_mode_by_id() {
             false, // plan_mode
             AccessMode::ReadWrite,
             vec![], // images
+            None,   // container_image
+            None,   // pull_policy
+            None,   // cpu_limit
+            None,   // memory_limit
         )
         .await
         .expect("Failed to update access mode");
@@ -425,6 +445,10 @@ async fn test_access_mode_persists_across_restarts() {
                 false, // plan_mode
                 AccessMode::ReadOnly,
                 vec![], // images
+                None,   // container_image
+                None,   // pull_policy
+                None,   // cpu_limit
+                None,   // memory_limit
             )
             .await
             .expect("Failed to create session");
@@ -553,6 +577,10 @@ async fn test_delete_session_cleans_up_proxy() {
             false, // plan_mode
             AccessMode::ReadOnly,
             vec![], // images
+            None,   // container_image
+            None,   // pull_policy
+            None,   // cpu_limit
+            None,   // memory_limit
         )
         .await
         .expect("Failed to create session");
