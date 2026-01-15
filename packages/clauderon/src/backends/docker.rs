@@ -1729,11 +1729,11 @@ mod tests {
         )
         .expect("Failed to build args");
 
-        // Count volume mounts (should have workspace + 3 cargo/sccache cache mounts + clauderon dir + uploads + claude.json)
+        // Count volume mounts (should have workspace + 3 cargo/sccache cache mounts + clauderon dir + uploads + claude.json + 2 plugin mounts)
         let mount_count = args.iter().filter(|a| *a == "-v").count();
         assert_eq!(
-            mount_count, 7,
-            "Normal git repo should have workspace + 3 cache mounts + clauderon dir + uploads + claude.json, got {mount_count} mounts"
+            mount_count, 9,
+            "Normal git repo should have workspace + 3 cache mounts + clauderon dir + uploads + claude.json + 2 plugin mounts, got {mount_count} mounts"
         );
     }
 
@@ -1952,11 +1952,11 @@ mod tests {
         )
         .expect("Failed to build args");
 
-        // Should have workspace + 3 cache mounts + clauderon dir + uploads + claude.json (no git parent mount)
+        // Should have workspace + 3 cache mounts + clauderon dir + uploads + claude.json + 2 plugin mounts (no git parent mount)
         let mount_count = args.iter().filter(|a| *a == "-v").count();
         assert_eq!(
-            mount_count, 7,
-            "Malformed worktree should have workspace + 3 cache mounts + clauderon dir + uploads + claude.json, got {mount_count} mounts"
+            mount_count, 9,
+            "Malformed worktree should have workspace + 3 cache mounts + clauderon dir + uploads + claude.json + 2 plugin mounts, got {mount_count} mounts"
         );
     }
 
@@ -1994,11 +1994,11 @@ mod tests {
         )
         .expect("Failed to build args");
 
-        // Should have workspace + 3 cache mounts + clauderon dir + uploads + claude.json (no git parent mount due to validation failure)
+        // Should have workspace + 3 cache mounts + clauderon dir + uploads + claude.json + 2 plugin mounts (no git parent mount due to validation failure)
         let mount_count = args.iter().filter(|a| *a == "-v").count();
         assert_eq!(
-            mount_count, 7,
-            "Worktree with missing parent should have workspace + 3 cache mounts + clauderon dir + uploads + claude.json, got {mount_count} mounts"
+            mount_count, 9,
+            "Worktree with missing parent should have workspace + 3 cache mounts + clauderon dir + uploads + claude.json + 2 plugin mounts, got {mount_count} mounts"
         );
     }
 
