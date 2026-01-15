@@ -151,6 +151,7 @@ async def process_file_with_browser(html_path: Path, url: str, output_path: Path
 
 async def process_all_files(input_dir: Path, output_dir: Path, use_browser: bool = True):
     """Process all HTML files in the input directory."""
+    import gc
 
     # Find all HTML files
     html_files = list(input_dir.rglob("*.html"))
@@ -159,7 +160,7 @@ async def process_all_files(input_dir: Path, output_dir: Path, use_browser: bool
     success_count = 0
     fail_count = 0
 
-    for html_file in html_files:
+    for i, html_file in enumerate(html_files):
         # Skip .visited.json metadata files
         if html_file.name == '.visited.json':
             continue
@@ -187,6 +188,10 @@ async def process_all_files(input_dir: Path, output_dir: Path, use_browser: bool
             success_count += 1
         else:
             fail_count += 1
+
+        # Force garbage collection every 10 files to reduce memory usage
+        if (i + 1) % 10 == 0:
+            gc.collect()
 
     print(f"\n=== Summary ===")
     print(f"Total: {len(html_files)}")
