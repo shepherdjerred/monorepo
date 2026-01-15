@@ -154,7 +154,6 @@ impl ExecutionBackend for ZellijBackend {
             &options.images,
             options.agent,
             options.session_id.as_ref(),
-            options.agent_type,
         );
         let output = Command::new("zellij")
             .args(&pane_args[..])
