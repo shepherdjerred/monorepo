@@ -131,6 +131,41 @@ export interface CreateSessionRequest {
 	 * Images will be passed to Claude Code using the `--image` flag.
 	 */
 	images?: string[];
+	/**
+	 * Optional: Custom container image (overrides backend default).
+	 * 
+	 * Format: `[registry/]repository[:tag]`
+	 * Example: `"ghcr.io/user/custom-dev:latest"`
+	 * 
+	 * Image must meet requirements: claude/codex CLI, bash, curl, git (recommended).
+	 * See docs/IMAGE_COMPATIBILITY.md for full requirements.
+	 */
+	container_image?: string;
+	/**
+	 * Optional: Image pull policy.
+	 * 
+	 * Controls when to pull the container image:
+	 * - `"always"`: Always pull latest version
+	 * - `"if-not-present"`: Pull only if not cached (default)
+	 * - `"never"`: Never pull, use local cache only
+	 */
+	pull_policy?: string;
+	/**
+	 * Optional: CPU limit for the container.
+	 * 
+	 * Format:
+	 * - Docker: Decimal cores (e.g., `"2.0"`, `"0.5"`)
+	 * - Kubernetes: Millicores or cores (e.g., `"2000m"`, `"2"`)
+	 */
+	cpu_limit?: string;
+	/**
+	 * Optional: Memory limit for the container.
+	 * 
+	 * Format: Number with suffix
+	 * - Docker: `"2g"` (2 gigabytes), `"512m"` (512 megabytes)
+	 * - Kubernetes: `"2Gi"` (2 gibibytes), `"512Mi"` (512 mebibytes)
+	 */
+	memory_limit?: string;
 }
 
 /** Credential availability status */
