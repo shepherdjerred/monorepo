@@ -409,15 +409,16 @@ impl AppleContainerBackend {
                 }
             }
 
-            // Note: Apple containers use virtualization, so we need to use a different approach
-            // for host resolution. We'll use environment variables for proxy configuration.
+            // Apple containers can reach the host via the gateway address 192.168.64.1
+            // (not host.docker.internal which is Docker-specific).
+            // See: https://github.com/apple/container/blob/main/docs/technical-overview.md
             args.extend([
                 "-e".to_string(),
-                format!("HTTP_PROXY=http://host.docker.internal:{port}"),
+                format!("HTTP_PROXY=http://192.168.64.1:{port}"),
                 "-e".to_string(),
-                format!("HTTPS_PROXY=http://host.docker.internal:{port}"),
+                format!("HTTPS_PROXY=http://192.168.64.1:{port}"),
                 "-e".to_string(),
-                "NO_PROXY=localhost,127.0.0.1,host.docker.internal".to_string(),
+                "NO_PROXY=localhost,127.0.0.1".to_string(),
             ]);
 
             // Set dummy tokens
