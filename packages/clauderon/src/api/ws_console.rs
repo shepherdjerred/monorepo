@@ -124,6 +124,11 @@ async fn handle_console_socket(socket: WebSocket, session_id: String, state: App
                         match message {
                             ConsoleMessage::Input { data } => {
                                 if let Ok(bytes) = base64::prelude::BASE64_STANDARD.decode(data) {
+                                    tracing::debug!(
+                                        "Received input bytes: {:?} (string: {:?})",
+                                        bytes,
+                                        String::from_utf8_lossy(&bytes)
+                                    );
                                     state
                                         .console_state
                                         .set_active(&session_id, client_id)
