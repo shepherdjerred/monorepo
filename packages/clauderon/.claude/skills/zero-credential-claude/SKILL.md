@@ -43,7 +43,36 @@ A `claude.json` file is mounted to skip onboarding:
 {"hasCompletedOnboarding": true}
 ```
 
-### 3. Proxy Credential Injection
+### 3. Container Mounts (Security)
+
+Containers receive **minimal mounts** for security. The base `~/.clauderon/` directory is NOT mounted. Only specific files/directories are mounted:
+
+**Mounted (Required for functionality):**
+```bash
+# Uploads directory (bidirectional communication)
+-v ~/.clauderon/uploads:/workspace/.clauderon/uploads
+
+# Proxy CA certificate (for TLS interception)
+-v ~/.clauderon/proxy-ca.pem:/etc/clauderon/proxy-ca.pem:ro
+
+# Codex dummy config (real tokens injected by proxy)
+-v ~/.clauderon/codex:/etc/clauderon/codex:ro
+
+# Claude configuration (onboarding and permissions)
+-v ~/.clauderon/claude.json:/workspace/.claude.json
+```
+
+**NOT Mounted (Security reasons):**
+- `~/.clauderon/secrets/` - Real OAuth tokens and API keys stay on host
+- `~/.clauderon/db.sqlite` - Session database
+- `~/.clauderon/audit.jsonl` - Proxy audit logs
+- `~/.clauderon/*.sock` - Unix sockets for daemon IPC
+- `~/.clauderon/proxy-ca-key.pem` - CA private key
+
+**Hooks directory:**
+The `/workspace/.clauderon/hooks/` directory is created inside containers via `docker exec`, not via mount. This ensures hooks are isolated per container.
+
+### 4. Proxy Credential Injection
 
 The HTTP proxy intercepts requests to `api.anthropic.com` and:
 
@@ -56,7 +85,7 @@ req.headers_mut().remove("authorization");
 ("authorization", format!("Bearer {}", token))
 ```
 
-### 4. Execution Modes
+### 5. Execution Modes
 
 The Docker backend supports two execution modes:
 
