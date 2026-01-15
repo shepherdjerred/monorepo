@@ -56,6 +56,8 @@ async fn test_claude_starts_in_docker() {
                 session_id: None,
                 initial_workdir: PathBuf::new(),
                 http_port: None,
+                container_image: None,
+                container_resources: None,
             },
         )
         .await;
@@ -129,6 +131,8 @@ async fn test_claude_writes_debug_files() {
                 session_id: None,
                 initial_workdir: PathBuf::new(),
                 http_port: None,
+                container_image: None,
+                container_resources: None,
             },
         )
         .await;
@@ -190,6 +194,8 @@ async fn test_container_runs_as_non_root() {
                 session_id: None,
                 initial_workdir: PathBuf::new(),
                 http_port: None,
+                container_image: None,
+                container_resources: None,
             },
         )
         .await;
@@ -263,6 +269,8 @@ async fn test_initial_prompt_executed() {
                 session_id: None,
                 initial_workdir: PathBuf::new(),
                 http_port: None,
+                container_image: None,
+                container_resources: None,
             },
         )
         .await;
@@ -381,6 +389,8 @@ async fn test_claude_print_mode_e2e() {
         session_id: None,
         initial_workdir: PathBuf::new(),
         http_port: None,
+                container_image: None,
+                container_resources: None,
         container_image: None,
         container_resources: None,
     };
