@@ -557,12 +557,16 @@ impl SessionManager {
             }
 
             update_progress(2, "Setting up session proxy".to_string()).await;
-            // Create per-session proxy for Docker backends (required, no fallback)
-            let proxy_port = if backend == BackendType::Docker {
-                let proxy_manager = self
-                    .proxy_manager
-                    .as_ref()
-                    .ok_or_else(|| anyhow::anyhow!("Proxy manager required for Docker backend"))?;
+            // Create per-session proxy for container backends (Docker and Apple Container)
+            #[cfg(target_os = "macos")]
+            let needs_proxy = matches!(backend, BackendType::Docker | BackendType::AppleContainer);
+            #[cfg(not(target_os = "macos"))]
+            let needs_proxy = backend == BackendType::Docker;
+
+            let proxy_port = if needs_proxy {
+                let proxy_manager = self.proxy_manager.as_ref().ok_or_else(|| {
+                    anyhow::anyhow!("Proxy manager required for container backend")
+                })?;
 
                 let port = proxy_manager
                     .create_session_proxy(session_id, access_mode)
@@ -587,7 +591,7 @@ impl SessionManager {
                 );
                 Some(port)
             } else {
-                None // Non-Docker backends don't need proxy
+                None // Non-container backends don't need proxy
             };
 
             update_progress(3, "Preparing agent environment".to_string()).await;

@@ -13,17 +13,6 @@ pub struct AppleContainerConfig {
     /// Custom container image to use (default: ghcr.io/anthropics/claude-code)
     pub container_image: Option<String>,
 
-    /// Additional volume mounts in format "host_path:container_path[:ro]"
-    #[serde(default)]
-    pub additional_volumes: Vec<String>,
-
-    /// Network configuration
-    pub network: Option<String>,
-
-    /// DNS nameservers
-    #[serde(default)]
-    pub dns: Vec<String>,
-
     /// Resource limits (CPU and memory)
     pub resources: Option<ResourceLimits>,
 }
@@ -113,39 +102,6 @@ impl AppleContainerConfig {
             }
         }
 
-        // Validate additional volumes format
-        for volume in &self.additional_volumes {
-            if !volume.contains(':') {
-                anyhow::bail!(
-                    "Invalid volume format '{}': must be 'host:container' or 'host:container:ro'",
-                    volume
-                );
-            }
-
-            let parts: Vec<&str> = volume.split(':').collect();
-            if parts.len() < 2 || parts.len() > 3 {
-                anyhow::bail!(
-                    "Invalid volume format '{}': must be 'host:container' or 'host:container:ro'",
-                    volume
-                );
-            }
-
-            // Validate readonly flag if present
-            if parts.len() == 3 && parts[2] != "ro" {
-                anyhow::bail!(
-                    "Invalid volume format '{}': third part must be 'ro'",
-                    volume
-                );
-            }
-        }
-
-        // Validate DNS addresses
-        for dns in &self.dns {
-            if dns.is_empty() {
-                anyhow::bail!("DNS address cannot be empty");
-            }
-        }
-
         Ok(())
     }
 }
@@ -154,9 +110,6 @@ impl Default for AppleContainerConfig {
     fn default() -> Self {
         Self {
             container_image: None,
-            additional_volumes: vec![],
-            network: None,
-            dns: vec![],
             resources: None,
         }
     }
@@ -170,9 +123,7 @@ mod tests {
     fn test_default_config() {
         let config = AppleContainerConfig::default();
         assert!(config.container_image.is_none());
-        assert!(config.additional_volumes.is_empty());
-        assert!(config.network.is_none());
-        assert!(config.dns.is_empty());
+        assert!(config.resources.is_none());
     }
 
     #[test]
@@ -220,63 +171,6 @@ mod tests {
     fn test_validate_valid_image() {
         let config = AppleContainerConfig {
             container_image: Some("ghcr.io/anthropics/claude-code:latest".to_string()),
-            ..Default::default()
-        };
-        assert!(config.validate().is_ok());
-    }
-
-    #[test]
-    fn test_validate_invalid_volume_format() {
-        let config = AppleContainerConfig {
-            additional_volumes: vec!["invalid_no_colon".to_string()],
-            ..Default::default()
-        };
-        assert!(config.validate().is_err());
-    }
-
-    #[test]
-    fn test_validate_invalid_volume_parts() {
-        let config = AppleContainerConfig {
-            additional_volumes: vec!["a:b:c:d".to_string()],
-            ..Default::default()
-        };
-        assert!(config.validate().is_err());
-    }
-
-    #[test]
-    fn test_validate_invalid_ro_flag() {
-        let config = AppleContainerConfig {
-            additional_volumes: vec!["/host:/container:rw".to_string()],
-            ..Default::default()
-        };
-        assert!(config.validate().is_err());
-    }
-
-    #[test]
-    fn test_validate_valid_volumes() {
-        let config = AppleContainerConfig {
-            additional_volumes: vec![
-                "/host:/container".to_string(),
-                "/host2:/container2:ro".to_string(),
-            ],
-            ..Default::default()
-        };
-        assert!(config.validate().is_ok());
-    }
-
-    #[test]
-    fn test_validate_empty_dns() {
-        let config = AppleContainerConfig {
-            dns: vec![String::new()],
-            ..Default::default()
-        };
-        assert!(config.validate().is_err());
-    }
-
-    #[test]
-    fn test_validate_valid_dns() {
-        let config = AppleContainerConfig {
-            dns: vec!["8.8.8.8".to_string(), "1.1.1.1".to_string()],
             ..Default::default()
         };
         assert!(config.validate().is_ok());
