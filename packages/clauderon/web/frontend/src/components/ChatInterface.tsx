@@ -72,7 +72,10 @@ export function ChatInterface({
     }
 
     // Send input to console
-    client.write(input + "\n");
+    const textToSend = input + "\r";
+    console.log("[ChatInterface] Sending text:", input);
+    console.log("[ChatInterface] Sending bytes:", Array.from(textToSend).map(c => c.charCodeAt(0)));
+    client.write(textToSend);
     setInput("");
   };
 

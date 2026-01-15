@@ -158,6 +158,8 @@ export function Console({ sessionId, sessionName, onClose, onSwitchToChat }: Con
 
     // Handle terminal input
     terminal.onData((data) => {
+      console.log("[Console] Terminal sending:", data);
+      console.log("[Console] Terminal bytes:", Array.from(data).map(c => c.charCodeAt(0)));
       const { client: currentClient, isConnected: currentConnected } = clientRef.current;
       if (currentClient && currentConnected) {
         currentClient.write(data);
