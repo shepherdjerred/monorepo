@@ -17,14 +17,12 @@ process.env["SCHEDULER_ENABLED"] ??= "true";
 process.env["BROWSER_ENABLED"] ??= "true";
 process.env["BROWSER_HEADLESS"] ??= "true";
 
-// If no database URL is set (local dev), use a local file database
-if (!process.env["DATABASE_URL"] && !process.env["OPS_DATABASE_URL"]) {
+// If no database path is set (local dev), use a local file database
+if (!process.env["DATABASE_PATH"]) {
   const dataDir = join(process.cwd(), "data");
   mkdirSync(dataDir, { recursive: true });
   const testDbPath = join(dataDir, "test-automation.db");
   process.env["DATABASE_PATH"] = testDbPath;
-  process.env["DATABASE_URL"] = `file:${testDbPath}`;
-  process.env["OPS_DATABASE_URL"] = `file:${testDbPath}`;
 }
 
 // Create screenshots directory
@@ -33,15 +31,18 @@ mkdirSync(screenshotsDir, { recursive: true });
 process.env["BIRMEL_SCREENSHOTS_DIR"] ??= screenshotsDir;
 
 // Ensure database directory exists if it's a file-based database
-const dbUrl = process.env["OPS_DATABASE_URL"] ?? process.env["DATABASE_URL"] ?? "";
-if (dbUrl.startsWith("file:")) {
-  const dbPath = dbUrl.replace("file:", "");
-  mkdirSync(dirname(dbPath), { recursive: true });
+const dbPath = process.env["DATABASE_PATH"] ?? "";
+const normalizedDbPath = dbPath.startsWith("file:") ? dbPath.replace("file:", "") : dbPath;
+if (normalizedDbPath) {
+  mkdirSync(dirname(normalizedDbPath), { recursive: true });
 }
 
 // Push database schema (creates tables if they don't exist)
 // Uses spawnSync with explicit args to avoid shell injection
 spawnSync("bunx", ["prisma", "db", "push", "--skip-generate", "--accept-data-loss"], {
   stdio: "pipe",
-  env: { ...process.env, DATABASE_URL: process.env["OPS_DATABASE_URL"] },
+  env: {
+    ...process.env,
+    DATABASE_URL: dbPath.startsWith("file:") ? dbPath : `file:${dbPath}`,
+  },
 });

@@ -467,14 +467,13 @@ export class Monorepo {
         outputs.push(`Published:\n${refs.join("\n")}`);
 
         // Deploy to homelab
-        // TEMPORARILY DISABLED: Waiting for dagger-utils with homelab fix to be published to npm
-        // outputs.push(
-        //   await updateHomelabVersion({
-        //     ghToken: githubToken,
-        //     appName: "birmel",
-        //     version,
-        //   }),
-        // );
+        outputs.push(
+          await updateHomelabVersion({
+            ghToken: githubToken,
+            appName: "birmel",
+            version,
+          }),
+        );
       }
 
       // Check if a mux release was created and upload binaries
@@ -643,6 +642,11 @@ export class Monorepo {
     ]);
     await container.sync();
     outputs.push("✓ Clippy passed");
+
+    // Compile tests without running (catches test compile issues)
+    container = container.withExec(["cargo", "test", "--no-run"]);
+    await container.sync();
+    outputs.push("✓ Tests compiled");
 
     // Tests
     container = container.withExec(["cargo", "test"]);

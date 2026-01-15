@@ -3,9 +3,10 @@
 //! These tests verify that:
 //! - Repositories are tracked when sessions are created
 //! - Path canonicalization prevents duplicates
-//! - The limit of 10 repos is enforced
+//! - The limit of 20 repos is enforced
 //! - Non-existent paths are filtered
 //! - UPSERT behavior updates timestamps correctly
+//! - Subdirectories are tracked separately (subpath specificity)
 
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -185,8 +186,8 @@ async fn test_path_canonicalization_prevents_duplicates() {
 async fn test_limit_enforcement_removes_oldest() {
     let (manager, _temp_dir, repos_dir) = create_test_manager().await;
 
-    // Create 11 different repos to exceed the limit of 10
-    for i in 0..11 {
+    // Create 21 different repos to exceed the limit of 20
+    for i in 0..21 {
         let repo_path = repos_dir.path().join(format!("repo-{i}"));
         std::fs::create_dir_all(&repo_path).expect("Failed to create repo dir");
         init_git_repo(&repo_path);
@@ -207,12 +208,12 @@ async fn test_limit_enforcement_removes_oldest() {
             .expect("Failed to create session");
     }
 
-    // Should only have 10 repos (the limit)
+    // Should only have 20 repos (the limit)
     let recent = manager
         .get_recent_repos()
         .await
         .expect("Failed to get recent repos");
-    assert_eq!(recent.len(), 10, "Should enforce limit of 10 repos");
+    assert_eq!(recent.len(), 20, "Should enforce limit of 20 repos");
 
     // The first repo (repo-0) should not be in the list
     let first_repo = repos_dir.path().join("repo-0").canonicalize().unwrap();
@@ -372,7 +373,7 @@ async fn test_nonexistent_repo_handles_gracefully() {
     // but will not store the path since it can't be canonicalized
     let nonexistent = PathBuf::from("/definitely/does/not/exist");
     store
-        .add_recent_repo(nonexistent.clone())
+        .add_recent_repo(nonexistent.clone(), PathBuf::new())
         .await
         .expect("Should handle nonexistent paths gracefully");
 
@@ -382,4 +383,227 @@ async fn test_nonexistent_repo_handles_gracefully() {
         .await
         .expect("Failed to get recent repos");
     assert_eq!(recent.len(), 0, "Non-existent paths should not be stored");
+}
+
+#[tokio::test]
+async fn test_subdirectories_tracked_separately() {
+    let (manager, _temp_dir, repos_dir) = create_test_manager().await;
+
+    // Create a monorepo with subdirectories
+    let repo_path = repos_dir.path().join("monorepo");
+    std::fs::create_dir_all(&repo_path).expect("Failed to create repo dir");
+    init_git_repo(&repo_path);
+
+    // Create subdirectories
+    let packages_foo = repo_path.join("packages/foo");
+    let packages_bar = repo_path.join("packages/bar");
+    std::fs::create_dir_all(&packages_foo).expect("Failed to create packages/foo");
+    std::fs::create_dir_all(&packages_bar).expect("Failed to create packages/bar");
+
+    // Create session in packages/foo
+    manager
+        .create_session(
+            packages_foo.to_string_lossy().to_string(),
+            "Prompt 1".to_string(),
+            BackendType::Zellij,
+            AgentType::ClaudeCode,
+            true,
+            false,
+            false,
+            Default::default(),
+            vec![],
+        )
+        .await
+        .expect("Failed to create session in packages/foo");
+
+    // Small delay to ensure different timestamps
+    tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+
+    // Create session in packages/bar
+    manager
+        .create_session(
+            packages_bar.to_string_lossy().to_string(),
+            "Prompt 2".to_string(),
+            BackendType::Zellij,
+            AgentType::ClaudeCode,
+            true,
+            false,
+            false,
+            Default::default(),
+            vec![],
+        )
+        .await
+        .expect("Failed to create session in packages/bar");
+
+    // Should have 2 separate entries
+    let recent = manager
+        .get_recent_repos()
+        .await
+        .expect("Failed to get recent repos");
+    assert_eq!(
+        recent.len(),
+        2,
+        "Should have 2 separate entries for different subdirectories"
+    );
+
+    // Both should have the same repo_path (git root)
+    let canonical_repo = repo_path.canonicalize().expect("Failed to canonicalize");
+    assert_eq!(recent[0].repo_path, canonical_repo);
+    assert_eq!(recent[1].repo_path, canonical_repo);
+
+    // But different subdirectories
+    let subdirs: Vec<String> = recent
+        .iter()
+        .map(|r| r.subdirectory.to_string_lossy().to_string())
+        .collect();
+    assert!(
+        subdirs.contains(&"packages/bar".to_string()),
+        "Should have packages/bar subdirectory"
+    );
+    assert!(
+        subdirs.contains(&"packages/foo".to_string()),
+        "Should have packages/foo subdirectory"
+    );
+}
+
+#[tokio::test]
+async fn test_same_subdir_updates_timestamp() {
+    let (manager, _temp_dir, repos_dir) = create_test_manager().await;
+
+    let repo_path = repos_dir.path().join("monorepo");
+    std::fs::create_dir_all(&repo_path).expect("Failed to create repo dir");
+    init_git_repo(&repo_path);
+
+    let packages_foo = repo_path.join("packages/foo");
+    std::fs::create_dir_all(&packages_foo).expect("Failed to create packages/foo");
+
+    // Create first session in packages/foo
+    manager
+        .create_session(
+            packages_foo.to_string_lossy().to_string(),
+            "Prompt 1".to_string(),
+            BackendType::Zellij,
+            AgentType::ClaudeCode,
+            true,
+            false,
+            false,
+            Default::default(),
+            vec![],
+        )
+        .await
+        .expect("Failed to create session 1");
+
+    let recent1 = manager
+        .get_recent_repos()
+        .await
+        .expect("Failed to get recent repos");
+    assert_eq!(recent1.len(), 1);
+    let timestamp1 = recent1[0].last_used;
+
+    // Wait to ensure different timestamp
+    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+
+    // Create second session in same subdirectory
+    manager
+        .create_session(
+            packages_foo.to_string_lossy().to_string(),
+            "Prompt 2".to_string(),
+            BackendType::Zellij,
+            AgentType::ClaudeCode,
+            true,
+            false,
+            false,
+            Default::default(),
+            vec![],
+        )
+        .await
+        .expect("Failed to create session 2");
+
+    // Should still have only 1 entry (same repo + subdir)
+    let recent2 = manager
+        .get_recent_repos()
+        .await
+        .expect("Failed to get recent repos");
+    assert_eq!(
+        recent2.len(),
+        1,
+        "Should deduplicate same repo+subdirectory"
+    );
+
+    // But timestamp should be updated
+    let timestamp2 = recent2[0].last_used;
+    assert!(
+        timestamp2 > timestamp1,
+        "Timestamp should be updated: {timestamp2} > {timestamp1}"
+    );
+}
+
+#[tokio::test]
+async fn test_subdirectories_respect_limit() {
+    let (manager, _temp_dir, repos_dir) = create_test_manager().await;
+
+    // Create a monorepo
+    let repo_path = repos_dir.path().join("monorepo");
+    std::fs::create_dir_all(&repo_path).expect("Failed to create repo dir");
+    init_git_repo(&repo_path);
+
+    // Create 22 different subdirectories to exceed the 20 limit
+    for i in 0..22 {
+        let subdir = repo_path.join(format!("package-{i}"));
+        std::fs::create_dir_all(&subdir).expect("Failed to create subdir");
+
+        manager
+            .create_session(
+                subdir.to_string_lossy().to_string(),
+                format!("Prompt {i}"),
+                BackendType::Zellij,
+                AgentType::ClaudeCode,
+                true,
+                false,
+                false,
+                Default::default(),
+                vec![],
+            )
+            .await
+            .expect("Failed to create session");
+
+        // Small delay to ensure different timestamps
+        tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+    }
+
+    // Should only have 20 entries (the limit)
+    let recent = manager
+        .get_recent_repos()
+        .await
+        .expect("Failed to get recent repos");
+    assert_eq!(
+        recent.len(),
+        20,
+        "Should enforce limit of 20 entries even with subdirectories"
+    );
+
+    // The oldest subdirectories should not be in the list
+    let subdirs: Vec<String> = recent
+        .iter()
+        .map(|r| r.subdirectory.to_string_lossy().to_string())
+        .collect();
+
+    assert!(
+        !subdirs.contains(&"package-0".to_string()),
+        "Oldest subdirectory should have been removed"
+    );
+    assert!(
+        !subdirs.contains(&"package-1".to_string()),
+        "Second oldest subdirectory should have been removed"
+    );
+
+    // The newest subdirectories should be in the list
+    assert!(
+        subdirs.contains(&"package-21".to_string()),
+        "Newest subdirectory should be in the list"
+    );
+    assert!(
+        subdirs.contains(&"package-20".to_string()),
+        "Second newest subdirectory should be in the list"
+    );
 }

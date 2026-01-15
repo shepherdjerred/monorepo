@@ -35,8 +35,8 @@ pub trait GitOperations: Send + Sync {
 /// Options for creating an execution backend session.
 #[derive(Debug, Clone, Default)]
 pub struct CreateOptions {
-    /// The type of agent to use.
-    pub agent_type: AgentType,
+    /// Agent to run (Claude Code, Codex, or Gemini).
+    pub agent: AgentType,
 
     /// Run in print mode (non-interactive, outputs response and exits).
     /// Only applicable to Docker backend.

@@ -16,6 +16,9 @@ use tokio::time::timeout;
 
 use super::kubernetes_config::{KubernetesConfig, KubernetesProxyConfig};
 use super::traits::{CreateOptions, ExecutionBackend};
+use crate::core::AgentType;
+use crate::plugins::PluginDiscovery;
+use crate::proxy::{dummy_auth_json_string, dummy_config_toml};
 
 /// Sanitize git config value to prevent environment variable injection
 ///
@@ -184,6 +187,13 @@ impl KubernetesBackend {
             self.create_shared_pvc("clauderon-sccache", &self.config.sccache_cache_size)
                 .await?;
             tracing::info!("Created shared sccache PVC");
+        }
+
+        // Create uploads PVC for image attachments (shared across sessions)
+        // Unlike workspace PVCs which are per-session, uploads are shared with session-id subdirectories
+        if pvcs.get("clauderon-uploads").await.is_err() {
+            self.create_shared_pvc("clauderon-uploads", "10Gi").await?;
+            tracing::info!("Created shared uploads PVC");
         }
 
         Ok(())
@@ -366,6 +376,24 @@ impl KubernetesBackend {
     async fn create_claude_config_configmap(&self, pod_name: &str) -> anyhow::Result<()> {
         let cms: Api<ConfigMap> = Api::namespaced(self.client.clone(), &self.config.namespace);
 
+        // Discover plugins from host (where clauderon server runs)
+        // Note: Plugins cannot be mounted in Kubernetes pods without PersistentVolumes
+        let plugin_discovery = PluginDiscovery::new(
+            dirs::home_dir()
+                .unwrap_or_else(|| std::path::PathBuf::from("/tmp"))
+                .join(".claude"),
+        );
+
+        if let Ok(plugin_manifest) = plugin_discovery.discover_plugins() {
+            if !plugin_manifest.installed_plugins.is_empty() {
+                tracing::warn!(
+                    plugin_count = plugin_manifest.installed_plugins.len(),
+                    "Plugins discovered but cannot be mounted in Kubernetes pods. \
+                     Plugin functionality will be limited. Future enhancement: use PersistentVolumes for plugin support."
+                );
+            }
+        }
+
         // Create minimal .claude.json config
         let claude_config = serde_json::json!({
             "version": "1.0",
@@ -378,6 +406,51 @@ impl KubernetesBackend {
         let cm = ConfigMap {
             metadata: ObjectMeta {
                 name: Some(format!("{pod_name}-config")),
+                namespace: Some(self.config.namespace.clone()),
+                labels: Some({
+                    let mut labels = BTreeMap::new();
+                    labels.insert("clauderon.io/managed".to_string(), "true".to_string());
+                    labels
+                }),
+                ..Default::default()
+            },
+            data: Some(data),
+            ..Default::default()
+        };
+
+        cms.create(&PostParams::default(), &cm).await?;
+        Ok(())
+    }
+
+    /// Create ConfigMap for Codex dummy auth/config (if proxy enabled)
+    async fn create_codex_config_configmap(&self, pod_name: &str) -> anyhow::Result<()> {
+        let Some(ref proxy_config) = self.proxy_config else {
+            return Ok(());
+        };
+
+        if !proxy_config.enabled {
+            return Ok(());
+        }
+
+        let cms: Api<ConfigMap> = Api::namespaced(self.client.clone(), &self.config.namespace);
+        let codex_dir = proxy_config.clauderon_dir.join("codex");
+        let auth_path = codex_dir.join("auth.json");
+        let config_path = codex_dir.join("config.toml");
+
+        let auth_json = match std::fs::read_to_string(&auth_path) {
+            Ok(contents) => contents,
+            Err(_) => dummy_auth_json_string(None)?,
+        };
+        let config_toml = std::fs::read_to_string(&config_path)
+            .unwrap_or_else(|_| dummy_config_toml().to_string());
+
+        let mut data = BTreeMap::new();
+        data.insert("auth.json".to_string(), auth_json);
+        data.insert("config.toml".to_string(), config_toml);
+
+        let cm = ConfigMap {
+            metadata: ObjectMeta {
+                name: Some(format!("{pod_name}-codex-config")),
                 namespace: Some(self.config.namespace.clone()),
                 labels: Some({
                     let mut labels = BTreeMap::new();
@@ -587,6 +660,13 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
                 ..Default::default()
             });
         }
+        if options.agent == AgentType::Codex {
+            env.push(EnvVar {
+                name: "CODEX_HOME".to_string(),
+                value: Some("/workspace/.codex".to_string()),
+                ..Default::default()
+            });
+        }
 
         // Add proxy configuration if enabled
         if let Some(ref proxy_config) = self.proxy_config {
@@ -657,12 +737,29 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
                             value: Some("clauderon-proxy".to_string()),
                             ..Default::default()
                         },
-                        EnvVar {
-                            name: "CLAUDE_CODE_OAUTH_TOKEN".to_string(),
-                            value: Some("sk-ant-oat01-clauderon-proxy-placeholder".to_string()),
-                            ..Default::default()
-                        },
                     ]);
+
+                    match options.agent {
+                        AgentType::ClaudeCode => {
+                            env.push(EnvVar {
+                                name: "CLAUDE_CODE_OAUTH_TOKEN".to_string(),
+                                value: Some("sk-ant-oat01-clauderon-proxy-placeholder".to_string()),
+                                ..Default::default()
+                            });
+                        }
+                        AgentType::Codex => {
+                            env.push(EnvVar {
+                                name: "OPENAI_API_KEY".to_string(),
+                                value: Some("sk-openai-clauderon-proxy-placeholder".to_string()),
+                                ..Default::default()
+                            });
+                            env.push(EnvVar {
+                                name: "CODEX_API_KEY".to_string(),
+                                value: Some("sk-openai-clauderon-proxy-placeholder".to_string()),
+                                ..Default::default()
+                            });
+                        }
+                    }
                 }
             }
         }
@@ -670,71 +767,96 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
         // Build agent command
         // Build a wrapper script that handles both initial creation and pod restart:
         // - On first run: session file doesn't exist → create new session with prompt
-        // - On restart: session file exists → resume session with --resume --fork
-        let claude_cmd = {
-            use crate::agents::{
-                claude_code::ClaudeCodeAgent, gemini_code::GeminiCodeAgent, traits::Agent,
-            };
-            use crate::core::AgentType;
-
+        // - On restart: session file exists → resume session
+        let agent_cmd = {
             let escaped_prompt = initial_prompt.replace('\'', "'\\''");
 
-            // Build command using appropriate agent
-            let mut cmd_vec: Vec<String> = match options.agent_type {
-                AgentType::Claude => {
-                    let agent = ClaudeCodeAgent::new();
-                    agent.start_command(&escaped_prompt, &options.images, options.dangerous_skip_checks, None)
-                }
-                AgentType::Gemini => {
-                    let agent = GeminiCodeAgent::new();
-                    agent.start_command(&escaped_prompt, &options.images, options.dangerous_skip_checks, None)
-                }
-            };
-
-            // Add print mode flags if enabled
-            if options.print_mode {
-                cmd_vec.insert(1, "--print".to_string());
-            }
-            if options.plan_mode {
-                cmd_vec.insert(1, "--plan".to_string());
-            }
-
-            // Determine CLI name based on agent type
-            let cli_name = match options.agent_type {
-                AgentType::Claude => "claude",
-                AgentType::Gemini => "gemini",
-            };
-
-            if let Some(session_id) = options.session_id {
-                let session_id_str = session_id.to_string();
-
-                // Build the create command with session ID
-                let mut create_cmd = vec![cli_name.to_string()];
-                create_cmd.push("--session-id".to_string());
-                create_cmd.push(session_id_str.clone());
-                // Add remaining args (skip CLI name at index 0)
-                create_cmd.extend(cmd_vec.iter().skip(1).cloned());
-                let create_cmd_str = create_cmd.join(" ");
-
-                // Build resume command
-                // Use --resume to continue an existing session instead of --session-id
-                // which would try to create a new session with that ID
-                // --fork-session creates a new session ID from the session so we don't modify the original
-                let resume_cmd = if options.dangerous_skip_checks {
-                    format!(
-                        "{} --dangerously-skip-permissions --resume {} --fork-session",
-                        cli_name,
-                        session_id_str
-                    )
+            let quote_arg = |arg: &str| -> String {
+                if arg.contains('\'')
+                    || arg.contains(' ')
+                    || arg.contains('\n')
+                    || arg.contains('&')
+                    || arg.contains('|')
+                {
+                    let escaped = arg.replace('\'', "'\\''");
+                    format!("'{escaped}'")
                 } else {
-                    format!("{} --resume {} --fork-session", cli_name, session_id_str)
-                };
+                    arg.to_string()
+                }
+            };
 
-                // Generate wrapper script that detects restart via session history file
-                // Agent stores session history at: .claude/projects/-workspace/<session-id>.jsonl
-                format!(
-                    r#"SESSION_ID="{session_id}"
-HISTORY_FILE="/workspace/.claude/projects/-workspace/${{SESSION_ID}}.jsonl"
+            // Translate image paths from host to container
+            // Host: /Users/name/.clauderon/uploads/... → Container: /workspace/.clauderon/uploads/...
+            let translated_images: Vec<String> = options
+                .images
+                .iter()
+                .map(|image_path| {
+                    crate::utils::paths::translate_image_path_to_container(image_path)
+                })
+                .collect();
+
+            match options.agent {
+                AgentType::ClaudeCode => {
+                    // Build base args (without session-id, we add it in wrapper)
+                    let mut base_args = vec!["claude".to_string()];
+                    if options.print_mode {
+                        base_args.push("--print".to_string());
+                        base_args.push("--verbose".to_string());
+                    }
+                    if options.plan_mode {
+                        base_args.push("--plan".to_string());
+                    }
+                    if options.dangerous_skip_checks {
+                        base_args.push("--dangerously-skip-permissions".to_string());
+                    }
+                    for image in &translated_images {
+                        base_args.push("--image".to_string());
+                        base_args.push(image.clone());
+                    }
+
+                    if let Some(session_id) = options.session_id {
+                        let session_id_str = session_id.to_string();
+
+                        // Build create command with all args
+                        let mut create_cmd = base_args.clone();
+                        create_cmd.insert(1, "--session-id".to_string());
+                        create_cmd.insert(2, session_id_str.clone());
+                        if !escaped_prompt.is_empty() {
+                            create_cmd.push(escaped_prompt.clone());
+                        }
+                        let create_cmd = create_cmd
+                            .iter()
+                            .map(|a| quote_arg(a))
+                            .collect::<Vec<_>>()
+                            .join(" ");
+
+                        // Build resume command
+                        let resume_cmd = if options.dangerous_skip_checks {
+                            format!(
+                                "claude --dangerously-skip-permissions --resume {} --fork-session",
+                                session_id_str
+                            )
+                        } else {
+                            format!("claude --resume {} --fork-session", session_id_str)
+                        };
+
+                        // Generate wrapper script
+                        let project_path = if options.initial_workdir.as_os_str().is_empty() {
+                            "-workspace".to_string()
+                        } else {
+                            format!(
+                                "-workspace-{}",
+                                options
+                                    .initial_workdir
+                                    .display()
+                                    .to_string()
+                                    .replace('/', "-")
+                            )
+                        };
+
+                        format!(
+                            r#"SESSION_ID="{session_id}"
+HISTORY_FILE="/workspace/.claude/projects/{project_path}/${{SESSION_ID}}.jsonl"
 if [ -f "$HISTORY_FILE" ]; then
     echo "Resuming existing session $SESSION_ID"
     exec {resume_cmd}
@@ -742,13 +864,183 @@ else
     echo "Creating new session $SESSION_ID"
     exec {create_cmd}
 fi"#,
-                    session_id = session_id_str,
-                    resume_cmd = resume_cmd,
-                    create_cmd = create_cmd_str,
-                )
-            } else {
-                // No session ID - just run the command directly
-                cmd_vec.join(" ")
+                            session_id = session_id_str,
+                            project_path = project_path,
+                            resume_cmd = resume_cmd,
+                            create_cmd = create_cmd,
+                        )
+                    } else {
+                        // No session ID - just run the command directly
+                        let mut cmd_vec = base_args;
+                        if !escaped_prompt.is_empty() {
+                            cmd_vec.push(escaped_prompt.clone());
+                        }
+                        cmd_vec
+                            .iter()
+                            .map(|a| quote_arg(a))
+                            .collect::<Vec<_>>()
+                            .join(" ")
+                    }
+                }
+                AgentType::Codex => {
+                    let codex_preamble = r#"CODEX_HOME="/workspace/.codex"
+export CODEX_HOME
+mkdir -p "$CODEX_HOME"
+if [ -f /etc/clauderon/codex/auth.json ]; then
+    cp /etc/clauderon/codex/auth.json "$CODEX_HOME/auth.json"
+fi
+if [ -f /etc/clauderon/codex/config.toml ]; then
+    cp /etc/clauderon/codex/config.toml "$CODEX_HOME/config.toml"
+fi"#;
+                    if options.print_mode {
+                        let mut cmd_vec = vec!["codex".to_string()];
+                        if options.dangerous_skip_checks {
+                            cmd_vec.push("--full-auto".to_string());
+                        }
+                        cmd_vec.push("exec".to_string());
+                        for image in &translated_images {
+                            cmd_vec.push("--image".to_string());
+                            cmd_vec.push(image.clone());
+                        }
+                        if !escaped_prompt.is_empty() {
+                            cmd_vec.push(escaped_prompt.clone());
+                        }
+                        let cmd = cmd_vec
+                            .iter()
+                            .map(|a| quote_arg(a))
+                            .collect::<Vec<_>>()
+                            .join(" ");
+                        format!("{codex_preamble}\n{cmd}")
+                    } else {
+                        let mut create_cmd_vec = vec!["codex".to_string()];
+                        if options.dangerous_skip_checks {
+                            create_cmd_vec.push("--full-auto".to_string());
+                        }
+                        for image in &translated_images {
+                            create_cmd_vec.push("--image".to_string());
+                            create_cmd_vec.push(image.clone());
+                        }
+                        if !escaped_prompt.is_empty() {
+                            create_cmd_vec.push(escaped_prompt.clone());
+                        }
+                        let create_cmd = create_cmd_vec
+                            .iter()
+                            .map(|a| quote_arg(a))
+                            .collect::<Vec<_>>()
+                            .join(" ");
+
+                        let mut resume_cmd_vec = vec!["codex".to_string()];
+                        if options.dangerous_skip_checks {
+                            resume_cmd_vec.push("--full-auto".to_string());
+                        }
+                        resume_cmd_vec.push("resume".to_string());
+                        resume_cmd_vec.push("--last".to_string());
+                        let resume_cmd = resume_cmd_vec
+                            .iter()
+                            .map(|a| quote_arg(a))
+                            .collect::<Vec<_>>()
+                            .join(" ");
+
+                        format!(
+                            r#"{codex_preamble}
+CODEX_DIR="/workspace/.codex/sessions"
+if [ -d "$CODEX_DIR" ] && [ "$(ls -A "$CODEX_DIR" 2>/dev/null)" ]; then
+    echo "Resuming last Codex session"
+    exec {resume_cmd}
+else
+    echo "Creating new Codex session"
+    exec {create_cmd}
+fi"#,
+                            resume_cmd = resume_cmd,
+                            create_cmd = create_cmd,
+                        )
+                    }
+                }
+                AgentType::Gemini => {
+                    // Build base args (similar to Claude Code)
+                    let mut base_args = vec!["gemini".to_string()];
+                    if options.print_mode {
+                        base_args.push("--print".to_string());
+                    }
+                    if options.plan_mode {
+                        base_args.push("--plan".to_string());
+                    }
+                    if options.dangerous_skip_checks {
+                        base_args.push("--dangerously-skip-permissions".to_string());
+                    }
+                    for image in &translated_images {
+                        base_args.push("--image".to_string());
+                        base_args.push(image.clone());
+                    }
+
+                    if let Some(session_id) = options.session_id {
+                        let session_id_str = session_id.to_string();
+
+                        // Build create command
+                        let mut create_cmd = base_args.clone();
+                        create_cmd.insert(1, "--session-id".to_string());
+                        create_cmd.insert(2, session_id_str.clone());
+                        if !escaped_prompt.is_empty() {
+                            create_cmd.push(escaped_prompt.clone());
+                        }
+                        let create_cmd = create_cmd
+                            .iter()
+                            .map(|a| quote_arg(a))
+                            .collect::<Vec<_>>()
+                            .join(" ");
+
+                        // Build resume command
+                        let resume_cmd = if options.dangerous_skip_checks {
+                            format!(
+                                "gemini --dangerously-skip-permissions --resume {} --fork-session",
+                                session_id_str
+                            )
+                        } else {
+                            format!("gemini --resume {} --fork-session", session_id_str)
+                        };
+
+                        // Generate wrapper script
+                        let project_path = if options.initial_workdir.as_os_str().is_empty() {
+                            "-workspace".to_string()
+                        } else {
+                            format!(
+                                "-workspace-{}",
+                                options
+                                    .initial_workdir
+                                    .display()
+                                    .to_string()
+                                    .replace('/', "-")
+                            )
+                        };
+
+                        format!(
+                            r#"SESSION_ID="{session_id}"
+HISTORY_FILE="/workspace/.claude/projects/{project_path}/${{SESSION_ID}}.jsonl"
+if [ -f "$HISTORY_FILE" ]; then
+    echo "Resuming existing session $SESSION_ID"
+    exec {resume_cmd}
+else
+    echo "Creating new session $SESSION_ID"
+    exec {create_cmd}
+fi"#,
+                            session_id = session_id_str,
+                            project_path = project_path,
+                            resume_cmd = resume_cmd,
+                            create_cmd = create_cmd,
+                        )
+                    } else {
+                        // No session ID - just run the command directly
+                        let mut cmd_vec = base_args;
+                        if !escaped_prompt.is_empty() {
+                            cmd_vec.push(escaped_prompt.clone());
+                        }
+                        cmd_vec
+                            .iter()
+                            .map(|a| quote_arg(a))
+                            .collect::<Vec<_>>()
+                            .join(" ")
+                    }
+                }
             }
         };
 
@@ -775,6 +1067,11 @@ fi"#,
                 sub_path: Some("claude.json".to_string()),
                 ..Default::default()
             },
+            VolumeMount {
+                name: "uploads".to_string(),
+                mount_path: "/workspace/.clauderon/uploads".to_string(),
+                ..Default::default()
+            },
         ];
 
         // Add proxy CA mount if enabled
@@ -787,6 +1084,18 @@ fi"#,
                     read_only: Some(true),
                     ..Default::default()
                 });
+            }
+        }
+        if options.agent == AgentType::Codex {
+            if let Some(ref proxy_config) = self.proxy_config {
+                if proxy_config.enabled {
+                    volume_mounts.push(VolumeMount {
+                        name: "codex-config".to_string(),
+                        mount_path: "/etc/clauderon/codex".to_string(),
+                        read_only: Some(true),
+                        ..Default::default()
+                    });
+                }
             }
         }
 
@@ -811,7 +1120,7 @@ fi"#,
             stdin: Some(true), // REQUIRED for kubectl attach
             tty: Some(true),   // REQUIRED for kubectl attach
             command: Some(vec!["bash".to_string(), "-c".to_string()]),
-            args: Some(vec![claude_cmd]),
+            args: Some(vec![agent_cmd]),
             working_dir: Some("/workspace".to_string()),
             env: Some(env),
             volume_mounts: Some(volume_mounts),
@@ -894,6 +1203,16 @@ fi"#,
                 }),
                 ..Default::default()
             },
+            Volume {
+                name: "uploads".to_string(),
+                persistent_volume_claim: Some(
+                    k8s_openapi::api::core::v1::PersistentVolumeClaimVolumeSource {
+                        claim_name: "clauderon-uploads".to_string(),
+                        ..Default::default()
+                    },
+                ),
+                ..Default::default()
+            },
         ];
 
         // Add proxy CA volume if enabled
@@ -907,6 +1226,20 @@ fi"#,
                     }),
                     ..Default::default()
                 });
+            }
+        }
+        if options.agent == AgentType::Codex {
+            if let Some(ref proxy_config) = self.proxy_config {
+                if proxy_config.enabled {
+                    volumes.push(Volume {
+                        name: "codex-config".to_string(),
+                        config_map: Some(k8s_openapi::api::core::v1::ConfigMapVolumeSource {
+                            name: format!("{pod_name}-codex-config"),
+                            ..Default::default()
+                        }),
+                        ..Default::default()
+                    });
+                }
             }
         }
 
@@ -1055,6 +1388,9 @@ impl ExecutionBackend for KubernetesBackend {
 
         // Create Claude config ConfigMap
         self.create_claude_config_configmap(&pod_name).await?;
+        if options.agent == AgentType::Codex {
+            self.create_codex_config_configmap(&pod_name).await?;
+        }
 
         // Create proxy ConfigMap if needed
         self.create_proxy_configmap().await?;
@@ -1114,6 +1450,17 @@ impl ExecutionBackend for KubernetesBackend {
                 tracing::debug!("ConfigMap {config_name} already deleted");
             }
             Err(e) => tracing::warn!("Failed to delete ConfigMap {config_name}: {e}"),
+        }
+        let codex_config_name = format!("{id}-codex-config");
+        match cms
+            .delete(&codex_config_name, &DeleteParams::default())
+            .await
+        {
+            Ok(_) => tracing::info!("Deleted ConfigMap {codex_config_name}"),
+            Err(kube::Error::Api(err)) if err.code == 404 => {
+                tracing::debug!("ConfigMap {codex_config_name} already deleted");
+            }
+            Err(e) => tracing::warn!("Failed to delete ConfigMap {codex_config_name}: {e}"),
         }
 
         // Delete workspace PVC (log warning on failure)

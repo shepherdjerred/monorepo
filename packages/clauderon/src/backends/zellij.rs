@@ -3,8 +3,14 @@ use std::path::Path;
 use tokio::process::Command;
 
 use super::traits::ExecutionBackend;
+use crate::core::AgentType;
 
 /// Zellij terminal multiplexer backend
+///
+/// Note on plugin inheritance: Zellij sessions run directly on the host system,
+/// not in containers. This means Claude Code plugins are automatically available
+/// at ~/.claude/plugins/ without any special configuration or mounting.
+/// No plugin-specific handling is needed for this backend.
 pub struct ZellijBackend;
 
 impl ZellijBackend {
@@ -31,26 +37,34 @@ impl ZellijBackend {
         initial_prompt: &str,
         dangerous_skip_checks: bool,
         images: &[String],
+        agent: AgentType,
         session_id: Option<&uuid::Uuid>,
-        agent_type: crate::core::AgentType,
     ) -> Vec<String> {
-        use crate::agents::{
-            claude_code::ClaudeCodeAgent, gemini_code::GeminiCodeAgent, traits::Agent,
-        };
-        use crate::core::AgentType;
+        use crate::agents::traits::Agent;
+        use crate::agents::{ClaudeCodeAgent, CodexAgent, GeminiCodeAgent};
 
         let escaped_prompt = initial_prompt.replace('\'', "'\\''");
 
-        // Build command using the selected agent
-        let cmd_vec = match agent_type {
-            AgentType::Claude => {
-                let agent = ClaudeCodeAgent::new();
-                agent.start_command(&escaped_prompt, images, dangerous_skip_checks, session_id)
-            }
-            AgentType::Gemini => {
-                let agent = GeminiCodeAgent::new();
-                agent.start_command(&escaped_prompt, images, dangerous_skip_checks, session_id)
-            }
+        // Build agent command
+        let cmd_vec = match agent {
+            AgentType::ClaudeCode => ClaudeCodeAgent::new().start_command(
+                &escaped_prompt,
+                images,
+                dangerous_skip_checks,
+                session_id,
+            ),
+            AgentType::Codex => CodexAgent::new().start_command(
+                &escaped_prompt,
+                images,
+                dangerous_skip_checks,
+                session_id,
+            ),
+            AgentType::Gemini => GeminiCodeAgent::new().start_command(
+                &escaped_prompt,
+                images,
+                dangerous_skip_checks,
+                session_id,
+            ),
         };
 
         // Join all arguments into a shell command, properly quoting each argument
@@ -138,6 +152,7 @@ impl ExecutionBackend for ZellijBackend {
             initial_prompt,
             options.dangerous_skip_checks,
             &options.images,
+            options.agent,
             options.session_id.as_ref(),
             options.agent_type,
         );
@@ -255,7 +270,7 @@ impl ZellijBackend {
             workdir,
             initial_prompt,
             super::traits::CreateOptions {
-                agent_type: crate::core::AgentType::Claude,
+                agent: AgentType::ClaudeCode,
                 print_mode: false,
                 plan_mode: true, // Default to plan mode
                 session_proxy_port: None,
@@ -311,8 +326,8 @@ mod tests {
             "test prompt",
             true,
             &[],
+            AgentType::ClaudeCode,
             None,
-            crate::core::AgentType::Claude,
         );
 
         assert!(
@@ -337,6 +352,7 @@ mod tests {
             "test prompt",
             true,
             &[],
+            AgentType::ClaudeCode,
             None,
             crate::core::AgentType::Claude,
         );
@@ -354,6 +370,7 @@ mod tests {
             prompt_with_quotes,
             true,
             &[],
+            AgentType::ClaudeCode,
             None,
             crate::core::AgentType::Claude,
         );
@@ -387,6 +404,7 @@ mod tests {
             "test prompt",
             true,
             &[],
+            AgentType::ClaudeCode,
             None,
             crate::core::AgentType::Claude,
         );
@@ -405,6 +423,7 @@ mod tests {
             "test prompt",
             true,
             &[],
+            AgentType::ClaudeCode,
             None,
             crate::core::AgentType::Claude,
         );
@@ -428,6 +447,7 @@ mod tests {
             "test prompt",
             true,
             &[],
+            AgentType::ClaudeCode,
             None,
             crate::core::AgentType::Claude,
         );
@@ -451,6 +471,7 @@ mod tests {
             "test prompt",
             true,
             &images,
+            AgentType::ClaudeCode,
             None,
             crate::core::AgentType::Claude,
         );
@@ -476,6 +497,7 @@ mod tests {
             "test prompt",
             true,
             &images,
+            AgentType::ClaudeCode,
             None,
             crate::core::AgentType::Claude,
         );
@@ -496,6 +518,7 @@ mod tests {
             "test prompt",
             true,
             &[],
+            AgentType::ClaudeCode,
             None,
             crate::core::AgentType::Claude,
         );
