@@ -250,7 +250,6 @@ fn test_zellij_action_schema() {
         &[],
         AgentType::ClaudeCode,
         None,
-        AgentType::ClaudeCode,
     );
 
     // Must start with action
