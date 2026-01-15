@@ -1,3 +1,4 @@
+use anyhow::Context;
 use async_trait::async_trait;
 use k8s_openapi::api::core::v1::{
     ConfigMap, Container, EnvVar, HostAlias, Namespace, PersistentVolumeClaim,
