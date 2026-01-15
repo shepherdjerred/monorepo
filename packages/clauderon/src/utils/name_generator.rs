@@ -102,6 +102,8 @@ async fn call_claude_cli(repo_path: &str, initial_prompt: &str) -> anyhow::Resul
         .arg(json_schema)
         .arg("--model")
         .arg("haiku")
+        .arg("--max-turns")
+        .arg("10")
         .arg("--dangerously-skip-permissions")
         .arg(&prompt);
 
@@ -131,6 +133,31 @@ async fn call_claude_cli(repo_path: &str, initial_prompt: &str) -> anyhow::Resul
 
     let json: serde_json::Value = serde_json::from_str(&stdout)
         .map_err(|e| anyhow::anyhow!("Failed to parse JSON output: {e}"))?;
+
+    // Check subtype before extracting structured_output
+    let subtype = json
+        .get("subtype")
+        .and_then(|v| v.as_str())
+        .unwrap_or("unknown");
+
+    tracing::debug!("Claude CLI response subtype: {}", subtype);
+
+    if subtype != "success" {
+        // Special handling for error_max_turns with --json-schema
+        if subtype == "error_max_turns" {
+            anyhow::bail!(
+                "Error: --json-schema was provided but Claude did not return structured_output. \
+                 Result subtype: error_max_turns. The conversation reached the maximum turn limit \
+                 before completing the structured output request."
+            );
+        }
+
+        // Generic error for other non-success subtypes
+        anyhow::bail!(
+            "Claude CLI returned non-success response with subtype: {}",
+            subtype
+        );
+    }
 
     // Extract the structured_output field (CLI returns wrapper object)
     let structured_output = json.get("structured_output").ok_or_else(|| {
@@ -267,5 +294,27 @@ mod tests {
         assert_eq!(title, "Test Session Title");
         assert_eq!(description, "Test session description");
         assert_eq!(branch_name, "test-branch");
+    }
+
+    #[test]
+    fn test_error_max_turns_response_format() {
+        // Verify that error_max_turns responses have the expected format
+        // Note: This tests response parsing, not the full error handling path
+        // which happens in the private call_claude_cli function
+        let json_response = r#"{
+            "type": "result",
+            "subtype": "error_max_turns",
+            "is_error": true,
+            "session_id": "test-123",
+            "usage": {}
+        }"#;
+
+        let json: serde_json::Value = serde_json::from_str(json_response).unwrap();
+        let subtype = json.get("subtype").and_then(|v| v.as_str()).unwrap();
+
+        // Verify the response has the expected structure
+        assert_eq!(subtype, "error_max_turns");
+        assert!(json.get("structured_output").is_none());
+        assert_eq!(json.get("is_error").and_then(|v| v.as_bool()), Some(true));
     }
 }
