@@ -79,7 +79,7 @@ pub struct Session {
     /// Access mode for proxy filtering
     pub access_mode: AccessMode,
 
-    /// Port for session-specific HTTP proxy (Docker only)
+    /// Port for session-specific HTTP proxy (container backends: Docker and Apple Container)
     pub proxy_port: Option<u16>,
 
     /// Path to Claude Code's session history file (.jsonl)
