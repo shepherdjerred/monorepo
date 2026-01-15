@@ -156,23 +156,43 @@ impl ColumnWidths {
         let shrink_ratio = available_for_columns as f64 / total_current as f64;
 
         // Apply proportional shrinking, respecting minimums
-        #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss, clippy::cast_precision_loss)]
+        #[allow(
+            clippy::cast_possible_truncation,
+            clippy::cast_sign_loss,
+            clippy::cast_precision_loss
+        )]
         let name_shrunk = (self.name as f64 * shrink_ratio).max(0.0).round() as usize;
         self.name = name_shrunk.max(Self::NAME_RANGE.0);
 
-        #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss, clippy::cast_precision_loss)]
+        #[allow(
+            clippy::cast_possible_truncation,
+            clippy::cast_sign_loss,
+            clippy::cast_precision_loss
+        )]
         let repo_shrunk = (self.repository as f64 * shrink_ratio).max(0.0).round() as usize;
         self.repository = repo_shrunk.max(Self::REPO_RANGE.0);
 
-        #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss, clippy::cast_precision_loss)]
+        #[allow(
+            clippy::cast_possible_truncation,
+            clippy::cast_sign_loss,
+            clippy::cast_precision_loss
+        )]
         let status_shrunk = (self.status as f64 * shrink_ratio).max(0.0).round() as usize;
         self.status = status_shrunk.max(Self::STATUS_RANGE.0);
 
-        #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss, clippy::cast_precision_loss)]
+        #[allow(
+            clippy::cast_possible_truncation,
+            clippy::cast_sign_loss,
+            clippy::cast_precision_loss
+        )]
         let backend_shrunk = (self.backend as f64 * shrink_ratio).max(0.0).round() as usize;
         self.backend = backend_shrunk.max(Self::BACKEND_RANGE.0);
 
-        #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss, clippy::cast_precision_loss)]
+        #[allow(
+            clippy::cast_possible_truncation,
+            clippy::cast_sign_loss,
+            clippy::cast_precision_loss
+        )]
         let branch_pr_shrunk = (self.branch_pr as f64 * shrink_ratio).max(0.0).round() as usize;
         self.branch_pr = branch_pr_shrunk.max(Self::BRANCH_PR_RANGE.0);
 
@@ -308,7 +328,9 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         .iter()
         .map(|session| {
             let status_style = match session.status {
-                SessionStatus::Creating | SessionStatus::Deleting => Style::default().fg(Color::Yellow),
+                SessionStatus::Creating | SessionStatus::Deleting => {
+                    Style::default().fg(Color::Yellow)
+                }
                 SessionStatus::Running => Style::default().fg(Color::Green),
                 SessionStatus::Idle => Style::default().fg(Color::Blue),
                 SessionStatus::Completed => Style::default().fg(Color::Cyan),
