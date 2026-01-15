@@ -231,6 +231,25 @@ impl Client {
         }
     }
 
+    /// Refresh a session (pull latest image and recreate container)
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the session is not found or refresh fails.
+    pub async fn refresh_session(&mut self, id: &str) -> anyhow::Result<()> {
+        let response = self
+            .send_request(Request::RefreshSession { id: id.to_string() })
+            .await?;
+
+        match response {
+            Response::Refreshed => Ok(()),
+            Response::Error { code, message } => {
+                anyhow::bail!("[{code}] {message}")
+            }
+            _ => anyhow::bail!("Unexpected response"),
+        }
+    }
+
     /// Get the attach command for a session
     ///
     /// # Errors

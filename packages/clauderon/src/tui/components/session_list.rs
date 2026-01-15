@@ -217,7 +217,7 @@ fn pad_to_width(text: &str, width: usize) -> String {
 pub fn render(frame: &mut Frame, app: &App, area: Rect) {
     let block = Block::default()
         .title(" Clauderon - Sessions ")
-        .title_bottom(" [n]ew  [d]elete  [a]rchive  [?]help  [q]uit ")
+        .title_bottom(" [n]ew  [d]elete  [a]rchive  [f]refresh  [?]help  [q]uit ")
         .borders(Borders::ALL)
         .border_style(Style::default().fg(Color::Cyan));
 

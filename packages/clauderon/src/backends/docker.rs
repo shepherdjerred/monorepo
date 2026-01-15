@@ -165,6 +165,34 @@ impl DockerBackend {
         }
     }
 
+    /// Pull the latest version of the Docker image
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the docker pull command fails.
+    #[instrument(skip(self))]
+    pub async fn pull_image(&self) -> anyhow::Result<()> {
+        tracing::info!(image = DOCKER_IMAGE, "Pulling Docker image");
+
+        let output = Command::new("docker")
+            .args(["pull", DOCKER_IMAGE])
+            .output()
+            .await?;
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            tracing::error!(
+                image = DOCKER_IMAGE,
+                stderr = %stderr,
+                "Failed to pull Docker image"
+            );
+            anyhow::bail!("Failed to pull Docker image: {stderr}");
+        }
+
+        tracing::info!(image = DOCKER_IMAGE, "Successfully pulled Docker image");
+        Ok(())
+    }
+
     /// Build the docker run command arguments (exposed for testing)
     ///
     /// Returns all arguments that would be passed to `docker run`.

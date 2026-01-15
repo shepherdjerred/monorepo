@@ -110,6 +110,13 @@ export class ClauderonClient {
   }
 
   /**
+   * Refresh a session (pull latest image and recreate container)
+   */
+  async refreshSession(id: string): Promise<void> {
+    await this.request("POST", `/api/sessions/${encodeURIComponent(id)}/refresh`);
+  }
+
+  /**
    * Get recent repositories
    */
   async getRecentRepos(): Promise<RecentRepoDto[]> {
