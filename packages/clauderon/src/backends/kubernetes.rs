@@ -991,7 +991,7 @@ fi"#,
                         create_cmd.insert(1, "--session-id".to_string());
                         create_cmd.insert(2, session_id_str.clone());
                         if !escaped_prompt.is_empty() {
-                            create_cmd.push(escaped_prompt.clone());
+                            create_cmd.push(escaped_prompt);
                         }
                         let create_cmd = create_cmd
                             .iter()
@@ -1042,7 +1042,7 @@ fi"#,
                         // No session ID - just run the command directly
                         let mut cmd_vec = base_args;
                         if !escaped_prompt.is_empty() {
-                            cmd_vec.push(escaped_prompt.clone());
+                            cmd_vec.push(escaped_prompt);
                         }
                         cmd_vec
                             .iter()
@@ -1112,16 +1112,12 @@ fi"#,
         // Determine effective image (override > config)
         let image = options
             .container_image
-            .as_ref()
-            .map(|ic| ic.image.clone())
-            .unwrap_or_else(|| self.config.image.clone());
+            .as_ref().map_or_else(|| self.config.image.clone(), |ic| ic.image.clone());
 
         // Determine effective image pull policy (override > config)
         let image_pull_policy = options
             .container_image
-            .as_ref()
-            .map(|ic| ic.pull_policy.to_kubernetes_value())
-            .unwrap_or_else(|| self.config.image_pull_policy.to_kubernetes_value());
+            .as_ref().map_or_else(|| self.config.image_pull_policy.to_kubernetes_value(), |ic| ic.pull_policy.to_kubernetes_value());
 
         tracing::info!(
             image = %image,
