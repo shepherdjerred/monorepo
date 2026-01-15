@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use typeshare::typeshare;
 use uuid::Uuid;
 
-use super::session::{BackendType, ClaudeWorkingStatus, Session, SessionStatus};
+use super::session::{AccessMode, BackendType, ClaudeWorkingStatus, Session, SessionStatus};
 
 /// Event representing a state change in the system (database model)
 /// Note: This is not exported to TypeScript. For WebSocket events, see api::protocol::Event
