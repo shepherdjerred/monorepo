@@ -1106,24 +1106,80 @@ fi"#,
             }
         }
 
-        // Resource requirements
-        let mut requests = BTreeMap::new();
-        requests.insert("cpu".to_string(), Quantity(self.config.cpu_request.clone()));
-        requests.insert(
-            "memory".to_string(),
-            Quantity(self.config.memory_request.clone()),
+        // Determine effective image (override > config)
+        let image = options
+            .container_image
+            .as_ref()
+            .map(|ic| ic.image.clone())
+            .unwrap_or_else(|| self.config.image.clone());
+
+        // Determine effective image pull policy (override > config)
+        let image_pull_policy = options
+            .container_image
+            .as_ref()
+            .map(|ic| ic.pull_policy.to_kubernetes_value())
+            .unwrap_or_else(|| self.config.image_pull_policy.to_kubernetes_value());
+
+        tracing::info!(
+            image = %image,
+            pull_policy = %image_pull_policy,
+            has_override = options.container_image.is_some(),
+            "Building Kubernetes pod with image settings"
         );
 
+        // Resource requirements (use override if provided, otherwise use config)
+        let mut requests = BTreeMap::new();
         let mut limits = BTreeMap::new();
-        limits.insert("cpu".to_string(), Quantity(self.config.cpu_limit.clone()));
-        limits.insert(
-            "memory".to_string(),
-            Quantity(self.config.memory_limit.clone()),
-        );
+
+        if let Some(ref resource_override) = options.container_resources {
+            // Use override resources
+            if let Some(ref cpu) = resource_override.cpu {
+                requests.insert("cpu".to_string(), Quantity(cpu.clone()));
+                limits.insert("cpu".to_string(), Quantity(cpu.clone()));
+            } else {
+                // No CPU override, use config
+                requests.insert("cpu".to_string(), Quantity(self.config.cpu_request.clone()));
+                limits.insert("cpu".to_string(), Quantity(self.config.cpu_limit.clone()));
+            }
+
+            if let Some(ref memory) = resource_override.memory {
+                requests.insert("memory".to_string(), Quantity(memory.clone()));
+                limits.insert("memory".to_string(), Quantity(memory.clone()));
+            } else {
+                // No memory override, use config
+                requests.insert(
+                    "memory".to_string(),
+                    Quantity(self.config.memory_request.clone()),
+                );
+                limits.insert(
+                    "memory".to_string(),
+                    Quantity(self.config.memory_limit.clone()),
+                );
+            }
+
+            tracing::info!(
+                cpu = ?resource_override.cpu,
+                memory = ?resource_override.memory,
+                "Using custom resource limits for Kubernetes pod"
+            );
+        } else {
+            // No override, use config defaults
+            requests.insert("cpu".to_string(), Quantity(self.config.cpu_request.clone()));
+            requests.insert(
+                "memory".to_string(),
+                Quantity(self.config.memory_request.clone()),
+            );
+            limits.insert("cpu".to_string(), Quantity(self.config.cpu_limit.clone()));
+            limits.insert(
+                "memory".to_string(),
+                Quantity(self.config.memory_limit.clone()),
+            );
+        }
 
         Container {
             name: "claude".to_string(),
-            image: Some(self.config.image.clone()),
+            image: Some(image),
+            image_pull_policy: Some(image_pull_policy.to_string()),
             stdin: Some(true), // REQUIRED for kubectl attach
             tty: Some(true),   // REQUIRED for kubectl attach
             command: Some(vec!["bash".to_string(), "-c".to_string()]),
