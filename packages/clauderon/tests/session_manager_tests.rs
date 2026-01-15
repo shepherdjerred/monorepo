@@ -443,7 +443,7 @@ async fn test_unarchive_session_success() {
             true,
             false,              // print_mode
             true,               // plan_mode
-            Default::default(), // access_mode
+            AccessMode::default(), // access_mode
             vec![],             // images
             None,               // container_image
             None,               // pull_policy
@@ -480,7 +480,7 @@ async fn test_unarchive_session_not_archived() {
             true,
             false,              // print_mode
             true,               // plan_mode
-            Default::default(), // access_mode
+            AccessMode::default(), // access_mode
             vec![],             // images
             None,               // container_image
             None,               // pull_policy
