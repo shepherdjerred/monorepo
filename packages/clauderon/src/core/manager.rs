@@ -368,7 +368,11 @@ impl SessionManager {
             let mut sessions = self.sessions.write().await;
 
             // Re-check limit with lock held (defense against race)
-            if sessions.len() >= self.max_sessions {
+            let active_count = sessions
+                .iter()
+                .filter(|s| s.status != SessionStatus::Archived)
+                .count();
+            if active_count >= self.max_sessions {
                 // Rollback database save
                 let _ = self.store.delete_session(session.id).await;
                 anyhow::bail!("Maximum session limit reached (prevented race condition)");
