@@ -66,6 +66,149 @@ You can provide an OpenAI API key via:
 - `OPENAI_API_KEY` or `CODEX_API_KEY` environment variables, or
 - `~/.clauderon/secrets/openai_api_key` (for the clauderon proxy to inject)
 
+## Credential Management
+
+Clauderon supports three methods for providing credentials, with the following priority order:
+
+1. **Environment Variables** (highest priority)
+2. **1Password** (if enabled)
+3. **Files in `~/.clauderon/secrets/`** (lowest priority)
+
+### Using Environment Variables
+
+Set credentials directly as environment variables:
+
+```bash
+export GITHUB_TOKEN="ghp_..."
+export CLAUDE_CODE_OAUTH_TOKEN="sk-ant-..."
+export OPENAI_API_KEY="sk-..."
+```
+
+### Using Files
+
+Store credentials in `~/.clauderon/secrets/` directory:
+
+```bash
+mkdir -p ~/.clauderon/secrets
+echo "ghp_..." > ~/.clauderon/secrets/github_token
+echo "sk-ant-..." > ~/.clauderon/secrets/anthropic_oauth_token
+chmod 600 ~/.clauderon/secrets/*
+```
+
+### Using 1Password (Recommended)
+
+Clauderon can securely retrieve credentials from 1Password instead of storing them in plain text files.
+
+#### Setup
+
+1. Install 1Password CLI:
+   ```bash
+   brew install 1password-cli
+   # or download from https://1password.com/downloads/command-line/
+   ```
+
+2. Authenticate with 1Password:
+   ```bash
+   op signin
+   ```
+
+3. Configure credentials in `~/.clauderon/proxy.toml`:
+   ```toml
+   [onepassword]
+   enabled = true
+
+   [onepassword.credentials]
+   github_token = "op://Production/GitHub/token"
+   anthropic_oauth_token = "op://Production/Anthropic/oauth_token"
+   openai_api_key = "op://Production/OpenAI/api_key"
+   pagerduty_token = "op://Production/PagerDuty/api_token"
+   sentry_auth_token = "op://Production/Sentry/auth_token"
+   grafana_api_key = "op://Production/Grafana/api_key"
+   npm_token = "op://Production/NPM/token"
+   docker_token = "op://Production/Docker/token"
+   k8s_token = "op://Production/Kubernetes/token"
+   talos_token = "op://Production/Talos/token"
+   ```
+
+#### Alternative: Environment Variables with 1Password References
+
+You can also set environment variables to 1Password secret references:
+
+```bash
+export GITHUB_TOKEN="op://Production/GitHub/token"
+export CLAUDE_CODE_OAUTH_TOKEN="op://Production/Anthropic/oauth_token"
+```
+
+When these are set, clauderon will automatically detect the `op://` prefix and fetch values from 1Password at startup.
+
+#### Service Accounts for CI/CD
+
+For automated environments, use 1Password service accounts:
+
+```bash
+export OP_SERVICE_ACCOUNT_TOKEN="ops_..."
+```
+
+Service account tokens are automatically detected by the `op` CLI.
+
+**Best Practices:**
+- Grant service accounts read-only access to specific vaults only
+- Use separate service accounts for production vs. staging environments
+- Rotate service account tokens regularly
+- Never commit service account tokens to version control
+
+#### Credential Priority Examples
+
+When credentials are defined in multiple places, clauderon uses the highest priority source:
+
+```bash
+# Example 1: Env var takes precedence
+export GITHUB_TOKEN="from-env"              # ← Used (highest priority)
+# TOML: github_token = "op://vault/item"   # Ignored
+# File: ~/.clauderon/secrets/github_token  # Ignored
+
+# Example 2: 1Password when no env var
+# No GITHUB_TOKEN env var
+# TOML: github_token = "op://vault/item"   # ← Used
+# File: ~/.clauderon/secrets/github_token  # Ignored
+
+# Example 3: File as fallback
+# No GITHUB_TOKEN env var
+# No 1Password configuration
+# File: ~/.clauderon/secrets/github_token  # ← Used
+```
+
+#### Troubleshooting
+
+**"1Password CLI (op) not found"**
+- Ensure `op` is installed and in your PATH
+- Or set a custom path in `proxy.toml`: `op_path = "/custom/path/to/op"`
+
+**"Failed to fetch credential from 1Password"**
+- Verify you're signed in: `op whoami`
+- Check the vault/item/field names in your references
+- Ensure you have access to the specified vault
+
+**Graceful Degradation**
+- If `op` CLI is not available, clauderon will skip 1Password and use environment variables or files
+- Individual credential fetch failures are logged but don't prevent startup
+- The system continues with credentials from other sources
+
+### Supported Credentials
+
+Clauderon supports the following credentials:
+
+- `github_token` - GitHub personal access token
+- `anthropic_oauth_token` - Claude Code OAuth token (CLAUDE_CODE_OAUTH_TOKEN)
+- `openai_api_key` - OpenAI API key (also accepts CODEX_API_KEY)
+- `pagerduty_token` - PagerDuty API token
+- `sentry_auth_token` - Sentry authentication token
+- `grafana_api_key` - Grafana API key
+- `npm_token` - NPM authentication token
+- `docker_token` - Docker Hub token
+- `k8s_token` - Kubernetes authentication token
+- `talos_token` - Talos mTLS token
+
 ## Custom Container Images
 
 Clauderon uses container images to run isolated Claude Code or Codex sessions. The default image is `ghcr.io/shepherdjerred/dotfiles`.
