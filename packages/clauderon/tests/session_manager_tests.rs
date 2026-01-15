@@ -441,14 +441,14 @@ async fn test_unarchive_session_success() {
             BackendType::Zellij,
             AgentType::ClaudeCode,
             true,
-            false,              // print_mode
-            true,               // plan_mode
+            false,                 // print_mode
+            true,                  // plan_mode
             AccessMode::default(), // access_mode
-            vec![],             // images
-            None,               // container_image
-            None,               // pull_policy
-            None,               // cpu_limit
-            None,               // memory_limit
+            vec![],                // images
+            None,                  // container_image
+            None,                  // pull_policy
+            None,                  // cpu_limit
+            None,                  // memory_limit
         )
         .await
         .unwrap();
@@ -478,14 +478,14 @@ async fn test_unarchive_session_not_archived() {
             BackendType::Zellij,
             AgentType::ClaudeCode,
             true,
-            false,              // print_mode
-            true,               // plan_mode
+            false,                 // print_mode
+            true,                  // plan_mode
             AccessMode::default(), // access_mode
-            vec![],             // images
-            None,               // container_image
-            None,               // pull_policy
-            None,               // cpu_limit
-            None,               // memory_limit
+            vec![],                // images
+            None,                  // container_image
+            None,                  // pull_policy
+            None,                  // cpu_limit
+            None,                  // memory_limit
         )
         .await
         .unwrap();
