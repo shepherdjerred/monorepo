@@ -545,7 +545,7 @@ impl SessionManager {
                 dangerous_skip_checks,
                 session_id: Some(session_id),
                 initial_workdir: subdirectory.clone(),
-                agent_type: agent,
+                agent,
                 http_port: self.http_port,
             };
             let backend_id = match backend {
@@ -1775,7 +1775,7 @@ impl SessionManager {
             session_id: Some(session.id),
             initial_workdir: session.subdirectory.clone(),
             http_port: self.http_port,
-            agent_type: session.agent,
+            agent: session.agent,
         };
 
         // Recreate container
