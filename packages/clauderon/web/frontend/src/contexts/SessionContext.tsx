@@ -12,6 +12,7 @@ type SessionContextValue = {
   createSession: (request: CreateSessionRequest) => Promise<string>;
   deleteSession: (id: string) => Promise<void>;
   archiveSession: (id: string) => Promise<void>;
+  refreshSession: (id: string) => Promise<void>;
   updateAccessMode: (id: string, mode: AccessMode) => Promise<void>;
   updateSession: (id: string, title?: string, description?: string) => Promise<void>;
   client: ClauderonClient;
@@ -63,6 +64,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const archiveSession = useCallback(
     async (id: string) => {
       await client.archiveSession(id);
+      await refreshSessions();
+    },
+    [client, refreshSessions]
+  );
+
+  const refreshSession = useCallback(
+    async (id: string) => {
+      await client.refreshSession(id);
       await refreshSessions();
     },
     [client, refreshSessions]
@@ -132,6 +141,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         createSession,
         deleteSession,
         archiveSession,
+        refreshSession,
         updateAccessMode,
         updateSession,
         client,

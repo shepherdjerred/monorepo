@@ -53,6 +53,7 @@ pub fn create_router(auth_state: &Option<AuthState>, dev_mode: bool) -> Router<A
         .route("/api/sessions/{id}", get(get_session))
         .route("/api/sessions/{id}", delete(delete_session))
         .route("/api/sessions/{id}/archive", post(archive_session))
+        .route("/api/sessions/{id}/refresh", post(refresh_session))
         .route("/api/sessions/{id}/access-mode", post(update_access_mode))
         .route("/api/sessions/{id}/metadata", post(update_metadata))
         .route("/api/sessions/{id}/history", get(get_session_history))
@@ -294,6 +295,28 @@ async fn archive_session(
     state.session_manager.archive_session(&id).await?;
 
     // Broadcast session updated event (status changed to Archived)
+    if let Some(session) = state.session_manager.get_session(&id).await {
+        broadcast_event(&state.event_broadcaster, Event::SessionUpdated(session)).await;
+    }
+
+    Ok(StatusCode::NO_CONTENT)
+}
+
+async fn refresh_session(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+) -> Result<StatusCode, AppError> {
+    validate_session_id(&id)?;
+    state
+        .session_manager
+        .refresh_session(&id)
+        .await
+        .map_err(|e| {
+            tracing::error!(error = %e, "Failed to refresh session");
+            AppError::Internal(e.to_string())
+        })?;
+
+    // Broadcast session updated event (container refreshed)
     if let Some(session) = state.session_manager.get_session(&id).await {
         broadcast_event(&state.event_broadcaster, Event::SessionUpdated(session)).await;
     }

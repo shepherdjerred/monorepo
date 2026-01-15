@@ -1351,6 +1351,165 @@ impl SessionManager {
         Ok(())
     }
 
+    /// Refresh a session by recreating its container with the latest image
+    ///
+    /// This operation:
+    /// 1. Pulls the latest Docker image
+    /// 2. Stops and removes the old container
+    /// 3. Creates a new container with the same configuration
+    /// 4. Preserves all session metadata and history
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - Session not found
+    /// - Session is not Docker-based
+    /// - Image pull fails
+    /// - Container recreation fails
+    #[instrument(skip(self), fields(id_or_name = %id_or_name))]
+    pub async fn refresh_session(&self, id_or_name: &str) -> anyhow::Result<()> {
+        // Acquire deletion semaphore (refresh is destructive like delete)
+        let _permit = self
+            .deletion_semaphore
+            .acquire()
+            .await
+            .map_err(|_| anyhow::anyhow!("System is shutting down"))?;
+
+        // Get session and validate it's Docker
+        let session = self
+            .get_session(id_or_name)
+            .await
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {id_or_name}"))?;
+
+        if session.backend != BackendType::Docker {
+            anyhow::bail!("Refresh only supported for Docker sessions");
+        }
+
+        let session_id = session.id;
+
+        // Capture configuration before deletion
+        let (
+            name,
+            repo_path,
+            worktree_path,
+            subdirectory,
+            initial_prompt,
+            agent,
+            dangerous_skip_checks,
+            access_mode,
+            proxy_port,
+            old_backend_id,
+        ) = {
+            let sessions = self.sessions.read().await;
+            let s = sessions
+                .iter()
+                .find(|s| s.id == session_id)
+                .ok_or_else(|| anyhow::anyhow!("Session disappeared"))?;
+
+            (
+                s.name.clone(),
+                s.repo_path.clone(),
+                s.worktree_path.clone(),
+                s.subdirectory.clone(),
+                s.initial_prompt.clone(),
+                s.agent,
+                s.dangerous_skip_checks,
+                s.access_mode,
+                s.proxy_port,
+                s.backend_id.clone(),
+            )
+        };
+
+        // Execute refresh: pull + delete + create
+        let result: anyhow::Result<String> = async {
+            // Pull latest image
+            self.docker
+                .pull_image()
+                .await
+                .context("Failed to pull Docker image")?;
+
+            // Delete old container
+            if let Some(ref backend_id) = old_backend_id {
+                let _ = self.docker.delete(backend_id).await;
+            }
+
+            // Create new container
+            let create_options = crate::backends::CreateOptions {
+                agent,
+                print_mode: false,
+                plan_mode: false,
+                session_proxy_port: proxy_port,
+                images: vec![],
+                dangerous_skip_checks,
+                session_id: Some(session_id),
+                initial_workdir: subdirectory,
+                http_port: self.http_port,
+            };
+
+            let new_backend_id = self
+                .docker
+                .create(&name, &worktree_path, &initial_prompt, create_options)
+                .await
+                .context("Failed to create new container")?;
+
+            // Reinstall hooks for Claude Code
+            if agent == super::session::AgentType::ClaudeCode {
+                let container_name = format!("clauderon-{name}");
+                if let Err(e) = crate::hooks::install_hooks_in_container(&container_name).await {
+                    tracing::warn!(error = %e, "Failed to install hooks (non-fatal)");
+                }
+            }
+
+            Ok(new_backend_id)
+        }
+        .await;
+
+        // Update session based on result
+        match result {
+            Ok(new_backend_id) => {
+                let mut sessions = self.sessions.write().await;
+                if let Some(session) = sessions.iter_mut().find(|s| s.id == session_id) {
+                    session.set_backend_id(new_backend_id.clone());
+                    session.set_status(SessionStatus::Running);
+                    session.reset_reconcile_state();
+
+                    let session_clone = session.clone();
+                    drop(sessions);
+
+                    self.store.save_session(&session_clone).await?;
+
+                    let event = Event::new(
+                        session_id,
+                        EventType::BackendIdSet {
+                            backend_id: new_backend_id.clone(),
+                        },
+                    );
+                    self.store.record_event(&event).await?;
+
+                    // Restart console session
+                    if let Err(err) = self
+                        .console_manager
+                        .ensure_session(session_id, BackendType::Docker, &new_backend_id)
+                        .await
+                    {
+                        tracing::warn!(error = %err, "Failed to start console session");
+                    }
+                }
+                Ok(())
+            }
+            Err(e) => {
+                // Mark as failed
+                let error_msg = format!("{:#}", e);
+                let mut sessions = self.sessions.write().await;
+                if let Some(session) = sessions.iter_mut().find(|s| s.id == session_id) {
+                    session.set_error(SessionStatus::Failed, error_msg.clone());
+                    self.store.save_session(session).await?;
+                }
+                Err(e)
+            }
+        }
+    }
+
     /// Reconcile expected state with reality
     ///
     /// This method:

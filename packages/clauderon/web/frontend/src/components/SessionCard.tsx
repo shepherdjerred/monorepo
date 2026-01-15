@@ -1,7 +1,7 @@
 import type { Session } from "@clauderon/client";
 import { SessionStatus, CheckStatus, ClaudeWorkingStatus } from "@clauderon/shared";
 import { formatRelativeTime } from "../lib/utils";
-import { Archive, Trash2, Terminal, CheckCircle2, XCircle, Clock, Loader2, User, Circle, AlertTriangle, Edit } from "lucide-react";
+import { Archive, Trash2, Terminal, CheckCircle2, XCircle, Clock, Loader2, User, Circle, AlertTriangle, Edit, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,10 +12,11 @@ type SessionCardProps = {
   onAttach: (session: Session) => void;
   onEdit: (session: Session) => void;
   onArchive: (session: Session) => void;
+  onRefresh: (session: Session) => void;
   onDelete: (session: Session) => void;
 }
 
-export function SessionCard({ session, onAttach, onEdit, onArchive, onDelete }: SessionCardProps) {
+export function SessionCard({ session, onAttach, onEdit, onArchive, onRefresh, onDelete }: SessionCardProps) {
   const statusColors: Record<SessionStatus, string> = {
     [SessionStatus.Creating]: "bg-status-creating",
     [SessionStatus.Deleting]: "bg-status-creating",
@@ -138,6 +139,23 @@ export function SessionCard({ session, onAttach, onEdit, onArchive, onDelete }: 
             </TooltipTrigger>
             <TooltipContent>Edit title/description</TooltipContent>
           </Tooltip>
+
+          {session.backend === "Docker" && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => { onRefresh(session); }}
+                  aria-label="Refresh session"
+                  className="cursor-pointer transition-all duration-200 hover:scale-110 hover:shadow-md"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Refresh (pull latest image and recreate)</TooltipContent>
+            </Tooltip>
+          )}
 
           <Tooltip>
             <TooltipTrigger asChild>
