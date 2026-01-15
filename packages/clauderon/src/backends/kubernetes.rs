@@ -1112,12 +1112,14 @@ fi"#,
         // Determine effective image (override > config)
         let image = options
             .container_image
-            .as_ref().map_or_else(|| self.config.image.clone(), |ic| ic.image.clone());
+            .as_ref()
+            .map_or_else(|| self.config.image.clone(), |ic| ic.image.clone());
 
         // Determine effective image pull policy (override > config)
-        let image_pull_policy = options
-            .container_image
-            .as_ref().map_or_else(|| self.config.image_pull_policy.to_kubernetes_value(), |ic| ic.pull_policy.to_kubernetes_value());
+        let image_pull_policy = options.container_image.as_ref().map_or_else(
+            || self.config.image_pull_policy.to_kubernetes_value(),
+            |ic| ic.pull_policy.to_kubernetes_value(),
+        );
 
         tracing::info!(
             image = %image,

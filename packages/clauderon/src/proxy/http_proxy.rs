@@ -241,7 +241,7 @@ impl HttpAuthProxy {
     }
 
     /// Get the listen address.
-    #[must_use] 
+    #[must_use]
     pub fn addr(&self) -> SocketAddr {
         self.addr
     }
