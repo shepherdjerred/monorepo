@@ -1877,6 +1877,9 @@ mod tests {
             None,
             None,
             None,
+            &DockerConfig::default(),
+            None,
+            None,
         )
         .expect("Failed to build args");
 
@@ -1913,6 +1916,9 @@ mod tests {
             std::slice::from_ref(&host_path),
             None,
             None,
+            None,
+            None,
+            &DockerConfig::default(),
             None,
             None,
         )
@@ -2231,6 +2237,9 @@ mod tests {
             None,              // git_user_email
             Some(&session_id), // session_id - required for wrapper script generation
             None,              // http_port
+            &DockerConfig::default(),
+            None,
+            None,
         )
         .expect("Failed to build args");
 
@@ -2268,6 +2277,9 @@ mod tests {
             None,              // git_user_email
             Some(&session_id), // session_id - required for wrapper script generation
             None,              // http_port
+            &DockerConfig::default(),
+            None,
+            None,
         )
         .expect("Failed to build args");
 

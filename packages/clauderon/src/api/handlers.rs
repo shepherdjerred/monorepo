@@ -40,6 +40,10 @@ pub async fn handle_request(request: Request, manager: &SessionManager) -> Respo
                     req.plan_mode,
                     req.access_mode,
                     req.images,
+                    req.container_image,
+                    req.pull_policy,
+                    req.cpu_limit,
+                    req.memory_limit,
                 )
                 .await
             {
