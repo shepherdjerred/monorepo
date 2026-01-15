@@ -1381,8 +1381,9 @@ impl App {
             self.pty_sessions.insert(session_id, pty_session);
         }
 
-        // Update selected index in session list to match
-        if let Some(idx) = self.sessions.iter().position(|s| s.id == session_id) {
+        // Update selected index in session list to match (search in filtered list)
+        let filtered_sessions = self.get_filtered_sessions();
+        if let Some(idx) = filtered_sessions.iter().position(|s| s.id == session_id) {
             self.selected_index = idx;
         }
 
@@ -1433,8 +1434,9 @@ impl App {
             self.pty_sessions.insert(session_id, pty_session);
         }
 
-        // Update selected index in session list to match
-        if let Some(idx) = self.sessions.iter().position(|s| s.id == session_id) {
+        // Update selected index in session list to match (search in filtered list)
+        let filtered_sessions = self.get_filtered_sessions();
+        if let Some(idx) = filtered_sessions.iter().position(|s| s.id == session_id) {
             self.selected_index = idx;
         }
 
