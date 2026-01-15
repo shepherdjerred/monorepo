@@ -10,6 +10,7 @@ mod config;
 mod container_config;
 mod filter;
 mod http_proxy;
+mod kubectl_proxy;
 mod manager;
 mod port_allocator;
 mod rules;
@@ -27,6 +28,7 @@ pub use container_config::{
 };
 pub use filter::{is_read_operation, is_write_operation};
 pub use http_proxy::HttpAuthProxy;
+pub use kubectl_proxy::KubectlProxy;
 pub use manager::ProxyManager;
 pub use port_allocator::PortAllocator;
 pub use rules::{Rule, find_matching_rule};
