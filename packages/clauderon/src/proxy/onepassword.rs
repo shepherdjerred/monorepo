@@ -62,6 +62,7 @@ impl OpReference {
     /// Convert to CLI arguments for `op item get`.
     ///
     /// Generates: `["item", "get", "vault/item", "--fields", "field", "--reveal"]`
+    #[must_use]
     pub fn to_cli_args(&self) -> Vec<String> {
         vec![
             "item".to_string(),
@@ -85,6 +86,7 @@ impl OnePasswordClient {
     /// # Arguments
     ///
     /// * `op_path` - Path to the `op` CLI executable (usually just "op")
+    #[must_use]
     pub fn new(op_path: String) -> Self {
         Self { op_path }
     }
@@ -185,7 +187,7 @@ impl OnePasswordClient {
 
             // Spawn a task for each credential fetch
             let task = tokio::spawn(async move {
-                let client = OnePasswordClient::new(client_path);
+                let client = Self::new(client_path);
                 let result = client.fetch_credential(&op_ref).await;
 
                 match &result {
