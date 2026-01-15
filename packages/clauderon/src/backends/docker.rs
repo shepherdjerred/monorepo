@@ -2130,6 +2130,7 @@ mod tests {
             &DockerConfig::default(),
             None,
             None,
+            &[],
         )
         .expect("Failed to build args");
 
@@ -2455,6 +2456,7 @@ mod tests {
             &DockerConfig::default(),
             None,
             None,
+            &[], // repositories
         )
         .expect("Failed to build args");
 
@@ -2495,6 +2497,7 @@ mod tests {
             &DockerConfig::default(),
             None,
             None,
+            &[], // repositories
         )
         .expect("Failed to build args");
 

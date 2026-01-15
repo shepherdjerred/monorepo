@@ -120,6 +120,7 @@ pub fn replay_events(events: &[Event]) -> Option<Session> {
         worktree_path,
         subdirectory: std::path::PathBuf::new(),
         branch_name: name.clone(),
+        repositories: None, // Loaded separately from database
         initial_prompt: initial_prompt.clone(),
         backend: *backend,
         agent: super::session::AgentType::ClaudeCode,
