@@ -166,7 +166,6 @@ pub async fn handle_paste_event(app: &mut App, text: &str) -> anyhow::Result<()>
         }
         AppMode::CopyMode
         | AppMode::SessionList
-        | AppMode::CreateDialog
         | AppMode::ConfirmDelete
         | AppMode::Help
         | AppMode::Locked
