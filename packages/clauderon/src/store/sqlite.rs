@@ -113,6 +113,10 @@ impl SqliteStore {
             Self::migrate_to_v9(pool).await?;
         }
 
+        if current_version < 10 {
+            Self::migrate_to_v10(pool).await?;
+        }
+
         Ok(())
     }
 
@@ -647,6 +651,96 @@ impl SqliteStore {
         tracing::info!("Migration v9 complete");
         Ok(())
     }
+
+    /// Migration v10: Add subdirectory tracking to recent_repos with composite primary key
+    async fn migrate_to_v10(pool: &SqlitePool) -> anyhow::Result<()> {
+        tracing::info!("Applying migration v10: Add subdirectory column to recent_repos");
+
+        // Step 1: Clean up any partial migration artifacts
+        sqlx::query("DROP TABLE IF EXISTS recent_repos_v10_temp")
+            .execute(pool)
+            .await?;
+
+        // Step 2: Create regular table to hold existing data (not TEMP due to connection pooling)
+        sqlx::query(
+            r"
+            CREATE TABLE recent_repos_v10_temp (
+                repo_path TEXT NOT NULL,
+                last_used TEXT NOT NULL
+            )
+            ",
+        )
+        .execute(pool)
+        .await?;
+
+        // Step 3: Copy existing data to temp table
+        sqlx::query(
+            r"
+            INSERT INTO recent_repos_v10_temp (repo_path, last_used)
+            SELECT repo_path, last_used FROM recent_repos
+            ",
+        )
+        .execute(pool)
+        .await?;
+
+        // Step 4: Drop old index
+        sqlx::query("DROP INDEX IF EXISTS idx_recent_repos_last_used")
+            .execute(pool)
+            .await?;
+
+        // Step 5: Drop old table completely
+        sqlx::query("DROP TABLE recent_repos").execute(pool).await?;
+
+        // Step 6: Create new table with correct schema
+        sqlx::query(
+            r"
+            CREATE TABLE recent_repos (
+                repo_path TEXT NOT NULL,
+                subdirectory TEXT NOT NULL DEFAULT '',
+                last_used TEXT NOT NULL,
+                PRIMARY KEY (repo_path, subdirectory)
+            )
+            ",
+        )
+        .execute(pool)
+        .await?;
+
+        // Step 7: Copy data back with empty subdirectory
+        sqlx::query(
+            r"
+            INSERT INTO recent_repos (repo_path, subdirectory, last_used)
+            SELECT repo_path, '', last_used FROM recent_repos_v10_temp
+            ",
+        )
+        .execute(pool)
+        .await?;
+
+        // Step 8: Drop temp table (if it still exists)
+        sqlx::query("DROP TABLE IF EXISTS recent_repos_v10_temp")
+            .execute(pool)
+            .await?;
+
+        // Step 9: Create index on last_used
+        sqlx::query(
+            r"
+            CREATE INDEX idx_recent_repos_last_used
+            ON recent_repos(last_used DESC)
+            ",
+        )
+        .execute(pool)
+        .await?;
+
+        // Record migration
+        let now = Utc::now();
+        sqlx::query("INSERT OR REPLACE INTO schema_version (version, applied_at) VALUES (?, ?)")
+            .bind(10)
+            .bind(now.to_rfc3339())
+            .execute(pool)
+            .await?;
+
+        tracing::info!("Migration v10 complete");
+        Ok(())
+    }
 }
 
 #[async_trait]
@@ -790,8 +884,12 @@ impl Store for SqliteStore {
         rows.into_iter().map(TryInto::try_into).collect()
     }
 
-    #[instrument(skip(self), fields(repo_path = %repo_path.display()))]
-    async fn add_recent_repo(&self, repo_path: PathBuf) -> anyhow::Result<()> {
+    #[instrument(skip(self), fields(repo_path = %repo_path.display(), subdirectory = %subdirectory.display()))]
+    async fn add_recent_repo(
+        &self,
+        repo_path: PathBuf,
+        subdirectory: PathBuf,
+    ) -> anyhow::Result<()> {
         // Canonicalize the path to prevent duplicates from different representations
         // (e.g., /home/user/repo vs /home/user/./repo vs ~/repo)
         let canonical = repo_path
@@ -801,11 +899,12 @@ impl Store for SqliteStore {
         let now = Utc::now();
         sqlx::query(
             r"
-            INSERT OR REPLACE INTO recent_repos (repo_path, last_used)
-            VALUES (?, ?)
+            INSERT OR REPLACE INTO recent_repos (repo_path, subdirectory, last_used)
+            VALUES (?, ?, ?)
             ",
         )
         .bind(canonical.to_string_lossy().to_string())
+        .bind(subdirectory.to_string_lossy().to_string())
         .bind(now.to_rfc3339())
         .execute(&self.pool)
         .await?;
@@ -816,7 +915,7 @@ impl Store for SqliteStore {
     #[instrument(skip(self))]
     async fn get_recent_repos(&self) -> anyhow::Result<Vec<RecentRepo>> {
         // Use compile-time constant instead of format!() for cleaner SQL
-        const QUERY: &str = "SELECT * FROM recent_repos ORDER BY last_used DESC LIMIT 10";
+        const QUERY: &str = "SELECT * FROM recent_repos ORDER BY last_used DESC LIMIT 20";
 
         let rows = sqlx::query_as::<_, RecentRepoRow>(QUERY)
             .fetch_all(&self.pool)
@@ -1086,6 +1185,7 @@ impl TryFrom<EventRow> for Event {
 #[derive(sqlx::FromRow)]
 struct RecentRepoRow {
     repo_path: String,
+    subdirectory: String,
     last_used: String,
 }
 
@@ -1095,6 +1195,7 @@ impl TryFrom<RecentRepoRow> for RecentRepo {
     fn try_from(row: RecentRepoRow) -> Result<Self, Self::Error> {
         Ok(Self {
             repo_path: row.repo_path.into(),
+            subdirectory: row.subdirectory.into(),
             last_used: chrono::DateTime::parse_from_rfc3339(&row.last_used)?.into(),
         })
     }
