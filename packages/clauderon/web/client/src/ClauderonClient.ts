@@ -156,6 +156,15 @@ export class ClauderonClient {
   }
 
   /**
+   * Regenerate session metadata using AI
+   * Returns the updated session with new title and description
+   */
+  async regenerateMetadata(id: string): Promise<Session> {
+    const response = await this.request<Session>("POST", `/api/sessions/${encodeURIComponent(id)}/regenerate-metadata`);
+    return response;
+  }
+
+  /**
    * Get system status including credentials and proxies
    */
   async getSystemStatus(): Promise<SystemStatus> {

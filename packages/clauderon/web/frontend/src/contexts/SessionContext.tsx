@@ -15,6 +15,7 @@ type SessionContextValue = {
   refreshSession: (id: string) => Promise<void>;
   updateAccessMode: (id: string, mode: AccessMode) => Promise<void>;
   updateSession: (id: string, title?: string, description?: string) => Promise<void>;
+  regenerateMetadata: (id: string) => Promise<void>;
   client: ClauderonClient;
 }
 
@@ -97,6 +98,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     [client]
   );
 
+  const regenerateMetadata = useCallback(
+    async (id: string) => {
+      await client.regenerateMetadata(id);
+      await refreshSessions();
+    },
+    [client, refreshSessions]
+  );
+
   // Handle real-time events
   const handleEvent = useCallback((event: { type: string; payload?: Session | { id: string } }) => {
     switch (event.type) {
@@ -148,6 +157,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         refreshSession,
         updateAccessMode,
         updateSession,
+        regenerateMetadata,
         client,
       }}
     >

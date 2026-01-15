@@ -56,6 +56,10 @@ pub fn create_router(auth_state: &Option<AuthState>, dev_mode: bool) -> Router<A
         .route("/api/sessions/{id}/refresh", post(refresh_session))
         .route("/api/sessions/{id}/access-mode", post(update_access_mode))
         .route("/api/sessions/{id}/metadata", post(update_metadata))
+        .route(
+            "/api/sessions/{id}/regenerate-metadata",
+            post(regenerate_metadata),
+        )
         .route("/api/sessions/{id}/history", get(get_session_history))
         .route("/api/sessions/{id}/upload", post(upload_file))
         .route("/api/recent-repos", get(get_recent_repos))
@@ -392,6 +396,36 @@ async fn update_metadata(
     }
 
     Ok(StatusCode::NO_CONTENT)
+}
+
+/// Regenerate session metadata using AI
+async fn regenerate_metadata(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+) -> Result<Json<SessionResponse>, AppError> {
+    let session_id = validate_session_id(&id)?;
+
+    // Regenerate metadata
+    state
+        .session_manager
+        .regenerate_session_metadata(session_id)
+        .await?;
+
+    // Get updated session
+    let session = state
+        .session_manager
+        .get_session(&id)
+        .await
+        .ok_or_else(|| anyhow::anyhow!("Session not found after regeneration"))?;
+
+    // Broadcast session updated event
+    broadcast_event(
+        &state.event_broadcaster,
+        Event::SessionUpdated(session.clone()),
+    )
+    .await;
+
+    Ok(Json(SessionResponse::from(session)))
 }
 
 /// Get recent repositories
