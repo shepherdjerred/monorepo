@@ -527,6 +527,10 @@ export type Request =
 	| { type: "ArchiveSession", payload: {
 	id: string;
 }}
+	/** Unarchive a session */
+	| { type: "UnarchiveSession", payload: {
+	id: string;
+}}
 	/** Get the attach command for a session */
 	| { type: "AttachSession", payload: {
 	id: string;
@@ -573,6 +577,8 @@ export type Response =
 	| { type: "Deleted", payload?: undefined }
 	/** Session archived successfully */
 	| { type: "Archived", payload?: undefined }
+	/** Session unarchived successfully */
+	| { type: "Unarchived", payload?: undefined }
 	/** Session refreshed successfully */
 	| { type: "Refreshed", payload?: undefined }
 	/** Command to attach to a session */
