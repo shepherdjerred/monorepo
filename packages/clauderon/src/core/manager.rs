@@ -438,6 +438,7 @@ impl SessionManager {
             worktree_path: worktree_path.clone(),
             subdirectory: subdirectory.clone(),
             branch_name: metadata.branch_name,
+            repositories: None, // Will be set after worktree creation
             initial_prompt: initial_prompt.clone(),
             backend,
             agent,
@@ -1101,6 +1102,7 @@ impl SessionManager {
             worktree_path: worktree_path.clone(),
             subdirectory: subdirectory.clone(),
             branch_name: metadata.branch_name, // Use AI branch_name (no suffix)
+            repositories: None,                // Single-repo mode (no multi-repo support)
             initial_prompt: initial_prompt.clone(),
             backend,
             agent,
@@ -1241,6 +1243,7 @@ impl SessionManager {
             http_port: self.http_port,
             container_image: container_image_config,
             container_resources: container_resource_limits,
+            repositories: &[], // Legacy single-repo mode (synchronous creation)
         };
         let backend_id = match backend {
             BackendType::Zellij => {
@@ -1823,6 +1826,7 @@ impl SessionManager {
                 http_port: self.http_port,
                 container_image: None,
                 container_resources: None,
+                repositories: &[], // Legacy single-repo mode (refresh operation)
             };
 
             let new_backend_id = self
