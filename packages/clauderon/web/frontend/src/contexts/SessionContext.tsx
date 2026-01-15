@@ -42,12 +42,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const createSession = useCallback(
     async (request: CreateSessionRequest) => {
       const result = await client.createSession(request);
-      // Trigger refresh in background without blocking return
-      // WebSocket events will typically update faster, but this ensures reliability
-      refreshSessions().catch(err => console.error('Background refresh failed:', err));
+      // WebSocket events will update the session list automatically
       return result.id;
     },
-    [client, refreshSessions]
+    [client]
   );
 
   const deleteSession = useCallback(
