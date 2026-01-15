@@ -1,5 +1,6 @@
 use anyhow::Context;
 use std::path::{Path, PathBuf};
+use tokio::process::Command;
 
 /// Result of git root detection
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -246,6 +247,101 @@ fn parse_worktree_git_file(git_file: &Path, worktree_path: &Path) -> anyhow::Res
 pub fn validate_git_repository(path: &Path) -> anyhow::Result<()> {
     find_git_root(path)?;
     Ok(())
+}
+
+/// Get the GitHub repository in `owner/repo` format from a local git repository
+///
+/// Executes `git remote get-url origin` to find the remote URL, then parses it
+/// to extract the owner and repository name.
+///
+/// # Arguments
+///
+/// * `repo_path` - Path to the git repository
+///
+/// # Returns
+///
+/// Returns the repository in `owner/repo` format (e.g., "anthropics/claude-code")
+///
+/// # Errors
+///
+/// Returns an error if:
+/// - The git command fails
+/// - The remote URL is not a GitHub URL
+/// - The URL format is invalid
+///
+/// # Example
+///
+/// ```no_run
+/// use std::path::PathBuf;
+/// use clauderon::utils::git::get_github_repo;
+///
+/// # async fn example() -> anyhow::Result<()> {
+/// let repo = get_github_repo(&PathBuf::from("/path/to/repo")).await?;
+/// assert_eq!(repo, "owner/repo");
+/// # Ok(())
+/// # }
+/// ```
+pub async fn get_github_repo(repo_path: &Path) -> anyhow::Result<String> {
+    let output = Command::new("git")
+        .args(["remote", "get-url", "origin"])
+        .current_dir(repo_path)
+        .output()
+        .await
+        .context("Failed to execute git remote get-url origin")?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        anyhow::bail!("git remote get-url origin failed: {}", stderr.trim());
+    }
+
+    let url = String::from_utf8_lossy(&output.stdout).trim().to_string();
+    parse_github_repo_from_url(&url)
+}
+
+/// Parse a GitHub repository URL and extract the owner/repo
+///
+/// Supports both SSH and HTTPS URL formats:
+/// - `git@github.com:owner/repo.git`
+/// - `https://github.com/owner/repo.git`
+/// - `https://github.com/owner/repo`
+///
+/// # Arguments
+///
+/// * `url` - The git remote URL to parse
+///
+/// # Returns
+///
+/// Returns the repository in `owner/repo` format
+///
+/// # Errors
+///
+/// Returns an error if the URL is not a valid GitHub URL
+pub fn parse_github_repo_from_url(url: &str) -> anyhow::Result<String> {
+    // Handle SSH format: git@github.com:owner/repo.git
+    if let Some(rest) = url.strip_prefix("git@github.com:") {
+        let repo = rest.trim_end_matches(".git");
+        if repo.contains('/') && !repo.is_empty() {
+            return Ok(repo.to_string());
+        }
+        anyhow::bail!("Invalid GitHub SSH URL format: {}", url);
+    }
+
+    // Handle HTTPS format: https://github.com/owner/repo.git or https://github.com/owner/repo
+    if let Some(rest) = url
+        .strip_prefix("https://github.com/")
+        .or_else(|| url.strip_prefix("http://github.com/"))
+    {
+        let repo = rest.trim_end_matches(".git");
+        if repo.contains('/') && !repo.is_empty() {
+            return Ok(repo.to_string());
+        }
+        anyhow::bail!("Invalid GitHub HTTPS URL format: {}", url);
+    }
+
+    anyhow::bail!(
+        "URL is not a GitHub repository URL: {}. Expected format: git@github.com:owner/repo.git or https://github.com/owner/repo",
+        url
+    )
 }
 
 #[cfg(test)]

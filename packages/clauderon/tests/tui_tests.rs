@@ -987,7 +987,7 @@ async fn test_deletion_state_tracking() {
             app.deleting_session_id = None;
             app.delete_task.take();
         }
-        _ => panic!("Expected successful deletion"),
+        DeleteProgress::Error { .. } => panic!("Expected successful deletion"),
     }
 
     // After deletion - state should be cleared

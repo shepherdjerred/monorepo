@@ -2,7 +2,7 @@
 
 use clauderon::api::protocol::{CreateSessionRequest, Request, Response};
 use clauderon::backends::DockerBackend;
-use clauderon::core::{AgentType, BackendType, SessionStatus};
+use clauderon::core::{AccessMode, AgentType, BackendType, SessionStatus};
 use std::path::PathBuf;
 
 #[test]
@@ -25,7 +25,7 @@ fn test_create_session_request_serialization() {
         dangerous_skip_checks: false,
         print_mode: false,
         plan_mode: true,
-        access_mode: Default::default(),
+        access_mode: AccessMode::default(),
         images: vec![],
         container_image: None,
         pull_policy: None,
@@ -162,7 +162,7 @@ fn test_print_mode_serialization() {
         dangerous_skip_checks: true,
         print_mode: true,
         plan_mode: false,
-        access_mode: Default::default(),
+        access_mode: AccessMode::default(),
         images: vec![],
         container_image: None,
         pull_policy: None,
