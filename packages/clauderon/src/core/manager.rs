@@ -245,11 +245,28 @@ impl SessionManager {
         memory_limit: Option<String>,
     ) -> anyhow::Result<Uuid> {
         // Validate session count limit
-        let session_count = self.sessions.read().await.len();
-        if session_count >= self.max_sessions {
+        let sessions_guard = self.sessions.read().await;
+        let active_count = sessions_guard
+            .iter()
+            .filter(|s| s.status != SessionStatus::Archived)
+            .count();
+        let archived_count = sessions_guard
+            .iter()
+            .filter(|s| s.status == SessionStatus::Archived)
+            .count();
+        drop(sessions_guard);
+
+        if active_count >= self.max_sessions {
+            tracing::warn!(
+                active_sessions = active_count,
+                archived_sessions = archived_count,
+                max_sessions = self.max_sessions,
+                "Session creation blocked - maximum active sessions reached"
+            );
             anyhow::bail!(
-                "Maximum session limit reached ({}/{}). Delete or archive sessions before creating new ones.",
-                session_count,
+                "Maximum session limit reached ({} active / {} total, max {}). Archive or delete sessions before creating new ones.",
+                active_count,
+                active_count + archived_count,
                 self.max_sessions
             );
         }
@@ -486,43 +503,33 @@ impl SessionManager {
             // Create per-session proxy for Docker backends
             let proxy_port = if backend == BackendType::Docker {
                 if let Some(ref proxy_manager) = self.proxy_manager {
-                    match proxy_manager
+                    let port = proxy_manager
                         .create_session_proxy(session_id, access_mode)
                         .await
+                        .context("Session proxy creation failed - cannot create session")?;
+
+                    if let Some(session) = self
+                        .sessions
+                        .write()
+                        .await
+                        .iter_mut()
+                        .find(|s| s.id == session_id)
                     {
-                        Ok(proxy_port) => {
-                            if let Some(session) = self
-                                .sessions
-                                .write()
-                                .await
-                                .iter_mut()
-                                .find(|s| s.id == session_id)
-                            {
-                                session.set_proxy_port(proxy_port);
-                            }
-                            tracing::info!(
-                                session_id = %session_id,
-                                name = %full_name,
-                                port = proxy_port,
-                                "Created session proxy"
-                            );
-                            Some(proxy_port)
-                        }
-                        Err(e) => {
-                            tracing::warn!(
-                                session_id = %session_id,
-                                name = %full_name,
-                                error = %e,
-                                "Failed to create session proxy, using global proxy"
-                            );
-                            None
-                        }
+                        session.set_proxy_port(port);
                     }
+
+                    tracing::info!(
+                        session_id = %session_id,
+                        name = %full_name,
+                        port = port,
+                        "Created required session proxy"
+                    );
+                    Some(port)
                 } else {
                     None
                 }
             } else {
-                None
+                None // Non-Docker backends don't need proxy
             };
 
             update_progress(3, "Preparing agent environment".to_string()).await;
@@ -919,30 +926,19 @@ impl SessionManager {
         // Create per-session proxy for Docker backends BEFORE creating container
         let proxy_port = if backend == BackendType::Docker {
             if let Some(ref proxy_manager) = self.proxy_manager {
-                match proxy_manager
+                let port = proxy_manager
                     .create_session_proxy(session.id, access_mode)
                     .await
-                {
-                    Ok(proxy_port) => {
-                        session.set_proxy_port(proxy_port);
-                        tracing::info!(
-                            session_id = %session.id,
-                            name = %session.name,
-                            port = proxy_port,
-                            "Created session proxy"
-                        );
-                        Some(proxy_port)
-                    }
-                    Err(e) => {
-                        tracing::warn!(
-                            session_id = %session.id,
-                            name = %session.name,
-                            error = %e,
-                            "Failed to create session proxy, using global proxy"
-                        );
-                        None
-                    }
-                }
+                    .context("Session proxy creation failed - cannot create session")?;
+
+                session.set_proxy_port(port);
+                tracing::info!(
+                    session_id = %session.id,
+                    name = %session.name,
+                    port = port,
+                    "Created required session proxy"
+                );
+                Some(port)
             } else {
                 None
             }
@@ -1415,6 +1411,15 @@ impl SessionManager {
             .git
             .delete_worktree(&session.repo_path, &session.worktree_path)
             .await;
+
+        // Clean up session uploads
+        if let Err(e) = crate::uploads::cleanup_session_uploads(session.id) {
+            tracing::warn!(
+                session_id = %session.id,
+                error = %e,
+                "Failed to clean up session uploads"
+            );
+        }
 
         // Record deletion event
         let event = Event::new(session.id, EventType::SessionDeleted { reason: None });
