@@ -128,6 +128,24 @@ Start the daemon with HTTP server enabled:
 
 Then open http://localhost:3030 in your browser.
 
+### Network Binding
+
+By default, the HTTP server binds to `127.0.0.1` (localhost only). For Docker container hooks to work with specific IP bindings (e.g., Tailscale), Clauderon automatically creates an additional `127.0.0.1` listener:
+
+```bash
+# Default: localhost only (no auth required)
+clauderon daemon
+
+# All interfaces: single listener on 0.0.0.0 (requires auth)
+CLAUDERON_ORIGIN=http://hostname:3030 CLAUDERON_BIND_ADDR=0.0.0.0 clauderon daemon
+
+# Specific IP: Creates BOTH specific IP and 127.0.0.1 listeners (requires auth)
+# (127.0.0.1 listener allows Docker containers to reach daemon via host.docker.internal)
+CLAUDERON_ORIGIN=http://hostname:3030 CLAUDERON_BIND_ADDR=100.64.1.1 clauderon daemon
+```
+
+**Note**: Binding to non-localhost addresses (`0.0.0.0` or specific IPs) requires setting `CLAUDERON_ORIGIN` for WebAuthn authentication, or using `CLAUDERON_DISABLE_AUTH=true` (not recommended for production).
+
 ### CLI Options
 
 ```bash
@@ -205,6 +223,62 @@ clauderon/
 │   └── frontend/     # React UI
 └── build.rs          # Build script (typeshare + embed)
 ```
+
+## Security Architecture
+
+### Zero-Credential Container Design
+
+Clauderon containers run with zero real credentials. The host proxy intercepts HTTPS requests and injects authentication tokens, so containers never see actual API keys.
+
+#### What's Mounted in Containers
+
+Containers receive minimal mounts for functionality:
+
+- **`~/.clauderon/uploads/{session-id}/`** → **`/workspace/.clauderon/uploads/{session-id}/`** (read-write)
+  - Image attachments uploaded via API
+  - Per-session isolation
+
+- **`~/.clauderon/proxy-ca.pem`** → **`/etc/clauderon/proxy-ca.pem`** (read-only)
+  - CA certificate for TLS interception
+  - Required for proxy functionality
+
+- **`~/.clauderon/codex/`** → **`/etc/clauderon/codex/`** (read-only)
+  - Dummy Codex authentication files
+  - Real tokens injected by proxy
+
+- **`~/.clauderon/talos/`** → **`/etc/clauderon/talos/`** (read-only, optional)
+  - Talos kubeconfig for Kubernetes operations
+  - Only mounted if Talos configured
+
+- **`~/.clauderon/claude.json`** → **`/workspace/.claude.json`** (read-write)
+  - Onboarding state and permissions preferences
+  - Claude Code writes to this file
+
+- **`~/.clauderon/managed-settings.json`** → **`/etc/claude-code/managed-settings.json`** (read-only, with proxy)
+  - Enforces bypass permissions mode in proxy environments
+
+#### What's NOT Mounted (Security)
+
+These files remain on the host only:
+
+- **`~/.clauderon/secrets/`** - Real OAuth tokens and API keys
+- **`~/.clauderon/db.sqlite`** - Session database
+- **`~/.clauderon/audit.jsonl`** - HTTP proxy audit logs
+- **`~/.clauderon/*.sock`** - Unix sockets for daemon IPC
+- **`~/.clauderon/proxy-ca-key.pem`** - CA private key
+- **`~/.clauderon/daemon.info`** - Daemon process metadata
+- **`~/.clauderon/logs/`** - Daemon log files
+
+#### Hooks Directory
+
+The `/workspace/.clauderon/hooks/` directory exists inside containers but is NOT mounted from the host. Instead:
+
+1. Container starts with no hooks directory
+2. Daemon uses `docker exec` to create `/workspace/.clauderon/hooks/` inside container
+3. Daemon writes `send_status.sh` script inside container
+4. Claude Code hooks execute the script to send events to daemon via HTTP
+
+This design ensures hooks are isolated per container and don't require host filesystem access.
 
 ## API Endpoints
 
