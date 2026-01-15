@@ -122,7 +122,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
 
     // If removing primary, set the first remaining repo as primary
     if (repoToRemove?.is_primary && newRepos.length > 0) {
-      newRepos[0].is_primary = true;
+      newRepos[0]!.is_primary = true;
     }
 
     setRepositories(newRepos);
@@ -193,13 +193,13 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
       const repoInputs: CreateRepositoryInput[] | undefined = repositories.length > 1
         ? repositories.map(repo => ({
             repo_path: repo.repo_path,
-            mount_name: repo.mount_name || undefined,
+            mount_name: repo.mount_name ? repo.mount_name : undefined,
             is_primary: repo.is_primary
           }))
         : undefined;
 
       const request: CreateSessionRequest = {
-        repo_path: repositories[0].repo_path, // Legacy field for backward compat
+        repo_path: repositories[0]!.repo_path, // Legacy field for backward compat
         repositories: repoInputs, // New multi-repo field
         initial_prompt: formData.initial_prompt,
         backend: formData.backend,
