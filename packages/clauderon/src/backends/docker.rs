@@ -1329,7 +1329,7 @@ impl DockerBackend {
                 http_port: None,
                 container_image: None,
                 container_resources: None,
-                repositories: &[], // Legacy single-repo mode
+                repositories: vec![], // Legacy single-repo mode
             },
         )
         .await
