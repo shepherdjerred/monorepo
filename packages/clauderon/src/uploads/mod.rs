@@ -19,6 +19,7 @@ pub const ALLOWED_EXTENSIONS: &[&str] = &["jpg", "jpeg", "png", "gif", "webp"];
 /// Get the upload directory for a specific session
 ///
 /// Returns: `~/.clauderon/uploads/{session-id}/`
+#[must_use]
 pub fn upload_dir_for_session(session_id: Uuid) -> PathBuf {
     crate::utils::paths::base_dir()
         .join("uploads")
@@ -46,7 +47,7 @@ pub fn validate_image_file(file_name: &str, content_type: Option<&str>, size: us
     let extension = path
         .extension()
         .and_then(|ext| ext.to_str())
-        .map(|s| s.to_lowercase())
+        .map(str::to_lowercase)
         .context("File has no extension")?;
 
     if !ALLOWED_EXTENSIONS.contains(&extension.as_str()) {

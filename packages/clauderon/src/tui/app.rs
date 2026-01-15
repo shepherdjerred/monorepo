@@ -220,17 +220,7 @@ impl DirectoryPickerState {
     /// Create a new directory picker state
     #[must_use]
     pub fn new() -> Self {
-        Self {
-            current_dir: std::env::current_dir().unwrap_or_default(),
-            all_entries: Vec::new(),
-            recent_repos: Vec::new(),
-            filtered_entries: Vec::new(),
-            search_query: String::new(),
-            selected_index: 0,
-            is_active: false,
-            error: None,
-            matcher: nucleo_matcher::Matcher::new(nucleo_matcher::Config::DEFAULT),
-        }
+        Self::default()
     }
 
     /// Load recent repositories from structured data with timestamps
@@ -416,25 +406,26 @@ impl DirectoryPickerState {
     }
 }
 
+impl Default for DirectoryPickerState {
+    fn default() -> Self {
+        Self {
+            current_dir: std::env::current_dir().unwrap_or_default(),
+            all_entries: Vec::new(),
+            recent_repos: Vec::new(),
+            filtered_entries: Vec::new(),
+            search_query: String::new(),
+            selected_index: 0,
+            is_active: false,
+            error: None,
+            matcher: nucleo_matcher::Matcher::new(nucleo_matcher::Config::DEFAULT),
+        }
+    }
+}
+
 impl CreateDialogState {
     #[must_use]
     pub fn new() -> Self {
-        Self {
-            prompt: String::new(),
-            repo_path: String::new(),
-            backend: BackendType::Zellij, // Default to Zellij
-            agent: AgentType::ClaudeCode,
-            skip_checks: false,
-            plan_mode: true,                 // Default to plan mode ON
-            access_mode: Default::default(), // ReadOnly by default (secure)
-            images: Vec::new(),
-            prompt_cursor_line: 0,
-            prompt_cursor_col: 0,
-            prompt_scroll_offset: 0,
-            focus: CreateDialogFocus::default(),
-            button_create_focused: false,
-            directory_picker: DirectoryPickerState::new(),
-        }
+        Self::default()
     }
 
     pub fn reset(&mut self) {
@@ -515,6 +506,7 @@ impl CreateDialogState {
     ///
     /// This matches the logic in create_dialog.rs rendering to ensure scroll
     /// calculations stay in sync with the actual displayed height.
+    #[must_use]
     pub fn prompt_visible_lines(&self) -> usize {
         let prompt_lines = self.prompt.lines().count().max(1);
         prompt_lines.clamp(5, 15) // Min 5, max 15 lines
@@ -543,6 +535,27 @@ impl CreateDialogState {
     pub fn remove_image(&mut self, index: usize) {
         if index < self.images.len() {
             self.images.remove(index);
+        }
+    }
+}
+
+impl Default for CreateDialogState {
+    fn default() -> Self {
+        Self {
+            prompt: String::new(),
+            repo_path: String::new(),
+            backend: BackendType::Zellij, // Default to Zellij
+            agent: AgentType::ClaudeCode,
+            skip_checks: false,
+            plan_mode: true,                    // Default to plan mode ON
+            access_mode: AccessMode::default(), // ReadOnly by default (secure)
+            images: Vec::new(),
+            prompt_cursor_line: 0,
+            prompt_cursor_col: 0,
+            prompt_scroll_offset: 0,
+            focus: CreateDialogFocus::default(),
+            button_create_focused: false,
+            directory_picker: DirectoryPickerState::new(),
         }
     }
 }
@@ -1035,8 +1048,9 @@ impl App {
             // Build status message, including any warnings
             let mut status = format!("Created session {name}", name = session.name);
             if let Some(warns) = warnings {
+                use std::fmt::Write;
                 for warn in warns {
-                    status.push_str(&format!(" (Warning: {warn})"));
+                    let _ = write!(status, " (Warning: {warn})");
                 }
             }
             self.status_message = Some(status);

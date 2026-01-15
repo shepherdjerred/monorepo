@@ -9,19 +9,15 @@ use std::path::PathBuf;
 /// - Kubernetes: `imagePullPolicy: Always|IfNotPresent|Never`
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
+#[derive(Default)]
 pub enum ImagePullPolicy {
     /// Always pull the latest version of the image (Docker: --pull=always, K8s: Always)
     Always,
     /// Pull image only if not present locally (Docker: --pull=missing, K8s: IfNotPresent)
+    #[default]
     IfNotPresent,
     /// Never pull, use local cache only; fails if image not found (Docker: --pull=never, K8s: Never)
     Never,
-}
-
-impl Default for ImagePullPolicy {
-    fn default() -> Self {
-        Self::IfNotPresent
-    }
 }
 
 impl std::fmt::Display for ImagePullPolicy {

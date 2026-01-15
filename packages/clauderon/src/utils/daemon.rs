@@ -141,47 +141,21 @@ pub fn spawn_daemon() -> anyhow::Result<()> {
 /// This function uses file locking to prevent race conditions when
 /// multiple clients try to spawn the daemon simultaneously.
 ///
-/// If the binary is newer than the running daemon, the daemon will be
-/// killed and restarted automatically.
-///
 /// # Errors
 ///
 /// Returns an error if the daemon cannot be spawned or fails to start.
 pub async fn ensure_daemon_running() -> anyhow::Result<()> {
-    use super::binary_info;
-
-    // Check if daemon is running
+    // Fast path: daemon is already running
     if is_daemon_running() {
-        // Check if binary is newer than running daemon
-        match binary_info::is_binary_newer_than_daemon() {
-            Ok(true) => {
-                tracing::info!("Binary is newer than running daemon, restarting...");
-                if let Err(e) = binary_info::kill_daemon() {
-                    tracing::warn!(error = %e, "Failed to kill old daemon, will attempt spawn anyway");
-                }
-                // Fall through to spawn new daemon
-            }
-            Ok(false) => {
-                // Daemon is up-to-date
-                return Ok(());
-            }
-            Err(e) => {
-                // If we can't check, assume daemon is current
-                tracing::debug!(error = %e, "Failed to check binary age, assuming daemon is current");
-                return Ok(());
-            }
-        }
+        return Ok(());
     }
 
     // Try to acquire the spawn lock
     // If another process holds it, they're spawning - just wait for daemon
-    let _lock = match acquire_spawn_lock() {
-        Ok(lock) => lock,
-        Err(_) => {
-            // Another process is spawning, wait for daemon to be ready
-            tracing::info!("Another process is spawning daemon, waiting...");
-            return wait_for_daemon(DEFAULT_DAEMON_TIMEOUT).await;
-        }
+    let Ok(_lock) = acquire_spawn_lock() else {
+        // Another process is spawning, wait for daemon to be ready
+        tracing::info!("Another process is spawning daemon, waiting...");
+        return wait_for_daemon(DEFAULT_DAEMON_TIMEOUT).await;
     };
 
     // Double-check after acquiring lock (another process may have just finished)
@@ -211,7 +185,7 @@ pub async fn wait_for_daemon(timeout: Duration) -> anyhow::Result<()> {
         // Try to actually connect to verify daemon is responsive
         if UnixStream::connect(&socket_path).await.is_ok() {
             tracing::info!(
-                elapsed_ms = start.elapsed().as_millis() as u64,
+                elapsed_ms = u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX),
                 "Daemon is ready"
             );
             return Ok(());

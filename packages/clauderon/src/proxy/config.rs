@@ -74,7 +74,7 @@ pub struct CodexTokens {
 }
 
 impl CodexTokens {
-    fn apply_overlay(&mut self, other: CodexTokens) {
+    fn apply_overlay(&mut self, other: Self) {
         if other.access_token.is_some() {
             self.access_token = other.access_token;
         }
@@ -164,6 +164,7 @@ impl Default for Credentials {
 
 impl Credentials {
     /// Load credentials from environment variables.
+    #[must_use]
     pub fn load_from_env() -> Self {
         let mut codex_tokens = CodexTokens {
             access_token: std::env::var("CODEX_ACCESS_TOKEN").ok(),
@@ -194,7 +195,8 @@ impl Credentials {
     }
 
     /// Load credentials from files in the secrets directory.
-    pub fn load_from_files(secrets_dir: &PathBuf) -> Self {
+    #[must_use]
+    pub fn load_from_files(secrets_dir: &Path) -> Self {
         let read_secret = |name: &str| -> Option<String> {
             let path = secrets_dir.join(name);
             std::fs::read_to_string(&path)
@@ -288,6 +290,7 @@ impl Credentials {
     }
 
     /// Get a credential by service name.
+    #[must_use]
     pub fn get(&self, service: &str) -> Option<String> {
         match service {
             "github" => self.github_token.clone(),
@@ -307,6 +310,7 @@ impl Credentials {
         }
     }
 
+    #[must_use]
     pub fn codex_access_token(&self) -> Option<String> {
         self.codex_tokens
             .read()
@@ -314,6 +318,7 @@ impl Credentials {
             .and_then(|t| t.access_token.clone())
     }
 
+    #[must_use]
     pub fn codex_refresh_token(&self) -> Option<String> {
         self.codex_tokens
             .read()
@@ -321,6 +326,7 @@ impl Credentials {
             .and_then(|t| t.refresh_token.clone())
     }
 
+    #[must_use]
     pub fn codex_account_id(&self) -> Option<String> {
         self.codex_tokens
             .read()
@@ -416,7 +422,7 @@ fn persist_codex_auth_json(
 ) -> anyhow::Result<()> {
     let auth_json = if path.exists() {
         let content = std::fs::read_to_string(path)?;
-        serde_json::from_str::<CodexAuthJson>(&content).unwrap_or(CodexAuthJson {
+        serde_json::from_str::<CodexAuthJson>(&content).unwrap_or_else(|_| CodexAuthJson {
             openai_api_key: openai_api_key.cloned(),
             tokens: None,
             last_refresh: None,

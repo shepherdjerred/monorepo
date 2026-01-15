@@ -94,8 +94,7 @@ pub fn find_git_root(path: &Path) -> anyhow::Result<GitRootInfo> {
             // Calculate relative path from git root to original path
             let subdirectory = canonical_path
                 .strip_prefix(&git_root)
-                .map(std::path::Path::to_path_buf)
-                .unwrap_or_else(|_| PathBuf::new());
+                .map_or_else(|_| PathBuf::new(), std::path::Path::to_path_buf);
 
             return Ok(GitRootInfo {
                 git_root,
@@ -250,28 +249,27 @@ pub fn validate_git_repository(path: &Path) -> anyhow::Result<()> {
     Ok(())
 }
 
-/// Get the GitHub owner/repo from a local git repository
+/// Get the GitHub repository in `owner/repo` format from a local git repository
 ///
-/// Runs `git remote get-url origin` and parses the result to extract the
-/// GitHub repository in `owner/repo` format.
+/// Executes `git remote get-url origin` to find the remote URL, then parses it
+/// to extract the owner and repository name.
 ///
 /// # Arguments
 ///
-/// * `repo_path` - Path to a git repository (can be any directory within the repo)
+/// * `repo_path` - Path to the git repository
 ///
 /// # Returns
 ///
-/// Returns the GitHub repository in `owner/repo` format (e.g., "shepherdjerred/monorepo")
+/// Returns the repository in `owner/repo` format (e.g., "anthropics/claude-code")
 ///
 /// # Errors
 ///
 /// Returns an error if:
-/// - The path is not a git repository
-/// - The repository has no `origin` remote
+/// - The git command fails
 /// - The remote URL is not a GitHub URL
-/// - The remote URL cannot be parsed
+/// - The URL format is invalid
 ///
-/// # Examples
+/// # Example
 ///
 /// ```no_run
 /// use std::path::PathBuf;
