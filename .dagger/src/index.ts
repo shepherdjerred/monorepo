@@ -153,7 +153,7 @@ function withSccache(container: Container): Container {
   const url = `https://github.com/mozilla/sccache/releases/download/v${version}/${tarball}`;
 
   return container
-    .withExec(["sh", "-c", `curl -L ${url} | tar xz`])
+    .withExec(["sh", "-c", `curl -L "${url}" | tar xz`])
     .withExec(["mv", `sccache-v${version}-${target}/sccache`, "/usr/local/bin/sccache"])
     .withExec(["chmod", "+x", "/usr/local/bin/sccache"])
     .withExec(["rm", "-rf", `sccache-v${version}-${target}`])
