@@ -449,13 +449,13 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
                 session.reconcile_attempts > 0 && session.last_reconcile_error.is_some();
 
             // Use title if available, otherwise fall back to name
-            let display_name = session.title.as_ref().map_or_else(|| &session.name, |t| t);
+            let display_name = session.title.as_ref().unwrap_or(&session.name);
 
             // Format session name with optional warning indicator
             let name_display = if has_reconcile_error {
                 format!("⚠ {}", display_name)
             } else {
-                display_name.to_string()
+                display_name.clone()
             };
 
             let name_style = if has_reconcile_error {
