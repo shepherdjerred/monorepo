@@ -49,9 +49,23 @@ impl FeatureFlags {
             flags.merge(&toml_flags);
         }
 
-        // 3. Override from environment variables
+        // 3. Override from environment variables (only set ones are merged)
         let env_flags = Self::load_from_env();
-        flags.merge(&env_flags);
+        if env_flags.enable_webauthn_auth != Self::default().enable_webauthn_auth {
+            flags.enable_webauthn_auth = env_flags.enable_webauthn_auth;
+        }
+        if env_flags.enable_ai_metadata != Self::default().enable_ai_metadata {
+            flags.enable_ai_metadata = env_flags.enable_ai_metadata;
+        }
+        if env_flags.enable_auto_reconcile != Self::default().enable_auto_reconcile {
+            flags.enable_auto_reconcile = env_flags.enable_auto_reconcile;
+        }
+        if env_flags.enable_proxy_port_reuse != Self::default().enable_proxy_port_reuse {
+            flags.enable_proxy_port_reuse = env_flags.enable_proxy_port_reuse;
+        }
+        if env_flags.enable_usage_tracking != Self::default().enable_usage_tracking {
+            flags.enable_usage_tracking = env_flags.enable_usage_tracking;
+        }
 
         // 4. Override from CLI arguments (highest priority)
         if let Some(cli_flags) = cli_overrides {
