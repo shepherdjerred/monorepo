@@ -9,11 +9,11 @@ type ProviderIconProps = {
 export function ProviderIcon({ agent, className = "w-4 h-4" }: ProviderIconProps) {
   switch (agent) {
     case "ClaudeCode":
-      return <Brain className={className} title="Claude Code" />;
+      return <Brain className={className} />;
     case "Codex":
-      return <Code className={className} title="Codex" />;
+      return <Code className={className} />;
     case "Gemini":
-      return <Sparkles className={className} title="Gemini" />;
+      return <Sparkles className={className} />;
     default:
       return null;
   }
