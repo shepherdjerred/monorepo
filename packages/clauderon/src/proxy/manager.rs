@@ -12,6 +12,7 @@ use super::audit::AuditLogger;
 use super::ca::ProxyCa;
 use super::config::{Credentials, ProxyConfig};
 use super::http_proxy::HttpAuthProxy;
+use super::kubectl_proxy::KubectlProxy;
 use super::port_allocator::PortAllocator;
 use super::talos_gateway::TalosGateway;
 use super::{generate_codex_config, generate_container_configs, generate_plugin_config};
@@ -28,6 +29,8 @@ pub struct ProxyManager {
     ca: ProxyCa,
     /// Talos gateway.
     talos_gateway: TalosGateway,
+    /// kubectl proxy.
+    kubectl_proxy: KubectlProxy,
     /// Audit logger.
     audit_logger: Arc<AuditLogger>,
     /// Clauderon directory.
@@ -74,11 +77,15 @@ impl ProxyManager {
         let mut talos_gateway = TalosGateway::new(config.talos_gateway_port, Arc::new(ca.clone()));
         let _ = talos_gateway.load_config(); // Ignore errors, just won't have Talos support
 
+        // Create kubectl proxy
+        let kubectl_proxy = KubectlProxy::new(config.kubectl_proxy_port);
+
         Ok(Self {
             config,
             credentials,
             ca,
             talos_gateway,
+            kubectl_proxy,
             audit_logger,
             clauderon_dir,
             talos_task: None,
@@ -89,7 +96,11 @@ impl ProxyManager {
 
     /// Generate container configuration files.
     pub fn generate_configs(&self) -> anyhow::Result<()> {
-        generate_container_configs(&self.clauderon_dir, self.config.talos_gateway_port)?;
+        generate_container_configs(
+            &self.clauderon_dir,
+            self.config.talos_gateway_port,
+            self.config.kubectl_proxy_port,
+        )?;
         let account_id = self.credentials.codex_account_id();
         generate_codex_config(&self.clauderon_dir, account_id.as_deref())?;
 
@@ -132,6 +143,25 @@ impl ProxyManager {
             tracing::info!("Talos mTLS gateway started on {}", talos_addr);
         }
 
+        // Start kubectl proxy if available
+        if KubectlProxy::is_available() {
+            if let Err(e) = self.kubectl_proxy.start() {
+                tracing::warn!(
+                    "Failed to start kubectl proxy: {} - kubectl commands will not work in containers",
+                    e
+                );
+            } else {
+                tracing::info!(
+                    "kubectl proxy started on port {}",
+                    self.kubectl_proxy.port()
+                );
+            }
+        } else {
+            tracing::info!(
+                "kubectl not found - skipping kubectl proxy (kubectl commands will not work in containers)"
+            );
+        }
+
         tracing::info!("Proxy services started");
         Ok(())
     }
@@ -139,6 +169,9 @@ impl ProxyManager {
     /// Stop all proxy services.
     pub fn stop(&mut self) -> anyhow::Result<()> {
         tracing::info!("Stopping proxy services...");
+
+        // Stop kubectl proxy
+        self.kubectl_proxy.stop();
 
         // Abort Talos gateway task
         if let Some(task) = self.talos_task.take() {
