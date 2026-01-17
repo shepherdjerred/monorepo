@@ -137,7 +137,7 @@ contexts:
 /// This kubeconfig points to kubectl proxy running on the host.
 /// IMPORTANT: No credentials needed - kubectl proxy handles all authentication using the host's kubeconfig.
 /// The container connects via HTTP to host-gateway:{port} (or host.docker.internal:{port} for Docker).
-fn generate_kubeconfig(clauderon_dir: &PathBuf, port: u16) -> anyhow::Result<()> {
+fn generate_kubeconfig(clauderon_dir: &Path, port: u16) -> anyhow::Result<()> {
     let kube_dir = clauderon_dir.join("kube");
     std::fs::create_dir_all(&kube_dir)?;
 
