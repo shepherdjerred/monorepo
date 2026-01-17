@@ -393,12 +393,18 @@ pub enum AgentType {
 #[typeshare]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ClaudeModel {
-    /// Claude Sonnet (default, best balance of performance and cost)
-    Sonnet,
-    /// Claude Opus (most capable model for complex tasks)
-    Opus,
-    /// Claude Haiku (fastest and cheapest)
-    Haiku,
+    /// Claude Opus 4.5 (most capable, best for complex workflows)
+    Opus4_5,
+    /// Claude Sonnet 4.5 (default, balanced performance for agents and coding)
+    Sonnet4_5,
+    /// Claude Haiku 4.5 (fastest, optimized for low latency)
+    Haiku4_5,
+    /// Claude Opus 4.1 (focused on agentic tasks and reasoning)
+    Opus4_1,
+    /// Claude Opus 4 (previous generation flagship)
+    Opus4,
+    /// Claude Sonnet 4 (previous generation balanced)
+    Sonnet4,
 }
 
 impl ClaudeModel {
@@ -406,16 +412,19 @@ impl ClaudeModel {
     #[must_use]
     pub const fn to_cli_flag(self) -> &'static str {
         match self {
-            Self::Sonnet => "sonnet",
-            Self::Opus => "opus",
-            Self::Haiku => "haiku",
+            Self::Opus4_5 => "opus-4-5",
+            Self::Sonnet4_5 => "sonnet-4-5",
+            Self::Haiku4_5 => "haiku-4-5",
+            Self::Opus4_1 => "opus-4-1",
+            Self::Opus4 => "opus-4",
+            Self::Sonnet4 => "sonnet-4",
         }
     }
 }
 
 impl Default for ClaudeModel {
     fn default() -> Self {
-        Self::Sonnet
+        Self::Sonnet4_5
     }
 }
 
@@ -423,16 +432,26 @@ impl Default for ClaudeModel {
 #[typeshare]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum CodexModel {
-    /// GPT-4o (default, latest GPT-4 with vision)
-    Gpt4o,
-    /// GPT-4 (previous generation)
-    Gpt4,
-    /// GPT-3.5 Turbo (faster, less capable)
-    Gpt35Turbo,
-    /// o1 (reasoning-focused model)
-    O1,
-    /// o3 (latest reasoning model)
-    O3,
+    /// GPT-5.2-Codex (default, most advanced for software engineering)
+    Gpt5_2Codex,
+    /// GPT-5.2 (most capable for professional knowledge work)
+    Gpt5_2,
+    /// GPT-5.2 Instant (fast variant)
+    Gpt5_2Instant,
+    /// GPT-5.2 Thinking (reasoning variant)
+    Gpt5_2Thinking,
+    /// GPT-5.2 Pro (premium variant)
+    Gpt5_2Pro,
+    /// GPT-5.1 (previous flagship)
+    Gpt5_1,
+    /// GPT-5.1 Instant (fast variant)
+    Gpt5_1Instant,
+    /// GPT-5.1 Thinking (reasoning variant)
+    Gpt5_1Thinking,
+    /// GPT-4.1 (specialized for coding)
+    Gpt4_1,
+    /// o3-mini (small reasoning model for science/math/coding)
+    O3Mini,
 }
 
 impl CodexModel {
@@ -440,18 +459,23 @@ impl CodexModel {
     #[must_use]
     pub const fn to_cli_flag(self) -> &'static str {
         match self {
-            Self::Gpt4o => "gpt-4o",
-            Self::Gpt4 => "gpt-4",
-            Self::Gpt35Turbo => "gpt-3.5-turbo",
-            Self::O1 => "o1",
-            Self::O3 => "o3",
+            Self::Gpt5_2Codex => "gpt-5-2-codex",
+            Self::Gpt5_2 => "gpt-5-2",
+            Self::Gpt5_2Instant => "gpt-5-2-instant",
+            Self::Gpt5_2Thinking => "gpt-5-2-thinking",
+            Self::Gpt5_2Pro => "gpt-5-2-pro",
+            Self::Gpt5_1 => "gpt-5-1",
+            Self::Gpt5_1Instant => "gpt-5-1-instant",
+            Self::Gpt5_1Thinking => "gpt-5-1-thinking",
+            Self::Gpt4_1 => "gpt-4-1",
+            Self::O3Mini => "o3-mini",
         }
     }
 }
 
 impl Default for CodexModel {
     fn default() -> Self {
-        Self::Gpt4o
+        Self::Gpt5_2Codex
     }
 }
 
@@ -459,10 +483,14 @@ impl Default for CodexModel {
 #[typeshare]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum GeminiModel {
-    /// Gemini 2.5 Pro (default, most capable)
-    Gemini25Pro,
-    /// Gemini 2.0 Flash Thinking Experimental
-    Gemini20FlashThinking,
+    /// Gemini 3 Pro (default, state-of-the-art reasoning with 1M token context)
+    Gemini3Pro,
+    /// Gemini 3 Flash (fast frontier-class performance at lower cost)
+    Gemini3Flash,
+    /// Gemini 2.5 Pro (production tier)
+    Gemini2_5Pro,
+    /// Gemini 2.0 Flash (previous generation fast model)
+    Gemini2_0Flash,
 }
 
 impl GeminiModel {
@@ -470,15 +498,17 @@ impl GeminiModel {
     #[must_use]
     pub const fn to_cli_flag(self) -> &'static str {
         match self {
-            Self::Gemini25Pro => "gemini-2.5-pro",
-            Self::Gemini20FlashThinking => "gemini-2.0-flash-thinking-exp",
+            Self::Gemini3Pro => "gemini-3-pro",
+            Self::Gemini3Flash => "gemini-3-flash",
+            Self::Gemini2_5Pro => "gemini-2-5-pro",
+            Self::Gemini2_0Flash => "gemini-2-0-flash",
         }
     }
 }
 
 impl Default for GeminiModel {
     fn default() -> Self {
-        Self::Gemini25Pro
+        Self::Gemini3Pro
     }
 }
 
@@ -642,86 +672,99 @@ mod tests {
 
     #[test]
     fn test_claude_model_to_cli_flag() {
-        assert_eq!(ClaudeModel::Sonnet.to_cli_flag(), "sonnet");
-        assert_eq!(ClaudeModel::Opus.to_cli_flag(), "opus");
-        assert_eq!(ClaudeModel::Haiku.to_cli_flag(), "haiku");
+        assert_eq!(ClaudeModel::Sonnet4_5.to_cli_flag(), "sonnet-4-5");
+        assert_eq!(ClaudeModel::Opus4_5.to_cli_flag(), "opus-4-5");
+        assert_eq!(ClaudeModel::Haiku4_5.to_cli_flag(), "haiku-4-5");
+        assert_eq!(ClaudeModel::Opus4_1.to_cli_flag(), "opus-4-1");
+        assert_eq!(ClaudeModel::Opus4.to_cli_flag(), "opus-4");
+        assert_eq!(ClaudeModel::Sonnet4.to_cli_flag(), "sonnet-4");
     }
 
     #[test]
     fn test_claude_model_default() {
-        assert_eq!(ClaudeModel::default(), ClaudeModel::Sonnet);
+        assert_eq!(ClaudeModel::default(), ClaudeModel::Sonnet4_5);
     }
 
     #[test]
     fn test_codex_model_to_cli_flag() {
-        assert_eq!(CodexModel::Gpt4o.to_cli_flag(), "gpt-4o");
-        assert_eq!(CodexModel::Gpt4.to_cli_flag(), "gpt-4");
-        assert_eq!(CodexModel::Gpt35Turbo.to_cli_flag(), "gpt-3.5-turbo");
-        assert_eq!(CodexModel::O1.to_cli_flag(), "o1");
-        assert_eq!(CodexModel::O3.to_cli_flag(), "o3");
+        assert_eq!(CodexModel::Gpt5_2Codex.to_cli_flag(), "gpt-5-2-codex");
+        assert_eq!(CodexModel::Gpt5_2.to_cli_flag(), "gpt-5-2");
+        assert_eq!(CodexModel::Gpt5_2Instant.to_cli_flag(), "gpt-5-2-instant");
+        assert_eq!(CodexModel::Gpt5_2Thinking.to_cli_flag(), "gpt-5-2-thinking");
+        assert_eq!(CodexModel::Gpt5_2Pro.to_cli_flag(), "gpt-5-2-pro");
+        assert_eq!(CodexModel::Gpt5_1.to_cli_flag(), "gpt-5-1");
+        assert_eq!(CodexModel::Gpt5_1Instant.to_cli_flag(), "gpt-5-1-instant");
+        assert_eq!(CodexModel::Gpt5_1Thinking.to_cli_flag(), "gpt-5-1-thinking");
+        assert_eq!(CodexModel::Gpt4_1.to_cli_flag(), "gpt-4-1");
+        assert_eq!(CodexModel::O3Mini.to_cli_flag(), "o3-mini");
     }
 
     #[test]
     fn test_codex_model_default() {
-        assert_eq!(CodexModel::default(), CodexModel::Gpt4o);
+        assert_eq!(CodexModel::default(), CodexModel::Gpt5_2Codex);
     }
 
     #[test]
     fn test_gemini_model_to_cli_flag() {
-        assert_eq!(GeminiModel::Gemini25Pro.to_cli_flag(), "gemini-2.5-pro");
+        assert_eq!(GeminiModel::Gemini3Pro.to_cli_flag(), "gemini-3-pro");
+        assert_eq!(GeminiModel::Gemini3Flash.to_cli_flag(), "gemini-3-flash");
+        assert_eq!(GeminiModel::Gemini2_5Pro.to_cli_flag(), "gemini-2-5-pro");
         assert_eq!(
-            GeminiModel::Gemini20FlashThinking.to_cli_flag(),
-            "gemini-2.0-flash-thinking-exp"
+            GeminiModel::Gemini2_0Flash.to_cli_flag(),
+            "gemini-2-0-flash"
         );
     }
 
     #[test]
     fn test_gemini_model_default() {
-        assert_eq!(GeminiModel::default(), GeminiModel::Gemini25Pro);
+        assert_eq!(GeminiModel::default(), GeminiModel::Gemini3Pro);
     }
 
     #[test]
     fn test_session_model_default_for_agent() {
         assert_eq!(
             SessionModel::default_for_agent(AgentType::ClaudeCode),
-            SessionModel::Claude(ClaudeModel::Sonnet)
+            SessionModel::Claude(ClaudeModel::Sonnet4_5)
         );
         assert_eq!(
             SessionModel::default_for_agent(AgentType::Codex),
-            SessionModel::Codex(CodexModel::Gpt4o)
+            SessionModel::Codex(CodexModel::Gpt5_2Codex)
         );
         assert_eq!(
             SessionModel::default_for_agent(AgentType::Gemini),
-            SessionModel::Gemini(GeminiModel::Gemini25Pro)
+            SessionModel::Gemini(GeminiModel::Gemini3Pro)
         );
     }
 
     #[test]
     fn test_session_model_to_cli_flag() {
         assert_eq!(
-            SessionModel::Claude(ClaudeModel::Opus).to_cli_flag(),
-            "opus"
+            SessionModel::Claude(ClaudeModel::Opus4_5).to_cli_flag(),
+            "opus-4-5"
         );
-        assert_eq!(SessionModel::Codex(CodexModel::O1).to_cli_flag(), "o1");
         assert_eq!(
-            SessionModel::Gemini(GeminiModel::Gemini25Pro).to_cli_flag(),
-            "gemini-2.5-pro"
+            SessionModel::Codex(CodexModel::O3Mini).to_cli_flag(),
+            "o3-mini"
+        );
+        assert_eq!(
+            SessionModel::Gemini(GeminiModel::Gemini3Pro).to_cli_flag(),
+            "gemini-3-pro"
         );
     }
 
     #[test]
     fn test_session_model_is_compatible_with() {
-        let claude_model = SessionModel::Claude(ClaudeModel::Sonnet);
+        let claude_model = SessionModel::Claude(ClaudeModel::Sonnet4_5);
         assert!(claude_model.is_compatible_with(AgentType::ClaudeCode));
         assert!(!claude_model.is_compatible_with(AgentType::Codex));
         assert!(!claude_model.is_compatible_with(AgentType::Gemini));
 
-        let codex_model = SessionModel::Codex(CodexModel::Gpt4o);
+        let codex_model = SessionModel::Codex(CodexModel::Gpt5_2Codex);
         assert!(!codex_model.is_compatible_with(AgentType::ClaudeCode));
         assert!(codex_model.is_compatible_with(AgentType::Codex));
         assert!(!codex_model.is_compatible_with(AgentType::Gemini));
 
-        let gemini_model = SessionModel::Gemini(GeminiModel::Gemini25Pro);
+        let gemini_model = SessionModel::Gemini(GeminiModel::Gemini3Pro);
         assert!(!gemini_model.is_compatible_with(AgentType::ClaudeCode));
         assert!(!gemini_model.is_compatible_with(AgentType::Codex));
         assert!(gemini_model.is_compatible_with(AgentType::Gemini));
@@ -737,7 +780,7 @@ mod tests {
             status: SessionStatus::Running,
             backend: BackendType::Docker,
             agent: AgentType::ClaudeCode,
-            model: Some(SessionModel::Claude(ClaudeModel::Opus)),
+            model: Some(SessionModel::Claude(ClaudeModel::Opus4_5)),
             repo_path: PathBuf::from("/test"),
             worktree_path: PathBuf::from("/test/worktree"),
             subdirectory: PathBuf::new(),
@@ -765,7 +808,7 @@ mod tests {
 
         assert_eq!(
             session.effective_model(),
-            SessionModel::Claude(ClaudeModel::Opus)
+            SessionModel::Claude(ClaudeModel::Opus4_5)
         );
     }
 
@@ -805,10 +848,10 @@ mod tests {
             updated_at: Utc::now(),
         };
 
-        // Should fall back to agent default (Sonnet for ClaudeCode)
+        // Should fall back to agent default (Sonnet4_5 for ClaudeCode)
         assert_eq!(
             session.effective_model(),
-            SessionModel::Claude(ClaudeModel::Sonnet)
+            SessionModel::Claude(ClaudeModel::Sonnet4_5)
         );
     }
 
@@ -822,7 +865,7 @@ mod tests {
             status: SessionStatus::Running,
             backend: BackendType::Docker,
             agent: AgentType::ClaudeCode,
-            model: Some(SessionModel::Claude(ClaudeModel::Haiku)),
+            model: Some(SessionModel::Claude(ClaudeModel::Haiku4_5)),
             repo_path: PathBuf::from("/test"),
             worktree_path: PathBuf::from("/test/worktree"),
             subdirectory: PathBuf::new(),
@@ -848,7 +891,7 @@ mod tests {
             updated_at: Utc::now(),
         };
 
-        assert_eq!(session.model_cli_flag(), Some("haiku"));
+        assert_eq!(session.model_cli_flag(), Some("haiku-4-5"));
     }
 
     #[test]
