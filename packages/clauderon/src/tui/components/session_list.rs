@@ -328,6 +328,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
             pad_to_width("Branch/PR", widths.branch_pr),
             Style::default().fg(Color::DarkGray),
         ),
+        Span::raw("  "), // Column padding
         Span::styled("◎", Style::default().fg(Color::DarkGray)),
         Span::raw(" "),
         Span::styled("CI", Style::default().fg(Color::DarkGray)),
@@ -447,11 +448,14 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
             let has_reconcile_error =
                 session.reconcile_attempts > 0 && session.last_reconcile_error.is_some();
 
+            // Use title if available, otherwise fall back to name
+            let display_name = session.title.as_ref().map_or_else(|| &session.name, |t| t);
+
             // Format session name with optional warning indicator
             let name_display = if has_reconcile_error {
-                format!("⚠ {}", session.name)
+                format!("⚠ {}", display_name)
             } else {
-                session.name.clone()
+                display_name.to_string()
             };
 
             let name_style = if has_reconcile_error {
@@ -488,6 +492,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
                 Span::raw(backend_padded),
                 Span::raw("  "), // Column padding
                 Span::raw(pr_padded),
+                Span::raw("  "), // Column padding
                 claude_indicator,
                 Span::raw(" "),
                 check_indicator,
