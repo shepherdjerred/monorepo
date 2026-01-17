@@ -6,6 +6,7 @@ use tokio::sync::mpsc;
 use tokio::task::JoinHandle;
 use uuid::Uuid;
 
+use crate::api::console_protocol::SignalType;
 use crate::api::{ApiClient, Client};
 use crate::core::{AccessMode, AgentType, BackendType, Session, SessionStatus};
 use crate::tui::attached::PtySession;
@@ -94,6 +95,8 @@ pub enum AppMode {
     Scroll,
     /// Showing reconcile error details for a session
     ReconcileError,
+    /// Signal menu dialog
+    SignalMenu,
 }
 
 /// Copy mode state for text selection and navigation
@@ -137,6 +140,64 @@ impl CopyModeState {
             visual_mode: false,
         }
     }
+}
+
+/// Signal menu dialog state
+#[derive(Debug, Clone)]
+pub struct SignalMenuState {
+    /// Currently selected signal index
+    pub selected_index: usize,
+
+    /// Available signals to send
+    pub signals: Vec<SignalType>,
+}
+
+impl SignalMenuState {
+    /// Create new signal menu state
+    #[must_use]
+    pub fn new() -> Self {
+        Self {
+            selected_index: 0,
+            signals: vec![
+                SignalType::Sigint,
+                SignalType::Sigquit,
+                SignalType::Sigtstp,
+                SignalType::Sigcont,
+                SignalType::Sigterm,
+                SignalType::Sigkill,
+                SignalType::Sighup,
+                SignalType::Sigusr1,
+                SignalType::Sigusr2,
+            ],
+        }
+    }
+
+    /// Select next signal in list
+    pub fn select_next(&mut self) {
+        if self.selected_index < self.signals.len().saturating_sub(1) {
+            self.selected_index = self.selected_index.saturating_add(1);
+        }
+    }
+
+    /// Select previous signal in list
+    pub fn select_previous(&mut self) {
+        self.selected_index = self.selected_index.saturating_sub(1);
+    }
+
+    /// Get currently selected signal
+    #[must_use]
+    pub fn selected_signal(&self) -> SignalType {
+        self.signals[self.selected_index]
+    }
+}
+
+/// Result of sending a signal
+#[derive(Debug, Clone)]
+pub enum SignalResult {
+    /// Signal sent successfully
+    Success(SignalType),
+    /// Signal send failed
+    Error { signal: SignalType, message: String },
 }
 
 /// Input focus for create dialog
@@ -634,6 +695,12 @@ pub struct App {
 
     /// Session ID for reconcile error dialog (when in ReconcileError mode)
     pub reconcile_error_session_id: Option<Uuid>,
+
+    /// Signal menu dialog state (None = closed)
+    pub signal_menu: Option<SignalMenuState>,
+
+    /// Last signal send result for status display
+    pub last_signal_result: Option<SignalResult>,
 }
 
 impl App {
@@ -666,6 +733,8 @@ impl App {
             launch_editor: false,
             copy_mode_state: None,
             reconcile_error_session_id: None,
+            signal_menu: None,
+            last_signal_result: None,
         }
     }
 
@@ -1323,6 +1392,57 @@ impl App {
     pub fn attached_pty_session_mut(&mut self) -> Option<&mut PtySession> {
         self.attached_session_id
             .and_then(|id| self.pty_sessions.get_mut(&id))
+    }
+
+    /// Open the signal menu dialog.
+    pub fn open_signal_menu(&mut self) {
+        self.signal_menu = Some(SignalMenuState::new());
+        self.mode = AppMode::SignalMenu;
+    }
+
+    /// Close the signal menu dialog.
+    pub fn close_signal_menu(&mut self) {
+        self.signal_menu = None;
+        self.mode = AppMode::Attached;
+    }
+
+    /// Send a signal to the attached PTY session.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if no PTY session is attached or signal sending fails.
+    #[tracing::instrument(skip(self), fields(signal = ?signal))]
+    pub async fn send_signal(&mut self, signal: SignalType) -> anyhow::Result<()> {
+        if let Some(pty_session) = self.attached_pty_session() {
+            match pty_session.send_signal(signal).await {
+                Ok(()) => {
+                    self.last_signal_result = Some(SignalResult::Success(signal));
+                    self.status_message =
+                        Some(format!("Sent {} to container", signal.display_name()));
+                    tracing::info!(
+                        signal = ?signal,
+                        "Signal sent successfully"
+                    );
+                    Ok(())
+                }
+                Err(e) => {
+                    let error_msg = e.to_string();
+                    self.last_signal_result = Some(SignalResult::Error {
+                        signal,
+                        message: error_msg.clone(),
+                    });
+                    self.status_message = Some(format!("Failed to send signal: {error_msg}"));
+                    tracing::error!(
+                        signal = ?signal,
+                        error = %e,
+                        "Failed to send signal"
+                    );
+                    Err(e)
+                }
+            }
+        } else {
+            anyhow::bail!("No active PTY session")
+        }
     }
 
     /// Update terminal size and resize any attached PTY.

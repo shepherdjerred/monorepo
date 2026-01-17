@@ -7,6 +7,7 @@ use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
 use uuid::Uuid;
 
+use crate::api::console_protocol::SignalType;
 use crate::core::session::BackendType;
 use crate::tui::attached::TerminalBuffer;
 use crate::utils::terminal_queries::{
@@ -27,6 +28,7 @@ const READ_BUFFER_SIZE: usize = 4096;
 enum WriteRequest {
     Bytes(Vec<u8>),
     Resize { rows: u16, cols: u16 },
+    Signal { signal: SignalType },
 }
 
 struct ConsoleSession {
@@ -152,6 +154,13 @@ impl ConsoleSession {
         buffer.resize(rows, cols);
     }
 
+    async fn send_signal(&self, signal: SignalType) -> anyhow::Result<()> {
+        self.write_tx
+            .send(WriteRequest::Signal { signal })
+            .await
+            .map_err(|_| anyhow::anyhow!("Console PTY write channel closed"))
+    }
+
     async fn shutdown(&self) {
         self.cancel_token.cancel();
         self.reader_task.abort();
@@ -242,6 +251,41 @@ impl ConsoleSession {
                                 break;
                             }
                         }
+                        Some(WriteRequest::Signal { signal }) => {
+                            tracing::info!(
+                                signal = ?signal,
+                                signal_num = signal.as_signal_number(),
+                                "Sending signal to PTY"
+                            );
+
+                            // Write control character to PTY for common signals
+                            let control_char = match signal {
+                                SignalType::Sigint => Some(vec![0x03]),   // Ctrl+C
+                                SignalType::Sigtstp => Some(vec![0x1A]),  // Ctrl+Z
+                                SignalType::Sigquit => Some(vec![0x1C]),  // Ctrl+\
+                                _ => None,
+                            };
+
+                            if let Some(char_bytes) = control_char {
+                                if let Err(e) = writer.write_all(&char_bytes).await {
+                                    tracing::error!(
+                                        signal = ?signal,
+                                        error = %e,
+                                        "Failed to write signal control character to PTY"
+                                    );
+                                    break;
+                                }
+                                tracing::info!(
+                                    signal = ?signal,
+                                    "Signal control character written to PTY successfully"
+                                );
+                            } else {
+                                tracing::warn!(
+                                    signal = ?signal,
+                                    "Non-control-character signal forwarding not yet implemented"
+                                );
+                            }
+                        }
                         None => break,
                     }
                 }
@@ -322,5 +366,10 @@ impl ConsoleSessionHandle {
 
     pub async fn resize(&self, rows: u16, cols: u16) {
         self.session.resize(rows, cols).await;
+    }
+
+    #[tracing::instrument(skip(self), fields(signal = ?signal))]
+    pub async fn send_signal(&self, signal: SignalType) -> anyhow::Result<()> {
+        self.session.send_signal(signal).await
     }
 }
