@@ -154,6 +154,30 @@ async fn handle_console_connection(
                             console_handle.resize(rows, cols).await;
                         }
                     }
+                    ConsoleMessage::Signal { signal } => {
+                        tracing::info!(
+                            session_id = %session_id,
+                            signal = ?signal,
+                            client_id = %client_id,
+                            "Received signal request from TUI client"
+                        );
+
+                        if let Err(e) = console_handle.send_signal(signal).await {
+                            tracing::error!(
+                                session_id = %session_id,
+                                signal = ?signal,
+                                error = %e,
+                                "Failed to forward signal to PTY"
+                            );
+                            // Don't break connection on signal failure
+                        } else {
+                            tracing::info!(
+                                session_id = %session_id,
+                                signal = ?signal,
+                                "Signal forwarded successfully to PTY"
+                            );
+                        }
+                    }
                     _ => {
                         tracing::debug!("Ignoring console message: {:?}", message);
                     }
