@@ -21,4 +21,5 @@ export {
   ApiError,
   SessionNotFoundError,
   WebSocketError,
+  DecodeError,
 } from "./errors.js";

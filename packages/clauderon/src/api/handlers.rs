@@ -312,6 +312,8 @@ pub async fn handle_create_session_with_progress(
         crate::core::BackendType::Zellij => "Zellij session",
         crate::core::BackendType::Docker => "Docker container",
         crate::core::BackendType::Kubernetes => "Kubernetes pod",
+        #[cfg(target_os = "macos")]
+        crate::core::BackendType::AppleContainer => "Apple container",
     };
 
     // Step 1: Creating git worktree

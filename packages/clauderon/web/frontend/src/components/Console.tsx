@@ -2,12 +2,38 @@ import { useEffect, useRef, useState } from "react";
 import { init, Terminal, FitAddon } from "ghostty-web";
 import { useConsole } from "../hooks/useConsole";
 import { X, MessageSquare } from "lucide-react";
+import * as Sentry from "@sentry/react";
+import { DecodeError } from "@clauderon/client";
 
 type ConsoleProps = {
   sessionId: string;
   sessionName: string;
   onClose: () => void;
   onSwitchToChat?: () => void;
+}
+
+/**
+ * Convert technical error to user-friendly message
+ */
+function getUserFriendlyErrorMessage(error: Error): string {
+  if (error instanceof DecodeError) {
+    switch (error.stage) {
+      case 'validation':
+        return 'Received invalid data format from session. The session may be experiencing issues.';
+      case 'base64':
+        return 'Terminal output decode error. The session is still running, but some output may be lost.';
+      case 'utf8':
+        return 'Terminal encoding error. Some characters may not display correctly.';
+    }
+  }
+
+  // Network/WebSocket errors
+  if (error.message.includes('WebSocket')) {
+    return 'Connection lost. Attempting to reconnect...';
+  }
+
+  // Default fallback
+  return 'An unexpected error occurred. The session may still be running.';
 }
 
 export function Console({ sessionId, sessionName, onClose, onSwitchToChat }: ConsoleProps) {
@@ -18,6 +44,20 @@ export function Console({ sessionId, sessionName, onClose, onSwitchToChat }: Con
   const [error, setError] = useState<string | null>(null);
   const errorTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [errorKey, setErrorKey] = useState<number>(0);
+
+  // Set Sentry context for this session
+  useEffect(() => {
+    Sentry.setContext('console_session', {
+      session_id: sessionId,
+      session_name: sessionName,
+      connected_at: new Date().toISOString(),
+    });
+
+    return () => {
+      // Clear context on unmount
+      Sentry.setContext('console_session', null);
+    };
+  }, [sessionId, sessionName]);
 
   // Dismiss error function
   const dismissError = () => {
@@ -210,8 +250,45 @@ export function Console({ sessionId, sessionName, onClose, onSwitchToChat }: Con
     });
 
     const unsubscribeError = client.onError((err: Error) => {
-      // Set new error and increment key for re-rendering
-      setError(err.message);
+      // Capture error in Sentry with rich context
+      if (err instanceof DecodeError) {
+        Sentry.captureException(err, {
+          level: 'error',
+          tags: {
+            error_type: 'terminal_decode',
+            decode_stage: err.stage,
+            session_id: err.context.sessionId || 'unknown',
+          },
+          contexts: {
+            decode: {
+              stage: err.stage,
+              data_length: err.context.dataLength,
+              data_sample: err.context.dataSample,
+              session_id: err.context.sessionId,
+              session_name: sessionName,
+            }
+          }
+        });
+      } else {
+        // Capture other errors with session context
+        Sentry.captureException(err, {
+          level: 'error',
+          tags: {
+            error_type: 'terminal_error',
+            session_id: sessionId,
+          },
+          contexts: {
+            session: {
+              session_id: sessionId,
+              session_name: sessionName,
+            }
+          }
+        });
+      }
+
+      // Show user-friendly error message
+      const userMessage = getUserFriendlyErrorMessage(err);
+      setError(userMessage);
       setErrorKey(prev => prev + 1);
 
       // Clear any existing timeout
@@ -234,7 +311,7 @@ export function Console({ sessionId, sessionName, onClose, onSwitchToChat }: Con
         clearTimeout(errorTimeoutRef.current);
       }
     };
-  }, [client]);
+  }, [client, sessionId, sessionName]);
 
   // Handle connection status changes
   useEffect(() => {
