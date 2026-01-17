@@ -311,7 +311,7 @@ export function Console({ sessionId, sessionName, onClose, onSwitchToChat }: Con
         clearTimeout(errorTimeoutRef.current);
       }
     };
-  }, [client]);
+  }, [client, sessionId, sessionName]);
 
   // Handle connection status changes
   useEffect(() => {
