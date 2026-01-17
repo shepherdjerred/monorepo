@@ -58,6 +58,12 @@ export class ConsoleClient {
   private sessionId: string | null = null;
   private decoder: TextDecoder | null = null;
 
+  // Error throttling to prevent performance issues
+  private errorCount: number = 0;
+  private lastErrorTime: number = 0;
+  private readonly MAX_ERRORS_PER_SECOND = 5;
+  private isErrorThrottled: boolean = false;
+
   private listeners: {
     connected: (() => void)[];
     disconnected: (() => void)[];
@@ -72,6 +78,38 @@ export class ConsoleClient {
 
   constructor(config: ConsoleClientConfig) {
     this.baseUrl = config.baseUrl;
+  }
+
+  /**
+   * Check if we should emit an error or throttle it
+   * Prevents error floods from freezing the UI
+   */
+  private shouldEmitError(): boolean {
+    const now = Date.now();
+    const timeSinceLastError = now - this.lastErrorTime;
+
+    // Reset counter if more than 1 second has passed
+    if (timeSinceLastError > 1000) {
+      this.errorCount = 0;
+      this.isErrorThrottled = false;
+    }
+
+    this.lastErrorTime = now;
+    this.errorCount++;
+
+    // If we've exceeded the limit, throttle and warn once
+    if (this.errorCount > this.MAX_ERRORS_PER_SECOND) {
+      if (!this.isErrorThrottled) {
+        this.isErrorThrottled = true;
+        console.error(
+          `[ConsoleClient] Error rate exceeded for session ${this.sessionId}. ` +
+          `Throttling errors to prevent performance issues. Check server logs.`
+        );
+      }
+      return false;
+    }
+
+    return true;
   }
 
   /**
@@ -118,39 +156,43 @@ export class ConsoleClient {
 
             // Validate base64 format before attempting decode
             if (!isValidBase64(message.data)) {
-              console.error(
-                `[ConsoleClient] Invalid base64 format (stage: validation) for session ${this.sessionId}. ` +
-                `Length: ${message.data.length}, ` +
-                `First 50 chars: ${message.data.substring(0, 50)}`
-              );
-              this.emit(
-                "error",
-                new DecodeError(
-                  `Invalid base64 format received from server`,
-                  'validation',
-                  {
-                    sessionId: this.sessionId,
-                    dataLength: message.data.length,
-                    dataSample: message.data.substring(0, 100),
-                  }
-                )
-              );
+              if (this.shouldEmitError()) {
+                console.error(
+                  `[ConsoleClient] Invalid base64 format (stage: validation) for session ${this.sessionId}. ` +
+                  `Length: ${message.data.length}, ` +
+                  `First 50 chars: ${message.data.substring(0, 50)}`
+                );
+                this.emit(
+                  "error",
+                  new DecodeError(
+                    `Invalid base64 format received from server`,
+                    'validation',
+                    {
+                      sessionId: this.sessionId,
+                      dataLength: message.data.length,
+                      dataSample: message.data.substring(0, 100),
+                    }
+                  )
+                );
+              }
               return;
             }
 
             // Check message size to prevent memory issues
             if (message.data.length > MAX_MESSAGE_SIZE) {
-              console.error(
-                `[ConsoleClient] Message size exceeded limit for session ${this.sessionId}. ` +
-                `Size: ${message.data.length} bytes, Max: ${MAX_MESSAGE_SIZE} bytes`
-              );
-              this.emit(
-                "error",
-                new WebSocketError(
-                  `Received message exceeds size limit (${(message.data.length / 1024).toFixed(0)}KB). ` +
-                  `Large outputs may be truncated.`
-                )
-              );
+              if (this.shouldEmitError()) {
+                console.error(
+                  `[ConsoleClient] Message size exceeded limit for session ${this.sessionId}. ` +
+                  `Size: ${message.data.length} bytes, Max: ${MAX_MESSAGE_SIZE} bytes`
+                );
+                this.emit(
+                  "error",
+                  new WebSocketError(
+                    `Received message exceeds size limit (${(message.data.length / 1024).toFixed(0)}KB). ` +
+                    `Large outputs may be truncated.`
+                  )
+                );
+              }
               return;
             }
 
@@ -161,25 +203,27 @@ export class ConsoleClient {
               const binaryString = atob(message.data);
               bytes = Uint8Array.from(binaryString, (char) => char.charCodeAt(0));
             } catch (atobError) {
-              const errorMsg = atobError instanceof Error ? atobError.message : String(atobError);
-              console.error(
-                `[ConsoleClient] Base64 decode error (stage: atob) for session ${this.sessionId}: ${errorMsg}. ` +
-                `Data length: ${message.data.length}, ` +
-                `Sample: ${message.data.substring(0, 100)}`
-              );
-              this.emit(
-                "error",
-                new DecodeError(
-                  `Failed to decode base64: ${errorMsg}`,
-                  'base64',
-                  {
-                    sessionId: this.sessionId,
-                    dataLength: message.data.length,
-                    dataSample: message.data.substring(0, 100),
-                  },
-                  atobError
-                )
-              );
+              if (this.shouldEmitError()) {
+                const errorMsg = atobError instanceof Error ? atobError.message : String(atobError);
+                console.error(
+                  `[ConsoleClient] Base64 decode error (stage: atob) for session ${this.sessionId}: ${errorMsg}. ` +
+                  `Data length: ${message.data.length}, ` +
+                  `Sample: ${message.data.substring(0, 100)}`
+                );
+                this.emit(
+                  "error",
+                  new DecodeError(
+                    `Failed to decode base64: ${errorMsg}`,
+                    'base64',
+                    {
+                      sessionId: this.sessionId,
+                      dataLength: message.data.length,
+                      dataSample: message.data.substring(0, 100),
+                    },
+                    atobError
+                  )
+                );
+              }
               return;
             }
 
@@ -191,29 +235,31 @@ export class ConsoleClient {
               const decoded = this.decoder!.decode(bytes, { stream: true });
               this.emit("data", decoded);
             } catch (utf8Error) {
-              const errorMsg = utf8Error instanceof Error ? utf8Error.message : String(utf8Error);
-              // Include hex dump of first 32 bytes for debugging
-              const hexSample = Array.from(bytes.slice(0, 32))
-                .map(b => '0x' + b.toString(16).padStart(2, '0'))
-                .join(' ');
-              console.error(
-                `[ConsoleClient] UTF-8 decode error (stage: utf8) for session ${this.sessionId}: ${errorMsg}. ` +
-                `Bytes length: ${bytes.length}, ` +
-                `Hex sample: ${hexSample}`
-              );
-              this.emit(
-                "error",
-                new DecodeError(
-                  `Failed to decode UTF-8: ${errorMsg}`,
-                  'utf8',
-                  {
-                    sessionId: this.sessionId,
-                    dataLength: bytes.length,
-                    dataSample: hexSample,
-                  },
-                  utf8Error
-                )
-              );
+              if (this.shouldEmitError()) {
+                const errorMsg = utf8Error instanceof Error ? utf8Error.message : String(utf8Error);
+                // Include hex dump of first 32 bytes for debugging
+                const hexSample = Array.from(bytes.slice(0, 32))
+                  .map(b => '0x' + b.toString(16).padStart(2, '0'))
+                  .join(' ');
+                console.error(
+                  `[ConsoleClient] UTF-8 decode error (stage: utf8) for session ${this.sessionId}: ${errorMsg}. ` +
+                  `Bytes length: ${bytes.length}, ` +
+                  `Hex sample: ${hexSample}`
+                );
+                this.emit(
+                  "error",
+                  new DecodeError(
+                    `Failed to decode UTF-8: ${errorMsg}`,
+                    'utf8',
+                    {
+                      sessionId: this.sessionId,
+                      dataLength: bytes.length,
+                      dataSample: hexSample,
+                    },
+                    utf8Error
+                  )
+                );
+              }
               return;
             }
           }
@@ -247,6 +293,11 @@ export class ConsoleClient {
     }
     this.sessionId = null;
     this.decoder = null;
+
+    // Reset error tracking
+    this.errorCount = 0;
+    this.lastErrorTime = 0;
+    this.isErrorThrottled = false;
   }
 
   /**
