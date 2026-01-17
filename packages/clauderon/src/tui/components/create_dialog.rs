@@ -6,7 +6,10 @@ use ratatui::{
     widgets::{Block, Borders, Clear, Paragraph, Wrap},
 };
 
-use crate::core::{AccessMode, AgentType, BackendType};
+use crate::core::{
+    AccessMode, AgentType, BackendType,
+    session::{ClaudeModel, CodexModel, GeminiModel, SessionModel},
+};
 use crate::tui::app::{App, CreateDialogFocus};
 
 /// Render the create session dialog
@@ -53,6 +56,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
             Constraint::Length(3),                        // Repo path
             Constraint::Length(2),                        // Backend
             Constraint::Length(2),                        // Agent
+            Constraint::Length(2),                        // Model
             Constraint::Length(2),                        // Access mode
             Constraint::Length(2),                        // Skip checks
             Constraint::Length(2),                        // Plan mode
@@ -72,6 +76,8 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
     let backend_idx = layout_idx;
     layout_idx += 1;
     let agent_idx = layout_idx;
+    layout_idx += 1;
+    let model_idx = layout_idx;
     layout_idx += 1;
     let access_idx = layout_idx;
     layout_idx += 1;
@@ -134,6 +140,79 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         ],
         dialog.focus == CreateDialogFocus::Agent,
         inner[agent_idx],
+    );
+
+    // Model selection (shows models compatible with selected agent)
+    let model_options = match dialog.agent {
+        AgentType::ClaudeCode => vec![
+            ("Default", dialog.model.is_none()),
+            (
+                "Sonnet",
+                matches!(
+                    dialog.model,
+                    Some(SessionModel::Claude(ClaudeModel::Sonnet))
+                ),
+            ),
+            (
+                "Opus",
+                matches!(dialog.model, Some(SessionModel::Claude(ClaudeModel::Opus))),
+            ),
+            (
+                "Haiku",
+                matches!(dialog.model, Some(SessionModel::Claude(ClaudeModel::Haiku))),
+            ),
+        ],
+        AgentType::Codex => vec![
+            ("Default", dialog.model.is_none()),
+            (
+                "GPT-4o",
+                matches!(dialog.model, Some(SessionModel::Codex(CodexModel::Gpt4o))),
+            ),
+            (
+                "GPT-4",
+                matches!(dialog.model, Some(SessionModel::Codex(CodexModel::Gpt4))),
+            ),
+            (
+                "GPT-3.5",
+                matches!(
+                    dialog.model,
+                    Some(SessionModel::Codex(CodexModel::Gpt35Turbo))
+                ),
+            ),
+            (
+                "o1",
+                matches!(dialog.model, Some(SessionModel::Codex(CodexModel::O1))),
+            ),
+            (
+                "o3",
+                matches!(dialog.model, Some(SessionModel::Codex(CodexModel::O3))),
+            ),
+        ],
+        AgentType::Gemini => vec![
+            ("Default", dialog.model.is_none()),
+            (
+                "2.5 Pro",
+                matches!(
+                    dialog.model,
+                    Some(SessionModel::Gemini(GeminiModel::Gemini25Pro))
+                ),
+            ),
+            (
+                "2.0 Flash",
+                matches!(
+                    dialog.model,
+                    Some(SessionModel::Gemini(GeminiModel::Gemini20FlashThinking))
+                ),
+            ),
+        ],
+    };
+
+    render_radio_field(
+        frame,
+        "Model",
+        &model_options,
+        dialog.focus == CreateDialogFocus::Model,
+        inner[model_idx],
     );
 
     // Access mode selection

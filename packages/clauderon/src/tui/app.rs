@@ -7,7 +7,7 @@ use tokio::task::JoinHandle;
 use uuid::Uuid;
 
 use crate::api::{ApiClient, Client};
-use crate::core::{AccessMode, AgentType, BackendType, Session, SessionStatus};
+use crate::core::{AccessMode, AgentType, BackendType, Session, SessionModel, SessionStatus};
 use crate::tui::attached::PtySession;
 
 /// Progress update from background session creation task
@@ -147,6 +147,7 @@ pub enum CreateDialogFocus {
     RepoPath,
     Backend,
     Agent,
+    Model,
     AccessMode,
     SkipChecks,
     PlanMode,
@@ -196,6 +197,7 @@ pub struct CreateDialogState {
     pub repo_path: String,
     pub backend: BackendType,
     pub agent: AgentType,
+    pub model: Option<SessionModel>,
     pub skip_checks: bool,
     pub plan_mode: bool,
     pub access_mode: AccessMode,
@@ -454,6 +456,50 @@ impl CreateDialogState {
         };
     }
 
+    /// Toggle through available models for the current agent
+    pub fn toggle_model(&mut self) {
+        use crate::core::session::{ClaudeModel, CodexModel, GeminiModel};
+
+        self.model = match self.agent {
+            AgentType::ClaudeCode => match &self.model {
+                None => Some(SessionModel::Claude(ClaudeModel::Sonnet)),
+                Some(SessionModel::Claude(ClaudeModel::Sonnet)) => {
+                    Some(SessionModel::Claude(ClaudeModel::Opus))
+                }
+                Some(SessionModel::Claude(ClaudeModel::Opus)) => {
+                    Some(SessionModel::Claude(ClaudeModel::Haiku))
+                }
+                Some(SessionModel::Claude(ClaudeModel::Haiku)) => None,
+                _ => Some(SessionModel::Claude(ClaudeModel::Sonnet)),
+            },
+            AgentType::Codex => match &self.model {
+                None => Some(SessionModel::Codex(CodexModel::Gpt4o)),
+                Some(SessionModel::Codex(CodexModel::Gpt4o)) => {
+                    Some(SessionModel::Codex(CodexModel::Gpt4))
+                }
+                Some(SessionModel::Codex(CodexModel::Gpt4)) => {
+                    Some(SessionModel::Codex(CodexModel::Gpt35Turbo))
+                }
+                Some(SessionModel::Codex(CodexModel::Gpt35Turbo)) => {
+                    Some(SessionModel::Codex(CodexModel::O1))
+                }
+                Some(SessionModel::Codex(CodexModel::O1)) => {
+                    Some(SessionModel::Codex(CodexModel::O3))
+                }
+                Some(SessionModel::Codex(CodexModel::O3)) => None,
+                _ => Some(SessionModel::Codex(CodexModel::Gpt4o)),
+            },
+            AgentType::Gemini => match &self.model {
+                None => Some(SessionModel::Gemini(GeminiModel::Gemini25Pro)),
+                Some(SessionModel::Gemini(GeminiModel::Gemini25Pro)) => {
+                    Some(SessionModel::Gemini(GeminiModel::Gemini20FlashThinking))
+                }
+                Some(SessionModel::Gemini(GeminiModel::Gemini20FlashThinking)) => None,
+                _ => Some(SessionModel::Gemini(GeminiModel::Gemini25Pro)),
+            },
+        };
+    }
+
     /// Cycle through agents: ClaudeCode -> Codex -> Gemini -> ClaudeCode
     pub fn toggle_agent(&mut self) {
         self.agent = match self.agent {
@@ -546,6 +592,7 @@ impl Default for CreateDialogState {
             repo_path: String::new(),
             backend: BackendType::Zellij, // Default to Zellij
             agent: AgentType::ClaudeCode,
+            model: None, // Default to CLI default
             skip_checks: false,
             plan_mode: true,                    // Default to plan mode ON
             access_mode: AccessMode::default(), // ReadOnly by default (secure)
