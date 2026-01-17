@@ -509,12 +509,12 @@ impl CreateDialogState {
         // Auto-toggle skip_checks based on backend:
         // Docker, Kubernetes, and AppleContainer benefit from skipping checks (isolated environments)
         // Zellij runs locally so checks are more important
-        self.skip_checks = matches!(
-            self.backend,
-            BackendType::Docker | BackendType::Kubernetes
-                #[cfg(target_os = "macos")]
-                | BackendType::AppleContainer
-        );
+        self.skip_checks = match self.backend {
+            BackendType::Zellij => false,
+            BackendType::Docker | BackendType::Kubernetes => true,
+            #[cfg(target_os = "macos")]
+            BackendType::AppleContainer => true,
+        };
     }
 
     /// Toggle between ReadOnly and ReadWrite access modes
