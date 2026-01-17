@@ -495,26 +495,30 @@ impl CreateDialogState {
 
     /// Cycle through backends: Zellij → Docker → Kubernetes → [AppleContainer →] Zellij, auto-adjusting skip_checks
     pub fn toggle_backend(&mut self) {
-        self.backend = match self.backend {
-            BackendType::Zellij => BackendType::Docker,
-            BackendType::Docker => BackendType::Kubernetes,
-            #[cfg(target_os = "macos")]
-            BackendType::Kubernetes => BackendType::AppleContainer,
-            #[cfg(not(target_os = "macos"))]
-            BackendType::Kubernetes => BackendType::Zellij,
-            #[cfg(target_os = "macos")]
-            BackendType::AppleContainer => BackendType::Zellij,
-        };
+        #[cfg(not(target_os = "macos"))]
+        {
+            self.backend = match self.backend {
+                BackendType::Zellij => BackendType::Docker,
+                BackendType::Docker => BackendType::Kubernetes,
+                BackendType::Kubernetes => BackendType::Zellij,
+            };
+            self.skip_checks =
+                matches!(self.backend, BackendType::Docker | BackendType::Kubernetes);
+        }
 
-        // Auto-toggle skip_checks based on backend:
-        // Docker, Kubernetes, and AppleContainer benefit from skipping checks (isolated environments)
-        // Zellij runs locally so checks are more important
-        self.skip_checks = match self.backend {
-            BackendType::Zellij => false,
-            BackendType::Docker | BackendType::Kubernetes => true,
-            #[cfg(target_os = "macos")]
-            BackendType::AppleContainer => true,
-        };
+        #[cfg(target_os = "macos")]
+        {
+            self.backend = match self.backend {
+                BackendType::Zellij => BackendType::Docker,
+                BackendType::Docker => BackendType::Kubernetes,
+                BackendType::Kubernetes => BackendType::AppleContainer,
+                BackendType::AppleContainer => BackendType::Zellij,
+            };
+            self.skip_checks = matches!(
+                self.backend,
+                BackendType::Docker | BackendType::Kubernetes | BackendType::AppleContainer
+            );
+        }
     }
 
     /// Toggle between ReadOnly and ReadWrite access modes
