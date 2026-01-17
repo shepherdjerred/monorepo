@@ -490,8 +490,8 @@ impl SessionManager {
             repo_path: repo_path.clone().into(),
             worktree_path: worktree_path.clone(),
             subdirectory: subdirectory.clone(),
-            branch_name: metadata.branch_name,
-            repositories: None, // Will be set after worktree creation
+            branch_name: full_name.clone(), // Use full name WITH suffix to match actual git branch
+            repositories: None,             // Will be set after worktree creation
             initial_prompt: initial_prompt.clone(),
             backend,
             agent,
@@ -1183,8 +1183,8 @@ impl SessionManager {
             repo_path: repo_path.clone().into(),
             worktree_path: worktree_path.clone(),
             subdirectory: subdirectory.clone(),
-            branch_name: metadata.branch_name, // Use AI branch_name (no suffix)
-            repositories: None,                // Single-repo mode (no multi-repo support)
+            branch_name: full_name.clone(), // Use full name WITH suffix to match actual git branch
+            repositories: None,             // Single-repo mode (no multi-repo support)
             initial_prompt: initial_prompt.clone(),
             backend,
             agent,
