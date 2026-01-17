@@ -6,8 +6,9 @@ use typeshare::typeshare;
 /// Feature flags configuration for the daemon.
 /// Flags are loaded at startup and require daemon restart to change.
 #[typeshare]
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(default)]
+#[allow(clippy::struct_excessive_bools)]
 pub struct FeatureFlags {
     /// Enable experimental WebAuthn passwordless authentication
     pub enable_webauthn_auth: bool,
@@ -45,16 +46,16 @@ impl FeatureFlags {
 
         // 2. Override from TOML config file (~/.clauderon/config.toml)
         if let Some(toml_flags) = Self::load_from_toml()? {
-            flags.merge(toml_flags);
+            flags.merge(&toml_flags);
         }
 
         // 3. Override from environment variables
         let env_flags = Self::load_from_env();
-        flags.merge(env_flags);
+        flags.merge(&env_flags);
 
         // 4. Override from CLI arguments (highest priority)
         if let Some(cli_flags) = cli_overrides {
-            flags.merge_from_cli(cli_flags);
+            flags.merge_from_cli(&cli_flags);
         }
 
         Ok(flags)
@@ -90,7 +91,7 @@ impl FeatureFlags {
     }
 
     /// Merge another FeatureFlags struct into this one (non-default values override)
-    fn merge(&mut self, other: Self) {
+    fn merge(&mut self, other: &Self) {
         // Only merge fields that differ from defaults
         let defaults = Self::default();
 
@@ -112,7 +113,7 @@ impl FeatureFlags {
     }
 
     /// Merge CLI overrides (which are Option<bool> to distinguish "not set")
-    fn merge_from_cli(&mut self, cli: CliFeatureFlags) {
+    fn merge_from_cli(&mut self, cli: &CliFeatureFlags) {
         if let Some(val) = cli.enable_webauthn_auth {
             self.enable_webauthn_auth = val;
         }
@@ -212,7 +213,7 @@ mod tests {
             ..Default::default()
         };
 
-        base.merge(override_flags);
+        base.merge(&override_flags);
         assert!(base.enable_webauthn_auth);
         // Other flags should remain at default
         assert!(base.enable_ai_metadata);
@@ -231,7 +232,7 @@ mod tests {
 
         // Merge with defaults - should not change anything
         let defaults = FeatureFlags::default();
-        base.merge(defaults);
+        base.merge(&defaults);
 
         // Base should remain unchanged since we only merged defaults
         assert!(base.enable_webauthn_auth);
@@ -250,7 +251,7 @@ mod tests {
             ..Default::default()
         };
 
-        flags.merge_from_cli(cli);
+        flags.merge_from_cli(&cli);
         assert!(flags.enable_webauthn_auth);
         assert!(flags.enable_usage_tracking);
         // Other flags should remain at default
@@ -271,7 +272,7 @@ mod tests {
             ..Default::default()
         };
 
-        flags.merge_from_cli(cli);
+        flags.merge_from_cli(&cli);
         // Should remain true since CLI didn't provide a value
         assert!(flags.enable_webauthn_auth);
     }
