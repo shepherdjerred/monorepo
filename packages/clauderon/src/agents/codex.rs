@@ -29,8 +29,15 @@ impl Agent for CodexAgent {
         images: &[String],
         dangerous_skip_checks: bool,
         _session_id: Option<&uuid::Uuid>,
+        model: Option<&str>,
     ) -> Vec<String> {
         let mut cmd = vec!["codex".to_string()];
+
+        // Add model flag if provided
+        if let Some(model_name) = model {
+            cmd.push("--model".to_string());
+            cmd.push(model_name.to_string());
+        }
 
         // Use full auto mode when dangerous skip checks is enabled
         if dangerous_skip_checks {
