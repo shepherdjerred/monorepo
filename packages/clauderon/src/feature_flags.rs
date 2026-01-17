@@ -49,23 +49,9 @@ impl FeatureFlags {
             flags.merge(&toml_flags);
         }
 
-        // 3. Override from environment variables (only set ones are merged)
+        // 3. Override from environment variables (highest priority after CLI)
         let env_flags = Self::load_from_env();
-        if env_flags.enable_webauthn_auth != Self::default().enable_webauthn_auth {
-            flags.enable_webauthn_auth = env_flags.enable_webauthn_auth;
-        }
-        if env_flags.enable_ai_metadata != Self::default().enable_ai_metadata {
-            flags.enable_ai_metadata = env_flags.enable_ai_metadata;
-        }
-        if env_flags.enable_auto_reconcile != Self::default().enable_auto_reconcile {
-            flags.enable_auto_reconcile = env_flags.enable_auto_reconcile;
-        }
-        if env_flags.enable_proxy_port_reuse != Self::default().enable_proxy_port_reuse {
-            flags.enable_proxy_port_reuse = env_flags.enable_proxy_port_reuse;
-        }
-        if env_flags.enable_usage_tracking != Self::default().enable_usage_tracking {
-            flags.enable_usage_tracking = env_flags.enable_usage_tracking;
-        }
+        flags.merge_from_env(&env_flags);
 
         // 4. Override from CLI arguments (highest priority)
         if let Some(cli_flags) = cli_overrides {
@@ -94,13 +80,16 @@ impl FeatureFlags {
 
     /// Load feature flags from environment variables
     /// Pattern: CLAUDERON_FEATURE_<FLAG_NAME>=true/false
-    fn load_from_env() -> Self {
-        Self {
-            enable_webauthn_auth: parse_env_bool("CLAUDERON_FEATURE_ENABLE_WEBAUTHN_AUTH"),
-            enable_ai_metadata: parse_env_bool("CLAUDERON_FEATURE_ENABLE_AI_METADATA"),
-            enable_auto_reconcile: parse_env_bool("CLAUDERON_FEATURE_ENABLE_AUTO_RECONCILE"),
-            enable_proxy_port_reuse: parse_env_bool("CLAUDERON_FEATURE_ENABLE_PROXY_PORT_REUSE"),
-            enable_usage_tracking: parse_env_bool("CLAUDERON_FEATURE_ENABLE_USAGE_TRACKING"),
+    /// Returns Option<bool> for each field - None means not set, Some means explicitly set
+    fn load_from_env() -> EnvFeatureFlags {
+        EnvFeatureFlags {
+            enable_webauthn_auth: parse_env_bool_option("CLAUDERON_FEATURE_ENABLE_WEBAUTHN_AUTH"),
+            enable_ai_metadata: parse_env_bool_option("CLAUDERON_FEATURE_ENABLE_AI_METADATA"),
+            enable_auto_reconcile: parse_env_bool_option("CLAUDERON_FEATURE_ENABLE_AUTO_RECONCILE"),
+            enable_proxy_port_reuse: parse_env_bool_option(
+                "CLAUDERON_FEATURE_ENABLE_PROXY_PORT_REUSE",
+            ),
+            enable_usage_tracking: parse_env_bool_option("CLAUDERON_FEATURE_ENABLE_USAGE_TRACKING"),
         }
     }
 
@@ -123,6 +112,25 @@ impl FeatureFlags {
         }
         if other.enable_usage_tracking != defaults.enable_usage_tracking {
             self.enable_usage_tracking = other.enable_usage_tracking;
+        }
+    }
+
+    /// Merge environment variable overrides (which are Option<bool> to distinguish "not set")
+    fn merge_from_env(&mut self, env: &EnvFeatureFlags) {
+        if let Some(val) = env.enable_webauthn_auth {
+            self.enable_webauthn_auth = val;
+        }
+        if let Some(val) = env.enable_ai_metadata {
+            self.enable_ai_metadata = val;
+        }
+        if let Some(val) = env.enable_auto_reconcile {
+            self.enable_auto_reconcile = val;
+        }
+        if let Some(val) = env.enable_proxy_port_reuse {
+            self.enable_proxy_port_reuse = val;
+        }
+        if let Some(val) = env.enable_usage_tracking {
+            self.enable_usage_tracking = val;
         }
     }
 
@@ -170,6 +178,16 @@ pub struct CliFeatureFlags {
     pub enable_usage_tracking: Option<bool>,
 }
 
+/// Environment variable feature flag overrides (returns Option<bool> to distinguish "not set")
+#[derive(Debug, Clone)]
+struct EnvFeatureFlags {
+    pub enable_webauthn_auth: Option<bool>,
+    pub enable_ai_metadata: Option<bool>,
+    pub enable_auto_reconcile: Option<bool>,
+    pub enable_proxy_port_reuse: Option<bool>,
+    pub enable_usage_tracking: Option<bool>,
+}
+
 /// Configuration file structure
 #[derive(Debug, Deserialize)]
 struct ConfigFile {
@@ -195,6 +213,26 @@ fn parse_env_bool(key: &str) -> bool {
             }
         })
         .unwrap_or(false)
+}
+
+/// Parse boolean from environment variable, returning None if not set
+/// Supports: true/false, 1/0, yes/no, on/off (case insensitive)
+/// Returns None if environment variable is not set
+fn parse_env_bool_option(key: &str) -> Option<bool> {
+    std::env::var(key)
+        .ok()
+        .and_then(|val| match val.to_lowercase().as_str() {
+            "true" | "1" | "yes" | "on" => Some(true),
+            "false" | "0" | "no" | "off" => Some(false),
+            _ => {
+                tracing::warn!(
+                    key = %key,
+                    value = %val,
+                    "Invalid boolean value for environment variable"
+                );
+                None
+            }
+        })
 }
 
 /// Get the config file path (~/.clauderon/config.toml)
