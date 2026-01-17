@@ -1,4 +1,3 @@
-import { Dialog } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { useEffect } from "react";
@@ -41,6 +40,7 @@ export function ConfirmDialog({
       document.addEventListener('keydown', handleEscape);
       return () => { document.removeEventListener('keydown', handleEscape); };
     }
+    return undefined;
   }, [open, onOpenChange]);
 
   if (!open) return null;
