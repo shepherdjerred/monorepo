@@ -179,6 +179,19 @@ async fn run_main_loop(
                             // TODO: Implement Kubernetes PTY attach
                             app.status_message = Some("Kubernetes attach not yet implemented".to_string());
                         }
+                        #[cfg(target_os = "macos")]
+                        Some(BackendType::AppleContainer) => {
+                            // Use PTY-based attachment for Apple Container
+                            match app.attach_selected_session().await {
+                                Ok(()) => {
+                                    app.status_message = Some("Attached - Press Ctrl+Q to detach, Ctrl+Left/Right to switch sessions".to_string());
+                                }
+                                Err(e) => {
+                                    app.status_message = Some(format!("Attach failed: {e}"));
+                                }
+                            }
+                            continue;
+                        }
                         None => {
                             // No session selected
                         }

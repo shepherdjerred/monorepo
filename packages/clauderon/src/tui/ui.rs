@@ -221,6 +221,14 @@ fn render_help(frame: &mut Frame, app: &App, area: Rect) {
                 ("Ctrl+L", "Toggle locked mode"),
                 ("?", "Show help"),
             ],
+            #[cfg(target_os = "macos")]
+            BackendType::AppleContainer => vec![
+                ("Ctrl+Q", "Detach"),
+                ("Ctrl+P/N", "Switch session (Prev/Next)"),
+                ("Ctrl+S", "Enter scroll mode"),
+                ("Ctrl+L", "Toggle locked mode"),
+                ("?", "Show help"),
+            ],
         },
     );
 
