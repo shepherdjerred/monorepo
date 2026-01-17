@@ -258,14 +258,13 @@ impl SessionManager {
     /// Extracts the repository name from the path and converts it to a valid mount name.
     /// Example: `/path/to/my-repo` → `my-repo`
     fn generate_mount_name(repo_path: &std::path::Path) -> String {
-        repo_path
-            .file_name()
-            .and_then(|n| n.to_str())
-            .map(|s| {
+        repo_path.file_name().and_then(|n| n.to_str()).map_or_else(
+            || "repo".to_string(),
+            |s| {
                 // Convert to lowercase and replace underscores with hyphens
                 s.to_lowercase().replace('_', "-")
-            })
-            .unwrap_or_else(|| "repo".to_string())
+            },
+        )
     }
 
     /// Ensure mount names are unique by appending -2, -3, etc. for duplicates
@@ -436,7 +435,7 @@ impl SessionManager {
             .collect();
         Self::deduplicate_mount_names(&mut mount_names);
         for (i, repo) in resolved_repos.iter_mut().enumerate() {
-            repo.mount_name = mount_names[i].clone();
+            repo.mount_name.clone_from(&mount_names[i]);
         }
 
         // Get primary repository for session metadata

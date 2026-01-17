@@ -1194,6 +1194,8 @@ impl Store for SqliteStore {
 
         // Insert new repositories
         for (index, repo) in repositories.iter().enumerate() {
+            #[allow(clippy::cast_possible_wrap)]
+            let display_order = index as i64; // Safe: max 5 repos per session
             sqlx::query(
                 r"
                 INSERT INTO session_repositories (
@@ -1210,7 +1212,7 @@ impl Store for SqliteStore {
             .bind(&repo.branch_name)
             .bind(&repo.mount_name)
             .bind(i64::from(repo.is_primary))
-            .bind(index as i64)
+            .bind(display_order)
             .execute(&mut *tx)
             .await?;
         }
