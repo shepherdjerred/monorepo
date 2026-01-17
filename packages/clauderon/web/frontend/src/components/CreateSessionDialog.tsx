@@ -1,10 +1,13 @@
 import { useState, useEffect } from "react";
-import type { CreateSessionRequest, BackendType, AgentType, AccessMode } from "@clauderon/client";
+import type { CreateSessionRequest, BackendType, AccessMode } from "@clauderon/client";
+import { AgentType } from "@clauderon/shared";
 import { useSessionContext } from "../contexts/SessionContext";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { X } from "lucide-react";
 import { RepositoryPathSelector } from "./RepositoryPathSelector";
+import { ProviderIcon } from "./ProviderIcon";
 import { toast } from "sonner";
 
 type CreateSessionDialogProps = {
@@ -21,7 +24,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
     repo_path: "",
     initial_prompt: "",
     backend: "Docker" as BackendType,
-    agent: "ClaudeCode" as AgentType,
+    agent: AgentType.ClaudeCode,
     access_mode: "ReadWrite" as AccessMode,
     plan_mode: true,
     dangerous_skip_checks: true, // Docker/Kubernetes default
@@ -89,17 +92,40 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
     }
   };
 
+  // Handle ESC key
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => { document.removeEventListener('keydown', handleEscape); };
+  }, [onClose]);
+
   return (
     <>
-      <div className="fixed inset-0 z-40" style={{
-        backgroundColor: 'hsl(220, 90%, 8%)',
-        opacity: 0.85
-      }} />
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 z-40"
+        style={{
+          backgroundColor: 'hsl(220, 90%, 8%)',
+          opacity: 0.85
+        }}
+        onClick={onClose}
+        aria-hidden="true"
+      />
+      {/* Modal */}
       <div className="fixed inset-0 flex items-center justify-center p-8 z-50">
-        <div className="max-w-2xl w-full flex flex-col border-4 border-primary" style={{
-          backgroundColor: 'hsl(220, 15%, 95%)',
-          boxShadow: '12px 12px 0 hsl(220, 85%, 25%), 24px 24px 0 hsl(220, 90%, 10%)'
-        }}>
+        <div
+          className="max-w-2xl w-full flex flex-col border-4 border-primary max-h-[90vh]"
+          style={{
+            backgroundColor: 'hsl(220, 15%, 95%)',
+            boxShadow: '12px 12px 0 hsl(220, 85%, 25%), 24px 24px 0 hsl(220, 90%, 10%)'
+          }}
+          onClick={(e) => { e.stopPropagation(); }}
+        >
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b-4 border-primary" style={{ backgroundColor: 'hsl(220, 85%, 25%)' }}>
             <h2 className="text-2xl font-bold font-mono uppercase tracking-wider text-white">
@@ -116,7 +142,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
           </div>
 
         {/* Form */}
-        <form onSubmit={(e) => { void handleSubmit(e); }} className="p-6 space-y-6" style={{ backgroundColor: 'hsl(220, 15%, 95%)' }}>
+        <form onSubmit={(e) => { void handleSubmit(e); }} className="p-6 space-y-6 overflow-y-auto" style={{ backgroundColor: 'hsl(220, 15%, 95%)' }}>
           {error && (
             <div className="p-4 border-4 font-mono" style={{ backgroundColor: 'hsl(0, 75%, 95%)', color: 'hsl(0, 75%, 40%)', borderColor: 'hsl(0, 75%, 50%)' }}>
               <strong className="font-bold">ERROR:</strong> {error}
@@ -165,18 +191,36 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
 
             <div className="space-y-2">
               <Label htmlFor="agent" className="font-semibold">Agent</Label>
-              <select
-                id="agent"
+              <Select
                 value={formData.agent}
-                onChange={(e) =>
-                  { setFormData({ ...formData, agent: e.target.value as AgentType }); }
-                }
-                className="cursor-pointer flex h-10 w-full rounded-md border-2 border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                onValueChange={(value) => {
+                  setFormData({ ...formData, agent: value as AgentType });
+                }}
               >
-                <option value="ClaudeCode">Claude Code</option>
-                <option value="Codex">Codex</option>
-                <option value="Gemini">Gemini</option>
-              </select>
+                <SelectTrigger className="border-2">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={AgentType.ClaudeCode}>
+                    <div className="flex items-center gap-2">
+                      <ProviderIcon agent={AgentType.ClaudeCode} />
+                      <span>Claude Code</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value={AgentType.Codex}>
+                    <div className="flex items-center gap-2">
+                      <ProviderIcon agent={AgentType.Codex} />
+                      <span>Codex</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value={AgentType.Gemini}>
+                    <div className="flex items-center gap-2">
+                      <ProviderIcon agent={AgentType.Gemini} />
+                      <span>Gemini</span>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
