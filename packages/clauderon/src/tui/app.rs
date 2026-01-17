@@ -432,18 +432,22 @@ impl CreateDialogState {
         *self = Self::new();
     }
 
-    /// Cycle through backends: Zellij → Docker → Kubernetes → Zellij, auto-adjusting skip_checks
+    /// Cycle through backends: Zellij → Docker → Kubernetes → AppleContainer → Zellij, auto-adjusting skip_checks
     pub fn toggle_backend(&mut self) {
         self.backend = match self.backend {
             BackendType::Zellij => BackendType::Docker,
             BackendType::Docker => BackendType::Kubernetes,
-            BackendType::Kubernetes => BackendType::Zellij,
+            BackendType::Kubernetes => BackendType::AppleContainer,
+            BackendType::AppleContainer => BackendType::Zellij,
         };
 
         // Auto-toggle skip_checks based on backend:
-        // Docker and Kubernetes benefit from skipping checks (isolated environments)
+        // Docker, Kubernetes, and AppleContainer benefit from skipping checks (isolated environments)
         // Zellij runs locally so checks are more important
-        self.skip_checks = matches!(self.backend, BackendType::Docker | BackendType::Kubernetes);
+        self.skip_checks = matches!(
+            self.backend,
+            BackendType::Docker | BackendType::Kubernetes | BackendType::AppleContainer
+        );
     }
 
     /// Toggle between ReadOnly and ReadWrite access modes
