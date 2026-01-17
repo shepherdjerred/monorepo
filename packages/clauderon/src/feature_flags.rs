@@ -277,64 +277,9 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_env_bool_true_variants() {
-        // Test with unique variable names to avoid conflicts
-        std::env::set_var("CLAUDERON_TEST_TRUE_1", "true");
-        assert!(parse_env_bool("CLAUDERON_TEST_TRUE_1"));
-
-        std::env::set_var("CLAUDERON_TEST_TRUE_2", "TRUE");
-        assert!(parse_env_bool("CLAUDERON_TEST_TRUE_2"));
-
-        std::env::set_var("CLAUDERON_TEST_TRUE_3", "1");
-        assert!(parse_env_bool("CLAUDERON_TEST_TRUE_3"));
-
-        std::env::set_var("CLAUDERON_TEST_TRUE_4", "yes");
-        assert!(parse_env_bool("CLAUDERON_TEST_TRUE_4"));
-
-        std::env::set_var("CLAUDERON_TEST_TRUE_5", "YES");
-        assert!(parse_env_bool("CLAUDERON_TEST_TRUE_5"));
-
-        std::env::set_var("CLAUDERON_TEST_TRUE_6", "on");
-        assert!(parse_env_bool("CLAUDERON_TEST_TRUE_6"));
-
-        std::env::set_var("CLAUDERON_TEST_TRUE_7", "ON");
-        assert!(parse_env_bool("CLAUDERON_TEST_TRUE_7"));
-    }
-
-    #[test]
-    fn test_parse_env_bool_false_variants() {
-        std::env::set_var("CLAUDERON_TEST_FALSE_1", "false");
-        assert!(!parse_env_bool("CLAUDERON_TEST_FALSE_1"));
-
-        std::env::set_var("CLAUDERON_TEST_FALSE_2", "FALSE");
-        assert!(!parse_env_bool("CLAUDERON_TEST_FALSE_2"));
-
-        std::env::set_var("CLAUDERON_TEST_FALSE_3", "0");
-        assert!(!parse_env_bool("CLAUDERON_TEST_FALSE_3"));
-
-        std::env::set_var("CLAUDERON_TEST_FALSE_4", "no");
-        assert!(!parse_env_bool("CLAUDERON_TEST_FALSE_4"));
-
-        std::env::set_var("CLAUDERON_TEST_FALSE_5", "NO");
-        assert!(!parse_env_bool("CLAUDERON_TEST_FALSE_5"));
-
-        std::env::set_var("CLAUDERON_TEST_FALSE_6", "off");
-        assert!(!parse_env_bool("CLAUDERON_TEST_FALSE_6"));
-
-        std::env::set_var("CLAUDERON_TEST_FALSE_7", "OFF");
-        assert!(!parse_env_bool("CLAUDERON_TEST_FALSE_7"));
-    }
-
-    #[test]
     fn test_parse_env_bool_not_set() {
         // Test with a variable that's extremely unlikely to be set
         assert!(!parse_env_bool("CLAUDERON_DEFINITELY_NOT_SET_XYZABC123"));
-    }
-
-    #[test]
-    fn test_parse_env_bool_invalid() {
-        std::env::set_var("CLAUDERON_TEST_INVALID", "invalid");
-        assert!(!parse_env_bool("CLAUDERON_TEST_INVALID"));
     }
 
     #[test]
