@@ -147,4 +147,19 @@
       4px 4px 0 hsl(var(--foreground)),
       8px 8px 0 hsl(var(--muted));
   }
+
+  /* Enhanced brutalist hover effect */
+  .card-brutalist-hover {
+    @apply transition-all duration-200;
+  }
+
+  .card-brutalist-hover:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0 hsl(var(--foreground));
+  }
+
+  /* Status block base styles */
+  .status-block {
+    @apply flex items-center gap-2 p-2 text-sm font-mono border-l-4;
+  }
 }
