@@ -126,23 +126,28 @@ ENVIRONMENT:
 
         // Feature Flags
         /// Enable experimental WebAuthn passwordless authentication
-        #[arg(long, env = "CLAUDERON_FEATURE_ENABLE_WEBAUTHN_AUTH")]
+        /// Can also be set via CLAUDERON_FEATURE_ENABLE_WEBAUTHN_AUTH environment variable
+        #[arg(long)]
         enable_webauthn_auth: Option<bool>,
 
         /// Enable AI-powered session metadata generation
-        #[arg(long, env = "CLAUDERON_FEATURE_ENABLE_AI_METADATA")]
+        /// Can also be set via CLAUDERON_FEATURE_ENABLE_AI_METADATA environment variable
+        #[arg(long)]
         enable_ai_metadata: Option<bool>,
 
         /// Enable automatic session reconciliation on startup
-        #[arg(long, env = "CLAUDERON_FEATURE_ENABLE_AUTO_RECONCILE")]
+        /// Can also be set via CLAUDERON_FEATURE_ENABLE_AUTO_RECONCILE environment variable
+        #[arg(long)]
         enable_auto_reconcile: Option<bool>,
 
         /// Enable session proxy port reuse (experimental)
-        #[arg(long, env = "CLAUDERON_FEATURE_ENABLE_PROXY_PORT_REUSE")]
+        /// Can also be set via CLAUDERON_FEATURE_ENABLE_PROXY_PORT_REUSE environment variable
+        #[arg(long)]
         enable_proxy_port_reuse: Option<bool>,
 
         /// Enable Claude usage tracking via API
-        #[arg(long, env = "CLAUDERON_FEATURE_ENABLE_USAGE_TRACKING")]
+        /// Can also be set via CLAUDERON_FEATURE_ENABLE_USAGE_TRACKING environment variable
+        #[arg(long)]
         enable_usage_tracking: Option<bool>,
     },
 
