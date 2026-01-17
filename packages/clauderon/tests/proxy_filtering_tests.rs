@@ -523,6 +523,7 @@ async fn test_proxy_port_persists_in_database() {
             worktree_path: "/tmp/worktree".into(),
             subdirectory: std::path::PathBuf::new(),
             branch_name: "test-branch".to_string(),
+            repositories: None,
             initial_prompt: "test".to_string(),
             backend: BackendType::Docker,
             agent: AgentType::ClaudeCode,
