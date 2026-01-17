@@ -19,6 +19,7 @@ pub struct KubectlProxy {
 
 impl KubectlProxy {
     /// Create a new kubectl proxy instance.
+    #[must_use]
     pub fn new(port: u16) -> Self {
         Self {
             port,
@@ -27,6 +28,7 @@ impl KubectlProxy {
     }
 
     /// Check if kubectl is available in PATH.
+    #[must_use]
     pub fn is_available() -> bool {
         Command::new("kubectl")
             .arg("version")
@@ -62,7 +64,7 @@ impl KubectlProxy {
 
         // Start kubectl proxy
         let child = Command::new("kubectl")
-            .args(&[
+            .args([
                 "proxy",
                 "--port",
                 &self.port.to_string(),
@@ -115,6 +117,7 @@ impl KubectlProxy {
     }
 
     /// Get the port kubectl proxy is running on.
+    #[must_use]
     pub fn port(&self) -> u16 {
         self.port
     }
