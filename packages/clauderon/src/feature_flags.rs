@@ -300,13 +300,15 @@ mod tests {
         assert!(parse_env_bool("TEST_FLAG_TRUE_7"));
 
         // Cleanup
-        std::env::remove_var("TEST_FLAG_TRUE_1");
-        std::env::remove_var("TEST_FLAG_TRUE_2");
-        std::env::remove_var("TEST_FLAG_TRUE_3");
-        std::env::remove_var("TEST_FLAG_TRUE_4");
-        std::env::remove_var("TEST_FLAG_TRUE_5");
-        std::env::remove_var("TEST_FLAG_TRUE_6");
-        std::env::remove_var("TEST_FLAG_TRUE_7");
+        unsafe {
+            std::env::remove_var("TEST_FLAG_TRUE_1");
+            std::env::remove_var("TEST_FLAG_TRUE_2");
+            std::env::remove_var("TEST_FLAG_TRUE_3");
+            std::env::remove_var("TEST_FLAG_TRUE_4");
+            std::env::remove_var("TEST_FLAG_TRUE_5");
+            std::env::remove_var("TEST_FLAG_TRUE_6");
+            std::env::remove_var("TEST_FLAG_TRUE_7");
+        }
     }
 
     #[test]
@@ -333,19 +335,23 @@ mod tests {
         assert!(!parse_env_bool("TEST_FLAG_FALSE_7"));
 
         // Cleanup
-        std::env::remove_var("TEST_FLAG_FALSE_1");
-        std::env::remove_var("TEST_FLAG_FALSE_2");
-        std::env::remove_var("TEST_FLAG_FALSE_3");
-        std::env::remove_var("TEST_FLAG_FALSE_4");
-        std::env::remove_var("TEST_FLAG_FALSE_5");
-        std::env::remove_var("TEST_FLAG_FALSE_6");
-        std::env::remove_var("TEST_FLAG_FALSE_7");
+        unsafe {
+            std::env::remove_var("TEST_FLAG_FALSE_1");
+            std::env::remove_var("TEST_FLAG_FALSE_2");
+            std::env::remove_var("TEST_FLAG_FALSE_3");
+            std::env::remove_var("TEST_FLAG_FALSE_4");
+            std::env::remove_var("TEST_FLAG_FALSE_5");
+            std::env::remove_var("TEST_FLAG_FALSE_6");
+            std::env::remove_var("TEST_FLAG_FALSE_7");
+        }
     }
 
     #[test]
     fn test_parse_env_bool_not_set() {
         // Ensure the var doesn't exist
-        std::env::remove_var("TEST_FLAG_NOT_SET");
+        unsafe {
+            std::env::remove_var("TEST_FLAG_NOT_SET");
+        }
         assert!(!parse_env_bool("TEST_FLAG_NOT_SET"));
     }
 
@@ -354,7 +360,9 @@ mod tests {
         std::env::set_var("TEST_FLAG_INVALID", "invalid");
         assert!(!parse_env_bool("TEST_FLAG_INVALID"));
 
-        std::env::remove_var("TEST_FLAG_INVALID");
+        unsafe {
+            std::env::remove_var("TEST_FLAG_INVALID");
+        }
     }
 
     #[test]
