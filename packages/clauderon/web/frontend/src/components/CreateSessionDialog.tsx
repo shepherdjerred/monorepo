@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import type { CreateSessionRequest, BackendType, AgentType, AccessMode } from "@clauderon/client";
+import type { CreateSessionRequest, BackendType, AccessMode } from "@clauderon/client";
+import { AgentType } from "@clauderon/shared";
 import { useSessionContext } from "../contexts/SessionContext";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -23,7 +24,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
     repo_path: "",
     initial_prompt: "",
     backend: "Docker" as BackendType,
-    agent: "ClaudeCode" as AgentType,
+    agent: AgentType.ClaudeCode,
     access_mode: "ReadWrite" as AccessMode,
     plan_mode: true,
     dangerous_skip_checks: true, // Docker/Kubernetes default
@@ -91,17 +92,40 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
     }
   };
 
+  // Handle ESC key
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => { document.removeEventListener('keydown', handleEscape); };
+  }, [onClose]);
+
   return (
     <>
-      <div className="fixed inset-0 z-40" style={{
-        backgroundColor: 'hsl(220, 90%, 8%)',
-        opacity: 0.85
-      }} />
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 z-40"
+        style={{
+          backgroundColor: 'hsl(220, 90%, 8%)',
+          opacity: 0.85
+        }}
+        onClick={onClose}
+        aria-hidden="true"
+      />
+      {/* Modal */}
       <div className="fixed inset-0 flex items-center justify-center p-8 z-50">
-        <div className="max-w-2xl w-full flex flex-col border-4 border-primary max-h-[90vh]" style={{
-          backgroundColor: 'hsl(220, 15%, 95%)',
-          boxShadow: '12px 12px 0 hsl(220, 85%, 25%), 24px 24px 0 hsl(220, 90%, 10%)'
-        }}>
+        <div
+          className="max-w-2xl w-full flex flex-col border-4 border-primary max-h-[90vh]"
+          style={{
+            backgroundColor: 'hsl(220, 15%, 95%)',
+            boxShadow: '12px 12px 0 hsl(220, 85%, 25%), 24px 24px 0 hsl(220, 90%, 10%)'
+          }}
+          onClick={(e) => { e.stopPropagation(); }}
+        >
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b-4 border-primary" style={{ backgroundColor: 'hsl(220, 85%, 25%)' }}>
             <h2 className="text-2xl font-bold font-mono uppercase tracking-wider text-white">
@@ -177,21 +201,21 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ClaudeCode">
+                  <SelectItem value={AgentType.ClaudeCode}>
                     <div className="flex items-center gap-2">
-                      <ProviderIcon agent="ClaudeCode" />
+                      <ProviderIcon agent={AgentType.ClaudeCode} />
                       <span>Claude Code</span>
                     </div>
                   </SelectItem>
-                  <SelectItem value="Codex">
+                  <SelectItem value={AgentType.Codex}>
                     <div className="flex items-center gap-2">
-                      <ProviderIcon agent="Codex" />
+                      <ProviderIcon agent={AgentType.Codex} />
                       <span>Codex</span>
                     </div>
                   </SelectItem>
-                  <SelectItem value="Gemini">
+                  <SelectItem value={AgentType.Gemini}>
                     <div className="flex items-center gap-2">
-                      <ProviderIcon agent="Gemini" />
+                      <ProviderIcon agent={AgentType.Gemini} />
                       <span>Gemini</span>
                     </div>
                   </SelectItem>

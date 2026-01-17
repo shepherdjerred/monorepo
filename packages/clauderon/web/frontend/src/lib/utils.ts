@@ -37,7 +37,7 @@ export function getRepoUrlFromPrUrl(prUrl: string): string | null {
   try {
     const regex = /^(https?:\/\/[^/]+\/[^/]+\/[^/]+)\/pull\/\d+/;
     const match = regex.exec(prUrl);
-    return match ? match[1] : null;
+    return match?.[1] ?? null;
   } catch {
     return null;
   }
