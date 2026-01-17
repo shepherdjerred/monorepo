@@ -19,6 +19,7 @@ fn test_request_serialization() {
 fn test_create_session_request_serialization() {
     let request = Request::CreateSession(CreateSessionRequest {
         repo_path: "/home/user/project".to_string(),
+        repositories: None,
         initial_prompt: "Fix the bug".to_string(),
         backend: BackendType::Zellij,
         agent: AgentType::ClaudeCode,
@@ -156,6 +157,7 @@ fn test_print_mode_serialization() {
     // Test with print_mode = true
     let request = Request::CreateSession(CreateSessionRequest {
         repo_path: "/tmp/repo".to_string(),
+        repositories: None,
         initial_prompt: "Generate a hello world".to_string(),
         backend: BackendType::Docker,
         agent: AgentType::ClaudeCode,
