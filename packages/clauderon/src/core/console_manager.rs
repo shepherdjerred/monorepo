@@ -325,6 +325,10 @@ impl ConsoleManager {
             BackendType::Kubernetes => {
                 anyhow::bail!("Console manager not supported for backend: {backend:?}")
             }
+            #[cfg(target_os = "macos")]
+            BackendType::AppleContainer => {
+                anyhow::bail!("Console manager not supported for backend: {backend:?}")
+            }
         };
 
         let session = Arc::new(session);
