@@ -192,6 +192,9 @@ async fn run_main_loop(
                             }
                             continue;
                         }
+                        #[cfg(target_os = "macos")]
+                        _ => {}
+                        #[cfg(not(target_os = "macos"))]
                         None => {
                             // No session selected
                         }
