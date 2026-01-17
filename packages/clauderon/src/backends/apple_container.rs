@@ -835,8 +835,8 @@ impl ExecutionBackend for AppleContainerBackend {
             "Creating Apple container"
         );
 
-        // Get UID
-        let uid = unsafe { libc::getuid() };
+        // Get UID using safe users crate
+        let uid = users::get_current_uid();
 
         // Build proxy config
         let proxy_config = options.session_proxy_port.map(|session_port| {
@@ -983,8 +983,8 @@ impl ExecutionBackend for AppleContainerBackend {
     /// # Errors
     ///
     /// Returns an error indicating logs are not supported.
-    #[instrument(skip(self), fields(name = %name, lines = %lines))]
-    async fn get_output(&self, name: &str, lines: usize) -> anyhow::Result<String> {
+    #[instrument(skip(self), fields(name = %name, lines = %_lines))]
+    async fn get_output(&self, name: &str, _lines: usize) -> anyhow::Result<String> {
         tracing::warn!(
             container_name = %name,
             "Apple Container backend does not support log retrieval yet"
