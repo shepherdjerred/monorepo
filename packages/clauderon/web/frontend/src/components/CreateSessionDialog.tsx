@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import type { CreateSessionRequest, BackendType, AgentType, AccessMode } from "@clauderon/client";
+import { useState, useEffect, useMemo } from "react";
+import type { CreateSessionRequest, BackendType, AgentType, AccessMode, SessionModel, ClaudeModel, CodexModel, GeminiModel } from "@clauderon/client";
 import { useSessionContext } from "../contexts/SessionContext";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -22,6 +22,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
     initial_prompt: "",
     backend: "Docker" as BackendType,
     agent: "ClaudeCode" as AgentType,
+    model: undefined as SessionModel | undefined,
     access_mode: "ReadWrite" as AccessMode,
     plan_mode: true,
     dangerous_skip_checks: true, // Docker/Kubernetes default
@@ -40,6 +41,38 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
     }));
   }, [formData.backend]);
 
+  // Reset model when agent changes
+  useEffect(() => {
+    setFormData(prev => ({ ...prev, model: undefined }));
+  }, [formData.agent]);
+
+  // Compute available models based on selected agent
+  const availableModels = useMemo(() => {
+    switch (formData.agent) {
+      case "ClaudeCode":
+        return [
+          { value: { Claude: "Sonnet" as ClaudeModel }, label: "Sonnet (Default - Best Balance)" },
+          { value: { Claude: "Opus" as ClaudeModel }, label: "Opus (Most Capable)" },
+          { value: { Claude: "Haiku" as ClaudeModel }, label: "Haiku (Fastest)" },
+        ];
+      case "Codex":
+        return [
+          { value: { Codex: "Gpt4o" as CodexModel }, label: "GPT-4o (Default)" },
+          { value: { Codex: "Gpt4" as CodexModel }, label: "GPT-4" },
+          { value: { Codex: "Gpt35Turbo" as CodexModel }, label: "GPT-3.5 Turbo" },
+          { value: { Codex: "O1" as CodexModel }, label: "o1 (Reasoning)" },
+          { value: { Codex: "O3" as CodexModel }, label: "o3 (Latest Reasoning)" },
+        ];
+      case "Gemini":
+        return [
+          { value: { Gemini: "Gemini25Pro" as GeminiModel }, label: "Gemini 2.5 Pro (Default)" },
+          { value: { Gemini: "Gemini20FlashThinking" as GeminiModel }, label: "Gemini 2.0 Flash Thinking" },
+        ];
+      default:
+        return [];
+    }
+  }, [formData.agent]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -51,6 +84,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
         initial_prompt: formData.initial_prompt,
         backend: formData.backend,
         agent: formData.agent,
+        model: formData.model,
         dangerous_skip_checks: formData.dangerous_skip_checks,
         print_mode: false,
         plan_mode: formData.plan_mode,
@@ -176,6 +210,28 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                 <option value="ClaudeCode">Claude Code</option>
                 <option value="Codex">Codex</option>
                 <option value="Gemini">Gemini</option>
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="model" className="font-semibold">
+                Model <span className="text-xs text-muted-foreground">(optional)</span>
+              </Label>
+              <select
+                id="model"
+                value={formData.model ? JSON.stringify(formData.model) : ""}
+                onChange={(e) => {
+                  const value = e.target.value ? JSON.parse(e.target.value) : undefined;
+                  setFormData({ ...formData, model: value });
+                }}
+                className="cursor-pointer flex h-10 w-full rounded-md border-2 border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <option value="">Default (CLI default)</option>
+                {availableModels.map((opt, i) => (
+                  <option key={i} value={JSON.stringify(opt.value)}>
+                    {opt.label}
+                  </option>
+                ))}
               </select>
             </div>
 

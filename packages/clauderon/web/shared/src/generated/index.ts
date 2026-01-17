@@ -110,6 +110,44 @@ export enum AgentType {
 	Gemini = "Gemini",
 }
 
+/** Model selection for Claude Code agent */
+export enum ClaudeModel {
+	/** Claude Sonnet (default, best balance of performance and cost) */
+	Sonnet = "Sonnet",
+	/** Claude Opus (most capable model for complex tasks) */
+	Opus = "Opus",
+	/** Claude Haiku (fastest and cheapest) */
+	Haiku = "Haiku",
+}
+
+/** Model selection for Codex agent */
+export enum CodexModel {
+	/** GPT-4o (default, latest GPT-4 with vision) */
+	Gpt4o = "Gpt4o",
+	/** GPT-4 (previous generation) */
+	Gpt4 = "Gpt4",
+	/** GPT-3.5 Turbo (faster, less capable) */
+	Gpt35Turbo = "Gpt35Turbo",
+	/** o1 (reasoning-focused model) */
+	O1 = "O1",
+	/** o3 (latest reasoning model) */
+	O3 = "O3",
+}
+
+/** Model selection for Gemini agent */
+export enum GeminiModel {
+	/** Gemini 2.5 Pro (default, most capable) */
+	Gemini25Pro = "Gemini25Pro",
+	/** Gemini 2.0 Flash Thinking Experimental */
+	Gemini20FlashThinking = "Gemini20FlashThinking",
+}
+
+/** Model configuration for a session */
+export type SessionModel =
+	| { Claude: ClaudeModel }
+	| { Codex: CodexModel }
+	| { Gemini: GeminiModel };
+
 /** Access mode for proxy filtering */
 export enum AccessMode {
 	/** Read-only: GET, HEAD, OPTIONS allowed; POST, PUT, DELETE, PATCH blocked */
@@ -128,6 +166,13 @@ export interface CreateSessionRequest {
 	backend: BackendType;
 	/** AI agent to use */
 	agent: AgentType;
+	/**
+	 * Optional model selection (must be compatible with selected agent).
+	 *
+	 * If not specified, the CLI will use its default model.
+	 * Examples: "sonnet" (Claude), "gpt-4o" (Codex), "gemini-2.5-pro" (Gemini)
+	 */
+	model?: SessionModel;
 	/** Skip safety checks */
 	dangerous_skip_checks: boolean;
 	/** Run in print mode (non-interactive, outputs response and exits) */
@@ -356,6 +401,8 @@ export interface Session {
 	backend: BackendType;
 	/** AI agent running in this session */
 	agent: AgentType;
+	/** AI model for this session (None for sessions created before model selection was added) */
+	model?: SessionModel;
 	/** Path to the source repository */
 	repo_path: string;
 	/** Path to the git worktree */
