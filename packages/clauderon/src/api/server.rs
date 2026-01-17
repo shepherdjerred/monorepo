@@ -189,6 +189,7 @@ pub async fn run_daemon_with_http(
             Arc::clone(&console_state),
             dev_mode,
             db_pool,
+            feature_flags.clone(),
         );
 
         tracing::info!(
@@ -290,6 +291,7 @@ async fn run_http_server(
     console_state: Arc<crate::api::console_state::ConsoleState>,
     dev_mode: bool,
     db_pool: sqlx::SqlitePool,
+    feature_flags: crate::feature_flags::FeatureFlags,
 ) -> anyhow::Result<()> {
     use crate::api::http_server::create_router;
     use crate::api::ws_console::ws_console_handler;
@@ -423,7 +425,7 @@ async fn run_http_server(
         event_broadcaster,
         auth_state: auth_state.clone(),
         console_state,
-        feature_flags,
+        feature_flags: Arc::clone(&feature_flags),
     };
 
     // Create the HTTP router with all routes and state
