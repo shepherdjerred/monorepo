@@ -84,7 +84,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
         initial_prompt: formData.initial_prompt,
         backend: formData.backend,
         agent: formData.agent,
-        model: formData.model,
+        ...(formData.model && { model: formData.model }),
         dangerous_skip_checks: formData.dangerous_skip_checks,
         print_mode: false,
         plan_mode: formData.plan_mode,
