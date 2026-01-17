@@ -1,11 +1,12 @@
 import type { Session } from "@clauderon/client";
 import { SessionStatus, CheckStatus, ClaudeWorkingStatus } from "@clauderon/shared";
-import { formatRelativeTime } from "../lib/utils";
+import { formatRelativeTime, getRepoUrlFromPrUrl } from "../lib/utils";
 import { Archive, ArchiveRestore, Trash2, Terminal, CheckCircle2, XCircle, Clock, Loader2, User, Circle, AlertTriangle, Edit, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { ProviderIcon } from "./ProviderIcon";
 
 type SessionCardProps = {
   session: Session;
@@ -39,7 +40,8 @@ export function SessionCard({ session, onAttach, onEdit, onArchive, onUnarchive,
           <Badge variant="outline" className="border-2 font-mono text-xs">
             {session.backend}
           </Badge>
-          <Badge variant="outline" className="border-2 font-mono text-xs">
+          <Badge variant="outline" className="border-2 font-mono text-xs flex items-center gap-1">
+            <ProviderIcon agent={session.agent} />
             {session.agent}
           </Badge>
         </div>
@@ -137,7 +139,18 @@ export function SessionCard({ session, onAttach, onEdit, onArchive, onUnarchive,
           <span className="font-mono text-muted-foreground">
             {formatRelativeTime(session.created_at)}
           </span>
-          <span className="text-muted-foreground">{session.branch_name}</span>
+          {session.pr_url && getRepoUrlFromPrUrl(session.pr_url) ? (
+            <a
+              href={`${getRepoUrlFromPrUrl(session.pr_url)}/tree/${session.branch_name}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline font-mono transition-colors duration-200"
+            >
+              {session.branch_name}
+            </a>
+          ) : (
+            <span className="text-muted-foreground font-mono">{session.branch_name}</span>
+          )}
           <Badge variant="secondary" className="font-mono">
             {session.access_mode}
           </Badge>
