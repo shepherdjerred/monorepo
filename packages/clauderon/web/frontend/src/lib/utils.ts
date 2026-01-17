@@ -28,3 +28,17 @@ export function formatRelativeTime(date: string | Date): string {
   const diffDays = Math.floor(diffHours / 24);
   return `${String(diffDays)}d ago`;
 }
+
+/**
+ * Extracts the base repository URL from a PR URL
+ * E.g., "https://github.com/owner/repo/pull/123" -> "https://github.com/owner/repo"
+ */
+export function getRepoUrlFromPrUrl(prUrl: string): string | null {
+  try {
+    const regex = /^(https?:\/\/[^/]+\/[^/]+\/[^/]+)\/pull\/\d+/;
+    const match = regex.exec(prUrl);
+    return match ? match[1] : null;
+  } catch {
+    return null;
+  }
+}

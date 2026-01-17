@@ -3,8 +3,10 @@ import type { CreateSessionRequest, BackendType, AgentType, AccessMode } from "@
 import { useSessionContext } from "../contexts/SessionContext";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { X } from "lucide-react";
 import { RepositoryPathSelector } from "./RepositoryPathSelector";
+import { ProviderIcon } from "./ProviderIcon";
 import { toast } from "sonner";
 
 type CreateSessionDialogProps = {
@@ -96,7 +98,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
         opacity: 0.85
       }} />
       <div className="fixed inset-0 flex items-center justify-center p-8 z-50">
-        <div className="max-w-2xl w-full flex flex-col border-4 border-primary" style={{
+        <div className="max-w-2xl w-full flex flex-col border-4 border-primary max-h-[90vh]" style={{
           backgroundColor: 'hsl(220, 15%, 95%)',
           boxShadow: '12px 12px 0 hsl(220, 85%, 25%), 24px 24px 0 hsl(220, 90%, 10%)'
         }}>
@@ -116,7 +118,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
           </div>
 
         {/* Form */}
-        <form onSubmit={(e) => { void handleSubmit(e); }} className="p-6 space-y-6" style={{ backgroundColor: 'hsl(220, 15%, 95%)' }}>
+        <form onSubmit={(e) => { void handleSubmit(e); }} className="p-6 space-y-6 overflow-y-auto" style={{ backgroundColor: 'hsl(220, 15%, 95%)' }}>
           {error && (
             <div className="p-4 border-4 font-mono" style={{ backgroundColor: 'hsl(0, 75%, 95%)', color: 'hsl(0, 75%, 40%)', borderColor: 'hsl(0, 75%, 50%)' }}>
               <strong className="font-bold">ERROR:</strong> {error}
@@ -165,18 +167,36 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
 
             <div className="space-y-2">
               <Label htmlFor="agent" className="font-semibold">Agent</Label>
-              <select
-                id="agent"
+              <Select
                 value={formData.agent}
-                onChange={(e) =>
-                  { setFormData({ ...formData, agent: e.target.value as AgentType }); }
-                }
-                className="cursor-pointer flex h-10 w-full rounded-md border-2 border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                onValueChange={(value) => {
+                  setFormData({ ...formData, agent: value as AgentType });
+                }}
               >
-                <option value="ClaudeCode">Claude Code</option>
-                <option value="Codex">Codex</option>
-                <option value="Gemini">Gemini</option>
-              </select>
+                <SelectTrigger className="border-2">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ClaudeCode">
+                    <div className="flex items-center gap-2">
+                      <ProviderIcon agent="ClaudeCode" />
+                      <span>Claude Code</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="Codex">
+                    <div className="flex items-center gap-2">
+                      <ProviderIcon agent="Codex" />
+                      <span>Codex</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="Gemini">
+                    <div className="flex items-center gap-2">
+                      <ProviderIcon agent="Gemini" />
+                      <span>Gemini</span>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
