@@ -39,6 +39,7 @@ impl ZellijBackend {
         images: &[String],
         agent: AgentType,
         session_id: Option<&uuid::Uuid>,
+        model: Option<&str>,
     ) -> Vec<String> {
         use crate::agents::traits::Agent;
         use crate::agents::{ClaudeCodeAgent, CodexAgent, GeminiCodeAgent};
@@ -52,18 +53,21 @@ impl ZellijBackend {
                 images,
                 dangerous_skip_checks,
                 session_id,
+                model,
             ),
             AgentType::Codex => CodexAgent::new().start_command(
                 &escaped_prompt,
                 images,
                 dangerous_skip_checks,
                 session_id,
+                model,
             ),
             AgentType::Gemini => GeminiCodeAgent::new().start_command(
                 &escaped_prompt,
                 images,
                 dangerous_skip_checks,
                 session_id,
+                model,
             ),
         };
 
@@ -154,6 +158,7 @@ impl ExecutionBackend for ZellijBackend {
             &options.images,
             options.agent,
             options.session_id.as_ref(),
+            options.model.as_deref(),
         );
         let output = Command::new("zellij")
             .args(&pane_args[..])
@@ -328,6 +333,7 @@ mod tests {
             true,
             &[],
             AgentType::ClaudeCode,
+            None,
             None,
         );
 

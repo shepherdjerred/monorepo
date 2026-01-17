@@ -275,6 +275,7 @@ impl SessionManager {
         initial_prompt: String,
         backend: BackendType,
         agent: super::session::AgentType,
+        model: Option<super::session::SessionModel>,
         dangerous_skip_checks: bool,
         print_mode: bool,
         plan_mode: bool,
@@ -368,6 +369,7 @@ impl SessionManager {
             initial_prompt: initial_prompt.clone(),
             backend,
             agent,
+            model: model.clone(),
             dangerous_skip_checks,
             access_mode,
         });
@@ -647,6 +649,7 @@ impl SessionManager {
             // Create backend resource
             let create_options = crate::backends::CreateOptions {
                 agent,
+                model: model.as_ref().map(|m| m.to_cli_flag().to_string()),
                 print_mode,
                 plan_mode,
                 session_proxy_port: proxy_port,
@@ -932,6 +935,7 @@ impl SessionManager {
             initial_prompt: initial_prompt.clone(),
             backend,
             agent,
+            model: model.clone(),
             dangerous_skip_checks,
             access_mode,
         });
@@ -1059,6 +1063,7 @@ impl SessionManager {
         // Create backend resource
         let create_options = crate::backends::CreateOptions {
             agent,
+            model: model.as_ref().map(|m| m.to_cli_flag().to_string()),
             print_mode,
             plan_mode,
             session_proxy_port: proxy_port,
@@ -1660,6 +1665,7 @@ impl SessionManager {
             // Create new container
             let create_options = crate::backends::CreateOptions {
                 agent,
+                model: session.model_cli_flag().map(str::to_string),
                 print_mode: false,
                 plan_mode: false,
                 session_proxy_port: proxy_port,
@@ -1967,6 +1973,7 @@ impl SessionManager {
         // Build creation options from session state
         let create_options = crate::backends::CreateOptions {
             agent: session.agent,
+            model: session.model_cli_flag().map(str::to_string),
             print_mode: false, // Never use print mode for recreation
             plan_mode: false,  // Don't enter plan mode - session already has context
             session_proxy_port: session.proxy_port,

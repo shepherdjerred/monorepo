@@ -32,6 +32,9 @@ pub struct Session {
     /// AI agent running in this session
     pub agent: AgentType,
 
+    /// AI model for this session (None for sessions created before model selection was added)
+    pub model: Option<SessionModel>,
+
     /// Path to the source repository
     #[typeshare(serialized_as = "String")]
     pub repo_path: PathBuf,
@@ -133,6 +136,8 @@ pub struct SessionConfig {
     pub backend: BackendType,
     /// AI agent type
     pub agent: AgentType,
+    /// AI model (optional, uses default if not specified)
+    pub model: Option<SessionModel>,
     /// Whether to skip safety checks
     pub dangerous_skip_checks: bool,
     /// Access mode for proxy filtering
@@ -152,6 +157,7 @@ impl Session {
             status: SessionStatus::Creating,
             backend: config.backend,
             agent: config.agent,
+            model: config.model,
             repo_path: config.repo_path,
             worktree_path: config.worktree_path,
             subdirectory: config.subdirectory,
@@ -310,6 +316,22 @@ impl Session {
         self.progress = None;
         self.updated_at = Utc::now();
     }
+
+    /// Get the effective model for CLI invocation
+    /// Falls back to agent default if model is not explicitly set
+    #[must_use]
+    pub fn effective_model(&self) -> SessionModel {
+        self.model
+            .clone()
+            .unwrap_or_else(|| SessionModel::default_for_agent(self.agent))
+    }
+
+    /// Get model CLI flag value, or None if session uses legacy CLI default
+    /// Returns None for legacy sessions without explicit model selection
+    #[must_use]
+    pub fn model_cli_flag(&self) -> Option<&'static str> {
+        self.model.as_ref().map(SessionModel::to_cli_flag)
+    }
 }
 
 /// Session lifecycle status
@@ -365,6 +387,144 @@ pub enum AgentType {
 
     /// Gemini CLI
     Gemini,
+}
+
+/// Model selection for Claude Code agent
+#[typeshare]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum ClaudeModel {
+    /// Claude Sonnet (default, best balance of performance and cost)
+    Sonnet,
+    /// Claude Opus (most capable model for complex tasks)
+    Opus,
+    /// Claude Haiku (fastest and cheapest)
+    Haiku,
+}
+
+impl ClaudeModel {
+    /// Convert to CLI flag value
+    #[must_use]
+    pub const fn to_cli_flag(self) -> &'static str {
+        match self {
+            Self::Sonnet => "sonnet",
+            Self::Opus => "opus",
+            Self::Haiku => "haiku",
+        }
+    }
+}
+
+impl Default for ClaudeModel {
+    fn default() -> Self {
+        Self::Sonnet
+    }
+}
+
+/// Model selection for Codex agent
+#[typeshare]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum CodexModel {
+    /// GPT-4o (default, latest GPT-4 with vision)
+    Gpt4o,
+    /// GPT-4 (previous generation)
+    Gpt4,
+    /// GPT-3.5 Turbo (faster, less capable)
+    Gpt35Turbo,
+    /// o1 (reasoning-focused model)
+    O1,
+    /// o3 (latest reasoning model)
+    O3,
+}
+
+impl CodexModel {
+    /// Convert to CLI flag value
+    #[must_use]
+    pub const fn to_cli_flag(self) -> &'static str {
+        match self {
+            Self::Gpt4o => "gpt-4o",
+            Self::Gpt4 => "gpt-4",
+            Self::Gpt35Turbo => "gpt-3.5-turbo",
+            Self::O1 => "o1",
+            Self::O3 => "o3",
+        }
+    }
+}
+
+impl Default for CodexModel {
+    fn default() -> Self {
+        Self::Gpt4o
+    }
+}
+
+/// Model selection for Gemini agent
+#[typeshare]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum GeminiModel {
+    /// Gemini 2.5 Pro (default, most capable)
+    Gemini25Pro,
+    /// Gemini 2.0 Flash Thinking Experimental
+    Gemini20FlashThinking,
+}
+
+impl GeminiModel {
+    /// Convert to CLI flag value
+    #[must_use]
+    pub const fn to_cli_flag(self) -> &'static str {
+        match self {
+            Self::Gemini25Pro => "gemini-2.5-pro",
+            Self::Gemini20FlashThinking => "gemini-2.0-flash-thinking-exp",
+        }
+    }
+}
+
+impl Default for GeminiModel {
+    fn default() -> Self {
+        Self::Gemini25Pro
+    }
+}
+
+/// Model configuration for a session
+#[typeshare]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum SessionModel {
+    /// Claude Code model
+    Claude(ClaudeModel),
+    /// Codex model
+    Codex(CodexModel),
+    /// Gemini model
+    Gemini(GeminiModel),
+}
+
+impl SessionModel {
+    /// Get default model for an agent type
+    #[must_use]
+    pub fn default_for_agent(agent: AgentType) -> Self {
+        match agent {
+            AgentType::ClaudeCode => Self::Claude(ClaudeModel::default()),
+            AgentType::Codex => Self::Codex(CodexModel::default()),
+            AgentType::Gemini => Self::Gemini(GeminiModel::default()),
+        }
+    }
+
+    /// Convert to CLI flag value
+    #[must_use]
+    pub fn to_cli_flag(&self) -> &'static str {
+        match self {
+            Self::Claude(model) => model.to_cli_flag(),
+            Self::Codex(model) => model.to_cli_flag(),
+            Self::Gemini(model) => model.to_cli_flag(),
+        }
+    }
+
+    /// Check if this model is compatible with the given agent type
+    #[must_use]
+    pub const fn is_compatible_with(&self, agent: AgentType) -> bool {
+        matches!(
+            (self, agent),
+            (Self::Claude(_), AgentType::ClaudeCode)
+                | (Self::Codex(_), AgentType::Codex)
+                | (Self::Gemini(_), AgentType::Gemini)
+        )
+    }
 }
 
 /// PR check status
@@ -472,4 +632,262 @@ pub fn get_history_file_path(worktree_path: &Path, session_id: &Uuid) -> PathBuf
         .join("projects")
         .join("-workspace")
         .join(format!("{session_id}.jsonl"))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ========== Model enum tests ==========
+
+    #[test]
+    fn test_claude_model_to_cli_flag() {
+        assert_eq!(ClaudeModel::Sonnet.to_cli_flag(), "sonnet");
+        assert_eq!(ClaudeModel::Opus.to_cli_flag(), "opus");
+        assert_eq!(ClaudeModel::Haiku.to_cli_flag(), "haiku");
+    }
+
+    #[test]
+    fn test_claude_model_default() {
+        assert_eq!(ClaudeModel::default(), ClaudeModel::Sonnet);
+    }
+
+    #[test]
+    fn test_codex_model_to_cli_flag() {
+        assert_eq!(CodexModel::Gpt4o.to_cli_flag(), "gpt-4o");
+        assert_eq!(CodexModel::Gpt4.to_cli_flag(), "gpt-4");
+        assert_eq!(CodexModel::Gpt35Turbo.to_cli_flag(), "gpt-3.5-turbo");
+        assert_eq!(CodexModel::O1.to_cli_flag(), "o1");
+        assert_eq!(CodexModel::O3.to_cli_flag(), "o3");
+    }
+
+    #[test]
+    fn test_codex_model_default() {
+        assert_eq!(CodexModel::default(), CodexModel::Gpt4o);
+    }
+
+    #[test]
+    fn test_gemini_model_to_cli_flag() {
+        assert_eq!(GeminiModel::Gemini25Pro.to_cli_flag(), "gemini-2.5-pro");
+        assert_eq!(
+            GeminiModel::Gemini20FlashThinking.to_cli_flag(),
+            "gemini-2.0-flash-thinking-exp"
+        );
+    }
+
+    #[test]
+    fn test_gemini_model_default() {
+        assert_eq!(GeminiModel::default(), GeminiModel::Gemini25Pro);
+    }
+
+    #[test]
+    fn test_session_model_default_for_agent() {
+        assert_eq!(
+            SessionModel::default_for_agent(AgentType::ClaudeCode),
+            SessionModel::Claude(ClaudeModel::Sonnet)
+        );
+        assert_eq!(
+            SessionModel::default_for_agent(AgentType::Codex),
+            SessionModel::Codex(CodexModel::Gpt4o)
+        );
+        assert_eq!(
+            SessionModel::default_for_agent(AgentType::Gemini),
+            SessionModel::Gemini(GeminiModel::Gemini25Pro)
+        );
+    }
+
+    #[test]
+    fn test_session_model_to_cli_flag() {
+        assert_eq!(
+            SessionModel::Claude(ClaudeModel::Opus).to_cli_flag(),
+            "opus"
+        );
+        assert_eq!(SessionModel::Codex(CodexModel::O1).to_cli_flag(), "o1");
+        assert_eq!(
+            SessionModel::Gemini(GeminiModel::Gemini25Pro).to_cli_flag(),
+            "gemini-2.5-pro"
+        );
+    }
+
+    #[test]
+    fn test_session_model_is_compatible_with() {
+        let claude_model = SessionModel::Claude(ClaudeModel::Sonnet);
+        assert!(claude_model.is_compatible_with(AgentType::ClaudeCode));
+        assert!(!claude_model.is_compatible_with(AgentType::Codex));
+        assert!(!claude_model.is_compatible_with(AgentType::Gemini));
+
+        let codex_model = SessionModel::Codex(CodexModel::Gpt4o);
+        assert!(!codex_model.is_compatible_with(AgentType::ClaudeCode));
+        assert!(codex_model.is_compatible_with(AgentType::Codex));
+        assert!(!codex_model.is_compatible_with(AgentType::Gemini));
+
+        let gemini_model = SessionModel::Gemini(GeminiModel::Gemini25Pro);
+        assert!(!gemini_model.is_compatible_with(AgentType::ClaudeCode));
+        assert!(!gemini_model.is_compatible_with(AgentType::Codex));
+        assert!(gemini_model.is_compatible_with(AgentType::Gemini));
+    }
+
+    #[test]
+    fn test_session_effective_model_with_explicit_model() {
+        let session = Session {
+            id: Uuid::new_v4(),
+            name: "test".to_string(),
+            title: None,
+            description: None,
+            status: SessionStatus::Running,
+            backend: BackendType::Docker,
+            agent: AgentType::ClaudeCode,
+            model: Some(SessionModel::Claude(ClaudeModel::Opus)),
+            repo_path: PathBuf::from("/test"),
+            worktree_path: PathBuf::from("/test/worktree"),
+            subdirectory: PathBuf::new(),
+            branch_name: "test".to_string(),
+            backend_id: None,
+            initial_prompt: "test".to_string(),
+            dangerous_skip_checks: false,
+            pr_url: None,
+            pr_check_status: None,
+            claude_status: ClaudeWorkingStatus::Unknown,
+            claude_status_updated_at: None,
+            merge_conflict: false,
+            worktree_dirty: false,
+            access_mode: AccessMode::ReadOnly,
+            proxy_port: None,
+            history_file_path: None,
+            reconcile_attempts: 0,
+            last_reconcile_error: None,
+            last_reconcile_at: None,
+            error_message: None,
+            progress: None,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+        };
+
+        assert_eq!(
+            session.effective_model(),
+            SessionModel::Claude(ClaudeModel::Opus)
+        );
+    }
+
+    #[test]
+    fn test_session_effective_model_with_none_falls_back_to_default() {
+        let session = Session {
+            id: Uuid::new_v4(),
+            name: "test".to_string(),
+            title: None,
+            description: None,
+            status: SessionStatus::Running,
+            backend: BackendType::Docker,
+            agent: AgentType::ClaudeCode,
+            model: None, // Legacy session without explicit model
+            repo_path: PathBuf::from("/test"),
+            worktree_path: PathBuf::from("/test/worktree"),
+            subdirectory: PathBuf::new(),
+            branch_name: "test".to_string(),
+            backend_id: None,
+            initial_prompt: "test".to_string(),
+            dangerous_skip_checks: false,
+            pr_url: None,
+            pr_check_status: None,
+            claude_status: ClaudeWorkingStatus::Unknown,
+            claude_status_updated_at: None,
+            merge_conflict: false,
+            worktree_dirty: false,
+            access_mode: AccessMode::ReadOnly,
+            proxy_port: None,
+            history_file_path: None,
+            reconcile_attempts: 0,
+            last_reconcile_error: None,
+            last_reconcile_at: None,
+            error_message: None,
+            progress: None,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+        };
+
+        // Should fall back to agent default (Sonnet for ClaudeCode)
+        assert_eq!(
+            session.effective_model(),
+            SessionModel::Claude(ClaudeModel::Sonnet)
+        );
+    }
+
+    #[test]
+    fn test_session_model_cli_flag_with_explicit_model() {
+        let session = Session {
+            id: Uuid::new_v4(),
+            name: "test".to_string(),
+            title: None,
+            description: None,
+            status: SessionStatus::Running,
+            backend: BackendType::Docker,
+            agent: AgentType::ClaudeCode,
+            model: Some(SessionModel::Claude(ClaudeModel::Haiku)),
+            repo_path: PathBuf::from("/test"),
+            worktree_path: PathBuf::from("/test/worktree"),
+            subdirectory: PathBuf::new(),
+            branch_name: "test".to_string(),
+            backend_id: None,
+            initial_prompt: "test".to_string(),
+            dangerous_skip_checks: false,
+            pr_url: None,
+            pr_check_status: None,
+            claude_status: ClaudeWorkingStatus::Unknown,
+            claude_status_updated_at: None,
+            merge_conflict: false,
+            worktree_dirty: false,
+            access_mode: AccessMode::ReadOnly,
+            proxy_port: None,
+            history_file_path: None,
+            reconcile_attempts: 0,
+            last_reconcile_error: None,
+            last_reconcile_at: None,
+            error_message: None,
+            progress: None,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+        };
+
+        assert_eq!(session.model_cli_flag(), Some("haiku"));
+    }
+
+    #[test]
+    fn test_session_model_cli_flag_with_none_returns_none() {
+        let session = Session {
+            id: Uuid::new_v4(),
+            name: "test".to_string(),
+            title: None,
+            description: None,
+            status: SessionStatus::Running,
+            backend: BackendType::Docker,
+            agent: AgentType::ClaudeCode,
+            model: None, // Legacy session
+            repo_path: PathBuf::from("/test"),
+            worktree_path: PathBuf::from("/test/worktree"),
+            subdirectory: PathBuf::new(),
+            branch_name: "test".to_string(),
+            backend_id: None,
+            initial_prompt: "test".to_string(),
+            dangerous_skip_checks: false,
+            pr_url: None,
+            pr_check_status: None,
+            claude_status: ClaudeWorkingStatus::Unknown,
+            claude_status_updated_at: None,
+            merge_conflict: false,
+            worktree_dirty: false,
+            access_mode: AccessMode::ReadOnly,
+            proxy_port: None,
+            history_file_path: None,
+            reconcile_attempts: 0,
+            last_reconcile_error: None,
+            last_reconcile_at: None,
+            error_message: None,
+            progress: None,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+        };
+
+        // Legacy sessions return None (no --model flag passed to CLI)
+        assert_eq!(session.model_cli_flag(), None);
+    }
 }

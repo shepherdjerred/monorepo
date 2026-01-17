@@ -252,6 +252,7 @@ impl DockerBackend {
         config: &DockerConfig,
         image_override: Option<&ImageConfig>,
         resource_override: Option<&ResourceLimits>,
+        model: Option<&str>,
     ) -> anyhow::Result<Vec<String>> {
         let container_name = format!("clauderon-{name}");
         let escaped_prompt = initial_prompt.replace('\'', "'\\''");
@@ -763,6 +764,7 @@ impl DockerBackend {
                         &translated_images,
                         dangerous_skip_checks,
                         None,
+                        model,
                     ); // Don't pass session_id here, we handle it in the wrapper
 
                     // Add print mode flags if enabled
@@ -875,6 +877,7 @@ fi"#;
                             images,
                             dangerous_skip_checks,
                             None,
+                            model,
                         );
                         let create_cmd_str = create_cmd_vec
                             .iter()
@@ -915,6 +918,7 @@ fi"#,
                         &translated_images,
                         dangerous_skip_checks,
                         None,
+                        model,
                     );
 
                     // Add print mode flags if enabled
@@ -1076,6 +1080,7 @@ impl ExecutionBackend for DockerBackend {
             &self.config,
             options.container_image.as_ref(),
             options.container_resources.as_ref(),
+            options.model.as_deref(),
         )?;
         let output = Command::new("docker").args(&args).output().await?;
 
