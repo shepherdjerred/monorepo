@@ -337,7 +337,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                     {!repo.is_primary && (
                       <button
                         type="button"
-                        onClick={() => handleSetPrimary(repo.id)}
+                        onClick={() => { handleSetPrimary(repo.id); }}
                         className="text-xs px-2 py-1 border-2 hover:bg-yellow-100 hover:border-yellow-600"
                         title="Set as primary repository"
                       >
@@ -347,7 +347,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                     {repositories.length > 1 && (
                       <button
                         type="button"
-                        onClick={() => handleRemoveRepository(repo.id)}
+                        onClick={() => { handleRemoveRepository(repo.id); }}
                         className="p-1 border-2 hover:bg-red-100 hover:border-red-600 text-red-600"
                         title="Remove repository"
                       >
@@ -361,7 +361,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                   <Label htmlFor={`repo-path-${repo.id}`} className="text-sm">Repository Path</Label>
                   <RepositoryPathSelector
                     value={repo.repo_path}
-                    onChange={(path) => handleRepoPathChange(repo.id, path)}
+                    onChange={(path) => { handleRepoPathChange(repo.id, path); }}
                     required
                   />
                 </div>
@@ -374,7 +374,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                     type="text"
                     id={`mount-name-${repo.id}`}
                     value={repo.mount_name}
-                    onChange={(e) => handleMountNameChange(repo.id, e.target.value)}
+                    onChange={(e) => { handleMountNameChange(repo.id, e.target.value); }}
                     placeholder="auto-generated"
                     className="w-full px-3 py-2 border-2 rounded font-mono text-sm"
                     pattern="[a-z0-9][a-z0-9-_]{0,62}[a-z0-9]"
@@ -516,7 +516,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                     <span className="text-sm truncate font-mono">{file.name}</span>
                     <button
                       type="button"
-                      onClick={() => setSelectedFiles(files => files.filter((_, idx) => idx !== i))}
+                      onClick={() => { setSelectedFiles(files => files.filter((_, idx) => idx !== i)); }}
                       className="text-red-600 font-bold px-2 hover:bg-red-100 rounded"
                     >
                       ✕
@@ -541,7 +541,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                   id="container_image"
                   placeholder="ghcr.io/user/image:tag"
                   value={formData.container_image}
-                  onChange={(e) => setFormData({ ...formData, container_image: e.target.value })}
+                  onChange={(e) => { setFormData({ ...formData, container_image: e.target.value }); }}
                   className="w-full px-3 py-2 border-2 rounded font-mono text-sm"
                 />
                 <p className="text-xs text-muted-foreground mt-1">
@@ -556,7 +556,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                   <select
                     id="pull_policy"
                     value={formData.pull_policy}
-                    onChange={(e) => setFormData({ ...formData, pull_policy: e.target.value as "always" | "if-not-present" | "never" })}
+                    onChange={(e) => { setFormData({ ...formData, pull_policy: e.target.value as "always" | "if-not-present" | "never" }); }}
                     className="w-full px-3 py-2 border-2 rounded font-mono text-sm"
                   >
                     <option value="if-not-present">If Not Present</option>
@@ -572,7 +572,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                     id="cpu_limit"
                     placeholder="2.0"
                     value={formData.cpu_limit}
-                    onChange={(e) => setFormData({ ...formData, cpu_limit: e.target.value })}
+                    onChange={(e) => { setFormData({ ...formData, cpu_limit: e.target.value }); }}
                     className="w-full px-3 py-2 border-2 rounded font-mono text-sm"
                   />
                 </div>
@@ -584,7 +584,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                     id="memory_limit"
                     placeholder="2g"
                     value={formData.memory_limit}
-                    onChange={(e) => setFormData({ ...formData, memory_limit: e.target.value })}
+                    onChange={(e) => { setFormData({ ...formData, memory_limit: e.target.value }); }}
                     className="w-full px-3 py-2 border-2 rounded font-mono text-sm"
                   />
                 </div>

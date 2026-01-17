@@ -210,6 +210,7 @@ async fn test_limit_enforcement_removes_oldest() {
         manager
             .create_session(
                 repo_path.to_string_lossy().to_string(),
+                None,
                 format!("Prompt {i}"),
                 BackendType::Zellij,
                 AgentType::ClaudeCode,
@@ -336,6 +337,7 @@ async fn test_recent_repos_ordered_by_most_recent() {
         manager
             .create_session(
                 repo_path.to_string_lossy().to_string(),
+                None,
                 format!("Prompt {i}"),
                 BackendType::Zellij,
                 AgentType::ClaudeCode,
@@ -613,6 +615,7 @@ async fn test_subdirectories_respect_limit() {
         manager
             .create_session(
                 subdir.to_string_lossy().to_string(),
+                None,
                 format!("Prompt {i}"),
                 BackendType::Zellij,
                 AgentType::ClaudeCode,
