@@ -16,6 +16,8 @@ const PLAYWRIGHT_VERSION = "1.57.0";
 const RELEASE_PLEASE_VERSION = "17.1.3";
 // Rust version for clauderon
 const RUST_VERSION = "1.85";
+// sccache version for Rust compilation caching
+const SCCACHE_VERSION = "0.9.1";
 
 // Cross-compilation targets for mux binary
 const MUX_TARGETS = [
@@ -119,6 +121,15 @@ function getRustContainer(source: Directory, frontendDist?: Directory): Containe
     .withMountedDirectory("/workspace", source.directory("packages/clauderon"))
     .withExec(["rustup", "component", "add", "rustfmt", "clippy"]);
 
+  // Install sccache for compilation caching
+  container = withSccache(container);
+
+  // Configure sccache
+  container = container
+    .withMountedCache("/sccache", dag.cacheVolume("sccache-cache"))
+    .withEnvVariable("RUSTC_WRAPPER", "sccache")
+    .withEnvVariable("SCCACHE_DIR", "/sccache");
+
   // Mount the pre-built frontend dist if provided
   if (frontendDist) {
     container = container.withDirectory("/workspace/web/frontend/dist", frontendDist);
@@ -128,10 +139,33 @@ function getRustContainer(source: Directory, frontendDist?: Directory): Containe
 }
 
 /**
+ * Install sccache (Mozilla's shared compilation cache) into a container.
+ * Downloads pre-built binary from GitHub releases for faster installation.
+ * Uses Dagger's layer caching - download is cached as long as version doesn't change.
+ *
+ * @param container The container to install sccache into
+ * @returns Container with sccache installed and verified
+ */
+function withSccache(container: Container): Container {
+  const target = "x86_64-unknown-linux-musl";
+  const version = SCCACHE_VERSION;
+  const tarball = `sccache-v${version}-${target}.tar.gz`;
+  const url = `https://github.com/mozilla/sccache/releases/download/v${version}/${tarball}`;
+
+  return container
+    .withExec(["sh", "-c", `curl -fsSL "${url}" -o /tmp/${tarball}`])
+    .withExec(["tar", "xzf", `/tmp/${tarball}`, "-C", "/tmp"])
+    .withExec(["mv", `/tmp/sccache-v${version}-${target}/sccache`, "/usr/local/bin/sccache"])
+    .withExec(["chmod", "+x", "/usr/local/bin/sccache"])
+    .withExec(["rm", "-rf", `/tmp/${tarball}`, `/tmp/sccache-v${version}-${target}`])
+    .withExec(["sccache", "--version"]); // Verify installation
+}
+
+/**
  * Get a Rust container with cross-compilation toolchains for mux builds
  */
 function getCrossCompileContainer(source: Directory): Container {
-  return dag
+  let container = dag
     .container()
     .from(`rust:${RUST_VERSION}-bookworm`)
     .withWorkdir("/workspace")
@@ -147,6 +181,17 @@ function getCrossCompileContainer(source: Directory): Container {
     // Add cross-compilation targets
     .withExec(["rustup", "target", "add", "x86_64-unknown-linux-gnu"])
     .withExec(["rustup", "target", "add", "aarch64-unknown-linux-gnu"]);
+
+  // Install sccache for compilation caching
+  container = withSccache(container);
+
+  // Configure sccache with separate cache for cross builds to avoid conflicts
+  container = container
+    .withMountedCache("/sccache-cross", dag.cacheVolume("sccache-cache-cross"))
+    .withEnvVariable("RUSTC_WRAPPER", "sccache")
+    .withEnvVariable("SCCACHE_DIR", "/sccache-cross");
+
+  return container;
 }
 
 /**
