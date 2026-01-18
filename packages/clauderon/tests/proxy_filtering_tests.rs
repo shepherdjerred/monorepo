@@ -83,6 +83,7 @@ async fn create_test_manager_with_proxy() -> (
     let zellij = Arc::new(MockExecutionBackend::zellij());
     let docker = Arc::new(MockExecutionBackend::docker());
     let kubernetes = Arc::new(MockExecutionBackend::kubernetes());
+    let sprites = Arc::new(MockExecutionBackend::sprites());
 
     // Helper functions to coerce Arc<Concrete> to Arc<dyn Trait>
     fn to_git_ops(arc: Arc<MockGitBackend>) -> Arc<dyn GitOperations> {
@@ -99,6 +100,7 @@ async fn create_test_manager_with_proxy() -> (
         to_exec_backend(Arc::clone(&docker)),
         to_exec_backend(Arc::clone(&kubernetes)),
         None,
+        to_exec_backend(Arc::clone(&sprites)),
     )
     .await
     .expect("Failed to create manager");
@@ -432,6 +434,7 @@ async fn test_access_mode_persists_across_restarts() {
         let zellij = Arc::new(MockExecutionBackend::zellij());
         let docker = Arc::new(MockExecutionBackend::docker());
         let kubernetes = Arc::new(MockExecutionBackend::kubernetes());
+        let sprites = Arc::new(MockExecutionBackend::sprites());
 
         fn to_git_ops(arc: Arc<MockGitBackend>) -> Arc<dyn GitOperations> {
             arc
@@ -447,6 +450,7 @@ async fn test_access_mode_persists_across_restarts() {
             to_exec_backend(docker),
             to_exec_backend(kubernetes),
             None,
+            to_exec_backend(sprites),
         )
         .await
         .expect("Failed to create manager");
@@ -487,6 +491,7 @@ async fn test_access_mode_persists_across_restarts() {
         let zellij = Arc::new(MockExecutionBackend::zellij());
         let docker = Arc::new(MockExecutionBackend::docker());
         let kubernetes = Arc::new(MockExecutionBackend::kubernetes());
+        let sprites = Arc::new(MockExecutionBackend::sprites());
 
         fn to_git_ops(arc: Arc<MockGitBackend>) -> Arc<dyn GitOperations> {
             arc
@@ -502,6 +507,7 @@ async fn test_access_mode_persists_across_restarts() {
             to_exec_backend(docker),
             to_exec_backend(kubernetes),
             None,
+            to_exec_backend(sprites),
         )
         .await
         .expect("Failed to create manager");

@@ -8,7 +8,7 @@ use uuid::Uuid;
 
 use crate::backends::{
     DockerBackend, ExecutionBackend, GitBackend, GitOperations, ImageConfig, ImagePullPolicy,
-    KubernetesBackend, ResourceLimits, ZellijBackend,
+    KubernetesBackend, ResourceLimits, SpritesBackend, ZellijBackend,
 };
 
 #[cfg(target_os = "macos")]
@@ -101,6 +101,7 @@ pub struct SessionManager {
     kubernetes_backend: Option<Arc<crate::backends::KubernetesBackend>>,
     #[cfg(target_os = "macos")]
     apple_container: Arc<dyn ExecutionBackend>,
+    sprites: Arc<dyn ExecutionBackend>,
     console_manager: Arc<ConsoleManager>,
     sessions: RwLock<Vec<Session>>,
     /// Optional proxy manager for per-session filtering
@@ -136,6 +137,7 @@ impl SessionManager {
         kubernetes: Arc<dyn ExecutionBackend>,
         kubernetes_backend: Option<Arc<crate::backends::KubernetesBackend>>,
         #[cfg(target_os = "macos")] apple_container: Arc<dyn ExecutionBackend>,
+        sprites: Arc<dyn ExecutionBackend>,
     ) -> anyhow::Result<Self> {
         let sessions = store.list_sessions().await?;
 
@@ -148,6 +150,7 @@ impl SessionManager {
             kubernetes_backend,
             #[cfg(target_os = "macos")]
             apple_container,
+            sprites,
             console_manager: Arc::new(ConsoleManager::new()),
             sessions: RwLock::new(sessions),
             proxy_manager: None,
@@ -182,6 +185,7 @@ impl SessionManager {
             Some(kubernetes_backend),
             #[cfg(target_os = "macos")]
             Arc::new(AppleContainerBackend::new()),
+            Arc::new(crate::backends::SpritesBackend::new()),
         )
         .await
     }
@@ -210,6 +214,7 @@ impl SessionManager {
             Some(kubernetes_backend),
             #[cfg(target_os = "macos")]
             Arc::new(AppleContainerBackend::new()),
+            Arc::new(SpritesBackend::new()),
         )
         .await
     }
@@ -941,6 +946,16 @@ impl SessionManager {
                         )
                         .await?
                 }
+                BackendType::Sprites => {
+                    self.sprites
+                        .create(
+                            &full_name,
+                            &worktree_path,
+                            &transformed_prompt,
+                            create_options,
+                        )
+                        .await?
+                }
             };
 
             update_progress(5, "Finalizing session".to_string()).await;
@@ -1406,6 +1421,16 @@ impl SessionManager {
                     )
                     .await?
             }
+            BackendType::Sprites => {
+                self.sprites
+                    .create(
+                        &full_name,
+                        &worktree_path,
+                        &transformed_prompt,
+                        create_options,
+                    )
+                    .await?
+            }
         };
 
         session.set_backend_id(backend_id.clone());
@@ -1494,6 +1519,7 @@ impl SessionManager {
             BackendType::Kubernetes => Ok(self.kubernetes.attach_command(backend_id)),
             #[cfg(target_os = "macos")]
             BackendType::AppleContainer => Ok(self.apple_container.attach_command(backend_id)),
+            BackendType::Sprites => Ok(self.sprites.attach_command(backend_id)),
         }
     }
 
@@ -1731,6 +1757,9 @@ impl SessionManager {
                     BackendType::AppleContainer => {
                         let _ = self.apple_container.delete(backend_id).await;
                     }
+                    BackendType::Sprites => {
+                        let _ = self.sprites.delete(backend_id).await;
+                    }
                 }
             }
 
@@ -1849,6 +1878,9 @@ impl SessionManager {
                 #[cfg(target_os = "macos")]
                 BackendType::AppleContainer => {
                     let _ = self.apple_container.delete(backend_id).await;
+                }
+                BackendType::Sprites => {
+                    let _ = self.sprites.delete(backend_id).await;
                 }
             }
         }
@@ -2130,6 +2162,7 @@ impl SessionManager {
                     BackendType::Kubernetes => self.kubernetes.exists(backend_id).await?,
                     #[cfg(target_os = "macos")]
                     BackendType::AppleContainer => self.apple_container.exists(backend_id).await?,
+                    BackendType::Sprites => self.sprites.exists(backend_id).await?,
                 };
 
                 if !exists {
@@ -2267,6 +2300,9 @@ impl SessionManager {
                                     let _ = proxy_manager.destroy_session_proxy(session.id).await;
                                 }
                             }
+                            BackendType::Sprites => {
+                                let _ = self.sprites.delete(backend_id).await;
+                            }
                         }
                     }
 
@@ -2353,6 +2389,9 @@ impl SessionManager {
                 BackendType::AppleContainer => {
                     let _ = self.apple_container.delete(backend_id).await;
                 }
+                BackendType::Sprites => {
+                    let _ = self.sprites.delete(backend_id).await;
+                }
             }
         }
 
@@ -2399,6 +2438,16 @@ impl SessionManager {
             #[cfg(target_os = "macos")]
             BackendType::AppleContainer => {
                 self.apple_container
+                    .create(
+                        &session.name,
+                        &session.worktree_path,
+                        &session.initial_prompt,
+                        create_options,
+                    )
+                    .await?
+            }
+            BackendType::Sprites => {
+                self.sprites
                     .create(
                         &session.name,
                         &session.worktree_path,
@@ -2979,6 +3028,32 @@ impl SessionManager {
                     .args(["action", "write-chars", prompt, "-s", backend_id])
                     .output()
                     .await?;
+
+                if !output.status.success() {
+                    anyhow::bail!(
+                        "Failed to send prompt: {}",
+                        String::from_utf8_lossy(&output.stderr)
+                    );
+                }
+            }
+            BackendType::Sprites => {
+                // Send prompt via sprite CLI exec (similar to kubectl exec)
+                let mut child = tokio::process::Command::new("sprite")
+                    .args(["exec", "-i", backend_id, "claude"])
+                    .stdin(std::process::Stdio::piped())
+                    .stdout(std::process::Stdio::piped())
+                    .stderr(std::process::Stdio::piped())
+                    .spawn()?;
+
+                // Write prompt to stdin
+                if let Some(mut stdin) = child.stdin.take() {
+                    use tokio::io::AsyncWriteExt;
+                    stdin.write_all(prompt.as_bytes()).await?;
+                    stdin.write_all(b"\n").await?;
+                    drop(stdin); // Close stdin to signal end of input
+                }
+
+                let output = child.wait_with_output().await?;
 
                 if !output.status.success() {
                     anyhow::bail!(
