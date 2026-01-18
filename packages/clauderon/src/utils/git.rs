@@ -344,6 +344,17 @@ pub fn parse_github_repo_from_url(url: &str) -> anyhow::Result<String> {
     )
 }
 
+/// Represents a file with uncommitted changes in a git worktree
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[cfg_attr(feature = "typeshare", typeshare::typeshare)]
+pub struct ChangedFile {
+    /// Git status code (e.g., "M", "A", "D", "??", "MM")
+    /// First character is index status, second is working tree status
+    pub status: String,
+    /// File path relative to worktree root
+    pub path: String,
+}
+
 /// Check if a git worktree has uncommitted changes (dirty status)
 ///
 /// Runs `git status --porcelain` to detect:
@@ -397,6 +408,83 @@ pub async fn check_worktree_dirty(worktree_path: &Path) -> anyhow::Result<bool> 
 
     // If output is non-empty, worktree has uncommitted changes
     Ok(!stdout.trim().is_empty())
+}
+
+/// Get list of changed files in a git worktree with their status
+///
+/// Runs `git status --porcelain` and parses the output to extract:
+/// - File paths
+/// - Git status codes (M=modified, A=added, D=deleted, etc.)
+///
+/// # Arguments
+///
+/// * `worktree_path` - Path to the git worktree to check
+///
+/// # Returns
+///
+/// Returns a vector of `ChangedFile` structs containing status and path for each changed file.
+/// Returns an empty vector if the worktree is clean.
+///
+/// # Errors
+///
+/// Returns an error if:
+/// - The git command fails to execute
+/// - The path is not a git worktree
+///
+/// # Examples
+///
+/// ```no_run
+/// use std::path::PathBuf;
+/// use clauderon::utils::git::get_worktree_changed_files;
+///
+/// # async fn example() -> anyhow::Result<()> {
+/// let files = get_worktree_changed_files(&PathBuf::from("/path/to/worktree")).await?;
+/// for file in files {
+///     println!("{}: {}", file.status, file.path);
+/// }
+/// # Ok(())
+/// # }
+/// ```
+#[tracing::instrument]
+pub async fn get_worktree_changed_files(worktree_path: &Path) -> anyhow::Result<Vec<ChangedFile>> {
+    let output = Command::new("git")
+        .current_dir(worktree_path)
+        .args(["status", "--porcelain"])
+        .output()
+        .await
+        .context("Failed to execute git status")?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        anyhow::bail!("git status failed: {}", stderr);
+    }
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let mut changed_files = Vec::new();
+
+    // Parse each line of git status --porcelain output
+    // Format: XY filename
+    // Where X is index status, Y is working tree status
+    for line in stdout.lines() {
+        if line.is_empty() {
+            continue;
+        }
+
+        // Status codes are first 2 characters, rest is filename
+        if line.len() < 3 {
+            tracing::warn!("Skipping malformed git status line: {}", line);
+            continue;
+        }
+
+        let status = line[..2].to_string();
+        let path = line[3..].to_string();
+
+        changed_files.push(ChangedFile { status, path });
+    }
+
+    tracing::debug!("Found {} changed files in worktree", changed_files.len());
+
+    Ok(changed_files)
 }
 
 #[cfg(test)]
