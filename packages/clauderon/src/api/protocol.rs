@@ -450,3 +450,14 @@ pub struct ClaudeUsage {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub error: Option<UsageError>,
 }
+
+/// Feature flags response for the frontend
+#[typeshare]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FeatureFlagsResponse {
+    /// Current feature flag values
+    pub flags: crate::feature_flags::FeatureFlags,
+
+    /// Whether flags require daemon restart to change
+    pub requires_restart: bool,
+}

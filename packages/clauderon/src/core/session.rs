@@ -479,9 +479,9 @@ impl std::str::FromStr for ClaudeWorkingStatus {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum AccessMode {
     /// Read-only: GET, HEAD, OPTIONS allowed; POST, PUT, DELETE, PATCH blocked
-    #[default]
     ReadOnly,
     /// Read-write: All HTTP methods allowed
+    #[default]
     ReadWrite,
 }
 
