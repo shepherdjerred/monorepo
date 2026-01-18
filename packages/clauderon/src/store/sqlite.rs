@@ -126,6 +126,10 @@ impl SqliteStore {
             Self::migrate_to_v12(pool).await?;
         }
 
+        if current_version < 13 {
+            Self::migrate_to_v13(pool).await?;
+        }
+
         Ok(())
     }
 
@@ -846,6 +850,36 @@ impl SqliteStore {
         tracing::info!("Migration v12 complete");
         Ok(())
     }
+
+    /// Migration v13: Add worktree_changed_files column for tracking list of changed files
+    async fn migrate_to_v13(pool: &SqlitePool) -> anyhow::Result<()> {
+        tracing::info!("Applying migration v13: Add worktree_changed_files column");
+
+        // Check if column exists
+        let column_exists: bool = sqlx::query_scalar(
+            "SELECT COUNT(*) > 0 FROM pragma_table_info('sessions') WHERE name = 'worktree_changed_files'",
+        )
+        .fetch_one(pool)
+        .await?;
+
+        if !column_exists {
+            sqlx::query("ALTER TABLE sessions ADD COLUMN worktree_changed_files TEXT")
+                .execute(pool)
+                .await?;
+            tracing::debug!("Added worktree_changed_files column to sessions table");
+        }
+
+        // Record migration
+        let now = Utc::now();
+        sqlx::query("INSERT OR REPLACE INTO schema_version (version, applied_at) VALUES (?, ?)")
+            .bind(13)
+            .bind(now.to_rfc3339())
+            .execute(pool)
+            .await?;
+
+        tracing::info!("Migration v13 complete");
+        Ok(())
+    }
 }
 
 #[async_trait]
@@ -964,10 +998,10 @@ impl Store for SqliteStore {
                 id, name, title, description, status, backend, agent, repo_path, worktree_path,
                 subdirectory, branch_name, backend_id, initial_prompt, dangerous_skip_checks,
                 pr_url, pr_check_status, claude_status, claude_status_updated_at,
-                merge_conflict, worktree_dirty, access_mode, proxy_port, history_file_path,
+                merge_conflict, worktree_dirty, worktree_changed_files, access_mode, proxy_port, history_file_path,
                 reconcile_attempts, last_reconcile_error, last_reconcile_at, error_message,
                 created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ",
         )
         .bind(session.id.to_string())
@@ -994,6 +1028,12 @@ impl Store for SqliteStore {
         .bind(session.claude_status_updated_at.map(|t| t.to_rfc3339()))
         .bind(session.merge_conflict)
         .bind(session.worktree_dirty)
+        .bind(
+            session
+                .worktree_changed_files
+                .as_ref()
+                .and_then(|files| serde_json::to_string(files).ok()),
+        )
         .bind(session.access_mode.to_string())
         .bind(session.proxy_port.map(i64::from))
         .bind(
@@ -1271,6 +1311,7 @@ struct SessionRow {
     claude_status_updated_at: Option<String>,
     merge_conflict: bool,
     worktree_dirty: bool,
+    worktree_changed_files: Option<String>,
     access_mode: String,
     proxy_port: Option<i64>,
     history_file_path: Option<String>,
@@ -1420,6 +1461,10 @@ impl TryFrom<SessionRow> for Session {
             claude_status_updated_at,
             merge_conflict: row.merge_conflict,
             worktree_dirty: row.worktree_dirty,
+            worktree_changed_files: row
+                .worktree_changed_files
+                .as_ref()
+                .and_then(|json| serde_json::from_str(json).ok()),
             access_mode: row.access_mode.parse().unwrap_or_default(),
             proxy_port: row.proxy_port.map(|p| p as u16),
             history_file_path: row.history_file_path.map(PathBuf::from),
