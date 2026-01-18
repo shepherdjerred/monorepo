@@ -244,13 +244,7 @@ impl AppleContainerBackend {
             temp_config.validate()?;
             (img, super::container_config::ImagePullPolicy::IfNotPresent)
         } else {
-            // Validate default image
-            let temp_config = ImageConfig {
-                image: "ghcr.io/anthropics/claude-code".to_string(),
-                pull_policy: super::container_config::ImagePullPolicy::IfNotPresent,
-                registry_auth: None,
-            };
-            temp_config.validate()?;
+            // Use default image (no validation needed for hardcoded constant)
             (
                 "ghcr.io/anthropics/claude-code",
                 super::container_config::ImagePullPolicy::IfNotPresent,
