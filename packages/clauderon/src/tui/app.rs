@@ -905,7 +905,11 @@ impl App {
     /// Returns an error if the daemon connection fails.
     pub async fn connect(&mut self) -> anyhow::Result<()> {
         match Client::connect().await {
-            Ok(client) => {
+            Ok(mut client) => {
+                // Fetch feature flags from the daemon
+                if let Ok(flags) = client.get_feature_flags().await {
+                    self.create_dialog.feature_flags = std::sync::Arc::new(flags);
+                }
                 self.client = Some(Box::new(client));
                 self.connection_error = None;
                 Ok(())
