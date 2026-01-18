@@ -335,6 +335,25 @@ impl SessionManager {
         Arc::clone(&self.feature_flags)
     }
 
+    /// Validate that read-only mode is allowed if requested
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if read-only mode is requested but the feature flag is disabled.
+    fn validate_readonly_mode_allowed(
+        &self,
+        access_mode: crate::core::AccessMode,
+    ) -> anyhow::Result<()> {
+        if access_mode == crate::core::AccessMode::ReadOnly
+            && !self.feature_flags.enable_readonly_mode
+        {
+            anyhow::bail!(
+                "Read-only mode is not available. This feature is experimental and must be explicitly enabled."
+            );
+        }
+        Ok(())
+    }
+
     /// List all sessions
     #[instrument(skip(self))]
     pub async fn list_sessions(&self) -> Vec<Session> {
@@ -920,6 +939,9 @@ impl SessionManager {
             self.feature_flags.enable_experimental_models,
         )
         .with_context(|| format!("Cannot create session with agent {:?}", agent))?;
+
+        // Validate read-only mode is enabled if requested
+        self.validate_readonly_mode_allowed(access_mode)?;
 
         // Process repositories (multi-repo mode or legacy single-repo mode)
         let repo_inputs = if let Some(repos) = repositories {
@@ -3437,6 +3459,9 @@ impl SessionManager {
         id_or_name: &str,
         new_mode: super::session::AccessMode,
     ) -> anyhow::Result<()> {
+        // Validate read-only mode is enabled if requested
+        self.validate_readonly_mode_allowed(new_mode)?;
+
         let mut sessions = self.sessions.write().await;
         let session = sessions
             .iter_mut()
