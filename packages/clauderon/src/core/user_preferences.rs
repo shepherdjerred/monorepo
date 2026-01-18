@@ -1,9 +1,7 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use typeshare::typeshare;
 
 /// User experience level for progressive disclosure
-#[typeshare]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "PascalCase")]
 pub enum ExperienceLevel {
@@ -45,7 +43,6 @@ impl std::str::FromStr for ExperienceLevel {
 }
 
 /// User preferences for progressive disclosure and UI customization
-#[typeshare]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UserPreferences {
     /// User ID
@@ -59,20 +56,16 @@ pub struct UserPreferences {
     /// Number of advanced operations used
     pub advanced_operations_used_count: u32,
     /// Timestamp of first session creation
-    #[typeshare(serialized_as = "String")]
     pub first_session_at: Option<DateTime<Utc>>,
     /// Timestamp of last activity
-    #[typeshare(serialized_as = "String")]
     pub last_activity_at: DateTime<Utc>,
     /// List of dismissed hint IDs
     pub dismissed_hints: Vec<String>,
     /// Custom UI preferences (JSON blob)
     pub ui_preferences: serde_json::Value,
     /// Timestamp of record creation
-    #[typeshare(serialized_as = "String")]
     pub created_at: DateTime<Utc>,
     /// Timestamp of last update
-    #[typeshare(serialized_as = "String")]
     pub updated_at: DateTime<Utc>,
 }
 
