@@ -233,10 +233,10 @@ impl DirectoryPickerState {
                 if !path.exists() {
                     return None;
                 }
-                let repo_name = path
-                    .file_name()
-                    .map(|n| n.to_string_lossy().to_string())
-                    .unwrap_or_else(|| dto.repo_path.clone());
+                let repo_name = path.file_name().map_or_else(
+                    || dto.repo_path.clone(),
+                    |n| n.to_string_lossy().to_string(),
+                );
 
                 // Include subdirectory in the display name if present
                 let name = if dto.subdirectory.is_empty() {
