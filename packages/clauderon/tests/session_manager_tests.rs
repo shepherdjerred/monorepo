@@ -594,6 +594,7 @@ async fn test_get_attach_command_docker() {
             None,
             None,
             None, // container settings
+            None, // storage_class
         )
         .await
         .unwrap();
