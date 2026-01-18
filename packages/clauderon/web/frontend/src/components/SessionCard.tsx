@@ -1,11 +1,12 @@
 import type { Session } from "@clauderon/client";
 import { SessionStatus, CheckStatus, ClaudeWorkingStatus } from "@clauderon/shared";
-import { formatRelativeTime } from "../lib/utils";
+import { formatRelativeTime, getRepoUrlFromPrUrl } from "../lib/utils";
 import { Archive, ArchiveRestore, Trash2, Terminal, CheckCircle2, XCircle, Clock, Loader2, User, Circle, AlertTriangle, Edit, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { ProviderIcon } from "./ProviderIcon";
 
 type SessionCardProps = {
   session: Session;
@@ -53,7 +54,8 @@ export function SessionCard({ session, onAttach, onEdit, onArchive, onUnarchive,
           <Badge variant="outline" className="border-2 font-mono text-xs">
             {session.backend}
           </Badge>
-          <Badge variant="outline" className="border-2 font-mono text-xs">
+          <Badge variant="outline" className="border-2 font-mono text-xs flex items-center gap-1">
+            <ProviderIcon agent={session.agent} />
             {session.agent}
           </Badge>
         </div>
@@ -68,6 +70,31 @@ export function SessionCard({ session, onAttach, onEdit, onArchive, onUnarchive,
           <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
             {session.initial_prompt}
           </p>
+        )}
+
+        {/* Repositories Section */}
+        {session.repositories && session.repositories.length > 1 && (
+          <details className="mb-3 border-2 border-primary/20 rounded">
+            <summary className="cursor-pointer px-2 py-1 hover:bg-muted/50 text-xs font-mono font-semibold flex items-center gap-2">
+              <span>📁 {session.repositories.length} Repositories</span>
+            </summary>
+            <div className="px-3 py-2 space-y-1 bg-muted/20">
+              {session.repositories.map((repo, idx) => (
+                <div key={idx} className="text-xs font-mono flex items-center gap-2">
+                  {repo.is_primary && (
+                    <span className="text-yellow-600 font-bold">★</span>
+                  )}
+                  <span className="font-semibold">{repo.mount_name}:</span>
+                  <span className="text-muted-foreground truncate">
+                    {repo.repo_path.split('/').pop()}/{repo.subdirectory || '.'}
+                  </span>
+                  <span className="text-xs text-muted-foreground/70">
+                    → {repo.is_primary ? '/workspace' : `/repos/${repo.mount_name}`}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </details>
         )}
 
         {/* Status Indicators */}
@@ -163,7 +190,18 @@ export function SessionCard({ session, onAttach, onEdit, onArchive, onUnarchive,
           <span className="font-mono text-muted-foreground">
             {formatRelativeTime(session.created_at)}
           </span>
-          <span className="text-muted-foreground">{session.branch_name}</span>
+          {session.pr_url && getRepoUrlFromPrUrl(session.pr_url) ? (
+            <a
+              href={`${getRepoUrlFromPrUrl(session.pr_url)}/tree/${session.branch_name}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline font-mono transition-colors duration-200"
+            >
+              {session.branch_name}
+            </a>
+          ) : (
+            <span className="text-muted-foreground font-mono">{session.branch_name}</span>
+          )}
           <Badge variant="secondary" className="font-mono">
             {session.access_mode}
           </Badge>

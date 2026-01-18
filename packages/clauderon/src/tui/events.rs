@@ -379,6 +379,7 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                     // Capture data for the background task
                     let request = CreateSessionRequest {
                         repo_path: app.create_dialog.repo_path.clone(),
+                        repositories: None, // TUI doesn't support multi-repo yet
                         initial_prompt: app.create_dialog.prompt.clone(),
                         backend: app.create_dialog.backend,
                         agent: app.create_dialog.agent,

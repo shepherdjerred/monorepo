@@ -533,6 +533,7 @@ async fn main() -> anyhow::Result<()> {
             let (session, warnings) = client
                 .create_session(api::protocol::CreateSessionRequest {
                     repo_path: repo,
+                    repositories: None,
                     initial_prompt: prompt,
                     backend: backend_type,
                     agent: agent_type,
