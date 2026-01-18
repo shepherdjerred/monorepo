@@ -371,6 +371,25 @@ impl Client {
             _ => anyhow::bail!("Unexpected response"),
         }
     }
+
+    /// Get current feature flags from the daemon
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the request fails or the daemon returns an error.
+    pub async fn get_feature_flags(
+        &mut self,
+    ) -> anyhow::Result<crate::feature_flags::FeatureFlags> {
+        let response = self.send_request(Request::GetFeatureFlags).await?;
+
+        match response {
+            Response::FeatureFlags { flags } => Ok(flags),
+            Response::Error { code, message } => {
+                anyhow::bail!("[{code}] {message}")
+            }
+            _ => anyhow::bail!("Unexpected response"),
+        }
+    }
 }
 
 #[async_trait]

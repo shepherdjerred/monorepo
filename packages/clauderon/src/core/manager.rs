@@ -281,6 +281,14 @@ impl SessionManager {
         self.kubernetes_backend.as_ref().map(Arc::as_ref)
     }
 
+    /// Get reference to feature flags
+    ///
+    /// Returns the current feature flag configuration.
+    #[must_use]
+    pub fn feature_flags(&self) -> Arc<crate::feature_flags::FeatureFlags> {
+        Arc::clone(&self.feature_flags)
+    }
+
     /// List all sessions
     #[instrument(skip(self))]
     pub async fn list_sessions(&self) -> Vec<Session> {
