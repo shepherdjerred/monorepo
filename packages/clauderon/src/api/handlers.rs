@@ -318,6 +318,7 @@ pub async fn handle_create_session_with_progress(
         crate::core::BackendType::Kubernetes => "Kubernetes pod",
         #[cfg(target_os = "macos")]
         crate::core::BackendType::AppleContainer => "Apple container",
+        crate::core::BackendType::Sprites => "Sprites container",
     };
 
     // Step 1: Creating git worktree

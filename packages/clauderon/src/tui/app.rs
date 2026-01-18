@@ -502,45 +502,52 @@ impl CreateDialogState {
         *self = Self::new();
     }
 
-    /// Cycle through backends: Zellij → Docker → Kubernetes → [AppleContainer] → Zellij, auto-adjusting skip_checks
+    /// Cycle through backends: Zellij → Docker → Kubernetes → Sprites → [AppleContainer] → Zellij, auto-adjusting skip_checks
     pub fn toggle_backend(&mut self) {
         self.backend = match self.backend {
             BackendType::Zellij => BackendType::Docker,
             BackendType::Docker => BackendType::Kubernetes,
+            BackendType::Kubernetes => BackendType::Sprites,
             #[cfg(target_os = "macos")]
-            BackendType::Kubernetes => BackendType::AppleContainer,
+            BackendType::Sprites => BackendType::AppleContainer,
             #[cfg(target_os = "macos")]
             BackendType::AppleContainer => BackendType::Zellij,
             #[cfg(not(target_os = "macos"))]
-            BackendType::Kubernetes => BackendType::Zellij,
+            BackendType::Sprites => BackendType::Zellij,
         };
 
         // Auto-toggle skip_checks based on backend:
-        // Docker, Kubernetes, and AppleContainer benefit from skipping checks (isolated environments)
+        // Docker, Kubernetes, Sprites, and AppleContainer benefit from skipping checks (isolated environments)
         // Zellij runs locally so checks are more important
         #[cfg(target_os = "macos")]
         {
             self.skip_checks = matches!(
                 self.backend,
-                BackendType::Docker | BackendType::Kubernetes | BackendType::AppleContainer
+                BackendType::Docker
+                    | BackendType::Kubernetes
+                    | BackendType::Sprites
+                    | BackendType::AppleContainer
             );
         }
         #[cfg(not(target_os = "macos"))]
         {
-            self.skip_checks =
-                matches!(self.backend, BackendType::Docker | BackendType::Kubernetes);
+            self.skip_checks = matches!(
+                self.backend,
+                BackendType::Docker | BackendType::Kubernetes | BackendType::Sprites
+            );
         }
     }
 
-    /// Cycle through backends in reverse: Zellij → [AppleContainer] → Kubernetes → Docker → Zellij
+    /// Cycle through backends in reverse: Zellij → [AppleContainer] → Sprites → Kubernetes → Docker → Zellij
     pub fn toggle_backend_reverse(&mut self) {
         self.backend = match self.backend {
             #[cfg(target_os = "macos")]
             BackendType::Zellij => BackendType::AppleContainer,
             #[cfg(target_os = "macos")]
-            BackendType::AppleContainer => BackendType::Kubernetes,
+            BackendType::AppleContainer => BackendType::Sprites,
             #[cfg(not(target_os = "macos"))]
-            BackendType::Zellij => BackendType::Kubernetes,
+            BackendType::Zellij => BackendType::Sprites,
+            BackendType::Sprites => BackendType::Kubernetes,
             BackendType::Kubernetes => BackendType::Docker,
             BackendType::Docker => BackendType::Zellij,
         };
@@ -549,11 +556,16 @@ impl CreateDialogState {
         #[cfg(target_os = "macos")]
         let is_container_backend = matches!(
             self.backend,
-            BackendType::Docker | BackendType::Kubernetes | BackendType::AppleContainer
+            BackendType::Docker
+                | BackendType::Kubernetes
+                | BackendType::Sprites
+                | BackendType::AppleContainer
         );
         #[cfg(not(target_os = "macos"))]
-        let is_container_backend =
-            matches!(self.backend, BackendType::Docker | BackendType::Kubernetes);
+        let is_container_backend = matches!(
+            self.backend,
+            BackendType::Docker | BackendType::Kubernetes | BackendType::Sprites
+        );
         self.skip_checks = is_container_backend;
     }
 

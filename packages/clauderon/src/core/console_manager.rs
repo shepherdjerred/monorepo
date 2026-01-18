@@ -329,6 +329,9 @@ impl ConsoleManager {
             BackendType::AppleContainer => {
                 anyhow::bail!("Console manager not supported for backend: {backend:?}")
             }
+            BackendType::Sprites => {
+                anyhow::bail!("Console manager not supported for backend: {backend:?}")
+            }
         };
 
         let session = Arc::new(session);
