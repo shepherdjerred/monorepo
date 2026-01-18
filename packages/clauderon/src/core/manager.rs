@@ -1108,6 +1108,7 @@ impl SessionManager {
         initial_prompt: String,
         backend: BackendType,
         agent: super::session::AgentType,
+        model: Option<super::session::SessionModel>,
         dangerous_skip_checks: bool,
         print_mode: bool,
         plan_mode: bool,
