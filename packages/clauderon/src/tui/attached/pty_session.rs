@@ -16,7 +16,7 @@ use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
 
 use super::terminal_buffer::TerminalBuffer;
-use crate::api::console_protocol::ConsoleMessage;
+use crate::api::console_protocol::{ConsoleMessage, SignalType};
 use crate::utils::paths;
 
 /// Channel buffer size for console events.
@@ -30,6 +30,7 @@ const WRITE_CHANNEL_SIZE: usize = 256;
 enum WriteRequest {
     Bytes(Vec<u8>),
     Resize { rows: u16, cols: u16 },
+    Signal { signal: SignalType },
 }
 
 /// Events emitted by a console session.
@@ -239,6 +240,22 @@ impl PtySession {
                                 }
                             }
                         }
+                        Some(WriteRequest::Signal { signal }) => {
+                            let message = ConsoleMessage::Signal { signal };
+                            if let Ok(payload) = serde_json::to_string(&message) {
+                                if writer.write_all(payload.as_bytes()).await.is_err() {
+                                    tracing::error!(signal = ?signal, "Failed to write signal message");
+                                    break;
+                                }
+                                if writer.write_all(b"\n").await.is_err() {
+                                    tracing::error!(signal = ?signal, "Failed to write newline after signal");
+                                    break;
+                                }
+                                tracing::debug!(signal = ?signal, "Signal message sent to daemon");
+                            } else {
+                                tracing::error!(signal = ?signal, "Failed to serialize signal message");
+                            }
+                        }
                         None => break,
                     }
                 }
@@ -306,6 +323,36 @@ impl PtySession {
             .await;
         let mut buffer = self.terminal_buffer.lock().await;
         buffer.resize(rows, cols);
+    }
+
+    /// Send a signal to the PTY process.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the write channel is closed or signal send fails.
+    #[tracing::instrument(skip(self), fields(
+        session_id = %self.session_id,
+        signal = ?signal
+    ))]
+    pub async fn send_signal(&self, signal: SignalType) -> anyhow::Result<()> {
+        tracing::debug!(
+            session_id = %self.session_id,
+            signal = ?signal,
+            "Queueing signal for transmission"
+        );
+
+        self.write_tx
+            .send(WriteRequest::Signal { signal })
+            .await
+            .map_err(|_| anyhow::anyhow!("Console write channel closed"))?;
+
+        tracing::info!(
+            session_id = %self.session_id,
+            signal = ?signal,
+            "Signal queued successfully"
+        );
+
+        Ok(())
     }
 
     /// Gracefully shutdown the session.

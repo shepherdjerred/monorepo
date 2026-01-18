@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use tracing::warn;
 
-use super::container_config::ResourceLimits;
+use super::container_config::{ImageConfig, ImagePullPolicy, ResourceLimits};
 
 /// Configuration for the Apple Container backend
 ///
@@ -15,6 +15,15 @@ pub struct AppleContainerConfig {
 
     /// Resource limits (CPU and memory)
     pub resources: Option<ResourceLimits>,
+
+    /// Extra flags to pass to `container run` command
+    ///
+    /// Advanced users can add custom flags for specific use cases.
+    /// Example: `["--privileged", "--cap-add=SYS_ADMIN"]`
+    ///
+    /// WARNING: Use with caution. Incorrect flags can break container creation.
+    #[serde(default)]
+    pub extra_flags: Vec<String>,
 }
 
 impl AppleContainerConfig {
@@ -84,22 +93,20 @@ impl AppleContainerConfig {
     ///
     /// Returns an error if any configuration values are invalid.
     pub fn validate(&self) -> anyhow::Result<()> {
-        // Validate container image format if provided
+        // Validate container image format using ImageConfig validation
+        // This ensures consistency with Docker and Kubernetes backends
         if let Some(ref image) = self.container_image {
-            if image.is_empty() {
-                anyhow::bail!("Container image cannot be empty");
-            }
+            let image_config = ImageConfig {
+                image: image.clone(),
+                pull_policy: ImagePullPolicy::IfNotPresent,
+                registry_auth: None,
+            };
+            image_config.validate().context("Invalid container image")?;
+        }
 
-            // Basic validation for image format
-            if image.len() > 256 {
-                anyhow::bail!("Container image name too long (max 256 characters)");
-            }
-
-            // Check for dangerous characters that could cause command injection
-            let dangerous_chars = ['$', '`', ';', '&', '|', '<', '>', '(', ')', '{', '}'];
-            if image.chars().any(|c| dangerous_chars.contains(&c)) {
-                anyhow::bail!("Container image contains invalid characters: {}", image);
-            }
+        // Validate resource limits if provided
+        if let Some(ref resources) = self.resources {
+            resources.validate().context("Invalid resource limits")?;
         }
 
         Ok(())
@@ -111,6 +118,7 @@ impl Default for AppleContainerConfig {
         Self {
             container_image: None,
             resources: None,
+            extra_flags: Vec::new(),
         }
     }
 }
