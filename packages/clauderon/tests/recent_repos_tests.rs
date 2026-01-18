@@ -231,6 +231,7 @@ async fn test_limit_enforcement_removes_oldest() {
                 None,
                 None,
                 None,
+                None, // storage_class
             )
             .await
             .expect("Failed to create session");
@@ -363,6 +364,7 @@ async fn test_recent_repos_ordered_by_most_recent() {
                 None,
                 None,
                 None,
+                None, // storage_class
             )
             .await
             .expect("Failed to create session");
