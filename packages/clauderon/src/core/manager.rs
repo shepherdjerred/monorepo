@@ -4022,7 +4022,6 @@ impl SessionManager {
             args.push("--delete-branch".to_string());
         }
 
-
         let output = tokio::process::Command::new("gh")
             .current_dir(&repo_path)
             .args(&args)

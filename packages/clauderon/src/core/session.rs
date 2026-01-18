@@ -449,7 +449,6 @@ impl Session {
         self.model.as_ref().map(SessionModel::to_cli_flag)
     }
 
-<<<<<<< HEAD
     /// Compute the current workflow stage from session state
     #[must_use]
     pub fn workflow_stage(&self) -> WorkflowStage {
