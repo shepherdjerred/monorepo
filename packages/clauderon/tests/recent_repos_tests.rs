@@ -643,6 +643,7 @@ async fn test_subdirectories_respect_limit() {
                 None,
                 None,
                 None,
+                None, // storage_class
             )
             .await
             .expect("Failed to create session");
