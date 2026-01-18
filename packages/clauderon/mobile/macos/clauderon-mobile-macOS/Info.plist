@@ -35,6 +35,8 @@
  			</dict>
  		</dict>
  	</dict>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Clauderon Mobile needs access to your photo library to upload images to Claude sessions.</string>
 	<key>NSMainStoryboardFile</key>
 	<string>Main</string>
 	<key>NSPrincipalClass</key>
