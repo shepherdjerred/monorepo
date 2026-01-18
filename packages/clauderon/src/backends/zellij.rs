@@ -370,6 +370,7 @@ mod tests {
             &[],
             AgentType::ClaudeCode,
             None,
+            None, // model
         );
 
         assert_eq!(args[0], "action", "Expected 'action' as first arg");
@@ -387,6 +388,7 @@ mod tests {
             &[],
             AgentType::ClaudeCode,
             None,
+            None, // model
         );
 
         // Find the command argument (last one containing the prompt)
@@ -420,6 +422,7 @@ mod tests {
             &[],
             AgentType::ClaudeCode,
             None,
+            None, // model
         );
 
         assert!(
@@ -438,6 +441,7 @@ mod tests {
             &[],
             AgentType::ClaudeCode,
             None,
+            None, // model
         );
 
         assert!(
@@ -461,6 +465,7 @@ mod tests {
             &[],
             AgentType::ClaudeCode,
             None,
+            None, // model
         );
 
         let cmd_arg = args.last().unwrap();
