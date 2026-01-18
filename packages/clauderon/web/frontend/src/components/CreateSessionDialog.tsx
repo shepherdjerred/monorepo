@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import type { CreateSessionRequest, BackendType, AccessMode, StorageClassInfo, CreateRepositoryInput, SessionModel, ClaudeModel, CodexModel, GeminiModel } from "@clauderon/client";
-import { AgentType } from "@clauderon/shared";
+import { AgentType, type FeatureFlags } from "@clauderon/shared";
 import { useSessionContext } from "../contexts/SessionContext";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -27,6 +27,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [featureFlags, setFeatureFlags] = useState<FeatureFlags | null>(null);
   const [storageClasses, setStorageClasses] = useState<StorageClassInfo[]>([]);
   const [loadingStorageClasses, setLoadingStorageClasses] = useState(false);
 
@@ -91,6 +92,27 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
   useEffect(() => {
     setFormData(prev => ({ ...prev, model: undefined }));
   }, [formData.agent]);
+
+  // Fetch feature flags on mount
+  useEffect(() => {
+    const fetchFlags = async () => {
+      try {
+        const response = await fetch('/api/feature-flags');
+        const data = await response.json();
+        setFeatureFlags(data.flags);
+      } catch (error) {
+        console.error('Failed to fetch feature flags:', error);
+      }
+    };
+    fetchFlags();
+  }, []);
+
+  // Reset backend if Kubernetes is disabled
+  useEffect(() => {
+    if (formData.backend === "Kubernetes" && featureFlags && !featureFlags.enable_kubernetes_backend) {
+      setFormData(prev => ({ ...prev, backend: "Docker" as BackendType }));
+    }
+  }, [featureFlags, formData.backend]);
 
   // Compute available models based on selected agent
   const availableModels = useMemo(() => {
@@ -434,7 +456,9 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
               >
                 <option value="Docker">Docker</option>
                 <option value="Zellij">Zellij</option>
-                <option value="Kubernetes">Kubernetes</option>
+                {featureFlags?.enable_kubernetes_backend && (
+                  <option value="Kubernetes">Kubernetes</option>
+                )}
               </select>
             </div>
 

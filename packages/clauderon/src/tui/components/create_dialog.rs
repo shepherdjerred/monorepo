@@ -117,15 +117,32 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
     );
 
     // Backend selection
+    // Conditionally build backend options based on feature flags
+    let backend_options: Vec<(&str, bool)> = {
+        let mut options = vec![
+            ("Zellij", dialog.backend == BackendType::Zellij),
+            ("Docker", dialog.backend == BackendType::Docker),
+        ];
+
+        if dialog.feature_flags.enable_kubernetes_backend {
+            options.push(("Kubernetes", dialog.backend == BackendType::Kubernetes));
+        }
+
+        options.push(("Sprites", dialog.backend == BackendType::Sprites));
+
+        #[cfg(target_os = "macos")]
+        options.push((
+            "Apple Container",
+            dialog.backend == BackendType::AppleContainer,
+        ));
+
+        options
+    };
+
     render_radio_field(
         frame,
         "Backend",
-        &[
-            ("Zellij", dialog.backend == BackendType::Zellij),
-            ("Docker", dialog.backend == BackendType::Docker),
-            ("Kubernetes", dialog.backend == BackendType::Kubernetes),
-            ("Sprites", dialog.backend == BackendType::Sprites),
-        ],
+        &backend_options,
         dialog.focus == CreateDialogFocus::Backend,
         inner[backend_idx],
     );
