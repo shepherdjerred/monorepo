@@ -18,6 +18,20 @@ type SessionCardProps = {
   onDelete: (session: Session) => void;
 }
 
+// Helper function to map git status codes to readable labels
+function getStatusLabel(status: string): string {
+  // Git status --porcelain format uses 2-char codes
+  const code = status.trim();
+  if (code.startsWith('M')) return 'Modified';
+  if (code.startsWith('A')) return 'Added';
+  if (code.startsWith('D')) return 'Deleted';
+  if (code.startsWith('R')) return 'Renamed';
+  if (code.startsWith('C')) return 'Copied';
+  if (code.startsWith('U')) return 'Unmerged';
+  if (code.startsWith('?')) return 'Untracked';
+  return 'Changed';
+}
+
 function shouldSpanWide(session: Session): boolean {
   return (
     session.status === SessionStatus.Running ||
@@ -172,12 +186,49 @@ export function SessionCard({ session, onAttach, onEdit, onArchive, onUnarchive,
 
           {/* Working Tree Dirty Status */}
           {session.worktree_dirty && (
-            <div className="flex items-center gap-2 p-2 bg-orange-500/10 border-l-4 border-orange-500">
-              <Edit className="w-3.5 h-3.5 text-orange-500" />
-              <span className="text-sm font-mono font-semibold text-orange-500">
-                Uncommitted changes
-              </span>
-            </div>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center gap-2 p-2 bg-orange-500/10 border-l-4 border-orange-500 cursor-help">
+                  <Edit className="w-3.5 h-3.5 text-orange-500" />
+                  <span className="text-sm font-mono font-semibold text-orange-500">
+                    Uncommitted changes
+                  </span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-md">
+                {session.worktree_changed_files && session.worktree_changed_files.length > 0 ? (
+                  <div className="space-y-2">
+                    {(() => {
+                      // Group files by status
+                      const grouped = session.worktree_changed_files.reduce((acc, file) => {
+                        const statusKey = getStatusLabel(file.status);
+                        if (!acc[statusKey]) acc[statusKey] = [];
+                        acc[statusKey].push(file.path);
+                        return acc;
+                      }, {} as Record<string, string[]>);
+
+                      return Object.entries(grouped).map(([status, files]) => (
+                        <div key={status}>
+                          <div className="font-semibold text-xs mb-1">{status}:</div>
+                          <div className="font-mono text-xs pl-2 space-y-0.5">
+                            {files.slice(0, 5).map((file) => (
+                              <div key={file} className="truncate max-w-xs">{file}</div>
+                            ))}
+                            {files.length > 5 && (
+                              <div className="text-muted-foreground italic">
+                                ...and {files.length - 5} more
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ));
+                    })()}
+                  </div>
+                ) : (
+                  <div>Files have uncommitted changes</div>
+                )}
+              </TooltipContent>
+            </Tooltip>
           )}
         </div>
 
