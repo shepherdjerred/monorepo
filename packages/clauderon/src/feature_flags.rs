@@ -210,6 +210,8 @@ struct ConfigFile {
 
 /// Parse boolean from environment variable
 /// Supports: true/false, 1/0, yes/no, on/off (case insensitive)
+/// Note: Kept for test coverage of parse_env_bool_not_set
+#[allow(dead_code)]
 fn parse_env_bool(key: &str) -> bool {
     std::env::var(key)
         .ok()
