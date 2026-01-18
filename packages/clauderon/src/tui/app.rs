@@ -252,7 +252,7 @@ pub struct DirectoryPickerState {
     matcher: nucleo_matcher::Matcher,
 }
 
-/// Create dialog state
+/// Create dialog state for managing session creation UI.
 #[derive(Debug, Clone)]
 pub struct CreateDialogState {
     pub prompt: String,
