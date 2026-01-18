@@ -318,6 +318,7 @@ mod tests {
             enable_auto_reconcile: false,
             enable_proxy_port_reuse: true,
             enable_usage_tracking: true,
+            enable_experimental_models: false,
         };
 
         // Merge with defaults - should not change anything
@@ -412,10 +413,14 @@ mod tests {
 
     #[test]
     fn test_experimental_models_env_override() {
-        std::env::set_var("CLAUDERON_FEATURE_ENABLE_EXPERIMENTAL_MODELS", "true");
+        unsafe {
+            std::env::set_var("CLAUDERON_FEATURE_ENABLE_EXPERIMENTAL_MODELS", "true");
+        }
         let flags = FeatureFlags::load(None).expect("Failed to load flags");
         assert!(flags.enable_experimental_models);
-        std::env::remove_var("CLAUDERON_FEATURE_ENABLE_EXPERIMENTAL_MODELS");
+        unsafe {
+            std::env::remove_var("CLAUDERON_FEATURE_ENABLE_EXPERIMENTAL_MODELS");
+        }
     }
 
     #[test]

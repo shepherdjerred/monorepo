@@ -54,9 +54,19 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
 
   // Fetch feature flags on mount
   useEffect(() => {
-    // TODO: This requires a new API endpoint to expose feature flags
-    // For now, default to disabled
-    setFeatureFlags({ enable_experimental_models: false });
+    const fetchFlags = async () => {
+      try {
+        const response = await fetch('/api/feature-flags');
+        const data = await response.json();
+        setFeatureFlags(data.flags);
+      } catch (error) {
+        console.error('Failed to fetch feature flags:', error);
+        // Default to disabled if fetch fails
+        setFeatureFlags({ enable_experimental_models: false });
+      }
+    };
+
+    fetchFlags();
   }, []);
 
   // Auto-check dangerous_skip_checks for Docker and Kubernetes, uncheck for Zellij
