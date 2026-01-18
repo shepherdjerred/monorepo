@@ -46,6 +46,33 @@ pnpm-lock.yaml
 
 # CocoaPods
 ios/Pods/
+macos/Pods/
+
+# macOS
+macos/DerivedData/
+macos/build/
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+macos/.xcode.env.local
+
+# Windows
+windows/*/obj/
+windows/*/bin/
+windows/*/Generated Files/
+windows/*.vcxproj.user
+windows/*.suo
+windows/*.sln.docstates
+windows/.vs/
+windows/ARM/
+windows/ARM64/
+windows/x64/
+windows/x86/
+windows/BundleArtifacts/
+windows/packages/
+windows/*.appx
+windows/*.msix
+windows/*.pfx
+!windows/ClauderonMobile/ClauderonMobile.pfx
 
 # Temporary files created by Metro
 .metro-health-check*

@@ -123,6 +123,32 @@ ENVIRONMENT:
         /// Can also be enabled via CLAUDERON_DEV=1 environment variable.
         #[arg(long, default_value = "false")]
         dev: bool,
+
+        // Feature Flags
+        /// Enable experimental WebAuthn passwordless authentication
+        /// Can also be set via CLAUDERON_FEATURE_ENABLE_WEBAUTHN_AUTH environment variable
+        #[arg(long)]
+        enable_webauthn_auth: Option<bool>,
+
+        /// Enable AI-powered session metadata generation
+        /// Can also be set via CLAUDERON_FEATURE_ENABLE_AI_METADATA environment variable
+        #[arg(long)]
+        enable_ai_metadata: Option<bool>,
+
+        /// Enable automatic session reconciliation on startup
+        /// Can also be set via CLAUDERON_FEATURE_ENABLE_AUTO_RECONCILE environment variable
+        #[arg(long)]
+        enable_auto_reconcile: Option<bool>,
+
+        /// Enable session proxy port reuse (experimental)
+        /// Can also be set via CLAUDERON_FEATURE_ENABLE_PROXY_PORT_REUSE environment variable
+        #[arg(long)]
+        enable_proxy_port_reuse: Option<bool>,
+
+        /// Enable Claude usage tracking via API
+        /// Can also be set via CLAUDERON_FEATURE_ENABLE_USAGE_TRACKING environment variable
+        #[arg(long)]
+        enable_usage_tracking: Option<bool>,
     },
 
     /// Launch the terminal UI
@@ -490,11 +516,30 @@ async fn main() -> anyhow::Result<()> {
             no_proxy,
             http_port,
             dev,
+            enable_webauthn_auth,
+            enable_ai_metadata,
+            enable_auto_reconcile,
+            enable_proxy_port_reuse,
+            enable_usage_tracking,
         } => {
             tracing::info!("Starting clauderon daemon");
+
+            // Build CLI feature flag overrides
+            let cli_flags = clauderon::feature_flags::CliFeatureFlags {
+                enable_webauthn_auth,
+                enable_ai_metadata,
+                enable_auto_reconcile,
+                enable_proxy_port_reuse,
+                enable_usage_tracking,
+            };
+
+            // Load feature flags with priority: CLI → env → TOML → defaults
+            let flags = clauderon::feature_flags::FeatureFlags::load(Some(cli_flags))?;
+            flags.log_state();
+
             let port = if http_port > 0 { Some(http_port) } else { None };
             let dev_mode = dev || std::env::var("CLAUDERON_DEV").is_ok();
-            api::server::run_daemon_with_http(!no_proxy, port, dev_mode).await?;
+            api::server::run_daemon_with_http(!no_proxy, port, dev_mode, flags).await?;
         }
         Commands::Tui => {
             tracing::info!("Launching TUI");
