@@ -45,6 +45,7 @@ impl Agent for GeminiCodeAgent {
         images: &[String],
         dangerous_skip_checks: bool,
         session_id: Option<&uuid::Uuid>,
+        model: Option<&str>,
     ) -> Vec<String> {
         let mut cmd = vec!["gemini".to_string()];
 
@@ -52,6 +53,12 @@ impl Agent for GeminiCodeAgent {
         if let Some(id) = session_id {
             cmd.push("--session-id".to_string());
             cmd.push(id.to_string());
+        }
+
+        // Add model flag if provided
+        if let Some(model_name) = model {
+            cmd.push("--model".to_string());
+            cmd.push(model_name.to_string());
         }
 
         // Only add flag if dangerous_skip_checks is enabled

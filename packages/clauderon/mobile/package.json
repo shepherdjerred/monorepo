@@ -6,11 +6,12 @@
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "macos": "react-native run-macos",
-    "windows": "react-native run-windows",
+    "windows": "npx @react-native-community/cli run-windows",
     "start": "react-native start",
     "test": "jest",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:windows": "jest --config jest.config.windows.js"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^2.2.0",
@@ -18,36 +19,49 @@
     "@react-navigation/bottom-tabs": "^7.9.0",
     "@react-navigation/native": "^7.1.26",
     "@react-navigation/native-stack": "^7.9.0",
+    "@react-navigation/stack": "^7.6.15",
     "@sentry/react-native": "^7.8.0",
     "react": "19.2.3",
+    "react-macos": "npm:react@19.1.4",
     "react-native": "0.83.1",
+    "react-native-gesture-handler": "^2.30.0",
     "react-native-image-picker": "^7.2.0",
     "react-native-markdown-display": "^7.0.2",
     "react-native-safe-area-context": "^5.6.2",
-    "react-native-syntax-highlighter": "^2.1.0",
-    "react-native-screens": "4.19.0"
+    "react-native-screens": "4.19.0",
+    "react-native-syntax-highlighter": "^2.1.0"
   },
   "devDependencies": {
     "@babel/core": "^7.28.5",
     "@babel/preset-env": "^7.28.5",
     "@babel/runtime": "^7.28.4",
-    "@react-native-community/cli": "^20.0.2",
-    "@react-native-community/cli-platform-android": "^20.0.2",
-    "@react-native-community/cli-platform-ios": "^20.0.2",
-    "@react-native/babel-preset": "^0.83.1",
-    "@react-native/eslint-config": "^0.83.1",
-    "@react-native/metro-config": "^0.83.1",
-    "@react-native/typescript-config": "^0.83.1",
+    "@react-native-community/cli": "^18.0.0",
+    "@react-native-community/cli-platform-android": "^18.0.0",
+    "@react-native-community/cli-platform-ios": "^18.0.0",
+    "@react-native/babel-preset": "0.83.1",
+    "@react-native/eslint-config": "0.83.1",
+    "@react-native/metro-config": "0.83.1",
+    "@react-native/typescript-config": "0.83.1",
     "@types/react": "~19.2.7",
     "@types/react-test-renderer": "^19.1.0",
     "babel-jest": "^30.2.0",
     "eslint": "^9.39.2",
     "jest": "^30.2.0",
     "prettier": "^3.7.4",
+    "react-native-macos": "^0.81.0",
+    "react-native-windows": "^0.81.2",
     "react-test-renderer": "19.2.3",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "@rnx-kit/jest-preset": "^0.1.17"
   },
   "engines": {
     "node": ">=20.19.4"
+  },
+  "react-native-windows": {
+    "init-windows": {
+      "name": "ClauderonMobile",
+      "namespace": "ClauderonMobile",
+      "template": "cpp-app"
+    }
   }
 }

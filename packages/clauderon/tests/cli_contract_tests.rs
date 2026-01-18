@@ -29,6 +29,7 @@ fn test_git_config_env_vars() {
         &clauderon::backends::DockerConfig::default(),
         None,
         None,
+        None, // model
         &[],
     )
     .expect("Failed to build args");
@@ -81,6 +82,7 @@ fn test_git_config_omitted_when_none() {
         &clauderon::backends::DockerConfig::default(),
         None,
         None,
+        None, // model
         &[],
     )
     .expect("Failed to build args");
@@ -118,6 +120,7 @@ fn test_docker_run_arg_order() {
         &clauderon::backends::DockerConfig::default(),
         None,
         None,
+        None, // model
         &[],
     )
     .expect("Failed to build args");
@@ -166,6 +169,7 @@ fn test_docker_env_vars() {
         &clauderon::backends::DockerConfig::default(),
         None,
         None,
+        None, // model
         &[],
     )
     .expect("Failed to build args");
@@ -254,6 +258,7 @@ fn test_zellij_action_schema() {
         &[],
         AgentType::ClaudeCode,
         None,
+        None, // model
     );
 
     // Must start with action
@@ -288,6 +293,7 @@ fn test_volume_mount_format() {
         &clauderon::backends::DockerConfig::default(),
         None,
         None,
+        None, // model
         &[],
     )
     .expect("Failed to build args");
@@ -351,6 +357,7 @@ fn test_workspace_mount_destination() {
         &clauderon::backends::DockerConfig::default(),
         None,
         None,
+        None, // model
         &[],
     )
     .expect("Failed to build args");
@@ -396,6 +403,7 @@ fn test_final_command_format() {
         &clauderon::backends::DockerConfig::default(),
         None,
         None,
+        None, // model
         &[],
     )
     .expect("Failed to build args");

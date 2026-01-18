@@ -1,0 +1,66 @@
+---
+title: clauderon
+description: Session management for AI coding agents
+template: splash
+hero:
+  tagline: Run AI coding agents in isolated, secure environments with zero-credential architectures
+  image:
+    file: ../../assets/hero.svg
+  actions:
+    - text: Get Started
+      link: /getting-started/introduction/
+      icon: right-arrow
+    - text: View on GitHub
+      link: https://github.com/shepherdjerred/monorepo/tree/main/packages/clauderon
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from "@astrojs/starlight/components";
+
+## Why clauderon?
+
+<CardGrid stagger>
+  <Card title="Zero-Credential Security" icon="shield">
+    AI agents run with placeholder credentials. Real tokens are injected by the
+    proxy at request time, keeping secrets out of agent memory.
+  </Card>
+
+  <Card title="Multiple Backends" icon="rocket">
+    Run sessions in Docker containers or Zellij terminal sessions. Choose the
+    isolation level that fits your workflow.
+  </Card>
+
+  <Card title="TUI Interface" icon="laptop">
+    Full terminal user interface for creating, managing, and interacting with
+    agent sessions.
+  </Card>
+
+  <Card title="Git Integration" icon="github">
+    Automatic git configuration injection. Sessions inherit your git identity
+    for seamless version control.
+  </Card>
+</CardGrid>
+
+## Quick Install
+
+```bash
+# Download the latest release
+curl -fsSL https://github.com/shepherdjerred/monorepo/releases/latest/download/clauderon-linux-x86_64 -o clauderon
+chmod +x clauderon
+sudo mv clauderon /usr/local/bin/
+
+# Start a session
+clauderon
+```
+
+## Architecture
+
+clauderon uses an HTTP proxy with TLS interception to securely manage credentials:
+
+1. **Session Creation**: Create isolated environments (Docker/Zellij)
+2. **Proxy Configuration**: Sessions route traffic through clauderon's proxy
+3. **Credential Injection**: OAuth tokens injected at request time
+4. **Request Filtering**: Malicious requests blocked before reaching APIs
+
+This architecture ensures AI agents never have direct access to your credentials.

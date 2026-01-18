@@ -111,6 +111,7 @@ async fn test_create_session_zellij_success() {
             "Test prompt".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
+            None, // model
             true,
             false,                 // print_mode
             true,                  // plan_mode
@@ -160,6 +161,7 @@ async fn test_create_session_docker_success() {
             "Zellij prompt".to_string(),
             BackendType::Zellij, // Changed from Docker to avoid proxy requirement
             AgentType::ClaudeCode,
+            None, // model
             false,
             false,                 // print_mode
             true,                  // plan_mode
@@ -202,6 +204,7 @@ async fn test_create_session_git_fails() {
             "Test prompt".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
+            None, // model
             true,
             false,                 // print_mode
             true,                  // plan_mode
@@ -242,6 +245,7 @@ async fn test_create_session_backend_fails() {
             "Test prompt".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
+            None, // model
             true,
             false,                 // print_mode
             true,                  // plan_mode
@@ -282,6 +286,7 @@ async fn test_get_session_by_name() {
             "prompt".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
+            None, // model
             true,
             false,                 // print_mode
             true,                  // plan_mode
@@ -314,6 +319,7 @@ async fn test_get_session_by_uuid() {
             "prompt".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
+            None, // model
             true,
             false,                 // print_mode
             true,                  // plan_mode
@@ -356,6 +362,7 @@ async fn test_delete_session_success() {
             "prompt".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
+            None, // model
             true,
             false,                 // print_mode
             true,                  // plan_mode
@@ -411,6 +418,7 @@ async fn test_archive_session_success() {
             "prompt".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
+            None, // model
             true,
             false,                 // print_mode
             true,                  // plan_mode
@@ -458,6 +466,7 @@ async fn test_unarchive_session_success() {
             "prompt".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
+            None, // model
             true,
             false,                 // print_mode
             true,                  // plan_mode
@@ -497,6 +506,7 @@ async fn test_unarchive_session_not_archived() {
             "prompt".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
+            None, // model
             true,
             false,                 // print_mode
             true,                  // plan_mode
@@ -540,6 +550,7 @@ async fn test_get_attach_command_zellij() {
             "prompt".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
+            None, // model
             true,
             false,                 // print_mode
             true,                  // plan_mode
@@ -573,6 +584,7 @@ async fn test_get_attach_command_docker() {
             "prompt".to_string(),
             BackendType::Zellij, // Changed from Docker to avoid proxy requirement
             AgentType::ClaudeCode,
+            None, // model
             true,
             false,                 // print_mode
             true,                  // plan_mode
@@ -615,6 +627,7 @@ async fn test_reconcile_healthy_session() {
             "prompt".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
+            None, // model
             true,
             false,                 // print_mode
             true,                  // plan_mode
@@ -650,6 +663,7 @@ async fn test_reconcile_missing_backend() {
             "prompt".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
+            None, // model
             true,
             false,                 // print_mode
             true,                  // plan_mode
@@ -697,6 +711,7 @@ async fn test_list_sessions_multiple() {
             "prompt 1".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
+            None, // model
             true,
             false,                 // print_mode
             true,                  // plan_mode
@@ -718,6 +733,7 @@ async fn test_list_sessions_multiple() {
             "prompt 2".to_string(),
             BackendType::Zellij, // Changed from Docker to avoid proxy requirement
             AgentType::ClaudeCode,
+            None, // model
             true,
             false,                 // print_mode
             true,                  // plan_mode
@@ -739,6 +755,7 @@ async fn test_list_sessions_multiple() {
             "prompt 3".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
+            None, // model
             true,
             false,                 // print_mode
             true,                  // plan_mode
@@ -771,6 +788,7 @@ async fn test_update_metadata_success() {
             "prompt".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
+            None, // model
             true,
             false,                 // print_mode
             true,                  // plan_mode
@@ -816,6 +834,7 @@ async fn test_update_metadata_by_uuid() {
             "prompt".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
+            None, // model
             true,
             false,                 // print_mode
             true,                  // plan_mode
@@ -857,6 +876,7 @@ async fn test_update_metadata_partial() {
             "prompt".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
+            None, // model
             true,
             false,                 // print_mode
             true,                  // plan_mode
@@ -923,6 +943,7 @@ async fn test_session_lifecycle() {
             "prompt".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
+            None, // model
             true,
             false,                 // print_mode
             true,                  // plan_mode

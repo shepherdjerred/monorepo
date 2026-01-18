@@ -1,14 +1,15 @@
-import { useState, useEffect } from "react";
-import type { CreateSessionRequest, BackendType, AccessMode, StorageClassInfo, CreateRepositoryInput } from "@clauderon/client";
+import { useState, useEffect, useMemo } from "react";
+import type { CreateSessionRequest, BackendType, AccessMode, StorageClassInfo, CreateRepositoryInput, SessionModel, ClaudeModel, CodexModel, GeminiModel } from "@clauderon/client";
 import { AgentType } from "@clauderon/shared";
 import { useSessionContext } from "../contexts/SessionContext";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { X, Plus, Trash2, Star } from "lucide-react";
+import { X, Check, AlertCircle, Plus, Trash2, Star } from "lucide-react";
 import { RepositoryPathSelector } from "./RepositoryPathSelector";
 import { ProviderIcon } from "./ProviderIcon";
 import { toast } from "sonner";
+import { AGENT_CAPABILITIES } from "@/lib/agent-features";
 
 type CreateSessionDialogProps = {
   onClose: () => void;
@@ -38,6 +39,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
     initial_prompt: "",
     backend: "Docker" as BackendType,
     agent: AgentType.ClaudeCode,
+    model: undefined as SessionModel | undefined,
     access_mode: "ReadWrite" as AccessMode,
     plan_mode: true,
     dangerous_skip_checks: true, // Docker/Kubernetes default
@@ -84,6 +86,48 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
       setFormData(prev => ({ ...prev, storage_class: "" }));
     }
   }, [formData.backend, client]);
+
+  // Reset model when agent changes
+  useEffect(() => {
+    setFormData(prev => ({ ...prev, model: undefined }));
+  }, [formData.agent]);
+
+  // Compute available models based on selected agent
+  const availableModels = useMemo(() => {
+    switch (formData.agent) {
+      case AgentType.ClaudeCode:
+        return [
+          { value: { type: "Claude" as const, content: "Sonnet4_5" as ClaudeModel }, label: "Sonnet 4.5 (Default - Balanced)" },
+          { value: { type: "Claude" as const, content: "Opus4_5" as ClaudeModel }, label: "Opus 4.5 (Most Capable)" },
+          { value: { type: "Claude" as const, content: "Haiku4_5" as ClaudeModel }, label: "Haiku 4.5 (Fastest)" },
+          { value: { type: "Claude" as const, content: "Opus4_1" as ClaudeModel }, label: "Opus 4.1 (Agentic)" },
+          { value: { type: "Claude" as const, content: "Opus4" as ClaudeModel }, label: "Opus 4" },
+          { value: { type: "Claude" as const, content: "Sonnet4" as ClaudeModel }, label: "Sonnet 4" },
+        ];
+      case AgentType.Codex:
+        return [
+          { value: { type: "Codex" as const, content: "Gpt5_2Codex" as CodexModel }, label: "GPT-5.2-Codex (Default - Best for Code)" },
+          { value: { type: "Codex" as const, content: "Gpt5_2" as CodexModel }, label: "GPT-5.2" },
+          { value: { type: "Codex" as const, content: "Gpt5_2Instant" as CodexModel }, label: "GPT-5.2 Instant (Fast)" },
+          { value: { type: "Codex" as const, content: "Gpt5_2Thinking" as CodexModel }, label: "GPT-5.2 Thinking (Reasoning)" },
+          { value: { type: "Codex" as const, content: "Gpt5_2Pro" as CodexModel }, label: "GPT-5.2 Pro (Premium)" },
+          { value: { type: "Codex" as const, content: "Gpt5_1" as CodexModel }, label: "GPT-5.1" },
+          { value: { type: "Codex" as const, content: "Gpt5_1Instant" as CodexModel }, label: "GPT-5.1 Instant" },
+          { value: { type: "Codex" as const, content: "Gpt5_1Thinking" as CodexModel }, label: "GPT-5.1 Thinking" },
+          { value: { type: "Codex" as const, content: "Gpt4_1" as CodexModel }, label: "GPT-4.1 (Coding Specialist)" },
+          { value: { type: "Codex" as const, content: "O3Mini" as CodexModel }, label: "o3-mini (Small Reasoning)" },
+        ];
+      case AgentType.Gemini:
+        return [
+          { value: { type: "Gemini" as const, content: "Gemini3Pro" as GeminiModel }, label: "Gemini 3 Pro (Default - 1M Context)" },
+          { value: { type: "Gemini" as const, content: "Gemini3Flash" as GeminiModel }, label: "Gemini 3 Flash (Fast)" },
+          { value: { type: "Gemini" as const, content: "Gemini2_5Pro" as GeminiModel }, label: "Gemini 2.5 Pro" },
+          { value: { type: "Gemini" as const, content: "Gemini2_0Flash" as GeminiModel }, label: "Gemini 2.0 Flash" },
+        ];
+      default:
+        return [];
+    }
+  }, [formData.agent]);
 
   // Auto-generate mount name from repo path
   const generateMountName = (repoPath: string): string => {
@@ -248,6 +292,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
         initial_prompt: formData.initial_prompt,
         backend: formData.backend,
         agent: formData.agent,
+        ...(formData.model && { model: formData.model }),
         dangerous_skip_checks: formData.dangerous_skip_checks,
         print_mode: false,
         plan_mode: formData.plan_mode,
@@ -508,6 +553,28 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="model" className="font-semibold">
+                Model <span className="text-xs text-muted-foreground">(optional)</span>
+              </Label>
+              <select
+                id="model"
+                value={formData.model ? JSON.stringify(formData.model) : ""}
+                onChange={(e) => {
+                  const value = e.target.value ? JSON.parse(e.target.value) : undefined;
+                  setFormData({ ...formData, model: value });
+                }}
+                className="cursor-pointer flex h-10 w-full rounded-md border-2 border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <option value="">Default (CLI default)</option>
+                {availableModels.map((opt, i) => (
+                  <option key={i} value={JSON.stringify(opt.value)}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="access_mode" className="font-semibold">Access Mode</Label>
               <select
                 id="access_mode"
@@ -525,6 +592,38 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
               </select>
             </div>
           </div>
+
+          {/* Agent Capabilities Info */}
+          {formData.agent && AGENT_CAPABILITIES[formData.agent] && (
+            <div className="mt-2 p-3 border-2 text-sm" style={{
+              backgroundColor: 'hsl(220, 15%, 98%)',
+              borderColor: 'hsl(220, 85%, 65%)',
+              color: 'hsl(220, 85%, 20%)'
+            }}>
+              <p className="font-semibold font-mono mb-2">{AGENT_CAPABILITIES[formData.agent].displayName} Capabilities:</p>
+              <ul className="space-y-1.5 pl-1">
+                {AGENT_CAPABILITIES[formData.agent].features.map((feature, idx) => (
+                  <li key={idx} className="flex items-start gap-2">
+                    {feature.supported ? (
+                      <Check className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                    ) : (
+                      <AlertCircle className="h-4 w-4 text-yellow-600 mt-0.5 flex-shrink-0" />
+                    )}
+                    <div className="flex-1">
+                      <span className={feature.supported ? "text-green-900" : "text-yellow-900"}>
+                        {feature.name}
+                      </span>
+                      {feature.note && (
+                        <span className="text-xs block text-muted-foreground mt-0.5">
+                          {feature.note}
+                        </span>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {formData.backend === "Kubernetes" && (
             <div className="mt-2 p-3 border-2 text-sm font-mono" style={{

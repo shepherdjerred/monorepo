@@ -98,6 +98,52 @@ export class ClauderonClient {
   }
 
   /**
+   * Unarchive a session
+   */
+  async unarchiveSession(id: string): Promise<void> {
+    await this.request(
+      "POST",
+      `/api/sessions/${encodeURIComponent(id)}/unarchive`
+    );
+  }
+
+  /**
+   * Update session metadata (title and/or description)
+   */
+  async updateSessionMetadata(
+    id: string,
+    title?: string,
+    description?: string
+  ): Promise<void> {
+    await this.request(
+      "POST",
+      `/api/sessions/${encodeURIComponent(id)}/metadata`,
+      { title, description }
+    );
+  }
+
+  /**
+   * Regenerate session metadata using AI
+   */
+  async regenerateMetadata(id: string): Promise<Session> {
+    const response = await this.request<{ session: Session }>(
+      "POST",
+      `/api/sessions/${encodeURIComponent(id)}/regenerate-metadata`
+    );
+    return response.session;
+  }
+
+  /**
+   * Refresh a Docker session (pull latest image and recreate container)
+   */
+  async refreshSession(id: string): Promise<void> {
+    await this.request(
+      "POST",
+      `/api/sessions/${encodeURIComponent(id)}/refresh`
+    );
+  }
+
+  /**
    * Get recent repositories
    */
   async getRecentRepos(): Promise<RecentRepoDto[]> {
@@ -189,8 +235,14 @@ export class ClauderonClient {
     const formData = new FormData();
 
     // React Native FormData expects an object with uri, type, and name
+    // iOS and macOS need "file://" prefix removed, Android and Windows use as-is
+    const normalizedUri =
+      Platform.OS === "ios" || Platform.OS === "macos"
+        ? imageUri.replace("file://", "")
+        : imageUri;
+
     formData.append("file", {
-      uri: Platform.OS === "ios" ? imageUri.replace("file://", "") : imageUri,
+      uri: normalizedUri,
       type: "image/jpeg", // Default to JPEG, could be improved to detect actual type
       name: fileName,
     } as any);

@@ -39,6 +39,7 @@ impl ZellijBackend {
         images: &[String],
         agent: AgentType,
         session_id: Option<&uuid::Uuid>,
+        model: Option<&str>,
     ) -> Vec<String> {
         use crate::agents::traits::Agent;
         use crate::agents::{ClaudeCodeAgent, CodexAgent, GeminiCodeAgent};
@@ -52,18 +53,21 @@ impl ZellijBackend {
                 images,
                 dangerous_skip_checks,
                 session_id,
+                model,
             ),
             AgentType::Codex => CodexAgent::new().start_command(
                 &escaped_prompt,
                 images,
                 dangerous_skip_checks,
                 session_id,
+                model,
             ),
             AgentType::Gemini => GeminiCodeAgent::new().start_command(
                 &escaped_prompt,
                 images,
                 dangerous_skip_checks,
                 session_id,
+                model,
             ),
         };
 
@@ -162,6 +166,7 @@ impl ExecutionBackend for ZellijBackend {
             &options.images,
             options.agent,
             options.session_id.as_ref(),
+            options.model.as_deref(),
         );
         let output = Command::new("zellij")
             .args(&pane_args[..])
@@ -278,6 +283,7 @@ impl ZellijBackend {
             initial_prompt,
             super::traits::CreateOptions {
                 agent: AgentType::ClaudeCode,
+                model: None, // Use default model
                 print_mode: false,
                 plan_mode: true, // Default to plan mode
                 session_proxy_port: None,
@@ -339,6 +345,7 @@ mod tests {
             &[],
             AgentType::ClaudeCode,
             None,
+            None,
         );
 
         assert!(
@@ -365,6 +372,7 @@ mod tests {
             &[],
             AgentType::ClaudeCode,
             None,
+            None, // model
         );
 
         assert_eq!(args[0], "action", "Expected 'action' as first arg");
@@ -382,6 +390,7 @@ mod tests {
             &[],
             AgentType::ClaudeCode,
             None,
+            None, // model
         );
 
         // Find the command argument (last one containing the prompt)
@@ -415,6 +424,7 @@ mod tests {
             &[],
             AgentType::ClaudeCode,
             None,
+            None, // model
         );
 
         assert!(
@@ -433,6 +443,7 @@ mod tests {
             &[],
             AgentType::ClaudeCode,
             None,
+            None, // model
         );
 
         assert!(
@@ -456,6 +467,7 @@ mod tests {
             &[],
             AgentType::ClaudeCode,
             None,
+            None, // model
         );
 
         let cmd_arg = args.last().unwrap();
@@ -479,6 +491,7 @@ mod tests {
             &images,
             AgentType::ClaudeCode,
             None,
+            None, // model
         );
 
         let cmd_arg = args.last().unwrap();
@@ -504,6 +517,7 @@ mod tests {
             &images,
             AgentType::ClaudeCode,
             None,
+            None, // model
         );
 
         let cmd_arg = args.last().unwrap();
@@ -524,6 +538,7 @@ mod tests {
             &[],
             AgentType::ClaudeCode,
             None,
+            None, // model
         );
 
         let cmd_arg = args.last().unwrap();
