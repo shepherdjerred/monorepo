@@ -48,6 +48,17 @@ export interface BrowseDirectoryResponse {
 	error?: string;
 }
 
+/** Represents a file with uncommitted changes in a git worktree */
+export interface ChangedFile {
+	/**
+	 * Git status code (e.g., "M", "A", "D", "??", "MM")
+	 * First character is index status, second is working tree status
+	 */
+	status: string;
+	/** File path relative to worktree root */
+	path: string;
+}
+
 /** Claude Code usage data for a specific time window */
 export interface UsageWindow {
 	/** Current usage (e.g., number of requests or tokens) */
@@ -90,6 +101,23 @@ export interface ClaudeUsage {
 	error?: UsageError;
 }
 
+/** Input for a single repository in a multi-repo session */
+export interface CreateRepositoryInput {
+	/** Path to the repository (can include subdirectory, e.g., "/path/to/monorepo/packages/foo") */
+	repo_path: string;
+	/**
+	 * Optional mount name for the repository in the container.
+	 * If None, will be auto-generated from repo name.
+	 * Examples: "primary", "shared-lib", "api-service"
+	 */
+	mount_name?: string;
+	/**
+	 * Whether this is the primary repository (determines working directory).
+	 * Exactly one repository must be marked as primary in multi-repo sessions.
+	 */
+	is_primary: boolean;
+}
+
 /** Execution backend type */
 export enum BackendType {
 	/** Zellij terminal multiplexer */
@@ -122,8 +150,13 @@ export enum AccessMode {
 
 /** Request to create a new session */
 export interface CreateSessionRequest {
-	/** Path to the repository */
+	/** Path to the repository (LEGACY: used when repositories is None) */
 	repo_path: string;
+	/**
+	 * Multiple repositories (NEW: when provided, overrides repo_path).
+	 * Maximum 5 repositories per session.
+	 */
+	repositories?: CreateRepositoryInput[];
 	/** Initial prompt for the AI agent */
 	initial_prompt: string;
 	/** Execution backend */
@@ -314,6 +347,22 @@ export enum SessionStatus {
 	Archived = "Archived",
 }
 
+/** Represents a repository mounted in a session */
+export interface SessionRepository {
+	/** Path to the repository root (git root) */
+	repo_path: string;
+	/** Subdirectory path relative to git root (empty if at root) */
+	subdirectory: string;
+	/** Path to the git worktree for this repository */
+	worktree_path: string;
+	/** Git branch name for this repository's worktree */
+	branch_name: string;
+	/** Mount name in the container (e.g., "primary", "shared-lib") */
+	mount_name: string;
+	/** Whether this is the primary repository (determines working directory) */
+	is_primary: boolean;
+}
+
 /** PR check status */
 export enum CheckStatus {
 	/** Checks are pending */
@@ -369,6 +418,11 @@ export interface Session {
 	subdirectory: string;
 	/** Git branch name */
 	branch_name: string;
+	/**
+	 * Multiple repositories mounted in this session (when Some, overrides single-repo fields above)
+	 * None indicates a legacy single-repo session using the fields above
+	 */
+	repositories?: SessionRepository[];
 	/** Backend-specific identifier (zellij session name, docker container id, or kubernetes pod name) */
 	backend_id?: string;
 	/** Initial prompt given to the AI agent */
@@ -387,6 +441,8 @@ export interface Session {
 	merge_conflict: boolean;
 	/** Whether the worktree has uncommitted changes (dirty working tree) */
 	worktree_dirty: boolean;
+	/** List of changed files in the worktree with their git status */
+	worktree_changed_files?: ChangedFile[];
 	/** Access mode for proxy filtering */
 	access_mode: AccessMode;
 	/** Port for session-specific HTTP proxy (container backends: Docker and Apple Container) */
@@ -521,6 +577,7 @@ export type EventType =
 	/** Working tree status changed (dirty/clean) */
 	| { type: "WorktreeStatusChanged", payload: {
 	is_dirty: boolean;
+	changed_files?: ChangedFile[];
 }}
 	/** Session was archived */
 	| { type: "SessionArchived", payload?: undefined }
