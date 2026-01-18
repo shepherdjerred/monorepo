@@ -183,7 +183,7 @@ impl KubernetesBackend {
 
             classes.push(StorageClassInfo {
                 name,
-                provisioner: sc.provisioner.unwrap_or_default(),
+                provisioner: sc.provisioner,
                 is_default,
             });
         }

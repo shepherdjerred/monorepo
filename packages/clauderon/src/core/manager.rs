@@ -97,6 +97,8 @@ pub struct SessionManager {
     zellij: Arc<dyn ExecutionBackend>,
     docker: Arc<dyn ExecutionBackend>,
     kubernetes: Arc<dyn ExecutionBackend>,
+    /// Concrete Kubernetes backend for API operations (e.g., listing storage classes)
+    kubernetes_backend: Arc<crate::backends::KubernetesBackend>,
     #[cfg(target_os = "macos")]
     apple_container: Arc<dyn ExecutionBackend>,
     console_manager: Arc<ConsoleManager>,
@@ -132,6 +134,7 @@ impl SessionManager {
         zellij: Arc<dyn ExecutionBackend>,
         docker: Arc<dyn ExecutionBackend>,
         kubernetes: Arc<dyn ExecutionBackend>,
+        kubernetes_backend: Arc<crate::backends::KubernetesBackend>,
         #[cfg(target_os = "macos")] apple_container: Arc<dyn ExecutionBackend>,
     ) -> anyhow::Result<Self> {
         let sessions = store.list_sessions().await?;
@@ -142,6 +145,7 @@ impl SessionManager {
             zellij,
             docker,
             kubernetes,
+            kubernetes_backend,
             #[cfg(target_os = "macos")]
             apple_container,
             console_manager: Arc::new(ConsoleManager::new()),
@@ -166,14 +170,15 @@ impl SessionManager {
     /// Returns an error if the store cannot be read or Kubernetes client fails.
     pub async fn with_defaults(store: Arc<dyn Store>) -> anyhow::Result<Self> {
         let kubernetes_backend =
-            KubernetesBackend::new(crate::backends::KubernetesConfig::load_or_default()).await?;
+            Arc::new(KubernetesBackend::new(crate::backends::KubernetesConfig::load_or_default()).await?);
 
         Self::new(
             store,
             Arc::new(GitBackend::new()),
             Arc::new(ZellijBackend::new()),
             Arc::new(DockerBackend::new()),
-            Arc::new(kubernetes_backend),
+            kubernetes_backend.clone(),
+            kubernetes_backend,
             #[cfg(target_os = "macos")]
             Arc::new(AppleContainerBackend::new()),
         )
@@ -192,14 +197,15 @@ impl SessionManager {
         docker: DockerBackend,
     ) -> anyhow::Result<Self> {
         let kubernetes_backend =
-            KubernetesBackend::new(crate::backends::KubernetesConfig::load_or_default()).await?;
+            Arc::new(KubernetesBackend::new(crate::backends::KubernetesConfig::load_or_default()).await?);
 
         Self::new(
             store,
             Arc::new(GitBackend::new()),
             Arc::new(ZellijBackend::new()),
             Arc::new(docker),
-            Arc::new(kubernetes_backend),
+            kubernetes_backend.clone(),
+            kubernetes_backend,
             #[cfg(target_os = "macos")]
             Arc::new(AppleContainerBackend::new()),
         )
@@ -240,7 +246,7 @@ impl SessionManager {
     /// Returns the Kubernetes backend for API operations like listing storage classes.
     #[must_use]
     pub fn kubernetes_backend(&self) -> &crate::backends::KubernetesBackend {
-        &self.kubernetes
+        &self.kubernetes_backend
     }
 
     /// List all sessions
@@ -2016,6 +2022,7 @@ impl SessionManager {
                 container_image: None,
                 container_resources: None,
                 repositories: vec![], // Legacy single-repo mode (refresh operation)
+                storage_class_override: None,
             };
 
             let new_backend_id = self
@@ -2352,6 +2359,7 @@ impl SessionManager {
             container_image: None,
             container_resources: None,
             repositories: vec![], // Legacy single-repo mode (recreation)
+            storage_class_override: None,
         };
 
         // Recreate container
