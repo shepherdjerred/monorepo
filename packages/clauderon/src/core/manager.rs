@@ -118,6 +118,8 @@ pub struct SessionManager {
     http_port: Option<u16>,
     /// Cache for Claude Code usage data
     usage_cache: Arc<RwLock<UsageCache>>,
+    /// Feature flags for controlling behavior
+    feature_flags: Arc<crate::feature_flags::FeatureFlags>,
 }
 
 impl SessionManager {
@@ -138,6 +140,7 @@ impl SessionManager {
         kubernetes_backend: Option<Arc<crate::backends::KubernetesBackend>>,
         #[cfg(target_os = "macos")] apple_container: Arc<dyn ExecutionBackend>,
         sprites: Arc<dyn ExecutionBackend>,
+        feature_flags: Arc<crate::feature_flags::FeatureFlags>,
     ) -> anyhow::Result<Self> {
         let sessions = store.list_sessions().await?;
 
@@ -160,6 +163,7 @@ impl SessionManager {
             max_sessions: 15,
             http_port: None,
             usage_cache: Arc::new(RwLock::new(UsageCache::new())),
+            feature_flags,
         })
     }
 
@@ -171,7 +175,10 @@ impl SessionManager {
     /// # Errors
     ///
     /// Returns an error if the store cannot be read or Kubernetes client fails.
-    pub async fn with_defaults(store: Arc<dyn Store>) -> anyhow::Result<Self> {
+    pub async fn with_defaults(
+        store: Arc<dyn Store>,
+        feature_flags: Arc<crate::feature_flags::FeatureFlags>,
+    ) -> anyhow::Result<Self> {
         let kubernetes_backend = Arc::new(
             KubernetesBackend::new(crate::backends::KubernetesConfig::load_or_default()).await?,
         );
@@ -186,6 +193,7 @@ impl SessionManager {
             #[cfg(target_os = "macos")]
             Arc::new(AppleContainerBackend::new()),
             Arc::new(crate::backends::SpritesBackend::new()),
+            feature_flags,
         )
         .await
     }
@@ -200,6 +208,7 @@ impl SessionManager {
     pub async fn with_docker_backend(
         store: Arc<dyn Store>,
         docker: DockerBackend,
+        feature_flags: Arc<crate::feature_flags::FeatureFlags>,
     ) -> anyhow::Result<Self> {
         let kubernetes_backend = Arc::new(
             KubernetesBackend::new(crate::backends::KubernetesConfig::load_or_default()).await?,
@@ -215,6 +224,7 @@ impl SessionManager {
             #[cfg(target_os = "macos")]
             Arc::new(AppleContainerBackend::new()),
             Arc::new(SpritesBackend::new()),
+            feature_flags,
         )
         .await
     }
@@ -241,6 +251,21 @@ impl SessionManager {
     /// across VM/network boundaries).
     pub fn set_http_port(&mut self, port: u16) {
         self.http_port = Some(port);
+    }
+
+    /// Validate that the requested backend is enabled via feature flags
+    fn validate_backend_enabled(&self, backend: BackendType) -> anyhow::Result<()> {
+        if backend == BackendType::Kubernetes && !self.feature_flags.enable_kubernetes_backend {
+            anyhow::bail!(
+                "Kubernetes backend is not enabled. To enable, set environment variable:\n  \
+                CLAUDERON_FEATURE_ENABLE_KUBERNETES_BACKEND=true\n\
+                Or add to ~/.clauderon/config.toml:\n  \
+                [feature_flags]\n  \
+                enable_kubernetes_backend = true"
+            );
+        }
+
+        Ok(())
     }
 
     #[must_use]
@@ -361,6 +386,9 @@ impl SessionManager {
         memory_limit: Option<String>,
         storage_class: Option<String>,
     ) -> anyhow::Result<Uuid> {
+        // Validate backend is enabled
+        self.validate_backend_enabled(backend)?;
+
         // Validate session count limit
         let sessions_guard = self.sessions.read().await;
         let active_count = sessions_guard
@@ -1157,6 +1185,9 @@ impl SessionManager {
         memory_limit: Option<String>,
         storage_class: Option<String>,
     ) -> anyhow::Result<(Session, Option<Vec<String>>)> {
+        // Validate backend is enabled
+        self.validate_backend_enabled(backend)?;
+
         // Multi-repository sessions are not supported in synchronous mode (used for print mode)
         // Use start_session_creation() for multi-repo support
         if repositories.is_some() && !repositories.as_ref().unwrap().is_empty() {
