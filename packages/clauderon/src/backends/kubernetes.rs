@@ -241,15 +241,23 @@ impl KubernetesBackend {
 
         // Create cargo cache PVC if it doesn't exist
         if pvcs.get("clauderon-cargo-cache").await.is_err() {
-            self.create_shared_pvc("clauderon-cargo-cache", &self.config.cargo_cache_size, options)
-                .await?;
+            self.create_shared_pvc(
+                "clauderon-cargo-cache",
+                &self.config.cargo_cache_size,
+                options,
+            )
+            .await?;
             tracing::info!("Created shared cargo cache PVC");
         }
 
         // Create sccache PVC if it doesn't exist
         if pvcs.get("clauderon-sccache").await.is_err() {
-            self.create_shared_pvc("clauderon-sccache", &self.config.sccache_cache_size, options)
-                .await?;
+            self.create_shared_pvc(
+                "clauderon-sccache",
+                &self.config.sccache_cache_size,
+                options,
+            )
+            .await?;
             tracing::info!("Created shared sccache PVC");
         }
 
