@@ -1,6 +1,8 @@
 import React from "react";
+import { Platform } from "react-native";
 import { NavigationContainer, DefaultTheme, DarkTheme, type Theme } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { createStackNavigator } from "@react-navigation/stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import type { RootStackParamList, MainTabParamList } from "../types/navigation";
 import { SessionListScreen } from "../screens/SessionListScreen";
@@ -11,7 +13,11 @@ import { EditSessionScreen } from "../screens/EditSessionScreen";
 import { StatusScreen } from "../screens/StatusScreen";
 import { useTheme } from "../contexts/ThemeContext";
 
-const Stack = createNativeStackNavigator<RootStackParamList>();
+// Use JS-based stack navigator on macOS (react-native-screens doesn't support macOS)
+// Use native stack navigator on other platforms for better performance
+const Stack = Platform.OS === "macos"
+  ? createStackNavigator<RootStackParamList>()
+  : createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 function MainTabs() {
