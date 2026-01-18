@@ -29,7 +29,32 @@ pub fn render(frame: &mut Frame, app: &App) {
     // Render modal dialogs on top
     match app.mode {
         AppMode::CreateDialog => {
-            let dialog_area = centered_rect(60, 70, frame.area());
+            // Calculate required height based on prompt content
+            let prompt_lines = app.create_dialog.prompt.lines().count().max(1);
+            let prompt_height = prompt_lines.clamp(5, usize::MAX); // Min 5 lines, no max
+            let images_height = if app.create_dialog.images.is_empty() {
+                0
+            } else {
+                app.create_dialog.images.len().min(3) + 2 // Show up to 3 images, +2 for borders
+            };
+
+            // Calculate total required height:
+            // - Prompt field: prompt_height + 2 (borders)
+            // - Images field: images_height
+            // - Repo path: 3
+            // - Backend: 2
+            // - Agent: 2
+            // - Access mode: 2
+            // - Skip checks: 2
+            // - Plan mode: 2
+            // - Spacer: 1
+            // - Buttons: 1
+            // - Outer margins: 2
+            // - Outer border: 2
+            let required_height =
+                (prompt_height + 2 + images_height + 3 + 2 + 2 + 2 + 2 + 2 + 1 + 1 + 2 + 2) as u16;
+
+            let dialog_area = centered_rect_with_height(60, required_height, frame.area());
             frame.render_widget(Clear, dialog_area);
             create_dialog::render(frame, app, dialog_area);
         }
@@ -319,6 +344,31 @@ fn centered_rect(percent_x: u16, percent_y: u16, area: Rect) -> Rect {
             Constraint::Percentage((100 - percent_y) / 2),
             Constraint::Percentage(percent_y),
             Constraint::Percentage((100 - percent_y) / 2),
+        ])
+        .split(area);
+
+    Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Percentage((100 - percent_x) / 2),
+            Constraint::Percentage(percent_x),
+            Constraint::Percentage((100 - percent_x) / 2),
+        ])
+        .split(popup_layout[1])[1]
+}
+
+/// Create a centered rectangle with percentage width and specific height
+fn centered_rect_with_height(percent_x: u16, height: u16, area: Rect) -> Rect {
+    // Clamp height to available area
+    let actual_height = height.min(area.height.saturating_sub(2));
+    let vertical_margin = area.height.saturating_sub(actual_height) / 2;
+
+    let popup_layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Length(vertical_margin),
+            Constraint::Length(actual_height),
+            Constraint::Length(vertical_margin),
         ])
         .split(area);
 
