@@ -64,11 +64,17 @@ export function MergePrDialog({ isOpen, onClose, onConfirm, session }: MergePrDi
                 <SelectValue placeholder="Select merge method" />
               </SelectTrigger>
               <SelectContent>
-                {session.pr_merge_methods?.map((method) => (
-                  <SelectItem key={method} value={method}>
-                    {method}
-                  </SelectItem>
-                ))}
+                {session.pr_merge_methods && session.pr_merge_methods.length > 0 ? (
+                  session.pr_merge_methods.map((method) => (
+                    <SelectItem key={method} value={method}>
+                      {method}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                    Loading merge methods...
+                  </div>
+                )}
               </SelectContent>
             </Select>
           </div>
