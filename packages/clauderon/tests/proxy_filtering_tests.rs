@@ -510,7 +510,10 @@ async fn test_access_mode_persists_across_restarts() {
             arc
         }
 
-        let feature_flags = Arc::new(clauderon::feature_flags::FeatureFlags::default());
+        let feature_flags = Arc::new(clauderon::feature_flags::FeatureFlags {
+            enable_readonly_mode: true,
+            ..Default::default()
+        });
         let manager = SessionManager::new(
             store,
             to_git_ops(git),
@@ -569,7 +572,10 @@ async fn test_access_mode_persists_across_restarts() {
             arc
         }
 
-        let feature_flags = Arc::new(clauderon::feature_flags::FeatureFlags::default());
+        let feature_flags = Arc::new(clauderon::feature_flags::FeatureFlags {
+            enable_readonly_mode: true,
+            ..Default::default()
+        });
         let manager = SessionManager::new(
             store,
             to_git_ops(git),
