@@ -15,6 +15,7 @@ use std::time::Duration;
 
 use clauderon::backends::{ExecutionBackend, GitOperations, MockExecutionBackend, MockGitBackend};
 use clauderon::core::{AccessMode, AgentType, BackendType, SessionManager, SessionStatus};
+use clauderon::feature_flags::FeatureFlags;
 use clauderon::proxy::{ProxyConfig, ProxyManager};
 use clauderon::store::{SqliteStore, Store};
 use tempfile::TempDir;
@@ -465,7 +466,7 @@ async fn test_access_mode_persists_across_restarts() {
             #[cfg(target_os = "macos")]
             to_exec_backend(apple_container),
             to_exec_backend(sprites),
-            Arc::new(clauderon::feature_flags::FeatureFlags::default()),
+            Arc::new(FeatureFlags::default()),
         )
         .await
         .expect("Failed to create manager");
@@ -528,7 +529,7 @@ async fn test_access_mode_persists_across_restarts() {
             #[cfg(target_os = "macos")]
             to_exec_backend(apple_container),
             to_exec_backend(sprites),
-            Arc::new(clauderon::feature_flags::FeatureFlags::default()),
+            Arc::new(FeatureFlags::default()),
         )
         .await
         .expect("Failed to create manager");
