@@ -30,6 +30,7 @@ pub struct AppState {
     pub event_broadcaster: EventBroadcaster,
     pub auth_state: Option<AuthState>,
     pub console_state: Arc<crate::api::console_state::ConsoleState>,
+    pub feature_flags: Arc<crate::feature_flags::FeatureFlags>,
 }
 
 /// Create the HTTP router with all endpoints (without state)
@@ -68,7 +69,8 @@ pub fn create_router(auth_state: &Option<AuthState>, dev_mode: bool) -> Router<A
         .route("/api/browse-directory", post(browse_directory))
         .route("/api/status", get(get_system_status))
         .route("/api/storage-classes", get(get_storage_classes))
-        .route("/api/credentials", post(update_credential));
+        .route("/api/credentials", post(update_credential))
+        .route("/api/feature-flags", get(get_feature_flags));
 
     // Apply auth middleware to protected routes if authentication is enabled
     if let Some(auth_state) = auth_state {
@@ -255,6 +257,7 @@ async fn create_session(
         .session_manager
         .start_session_creation(
             request.repo_path,
+            request.repositories,
             request.initial_prompt,
             request.backend,
             request.agent,
@@ -854,4 +857,16 @@ async fn receive_hook(
         .await?;
 
     Ok(Json(json!({ "status": "ok" })))
+}
+
+/// Get current feature flags
+async fn get_feature_flags(
+    State(state): State<AppState>,
+) -> Result<Json<crate::api::protocol::FeatureFlagsResponse>, AppError> {
+    let flags = (*state.feature_flags).clone();
+
+    Ok(Json(crate::api::protocol::FeatureFlagsResponse {
+        flags,
+        requires_restart: true,
+    }))
 }

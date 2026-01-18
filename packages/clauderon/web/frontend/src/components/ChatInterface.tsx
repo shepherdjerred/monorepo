@@ -172,7 +172,7 @@ export function ChatInterface({
                   />
                   <button
                     type="button"
-                    onClick={() => setAttachedImages(files => files.filter((_, idx) => idx !== i))}
+                    onClick={() => { setAttachedImages(files => files.filter((_, idx) => idx !== i)); }}
                     className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-5 h-5 text-xs font-bold border-2 border-white hover:bg-red-700"
                   >
                     ✕

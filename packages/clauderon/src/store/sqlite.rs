@@ -1,5 +1,6 @@
 use async_trait::async_trait;
 use chrono::Utc;
+use sqlx::Row;
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePool, SqlitePoolOptions};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
@@ -119,6 +120,10 @@ impl SqliteStore {
 
         if current_version < 11 {
             Self::migrate_to_v11(pool).await?;
+        }
+
+        if current_version < 12 {
+            Self::migrate_to_v12(pool).await?;
         }
 
         Ok(())
@@ -777,6 +782,70 @@ impl SqliteStore {
         tracing::info!("Migration v11 complete");
         Ok(())
     }
+
+    /// Migration v12: Add session_repositories junction table for multi-repo support
+    async fn migrate_to_v12(pool: &SqlitePool) -> anyhow::Result<()> {
+        tracing::info!("Applying migration v12: Multi-repository support");
+
+        // Create session_repositories junction table
+        sqlx::query(
+            r"
+            CREATE TABLE IF NOT EXISTS session_repositories (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                session_id TEXT NOT NULL,
+                repo_path TEXT NOT NULL,
+                subdirectory TEXT NOT NULL DEFAULT '',
+                worktree_path TEXT NOT NULL,
+                branch_name TEXT NOT NULL,
+                mount_name TEXT NOT NULL,
+                is_primary INTEGER NOT NULL DEFAULT 0,
+                display_order INTEGER NOT NULL DEFAULT 0,
+                FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE CASCADE,
+                UNIQUE (session_id, mount_name)
+            )
+            ",
+        )
+        .execute(pool)
+        .await?;
+
+        // Create index on session_id for faster queries
+        sqlx::query(
+            r"
+            CREATE INDEX IF NOT EXISTS idx_session_repositories_session_id
+            ON session_repositories(session_id)
+            ",
+        )
+        .execute(pool)
+        .await?;
+
+        // Migrate existing sessions to junction table
+        // Each existing session gets one entry with is_primary=1 and mount_name='primary'
+        sqlx::query(
+            r"
+            INSERT INTO session_repositories (
+                session_id, repo_path, subdirectory, worktree_path,
+                branch_name, mount_name, is_primary, display_order
+            )
+            SELECT
+                id, repo_path, subdirectory, worktree_path,
+                branch_name, 'primary', 1, 0
+            FROM sessions
+            ",
+        )
+        .execute(pool)
+        .await?;
+
+        // Record migration
+        let now = Utc::now();
+        sqlx::query("INSERT OR REPLACE INTO schema_version (version, applied_at) VALUES (?, ?)")
+            .bind(12)
+            .bind(now.to_rfc3339())
+            .execute(pool)
+            .await?;
+
+        tracing::info!("Migration v12 complete");
+        Ok(())
+    }
 }
 
 #[async_trait]
@@ -789,15 +858,52 @@ impl Store for SqliteStore {
 
         tracing::debug!("Loaded {} session rows from database", rows.len());
 
-        rows.into_iter()
-            .enumerate()
-            .map(|(i, row)| {
-                row.try_into().map_err(|e: anyhow::Error| {
-                    tracing::error!("Failed to parse session row {}: {}", i, e);
-                    e
-                })
-            })
-            .collect()
+        let mut sessions = Vec::new();
+        for (i, row) in rows.into_iter().enumerate() {
+            let mut session: Session = row.try_into().map_err(|e: anyhow::Error| {
+                tracing::error!("Failed to parse session row {}: {}", i, e);
+                e
+            })?;
+
+            // Load repositories from junction table
+            match self.get_session_repositories(session.id).await {
+                Ok(repos) if !repos.is_empty() => {
+                    session.repositories = Some(repos);
+                }
+                Ok(_) => {
+                    // No repositories in junction table, construct from legacy fields
+                    // This handles backward compatibility with sessions created before multi-repo
+                    session.repositories = Some(vec![crate::core::SessionRepository {
+                        repo_path: session.repo_path.clone(),
+                        subdirectory: session.subdirectory.clone(),
+                        worktree_path: session.worktree_path.clone(),
+                        branch_name: session.branch_name.clone(),
+                        mount_name: "primary".to_string(),
+                        is_primary: true,
+                    }]);
+                }
+                Err(e) => {
+                    tracing::warn!(
+                        session_id = %session.id,
+                        error = %e,
+                        "Failed to load repositories for session, using legacy fields"
+                    );
+                    // Fallback to legacy single-repo
+                    session.repositories = Some(vec![crate::core::SessionRepository {
+                        repo_path: session.repo_path.clone(),
+                        subdirectory: session.subdirectory.clone(),
+                        worktree_path: session.worktree_path.clone(),
+                        branch_name: session.branch_name.clone(),
+                        mount_name: "primary".to_string(),
+                        is_primary: true,
+                    }]);
+                }
+            }
+
+            sessions.push(session);
+        }
+
+        Ok(sessions)
     }
 
     #[instrument(skip(self), fields(session_id = %id))]
@@ -808,7 +914,44 @@ impl Store for SqliteStore {
             .await?;
 
         match row {
-            Some(r) => Ok(Some(r.try_into()?)),
+            Some(r) => {
+                let mut session: Session = r.try_into()?;
+
+                // Load repositories from junction table
+                match self.get_session_repositories(session.id).await {
+                    Ok(repos) if !repos.is_empty() => {
+                        session.repositories = Some(repos);
+                    }
+                    Ok(_) => {
+                        // No repositories in junction table, construct from legacy fields
+                        session.repositories = Some(vec![crate::core::SessionRepository {
+                            repo_path: session.repo_path.clone(),
+                            subdirectory: session.subdirectory.clone(),
+                            worktree_path: session.worktree_path.clone(),
+                            branch_name: session.branch_name.clone(),
+                            mount_name: "primary".to_string(),
+                            is_primary: true,
+                        }]);
+                    }
+                    Err(e) => {
+                        tracing::warn!(
+                            session_id = %session.id,
+                            error = %e,
+                            "Failed to load repositories for session, using legacy fields"
+                        );
+                        session.repositories = Some(vec![crate::core::SessionRepository {
+                            repo_path: session.repo_path.clone(),
+                            subdirectory: session.subdirectory.clone(),
+                            worktree_path: session.worktree_path.clone(),
+                            branch_name: session.branch_name.clone(),
+                            mount_name: "primary".to_string(),
+                            is_primary: true,
+                        }]);
+                    }
+                }
+
+                Ok(Some(session))
+            }
             None => Ok(None),
         }
     }
@@ -992,6 +1135,98 @@ impl Store for SqliteStore {
         }
 
         Ok(repos)
+    }
+
+    #[instrument(skip(self))]
+    async fn get_session_repositories(
+        &self,
+        session_id: Uuid,
+    ) -> anyhow::Result<Vec<crate::core::SessionRepository>> {
+        use crate::core::SessionRepository;
+
+        let rows = sqlx::query(
+            r"
+            SELECT repo_path, subdirectory, worktree_path, branch_name, mount_name, is_primary
+            FROM session_repositories
+            WHERE session_id = ?
+            ORDER BY display_order ASC, is_primary DESC
+            ",
+        )
+        .bind(session_id.to_string())
+        .fetch_all(&self.pool)
+        .await?;
+
+        let mut repositories = Vec::new();
+        for row in rows {
+            repositories.push(SessionRepository {
+                repo_path: PathBuf::from(row.try_get::<String, _>("repo_path")?),
+                subdirectory: PathBuf::from(row.try_get::<String, _>("subdirectory")?),
+                worktree_path: PathBuf::from(row.try_get::<String, _>("worktree_path")?),
+                branch_name: row.try_get("branch_name")?,
+                mount_name: row.try_get("mount_name")?,
+                is_primary: row.try_get::<i64, _>("is_primary")? != 0,
+            });
+        }
+
+        tracing::debug!(
+            session_id = %session_id,
+            count = repositories.len(),
+            "Loaded repositories for session"
+        );
+
+        Ok(repositories)
+    }
+
+    #[instrument(skip(self, repositories), fields(session_id = %session_id, count = repositories.len()))]
+    async fn save_session_repositories(
+        &self,
+        session_id: Uuid,
+        repositories: &[crate::core::SessionRepository],
+    ) -> anyhow::Result<()> {
+        // Begin transaction
+        let mut tx = self.pool.begin().await?;
+
+        // Delete existing repositories for this session
+        sqlx::query("DELETE FROM session_repositories WHERE session_id = ?")
+            .bind(session_id.to_string())
+            .execute(&mut *tx)
+            .await?;
+
+        // Insert new repositories
+        for (index, repo) in repositories.iter().enumerate() {
+            #[allow(clippy::cast_possible_wrap)]
+            let display_order = index as i64; // Safe: max 5 repos per session
+            sqlx::query(
+                r"
+                INSERT INTO session_repositories (
+                    session_id, repo_path, subdirectory, worktree_path,
+                    branch_name, mount_name, is_primary, display_order
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                ",
+            )
+            .bind(session_id.to_string())
+            .bind(repo.repo_path.to_string_lossy().to_string())
+            .bind(repo.subdirectory.to_string_lossy().to_string())
+            .bind(repo.worktree_path.to_string_lossy().to_string())
+            .bind(&repo.branch_name)
+            .bind(&repo.mount_name)
+            .bind(i64::from(repo.is_primary))
+            .bind(display_order)
+            .execute(&mut *tx)
+            .await?;
+        }
+
+        // Commit transaction
+        tx.commit().await?;
+
+        tracing::debug!(
+            session_id = %session_id,
+            count = repositories.len(),
+            "Saved repositories for session"
+        );
+
+        Ok(())
     }
 }
 
@@ -1195,6 +1430,7 @@ impl TryFrom<SessionRow> for Session {
             progress: None, // Progress is transient and not persisted to database
             created_at,
             updated_at,
+            repositories: None, // Repositories loaded separately via get_session_repositories
         })
     }
 }
