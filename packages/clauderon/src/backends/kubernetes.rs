@@ -5,10 +5,11 @@ use k8s_openapi::api::core::v1::{
     PersistentVolumeClaimSpec, Pod, PodSecurityContext, PodSpec, ResourceRequirements,
     SecurityContext, Volume, VolumeMount, VolumeResourceRequirements,
 };
+use k8s_openapi::api::storage::v1::StorageClass;
 use k8s_openapi::apimachinery::pkg::api::resource::Quantity;
 use k8s_openapi::apimachinery::pkg::apis::meta::v1::ObjectMeta;
 use kube::Client;
-use kube::api::{Api, DeleteParams, LogParams, PostParams};
+use kube::api::{Api, DeleteParams, ListParams, LogParams, PostParams};
 use std::collections::BTreeMap;
 use std::path::Path;
 use std::time::Duration;
@@ -21,6 +22,17 @@ use super::traits::{CreateOptions, ExecutionBackend};
 use crate::core::AgentType;
 use crate::plugins::PluginDiscovery;
 use crate::proxy::{dummy_auth_json_string, dummy_config_toml};
+
+/// Information about a Kubernetes storage class
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct StorageClassInfo {
+    /// Storage class name
+    pub name: String,
+    /// Provisioner (e.g., "kubernetes.io/aws-ebs")
+    pub provisioner: String,
+    /// Whether this is the default storage class
+    pub is_default: bool,
+}
 
 /// Sanitize git config value to prevent environment variable injection
 ///
@@ -150,6 +162,56 @@ impl KubernetesBackend {
         (name, email)
     }
 
+    /// List available storage classes in the cluster
+    ///
+    /// Returns a list of storage class names and metadata including which one is default.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the Kubernetes API is unreachable or returns an error.
+    pub async fn list_storage_classes(&self) -> anyhow::Result<Vec<StorageClassInfo>> {
+        let storage_classes: Api<StorageClass> = Api::all(self.client.clone());
+
+        let list = storage_classes
+            .list(&ListParams::default())
+            .await
+            .context("Failed to list storage classes from Kubernetes API")?;
+
+        let mut classes = Vec::new();
+        for sc in list.items {
+            let name = sc.metadata.name.unwrap_or_default();
+
+            // Check if this is the default storage class
+            let is_default = sc
+                .metadata
+                .annotations
+                .as_ref()
+                .and_then(|annotations| {
+                    annotations
+                        .get("storageclass.kubernetes.io/is-default-class")
+                        .or_else(|| {
+                            annotations.get("storageclass.beta.kubernetes.io/is-default-class")
+                        })
+                })
+                .is_some_and(|v| v == "true");
+
+            classes.push(StorageClassInfo {
+                name,
+                provisioner: sc.provisioner,
+                is_default,
+            });
+        }
+
+        // Sort: default first, then alphabetically
+        classes.sort_by(|a, b| match (a.is_default, b.is_default) {
+            (true, false) => std::cmp::Ordering::Less,
+            (false, true) => std::cmp::Ordering::Greater,
+            _ => a.name.cmp(&b.name),
+        });
+
+        Ok(classes)
+    }
+
     /// Ensure the namespace and service account exist
     async fn ensure_namespace_exists(&self) -> anyhow::Result<()> {
         let namespaces: Api<Namespace> = Api::all(self.client.clone());
@@ -187,28 +249,37 @@ impl KubernetesBackend {
     }
 
     /// Ensure shared cache PVCs exist (cargo and sccache)
-    async fn ensure_shared_pvcs_exist(&self) -> anyhow::Result<()> {
+    async fn ensure_shared_pvcs_exist(&self, options: &CreateOptions) -> anyhow::Result<()> {
         let pvcs: Api<PersistentVolumeClaim> =
             Api::namespaced(self.client.clone(), &self.config.namespace);
 
         // Create cargo cache PVC if it doesn't exist
         if pvcs.get("clauderon-cargo-cache").await.is_err() {
-            self.create_shared_pvc("clauderon-cargo-cache", &self.config.cargo_cache_size)
-                .await?;
+            self.create_shared_pvc(
+                "clauderon-cargo-cache",
+                &self.config.cargo_cache_size,
+                options,
+            )
+            .await?;
             tracing::info!("Created shared cargo cache PVC");
         }
 
         // Create sccache PVC if it doesn't exist
         if pvcs.get("clauderon-sccache").await.is_err() {
-            self.create_shared_pvc("clauderon-sccache", &self.config.sccache_cache_size)
-                .await?;
+            self.create_shared_pvc(
+                "clauderon-sccache",
+                &self.config.sccache_cache_size,
+                options,
+            )
+            .await?;
             tracing::info!("Created shared sccache PVC");
         }
 
         // Create uploads PVC for image attachments (shared across sessions)
         // Unlike workspace PVCs which are per-session, uploads are shared with session-id subdirectories
         if pvcs.get("clauderon-uploads").await.is_err() {
-            self.create_shared_pvc("clauderon-uploads", "10Gi").await?;
+            self.create_shared_pvc("clauderon-uploads", "10Gi", options)
+                .await?;
             tracing::info!("Created shared uploads PVC");
         }
 
@@ -218,7 +289,12 @@ impl KubernetesBackend {
     /// Create a shared PVC for caching
     ///
     /// Tries ReadWriteMany first, falls back to ReadWriteOnce if RWX is not available
-    async fn create_shared_pvc(&self, name: &str, size: &str) -> anyhow::Result<()> {
+    async fn create_shared_pvc(
+        &self,
+        name: &str,
+        size: &str,
+        options: &CreateOptions,
+    ) -> anyhow::Result<()> {
         let pvcs: Api<PersistentVolumeClaim> =
             Api::namespaced(self.client.clone(), &self.config.namespace);
 
@@ -246,7 +322,10 @@ impl KubernetesBackend {
             },
             spec: Some(PersistentVolumeClaimSpec {
                 access_modes: Some(access_modes.clone()),
-                storage_class_name: self.config.storage_class.clone(),
+                storage_class_name: options
+                    .storage_class_override
+                    .clone()
+                    .or_else(|| self.config.storage_class.clone()),
                 resources: Some(VolumeResourceRequirements {
                     requests: Some(resources.clone()),
                     ..Default::default()
@@ -301,7 +380,10 @@ impl KubernetesBackend {
                     },
                     spec: Some(PersistentVolumeClaimSpec {
                         access_modes: Some(vec!["ReadWriteOnce".to_string()]),
-                        storage_class_name: self.config.storage_class.clone(),
+                        storage_class_name: options
+                            .storage_class_override
+                            .clone()
+                            .or_else(|| self.config.storage_class.clone()),
                         resources: Some(VolumeResourceRequirements {
                             requests: Some(resources),
                             ..Default::default()
@@ -345,7 +427,12 @@ impl KubernetesBackend {
     }
 
     /// Create a workspace PVC for a specific session
-    async fn create_workspace_pvc(&self, pod_name: &str, session_id: &str) -> anyhow::Result<()> {
+    async fn create_workspace_pvc(
+        &self,
+        pod_name: &str,
+        session_id: &str,
+        options: &CreateOptions,
+    ) -> anyhow::Result<()> {
         let pvcs: Api<PersistentVolumeClaim> =
             Api::namespaced(self.client.clone(), &self.config.namespace);
 
@@ -374,7 +461,10 @@ impl KubernetesBackend {
             },
             spec: Some(PersistentVolumeClaimSpec {
                 access_modes: Some(vec!["ReadWriteOnce".to_string()]),
-                storage_class_name: self.config.storage_class.clone(),
+                storage_class_name: options
+                    .storage_class_override
+                    .clone()
+                    .or_else(|| self.config.storage_class.clone()),
                 resources: Some(VolumeResourceRequirements {
                     requests: Some(resources),
                     ..Default::default()
@@ -1629,7 +1719,7 @@ impl ExecutionBackend for KubernetesBackend {
         let (git_user_name, git_user_email) = Self::read_git_user_config().await;
 
         // Ensure shared cache PVCs exist
-        self.ensure_shared_pvcs_exist().await?;
+        self.ensure_shared_pvcs_exist(&options).await?;
 
         // Create workspace PVC for this session
         // Use actual session ID from options for proper PVC labeling and tracking
@@ -1637,7 +1727,8 @@ impl ExecutionBackend for KubernetesBackend {
             .session_id
             .ok_or_else(|| anyhow::anyhow!("session_id is required for Kubernetes backend"))?
             .to_string();
-        self.create_workspace_pvc(&pod_name, &session_id).await?;
+        self.create_workspace_pvc(&pod_name, &session_id, &options)
+            .await?;
 
         // Create Claude config ConfigMap
         self.create_claude_config_configmap(&pod_name).await?;

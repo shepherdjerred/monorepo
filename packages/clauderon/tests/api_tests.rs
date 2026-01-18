@@ -33,6 +33,7 @@ fn test_create_session_request_serialization() {
         pull_policy: None,
         cpu_limit: None,
         memory_limit: None,
+        storage_class: None,
     });
 
     let json = serde_json::to_string(&request).unwrap();
@@ -172,6 +173,7 @@ fn test_print_mode_serialization() {
         pull_policy: None,
         cpu_limit: None,
         memory_limit: None,
+        storage_class: None,
     });
 
     let json = serde_json::to_string(&request).unwrap();
