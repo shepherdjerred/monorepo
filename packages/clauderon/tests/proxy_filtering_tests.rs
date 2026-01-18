@@ -144,6 +144,7 @@ async fn test_create_session_with_read_only_mode() {
     let (session, _warnings) = manager
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
+            None,
             "Test prompt".to_string(),
             BackendType::Docker,
             AgentType::ClaudeCode,
@@ -178,6 +179,7 @@ async fn test_create_session_with_read_write_mode() {
     let (session, _warnings) = manager
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
+            None,
             "Test prompt".to_string(),
             BackendType::Docker,
             AgentType::ClaudeCode,
@@ -208,6 +210,7 @@ async fn test_zellij_backend_ignores_proxy_port() {
     let (session, _warnings) = manager
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
+            None,
             "Test prompt".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
@@ -240,6 +243,7 @@ async fn test_update_access_mode_by_name() {
     let (session, _warnings) = manager
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
+            None,
             "Test prompt".to_string(),
             BackendType::Docker,
             AgentType::ClaudeCode,
@@ -282,6 +286,7 @@ async fn test_update_access_mode_by_id() {
     let (session, _warnings) = manager
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
+            None,
             "Test prompt".to_string(),
             BackendType::Docker,
             AgentType::ClaudeCode,
@@ -437,6 +442,7 @@ async fn test_access_mode_persists_across_restarts() {
         let (session, _) = manager
             .create_session(
                 repo_dir.path().to_string_lossy().to_string(),
+                None,
                 "Test".to_string(),
                 BackendType::Zellij, // Changed from Docker to avoid proxy requirement
                 AgentType::ClaudeCode,
@@ -522,6 +528,7 @@ async fn test_proxy_port_persists_in_database() {
             agent: AgentType::ClaudeCode,
             dangerous_skip_checks: true,
             access_mode: AccessMode::ReadWrite,
+            repositories: None,
         });
 
         session.set_proxy_port(18234);
@@ -569,6 +576,7 @@ async fn test_delete_session_cleans_up_proxy() {
     let (session, _warnings) = manager
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
+            None,
             "Test prompt".to_string(),
             BackendType::Docker,
             AgentType::ClaudeCode,
@@ -652,8 +660,8 @@ fn test_access_mode_display() {
 
 #[test]
 fn test_access_mode_default() {
-    // ReadOnly is the secure default (principle of least privilege)
-    assert_eq!(AccessMode::default(), AccessMode::ReadOnly);
+    // ReadWrite is the default for convenience in development workflows
+    assert_eq!(AccessMode::default(), AccessMode::ReadWrite);
 }
 
 // ========== HTTP Method Filtering Tests ==========
