@@ -577,6 +577,7 @@ async fn test_same_subdir_updates_timestamp() {
             "Prompt 2".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
+            None, // model
             true,
             false,
             false,
