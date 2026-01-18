@@ -442,8 +442,10 @@ impl Session {
         let has_conflict = self.merge_conflict;
 
         // Changes requested on PR
-        let changes_requested =
-            matches!(self.pr_review_decision, Some(ReviewDecision::ChangesRequested));
+        let changes_requested = matches!(
+            self.pr_review_decision,
+            Some(ReviewDecision::ChangesRequested)
+        );
 
         ci_failing || has_conflict || changes_requested
     }

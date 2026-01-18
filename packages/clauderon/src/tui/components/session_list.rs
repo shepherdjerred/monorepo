@@ -221,7 +221,8 @@ impl ColumnWidths {
         self.branch_pr = branch_pr_shrunk.max(Self::BRANCH_PR_RANGE.0);
 
         // If still doesn't fit after respecting minimums, force to minimums
-        let new_total = self.name + self.repository + self.status + self.stage + self.backend + self.branch_pr;
+        let new_total =
+            self.name + self.repository + self.status + self.stage + self.backend + self.branch_pr;
         if new_total > available_for_columns {
             self.name = Self::NAME_RANGE.0;
             self.repository = Self::REPO_RANGE.0;
