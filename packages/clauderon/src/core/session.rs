@@ -472,6 +472,7 @@ impl Default for ClaudeModel {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum CodexModel {
     /// GPT-5.2-Codex (default, most advanced for software engineering)
+    #[default]
     Gpt5_2Codex,
     /// GPT-5.2 (most capable for professional knowledge work)
     Gpt5_2,
@@ -517,6 +518,7 @@ impl CodexModel {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum GeminiModel {
     /// Gemini 3 Pro (default, state-of-the-art reasoning with 1M token context)
+    #[default]
     Gemini3Pro,
     /// Gemini 3 Flash (fast frontier-class performance at lower cost)
     Gemini3Flash,
