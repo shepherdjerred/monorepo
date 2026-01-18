@@ -96,7 +96,7 @@ pub struct KubernetesConfig {
     ///
     /// WARNING: Use with caution. Incorrect annotations may affect pod behavior.
     #[serde(default)]
-    pub extra_annotations: std::collections::HashMap<String, String>,
+    pub extra_annotations: std::collections::BTreeMap<String, String>,
 }
 
 impl Default for KubernetesConfig {
@@ -120,7 +120,7 @@ impl Default for KubernetesConfig {
             proxy_service_port: None,
             host_gateway_ip: Some("192.168.65.254".to_string()), // Docker Desktop default
             use_rwo_cache: false, // Try RWX first, fallback to RWO on error
-            extra_annotations: std::collections::HashMap::new(),
+            extra_annotations: std::collections::BTreeMap::new(),
         }
     }
 }
