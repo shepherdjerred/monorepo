@@ -265,9 +265,9 @@ impl SessionManager {
     /// Returns an error if read-only mode is requested but the feature flag is disabled.
     fn validate_readonly_mode_allowed(
         &self,
-        access_mode: crate::types::AccessMode,
+        access_mode: super::session::AccessMode,
     ) -> anyhow::Result<()> {
-        if access_mode == crate::types::AccessMode::ReadOnly
+        if access_mode == super::session::AccessMode::ReadOnly
             && !self.feature_flags.enable_readonly_mode
         {
             anyhow::bail!(
