@@ -319,6 +319,7 @@ mod tests {
             enable_auto_reconcile: false,
             enable_proxy_port_reuse: true,
             enable_usage_tracking: true,
+            enable_kubernetes_backend: true,
         };
 
         // Merge with defaults - should not change anything
@@ -331,6 +332,7 @@ mod tests {
         assert!(!base.enable_auto_reconcile);
         assert!(base.enable_proxy_port_reuse);
         assert!(base.enable_usage_tracking);
+        assert!(base.enable_kubernetes_backend);
     }
 
     #[test]
