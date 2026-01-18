@@ -81,7 +81,7 @@ async fn create_test_manager() -> (SessionManager, TempDir, TempDir) {
         to_exec_backend(zellij),
         to_exec_backend(docker),
         to_exec_backend(kubernetes),
-        None,
+            None,
     )
     .await
     .expect("Failed to create manager");

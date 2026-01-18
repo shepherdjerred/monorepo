@@ -89,7 +89,7 @@ async fn create_test_manager() -> (
         to_exec_backend(Arc::clone(&zellij)),
         to_exec_backend(Arc::clone(&docker)),
         to_exec_backend(Arc::clone(&kubernetes)),
-        None,
+            None,
     )
     .await
     .expect("Failed to create manager");
