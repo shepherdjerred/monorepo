@@ -310,8 +310,7 @@ impl CIPoller {
                 new_review_decision = match data["reviewDecision"].as_str() {
                     Some("APPROVED") => Some(ReviewDecision::Approved),
                     Some("CHANGES_REQUESTED") => Some(ReviewDecision::ChangesRequested),
-                    Some("REVIEW_REQUIRED") => Some(ReviewDecision::ReviewRequired),
-                    None => Some(ReviewDecision::ReviewRequired), // Null means review required
+                    Some("REVIEW_REQUIRED") | None => Some(ReviewDecision::ReviewRequired),
                     _ => None,
                 };
             }
