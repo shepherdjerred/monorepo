@@ -31,6 +31,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
   const [loadingStorageClasses, setLoadingStorageClasses] = useState(false);
 
   // Multi-repo state
+  const [multiRepoEnabled, setMultiRepoEnabled] = useState(false);
   const [repositories, setRepositories] = useState<RepositoryEntry[]>([
     { id: '1', repo_path: '', mount_name: 'primary', is_primary: true }
   ]);
@@ -91,6 +92,24 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
   useEffect(() => {
     setFormData(prev => ({ ...prev, model: undefined }));
   }, [formData.agent]);
+
+  // Sync repositories array with multi-repo toggle
+  useEffect(() => {
+    if (multiRepoEnabled) {
+      // When enabled: Ensure at least 2 repos (add empty second repo if needed)
+      if (repositories.length === 1) {
+        setRepositories([
+          repositories[0]!,
+          { id: String(Date.now()), repo_path: '', mount_name: '', is_primary: false }
+        ]);
+      }
+    } else {
+      // When disabled: Keep only first repo, discard others immediately
+      if (repositories.length > 1) {
+        setRepositories([repositories[0]!]);
+      }
+    }
+  }, [multiRepoEnabled, repositories]);
 
   // Compute available models based on selected agent
   const availableModels = useMemo(() => {
@@ -211,6 +230,19 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
       return "At least one repository is required";
     }
 
+    // Single mode: Only first repo needs path
+    if (!multiRepoEnabled) {
+      if (!repositories[0]!.repo_path.trim()) {
+        return "Repository path is required";
+      }
+      return null;
+    }
+
+    // Multi mode validation
+    if (repositories.length < 2) {
+      return "Multi-repository mode requires at least 2 repositories";
+    }
+
     // Check all repos have paths
     if (repositories.some(r => !r.repo_path.trim())) {
       return "All repositories must have a path";
@@ -250,6 +282,11 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
       }
     }
 
+    // Check backend compatibility
+    if (formData.backend !== "Docker") {
+      return "Multi-repository mode is only supported with Docker backend";
+    }
+
     return null;
   };
 
@@ -277,8 +314,8 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
         return;
       }
 
-      // Build CreateRepositoryInput array (only if multi-repo)
-      const repoInputs: CreateRepositoryInput[] | undefined = repositories.length > 1
+      // Build CreateRepositoryInput array (only if multi-repo enabled)
+      const repoInputs: CreateRepositoryInput[] | undefined = multiRepoEnabled
         ? repositories.map(repo => ({
             repo_path: repo.repo_path,
             ...(repo.mount_name && { mount_name: repo.mount_name }),
@@ -389,60 +426,93 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
             </div>
           )}
 
+          {/* Multi-Repository Mode Toggle */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="multi-repo-enabled"
+                checked={multiRepoEnabled}
+                onChange={(e) => { setMultiRepoEnabled(e.target.checked); }}
+                className="cursor-pointer w-4 h-4 rounded border-2 border-input"
+              />
+              <Label htmlFor="multi-repo-enabled" className="cursor-pointer font-semibold">
+                Enable Multi-Repository Mode
+              </Label>
+            </div>
+            <p className="text-sm text-muted-foreground pl-6">
+              Mount multiple git repositories in the same session. Only supported with Docker backend.
+            </p>
+            {multiRepoEnabled && formData.backend !== "Docker" && (
+              <div className="p-3 border-2 text-sm font-mono ml-6" style={{
+                backgroundColor: 'hsl(45, 75%, 95%)',
+                borderColor: 'hsl(45, 75%, 50%)',
+                color: 'hsl(45, 75%, 30%)'
+              }}>
+                <strong>Warning:</strong> Multi-repository mode requires Docker backend.
+                Please select Docker above or disable multi-repository mode.
+              </div>
+            )}
+          </div>
+
           {/* Repositories Section */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <Label className="font-semibold">
-                Repositories {repositories.length > 1 && `(${repositories.length}/5)`}
+                {multiRepoEnabled ? `Repositories (${repositories.length}/5)` : 'Repository'}
               </Label>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleAddRepository}
-                disabled={repositories.length >= 5}
-                className="flex items-center gap-1"
-              >
-                <Plus className="w-4 h-4" />
-                Add Repository
-              </Button>
+              {multiRepoEnabled && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAddRepository}
+                  disabled={repositories.length >= 5}
+                  className="flex items-center gap-1"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Repository
+                </Button>
+              )}
             </div>
 
             {repositories.map((repo, index) => (
               <div key={repo.id} className="border-2 border-primary p-3 space-y-2" style={{ backgroundColor: 'hsl(220, 15%, 98%)' }}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-sm font-semibold">#{index + 1}</span>
-                    {repo.is_primary && (
-                      <span className="flex items-center gap-1 px-2 py-0.5 text-xs font-bold border-2 border-yellow-600 bg-yellow-100 text-yellow-800">
-                        <Star className="w-3 h-3 fill-yellow-600" />
-                        PRIMARY
-                      </span>
-                    )}
+                {multiRepoEnabled && (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-sm font-semibold">#{index + 1}</span>
+                      {repo.is_primary && (
+                        <span className="flex items-center gap-1 px-2 py-0.5 text-xs font-bold border-2 border-yellow-600 bg-yellow-100 text-yellow-800">
+                          <Star className="w-3 h-3 fill-yellow-600" />
+                          PRIMARY
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {!repo.is_primary && (
+                        <button
+                          type="button"
+                          onClick={() => { handleSetPrimary(repo.id); }}
+                          className="text-xs px-2 py-1 border-2 hover:bg-yellow-100 hover:border-yellow-600"
+                          title="Set as primary repository"
+                        >
+                          Set Primary
+                        </button>
+                      )}
+                      {repositories.length > 2 && (
+                        <button
+                          type="button"
+                          onClick={() => { handleRemoveRepository(repo.id); }}
+                          className="p-1 border-2 hover:bg-red-100 hover:border-red-600 text-red-600"
+                          title="Remove repository"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {!repo.is_primary && (
-                      <button
-                        type="button"
-                        onClick={() => { handleSetPrimary(repo.id); }}
-                        className="text-xs px-2 py-1 border-2 hover:bg-yellow-100 hover:border-yellow-600"
-                        title="Set as primary repository"
-                      >
-                        Set Primary
-                      </button>
-                    )}
-                    {repositories.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => { handleRemoveRepository(repo.id); }}
-                        className="p-1 border-2 hover:bg-red-100 hover:border-red-600 text-red-600"
-                        title="Remove repository"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-                </div>
+                )}
 
                 <div className="space-y-2">
                   <Label htmlFor={`repo-path-${repo.id}`} className="text-sm">Repository Path</Label>
@@ -453,38 +523,29 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor={`mount-name-${repo.id}`} className="text-sm">
-                    Mount Name <span className="text-xs text-muted-foreground">(alphanumeric + hyphens/underscores)</span>
-                  </Label>
-                  <input
-                    type="text"
-                    id={`mount-name-${repo.id}`}
-                    value={repo.mount_name}
-                    onChange={(e) => { handleMountNameChange(repo.id, e.target.value); }}
-                    placeholder="auto-generated"
-                    className="w-full px-3 py-2 border-2 rounded font-mono text-sm"
-                    pattern="[a-z0-9][a-z0-9-_]{0,62}[a-z0-9]"
-                    maxLength={64}
-                    required
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Container path: {repo.is_primary ? '/workspace' : `/repos/${repo.mount_name || '...'}`}
-                  </p>
-                </div>
+                {multiRepoEnabled && (
+                  <div className="space-y-2">
+                    <Label htmlFor={`mount-name-${repo.id}`} className="text-sm">
+                      Mount Name <span className="text-xs text-muted-foreground">(alphanumeric + hyphens/underscores)</span>
+                    </Label>
+                    <input
+                      type="text"
+                      id={`mount-name-${repo.id}`}
+                      value={repo.mount_name}
+                      onChange={(e) => { handleMountNameChange(repo.id, e.target.value); }}
+                      placeholder="auto-generated"
+                      className="w-full px-3 py-2 border-2 rounded font-mono text-sm"
+                      pattern="[a-z0-9][a-z0-9-_]{0,62}[a-z0-9]"
+                      maxLength={64}
+                      required
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Container path: {repo.is_primary ? '/workspace' : `/repos/${repo.mount_name || '...'}`}
+                    </p>
+                  </div>
+                )}
               </div>
             ))}
-
-            {repositories.length > 1 && formData.backend !== "Docker" && (
-              <div className="p-3 border-2 text-sm font-mono" style={{
-                backgroundColor: 'hsl(45, 75%, 95%)',
-                borderColor: 'hsl(45, 75%, 50%)',
-                color: 'hsl(45, 75%, 30%)'
-              }}>
-                <strong>Warning:</strong> Multi-repository sessions are only supported with Docker backend.
-                Zellij and Kubernetes backends will reject multi-repo sessions.
-              </div>
-            )}
           </div>
 
           <div className="space-y-2">
