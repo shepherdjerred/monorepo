@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import type { RecentRepoDto } from "../types/generated";
 import { useSessionContext } from "../contexts/SessionContext";
-import { colors } from "../styles/colors";
+import { useTheme } from "../contexts/ThemeContext";
 import { typography } from "../styles/typography";
 import { formatRelativeTime } from "../lib/utils";
 
@@ -27,6 +27,7 @@ export function RecentReposSelector({
   onClose,
 }: RecentReposSelectorProps) {
   const { client } = useSessionContext();
+  const { colors } = useTheme();
   const [repos, setRepos] = useState<RecentRepoDto[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -59,6 +60,8 @@ export function RecentReposSelector({
     onSelect(path);
   };
 
+  const themedStyles = getThemedStyles(colors);
+
   return (
     <Modal
       visible={visible}
@@ -67,29 +70,35 @@ export function RecentReposSelector({
       onRequestClose={onClose}
     >
       <View style={styles.overlay}>
-        <View style={styles.sheet}>
-          <View style={styles.header}>
-            <Text style={styles.title}>Recent Repositories</Text>
-            <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-              <Text style={styles.closeButtonText}>X</Text>
+        <View style={themedStyles.sheet}>
+          <View style={[styles.header, { borderBottomColor: colors.border }]}>
+            <Text style={[styles.title, { color: colors.textDark }]}>Recent Repositories</Text>
+            <TouchableOpacity
+              style={[styles.closeButton, { borderColor: colors.border, backgroundColor: colors.surface }]}
+              onPress={onClose}
+            >
+              <Text style={[styles.closeButtonText, { color: colors.textDark }]}>X</Text>
             </TouchableOpacity>
           </View>
 
           {isLoading ? (
             <View style={styles.centered}>
               <ActivityIndicator size="large" color={colors.primary} />
-              <Text style={styles.loadingText}>Loading...</Text>
+              <Text style={[styles.loadingText, { color: colors.textLight }]}>Loading...</Text>
             </View>
           ) : error ? (
             <View style={styles.centered}>
-              <Text style={styles.errorText}>{error}</Text>
-              <TouchableOpacity style={styles.retryButton} onPress={loadRepos}>
-                <Text style={styles.retryButtonText}>Retry</Text>
+              <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
+              <TouchableOpacity
+                style={[styles.retryButton, { borderColor: colors.border, backgroundColor: colors.primary }]}
+                onPress={loadRepos}
+              >
+                <Text style={[styles.retryButtonText, { color: colors.textWhite }]}>Retry</Text>
               </TouchableOpacity>
             </View>
           ) : repos.length === 0 ? (
             <View style={styles.centered}>
-              <Text style={styles.emptyText}>No recent repositories</Text>
+              <Text style={[styles.emptyText, { color: colors.textLight }]}>No recent repositories</Text>
             </View>
           ) : (
             <FlatList
@@ -99,15 +108,15 @@ export function RecentReposSelector({
               }
               renderItem={({ item }) => (
                 <TouchableOpacity
-                  style={styles.repoItem}
+                  style={[styles.repoItem, { borderColor: colors.border, backgroundColor: colors.surface }]}
                   onPress={() => handleSelect(item)}
                 >
-                  <Text style={styles.repoPath} numberOfLines={1}>
+                  <Text style={[styles.repoPath, { color: colors.textDark }]} numberOfLines={1}>
                     {item.subdirectory
                       ? `${item.repo_path}/${item.subdirectory}`
                       : item.repo_path}
                   </Text>
-                  <Text style={styles.repoTime}>
+                  <Text style={[styles.repoTime, { color: colors.textLight }]}>
                     {formatRelativeTime(new Date(item.last_used))}
                   </Text>
                 </TouchableOpacity>
@@ -121,30 +130,35 @@ export function RecentReposSelector({
   );
 }
 
+function getThemedStyles(colors: { surface: string; border: string }) {
+  return StyleSheet.create({
+    sheet: {
+      backgroundColor: colors.surface,
+      borderTopWidth: 3,
+      borderLeftWidth: 3,
+      borderRightWidth: 3,
+      borderColor: colors.border,
+      maxHeight: "70%",
+      ...Platform.select({
+        ios: {
+          shadowColor: colors.border,
+          shadowOffset: { width: 0, height: -4 },
+          shadowOpacity: 1,
+          shadowRadius: 0,
+        },
+        android: {
+          elevation: 8,
+        },
+      }),
+    },
+  });
+}
+
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
     justifyContent: "flex-end",
-  },
-  sheet: {
-    backgroundColor: colors.surface,
-    borderTopWidth: 3,
-    borderLeftWidth: 3,
-    borderRightWidth: 3,
-    borderColor: colors.border,
-    maxHeight: "70%",
-    ...Platform.select({
-      ios: {
-        shadowColor: colors.border,
-        shadowOffset: { width: 0, height: -4 },
-        shadowOpacity: 1,
-        shadowRadius: 0,
-      },
-      android: {
-        elevation: 8,
-      },
-    }),
   },
   header: {
     flexDirection: "row",
@@ -152,27 +166,22 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 16,
     borderBottomWidth: 2,
-    borderBottomColor: colors.border,
   },
   title: {
     fontSize: typography.fontSize.lg,
     fontWeight: typography.fontWeight.bold,
-    color: colors.textDark,
     textTransform: "uppercase",
   },
   closeButton: {
     width: 32,
     height: 32,
     borderWidth: 2,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
     justifyContent: "center",
     alignItems: "center",
   },
   closeButtonText: {
     fontSize: typography.fontSize.base,
     fontWeight: typography.fontWeight.bold,
-    color: colors.textDark,
   },
   centered: {
     padding: 32,
@@ -181,11 +190,9 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: typography.fontSize.base,
-    color: colors.textLight,
   },
   errorText: {
     fontSize: typography.fontSize.base,
-    color: colors.error,
     textAlign: "center",
     marginBottom: 16,
   },
@@ -193,18 +200,14 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderWidth: 2,
-    borderColor: colors.border,
-    backgroundColor: colors.primary,
   },
   retryButtonText: {
     fontSize: typography.fontSize.sm,
     fontWeight: typography.fontWeight.bold,
-    color: colors.textWhite,
     textTransform: "uppercase",
   },
   emptyText: {
     fontSize: typography.fontSize.base,
-    color: colors.textLight,
   },
   listContent: {
     padding: 8,
@@ -212,18 +215,14 @@ const styles = StyleSheet.create({
   repoItem: {
     padding: 16,
     borderWidth: 2,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
     marginBottom: 8,
   },
   repoPath: {
     fontSize: typography.fontSize.base,
     fontFamily: typography.fontFamily.mono,
-    color: colors.textDark,
     marginBottom: 4,
   },
   repoTime: {
     fontSize: typography.fontSize.xs,
-    color: colors.textLight,
   },
 });
