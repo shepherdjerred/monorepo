@@ -83,6 +83,7 @@ async fn create_test_manager() -> (SessionManager, TempDir, TempDir) {
         to_exec_backend(zellij),
         to_exec_backend(docker),
         to_exec_backend(kubernetes),
+        None,
         to_exec_backend(sprites),
         Arc::new(clauderon::feature_flags::FeatureFlags::default()),
     )
@@ -119,6 +120,7 @@ async fn test_recent_repo_tracked_on_session_create() {
             None,                  // pull_policy
             None,                  // cpu_limit
             None,                  // memory_limit
+            None,                  // storage_class
         )
         .await
         .expect("Failed to create session");
@@ -168,6 +170,7 @@ async fn test_path_canonicalization_prevents_duplicates() {
             None,
             None,
             None,
+            None, // storage_class
         )
         .await
         .expect("Failed to create session 1");
@@ -191,6 +194,7 @@ async fn test_path_canonicalization_prevents_duplicates() {
             None,
             None,
             None,
+            None, // storage_class
         )
         .await
         .expect("Failed to create session 2");
@@ -231,6 +235,7 @@ async fn test_limit_enforcement_removes_oldest() {
                 None,
                 None,
                 None,
+                None, // storage_class
             )
             .await
             .expect("Failed to create session");
@@ -284,6 +289,7 @@ async fn test_upsert_behavior_updates_timestamp() {
             None,
             None,
             None,
+            None, // storage_class
         )
         .await
         .expect("Failed to create session 1");
@@ -316,6 +322,7 @@ async fn test_upsert_behavior_updates_timestamp() {
             None,
             None,
             None,
+            None, // storage_class
         )
         .await
         .expect("Failed to create session 2");
@@ -361,6 +368,7 @@ async fn test_recent_repos_ordered_by_most_recent() {
                 None,
                 None,
                 None,
+                None, // storage_class
             )
             .await
             .expect("Failed to create session");
@@ -408,6 +416,7 @@ async fn test_nonexistent_repo_handles_gracefully() {
             None,
             None,
             None,
+            None, // storage_class
         )
         .await;
 
@@ -470,6 +479,7 @@ async fn test_subdirectories_tracked_separately() {
             None,
             None,
             None,
+            None, // storage_class
         )
         .await
         .expect("Failed to create session in packages/foo");
@@ -495,6 +505,7 @@ async fn test_subdirectories_tracked_separately() {
             None,
             None,
             None,
+            None, // storage_class
         )
         .await
         .expect("Failed to create session in packages/bar");
@@ -559,6 +570,7 @@ async fn test_same_subdir_updates_timestamp() {
             None,
             None,
             None,
+            None, // storage_class
         )
         .await
         .expect("Failed to create session 1");
@@ -591,6 +603,7 @@ async fn test_same_subdir_updates_timestamp() {
             None,
             None,
             None,
+            None, // storage_class
         )
         .await
         .expect("Failed to create session 2");
@@ -645,6 +658,7 @@ async fn test_subdirectories_respect_limit() {
                 None,
                 None,
                 None,
+                None, // storage_class
             )
             .await
             .expect("Failed to create session");
