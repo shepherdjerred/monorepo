@@ -3,6 +3,7 @@ import type { Session } from "@clauderon/client";
 import { AuthProvider } from "./contexts/AuthContext";
 import { AuthGuard } from "./components/AuthGuard";
 import { SessionProvider } from "./contexts/SessionContext";
+import { FeatureFlagsProvider } from "./contexts/FeatureFlagsContext";
 import { SessionList } from "./components/SessionList";
 import { CreateSessionDialog } from "./components/CreateSessionDialog";
 import { Console } from "./components/Console";
@@ -78,7 +79,9 @@ export function App() {
   return (
     <AuthProvider>
       <AuthGuard>
-        <AppContent />
+        <FeatureFlagsProvider>
+          <AppContent />
+        </FeatureFlagsProvider>
       </AuthGuard>
     </AuthProvider>
   );

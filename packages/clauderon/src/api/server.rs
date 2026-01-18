@@ -103,13 +103,17 @@ pub async fn run_daemon_with_http(
     // Note: Proxy config is now provided per-session, not at backend initialization
     tracing::debug!("Initializing session manager...");
     let docker_backend = DockerBackend::new();
-    let mut session_manager =
-        SessionManager::with_docker_backend(Arc::clone(&store), docker_backend)
-            .await
-            .map_err(|e| {
-                tracing::error!("Failed to initialize session manager: {}", e);
-                e
-            })?;
+    let feature_flags_arc = Arc::new(feature_flags);
+    let mut session_manager = SessionManager::with_docker_backend(
+        Arc::clone(&store),
+        docker_backend,
+        Arc::clone(&feature_flags_arc),
+    )
+    .await
+    .map_err(|e| {
+        tracing::error!("Failed to initialize session manager: {}", e);
+        e
+    })?;
 
     // Wire up proxy manager for per-session filtering (if available)
     if let Some(ref pm) = proxy_manager {
@@ -189,7 +193,7 @@ pub async fn run_daemon_with_http(
             Arc::clone(&console_state),
             dev_mode,
             db_pool,
-            feature_flags.clone(),
+            (*feature_flags_arc).clone(),
         );
 
         tracing::info!(

@@ -93,6 +93,7 @@ async fn create_test_manager_with_proxy() -> (
         arc
     }
 
+    let feature_flags = Arc::new(clauderon::feature_flags::FeatureFlags::default());
     let mut manager = SessionManager::new(
         store,
         to_git_ops(Arc::clone(&git)),
@@ -100,6 +101,7 @@ async fn create_test_manager_with_proxy() -> (
         to_exec_backend(Arc::clone(&docker)),
         to_exec_backend(Arc::clone(&kubernetes)),
         to_exec_backend(Arc::clone(&sprites)),
+        feature_flags,
     )
     .await
     .expect("Failed to create manager");
@@ -437,6 +439,7 @@ async fn test_access_mode_persists_across_restarts() {
             arc
         }
 
+        let feature_flags = Arc::new(clauderon::feature_flags::FeatureFlags::default());
         let manager = SessionManager::new(
             store,
             to_git_ops(git),
@@ -444,6 +447,7 @@ async fn test_access_mode_persists_across_restarts() {
             to_exec_backend(docker),
             to_exec_backend(kubernetes),
             to_exec_backend(sprites),
+            feature_flags,
         )
         .await
         .expect("Failed to create manager");
@@ -492,6 +496,7 @@ async fn test_access_mode_persists_across_restarts() {
             arc
         }
 
+        let feature_flags = Arc::new(clauderon::feature_flags::FeatureFlags::default());
         let manager = SessionManager::new(
             store,
             to_git_ops(git),
@@ -499,6 +504,7 @@ async fn test_access_mode_persists_across_restarts() {
             to_exec_backend(docker),
             to_exec_backend(kubernetes),
             to_exec_backend(sprites),
+            feature_flags,
         )
         .await
         .expect("Failed to create manager");
