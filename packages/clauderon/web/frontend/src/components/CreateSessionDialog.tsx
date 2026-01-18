@@ -179,6 +179,12 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
     })));
   };
 
+  const handleMountNameChange = (id: string, newName: string) => {
+    setRepositories(repos => repos.map(repo =>
+      repo.id === id ? { ...repo, mount_name: newName } : repo
+    ));
+  };
+
   const handleAddRepository = () => {
     if (repositories.length >= 5) {
       toast.error("Maximum 5 repositories per session");
