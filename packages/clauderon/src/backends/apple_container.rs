@@ -233,7 +233,7 @@ impl AppleContainerBackend {
         let (image_str, pull_policy) = if let Some(image_cfg) = image_override {
             // Validate override image
             image_cfg.validate()?;
-            (&image_cfg.image, image_cfg.pull_policy.clone())
+            (image_cfg.image.as_str(), image_cfg.pull_policy.clone())
         } else if let Some(ref img) = config.container_image {
             // Validate config image using ImageConfig validation
             let temp_config = ImageConfig {
@@ -242,7 +242,10 @@ impl AppleContainerBackend {
                 registry_auth: None,
             };
             temp_config.validate()?;
-            (img, super::container_config::ImagePullPolicy::IfNotPresent)
+            (
+                img.as_str(),
+                super::container_config::ImagePullPolicy::IfNotPresent,
+            )
         } else {
             // Use default image (no validation needed for hardcoded constant)
             (
@@ -669,6 +672,7 @@ impl AppleContainerBackend {
                         &translated_images,
                         dangerous_skip_checks,
                         None,
+                        None,
                     );
 
                     if print_mode {
@@ -767,6 +771,7 @@ fi"#;
                             images,
                             dangerous_skip_checks,
                             None,
+                            None,
                         );
                         let create_cmd_str = create_cmd_vec
                             .iter()
@@ -782,6 +787,7 @@ fi"#;
                         &escaped_prompt,
                         &translated_images,
                         dangerous_skip_checks,
+                        None,
                         None,
                     );
 
