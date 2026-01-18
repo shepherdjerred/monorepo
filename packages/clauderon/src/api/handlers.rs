@@ -291,11 +291,9 @@ pub async fn handle_request(
             },
         },
 
-        Request::GetFeatureFlags => {
-            Response::FeatureFlags {
-                flags: (*manager.feature_flags()).clone(),
-            }
-        }
+        Request::GetFeatureFlags => Response::FeatureFlags {
+            flags: (*manager.feature_flags()).clone(),
+        },
     }
 }
 
