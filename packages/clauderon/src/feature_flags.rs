@@ -40,6 +40,13 @@ impl Default for FeatureFlags {
 
 impl FeatureFlags {
     /// Load feature flags with priority: CLI args → env vars → TOML → defaults
+    ///
+    /// TODO: Wire up feature flags to actual feature toggles:
+    /// - enable_webauthn_auth: WebAuthn authentication flow
+    /// - enable_ai_metadata: AI-powered session metadata generation
+    /// - enable_auto_reconcile: Automatic session reconciliation on startup
+    /// - enable_proxy_port_reuse: Session proxy port reuse behavior
+    /// - enable_usage_tracking: Claude usage tracking via API
     pub fn load(cli_overrides: Option<CliFeatureFlags>) -> anyhow::Result<Self> {
         // 1. Start with defaults
         let mut flags = Self::default();
@@ -63,7 +70,13 @@ impl FeatureFlags {
 
     /// Load feature flags from TOML config file
     fn load_from_toml() -> anyhow::Result<Option<Self>> {
-        let config_path = config_path();
+        let config_path = match config_path() {
+            Some(path) => path,
+            None => {
+                // No home directory available, skip TOML loading
+                return Ok(None);
+            }
+        };
 
         if !config_path.exists() {
             return Ok(None);
@@ -236,11 +249,12 @@ fn parse_env_bool_option(key: &str) -> Option<bool> {
 }
 
 /// Get the config file path (~/.clauderon/config.toml)
-fn config_path() -> PathBuf {
-    let mut path = dirs::home_dir().expect("Failed to get home directory");
+/// Returns None if home directory cannot be determined (e.g., in some container environments)
+fn config_path() -> Option<PathBuf> {
+    let mut path = dirs::home_dir()?;
     path.push(".clauderon");
     path.push("config.toml");
-    path
+    Some(path)
 }
 
 #[cfg(test)]
