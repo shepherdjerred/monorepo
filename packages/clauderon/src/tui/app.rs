@@ -233,10 +233,18 @@ impl DirectoryPickerState {
                 if !path.exists() {
                     return None;
                 }
-                let name = path
+                let repo_name = path
                     .file_name()
                     .map(|n| n.to_string_lossy().to_string())
-                    .unwrap_or(dto.repo_path);
+                    .unwrap_or_else(|| dto.repo_path.clone());
+
+                // Include subdirectory in the display name if present
+                let name = if dto.subdirectory.is_empty() {
+                    repo_name
+                } else {
+                    format!("{} → {}", repo_name, dto.subdirectory)
+                };
+
                 Some(DirEntry {
                     name,
                     path,
@@ -450,6 +458,22 @@ impl CreateDialogState {
         );
     }
 
+    /// Cycle through backends in reverse: Zellij → AppleContainer → Kubernetes → Docker → Zellij
+    pub fn toggle_backend_reverse(&mut self) {
+        self.backend = match self.backend {
+            BackendType::Zellij => BackendType::AppleContainer,
+            BackendType::AppleContainer => BackendType::Kubernetes,
+            BackendType::Kubernetes => BackendType::Docker,
+            BackendType::Docker => BackendType::Zellij,
+        };
+
+        // Auto-toggle skip_checks based on backend (same logic as forward toggle)
+        self.skip_checks = matches!(
+            self.backend,
+            BackendType::Docker | BackendType::Kubernetes | BackendType::AppleContainer
+        );
+    }
+
     /// Toggle between ReadOnly and ReadWrite access modes
     pub fn toggle_access_mode(&mut self) {
         self.access_mode = match self.access_mode {
@@ -464,6 +488,15 @@ impl CreateDialogState {
             AgentType::ClaudeCode => AgentType::Codex,
             AgentType::Codex => AgentType::Gemini,
             AgentType::Gemini => AgentType::ClaudeCode,
+        };
+    }
+
+    /// Cycle through agents in reverse: ClaudeCode -> Gemini -> Codex -> ClaudeCode
+    pub fn toggle_agent_reverse(&mut self) {
+        self.agent = match self.agent {
+            AgentType::ClaudeCode => AgentType::Gemini,
+            AgentType::Gemini => AgentType::Codex,
+            AgentType::Codex => AgentType::ClaudeCode,
         };
     }
 

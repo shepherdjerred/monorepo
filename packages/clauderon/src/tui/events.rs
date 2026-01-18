@@ -549,10 +549,18 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                 app.create_dialog.ensure_cursor_visible();
             }
             CreateDialogFocus::Backend => {
-                app.create_dialog.toggle_backend();
+                if key.code == KeyCode::Left {
+                    app.create_dialog.toggle_backend_reverse();
+                } else {
+                    app.create_dialog.toggle_backend();
+                }
             }
             CreateDialogFocus::Agent => {
-                app.create_dialog.toggle_agent();
+                if key.code == KeyCode::Left {
+                    app.create_dialog.toggle_agent_reverse();
+                } else {
+                    app.create_dialog.toggle_agent();
+                }
             }
             CreateDialogFocus::AccessMode => {
                 app.create_dialog.toggle_access_mode();
