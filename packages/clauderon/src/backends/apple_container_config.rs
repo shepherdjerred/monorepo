@@ -101,9 +101,7 @@ impl AppleContainerConfig {
                 pull_policy: ImagePullPolicy::IfNotPresent,
                 registry_auth: None,
             };
-            image_config
-                .validate()
-                .context("Invalid container image")?;
+            image_config.validate().context("Invalid container image")?;
         }
 
         // Validate resource limits if provided
