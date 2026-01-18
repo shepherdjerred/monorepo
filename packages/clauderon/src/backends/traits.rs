@@ -1,4 +1,4 @@
-use crate::core::session::AgentType;
+use crate::core::session::{AgentType, SessionRepository};
 use async_trait::async_trait;
 use std::path::{Path, PathBuf};
 
@@ -85,6 +85,11 @@ pub struct CreateOptions {
     /// For Docker: sets --cpus and --memory flags.
     /// For Kubernetes: sets CPU/memory requests and limits in pod spec.
     pub container_resources: Option<ResourceLimits>,
+
+    /// Repositories to mount in the session.
+    /// When empty, use single-repo legacy mode with workdir parameter.
+    /// When non-empty, use multi-repo mode and ignore workdir parameter.
+    pub repositories: Vec<SessionRepository>,
 }
 
 /// Trait for execution backends (Zellij, Docker, etc.)

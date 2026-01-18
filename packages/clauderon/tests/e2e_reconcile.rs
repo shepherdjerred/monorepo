@@ -27,6 +27,7 @@ fn create_test_session(name: &str, worktree_path: &std::path::Path) -> Session {
         agent: AgentType::ClaudeCode,
         dangerous_skip_checks: true,
         access_mode: AccessMode::default(),
+        repositories: None,
     });
     session.set_status(SessionStatus::Running);
     session.set_backend_id(format!("clauderon-{name}"));

@@ -29,6 +29,7 @@ fn test_git_config_env_vars() {
         &clauderon::backends::DockerConfig::default(),
         None,
         None,
+        &[],
     )
     .expect("Failed to build args");
 
@@ -80,6 +81,7 @@ fn test_git_config_omitted_when_none() {
         &clauderon::backends::DockerConfig::default(),
         None,
         None,
+        &[],
     )
     .expect("Failed to build args");
 
@@ -116,6 +118,7 @@ fn test_docker_run_arg_order() {
         &clauderon::backends::DockerConfig::default(),
         None,
         None,
+        &[],
     )
     .expect("Failed to build args");
 
@@ -163,6 +166,7 @@ fn test_docker_env_vars() {
         &clauderon::backends::DockerConfig::default(),
         None,
         None,
+        &[],
     )
     .expect("Failed to build args");
 
@@ -284,6 +288,7 @@ fn test_volume_mount_format() {
         &clauderon::backends::DockerConfig::default(),
         None,
         None,
+        &[],
     )
     .expect("Failed to build args");
 
@@ -346,6 +351,7 @@ fn test_workspace_mount_destination() {
         &clauderon::backends::DockerConfig::default(),
         None,
         None,
+        &[],
     )
     .expect("Failed to build args");
 
@@ -390,6 +396,7 @@ fn test_final_command_format() {
         &clauderon::backends::DockerConfig::default(),
         None,
         None,
+        &[],
     )
     .expect("Failed to build args");
 

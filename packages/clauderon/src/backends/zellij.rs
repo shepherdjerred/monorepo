@@ -131,6 +131,14 @@ impl ExecutionBackend for ZellijBackend {
         initial_prompt: &str,
         options: super::traits::CreateOptions,
     ) -> anyhow::Result<String> {
+        // Multi-repository sessions are not supported in Zellij backend
+        if !options.repositories.is_empty() {
+            anyhow::bail!(
+                "Multi-repository sessions are not supported for Zellij backend. \
+                Please use Docker backend for multi-repo sessions, or use single-repository mode."
+            );
+        }
+
         // Create a new Zellij session in the background
         let args = Self::build_create_session_args(name);
         let output = Command::new("zellij").args(&args[..]).output().await?;
@@ -285,6 +293,7 @@ impl ZellijBackend {
                 http_port: None,
                 container_image: None,
                 container_resources: None,
+                repositories: vec![], // Legacy single-repo mode
             },
         )
         .await

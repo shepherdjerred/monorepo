@@ -5,7 +5,7 @@ use chrono::{DateTime, Utc};
 use std::path::PathBuf;
 use uuid::Uuid;
 
-use crate::core::{Event, Session};
+use crate::core::{Event, Session, SessionRepository};
 
 pub use sqlite::SqliteStore;
 
@@ -53,4 +53,19 @@ pub trait Store: Send + Sync {
 
     /// Get recent repositories, ordered by most recently used
     async fn get_recent_repos(&self) -> anyhow::Result<Vec<RecentRepo>>;
+
+    /// Get repositories for a session (from junction table)
+    /// Returns empty vec for legacy single-repo sessions
+    async fn get_session_repositories(
+        &self,
+        session_id: Uuid,
+    ) -> anyhow::Result<Vec<SessionRepository>>;
+
+    /// Save repositories for a session (to junction table)
+    /// Replaces existing repositories for this session
+    async fn save_session_repositories(
+        &self,
+        session_id: Uuid,
+        repositories: &[SessionRepository],
+    ) -> anyhow::Result<()>;
 }
