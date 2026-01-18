@@ -185,9 +185,20 @@ async fn run_main_loop(
                         }
                         #[cfg(target_os = "macos")]
                         Some(BackendType::AppleContainer) => {
-                            // TODO: Implement Apple Container PTY attach
-                            app.status_message = Some("Apple Container attach not yet implemented".to_string());
+                            // Use PTY-based attachment for Apple Container
+                            match app.attach_selected_session().await {
+                                Ok(()) => {
+                                    app.status_message = Some("Attached - Press Ctrl+Q to detach, Ctrl+Left/Right to switch sessions".to_string());
+                                }
+                                Err(e) => {
+                                    app.status_message = Some(format!("Attach failed: {e}"));
+                                }
+                            }
+                            continue;
                         }
+                        #[cfg(target_os = "macos")]
+                        _ => {}
+                        #[cfg(not(target_os = "macos"))]
                         None => {
                             // No session selected
                         }
