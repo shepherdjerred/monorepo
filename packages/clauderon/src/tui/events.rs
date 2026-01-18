@@ -392,6 +392,7 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                         pull_policy: None,
                         cpu_limit: None,
                         memory_limit: None,
+                        storage_class: None,
                     };
 
                     // Spawn background task
