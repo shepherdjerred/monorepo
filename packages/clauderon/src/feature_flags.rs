@@ -315,6 +315,7 @@ mod tests {
             enable_auto_reconcile: false,
             enable_proxy_port_reuse: true,
             enable_usage_tracking: true,
+            enable_readonly_mode: false,
         };
 
         // Merge with defaults - should not change anything
