@@ -74,8 +74,6 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
     layout_idx += 1;
     let repo_idx = layout_idx;
     layout_idx += 1;
-    let multi_repo_idx = layout_idx;
-    layout_idx += 1;
     let backend_idx = layout_idx;
     layout_idx += 1;
     let agent_idx = layout_idx;
@@ -117,15 +115,6 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         &dialog.repo_path,
         dialog.focus == CreateDialogFocus::RepoPath,
         inner[repo_idx],
-    );
-
-    // Multi-repository mode toggle (disabled in TUI - shows info message)
-    render_checkbox_field(
-        frame,
-        "Multi-Repository Mode (Docker only, Web UI only)",
-        dialog.multi_repo_enabled,
-        dialog.focus == CreateDialogFocus::MultiRepoToggle,
-        inner[multi_repo_idx],
     );
 
     // Backend selection
