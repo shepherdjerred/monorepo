@@ -411,7 +411,7 @@ impl Session {
         // Check if ready to merge (all checks pass, approved, no conflicts)
         let checks_pass = matches!(
             self.pr_check_status,
-            Some(CheckStatus::Passing) | Some(CheckStatus::Mergeable)
+            Some(CheckStatus::Passing | CheckStatus::Mergeable)
         );
         let approved = matches!(self.pr_review_decision, Some(ReviewDecision::Approved));
         let no_conflicts = !self.merge_conflict;

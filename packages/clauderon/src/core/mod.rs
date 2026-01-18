@@ -8,6 +8,6 @@ pub use errors::{BackendError, SessionError};
 pub use events::Event;
 pub use manager::SessionManager;
 pub use session::{
-    AccessMode, AgentType, BackendType, CheckStatus, ClaudeWorkingStatus, Session, SessionConfig,
-    SessionRepository, SessionStatus,
+    AccessMode, AgentType, BackendType, BlockerDetails, CheckStatus, ClaudeWorkingStatus,
+    ReviewDecision, Session, SessionConfig, SessionRepository, SessionStatus, WorkflowStage,
 };
