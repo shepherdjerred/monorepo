@@ -21,7 +21,7 @@ type SessionListProps = {
 
 type FilterStatus = "all" | "running" | "idle" | "completed" | "archived";
 
-const TAB_TRIGGER_CLASS = "cursor-pointer transition-all duration-200 hover:bg-primary/20 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-b-4 data-[state=active]:border-foreground";
+const TAB_TRIGGER_CLASS = "cursor-pointer transition-all duration-200 hover:bg-primary/20 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-2 data-[state=active]:border-primary data-[state=active]:shadow-[4px_4px_0_hsl(220,85%,25%)] data-[state=active]:font-bold";
 
 export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
   const { sessions, isLoading, error, refreshSessions, archiveSession, unarchiveSession, refreshSession, deleteSession } =
@@ -200,7 +200,7 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
       {/* Filters */}
       <nav className="p-4 border-b-2" aria-label="Session filters">
         <Tabs value={filter} onValueChange={(v) => { setFilter(v as FilterStatus); }}>
-          <TabsList className="grid w-full grid-cols-5 border-2">
+          <TabsList className="grid w-full grid-cols-5 border-2 gap-2 p-2">
             <TabsTrigger
               value="all"
               className={`font-semibold ${TAB_TRIGGER_CLASS}`}

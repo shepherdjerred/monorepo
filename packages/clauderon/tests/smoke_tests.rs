@@ -58,6 +58,7 @@ async fn test_claude_starts_in_docker() {
                 http_port: None,
                 container_image: None,
                 container_resources: None,
+                repositories: vec![],
             },
         )
         .await;
@@ -133,6 +134,7 @@ async fn test_claude_writes_debug_files() {
                 http_port: None,
                 container_image: None,
                 container_resources: None,
+                repositories: vec![],
             },
         )
         .await;
@@ -196,6 +198,7 @@ async fn test_container_runs_as_non_root() {
                 http_port: None,
                 container_image: None,
                 container_resources: None,
+                repositories: vec![],
             },
         )
         .await;
@@ -271,6 +274,7 @@ async fn test_initial_prompt_executed() {
                 http_port: None,
                 container_image: None,
                 container_resources: None,
+                repositories: vec![],
             },
         )
         .await;
@@ -391,6 +395,7 @@ async fn test_claude_print_mode_e2e() {
         http_port: None,
         container_image: None,
         container_resources: None,
+        repositories: vec![],
     };
 
     // Simple prompt that should produce predictable-ish output
