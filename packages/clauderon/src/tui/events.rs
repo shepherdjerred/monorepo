@@ -560,6 +560,9 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
             CreateDialogFocus::Agent => {
                 app.create_dialog.toggle_agent();
             }
+            CreateDialogFocus::Model => {
+                app.create_dialog.toggle_model();
+            }
             CreateDialogFocus::AccessMode => {
                 app.create_dialog.toggle_access_mode();
             }
@@ -580,6 +583,9 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
             }
             CreateDialogFocus::Agent => {
                 app.create_dialog.toggle_agent();
+            }
+            CreateDialogFocus::Model => {
+                app.create_dialog.toggle_model();
             }
             CreateDialogFocus::AccessMode => {
                 app.create_dialog.toggle_access_mode();
