@@ -6,6 +6,7 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { AGENT_CAPABILITIES, type AgentType } from "@/lib/agent-features";
 
 type SessionCardProps = {
   session: Session;
@@ -39,9 +40,31 @@ export function SessionCard({ session, onAttach, onEdit, onArchive, onUnarchive,
           <Badge variant="outline" className="border-2 font-mono text-xs">
             {session.backend}
           </Badge>
-          <Badge variant="outline" className="border-2 font-mono text-xs">
-            {session.agent}
-          </Badge>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Badge variant="outline" className="border-2 font-mono text-xs cursor-help">
+                  {session.agent}
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent>
+                <div className="text-xs max-w-xs">
+                  <p className="font-semibold mb-1">{AGENT_CAPABILITIES[session.agent as AgentType]?.displayName || session.agent} Capabilities</p>
+                  <ul className="space-y-1">
+                    {AGENT_CAPABILITIES[session.agent as AgentType]?.features.map((feature, idx) => (
+                      <li key={idx} className="flex items-start gap-1.5">
+                        <span className="flex-shrink-0">{feature.supported ? '✓' : '⚠'}</span>
+                        <span className={feature.supported ? "" : "text-yellow-600"}>
+                          {feature.name}
+                          {feature.note && <span className="text-muted-foreground block text-xs mt-0.5">{feature.note}</span>}
+                        </span>
+                      </li>
+                    )) || <li>No capability information available</li>}
+                  </ul>
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </CardHeader>
       <CardContent>

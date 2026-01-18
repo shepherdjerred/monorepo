@@ -3,9 +3,10 @@ import type { CreateSessionRequest, BackendType, AgentType, AccessMode } from "@
 import { useSessionContext } from "../contexts/SessionContext";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { X } from "lucide-react";
+import { X, Check, AlertCircle } from "lucide-react";
 import { RepositoryPathSelector } from "./RepositoryPathSelector";
 import { toast } from "sonner";
+import { AGENT_CAPABILITIES } from "@/lib/agent-features";
 
 type CreateSessionDialogProps = {
   onClose: () => void;
@@ -197,6 +198,38 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
               </select>
             </div>
           </div>
+
+          {/* Agent Capabilities Info */}
+          {formData.agent && AGENT_CAPABILITIES[formData.agent] && (
+            <div className="mt-2 p-3 border-2 text-sm" style={{
+              backgroundColor: 'hsl(220, 15%, 98%)',
+              borderColor: 'hsl(220, 85%, 65%)',
+              color: 'hsl(220, 85%, 20%)'
+            }}>
+              <p className="font-semibold font-mono mb-2">{AGENT_CAPABILITIES[formData.agent].displayName} Capabilities:</p>
+              <ul className="space-y-1.5 pl-1">
+                {AGENT_CAPABILITIES[formData.agent].features.map((feature, idx) => (
+                  <li key={idx} className="flex items-start gap-2">
+                    {feature.supported ? (
+                      <Check className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                    ) : (
+                      <AlertCircle className="h-4 w-4 text-yellow-600 mt-0.5 flex-shrink-0" />
+                    )}
+                    <div className="flex-1">
+                      <span className={feature.supported ? "text-green-900" : "text-yellow-900"}>
+                        {feature.name}
+                      </span>
+                      {feature.note && (
+                        <span className="text-xs block text-muted-foreground mt-0.5">
+                          {feature.note}
+                        </span>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {formData.backend === "Kubernetes" && (
             <div className="mt-2 p-3 border-2 text-sm font-mono" style={{
