@@ -566,8 +566,14 @@ async fn main() -> anyhow::Result<()> {
                 "sprites" => core::session::BackendType::Sprites,
                 #[cfg(target_os = "macos")]
                 "apple" | "apple-container" => core::session::BackendType::AppleContainer,
-                _ => anyhow::bail!("Unknown backend: {backend}. Use 'zellij', 'docker', 'kubernetes', 'sprites'{}",
-                    if cfg!(target_os = "macos") { ", or 'apple'" } else { "" }),
+                _ => anyhow::bail!(
+                    "Unknown backend: {backend}. Use 'zellij', 'docker', 'kubernetes', 'sprites'{}",
+                    if cfg!(target_os = "macos") {
+                        ", or 'apple'"
+                    } else {
+                        ""
+                    }
+                ),
             };
 
             let agent_type = match agent.to_lowercase().as_str() {
