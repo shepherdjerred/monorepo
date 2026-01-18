@@ -940,7 +940,7 @@ impl Store for SqliteStore {
                 Ok(repos) if !repos.is_empty() => {
                     // Sync top-level subdirectory with primary repo
                     if let Some(primary) = repos.iter().find(|r| r.is_primary) {
-                        session.subdirectory = primary.subdirectory.clone();
+                        session.subdirectory.clone_from(&primary.subdirectory);
                     }
                     session.repositories = Some(repos);
                 }
@@ -996,7 +996,7 @@ impl Store for SqliteStore {
                     Ok(repos) if !repos.is_empty() => {
                         // Sync top-level subdirectory with primary repo
                         if let Some(primary) = repos.iter().find(|r| r.is_primary) {
-                            session.subdirectory = primary.subdirectory.clone();
+                            session.subdirectory.clone_from(&primary.subdirectory);
                         }
                         session.repositories = Some(repos);
                     }
