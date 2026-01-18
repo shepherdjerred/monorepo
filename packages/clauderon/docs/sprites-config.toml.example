@@ -1,0 +1,95 @@
+# Sprites.dev Backend Configuration
+#
+# This file configures the Sprites.dev backend for clauderon.
+# Copy this file to ~/.clauderon/sprites-config.toml and customize as needed.
+#
+# Sprites.dev provides hardware-isolated Firecracker containers with persistent
+# ext4 filesystems and sub-1-second cold starts. Unlike Docker/Kubernetes,
+# sprites cannot mount local directories, so git repositories are cloned from
+# remotes instead.
+
+# Authentication token for sprites.dev API
+# Can also be set via SPRITES_TOKEN environment variable (recommended for security)
+# Environment variable takes precedence over this config value
+# Get your token from: https://sprites.dev/dashboard/tokens
+# token = "sp_your_token_here"
+
+[resources]
+# CPU cores (1-8)
+# Default: 2
+cpu = 2
+
+# Memory in gigabytes (1-16)
+# Default: 4
+memory = 4
+
+[lifecycle]
+# Automatically destroy sprite when session is deleted
+# If false, sprite persists for reuse (incurs storage costs: $0.00068/GB-hour)
+# Default: false (sprites persist for reuse)
+auto_destroy = false
+
+# Automatically checkpoint sprite before hibernation
+# Enables faster cold starts (~300ms) at cost of storage
+# Default: false
+auto_checkpoint = false
+
+[network]
+# Default network policy: "allow-all", "block-all", or "allow-list"
+# - "allow-all": No restrictions (default)
+# - "block-all": Complete network isolation
+# - "allow-list": Only allow specified domains below
+# Default: "allow-all"
+default_policy = "allow-all"
+
+# Allowed domains when policy is "allow-list"
+# Supports wildcards (e.g., "*.github.com")
+# Default includes common development services
+allowed_domains = [
+    "api.anthropic.com",
+    "github.com",
+    "*.githubusercontent.com",
+    "crates.io",
+    "static.crates.io",
+    "index.crates.io",
+]
+
+[image]
+# Base image for sprites
+# Default: "ubuntu:22.04" (Ubuntu 22.04 LTS)
+# Other options: "ubuntu:24.04", "debian:12", custom images
+base_image = "ubuntu:22.04"
+
+# Automatically install Claude Code if not present in image
+# If false, you must include Claude Code in your base image
+# Default: true
+install_claude = true
+
+# Additional packages to install via apt-get
+# Installed before Claude Code installation
+# Default: [] (no additional packages)
+packages = [
+    # "git",
+    # "curl",
+    # "build-essential",
+    # "python3",
+    # "nodejs",
+]
+
+# Cost Estimation Examples
+# =======================
+#
+# Short development session (4 hours):
+# - 2 CPUs, 4GB RAM, 10GB storage
+# - CPU: 4h × 2 × $0.07 = $0.56
+# - RAM: 4h × 4 × $0.04375 = $0.70
+# - Storage: 4h × 10 × $0.00068 = $0.03
+# - Total: ~$1.29
+#
+# Persistent sprite (7 days, idle):
+# - Storage only: 168h × 10GB × $0.00068 = $1.14/week
+# - Plus active time charges when running
+#
+# Recommendation:
+# - Use auto_destroy=true for one-off tasks
+# - Use auto_destroy=false for recurring work to avoid setup time
