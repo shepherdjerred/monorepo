@@ -6,6 +6,7 @@ use ratatui::{
     widgets::{Block, Borders, Clear, Paragraph, Wrap},
 };
 
+use super::SPINNER_FRAMES;
 use crate::core::{
     AccessMode, AgentType, BackendType,
     session::{ClaudeModel, CodexModel, GeminiModel, SessionModel},
@@ -594,9 +595,6 @@ fn render_buttons(frame: &mut Frame, focused: bool, create_focused: bool, area: 
     let paragraph = Paragraph::new(line);
     frame.render_widget(paragraph, area);
 }
-
-/// Spinner frames for loading animation
-const SPINNER_FRAMES: &[&str] = &["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
 
 fn render_loading(
     frame: &mut Frame,
