@@ -57,6 +57,7 @@ pub async fn handle_request(
                         req.pull_policy,
                         req.cpu_limit,
                         req.memory_limit,
+                        req.storage_class.clone(),
                     )
                     .await
                 {
@@ -101,6 +102,7 @@ pub async fn handle_request(
                         req.pull_policy,
                         req.cpu_limit,
                         req.memory_limit,
+                        req.storage_class.clone(),
                     )
                     .await
                 {
@@ -348,6 +350,7 @@ pub async fn handle_create_session_with_progress(
             req.pull_policy,
             req.cpu_limit,
             req.memory_limit,
+            req.storage_class,
         )
         .await
     {
