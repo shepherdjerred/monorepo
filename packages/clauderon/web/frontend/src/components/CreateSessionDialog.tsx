@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
-import type { CreateSessionRequest, BackendType, AccessMode, CreateRepositoryInput, SessionModel, ClaudeModel, CodexModel, GeminiModel } from "@clauderon/client";
-import { AgentType } from "@clauderon/shared";
+import type { CreateSessionRequest, BackendType, AccessMode, StorageClassInfo, CreateRepositoryInput, SessionModel, ClaudeModel, CodexModel, GeminiModel } from "@clauderon/client";
+import { AgentType, type FeatureFlags } from "@clauderon/shared";
 import { useSessionContext } from "../contexts/SessionContext";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -27,10 +27,13 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [featureFlags, setFeatureFlags] = useState<FeatureFlags | null>(null);
+  const [storageClasses, setStorageClasses] = useState<StorageClassInfo[]>([]);
+  const [loadingStorageClasses, setLoadingStorageClasses] = useState(false);
 
   // Multi-repo state
   const [repositories, setRepositories] = useState<RepositoryEntry[]>([
-    { id: '1', repo_path: '', mount_name: 'primary', is_primary: true }
+    { id: '1', repo_path: '', mount_name: '', is_primary: true }
   ]);
 
   const [formData, setFormData] = useState({
@@ -46,20 +49,70 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
     pull_policy: "if-not-present" as "always" | "if-not-present" | "never",
     cpu_limit: "",
     memory_limit: "",
+    storage_class: "",
   });
 
-  // Auto-check dangerous_skip_checks for Docker and Kubernetes, uncheck for Zellij
+  // Auto-check dangerous_skip_checks for Docker, Kubernetes, and Sprites, uncheck for Zellij
   useEffect(() => {
     setFormData(prev => ({
       ...prev,
-      dangerous_skip_checks: prev.backend === "Docker" || prev.backend === "Kubernetes"
+      dangerous_skip_checks: prev.backend === "Docker" || prev.backend === "Kubernetes" || prev.backend === "Sprites"
     }));
   }, [formData.backend]);
+
+  // Fetch storage classes when Kubernetes backend is selected
+  useEffect(() => {
+    if (formData.backend === "Kubernetes") {
+      setLoadingStorageClasses(true);
+      client.getStorageClasses()
+        .then((classes) => {
+          setStorageClasses(classes);
+          // Auto-select default storage class if available
+          const defaultClass = classes.find(c => c.is_default);
+          if (defaultClass && !formData.storage_class) {
+            setFormData(prev => ({ ...prev, storage_class: defaultClass.name }));
+          }
+        })
+        .catch((err) => {
+          console.error('Failed to fetch storage classes:', err);
+          toast.warning('Could not load storage classes from cluster');
+          setStorageClasses([]);
+        })
+        .finally(() => {
+          setLoadingStorageClasses(false);
+        });
+    } else {
+      // Clear storage classes when switching away from Kubernetes
+      setStorageClasses([]);
+      setFormData(prev => ({ ...prev, storage_class: "" }));
+    }
+  }, [formData.backend, client]);
 
   // Reset model when agent changes
   useEffect(() => {
     setFormData(prev => ({ ...prev, model: undefined }));
   }, [formData.agent]);
+
+  // Fetch feature flags on mount
+  useEffect(() => {
+    const fetchFlags = async () => {
+      try {
+        const response = await fetch('/api/feature-flags');
+        const data = await response.json();
+        setFeatureFlags(data.flags);
+      } catch (error) {
+        console.error('Failed to fetch feature flags:', error);
+      }
+    };
+    fetchFlags();
+  }, []);
+
+  // Reset backend if Kubernetes is disabled
+  useEffect(() => {
+    if (formData.backend === "Kubernetes" && featureFlags && !featureFlags.enable_kubernetes_backend) {
+      setFormData(prev => ({ ...prev, backend: "Docker" as BackendType }));
+    }
+  }, [featureFlags, formData.backend]);
 
   // Compute available models based on selected agent
   const availableModels = useMemo(() => {
@@ -98,40 +151,9 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
     }
   }, [formData.agent]);
 
-  // Auto-generate mount name from repo path
-  const generateMountName = (repoPath: string): string => {
-    if (!repoPath) return '';
-
-    // Extract last part of path and convert to valid mount name
-    const pathParts = repoPath.split('/');
-    const lastName = pathParts[pathParts.length - 1] || pathParts[pathParts.length - 2] || 'repo';
-
-    return lastName
-      .toLowerCase()
-      .replace(/[^a-z0-9-_]/g, '-')
-      .replace(/_/g, '-')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '');
-  };
-
   const handleRepoPathChange = (id: string, newPath: string) => {
-    setRepositories(repos => repos.map(repo => {
-      if (repo.id === id) {
-        // Auto-generate mount name if it hasn't been manually edited
-        const shouldAutoGenerate = !repo.mount_name || repo.mount_name === generateMountName(repo.repo_path);
-        return {
-          ...repo,
-          repo_path: newPath,
-          mount_name: shouldAutoGenerate ? generateMountName(newPath) : repo.mount_name
-        };
-      }
-      return repo;
-    }));
-  };
-
-  const handleMountNameChange = (id: string, newMountName: string) => {
     setRepositories(repos => repos.map(repo =>
-      repo.id === id ? { ...repo, mount_name: newMountName } : repo
+      repo.id === id ? { ...repo, repo_path: newPath } : repo
     ));
   };
 
@@ -191,34 +213,6 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
       return "Exactly one repository must be marked as primary";
     }
 
-    // Check mount names are valid and unique
-    const mountNames = new Set<string>();
-    for (const repo of repositories) {
-      const name = repo.mount_name.trim();
-
-      if (!name) {
-        return "All repositories must have a mount name";
-      }
-
-      if (!/^[a-z0-9]([a-z0-9-_]{0,62}[a-z0-9])?$/.test(name)) {
-        return `Invalid mount name "${name}": must be alphanumeric with hyphens/underscores, 1-64 characters`;
-      }
-
-      if (mountNames.has(name)) {
-        return `Duplicate mount name: "${name}"`;
-      }
-
-      mountNames.add(name);
-    }
-
-    // Check for reserved names
-    const reserved = ['workspace', 'clauderon', 'repos', 'primary'];
-    for (const repo of repositories) {
-      if (reserved.includes(repo.mount_name.toLowerCase())) {
-        return `Mount name "${repo.mount_name}" is reserved`;
-      }
-    }
-
     return null;
   };
 
@@ -226,6 +220,16 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
     e.preventDefault();
     setIsSubmitting(true);
     setError(null);
+
+    // Validate storage class for Kubernetes backend
+    if (formData.backend === "Kubernetes" && storageClasses.length > 0) {
+      const hasDefault = storageClasses.some(sc => sc.is_default);
+      if (!hasDefault && !formData.storage_class) {
+        setError("No default storage class available. Please select a storage class.");
+        setIsSubmitting(false);
+        return;
+      }
+    }
 
     try {
       // Validate repositories
@@ -240,7 +244,6 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
       const repoInputs: CreateRepositoryInput[] | undefined = repositories.length > 1
         ? repositories.map(repo => ({
             repo_path: repo.repo_path,
-            ...(repo.mount_name && { mount_name: repo.mount_name }),
             is_primary: repo.is_primary
           }))
         : undefined;
@@ -262,6 +265,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
         ...(formData.container_image && { container_image: formData.container_image }),
         ...(formData.cpu_limit && { cpu_limit: formData.cpu_limit }),
         ...(formData.memory_limit && { memory_limit: formData.memory_limit }),
+        ...(formData.storage_class && { storage_class: formData.storage_class }),
       };
 
       const result = await createSession(request);
@@ -410,26 +414,6 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                     required
                   />
                 </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor={`mount-name-${repo.id}`} className="text-sm">
-                    Mount Name <span className="text-xs text-muted-foreground">(alphanumeric + hyphens/underscores)</span>
-                  </Label>
-                  <input
-                    type="text"
-                    id={`mount-name-${repo.id}`}
-                    value={repo.mount_name}
-                    onChange={(e) => { handleMountNameChange(repo.id, e.target.value); }}
-                    placeholder="auto-generated"
-                    className="w-full px-3 py-2 border-2 rounded font-mono text-sm"
-                    pattern="[a-z0-9][a-z0-9-_]{0,62}[a-z0-9]"
-                    maxLength={64}
-                    required
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Container path: {repo.is_primary ? '/workspace' : `/repos/${repo.mount_name || '...'}`}
-                  </p>
-                </div>
               </div>
             ))}
 
@@ -440,7 +424,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                 color: 'hsl(45, 75%, 30%)'
               }}>
                 <strong>Warning:</strong> Multi-repository sessions are only supported with Docker backend.
-                Zellij and Kubernetes backends will reject multi-repo sessions.
+                Zellij, Kubernetes, and Sprites backends will reject multi-repo sessions.
               </div>
             )}
           </div>
@@ -472,7 +456,10 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
               >
                 <option value="Docker">Docker</option>
                 <option value="Zellij">Zellij</option>
-                <option value="Kubernetes">Kubernetes</option>
+                {featureFlags?.enable_kubernetes_backend && (
+                  <option value="Kubernetes">Kubernetes</option>
+                )}
+                <option value="Sprites">Sprites</option>
               </select>
             </div>
 
@@ -688,6 +675,39 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                   />
                 </div>
               </div>
+
+              {/* Storage Class (Kubernetes only) */}
+              {formData.backend === "Kubernetes" && (
+                <div className="space-y-2">
+                  <Label htmlFor="storage_class">Storage Class (Kubernetes)</Label>
+                  {loadingStorageClasses ? (
+                    <div className="text-sm text-muted-foreground">Loading storage classes...</div>
+                  ) : storageClasses.length > 0 ? (
+                    <>
+                      <select
+                        id="storage_class"
+                        value={formData.storage_class}
+                        onChange={(e) => setFormData({ ...formData, storage_class: e.target.value })}
+                        className="w-full px-3 py-2 border-2 rounded font-mono text-sm"
+                      >
+                        <option value="">Use default from config</option>
+                        {storageClasses.map((sc) => (
+                          <option key={sc.name} value={sc.name}>
+                            {sc.name} {sc.is_default ? "(default)" : ""} - {sc.provisioner}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Storage class for persistent volume claims (PVCs). Affects cache and workspace volumes.
+                      </p>
+                    </>
+                  ) : (
+                    <div className="text-sm text-muted-foreground">
+                      No storage classes available. Check cluster configuration.
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </details>
 

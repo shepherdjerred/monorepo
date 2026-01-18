@@ -22,6 +22,15 @@ import type {
 import { ApiError, NetworkError, SessionNotFoundError } from "./errors.js";
 
 /**
+ * Information about a Kubernetes storage class
+ */
+export type StorageClassInfo = {
+  name: string;
+  provisioner: string;
+  is_default: boolean;
+}
+
+/**
  * Configuration options for ClauderonClient
  */
 export type ClauderonClientConfig = {
@@ -189,6 +198,26 @@ export class ClauderonClient {
       value,
     };
     await this.request("POST", "/api/credentials", request);
+  }
+
+  /**
+   * Get available Kubernetes storage classes
+   * Only applicable when Kubernetes backend is available
+   */
+  async getStorageClasses(): Promise<StorageClassInfo[]> {
+    try {
+      const response = await this.request<{ storage_classes: StorageClassInfo[] }>(
+        "GET",
+        "/api/storage-classes"
+      );
+      return response.storage_classes;
+    } catch (error) {
+      // If endpoint not available or K8s not configured, return empty array
+      if (error instanceof ApiError && (error.statusCode === 404 || error.statusCode === 501)) {
+        return [];
+      }
+      throw error;
+    }
   }
 
   /**

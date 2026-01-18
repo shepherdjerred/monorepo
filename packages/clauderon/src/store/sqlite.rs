@@ -990,6 +990,10 @@ impl Store for SqliteStore {
             // Load repositories from junction table
             match self.get_session_repositories(session.id).await {
                 Ok(repos) if !repos.is_empty() => {
+                    // Sync top-level subdirectory with primary repo
+                    if let Some(primary) = repos.iter().find(|r| r.is_primary) {
+                        session.subdirectory.clone_from(&primary.subdirectory);
+                    }
                     session.repositories = Some(repos);
                 }
                 Ok(_) => {
@@ -1042,6 +1046,10 @@ impl Store for SqliteStore {
                 // Load repositories from junction table
                 match self.get_session_repositories(session.id).await {
                     Ok(repos) if !repos.is_empty() => {
+                        // Sync top-level subdirectory with primary repo
+                        if let Some(primary) = repos.iter().find(|r| r.is_primary) {
+                            session.subdirectory.clone_from(&primary.subdirectory);
+                        }
                         session.repositories = Some(repos);
                     }
                     Ok(_) => {

@@ -70,6 +70,7 @@ pub fn create_router(auth_state: &Option<AuthState>, dev_mode: bool) -> Router<A
         .route("/api/recent-repos", get(get_recent_repos))
         .route("/api/browse-directory", post(browse_directory))
         .route("/api/status", get(get_system_status))
+        .route("/api/storage-classes", get(get_storage_classes))
         .route("/api/credentials", post(update_credential))
         .route("/api/feature-flags", get(get_feature_flags))
         .route("/api/preferences", get(get_user_preferences))
@@ -293,6 +294,7 @@ async fn create_session(
             request.pull_policy,
             request.cpu_limit,
             request.memory_limit,
+            request.storage_class,
         )
         .await?;
 
@@ -567,6 +569,23 @@ async fn get_system_status(
 ) -> Result<Json<crate::api::protocol::SystemStatus>, AppError> {
     let status = state.session_manager.get_system_status().await?;
     Ok(Json(status))
+}
+
+/// Get available Kubernetes storage classes
+async fn get_storage_classes(
+    State(state): State<AppState>,
+) -> Result<Json<serde_json::Value>, AppError> {
+    let k8s_backend = state
+        .session_manager
+        .kubernetes_backend()
+        .ok_or_else(|| AppError::BadRequest("Kubernetes backend not available".to_string()))?;
+
+    let storage_classes = k8s_backend
+        .list_storage_classes()
+        .await
+        .map_err(|e| AppError::BadRequest(format!("Failed to list storage classes: {}", e)))?;
+
+    Ok(Json(json!({ "storage_classes": storage_classes })))
 }
 
 /// Update a credential

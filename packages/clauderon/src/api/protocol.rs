@@ -54,6 +54,9 @@ pub enum Request {
 
     /// Refresh a session (pull latest image and recreate container)
     RefreshSession { id: String },
+
+    /// Get current feature flags
+    GetFeatureFlags,
 }
 
 /// Recent repository entry with timestamp
@@ -213,6 +216,14 @@ pub struct CreateSessionRequest {
     /// - Kubernetes: `"2Gi"` (2 gibibytes), `"512Mi"` (512 mebibytes)
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub memory_limit: Option<String>,
+
+    /// Optional: Storage class for persistent volumes (Kubernetes only).
+    ///
+    /// Format: Storage class name (e.g., `"gp2"`, `"standard"`)
+    /// Only applicable to Kubernetes backend.
+    /// If not specified, uses cluster default or config file setting.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub storage_class: Option<String>,
 }
 
 /// Default to plan mode for safety - allows users to explore and understand
@@ -309,6 +320,11 @@ pub enum Response {
 
     /// Session ID returned
     SessionId { session_id: String },
+
+    /// Current feature flags
+    FeatureFlags {
+        flags: crate::feature_flags::FeatureFlags,
+    },
 
     /// Generic success response
     Ok,

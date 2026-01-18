@@ -88,7 +88,7 @@ async fn run_main_loop(
     let mut event_stream = events::create_event_stream();
 
     // Tick interval for animations
-    let mut tick_interval = tokio::time::interval(Duration::from_millis(50));
+    let mut tick_interval = tokio::time::interval(Duration::from_millis(80));
 
     // Background reconcile interval (30 seconds)
     let mut reconcile_interval = tokio::time::interval(Duration::from_secs(30));

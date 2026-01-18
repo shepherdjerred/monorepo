@@ -374,6 +374,15 @@ impl ApiClient for MockApiClient {
             },
         ])
     }
+
+    async fn get_feature_flags(&mut self) -> anyhow::Result<crate::feature_flags::FeatureFlags> {
+        if self.should_fail() {
+            let msg = self.error_message.read().await.clone();
+            anyhow::bail!("{msg}");
+        }
+
+        Ok(crate::feature_flags::FeatureFlags::default())
+    }
 }
 
 #[cfg(test)]
@@ -407,6 +416,7 @@ mod tests {
             pull_policy: None,
             cpu_limit: None,
             memory_limit: None,
+            storage_class: None,
         };
 
         let (session, warnings) = client.create_session(request).await.unwrap();
