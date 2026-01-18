@@ -147,6 +147,8 @@ async fn create_test_manager_with_proxy_and_readonly() -> (
     let zellij = Arc::new(MockExecutionBackend::zellij());
     let docker = Arc::new(MockExecutionBackend::docker());
     let kubernetes = Arc::new(MockExecutionBackend::kubernetes());
+    #[cfg(target_os = "macos")]
+    let apple_container = Arc::new(MockExecutionBackend::apple_container());
     let sprites = Arc::new(MockExecutionBackend::sprites());
 
     // Helper functions to coerce Arc<Concrete> to Arc<dyn Trait>
@@ -170,6 +172,8 @@ async fn create_test_manager_with_proxy_and_readonly() -> (
         to_exec_backend(Arc::clone(&docker)),
         to_exec_backend(Arc::clone(&kubernetes)),
         None,
+        #[cfg(target_os = "macos")]
+        to_exec_backend(Arc::clone(&apple_container)),
         to_exec_backend(Arc::clone(&sprites)),
         feature_flags,
     )
@@ -285,7 +289,7 @@ async fn test_create_session_with_read_write_mode() {
 async fn test_zellij_backend_ignores_proxy_port() {
     let repo_dir = create_temp_git_repo();
     let (manager, _proxy_manager, _temp_dir, _git, _zellij, _docker) =
-        create_test_manager_with_proxy().await;
+        create_test_manager_with_proxy_and_readonly().await;
 
     let (session, _warnings) = manager
         .create_session(
@@ -689,7 +693,7 @@ async fn test_proxy_port_persists_in_database() {
 async fn test_delete_session_cleans_up_proxy() {
     let repo_dir = create_temp_git_repo();
     let (manager, _proxy_manager, _temp_dir, _git, _zellij, _docker) =
-        create_test_manager_with_proxy().await;
+        create_test_manager_with_proxy_and_readonly().await;
 
     let (session, _warnings) = manager
         .create_session(
