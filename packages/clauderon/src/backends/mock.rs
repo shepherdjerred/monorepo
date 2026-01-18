@@ -171,6 +171,12 @@ impl MockExecutionBackend {
         Self::new("kubernetes")
     }
 
+    /// Create a mock Sprites backend
+    #[must_use]
+    pub fn sprites() -> Self {
+        Self::new("sprites")
+    }
+
     /// Configure the mock to fail all operations
     pub fn set_should_fail(&self, should_fail: bool) {
         self.should_fail.store(should_fail, Ordering::SeqCst);
