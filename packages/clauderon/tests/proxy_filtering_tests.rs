@@ -521,6 +521,10 @@ async fn test_access_mode_persists_across_restarts() {
             arc
         }
 
+        let feature_flags = Arc::new(clauderon::feature_flags::FeatureFlags {
+            enable_readonly_mode: true,
+            ..Default::default()
+        });
         let manager = SessionManager::new(
             store,
             to_git_ops(git),
@@ -531,7 +535,7 @@ async fn test_access_mode_persists_across_restarts() {
             #[cfg(target_os = "macos")]
             to_exec_backend(apple_container),
             to_exec_backend(sprites),
-            Arc::new(FeatureFlags::default()),
+            feature_flags,
         )
         .await
         .expect("Failed to create manager");
@@ -584,6 +588,10 @@ async fn test_access_mode_persists_across_restarts() {
             arc
         }
 
+        let feature_flags = Arc::new(clauderon::feature_flags::FeatureFlags {
+            enable_readonly_mode: true,
+            ..Default::default()
+        });
         let manager = SessionManager::new(
             store,
             to_git_ops(git),
@@ -594,7 +602,7 @@ async fn test_access_mode_persists_across_restarts() {
             #[cfg(target_os = "macos")]
             to_exec_backend(apple_container),
             to_exec_backend(sprites),
-            Arc::new(FeatureFlags::default()),
+            feature_flags,
         )
         .await
         .expect("Failed to create manager");
