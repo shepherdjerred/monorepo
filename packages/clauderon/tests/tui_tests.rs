@@ -1305,7 +1305,7 @@ fn test_signal_menu_selected_signal() {
     let menu = SignalMenuState::new();
     let signal = menu.selected_signal();
 
-    assert_eq!(signal, Some(SignalType::Sigint));
+    assert_eq!(signal, SignalType::Sigint);
 }
 
 #[test]
