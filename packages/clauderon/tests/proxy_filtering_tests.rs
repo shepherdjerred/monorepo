@@ -102,7 +102,7 @@ async fn create_test_manager_with_proxy() -> (
         to_exec_backend(Arc::clone(&kubernetes)),
         None,
         to_exec_backend(Arc::clone(&sprites)),
-        crate::feature_flags::FeatureFlags::default(),
+        FeatureFlags::default(),
     )
     .await
     .expect("Failed to create manager");
