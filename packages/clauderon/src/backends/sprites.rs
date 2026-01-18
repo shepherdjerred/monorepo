@@ -456,23 +456,26 @@ impl SpritesBackend {
                 format!("/home/sprite/repos/{}", repo.mount_name)
             };
 
+            // Build clone command
+            let mut clone_args = vec![
+                "git".to_string(),
+                "clone".to_string(),
+                "--branch".to_string(),
+                repo.branch_name.clone(),
+                "--single-branch".to_string(),
+            ];
+
+            // Add shallow clone flags if configured
+            if self.config.git.shallow_clone {
+                clone_args.push("--depth".to_string());
+                clone_args.push("1".to_string());
+            }
+
+            clone_args.push(remote_url.clone());
+            clone_args.push(target_path.clone());
+
             // Clone the repository
-            let clone_result = self
-                .sprite_exec(
-                    sprite_name,
-                    vec![
-                        "git".to_string(),
-                        "clone".to_string(),
-                        "--branch".to_string(),
-                        repo.branch_name.clone(),
-                        "--single-branch".to_string(),
-                        "--depth".to_string(),
-                        "1".to_string(), // Shallow clone for faster setup
-                        remote_url.clone(),
-                        target_path.clone(),
-                    ],
-                )
-                .await?;
+            let clone_result = self.sprite_exec(sprite_name, clone_args).await?;
 
             if clone_result.exit_code != 0 {
                 tracing::error!(
@@ -554,19 +557,13 @@ impl SpritesBackend {
         }
 
         // Install Claude Code using the official installation script
-        // TODO: Replace with actual Claude Code installation command
-        let install_script = r"
-curl -fsSL https://claude.ai/install.sh | sh
-";
+        // Use configured installation URL
+        let install_script = format!("curl -fsSL {} | sh", self.config.image.claude_install_url);
 
         let result = self
             .sprite_exec(
                 sprite_name,
-                vec![
-                    "sh".to_string(),
-                    "-c".to_string(),
-                    install_script.to_string(),
-                ],
+                vec!["sh".to_string(), "-c".to_string(), install_script],
             )
             .await?;
 

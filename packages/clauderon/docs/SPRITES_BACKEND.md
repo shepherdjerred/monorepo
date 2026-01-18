@@ -131,6 +131,52 @@ base_image = "ubuntu:22.04"
 install_claude = true
 ```
 
+## Limitations and Known Issues
+
+### Private Repository Authentication
+
+**Current Limitation:** The Sprites backend does not yet support automatic authentication for private git repositories.
+
+**Workarounds:**
+
+1. **Use public repositories** - If possible, use public repositories for clauderon sessions
+
+2. **Pre-configure SSH keys** - If using a custom base image, include SSH keys:
+   ```dockerfile
+   # In your custom image
+   COPY id_ed25519 /root/.ssh/id_ed25519
+   RUN chmod 600 /root/.ssh/id_ed25519
+   ```
+
+3. **Use personal access tokens in URLs:**
+   ```bash
+   # Configure git to use HTTPS with token
+   git config --global url."https://${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
+   ```
+
+**Future Feature:** Automatic SSH key and credential mounting is planned for a future release.
+
+### Shallow Clone Limitations
+
+By default, repositories are cloned with `--depth 1` (shallow clone) for faster setup. This may cause issues with:
+
+- `git describe` (requires tag history)
+- Rebasing operations
+- Viewing full commit history
+- Some CI/CD tools that expect full history
+
+**Solution:** Disable shallow clones in configuration:
+```toml
+[git]
+shallow_clone = false
+```
+
+### Other Limitations
+
+- **No local filesystem mounting** - Unlike Docker/Kubernetes, sprites cannot mount local directories. All code must be cloned from git remotes.
+- **Network dependency** - Requires internet connectivity and access to git remotes
+- **API rate limits** - Subject to sprites.dev API rate limiting
+
 ## Configuration
 
 ### Authentication

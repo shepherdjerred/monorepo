@@ -120,6 +120,27 @@ impl Default for SpritesNetwork {
     }
 }
 
+/// Git repository configuration for sprites
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct SpritesGit {
+    /// Use shallow clone (--depth 1) for faster cloning
+    /// Shallow clones are faster but may break git describe, rebasing, etc.
+    #[serde(default = "default_shallow_clone")]
+    pub shallow_clone: bool,
+}
+
+fn default_shallow_clone() -> bool {
+    true
+}
+
+impl Default for SpritesGit {
+    fn default() -> Self {
+        Self {
+            shallow_clone: default_shallow_clone(),
+        }
+    }
+}
+
 /// Image configuration for sprites
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct SpritesImage {
@@ -131,6 +152,11 @@ pub struct SpritesImage {
     /// Automatically install Claude Code if not present in image
     #[serde(default = "default_install_claude")]
     pub install_claude: bool,
+
+    /// Claude Code installation URL
+    /// WARNING: This URL should be verified before use
+    #[serde(default = "default_claude_install_url")]
+    pub claude_install_url: String,
 
     /// Additional packages to install via apt-get
     /// Example: `["git", "curl", "build-essential"]`
@@ -146,11 +172,17 @@ fn default_install_claude() -> bool {
     true
 }
 
+fn default_claude_install_url() -> String {
+    // TODO: Verify this is the correct Claude Code installation URL
+    "https://claude.ai/install.sh".to_string()
+}
+
 impl Default for SpritesImage {
     fn default() -> Self {
         Self {
             base_image: default_base_image(),
             install_claude: default_install_claude(),
+            claude_install_url: default_claude_install_url(),
             packages: vec![],
         }
     }
@@ -173,6 +205,17 @@ impl SpritesImage {
                 "Base image contains dangerous characters: '{}'",
                 self.base_image
             ));
+        }
+
+        // Validate Claude install URL
+        if self.claude_install_url.is_empty() {
+            return Err(anyhow::anyhow!("Claude install URL cannot be empty"));
+        }
+        if !self.claude_install_url.starts_with("https://") {
+            tracing::warn!(
+                "Claude install URL does not use HTTPS: {}",
+                self.claude_install_url
+            );
         }
 
         // Validate package names
@@ -219,6 +262,10 @@ pub struct SpritesConfig {
     /// Image configuration
     #[serde(default)]
     pub image: SpritesImage,
+
+    /// Git repository configuration
+    #[serde(default)]
+    pub git: SpritesGit,
 }
 
 impl SpritesConfig {
