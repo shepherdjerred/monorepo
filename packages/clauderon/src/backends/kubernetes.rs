@@ -507,7 +507,10 @@ impl KubernetesBackend {
         });
 
         let mut data = BTreeMap::new();
-        data.insert("managed-settings.json".to_string(), managed_settings.to_string());
+        data.insert(
+            "managed-settings.json".to_string(),
+            managed_settings.to_string(),
+        );
 
         let cm = ConfigMap {
             metadata: ObjectMeta {
@@ -1608,8 +1611,7 @@ impl ExecutionBackend for KubernetesBackend {
         self.ensure_namespace_exists().await?;
 
         // Validate image names (security: prevent command injection)
-        validate_image_name(&self.config.image)
-            .context("Invalid container image in config")?;
+        validate_image_name(&self.config.image).context("Invalid container image in config")?;
         if let Some(ref image_config) = options.container_image {
             image_config
                 .validate()

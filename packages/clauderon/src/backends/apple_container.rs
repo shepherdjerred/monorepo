@@ -251,7 +251,10 @@ impl AppleContainerBackend {
                 registry_auth: None,
             };
             temp_config.validate()?;
-            ("ghcr.io/anthropics/claude-code", super::container_config::ImagePullPolicy::IfNotPresent)
+            (
+                "ghcr.io/anthropics/claude-code",
+                super::container_config::ImagePullPolicy::IfNotPresent,
+            )
         };
 
         let mut args = vec!["run".to_string()];
@@ -263,11 +266,7 @@ impl AppleContainerBackend {
             args.push(pull_flag.to_string());
         }
 
-        args.extend([
-            "-d".to_string(),
-            "-i".to_string(),
-            "-t".to_string(),
-        ]);
+        args.extend(["-d".to_string(), "-i".to_string(), "-t".to_string()]);
 
         // Set container name
         args.extend(["--name".to_string(), container_name]);
