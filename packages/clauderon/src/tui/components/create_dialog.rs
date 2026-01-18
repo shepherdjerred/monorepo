@@ -11,6 +11,7 @@ use crate::core::{
     session::{ClaudeModel, CodexModel, GeminiModel, SessionModel},
 };
 use crate::tui::app::{App, CreateDialogFocus};
+use super::SPINNER_FRAMES;
 
 /// Render the create session dialog
 pub fn render(frame: &mut Frame, app: &App, area: Rect) {
@@ -596,7 +597,6 @@ fn render_buttons(frame: &mut Frame, focused: bool, create_focused: bool, area: 
 }
 
 /// Spinner frames for loading animation
-const SPINNER_FRAMES: &[&str] = &["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
 
 fn render_loading(
     frame: &mut Frame,
