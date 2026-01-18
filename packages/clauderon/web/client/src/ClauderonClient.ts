@@ -17,6 +17,7 @@ import type {
   BrowseDirectoryRequest,
   BrowseDirectoryResponse,
   UploadResponse,
+  UserPreferences,
 } from "@clauderon/shared";
 import { ApiError, NetworkError, SessionNotFoundError } from "./errors.js";
 
@@ -313,6 +314,34 @@ export class ClauderonClient {
         error
       );
     }
+  }
+
+  /**
+   * Get user preferences
+   */
+  async getUserPreferences(): Promise<UserPreferences> {
+    return await this.request<UserPreferences>("GET", "/api/preferences");
+  }
+
+  /**
+   * Track a user operation (session_created, session_attached, advanced_operation)
+   */
+  async trackOperation(operation: "session_created" | "session_attached" | "advanced_operation"): Promise<void> {
+    await this.request("POST", "/api/preferences/track", { operation });
+  }
+
+  /**
+   * Dismiss a hint by ID
+   */
+  async dismissHint(hintId: string): Promise<void> {
+    await this.request("POST", "/api/preferences/dismiss-hint", { hint_id: hintId });
+  }
+
+  /**
+   * Mark first run experience as complete
+   */
+  async completeFirstRun(): Promise<void> {
+    await this.request("POST", "/api/preferences/complete-first-run");
   }
 
   /**

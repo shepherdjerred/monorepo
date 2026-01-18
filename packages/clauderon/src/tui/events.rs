@@ -210,6 +210,7 @@ pub async fn handle_key_event(app: &mut App, key: KeyEvent) -> anyhow::Result<()
         AppMode::Scroll => handle_scroll_mode_key(app, key),
         AppMode::ReconcileError => handle_reconcile_error_key(app, key).await?,
         AppMode::SignalMenu => handle_signal_menu_key(app, key).await?,
+        AppMode::FirstRun => handle_first_run_key(app, key).await?,
     }
     Ok(())
 }
@@ -1091,4 +1092,71 @@ fn is_image_path(text: &str) -> bool {
                 "jpg" | "jpeg" | "png" | "gif" | "webp"
             )
         })
+}
+
+/// Handle key events in the First Run Experience
+///
+/// Keys:
+/// - Enter/→: Next screen
+/// - ←: Previous screen
+/// - s: Skip FRE (mark complete)
+/// - q/Esc: Close FRE (only on last screen)
+/// - n: Create session (only on last screen)
+async fn handle_first_run_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
+    use crate::tui::first_run::FREScreen;
+
+    let Some(current_screen) = app.fre_screen else {
+        return Ok(());
+    };
+
+    match key.code {
+        // Navigate to next screen
+        KeyCode::Enter | KeyCode::Right => {
+            if let Some(next) = current_screen.next() {
+                app.fre_screen = Some(next);
+            } else {
+                // On last screen, Enter closes FRE
+                close_fre_complete(app).await?;
+            }
+        }
+        // Navigate to previous screen
+        KeyCode::Left => {
+            if let Some(prev) = current_screen.prev() {
+                app.fre_screen = Some(prev);
+            }
+        }
+        // Skip FRE
+        KeyCode::Char('s') => {
+            close_fre_complete(app).await?;
+        }
+        // Close FRE (only on last screen)
+        KeyCode::Char('q') | KeyCode::Esc => {
+            if current_screen == FREScreen::QuickStart {
+                close_fre_complete(app).await?;
+            }
+        }
+        // Create session (only on last screen)
+        KeyCode::Char('n') => {
+            if current_screen == FREScreen::QuickStart {
+                close_fre_complete(app).await?;
+                app.open_create_dialog();
+            }
+        }
+        _ => {}
+    }
+
+    Ok(())
+}
+
+/// Close the FRE and mark it as complete
+async fn close_fre_complete(app: &mut App) -> anyhow::Result<()> {
+    app.mode = AppMode::SessionList;
+    app.fre_screen = None;
+
+    // Mark FRE as complete in preferences
+    if let Some(ref mut prefs) = app.preferences {
+        prefs.mark_first_run_complete().await?;
+    }
+
+    Ok(())
 }

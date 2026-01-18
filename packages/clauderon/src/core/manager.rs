@@ -240,6 +240,12 @@ impl SessionManager {
         Arc::clone(&self.console_manager)
     }
 
+    /// Get reference to the store
+    #[must_use]
+    pub fn store(&self) -> &Arc<dyn Store> {
+        &self.store
+    }
+
     /// List all sessions
     #[instrument(skip(self))]
     pub async fn list_sessions(&self) -> Vec<Session> {

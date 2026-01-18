@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use chrono::Utc;
+use chrono::{DateTime, Utc};
 use sqlx::Row;
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePool, SqlitePoolOptions};
 use std::path::{Path, PathBuf};
@@ -8,7 +8,7 @@ use tracing::instrument;
 use uuid::Uuid;
 
 use super::{RecentRepo, Store};
-use crate::core::{Event, Session};
+use crate::core::{Event, Session, UserPreferences};
 
 /// SQLite-based session store
 pub struct SqliteStore {
@@ -132,6 +132,10 @@ impl SqliteStore {
 
         if current_version < 14 {
             Self::migrate_to_v14(pool).await?;
+        }
+
+        if current_version < 15 {
+            Self::migrate_to_v15(pool).await?;
         }
 
         Ok(())
@@ -916,6 +920,54 @@ impl SqliteStore {
         tracing::info!("Migration v14 complete");
         Ok(())
     }
+
+    /// Migration v15: Add user preferences for progressive disclosure
+    async fn migrate_to_v15(pool: &SqlitePool) -> anyhow::Result<()> {
+        tracing::info!("Applying migration v15: User preferences");
+
+        // Create user_preferences table
+        sqlx::query(
+            r"
+            CREATE TABLE IF NOT EXISTS user_preferences (
+                user_id TEXT PRIMARY KEY,
+                experience_level TEXT NOT NULL DEFAULT 'FirstTime',
+                sessions_created_count INTEGER NOT NULL DEFAULT 0,
+                sessions_attached_count INTEGER NOT NULL DEFAULT 0,
+                advanced_operations_used_count INTEGER NOT NULL DEFAULT 0,
+                first_session_at TEXT,
+                last_activity_at TEXT NOT NULL,
+                dismissed_hints TEXT NOT NULL DEFAULT '[]',
+                ui_preferences TEXT NOT NULL DEFAULT '{}',
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+            ",
+        )
+        .execute(pool)
+        .await?;
+
+        // Create index on user_id
+        sqlx::query(
+            r"
+            CREATE INDEX IF NOT EXISTS idx_user_preferences_user_id
+            ON user_preferences(user_id)
+            ",
+        )
+        .execute(pool)
+        .await?;
+
+        // Record migration
+        let now = Utc::now();
+        sqlx::query("INSERT OR REPLACE INTO schema_version (version, applied_at) VALUES (?, ?)")
+            .bind(15)
+            .bind(now.to_rfc3339())
+            .execute(pool)
+            .await?;
+
+        tracing::info!("Migration v15 complete");
+        Ok(())
+    }
 }
 
 #[async_trait]
@@ -1307,6 +1359,138 @@ impl Store for SqliteStore {
             session_id = %session_id,
             count = repositories.len(),
             "Saved repositories for session"
+        );
+
+        Ok(())
+    }
+
+    #[instrument(skip(self))]
+    async fn get_user_preferences(&self, user_id: &str) -> anyhow::Result<Option<UserPreferences>> {
+        let row = sqlx::query(
+            r"
+            SELECT user_id, experience_level, sessions_created_count, sessions_attached_count,
+                   advanced_operations_used_count, first_session_at, last_activity_at,
+                   dismissed_hints, ui_preferences, created_at, updated_at
+            FROM user_preferences
+            WHERE user_id = ?
+            ",
+        )
+        .bind(user_id)
+        .fetch_optional(&self.pool)
+        .await?;
+
+        if let Some(row) = row {
+            let dismissed_hints: Vec<String> =
+                serde_json::from_str(&row.try_get::<String, _>("dismissed_hints")?)?;
+            let ui_preferences: serde_json::Value =
+                serde_json::from_str(&row.try_get::<String, _>("ui_preferences")?)?;
+
+            let first_session_at: Option<DateTime<Utc>> = row
+                .try_get::<Option<String>, _>("first_session_at")?
+                .map(|s| chrono::DateTime::parse_from_rfc3339(&s).map(Into::into))
+                .transpose()?;
+
+            let last_activity_at: DateTime<Utc> = chrono::DateTime::parse_from_rfc3339(
+                &row.try_get::<String, _>("last_activity_at")?,
+            )?
+            .into();
+            let created_at: DateTime<Utc> =
+                chrono::DateTime::parse_from_rfc3339(&row.try_get::<String, _>("created_at")?)?
+                    .into();
+            let updated_at: DateTime<Utc> =
+                chrono::DateTime::parse_from_rfc3339(&row.try_get::<String, _>("updated_at")?)?
+                    .into();
+
+            let mut prefs = UserPreferences {
+                user_id: row.try_get("user_id")?,
+                experience_level: row.try_get::<String, _>("experience_level")?.parse()?,
+                sessions_created_count: row.try_get::<i64, _>("sessions_created_count")? as u32,
+                sessions_attached_count: row.try_get::<i64, _>("sessions_attached_count")? as u32,
+                advanced_operations_used_count: row
+                    .try_get::<i64, _>("advanced_operations_used_count")?
+                    as u32,
+                first_session_at,
+                last_activity_at,
+                dismissed_hints,
+                ui_preferences,
+                created_at,
+                updated_at,
+            };
+
+            // Recalculate experience level based on current data
+            prefs.experience_level = prefs.calculate_experience_level();
+
+            tracing::debug!(user_id = %user_id, level = ?prefs.experience_level, "Loaded user preferences");
+            Ok(Some(prefs))
+        } else {
+            Ok(None)
+        }
+    }
+
+    #[instrument(skip(self, preferences))]
+    async fn save_user_preferences(&self, preferences: &UserPreferences) -> anyhow::Result<()> {
+        let dismissed_hints_json = serde_json::to_string(&preferences.dismissed_hints)?;
+        let ui_preferences_json = serde_json::to_string(&preferences.ui_preferences)?;
+
+        sqlx::query(
+            r"
+            INSERT OR REPLACE INTO user_preferences (
+                user_id, experience_level, sessions_created_count, sessions_attached_count,
+                advanced_operations_used_count, first_session_at, last_activity_at,
+                dismissed_hints, ui_preferences, created_at, updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ",
+        )
+        .bind(&preferences.user_id)
+        .bind(preferences.experience_level.to_string())
+        .bind(preferences.sessions_created_count as i64)
+        .bind(preferences.sessions_attached_count as i64)
+        .bind(preferences.advanced_operations_used_count as i64)
+        .bind(preferences.first_session_at.map(|dt| dt.to_rfc3339()))
+        .bind(preferences.last_activity_at.to_rfc3339())
+        .bind(dismissed_hints_json)
+        .bind(ui_preferences_json)
+        .bind(preferences.created_at.to_rfc3339())
+        .bind(preferences.updated_at.to_rfc3339())
+        .execute(&self.pool)
+        .await?;
+
+        tracing::debug!(
+            user_id = %preferences.user_id,
+            level = ?preferences.experience_level,
+            "Saved user preferences"
+        );
+        Ok(())
+    }
+
+    #[instrument(skip(self))]
+    async fn track_user_operation(
+        &self,
+        user_id: &str,
+        operation: super::UserOperation,
+    ) -> anyhow::Result<()> {
+        // Get or create preferences
+        let mut prefs = self
+            .get_user_preferences(user_id)
+            .await?
+            .unwrap_or_else(|| UserPreferences::new(user_id.to_string()));
+
+        // Track the operation
+        match operation {
+            super::UserOperation::SessionCreated => prefs.track_session_created(),
+            super::UserOperation::SessionAttached => prefs.track_session_attached(),
+            super::UserOperation::AdvancedOperation => prefs.track_advanced_operation(),
+        }
+
+        // Save updated preferences
+        self.save_user_preferences(&prefs).await?;
+
+        tracing::info!(
+            user_id = %user_id,
+            operation = ?operation,
+            level = ?prefs.experience_level,
+            "Tracked user operation"
         );
 
         Ok(())

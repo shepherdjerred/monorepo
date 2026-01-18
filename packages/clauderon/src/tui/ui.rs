@@ -76,6 +76,11 @@ pub fn render(frame: &mut Frame, app: &App) {
             frame.render_widget(Clear, dialog_area);
             render_signal_menu(frame, app, dialog_area);
         }
+        AppMode::FirstRun => {
+            if let Some(screen) = app.fre_screen {
+                crate::tui::first_run::render(frame, screen, frame.area());
+            }
+        }
         AppMode::SessionList
         | AppMode::Attached
         | AppMode::CopyMode
@@ -220,10 +225,63 @@ fn render_confirm_delete(frame: &mut Frame, app: &App, area: Rect) {
 }
 
 fn render_help(frame: &mut Frame, app: &App, area: Rect) {
+    use crate::core::ExperienceLevel;
+
+    let experience_level = app.experience_level();
+
+    let title = match experience_level {
+        ExperienceLevel::FirstTime => " Quick Start ",
+        ExperienceLevel::Regular => " Help ",
+        ExperienceLevel::Advanced => " Help (All Shortcuts) ",
+    };
+
     let block = Block::default()
-        .title(" Help ")
+        .title(title)
         .borders(Borders::ALL)
         .border_style(Style::default().fg(Color::Cyan));
+
+    // FirstTime users: Only show 7 essential shortcuts
+    if experience_level == ExperienceLevel::FirstTime {
+        let help_items = vec![(
+            "Quick Start",
+            vec![
+                ("↑/↓", "Navigate"),
+                ("Enter", "Attach to session"),
+                ("n", "New session"),
+                ("d", "Delete session"),
+                ("a", "Archive session"),
+                ("?", "Help"),
+                ("q", "Quit"),
+            ],
+        )];
+
+        let mut items = Vec::new();
+        for (section, keys) in help_items {
+            items.push(ListItem::new(Line::from(Span::styled(
+                section,
+                Style::default()
+                    .fg(Color::Yellow)
+                    .add_modifier(Modifier::BOLD),
+            ))));
+            for (key, desc) in keys {
+                items.push(ListItem::new(Line::from(vec![
+                    Span::styled(format!("  {key:12}"), Style::default().fg(Color::Green)),
+                    Span::raw(desc),
+                ])));
+            }
+        }
+        items.push(ListItem::new(Line::from("")));
+        items.push(ListItem::new(Line::from(Span::styled(
+            "Press 'h' for full reference",
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::ITALIC),
+        ))));
+
+        let list = List::new(items).block(block);
+        frame.render_widget(list, area);
+        return;
+    }
 
     // Build "While Attached" section based on selected session's backend
     let attached_hints = app.selected_session().map_or_else(
@@ -261,67 +319,102 @@ fn render_help(frame: &mut Frame, app: &App, area: Rect) {
         },
     );
 
-    let help_items = vec![
-        (
-            "Session List",
-            vec![
-                ("↑/k", "Move up"),
-                ("↓/j", "Move down"),
-                ("Enter", "Attach to session"),
-                ("1-5", "Switch filter view"),
-                ("Tab", "Cycle through filters"),
-                ("n", "New session"),
-                ("d", "Delete session"),
-                ("a", "Archive session"),
-                ("u", "Unarchive session"),
-                ("f", "Refresh session (Docker only)"),
-                ("r", "Reconcile state"),
-                ("R", "Refresh list"),
-                ("?", "Toggle help"),
-                ("q", "Quit"),
-            ],
-        ),
-        (
-            "Create Dialog",
-            vec![
-                ("Tab", "Next field"),
-                ("Shift+Tab", "Previous field"),
-                ("←/→/Space", "Toggle options"),
-                ("Enter", "Submit (on buttons)"),
-                ("Esc", "Cancel"),
-            ],
-        ),
-        ("While Attached", attached_hints),
-        (
-            "Locked Mode",
-            vec![
-                ("Ctrl+L", "Unlock and return to attached"),
-                ("All keys", "Forwarded to application"),
-            ],
-        ),
-        (
-            "Scroll Mode",
-            vec![
-                ("↑/↓ or j/k", "Scroll one line"),
-                ("PgUp/PgDn", "Scroll one page"),
-                ("Ctrl+b/f", "Scroll one page (vi-style)"),
-                ("Esc/q", "Exit scroll mode"),
-                ("Ctrl+S", "Exit scroll mode"),
-            ],
-        ),
-        (
-            "Copy Mode",
-            vec![
-                ("h/j/k/l", "Move cursor (vi-style)"),
-                ("Arrow keys", "Move cursor"),
-                ("v", "Start/cancel visual selection"),
-                ("y", "Yank (copy) selection to clipboard"),
-                ("PgUp/PgDn", "Scroll page up/down"),
-                ("q or Esc", "Exit copy mode"),
-                ("?", "Show help"),
-            ],
-        ),
-    ];
+    // Regular users: ~15 shortcuts (skip advanced modes)
+    let help_items = if experience_level == ExperienceLevel::Regular {
+        vec![
+            (
+                "Session List",
+                vec![
+                    ("↑/k", "Move up"),
+                    ("↓/j", "Move down"),
+                    ("Enter", "Attach to session"),
+                    ("1-5", "Switch filter view"),
+                    ("Tab", "Cycle through filters"),
+                    ("n", "New session"),
+                    ("d", "Delete session"),
+                    ("a", "Archive session"),
+                    ("u", "Unarchive session"),
+                    ("f", "Refresh session (Docker only)"),
+                    ("R", "Refresh list"),
+                    ("?", "Toggle help"),
+                    ("q", "Quit"),
+                ],
+            ),
+            (
+                "Create Dialog",
+                vec![
+                    ("Tab", "Next field"),
+                    ("Shift+Tab", "Previous field"),
+                    ("Enter", "Submit"),
+                    ("Esc", "Cancel"),
+                ],
+            ),
+            ("While Attached", attached_hints),
+        ]
+    } else {
+        // Advanced users: Full help with all shortcuts
+        vec![
+            (
+                "Session List",
+                vec![
+                    ("↑/k", "Move up"),
+                    ("↓/j", "Move down"),
+                    ("Enter", "Attach to session"),
+                    ("1-5", "Switch filter view"),
+                    ("Tab", "Cycle through filters"),
+                    ("n", "New session"),
+                    ("d", "Delete session"),
+                    ("a", "Archive session"),
+                    ("u", "Unarchive session"),
+                    ("f", "Refresh session (Docker only)"),
+                    ("r", "Reconcile state"),
+                    ("R", "Refresh list"),
+                    ("?", "Toggle help"),
+                    ("q", "Quit"),
+                ],
+            ),
+            (
+                "Create Dialog",
+                vec![
+                    ("Tab", "Next field"),
+                    ("Shift+Tab", "Previous field"),
+                    ("←/→/Space", "Toggle options"),
+                    ("Enter", "Submit (on buttons)"),
+                    ("Esc", "Cancel"),
+                ],
+            ),
+            ("While Attached", attached_hints),
+            (
+                "Locked Mode",
+                vec![
+                    ("Ctrl+L", "Unlock and return to attached"),
+                    ("All keys", "Forwarded to application"),
+                ],
+            ),
+            (
+                "Scroll Mode",
+                vec![
+                    ("↑/↓ or j/k", "Scroll one line"),
+                    ("PgUp/PgDn", "Scroll one page"),
+                    ("Ctrl+b/f", "Scroll one page (vi-style)"),
+                    ("Esc/q", "Exit scroll mode"),
+                    ("Ctrl+S", "Exit scroll mode"),
+                ],
+            ),
+            (
+                "Copy Mode",
+                vec![
+                    ("h/j/k/l", "Move cursor (vi-style)"),
+                    ("Arrow keys", "Move cursor"),
+                    ("v", "Start/cancel visual selection"),
+                    ("y", "Yank (copy) selection to clipboard"),
+                    ("PgUp/PgDn", "Scroll page up/down"),
+                    ("q or Esc", "Exit copy mode"),
+                    ("?", "Show help"),
+                ],
+            ),
+        ]
+    };
 
     let mut items = Vec::new();
     for (section, keys) in help_items {

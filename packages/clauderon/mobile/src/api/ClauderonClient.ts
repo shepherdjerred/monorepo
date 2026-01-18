@@ -6,6 +6,7 @@ import type {
   SystemStatus,
   UpdateCredentialRequest,
   UploadResponse,
+  UserPreferences,
 } from "../types/generated";
 import { ApiError, NetworkError, SessionNotFoundError } from "./errors";
 import { Platform } from "react-native";
@@ -219,6 +220,42 @@ export class ClauderonClient {
       totalLines: response.total_lines,
       fileExists: response.file_exists,
     };
+  }
+
+  /**
+   * Get user preferences
+   */
+  async getUserPreferences(): Promise<UserPreferences> {
+    const response = await this.request<UserPreferences>(
+      "GET",
+      "/api/preferences"
+    );
+    return response;
+  }
+
+  /**
+   * Track a user operation
+   */
+  async trackOperation(
+    operation: "session_created" | "session_attached" | "advanced_operation"
+  ): Promise<void> {
+    await this.request("POST", "/api/preferences/track", { operation });
+  }
+
+  /**
+   * Dismiss a hint
+   */
+  async dismissHint(hintId: string): Promise<void> {
+    await this.request("POST", "/api/preferences/dismiss-hint", {
+      hint_id: hintId,
+    });
+  }
+
+  /**
+   * Mark first run experience as complete
+   */
+  async completeFirstRun(): Promise<void> {
+    await this.request("POST", "/api/preferences/complete-first-run");
   }
 
   /**

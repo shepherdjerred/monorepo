@@ -98,6 +98,8 @@ pub enum AppMode {
     ReconcileError,
     /// Signal menu dialog
     SignalMenu,
+    /// First Run Experience - onboarding flow
+    FirstRun,
 }
 
 /// Copy mode state for text selection and navigation
@@ -844,6 +846,12 @@ pub struct App {
 
     /// Last signal send result for status display
     pub last_signal_result: Option<SignalResult>,
+
+    /// User preferences for progressive disclosure
+    pub preferences: Option<crate::tui::preferences::TuiPreferences>,
+
+    /// Current First Run Experience screen (None if not in FRE)
+    pub fre_screen: Option<crate::tui::first_run::FREScreen>,
 }
 
 impl App {
@@ -878,7 +886,44 @@ impl App {
             reconcile_error_session_id: None,
             signal_menu: None,
             last_signal_result: None,
+            preferences: None,
+            fre_screen: None,
         }
+    }
+
+    /// Load user preferences from disk
+    pub async fn load_preferences(&mut self) {
+        match crate::tui::preferences::TuiPreferences::load().await {
+            Ok(prefs) => {
+                tracing::info!(
+                    level = ?prefs.experience_level(),
+                    "Loaded TUI preferences"
+                );
+                self.preferences = Some(prefs);
+            }
+            Err(e) => {
+                tracing::warn!(error = %e, "Failed to load preferences, using defaults");
+                // Continue without preferences - non-fatal
+            }
+        }
+    }
+
+    /// Get current experience level
+    #[must_use]
+    pub fn experience_level(&self) -> crate::core::ExperienceLevel {
+        self.preferences
+            .as_ref()
+            .map(|p| p.experience_level())
+            .unwrap_or(crate::core::ExperienceLevel::FirstTime)
+    }
+
+    /// Check if first run should be shown
+    #[must_use]
+    pub fn should_show_first_run(&self) -> bool {
+        self.preferences
+            .as_ref()
+            .map(|p| p.should_show_first_run())
+            .unwrap_or(false)
     }
 
     /// Connect to the daemon

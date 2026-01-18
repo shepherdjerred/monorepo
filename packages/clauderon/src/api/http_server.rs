@@ -2,14 +2,16 @@ use crate::api::middleware::correlation_id_middleware;
 use crate::api::protocol::{CreateSessionRequest, Event};
 use crate::api::static_files::{serve_docs, serve_static};
 use crate::api::ws_events::{EventBroadcaster, broadcast_event};
-use crate::auth::{self, AuthState};
+use crate::auth::{self, AuthState, AuthenticatedUserId};
+use crate::core::UserPreferences;
 use crate::core::manager::SessionManager;
 use crate::core::session::AccessMode;
 use crate::core::session::ClaudeWorkingStatus;
 use crate::hooks::{HookEvent, HookMessage};
+use crate::store::UserOperation;
 use axum::{
     Json, Router,
-    extract::{Path, Query, State},
+    extract::{Extension, Path, Query, State},
     http::StatusCode,
     middleware,
     middleware::from_fn_with_state,
@@ -69,7 +71,14 @@ pub fn create_router(auth_state: &Option<AuthState>, dev_mode: bool) -> Router<A
         .route("/api/browse-directory", post(browse_directory))
         .route("/api/status", get(get_system_status))
         .route("/api/credentials", post(update_credential))
-        .route("/api/feature-flags", get(get_feature_flags));
+        .route("/api/feature-flags", get(get_feature_flags))
+        .route("/api/preferences", get(get_user_preferences))
+        .route("/api/preferences/track", post(track_operation))
+        .route("/api/preferences/dismiss-hint", post(dismiss_hint))
+        .route(
+            "/api/preferences/complete-first-run",
+            post(complete_first_run),
+        );
 
     // Apply auth middleware to protected routes if authentication is enabled
     if let Some(auth_state) = auth_state {
@@ -259,6 +268,7 @@ async fn get_session(
 /// Create a new session (async - returns immediately)
 async fn create_session(
     State(state): State<AppState>,
+    Extension(user_id): Extension<AuthenticatedUserId>,
     Json(request): Json<CreateSessionRequest>,
 ) -> Result<Json<serde_json::Value>, AppError> {
     // Validate model compatibility with agent
@@ -347,6 +357,7 @@ async fn unarchive_session(
 
 async fn refresh_session(
     State(state): State<AppState>,
+    Extension(user_id): Extension<AuthenticatedUserId>,
     Path(id): Path<String>,
 ) -> Result<StatusCode, AppError> {
     validate_session_id(&id)?;
@@ -396,6 +407,7 @@ struct HistoryResponse {
 /// Update session access mode
 async fn update_access_mode(
     State(state): State<AppState>,
+    Extension(user_id): Extension<AuthenticatedUserId>,
     Path(id): Path<String>,
     Json(request): Json<UpdateAccessModeRequest>,
 ) -> Result<StatusCode, AppError> {
@@ -436,6 +448,7 @@ async fn update_metadata(
 /// Regenerate session metadata using AI
 async fn regenerate_metadata(
     State(state): State<AppState>,
+    Extension(user_id): Extension<AuthenticatedUserId>,
     Path(id): Path<String>,
 ) -> Result<Json<serde_json::Value>, AppError> {
     validate_session_id(&id)?;
@@ -867,4 +880,114 @@ async fn get_feature_flags(
         flags,
         requires_restart: true,
     }))
+}
+
+/// Get user preferences
+async fn get_user_preferences(
+    State(state): State<AppState>,
+    Extension(user_id): Extension<AuthenticatedUserId>,
+) -> Result<Json<UserPreferences>, AppError> {
+    let store = &state.session_manager.store();
+
+    // Get or create preferences
+    let prefs = store
+        .get_user_preferences(&user_id.0.to_string())
+        .await?
+        .unwrap_or_else(|| UserPreferences::new(user_id.0.to_string()));
+
+    Ok(Json(prefs))
+}
+
+/// Track a user operation
+#[derive(Debug, Deserialize)]
+struct TrackOperationRequest {
+    operation: String,
+}
+
+async fn track_operation(
+    State(state): State<AppState>,
+    Extension(user_id): Extension<AuthenticatedUserId>,
+    Json(request): Json<TrackOperationRequest>,
+) -> Result<StatusCode, AppError> {
+    let store = &state.session_manager.store();
+
+    let operation = match request.operation.as_str() {
+        "session_created" => UserOperation::SessionCreated,
+        "session_attached" => UserOperation::SessionAttached,
+        "advanced_operation" => UserOperation::AdvancedOperation,
+        _ => return Err(AppError::BadRequest("Invalid operation type".to_string())),
+    };
+
+    store
+        .track_user_operation(&user_id.0.to_string(), operation)
+        .await?;
+
+    // Broadcast preferences updated event
+    let prefs = store
+        .get_user_preferences(&user_id.0.to_string())
+        .await?
+        .unwrap_or_else(|| UserPreferences::new(user_id.0.to_string()));
+
+    broadcast_event(
+        &state.event_broadcaster,
+        Event::PreferencesUpdated { preferences: prefs },
+    );
+
+    Ok(StatusCode::OK)
+}
+
+/// Dismiss a hint
+#[derive(Debug, Deserialize)]
+struct DismissHintRequest {
+    hint_id: String,
+}
+
+async fn dismiss_hint(
+    State(state): State<AppState>,
+    Extension(user_id): Extension<AuthenticatedUserId>,
+    Json(request): Json<DismissHintRequest>,
+) -> Result<StatusCode, AppError> {
+    let store = &state.session_manager.store();
+
+    // Get or create preferences
+    let mut prefs = store
+        .get_user_preferences(&user_id.0.to_string())
+        .await?
+        .unwrap_or_else(|| UserPreferences::new(user_id.0.to_string()));
+
+    prefs.dismiss_hint(request.hint_id);
+    store.save_user_preferences(&prefs).await?;
+
+    // Broadcast preferences updated event
+    broadcast_event(
+        &state.event_broadcaster,
+        Event::PreferencesUpdated { preferences: prefs },
+    );
+
+    Ok(StatusCode::OK)
+}
+
+/// Mark first run experience as complete
+async fn complete_first_run(
+    State(state): State<AppState>,
+    Extension(user_id): Extension<AuthenticatedUserId>,
+) -> Result<StatusCode, AppError> {
+    let store = &state.session_manager.store();
+
+    // Get or create preferences
+    let mut prefs = store
+        .get_user_preferences(&user_id.0.to_string())
+        .await?
+        .unwrap_or_else(|| UserPreferences::new(user_id.0.to_string()));
+
+    prefs.mark_first_run_complete();
+    store.save_user_preferences(&prefs).await?;
+
+    // Broadcast preferences updated event
+    broadcast_event(
+        &state.event_broadcaster,
+        Event::PreferencesUpdated { preferences: prefs },
+    );
+
+    Ok(StatusCode::OK)
 }
