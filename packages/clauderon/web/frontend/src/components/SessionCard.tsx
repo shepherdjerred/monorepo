@@ -6,7 +6,7 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { AGENT_CAPABILITIES, type AgentType } from "@/lib/agent-features";
+import { AGENT_CAPABILITIES } from "@/lib/agent-features";
 import { ProviderIcon } from "./ProviderIcon";
 
 type SessionCardProps = {
@@ -51,9 +51,9 @@ export function SessionCard({ session, onAttach, onEdit, onArchive, onUnarchive,
               </TooltipTrigger>
               <TooltipContent>
                 <div className="text-xs max-w-xs">
-                  <p className="font-semibold mb-1">{AGENT_CAPABILITIES[session.agent as AgentType]?.displayName || session.agent} Capabilities</p>
+                  <p className="font-semibold mb-1">{AGENT_CAPABILITIES[session.agent]?.displayName || session.agent} Capabilities</p>
                   <ul className="space-y-1">
-                    {AGENT_CAPABILITIES[session.agent as AgentType]?.features.map((feature, idx) => (
+                    {AGENT_CAPABILITIES[session.agent]?.features.map((feature, idx) => (
                       <li key={idx} className="flex items-start gap-1.5">
                         <span className="flex-shrink-0">{feature.supported ? '✓' : '⚠'}</span>
                         <span className={feature.supported ? "" : "text-yellow-600"}>
