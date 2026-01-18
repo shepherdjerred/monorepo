@@ -35,6 +35,14 @@ pub async fn handle_request(
         ),
 
         Request::CreateSession(req) => {
+            // Validate request including experimental models check
+            if let Err(e) = req.validate(manager.feature_flags()) {
+                return Response::Error {
+                    code: "INVALID_REQUEST".to_string(),
+                    message: e.to_string(),
+                };
+            }
+
             // Use async creation for multi-repo or when not in print mode
             let use_async = req.repositories.is_some() || !req.print_mode;
 
