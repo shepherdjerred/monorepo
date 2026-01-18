@@ -428,6 +428,32 @@ export enum CheckStatus {
 	Merged = "Merged",
 }
 
+/** PR review decision from GitHub */
+export enum ReviewDecision {
+	/** Review is required */
+	ReviewRequired = "ReviewRequired",
+	/** Changes have been requested */
+	ChangesRequested = "ChangesRequested",
+	/** PR has been approved */
+	Approved = "Approved",
+}
+
+/** Workflow stage in the PR lifecycle */
+export enum WorkflowStage {
+	/** No PR yet, still planning */
+	Planning = "Planning",
+	/** PR created, implementation in progress */
+	Implementation = "Implementation",
+	/** PR waiting for review */
+	Review = "Review",
+	/** PR blocked by CI, conflicts, or requested changes */
+	Blocked = "Blocked",
+	/** PR ready to merge (checks pass, approved, no conflicts) */
+	ReadyToMerge = "ReadyToMerge",
+	/** PR has been merged */
+	Merged = "Merged",
+}
+
 /** Claude agent working status */
 export enum ClaudeWorkingStatus {
 	/** Unknown state (no hooks configured or no data yet) */
@@ -486,6 +512,8 @@ export interface Session {
 	pr_url?: string;
 	/** Status of PR checks */
 	pr_check_status?: CheckStatus;
+	/** Review decision on the PR from GitHub */
+	pr_review_decision?: ReviewDecision;
 	/** Current Claude agent working status (from hooks) */
 	claude_status: ClaudeWorkingStatus;
 	/** Timestamp of last Claude status update */
