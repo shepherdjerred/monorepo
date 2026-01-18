@@ -158,7 +158,7 @@ impl KubernetesBackend {
         let storage_classes: Api<StorageClass> = Api::all(self.client.clone());
 
         let list = storage_classes
-            .list(&Default::default())
+            .list(&ListParams::default())
             .await
             .context("Failed to list storage classes from Kubernetes API")?;
 
@@ -178,8 +178,7 @@ impl KubernetesBackend {
                             annotations.get("storageclass.beta.kubernetes.io/is-default-class")
                         })
                 })
-                .map(|v| v == "true")
-                .unwrap_or(false);
+                .is_some_and(|v| v == "true");
 
             classes.push(StorageClassInfo {
                 name,
