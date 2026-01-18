@@ -106,12 +106,35 @@ pub struct BrowseDirectoryResponse {
     pub error: Option<String>,
 }
 
+/// Input for a single repository in a multi-repo session
+#[typeshare]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CreateRepositoryInput {
+    /// Path to the repository (can include subdirectory, e.g., "/path/to/monorepo/packages/foo")
+    pub repo_path: String,
+
+    /// Optional mount name for the repository in the container.
+    /// If None, will be auto-generated from repo name.
+    /// Examples: "primary", "shared-lib", "api-service"
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mount_name: Option<String>,
+
+    /// Whether this is the primary repository (determines working directory).
+    /// Exactly one repository must be marked as primary in multi-repo sessions.
+    pub is_primary: bool,
+}
+
 /// Request to create a new session
 #[typeshare]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CreateSessionRequest {
-    /// Path to the repository
+    /// Path to the repository (LEGACY: used when repositories is None)
     pub repo_path: String,
+
+    /// Multiple repositories (NEW: when provided, overrides repo_path).
+    /// Maximum 5 repositories per session.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub repositories: Option<Vec<CreateRepositoryInput>>,
 
     /// Initial prompt for the AI agent
     pub initial_prompt: String,
@@ -426,4 +449,15 @@ pub struct ClaudeUsage {
     /// Error information if usage fetch failed
     #[serde(skip_serializing_if = "Option::is_none")]
     pub error: Option<UsageError>,
+}
+
+/// Feature flags response for the frontend
+#[typeshare]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FeatureFlagsResponse {
+    /// Current feature flag values
+    pub flags: crate::feature_flags::FeatureFlags,
+
+    /// Whether flags require daemon restart to change
+    pub requires_restart: bool,
 }

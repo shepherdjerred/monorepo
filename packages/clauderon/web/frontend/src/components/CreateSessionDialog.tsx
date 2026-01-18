@@ -1,10 +1,13 @@
 import { useState, useEffect } from "react";
-import type { CreateSessionRequest, BackendType, AgentType, AccessMode } from "@clauderon/client";
+import type { CreateSessionRequest, BackendType, AccessMode, CreateRepositoryInput } from "@clauderon/client";
+import { AgentType } from "@clauderon/shared";
 import { useSessionContext } from "../contexts/SessionContext";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { X, Check, AlertCircle } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { X, Check, AlertCircle, Plus, Trash2, Star } from "lucide-react";
 import { RepositoryPathSelector } from "./RepositoryPathSelector";
+import { ProviderIcon } from "./ProviderIcon";
 import { toast } from "sonner";
 import { AGENT_CAPABILITIES } from "@/lib/agent-features";
 
@@ -12,17 +15,28 @@ type CreateSessionDialogProps = {
   onClose: () => void;
 }
 
+type RepositoryEntry = {
+  id: string;
+  repo_path: string;
+  mount_name: string;
+  is_primary: boolean;
+};
+
 export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
   const { createSession, client } = useSessionContext();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
+  // Multi-repo state
+  const [repositories, setRepositories] = useState<RepositoryEntry[]>([
+    { id: '1', repo_path: '', mount_name: 'primary', is_primary: true }
+  ]);
+
   const [formData, setFormData] = useState({
-    repo_path: "",
     initial_prompt: "",
     backend: "Docker" as BackendType,
-    agent: "ClaudeCode" as AgentType,
+    agent: AgentType.ClaudeCode,
     access_mode: "ReadWrite" as AccessMode,
     plan_mode: true,
     dangerous_skip_checks: true, // Docker/Kubernetes default
@@ -41,14 +55,156 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
     }));
   }, [formData.backend]);
 
+  // Auto-generate mount name from repo path
+  const generateMountName = (repoPath: string): string => {
+    if (!repoPath) return '';
+
+    // Extract last part of path and convert to valid mount name
+    const pathParts = repoPath.split('/');
+    const lastName = pathParts[pathParts.length - 1] || pathParts[pathParts.length - 2] || 'repo';
+
+    return lastName
+      .toLowerCase()
+      .replace(/[^a-z0-9-_]/g, '-')
+      .replace(/_/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '');
+  };
+
+  const handleRepoPathChange = (id: string, newPath: string) => {
+    setRepositories(repos => repos.map(repo => {
+      if (repo.id === id) {
+        // Auto-generate mount name if it hasn't been manually edited
+        const shouldAutoGenerate = !repo.mount_name || repo.mount_name === generateMountName(repo.repo_path);
+        return {
+          ...repo,
+          repo_path: newPath,
+          mount_name: shouldAutoGenerate ? generateMountName(newPath) : repo.mount_name
+        };
+      }
+      return repo;
+    }));
+  };
+
+  const handleMountNameChange = (id: string, newMountName: string) => {
+    setRepositories(repos => repos.map(repo =>
+      repo.id === id ? { ...repo, mount_name: newMountName } : repo
+    ));
+  };
+
+  const handleSetPrimary = (id: string) => {
+    setRepositories(repos => repos.map(repo => ({
+      ...repo,
+      is_primary: repo.id === id
+    })));
+  };
+
+  const handleAddRepository = () => {
+    if (repositories.length >= 5) {
+      toast.error("Maximum 5 repositories per session");
+      return;
+    }
+
+    const newId = String(Date.now());
+    setRepositories([...repositories, {
+      id: newId,
+      repo_path: '',
+      mount_name: '',
+      is_primary: false
+    }]);
+  };
+
+  const handleRemoveRepository = (id: string) => {
+    // Don't allow removing if it's the last one
+    if (repositories.length === 1) {
+      toast.error("Must have at least one repository");
+      return;
+    }
+
+    const repoToRemove = repositories.find(r => r.id === id);
+    const newRepos = repositories.filter(r => r.id !== id);
+
+    // If removing primary, set the first remaining repo as primary
+    if (repoToRemove?.is_primary && newRepos.length > 0) {
+      newRepos[0]!.is_primary = true;
+    }
+
+    setRepositories(newRepos);
+  };
+
+  const validateRepositories = (): string | null => {
+    if (repositories.length === 0) {
+      return "At least one repository is required";
+    }
+
+    // Check all repos have paths
+    if (repositories.some(r => !r.repo_path.trim())) {
+      return "All repositories must have a path";
+    }
+
+    // Check exactly one primary
+    const primaryCount = repositories.filter(r => r.is_primary).length;
+    if (primaryCount !== 1) {
+      return "Exactly one repository must be marked as primary";
+    }
+
+    // Check mount names are valid and unique
+    const mountNames = new Set<string>();
+    for (const repo of repositories) {
+      const name = repo.mount_name.trim();
+
+      if (!name) {
+        return "All repositories must have a mount name";
+      }
+
+      if (!/^[a-z0-9]([a-z0-9-_]{0,62}[a-z0-9])?$/.test(name)) {
+        return `Invalid mount name "${name}": must be alphanumeric with hyphens/underscores, 1-64 characters`;
+      }
+
+      if (mountNames.has(name)) {
+        return `Duplicate mount name: "${name}"`;
+      }
+
+      mountNames.add(name);
+    }
+
+    // Check for reserved names
+    const reserved = ['workspace', 'clauderon', 'repos', 'primary'];
+    for (const repo of repositories) {
+      if (reserved.includes(repo.mount_name.toLowerCase())) {
+        return `Mount name "${repo.mount_name}" is reserved`;
+      }
+    }
+
+    return null;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setError(null);
 
     try {
+      // Validate repositories
+      const validationError = validateRepositories();
+      if (validationError) {
+        setError(validationError);
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Build CreateRepositoryInput array (only if multi-repo)
+      const repoInputs: CreateRepositoryInput[] | undefined = repositories.length > 1
+        ? repositories.map(repo => ({
+            repo_path: repo.repo_path,
+            ...(repo.mount_name && { mount_name: repo.mount_name }),
+            is_primary: repo.is_primary
+          }))
+        : undefined;
+
       const request: CreateSessionRequest = {
-        repo_path: formData.repo_path,
+        repo_path: repositories[0]!.repo_path, // Legacy field for backward compat
+        ...(repoInputs && { repositories: repoInputs }), // New multi-repo field
         initial_prompt: formData.initial_prompt,
         backend: formData.backend,
         agent: formData.agent,
@@ -90,17 +246,40 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
     }
   };
 
+  // Handle ESC key
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => { document.removeEventListener('keydown', handleEscape); };
+  }, [onClose]);
+
   return (
     <>
-      <div className="fixed inset-0 z-40" style={{
-        backgroundColor: 'hsl(220, 90%, 8%)',
-        opacity: 0.85
-      }} />
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 z-40"
+        style={{
+          backgroundColor: 'hsl(220, 90%, 8%)',
+          opacity: 0.85
+        }}
+        onClick={onClose}
+        aria-hidden="true"
+      />
+      {/* Modal */}
       <div className="fixed inset-0 flex items-center justify-center p-8 z-50">
-        <div className="max-w-2xl w-full flex flex-col border-4 border-primary" style={{
-          backgroundColor: 'hsl(220, 15%, 95%)',
-          boxShadow: '12px 12px 0 hsl(220, 85%, 25%), 24px 24px 0 hsl(220, 90%, 10%)'
-        }}>
+        <div
+          className="max-w-3xl w-full flex flex-col border-4 border-primary max-h-[90vh]"
+          style={{
+            backgroundColor: 'hsl(220, 15%, 95%)',
+            boxShadow: '12px 12px 0 hsl(220, 85%, 25%), 24px 24px 0 hsl(220, 90%, 10%)'
+          }}
+          onClick={(e) => { e.stopPropagation(); }}
+        >
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b-4 border-primary" style={{ backgroundColor: 'hsl(220, 85%, 25%)' }}>
             <h2 className="text-2xl font-bold font-mono uppercase tracking-wider text-white">
@@ -117,20 +296,109 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
           </div>
 
         {/* Form */}
-        <form onSubmit={(e) => { void handleSubmit(e); }} className="p-6 space-y-6" style={{ backgroundColor: 'hsl(220, 15%, 95%)' }}>
+        <form onSubmit={(e) => { void handleSubmit(e); }} className="p-6 space-y-6 overflow-y-auto" style={{ backgroundColor: 'hsl(220, 15%, 95%)' }}>
           {error && (
             <div className="p-4 border-4 font-mono" style={{ backgroundColor: 'hsl(0, 75%, 95%)', color: 'hsl(0, 75%, 40%)', borderColor: 'hsl(0, 75%, 50%)' }}>
               <strong className="font-bold">ERROR:</strong> {error}
             </div>
           )}
 
-          <div className="space-y-2">
-            <Label htmlFor="repo_path" className="font-semibold">Repository Path</Label>
-            <RepositoryPathSelector
-              value={formData.repo_path}
-              onChange={(path) => { setFormData({ ...formData, repo_path: path }); }}
-              required
-            />
+          {/* Repositories Section */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label className="font-semibold">
+                Repositories {repositories.length > 1 && `(${repositories.length}/5)`}
+              </Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleAddRepository}
+                disabled={repositories.length >= 5}
+                className="flex items-center gap-1"
+              >
+                <Plus className="w-4 h-4" />
+                Add Repository
+              </Button>
+            </div>
+
+            {repositories.map((repo, index) => (
+              <div key={repo.id} className="border-2 border-primary p-3 space-y-2" style={{ backgroundColor: 'hsl(220, 15%, 98%)' }}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-sm font-semibold">#{index + 1}</span>
+                    {repo.is_primary && (
+                      <span className="flex items-center gap-1 px-2 py-0.5 text-xs font-bold border-2 border-yellow-600 bg-yellow-100 text-yellow-800">
+                        <Star className="w-3 h-3 fill-yellow-600" />
+                        PRIMARY
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {!repo.is_primary && (
+                      <button
+                        type="button"
+                        onClick={() => { handleSetPrimary(repo.id); }}
+                        className="text-xs px-2 py-1 border-2 hover:bg-yellow-100 hover:border-yellow-600"
+                        title="Set as primary repository"
+                      >
+                        Set Primary
+                      </button>
+                    )}
+                    {repositories.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => { handleRemoveRepository(repo.id); }}
+                        className="p-1 border-2 hover:bg-red-100 hover:border-red-600 text-red-600"
+                        title="Remove repository"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor={`repo-path-${repo.id}`} className="text-sm">Repository Path</Label>
+                  <RepositoryPathSelector
+                    value={repo.repo_path}
+                    onChange={(path) => { handleRepoPathChange(repo.id, path); }}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor={`mount-name-${repo.id}`} className="text-sm">
+                    Mount Name <span className="text-xs text-muted-foreground">(alphanumeric + hyphens/underscores)</span>
+                  </Label>
+                  <input
+                    type="text"
+                    id={`mount-name-${repo.id}`}
+                    value={repo.mount_name}
+                    onChange={(e) => { handleMountNameChange(repo.id, e.target.value); }}
+                    placeholder="auto-generated"
+                    className="w-full px-3 py-2 border-2 rounded font-mono text-sm"
+                    pattern="[a-z0-9][a-z0-9-_]{0,62}[a-z0-9]"
+                    maxLength={64}
+                    required
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Container path: {repo.is_primary ? '/workspace' : `/repos/${repo.mount_name || '...'}`}
+                  </p>
+                </div>
+              </div>
+            ))}
+
+            {repositories.length > 1 && formData.backend !== "Docker" && (
+              <div className="p-3 border-2 text-sm font-mono" style={{
+                backgroundColor: 'hsl(45, 75%, 95%)',
+                borderColor: 'hsl(45, 75%, 50%)',
+                color: 'hsl(45, 75%, 30%)'
+              }}>
+                <strong>Warning:</strong> Multi-repository sessions are only supported with Docker backend.
+                Zellij and Kubernetes backends will reject multi-repo sessions.
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -166,18 +434,36 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
 
             <div className="space-y-2">
               <Label htmlFor="agent" className="font-semibold">Agent</Label>
-              <select
-                id="agent"
+              <Select
                 value={formData.agent}
-                onChange={(e) =>
-                  { setFormData({ ...formData, agent: e.target.value as AgentType }); }
-                }
-                className="cursor-pointer flex h-10 w-full rounded-md border-2 border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                onValueChange={(value) => {
+                  setFormData({ ...formData, agent: value as AgentType });
+                }}
               >
-                <option value="ClaudeCode">Claude Code</option>
-                <option value="Codex">Codex</option>
-                <option value="Gemini">Gemini</option>
-              </select>
+                <SelectTrigger className="border-2">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={AgentType.ClaudeCode}>
+                    <div className="flex items-center gap-2">
+                      <ProviderIcon agent={AgentType.ClaudeCode} />
+                      <span>Claude Code</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value={AgentType.Codex}>
+                    <div className="flex items-center gap-2">
+                      <ProviderIcon agent={AgentType.Codex} />
+                      <span>Codex</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value={AgentType.Gemini}>
+                    <div className="flex items-center gap-2">
+                      <ProviderIcon agent={AgentType.Gemini} />
+                      <span>Gemini</span>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
@@ -263,7 +549,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                     <span className="text-sm truncate font-mono">{file.name}</span>
                     <button
                       type="button"
-                      onClick={() => setSelectedFiles(files => files.filter((_, idx) => idx !== i))}
+                      onClick={() => { setSelectedFiles(files => files.filter((_, idx) => idx !== i)); }}
                       className="text-red-600 font-bold px-2 hover:bg-red-100 rounded"
                     >
                       ✕
@@ -288,7 +574,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                   id="container_image"
                   placeholder="ghcr.io/user/image:tag"
                   value={formData.container_image}
-                  onChange={(e) => setFormData({ ...formData, container_image: e.target.value })}
+                  onChange={(e) => { setFormData({ ...formData, container_image: e.target.value }); }}
                   className="w-full px-3 py-2 border-2 rounded font-mono text-sm"
                 />
                 <p className="text-xs text-muted-foreground mt-1">
@@ -303,7 +589,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                   <select
                     id="pull_policy"
                     value={formData.pull_policy}
-                    onChange={(e) => setFormData({ ...formData, pull_policy: e.target.value as "always" | "if-not-present" | "never" })}
+                    onChange={(e) => { setFormData({ ...formData, pull_policy: e.target.value as "always" | "if-not-present" | "never" }); }}
                     className="w-full px-3 py-2 border-2 rounded font-mono text-sm"
                   >
                     <option value="if-not-present">If Not Present</option>
@@ -319,7 +605,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                     id="cpu_limit"
                     placeholder="2.0"
                     value={formData.cpu_limit}
-                    onChange={(e) => setFormData({ ...formData, cpu_limit: e.target.value })}
+                    onChange={(e) => { setFormData({ ...formData, cpu_limit: e.target.value }); }}
                     className="w-full px-3 py-2 border-2 rounded font-mono text-sm"
                   />
                 </div>
@@ -331,7 +617,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                     id="memory_limit"
                     placeholder="2g"
                     value={formData.memory_limit}
-                    onChange={(e) => setFormData({ ...formData, memory_limit: e.target.value })}
+                    onChange={(e) => { setFormData({ ...formData, memory_limit: e.target.value }); }}
                     className="w-full px-3 py-2 border-2 rounded font-mono text-sm"
                   />
                 </div>
