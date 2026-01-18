@@ -134,6 +134,10 @@ impl SqliteStore {
             Self::migrate_to_v14(pool).await?;
         }
 
+        if current_version < 15 {
+            Self::migrate_to_v15(pool).await?;
+        }
+
         Ok(())
     }
 
@@ -916,6 +920,38 @@ impl SqliteStore {
         tracing::info!("Migration v14 complete");
         Ok(())
     }
+
+    /// Migration v15: Add pr_review_decision column for workflow stages
+    async fn migrate_to_v15(pool: &SqlitePool) -> anyhow::Result<()> {
+        tracing::info!("Applying migration v15: Add PR review decision");
+
+        // Check if column exists
+        let review_decision_exists: bool = sqlx::query_scalar(
+            "SELECT COUNT(*) > 0 FROM pragma_table_info('sessions') WHERE name = 'pr_review_decision'",
+        )
+        .fetch_one(pool)
+        .await?;
+
+        if !review_decision_exists {
+            // Store as TEXT with serialization for ReviewDecision enum
+            // NULL for sessions without PR review data
+            sqlx::query("ALTER TABLE sessions ADD COLUMN pr_review_decision TEXT")
+                .execute(pool)
+                .await?;
+            tracing::debug!("Added pr_review_decision column to sessions table");
+        }
+
+        // Record migration
+        let now = Utc::now();
+        sqlx::query("INSERT OR REPLACE INTO schema_version (version, applied_at) VALUES (?, ?)")
+            .bind(15)
+            .bind(now.to_rfc3339())
+            .execute(pool)
+            .await?;
+
+        tracing::info!("Migration v15 complete");
+        Ok(())
+    }
 }
 
 #[async_trait]
@@ -1041,11 +1077,11 @@ impl Store for SqliteStore {
             INSERT OR REPLACE INTO sessions (
                 id, name, title, description, status, backend, agent, model, repo_path, worktree_path,
                 subdirectory, branch_name, backend_id, initial_prompt, dangerous_skip_checks,
-                pr_url, pr_check_status, claude_status, claude_status_updated_at,
+                pr_url, pr_check_status, pr_review_decision, claude_status, claude_status_updated_at,
                 merge_conflict, worktree_dirty, worktree_changed_files, access_mode, proxy_port, history_file_path,
                 reconcile_attempts, last_reconcile_error, last_reconcile_at, error_message,
                 created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ",
         )
         .bind(session.id.to_string())
@@ -1073,6 +1109,11 @@ impl Store for SqliteStore {
         .bind(
             session
                 .pr_check_status
+                .and_then(|s| serde_json::to_string(&s).ok()),
+        )
+        .bind(
+            session
+                .pr_review_decision
                 .and_then(|s| serde_json::to_string(&s).ok()),
         )
         .bind(serde_json::to_string(&session.claude_status)?)
@@ -1359,6 +1400,7 @@ struct SessionRow {
     dangerous_skip_checks: bool,
     pr_url: Option<String>,
     pr_check_status: Option<String>,
+    pr_review_decision: Option<String>,
     claude_status: String,
     claude_status_updated_at: Option<String>,
     merge_conflict: bool,
@@ -1425,6 +1467,20 @@ impl TryFrom<SessionRow> for Session {
                 serde_json::from_str(&s).map_err(|e| {
                     anyhow::anyhow!(
                         "session '{}': invalid pr_check_status '{}': {}",
+                        row.name,
+                        s,
+                        e
+                    )
+                })
+            })
+            .transpose()?;
+
+        let pr_review_decision = row
+            .pr_review_decision
+            .map(|s| {
+                serde_json::from_str(&s).map_err(|e| {
+                    anyhow::anyhow!(
+                        "session '{}': invalid pr_review_decision '{}': {}",
                         row.name,
                         s,
                         e
@@ -1519,6 +1575,7 @@ impl TryFrom<SessionRow> for Session {
             dangerous_skip_checks: row.dangerous_skip_checks,
             pr_url: row.pr_url,
             pr_check_status,
+            pr_review_decision,
             claude_status,
             claude_status_updated_at,
             merge_conflict: row.merge_conflict,

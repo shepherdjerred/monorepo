@@ -97,6 +97,9 @@ pub struct Session {
     /// Status of PR checks
     pub pr_check_status: Option<CheckStatus>,
 
+    /// PR review decision (approval status)
+    pub pr_review_decision: Option<ReviewDecision>,
+
     /// Current Claude agent working status (from hooks)
     pub claude_status: ClaudeWorkingStatus,
 
@@ -204,6 +207,7 @@ impl Session {
             dangerous_skip_checks: config.dangerous_skip_checks,
             pr_url: None,
             pr_check_status: None,
+            pr_review_decision: None,
             claude_status: ClaudeWorkingStatus::Unknown,
             claude_status_updated_at: None,
             merge_conflict: false,
@@ -243,6 +247,12 @@ impl Session {
     /// Update PR check status
     pub fn set_check_status(&mut self, status: CheckStatus) {
         self.pr_check_status = Some(status);
+        self.updated_at = Utc::now();
+    }
+
+    /// Update PR review decision
+    pub fn set_pr_review_decision(&mut self, decision: ReviewDecision) {
+        self.pr_review_decision = Some(decision);
         self.updated_at = Utc::now();
     }
 
@@ -378,6 +388,79 @@ impl Session {
     #[must_use]
     pub fn model_cli_flag(&self) -> Option<&'static str> {
         self.model.as_ref().map(SessionModel::to_cli_flag)
+    }
+
+    /// Compute the current workflow stage from session state
+    #[must_use]
+    pub fn workflow_stage(&self) -> WorkflowStage {
+        // Check if PR is merged first
+        if self.pr_check_status == Some(CheckStatus::Merged) {
+            return WorkflowStage::Merged;
+        }
+
+        // No PR yet - still planning
+        if self.pr_url.is_none() {
+            return WorkflowStage::Planning;
+        }
+
+        // PR exists - check for blockers
+        if self.has_blockers() {
+            return WorkflowStage::Blocked;
+        }
+
+        // Check if ready to merge (all checks pass, approved, no conflicts)
+        let checks_pass = matches!(
+            self.pr_check_status,
+            Some(CheckStatus::Passing | CheckStatus::Mergeable)
+        );
+        let approved = matches!(self.pr_review_decision, Some(ReviewDecision::Approved));
+        let no_conflicts = !self.merge_conflict;
+
+        if checks_pass && approved && no_conflicts {
+            return WorkflowStage::ReadyToMerge;
+        }
+
+        // Check if waiting for review
+        if matches!(
+            self.pr_review_decision,
+            Some(ReviewDecision::ReviewRequired) | None
+        ) {
+            return WorkflowStage::Review;
+        }
+
+        // Default to implementation phase (PR exists but not ready)
+        WorkflowStage::Implementation
+    }
+
+    /// Check if the session has any blockers
+    #[must_use]
+    pub fn has_blockers(&self) -> bool {
+        // CI is failing
+        let ci_failing = matches!(self.pr_check_status, Some(CheckStatus::Failing));
+
+        // Has merge conflicts
+        let has_conflict = self.merge_conflict;
+
+        // Changes requested on PR
+        let changes_requested = matches!(
+            self.pr_review_decision,
+            Some(ReviewDecision::ChangesRequested)
+        );
+
+        ci_failing || has_conflict || changes_requested
+    }
+
+    /// Get detailed blocker information
+    #[must_use]
+    pub fn blocker_details(&self) -> BlockerDetails {
+        BlockerDetails {
+            ci_failing: matches!(self.pr_check_status, Some(CheckStatus::Failing)),
+            merge_conflict: self.merge_conflict,
+            changes_requested: matches!(
+                self.pr_review_decision,
+                Some(ReviewDecision::ChangesRequested)
+            ),
+        }
     }
 }
 
@@ -623,6 +706,57 @@ pub enum CheckStatus {
     Merged,
 }
 
+/// PR review decision status
+#[typeshare]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum ReviewDecision {
+    /// Review is required but not yet provided
+    ReviewRequired,
+
+    /// Changes have been requested
+    ChangesRequested,
+
+    /// PR has been approved
+    Approved,
+}
+
+/// Workflow stage computed from session state
+#[typeshare]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum WorkflowStage {
+    /// Planning phase - no PR yet, Claude is working
+    Planning,
+
+    /// Implementation phase - PR created, CI running or waiting
+    Implementation,
+
+    /// Review phase - PR waiting for approval
+    Review,
+
+    /// Blocked phase - has blockers (CI failing, conflicts, changes requested)
+    Blocked,
+
+    /// Ready to merge - all checks pass, approved, no conflicts
+    ReadyToMerge,
+
+    /// Merged - PR has been merged
+    Merged,
+}
+
+/// Blocker details for a session
+#[typeshare]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct BlockerDetails {
+    /// Whether CI checks are failing
+    pub ci_failing: bool,
+
+    /// Whether the branch has merge conflicts
+    pub merge_conflict: bool,
+
+    /// Whether changes have been requested on the PR
+    pub changes_requested: bool,
+}
+
 /// Claude agent working status
 #[typeshare]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
@@ -853,6 +987,7 @@ mod tests {
             dangerous_skip_checks: false,
             pr_url: None,
             pr_check_status: None,
+            pr_review_decision: None,
             claude_status: ClaudeWorkingStatus::Unknown,
             claude_status_updated_at: None,
             merge_conflict: false,
@@ -897,6 +1032,7 @@ mod tests {
             dangerous_skip_checks: false,
             pr_url: None,
             pr_check_status: None,
+            pr_review_decision: None,
             claude_status: ClaudeWorkingStatus::Unknown,
             claude_status_updated_at: None,
             merge_conflict: false,
@@ -942,6 +1078,7 @@ mod tests {
             dangerous_skip_checks: false,
             pr_url: None,
             pr_check_status: None,
+            pr_review_decision: None,
             claude_status: ClaudeWorkingStatus::Unknown,
             claude_status_updated_at: None,
             merge_conflict: false,
@@ -983,6 +1120,7 @@ mod tests {
             dangerous_skip_checks: false,
             pr_url: None,
             pr_check_status: None,
+            pr_review_decision: None,
             claude_status: ClaudeWorkingStatus::Unknown,
             claude_status_updated_at: None,
             merge_conflict: false,
@@ -1002,5 +1140,252 @@ mod tests {
 
         // Legacy sessions return None (no --model flag passed to CLI)
         assert_eq!(session.model_cli_flag(), None);
+    }
+
+    #[test]
+    fn test_workflow_stage_planning_no_pr() {
+        let session = Session {
+            pr_url: None,
+            pr_check_status: None,
+            pr_review_decision: None,
+            merge_conflict: false,
+            ..create_test_session()
+        };
+
+        assert_eq!(session.workflow_stage(), WorkflowStage::Planning);
+    }
+
+    #[test]
+    fn test_workflow_stage_merged() {
+        let session = Session {
+            pr_url: Some("https://github.com/test/test/pull/1".to_string()),
+            pr_check_status: Some(CheckStatus::Merged),
+            pr_review_decision: None,
+            ..create_test_session()
+        };
+
+        assert_eq!(session.workflow_stage(), WorkflowStage::Merged);
+    }
+
+    #[test]
+    fn test_workflow_stage_blocked_by_ci_failure() {
+        let session = Session {
+            pr_url: Some("https://github.com/test/test/pull/1".to_string()),
+            pr_check_status: Some(CheckStatus::Failing),
+            pr_review_decision: Some(ReviewDecision::ReviewRequired),
+            merge_conflict: false,
+            ..create_test_session()
+        };
+
+        assert_eq!(session.workflow_stage(), WorkflowStage::Blocked);
+    }
+
+    #[test]
+    fn test_workflow_stage_blocked_by_merge_conflict() {
+        let session = Session {
+            pr_url: Some("https://github.com/test/test/pull/1".to_string()),
+            pr_check_status: Some(CheckStatus::Passing),
+            pr_review_decision: Some(ReviewDecision::Approved),
+            merge_conflict: true,
+            ..create_test_session()
+        };
+
+        assert_eq!(session.workflow_stage(), WorkflowStage::Blocked);
+    }
+
+    #[test]
+    fn test_workflow_stage_blocked_by_changes_requested() {
+        let session = Session {
+            pr_url: Some("https://github.com/test/test/pull/1".to_string()),
+            pr_check_status: Some(CheckStatus::Passing),
+            pr_review_decision: Some(ReviewDecision::ChangesRequested),
+            merge_conflict: false,
+            ..create_test_session()
+        };
+
+        assert_eq!(session.workflow_stage(), WorkflowStage::Blocked);
+    }
+
+    #[test]
+    fn test_workflow_stage_ready_to_merge() {
+        let session = Session {
+            pr_url: Some("https://github.com/test/test/pull/1".to_string()),
+            pr_check_status: Some(CheckStatus::Passing),
+            pr_review_decision: Some(ReviewDecision::Approved),
+            merge_conflict: false,
+            ..create_test_session()
+        };
+
+        assert_eq!(session.workflow_stage(), WorkflowStage::ReadyToMerge);
+    }
+
+    #[test]
+    fn test_workflow_stage_ready_to_merge_with_mergeable() {
+        let session = Session {
+            pr_url: Some("https://github.com/test/test/pull/1".to_string()),
+            pr_check_status: Some(CheckStatus::Mergeable),
+            pr_review_decision: Some(ReviewDecision::Approved),
+            merge_conflict: false,
+            ..create_test_session()
+        };
+
+        assert_eq!(session.workflow_stage(), WorkflowStage::ReadyToMerge);
+    }
+
+    #[test]
+    fn test_workflow_stage_review_awaiting() {
+        let session = Session {
+            pr_url: Some("https://github.com/test/test/pull/1".to_string()),
+            pr_check_status: Some(CheckStatus::Passing),
+            pr_review_decision: Some(ReviewDecision::ReviewRequired),
+            merge_conflict: false,
+            ..create_test_session()
+        };
+
+        assert_eq!(session.workflow_stage(), WorkflowStage::Review);
+    }
+
+    #[test]
+    fn test_workflow_stage_review_no_decision() {
+        let session = Session {
+            pr_url: Some("https://github.com/test/test/pull/1".to_string()),
+            pr_check_status: Some(CheckStatus::Passing),
+            pr_review_decision: None,
+            merge_conflict: false,
+            ..create_test_session()
+        };
+
+        assert_eq!(session.workflow_stage(), WorkflowStage::Review);
+    }
+
+    #[test]
+    fn test_workflow_stage_implementation_pending_ci() {
+        let session = Session {
+            pr_url: Some("https://github.com/test/test/pull/1".to_string()),
+            pr_check_status: Some(CheckStatus::Pending),
+            pr_review_decision: Some(ReviewDecision::Approved),
+            merge_conflict: false,
+            ..create_test_session()
+        };
+
+        assert_eq!(session.workflow_stage(), WorkflowStage::Implementation);
+    }
+
+    #[test]
+    fn test_has_blockers_ci_failing() {
+        let session = Session {
+            pr_check_status: Some(CheckStatus::Failing),
+            merge_conflict: false,
+            pr_review_decision: None,
+            ..create_test_session()
+        };
+
+        assert!(session.has_blockers());
+    }
+
+    #[test]
+    fn test_has_blockers_merge_conflict() {
+        let session = Session {
+            pr_check_status: Some(CheckStatus::Passing),
+            merge_conflict: true,
+            pr_review_decision: None,
+            ..create_test_session()
+        };
+
+        assert!(session.has_blockers());
+    }
+
+    #[test]
+    fn test_has_blockers_changes_requested() {
+        let session = Session {
+            pr_check_status: Some(CheckStatus::Passing),
+            merge_conflict: false,
+            pr_review_decision: Some(ReviewDecision::ChangesRequested),
+            ..create_test_session()
+        };
+
+        assert!(session.has_blockers());
+    }
+
+    #[test]
+    fn test_has_blockers_none() {
+        let session = Session {
+            pr_check_status: Some(CheckStatus::Passing),
+            merge_conflict: false,
+            pr_review_decision: Some(ReviewDecision::Approved),
+            ..create_test_session()
+        };
+
+        assert!(!session.has_blockers());
+    }
+
+    #[test]
+    fn test_blocker_details_all_blockers() {
+        let session = Session {
+            pr_check_status: Some(CheckStatus::Failing),
+            merge_conflict: true,
+            pr_review_decision: Some(ReviewDecision::ChangesRequested),
+            ..create_test_session()
+        };
+
+        let blockers = session.blocker_details();
+        assert!(blockers.ci_failing);
+        assert!(blockers.merge_conflict);
+        assert!(blockers.changes_requested);
+    }
+
+    #[test]
+    fn test_blocker_details_single_blocker() {
+        let session = Session {
+            pr_check_status: Some(CheckStatus::Failing),
+            merge_conflict: false,
+            pr_review_decision: None,
+            ..create_test_session()
+        };
+
+        let blockers = session.blocker_details();
+        assert!(blockers.ci_failing);
+        assert!(!blockers.merge_conflict);
+        assert!(!blockers.changes_requested);
+    }
+
+    /// Helper function to create a test session with default values
+    fn create_test_session() -> Session {
+        Session {
+            id: Uuid::new_v4(),
+            name: "test".to_string(),
+            title: None,
+            description: None,
+            status: SessionStatus::Running,
+            backend: BackendType::Docker,
+            agent: AgentType::ClaudeCode,
+            model: None,
+            repo_path: PathBuf::from("/test"),
+            worktree_path: PathBuf::from("/test/worktree"),
+            subdirectory: PathBuf::new(),
+            branch_name: "test".to_string(),
+            repositories: None,
+            backend_id: None,
+            initial_prompt: "test".to_string(),
+            dangerous_skip_checks: false,
+            pr_url: None,
+            pr_check_status: None,
+            pr_review_decision: None,
+            claude_status: ClaudeWorkingStatus::Unknown,
+            claude_status_updated_at: None,
+            merge_conflict: false,
+            worktree_dirty: false,
+            worktree_changed_files: None,
+            access_mode: AccessMode::ReadOnly,
+            proxy_port: None,
+            history_file_path: None,
+            reconcile_attempts: 0,
+            last_reconcile_error: None,
+            last_reconcile_at: None,
+            error_message: None,
+            progress: None,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+        }
     }
 }
