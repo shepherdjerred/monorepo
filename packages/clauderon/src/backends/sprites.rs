@@ -547,9 +547,9 @@ impl SpritesBackend {
 
         // Install Claude Code using the official installation script
         // TODO: Replace with actual Claude Code installation command
-        let install_script = r#"
+        let install_script = r"
 curl -fsSL https://claude.ai/install.sh | sh
-"#;
+";
 
         let result = self
             .sprite_exec(

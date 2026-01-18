@@ -562,7 +562,12 @@ async fn main() -> anyhow::Result<()> {
             let backend_type = match backend.to_lowercase().as_str() {
                 "zellij" => core::session::BackendType::Zellij,
                 "docker" => core::session::BackendType::Docker,
-                _ => anyhow::bail!("Unknown backend: {backend}. Use 'zellij' or 'docker'"),
+                "kubernetes" | "k8s" => core::session::BackendType::Kubernetes,
+                "sprites" => core::session::BackendType::Sprites,
+                #[cfg(target_os = "macos")]
+                "apple" | "apple-container" => core::session::BackendType::AppleContainer,
+                _ => anyhow::bail!("Unknown backend: {backend}. Use 'zellij', 'docker', 'kubernetes', 'sprites'{}",
+                    if cfg!(target_os = "macos") { ", or 'apple'" } else { "" }),
             };
 
             let agent_type = match agent.to_lowercase().as_str() {

@@ -358,7 +358,7 @@ async fn test_create_dialog_toggle_backend() {
 
     assert_eq!(app.create_dialog.backend, BackendType::Zellij); // Default is Zellij
 
-    // Test Right key (forward): Zellij → Docker → Kubernetes → Zellij
+    // Test Right key (forward): Zellij → Docker → Kubernetes → Sprites → [AppleContainer] → Zellij
     handle_key_event(&mut app, key(KeyCode::Right))
         .await
         .unwrap();
@@ -372,7 +372,12 @@ async fn test_create_dialog_toggle_backend() {
     handle_key_event(&mut app, key(KeyCode::Right))
         .await
         .unwrap();
-    // On macOS, this would cycle through AppleContainer. On other platforms, it goes directly to Zellij
+    assert_eq!(app.create_dialog.backend, BackendType::Sprites);
+
+    handle_key_event(&mut app, key(KeyCode::Right))
+        .await
+        .unwrap();
+    // On macOS, this would cycle through AppleContainer. On other platforms, it goes back to Zellij
     #[cfg(target_os = "macos")]
     assert_eq!(app.create_dialog.backend, BackendType::AppleContainer);
     #[cfg(not(target_os = "macos"))]
@@ -382,8 +387,8 @@ async fn test_create_dialog_toggle_backend() {
     handle_key_event(&mut app, key(KeyCode::Left))
         .await
         .unwrap();
-    // Should go back to Kubernetes
-    assert_eq!(app.create_dialog.backend, BackendType::Kubernetes);
+    // Should go back to Sprites
+    assert_eq!(app.create_dialog.backend, BackendType::Sprites);
 }
 
 #[tokio::test]
