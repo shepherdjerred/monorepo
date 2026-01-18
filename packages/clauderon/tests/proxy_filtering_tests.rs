@@ -158,9 +158,10 @@ async fn create_test_manager_with_proxy_and_readonly() -> (
     }
 
     // Create feature flags with readonly mode enabled
-    let mut feature_flags = clauderon::feature_flags::FeatureFlags::default();
-    feature_flags.enable_readonly_mode = true;
-    let feature_flags = Arc::new(feature_flags);
+    let feature_flags = Arc::new(clauderon::feature_flags::FeatureFlags {
+        enable_readonly_mode: true,
+        ..Default::default()
+    });
 
     let mut manager = SessionManager::new(
         store,
