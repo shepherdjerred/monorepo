@@ -484,6 +484,7 @@ mod tests {
             &images,
             AgentType::ClaudeCode,
             None,
+            None, // model
         );
 
         let cmd_arg = args.last().unwrap();
@@ -509,6 +510,7 @@ mod tests {
             &images,
             AgentType::ClaudeCode,
             None,
+            None, // model
         );
 
         let cmd_arg = args.last().unwrap();
@@ -529,6 +531,7 @@ mod tests {
             &[],
             AgentType::ClaudeCode,
             None,
+            None, // model
         );
 
         let cmd_arg = args.last().unwrap();
