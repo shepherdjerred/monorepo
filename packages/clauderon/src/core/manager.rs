@@ -2788,6 +2788,7 @@ impl SessionManager {
         &self,
         session_id: Uuid,
         is_dirty: bool,
+        changed_files: Option<Vec<crate::utils::git::ChangedFile>>,
     ) -> anyhow::Result<()> {
         let mut sessions = self.sessions.write().await;
         let session = sessions
@@ -2796,16 +2797,23 @@ impl SessionManager {
             .ok_or_else(|| anyhow::anyhow!("Session not found: {}", session_id))?;
 
         // Don't update if status hasn't changed
-        if session.worktree_dirty == is_dirty {
+        if session.worktree_dirty == is_dirty && session.worktree_changed_files == changed_files {
             return Ok(());
         }
 
         session.set_worktree_dirty(is_dirty);
+        session.set_worktree_changed_files(changed_files.clone());
         let session_clone = session.clone();
         drop(sessions);
 
         // Record event
-        let event = Event::new(session_id, EventType::WorktreeStatusChanged { is_dirty });
+        let event = Event::new(
+            session_id,
+            EventType::WorktreeStatusChanged {
+                is_dirty,
+                changed_files,
+            },
+        );
         self.store.record_event(&event).await?;
 
         // Update in store

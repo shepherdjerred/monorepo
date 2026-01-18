@@ -244,7 +244,13 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
         )}
 
         {isLoading ? (
-          <div className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+          <div
+            className="grid gap-4 auto-rows-auto"
+            style={{
+              gridTemplateColumns: 'repeat(auto-fill, minmax(min(350px, 100%), 1fr))',
+              gridAutoFlow: 'dense'
+            }}
+          >
             {[1, 2, 3].map((i) => (
               <Card key={i} className="border-2">
                 <CardHeader className="pb-3">
@@ -278,7 +284,13 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
             <p className="text-sm">Create a new session to get started</p>
           </div>
         ) : (
-          <div className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+          <div
+            className="grid gap-4 auto-rows-auto"
+            style={{
+              gridTemplateColumns: 'repeat(auto-fill, minmax(min(350px, 100%), 1fr))',
+              gridAutoFlow: 'dense'
+            }}
+          >
             {filteredSessions.map((session) => (
               <SessionCard
                 key={session.id}
