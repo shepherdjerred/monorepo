@@ -97,6 +97,8 @@ pub struct SessionManager {
     zellij: Arc<dyn ExecutionBackend>,
     docker: Arc<dyn ExecutionBackend>,
     kubernetes: Arc<dyn ExecutionBackend>,
+    /// Concrete Kubernetes backend for API operations (e.g., listing storage classes)
+    kubernetes_backend: Option<Arc<crate::backends::KubernetesBackend>>,
     #[cfg(target_os = "macos")]
     apple_container: Arc<dyn ExecutionBackend>,
     sprites: Arc<dyn ExecutionBackend>,
@@ -133,6 +135,7 @@ impl SessionManager {
         zellij: Arc<dyn ExecutionBackend>,
         docker: Arc<dyn ExecutionBackend>,
         kubernetes: Arc<dyn ExecutionBackend>,
+        kubernetes_backend: Option<Arc<crate::backends::KubernetesBackend>>,
         #[cfg(target_os = "macos")] apple_container: Arc<dyn ExecutionBackend>,
         sprites: Arc<dyn ExecutionBackend>,
     ) -> anyhow::Result<Self> {
@@ -144,6 +147,7 @@ impl SessionManager {
             zellij,
             docker,
             kubernetes,
+            kubernetes_backend,
             #[cfg(target_os = "macos")]
             apple_container,
             sprites,
@@ -168,15 +172,17 @@ impl SessionManager {
     ///
     /// Returns an error if the store cannot be read or Kubernetes client fails.
     pub async fn with_defaults(store: Arc<dyn Store>) -> anyhow::Result<Self> {
-        let kubernetes_backend =
-            KubernetesBackend::new(crate::backends::KubernetesConfig::load_or_default()).await?;
+        let kubernetes_backend = Arc::new(
+            KubernetesBackend::new(crate::backends::KubernetesConfig::load_or_default()).await?,
+        );
 
         Self::new(
             store,
             Arc::new(GitBackend::new()),
             Arc::new(ZellijBackend::new()),
             Arc::new(DockerBackend::new()),
-            Arc::new(kubernetes_backend),
+            kubernetes_backend.clone(),
+            Some(kubernetes_backend),
             #[cfg(target_os = "macos")]
             Arc::new(AppleContainerBackend::new()),
             Arc::new(crate::backends::SpritesBackend::new()),
@@ -195,15 +201,17 @@ impl SessionManager {
         store: Arc<dyn Store>,
         docker: DockerBackend,
     ) -> anyhow::Result<Self> {
-        let kubernetes_backend =
-            KubernetesBackend::new(crate::backends::KubernetesConfig::load_or_default()).await?;
+        let kubernetes_backend = Arc::new(
+            KubernetesBackend::new(crate::backends::KubernetesConfig::load_or_default()).await?,
+        );
 
         Self::new(
             store,
             Arc::new(GitBackend::new()),
             Arc::new(ZellijBackend::new()),
             Arc::new(docker),
-            Arc::new(kubernetes_backend),
+            kubernetes_backend.clone(),
+            Some(kubernetes_backend),
             #[cfg(target_os = "macos")]
             Arc::new(AppleContainerBackend::new()),
             Arc::new(SpritesBackend::new()),
@@ -238,6 +246,14 @@ impl SessionManager {
     #[must_use]
     pub fn console_manager(&self) -> Arc<ConsoleManager> {
         Arc::clone(&self.console_manager)
+    }
+
+    /// Get reference to Kubernetes backend
+    ///
+    /// Returns the Kubernetes backend for API operations like listing storage classes.
+    #[must_use]
+    pub fn kubernetes_backend(&self) -> Option<&crate::backends::KubernetesBackend> {
+        self.kubernetes_backend.as_ref().map(Arc::as_ref)
     }
 
     /// List all sessions
@@ -343,6 +359,7 @@ impl SessionManager {
         pull_policy: Option<String>,
         cpu_limit: Option<String>,
         memory_limit: Option<String>,
+        storage_class: Option<String>,
     ) -> anyhow::Result<Uuid> {
         // Validate session count limit
         let sessions_guard = self.sessions.read().await;
@@ -600,6 +617,7 @@ impl SessionManager {
                     pull_policy,
                     cpu_limit,
                     memory_limit,
+                    storage_class,
                 )
                 .await;
         });
@@ -631,6 +649,7 @@ impl SessionManager {
         pull_policy: Option<String>,
         cpu_limit: Option<String>,
         memory_limit: Option<String>,
+        storage_class: Option<String>,
     ) {
         // Acquire semaphore to limit concurrent creations
         let Ok(_permit) = self.creation_semaphore.acquire().await else {
@@ -882,6 +901,7 @@ impl SessionManager {
                 http_port: self.http_port,
                 container_image: container_image_config,
                 container_resources: container_resource_limits,
+                storage_class_override: storage_class,
                 repositories: session_repos.clone(),
             };
             let backend_id = match backend {
@@ -1135,6 +1155,7 @@ impl SessionManager {
         pull_policy: Option<String>,
         cpu_limit: Option<String>,
         memory_limit: Option<String>,
+        storage_class: Option<String>,
     ) -> anyhow::Result<(Session, Option<Vec<String>>)> {
         // Multi-repository sessions are not supported in synchronous mode (used for print mode)
         // Use start_session_creation() for multi-repo support
@@ -1355,6 +1376,7 @@ impl SessionManager {
             http_port: self.http_port,
             container_image: container_image_config,
             container_resources: container_resource_limits,
+            storage_class_override: storage_class,
             repositories: vec![], // Legacy single-repo mode (synchronous creation)
         };
         let backend_id = match backend {
@@ -2043,6 +2065,7 @@ impl SessionManager {
                 container_image: None,
                 container_resources: None,
                 repositories: vec![], // Legacy single-repo mode (refresh operation)
+                storage_class_override: None,
             };
 
             let new_backend_id = self
@@ -2387,6 +2410,7 @@ impl SessionManager {
             container_image: None,
             container_resources: None,
             repositories: vec![], // Legacy single-repo mode (recreation)
+            storage_class_override: None,
         };
 
         // Recreate container

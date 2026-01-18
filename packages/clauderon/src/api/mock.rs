@@ -407,6 +407,7 @@ mod tests {
             pull_policy: None,
             cpu_limit: None,
             memory_limit: None,
+            storage_class: None,
         };
 
         let (session, warnings) = client.create_session(request).await.unwrap();

@@ -99,6 +99,7 @@ async fn create_test_manager_with_proxy() -> (
         to_exec_backend(Arc::clone(&zellij)),
         to_exec_backend(Arc::clone(&docker)),
         to_exec_backend(Arc::clone(&kubernetes)),
+        None,
         to_exec_backend(Arc::clone(&sprites)),
     )
     .await
@@ -160,6 +161,7 @@ async fn test_create_session_with_read_only_mode() {
             None,   // pull_policy
             None,   // cpu_limit
             None,   // memory_limit
+            None,   // storage_class
         )
         .await
         .expect("Failed to create session");
@@ -196,6 +198,7 @@ async fn test_create_session_with_read_write_mode() {
             None,   // pull_policy
             None,   // cpu_limit
             None,   // memory_limit
+            None,   // storage_class
         )
         .await
         .expect("Failed to create session");
@@ -228,6 +231,7 @@ async fn test_zellij_backend_ignores_proxy_port() {
             None,   // pull_policy
             None,   // cpu_limit
             None,   // memory_limit
+            None,   // storage_class
         )
         .await
         .expect("Failed to create session");
@@ -262,6 +266,7 @@ async fn test_update_access_mode_by_name() {
             None,   // pull_policy
             None,   // cpu_limit
             None,   // memory_limit
+            None,   // storage_class
         )
         .await
         .expect("Failed to create session");
@@ -306,6 +311,7 @@ async fn test_update_access_mode_by_id() {
             None,   // pull_policy
             None,   // cpu_limit
             None,   // memory_limit
+            None,   // storage_class
         )
         .await
         .expect("Failed to update access mode");
@@ -443,6 +449,7 @@ async fn test_access_mode_persists_across_restarts() {
             to_exec_backend(zellij),
             to_exec_backend(docker),
             to_exec_backend(kubernetes),
+            None,
             to_exec_backend(sprites),
         )
         .await
@@ -465,6 +472,7 @@ async fn test_access_mode_persists_across_restarts() {
                 None,   // pull_policy
                 None,   // cpu_limit
                 None,   // memory_limit
+                None,   // storage_class
             )
             .await
             .expect("Failed to create session");
@@ -498,6 +506,7 @@ async fn test_access_mode_persists_across_restarts() {
             to_exec_backend(zellij),
             to_exec_backend(docker),
             to_exec_backend(kubernetes),
+            None,
             to_exec_backend(sprites),
         )
         .await
@@ -603,6 +612,7 @@ async fn test_delete_session_cleans_up_proxy() {
             None,   // pull_policy
             None,   // cpu_limit
             None,   // memory_limit
+            None,   // storage_class
         )
         .await
         .expect("Failed to create session");

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import type { CreateSessionRequest, BackendType, AccessMode, CreateRepositoryInput, SessionModel, ClaudeModel, CodexModel, GeminiModel } from "@clauderon/client";
+import type { CreateSessionRequest, BackendType, AccessMode, StorageClassInfo, CreateRepositoryInput, SessionModel, ClaudeModel, CodexModel, GeminiModel } from "@clauderon/client";
 import { AgentType } from "@clauderon/shared";
 import { useSessionContext } from "../contexts/SessionContext";
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,8 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [storageClasses, setStorageClasses] = useState<StorageClassInfo[]>([]);
+  const [loadingStorageClasses, setLoadingStorageClasses] = useState(false);
 
   // Multi-repo state
   const [repositories, setRepositories] = useState<RepositoryEntry[]>([
@@ -46,6 +48,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
     pull_policy: "if-not-present" as "always" | "if-not-present" | "never",
     cpu_limit: "",
     memory_limit: "",
+    storage_class: "",
   });
 
   // Auto-check dangerous_skip_checks for Docker and Kubernetes, uncheck for Zellij
@@ -55,6 +58,34 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
       dangerous_skip_checks: prev.backend === "Docker" || prev.backend === "Kubernetes"
     }));
   }, [formData.backend]);
+
+  // Fetch storage classes when Kubernetes backend is selected
+  useEffect(() => {
+    if (formData.backend === "Kubernetes") {
+      setLoadingStorageClasses(true);
+      client.getStorageClasses()
+        .then((classes) => {
+          setStorageClasses(classes);
+          // Auto-select default storage class if available
+          const defaultClass = classes.find(c => c.is_default);
+          if (defaultClass && !formData.storage_class) {
+            setFormData(prev => ({ ...prev, storage_class: defaultClass.name }));
+          }
+        })
+        .catch((err) => {
+          console.error('Failed to fetch storage classes:', err);
+          toast.warning('Could not load storage classes from cluster');
+          setStorageClasses([]);
+        })
+        .finally(() => {
+          setLoadingStorageClasses(false);
+        });
+    } else {
+      // Clear storage classes when switching away from Kubernetes
+      setStorageClasses([]);
+      setFormData(prev => ({ ...prev, storage_class: "" }));
+    }
+  }, [formData.backend, client]);
 
   // Reset model when agent changes
   useEffect(() => {
@@ -227,6 +258,16 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
     setIsSubmitting(true);
     setError(null);
 
+    // Validate storage class for Kubernetes backend
+    if (formData.backend === "Kubernetes" && storageClasses.length > 0) {
+      const hasDefault = storageClasses.some(sc => sc.is_default);
+      if (!hasDefault && !formData.storage_class) {
+        setError("No default storage class available. Please select a storage class.");
+        setIsSubmitting(false);
+        return;
+      }
+    }
+
     try {
       // Validate repositories
       const validationError = validateRepositories();
@@ -262,6 +303,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
         ...(formData.container_image && { container_image: formData.container_image }),
         ...(formData.cpu_limit && { cpu_limit: formData.cpu_limit }),
         ...(formData.memory_limit && { memory_limit: formData.memory_limit }),
+        ...(formData.storage_class && { storage_class: formData.storage_class }),
       };
 
       const result = await createSession(request);
@@ -688,6 +730,39 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                   />
                 </div>
               </div>
+
+              {/* Storage Class (Kubernetes only) */}
+              {formData.backend === "Kubernetes" && (
+                <div className="space-y-2">
+                  <Label htmlFor="storage_class">Storage Class (Kubernetes)</Label>
+                  {loadingStorageClasses ? (
+                    <div className="text-sm text-muted-foreground">Loading storage classes...</div>
+                  ) : storageClasses.length > 0 ? (
+                    <>
+                      <select
+                        id="storage_class"
+                        value={formData.storage_class}
+                        onChange={(e) => setFormData({ ...formData, storage_class: e.target.value })}
+                        className="w-full px-3 py-2 border-2 rounded font-mono text-sm"
+                      >
+                        <option value="">Use default from config</option>
+                        {storageClasses.map((sc) => (
+                          <option key={sc.name} value={sc.name}>
+                            {sc.name} {sc.is_default ? "(default)" : ""} - {sc.provisioner}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Storage class for persistent volume claims (PVCs). Affects cache and workspace volumes.
+                      </p>
+                    </>
+                  ) : (
+                    <div className="text-sm text-muted-foreground">
+                      No storage classes available. Check cluster configuration.
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </details>
 
