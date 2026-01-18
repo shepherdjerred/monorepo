@@ -439,27 +439,24 @@ impl CreateDialogState {
             BackendType::Docker => BackendType::Kubernetes,
             #[cfg(target_os = "macos")]
             BackendType::Kubernetes => BackendType::AppleContainer,
-            #[cfg(target_os = "macos")]
-            BackendType::AppleContainer => BackendType::Zellij,
             #[cfg(not(target_os = "macos"))]
             BackendType::Kubernetes => BackendType::Zellij,
+            #[cfg(target_os = "macos")]
+            BackendType::AppleContainer => BackendType::Zellij,
         };
 
         // Auto-toggle skip_checks based on backend:
         // Docker, Kubernetes, and AppleContainer benefit from skipping checks (isolated environments)
         // Zellij runs locally so checks are more important
         #[cfg(target_os = "macos")]
-        {
-            self.skip_checks = matches!(
-                self.backend,
-                BackendType::Docker | BackendType::Kubernetes | BackendType::AppleContainer
-            );
-        }
+        let is_container_backend = matches!(
+            self.backend,
+            BackendType::Docker | BackendType::Kubernetes | BackendType::AppleContainer
+        );
         #[cfg(not(target_os = "macos"))]
-        {
-            self.skip_checks =
-                matches!(self.backend, BackendType::Docker | BackendType::Kubernetes);
-        }
+        let is_container_backend =
+            matches!(self.backend, BackendType::Docker | BackendType::Kubernetes);
+        self.skip_checks = is_container_backend;
     }
 
     /// Toggle between ReadOnly and ReadWrite access modes
@@ -1042,6 +1039,7 @@ impl App {
 
         let request = CreateSessionRequest {
             repo_path: self.create_dialog.repo_path.clone(),
+            repositories: None, // TUI doesn't support multi-repo yet
             initial_prompt: self.create_dialog.prompt.clone(),
             backend: self.create_dialog.backend,
             agent: self.create_dialog.agent,
