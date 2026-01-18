@@ -116,9 +116,7 @@ impl SpritesBackend {
             .json(&body)
             .send()
             .await
-            .map_err(|e| {
-                anyhow::anyhow!("Failed to send create sprite request: {}", e)
-            })?;
+            .map_err(|e| anyhow::anyhow!("Failed to send create sprite request: {}", e))?;
 
         let status = response.status();
         if !status.is_success() {
@@ -170,9 +168,7 @@ impl SpritesBackend {
                 .bearer_auth(&token)
                 .send()
                 .await
-                .map_err(|e| {
-                    anyhow::anyhow!("Failed to check sprite status: {}", e)
-                })?;
+                .map_err(|e| anyhow::anyhow!("Failed to check sprite status: {}", e))?;
 
             if !response.status().is_success() {
                 let status = response.status();
@@ -185,9 +181,10 @@ impl SpritesBackend {
                 );
             }
 
-            let sprite_info: SpriteInfo = response.json().await.map_err(|e| {
-                anyhow::anyhow!("Failed to parse sprite status response: {}", e)
-            })?;
+            let sprite_info: SpriteInfo = response
+                .json()
+                .await
+                .map_err(|e| anyhow::anyhow!("Failed to parse sprite status response: {}", e))?;
 
             tracing::debug!(
                 sprite_name = %name,
@@ -215,11 +212,7 @@ impl SpritesBackend {
     ///
     /// Returns an error if the API request fails.
     #[instrument(skip(self, command))]
-    async fn sprite_exec(
-        &self,
-        name: &str,
-        command: Vec<String>,
-    ) -> anyhow::Result<ExecResponse> {
+    async fn sprite_exec(&self, name: &str, command: Vec<String>) -> anyhow::Result<ExecResponse> {
         let token = self.get_token()?;
         let url = format!("{}/{}/exec", self.base_url, name);
 
@@ -256,7 +249,11 @@ impl SpritesBackend {
         }
 
         let exec_response: ExecResponse = response.json().await.map_err(|e| {
-            anyhow::anyhow!("Failed to parse exec response from sprite '{}': {}", name, e)
+            anyhow::anyhow!(
+                "Failed to parse exec response from sprite '{}': {}",
+                name,
+                e
+            )
         })?;
 
         tracing::debug!(
@@ -284,9 +281,7 @@ impl SpritesBackend {
             .bearer_auth(token)
             .send()
             .await
-            .map_err(|e| {
-                anyhow::anyhow!("Failed to get sprite '{}' info: {}", name, e)
-            })?;
+            .map_err(|e| anyhow::anyhow!("Failed to get sprite '{}' info: {}", name, e))?;
 
         if !response.status().is_success() {
             let status = response.status();
@@ -299,9 +294,10 @@ impl SpritesBackend {
             );
         }
 
-        let sprite_info: SpriteInfo = response.json().await.map_err(|e| {
-            anyhow::anyhow!("Failed to parse sprite info for '{}': {}", name, e)
-        })?;
+        let sprite_info: SpriteInfo = response
+            .json()
+            .await
+            .map_err(|e| anyhow::anyhow!("Failed to parse sprite info for '{}': {}", name, e))?;
 
         Ok(sprite_info)
     }
@@ -339,9 +335,7 @@ impl SpritesBackend {
         }
 
         let url = String::from_utf8(output.stdout)
-            .map_err(|e| {
-                anyhow::anyhow!("Invalid UTF-8 in git remote URL: {}", e)
-            })?
+            .map_err(|e| anyhow::anyhow!("Invalid UTF-8 in git remote URL: {}", e))?
             .trim()
             .to_string();
 
@@ -388,9 +382,7 @@ impl SpritesBackend {
         }
 
         let branch = String::from_utf8(output.stdout)
-            .map_err(|e| {
-                anyhow::anyhow!("Invalid UTF-8 in branch name: {}", e)
-            })?
+            .map_err(|e| anyhow::anyhow!("Invalid UTF-8 in branch name: {}", e))?
             .trim()
             .to_string();
 
@@ -415,11 +407,16 @@ impl SpritesBackend {
         );
 
         // Create base repos directory
-        self.sprite_exec(sprite_name, vec!["mkdir".to_string(), "-p".to_string(), "/home/sprite/repos".to_string()])
-            .await
-            .map_err(|e| {
-                anyhow::anyhow!("Failed to create repos directory in sprite: {}", e)
-            })?;
+        self.sprite_exec(
+            sprite_name,
+            vec![
+                "mkdir".to_string(),
+                "-p".to_string(),
+                "/home/sprite/repos".to_string(),
+            ],
+        )
+        .await
+        .map_err(|e| anyhow::anyhow!("Failed to create repos directory in sprite: {}", e))?;
 
         for repo in repositories {
             tracing::info!(
@@ -431,15 +428,18 @@ impl SpritesBackend {
             );
 
             // Get git remote URL from local worktree
-            let remote_url = self.get_git_remote(&repo.worktree_path).await.map_err(|e| {
-                anyhow::anyhow!(
-                    "Failed to get git remote for {} ({}): {}. \
+            let remote_url = self
+                .get_git_remote(&repo.worktree_path)
+                .await
+                .map_err(|e| {
+                    anyhow::anyhow!(
+                        "Failed to get git remote for {} ({}): {}. \
                     Sprites backend requires git repositories with configured remotes.",
-                    repo.mount_name,
-                    repo.repo_path.display(),
-                    e
-                )
-            })?;
+                        repo.mount_name,
+                        repo.repo_path.display(),
+                        e
+                    )
+                })?;
 
             // Determine target path in sprite
             let target_path = if repo.is_primary {
@@ -502,10 +502,7 @@ impl SpritesBackend {
     #[instrument(skip(self))]
     async fn is_claude_installed(&self, sprite_name: &str) -> anyhow::Result<bool> {
         let result = self
-            .sprite_exec(
-                sprite_name,
-                vec!["which".to_string(), "claude".to_string()],
-            )
+            .sprite_exec(sprite_name, vec!["which".to_string(), "claude".to_string()])
             .await?;
 
         Ok(result.exit_code == 0)
@@ -557,7 +554,11 @@ curl -fsSL https://claude.ai/install.sh | sh
         let result = self
             .sprite_exec(
                 sprite_name,
-                vec!["sh".to_string(), "-c".to_string(), install_script.to_string()],
+                vec![
+                    "sh".to_string(),
+                    "-c".to_string(),
+                    install_script.to_string(),
+                ],
             )
             .await?;
 
@@ -694,16 +695,12 @@ impl ExecutionBackend for SpritesBackend {
         // Step 1: Create the sprite
         self.create_sprite(&sprite_name)
             .await
-            .map_err(|e| {
-                anyhow::anyhow!("Failed to create sprite '{}': {}", sprite_name, e)
-            })?;
+            .map_err(|e| anyhow::anyhow!("Failed to create sprite '{}': {}", sprite_name, e))?;
 
         // Step 2: Wait for sprite to be ready
-        self.wait_for_ready(&sprite_name, 120)
-            .await
-            .map_err(|e| {
-                anyhow::anyhow!("Sprite '{}' failed to become ready: {}", sprite_name, e)
-            })?;
+        self.wait_for_ready(&sprite_name, 120).await.map_err(|e| {
+            anyhow::anyhow!("Sprite '{}' failed to become ready: {}", sprite_name, e)
+        })?;
 
         // Step 3: Setup repositories
         let repositories = if options.repositories.is_empty() {
@@ -732,12 +729,19 @@ impl ExecutionBackend for SpritesBackend {
         self.setup_repositories(&sprite_name, &repositories)
             .await
             .map_err(|e| {
-                anyhow::anyhow!("Failed to setup repositories in sprite '{}': {}", sprite_name, e)
+                anyhow::anyhow!(
+                    "Failed to setup repositories in sprite '{}': {}",
+                    sprite_name,
+                    e
+                )
             })?;
 
         // Step 4: Install Claude Code if needed and configured
         if self.config.image.install_claude && options.agent == AgentType::ClaudeCode {
-            let claude_installed = self.is_claude_installed(&sprite_name).await.unwrap_or(false);
+            let claude_installed = self
+                .is_claude_installed(&sprite_name)
+                .await
+                .unwrap_or(false);
 
             if !claude_installed {
                 tracing::info!(sprite_name = %sprite_name, "Claude Code not found, installing");
@@ -763,9 +767,7 @@ impl ExecutionBackend for SpritesBackend {
             &options.images,
         )
         .await
-        .map_err(|e| {
-            anyhow::anyhow!("Failed to start agent in sprite '{}': {}", sprite_name, e)
-        })?;
+        .map_err(|e| anyhow::anyhow!("Failed to start agent in sprite '{}': {}", sprite_name, e))?;
 
         tracing::info!(
             session_name = %name,
@@ -789,9 +791,7 @@ impl ExecutionBackend for SpritesBackend {
             .bearer_auth(token)
             .send()
             .await
-            .map_err(|e| {
-                anyhow::anyhow!("Failed to check sprite '{}' existence: {}", id, e)
-            })?;
+            .map_err(|e| anyhow::anyhow!("Failed to check sprite '{}' existence: {}", id, e))?;
 
         let exists = response.status().is_success();
         tracing::debug!(sprite_name = %id, exists = exists, "Sprite existence check complete");
@@ -846,7 +846,12 @@ impl ExecutionBackend for SpritesBackend {
                 body = %body,
                 "Failed to delete sprite"
             );
-            anyhow::bail!("Failed to delete sprite '{}' (HTTP {}): {}", id, status, body);
+            anyhow::bail!(
+                "Failed to delete sprite '{}' (HTTP {}): {}",
+                id,
+                status,
+                body
+            );
         }
 
         tracing::info!(sprite_name = %id, "Sprite deleted successfully");
@@ -878,9 +883,7 @@ impl ExecutionBackend for SpritesBackend {
                 ],
             )
             .await
-            .map_err(|e| {
-                anyhow::anyhow!("Failed to get output from sprite '{}': {}", id, e)
-            })?;
+            .map_err(|e| anyhow::anyhow!("Failed to get output from sprite '{}': {}", id, e))?;
 
         if result.exit_code != 0 {
             tracing::warn!(
