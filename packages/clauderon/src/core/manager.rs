@@ -8,7 +8,7 @@ use uuid::Uuid;
 
 use crate::backends::{
     DockerBackend, ExecutionBackend, GitBackend, GitOperations, ImageConfig, ImagePullPolicy,
-    KubernetesBackend, ResourceLimits, ZellijBackend,
+    KubernetesBackend, ResourceLimits, SpritesBackend, ZellijBackend,
 };
 
 #[cfg(target_os = "macos")]

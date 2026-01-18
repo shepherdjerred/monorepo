@@ -503,6 +503,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(unsafe_code)]
     fn test_get_token_from_env() {
         // Set environment variable
         unsafe {
@@ -525,6 +526,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(unsafe_code)]
     fn test_get_token_from_config() {
         // Ensure env var is not set
         unsafe {
@@ -541,6 +543,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(unsafe_code)]
     fn test_get_token_fails_when_missing() {
         // Ensure env var is not set
         unsafe {
