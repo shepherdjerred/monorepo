@@ -174,7 +174,9 @@ impl KubernetesBackend {
                 .and_then(|annotations| {
                     annotations
                         .get("storageclass.kubernetes.io/is-default-class")
-                        .or_else(|| annotations.get("storageclass.beta.kubernetes.io/is-default-class"))
+                        .or_else(|| {
+                            annotations.get("storageclass.beta.kubernetes.io/is-default-class")
+                        })
                 })
                 .map(|v| v == "true")
                 .unwrap_or(false);
