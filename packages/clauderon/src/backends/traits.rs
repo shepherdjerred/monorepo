@@ -1,4 +1,4 @@
-use crate::core::session::AgentType;
+use crate::core::session::{AgentType, SessionRepository};
 use async_trait::async_trait;
 use std::path::{Path, PathBuf};
 
@@ -87,6 +87,11 @@ pub struct CreateOptions {
     /// When provided, overrides the default storage class from the backend's config file.
     /// Applies only to Kubernetes backend for PVC creation.
     pub storage_class_override: Option<String>,
+
+    /// Repositories to mount in the session.
+    /// When empty, use single-repo legacy mode with workdir parameter.
+    /// When non-empty, use multi-repo mode and ignore workdir parameter.
+    pub repositories: Vec<SessionRepository>,
 }
 
 /// Trait for execution backends (Zellij, Docker, etc.)

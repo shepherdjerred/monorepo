@@ -9,19 +9,19 @@ export function QuestionView({ message }: QuestionViewProps) {
   // Find the AskUserQuestion tool use
   const questionTool = message.toolUses?.find(tool => tool.name === "AskUserQuestion");
 
-  if (!questionTool || !questionTool.input) {
+  if (!questionTool?.input) {
     return null;
   }
 
-  const questions = questionTool.input['questions'] as Array<{
+  const questions = questionTool.input['questions'] as {
     question: string;
     header: string;
-    options: Array<{
+    options: {
       label: string;
       description: string;
-    }>;
+    }[];
     multiSelect: boolean;
-  }> | undefined;
+  }[] | undefined;
 
   if (!questions || questions.length === 0) {
     return null;
