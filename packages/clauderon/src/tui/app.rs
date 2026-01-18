@@ -520,13 +520,18 @@ impl CreateDialogState {
         {
             self.skip_checks = matches!(
                 self.backend,
-                BackendType::Docker | BackendType::Kubernetes | BackendType::Sprites | BackendType::AppleContainer
+                BackendType::Docker
+                    | BackendType::Kubernetes
+                    | BackendType::Sprites
+                    | BackendType::AppleContainer
             );
         }
         #[cfg(not(target_os = "macos"))]
         {
-            self.skip_checks =
-                matches!(self.backend, BackendType::Docker | BackendType::Kubernetes | BackendType::Sprites);
+            self.skip_checks = matches!(
+                self.backend,
+                BackendType::Docker | BackendType::Kubernetes | BackendType::Sprites
+            );
         }
     }
 
@@ -548,11 +553,16 @@ impl CreateDialogState {
         #[cfg(target_os = "macos")]
         let is_container_backend = matches!(
             self.backend,
-            BackendType::Docker | BackendType::Kubernetes | BackendType::Sprites | BackendType::AppleContainer
+            BackendType::Docker
+                | BackendType::Kubernetes
+                | BackendType::Sprites
+                | BackendType::AppleContainer
         );
         #[cfg(not(target_os = "macos"))]
-        let is_container_backend =
-            matches!(self.backend, BackendType::Docker | BackendType::Kubernetes | BackendType::Sprites);
+        let is_container_backend = matches!(
+            self.backend,
+            BackendType::Docker | BackendType::Kubernetes | BackendType::Sprites
+        );
         self.skip_checks = is_container_backend;
     }
 
