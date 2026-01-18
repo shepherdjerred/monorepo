@@ -7,9 +7,10 @@ import {
   StyleSheet,
   ActivityIndicator,
   Platform,
+  Alert,
 } from "react-native";
 import type { CredentialStatus } from "../types/generated";
-import { colors } from "../styles/colors";
+import { useTheme } from "../contexts/ThemeContext";
 import { typography } from "../styles/typography";
 
 type CredentialRowProps = {
@@ -18,6 +19,7 @@ type CredentialRowProps = {
 };
 
 export function CredentialRow({ credential, onSave }: CredentialRowProps) {
+  const { colors } = useTheme();
   const [isEditing, setIsEditing] = useState(false);
   const [value, setValue] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -31,8 +33,11 @@ export function CredentialRow({ credential, onSave }: CredentialRowProps) {
       await onSave(credential.service_id, value.trim());
       setValue("");
       setIsEditing(false);
-    } catch {
-      // Error handling in parent
+    } catch (error) {
+      Alert.alert(
+        "Error",
+        `Failed to save credential: ${error instanceof Error ? error.message : "Unknown error"}`
+      );
     } finally {
       setIsSaving(false);
     }
@@ -43,35 +48,39 @@ export function CredentialRow({ credential, onSave }: CredentialRowProps) {
     setIsEditing(false);
   };
 
+  const themedStyles = getThemedStyles(colors);
+
   return (
-    <View style={styles.container}>
+    <View style={themedStyles.container}>
       <View style={styles.header}>
         <View style={styles.nameRow}>
           <View
             style={[
-              styles.statusDot,
-              credential.available ? styles.statusAvailable : styles.statusMissing,
+              themedStyles.statusDot,
+              credential.available
+                ? { backgroundColor: colors.success }
+                : { backgroundColor: colors.error },
             ]}
           />
-          <Text style={styles.name}>{credential.name}</Text>
+          <Text style={[styles.name, { color: colors.textDark }]}>{credential.name}</Text>
         </View>
         {credential.readonly && (
-          <View style={styles.readonlyBadge}>
-            <Text style={styles.readonlyText}>Readonly</Text>
+          <View style={[styles.readonlyBadge, { backgroundColor: colors.textLight, borderColor: colors.border }]}>
+            <Text style={[styles.readonlyText, { color: colors.textWhite }]}>Readonly</Text>
           </View>
         )}
       </View>
 
       {credential.available && credential.masked_value && (
         <View style={styles.valueRow}>
-          <Text style={styles.maskedValue}>
+          <Text style={[styles.maskedValue, { color: colors.textLight }]}>
             {showValue ? credential.masked_value : "••••••••••••"}
           </Text>
           <TouchableOpacity
-            style={styles.showButton}
+            style={[styles.showButton, { borderColor: colors.border }]}
             onPress={() => setShowValue(!showValue)}
           >
-            <Text style={styles.showButtonText}>
+            <Text style={[styles.showButtonText, { color: colors.textDark }]}>
               {showValue ? "Hide" : "Show"}
             </Text>
           </TouchableOpacity>
@@ -79,7 +88,7 @@ export function CredentialRow({ credential, onSave }: CredentialRowProps) {
       )}
 
       {credential.source && (
-        <Text style={styles.source}>Source: {credential.source}</Text>
+        <Text style={[styles.source, { color: colors.textLight }]}>Source: {credential.source}</Text>
       )}
 
       {!credential.readonly && (
@@ -87,7 +96,7 @@ export function CredentialRow({ credential, onSave }: CredentialRowProps) {
           {isEditing ? (
             <View style={styles.editRow}>
               <TextInput
-                style={styles.input}
+                style={[themedStyles.input, { color: colors.text }]}
                 value={value}
                 onChangeText={setValue}
                 placeholder="Enter credential value"
@@ -98,15 +107,15 @@ export function CredentialRow({ credential, onSave }: CredentialRowProps) {
               />
               <View style={styles.editActions}>
                 <TouchableOpacity
-                  style={styles.cancelButton}
+                  style={[themedStyles.cancelButton]}
                   onPress={handleCancel}
                   disabled={isSaving}
                 >
-                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                  <Text style={[styles.cancelButtonText, { color: colors.textDark }]}>Cancel</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[
-                    styles.saveButton,
+                    themedStyles.saveButton,
                     (!value.trim() || isSaving) && styles.buttonDisabled,
                   ]}
                   onPress={handleSave}
@@ -115,17 +124,17 @@ export function CredentialRow({ credential, onSave }: CredentialRowProps) {
                   {isSaving ? (
                     <ActivityIndicator size="small" color={colors.textWhite} />
                   ) : (
-                    <Text style={styles.saveButtonText}>Save</Text>
+                    <Text style={[styles.saveButtonText, { color: colors.textWhite }]}>Save</Text>
                   )}
                 </TouchableOpacity>
               </View>
             </View>
           ) : (
             <TouchableOpacity
-              style={styles.editButton}
+              style={[themedStyles.editButton]}
               onPress={() => setIsEditing(true)}
             >
-              <Text style={styles.editButtonText}>
+              <Text style={[styles.editButtonText, { color: colors.textDark }]}>
                 {credential.available ? "Update" : "Add"}
               </Text>
             </TouchableOpacity>
@@ -136,25 +145,72 @@ export function CredentialRow({ credential, onSave }: CredentialRowProps) {
   );
 }
 
+// Dynamic styles based on theme colors
+function getThemedStyles(colors: { surface: string; border: string; background: string; primary: string }) {
+  return StyleSheet.create({
+    container: {
+      backgroundColor: colors.surface,
+      borderWidth: 2,
+      borderColor: colors.border,
+      padding: 12,
+      marginBottom: 8,
+      ...Platform.select({
+        ios: {
+          shadowColor: colors.border,
+          shadowOffset: { width: 2, height: 2 },
+          shadowOpacity: 1,
+          shadowRadius: 0,
+        },
+        android: {
+          elevation: 2,
+        },
+      }),
+    },
+    statusDot: {
+      width: 12,
+      height: 12,
+      borderRadius: 6,
+      borderWidth: 2,
+      borderColor: colors.border,
+    },
+    input: {
+      backgroundColor: colors.background,
+      borderWidth: 2,
+      borderColor: colors.border,
+      padding: 10,
+      fontSize: typography.fontSize.base,
+      marginBottom: 8,
+    },
+    cancelButton: {
+      flex: 1,
+      paddingVertical: 10,
+      borderWidth: 2,
+      borderColor: colors.border,
+      backgroundColor: colors.surface,
+      alignItems: "center" as const,
+    },
+    saveButton: {
+      flex: 1,
+      paddingVertical: 10,
+      borderWidth: 2,
+      borderColor: colors.border,
+      backgroundColor: colors.primary,
+      alignItems: "center" as const,
+    },
+    editButton: {
+      paddingVertical: 8,
+      paddingHorizontal: 12,
+      borderWidth: 2,
+      borderColor: colors.border,
+      backgroundColor: colors.surface,
+      alignSelf: "flex-start" as const,
+      marginTop: 4,
+    },
+  });
+}
+
+// Static styles (layout only, no colors)
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: colors.surface,
-    borderWidth: 2,
-    borderColor: colors.border,
-    padding: 12,
-    marginBottom: 8,
-    ...Platform.select({
-      ios: {
-        shadowColor: colors.border,
-        shadowOffset: { width: 2, height: 2 },
-        shadowOpacity: 1,
-        shadowRadius: 0,
-      },
-      android: {
-        elevation: 2,
-      },
-    }),
-  },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -166,35 +222,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
   },
-  statusDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    borderWidth: 2,
-    borderColor: colors.border,
-  },
-  statusAvailable: {
-    backgroundColor: colors.success,
-  },
-  statusMissing: {
-    backgroundColor: colors.error,
-  },
   name: {
     fontSize: typography.fontSize.base,
     fontWeight: typography.fontWeight.bold,
-    color: colors.textDark,
   },
   readonlyBadge: {
     paddingVertical: 2,
     paddingHorizontal: 6,
-    backgroundColor: colors.textLight,
     borderWidth: 1,
-    borderColor: colors.border,
   },
   readonlyText: {
     fontSize: typography.fontSize.xs,
     fontWeight: typography.fontWeight.bold,
-    color: colors.textWhite,
     textTransform: "uppercase",
   },
   valueRow: {
@@ -206,85 +245,44 @@ const styles = StyleSheet.create({
   maskedValue: {
     fontSize: typography.fontSize.sm,
     fontFamily: typography.fontFamily.mono,
-    color: colors.textLight,
   },
   showButton: {
     paddingVertical: 4,
     paddingHorizontal: 8,
     borderWidth: 1,
-    borderColor: colors.border,
   },
   showButtonText: {
     fontSize: typography.fontSize.xs,
     fontWeight: typography.fontWeight.bold,
-    color: colors.textDark,
     textTransform: "uppercase",
   },
   source: {
     fontSize: typography.fontSize.xs,
-    color: colors.textLight,
     marginBottom: 8,
   },
   editRow: {
     marginTop: 8,
   },
-  input: {
-    backgroundColor: colors.background,
-    borderWidth: 2,
-    borderColor: colors.border,
-    padding: 10,
-    fontSize: typography.fontSize.base,
-    color: colors.text,
-    marginBottom: 8,
-  },
   editActions: {
     flexDirection: "row",
     gap: 8,
   },
-  cancelButton: {
-    flex: 1,
-    paddingVertical: 10,
-    borderWidth: 2,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-    alignItems: "center",
-  },
   cancelButtonText: {
     fontSize: typography.fontSize.sm,
     fontWeight: typography.fontWeight.bold,
-    color: colors.textDark,
     textTransform: "uppercase",
-  },
-  saveButton: {
-    flex: 1,
-    paddingVertical: 10,
-    borderWidth: 2,
-    borderColor: colors.border,
-    backgroundColor: colors.primary,
-    alignItems: "center",
   },
   saveButtonText: {
     fontSize: typography.fontSize.sm,
     fontWeight: typography.fontWeight.bold,
-    color: colors.textWhite,
     textTransform: "uppercase",
   },
   buttonDisabled: {
     opacity: 0.5,
   },
-  editButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderWidth: 2,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-    alignSelf: "flex-start",
-    marginTop: 4,
-  },
   editButtonText: {
     fontSize: typography.fontSize.xs,
     fontWeight: typography.fontWeight.bold,
-    color: colors.textDark,
     textTransform: "uppercase",
   },
 });
