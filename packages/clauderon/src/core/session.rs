@@ -111,6 +111,18 @@ pub struct Session {
     /// PR review decision (approval status)
     pub pr_review_decision: Option<ReviewDecision>,
 
+    /// PR review status (approved, changes requested, etc.)
+    pub pr_review_status: Option<PrReviewStatus>,
+
+    /// Available merge methods for the repository
+    pub pr_merge_methods: Option<Vec<MergeMethod>>,
+
+    /// Default merge method based on repository settings
+    pub pr_default_merge_method: Option<MergeMethod>,
+
+    /// Whether to delete branch after merge (from repository settings)
+    pub pr_delete_branch_on_merge: Option<bool>,
+
     /// Current Claude agent working status (from hooks)
     pub claude_status: ClaudeWorkingStatus,
 
@@ -222,6 +234,10 @@ impl Session {
             pr_url: None,
             pr_check_status: None,
             pr_review_decision: None,
+            pr_review_status: None,
+            pr_merge_methods: None,
+            pr_default_merge_method: None,
+            pr_delete_branch_on_merge: None,
             claude_status: ClaudeWorkingStatus::Unknown,
             claude_status_updated_at: None,
             merge_conflict: false,
@@ -273,6 +289,25 @@ impl Session {
     /// Update PR review decision
     pub fn set_pr_review_decision(&mut self, decision: ReviewDecision) {
         self.pr_review_decision = Some(decision);
+        self.updated_at = Utc::now();
+    }
+
+    /// Update PR review status
+    pub fn set_pr_review_status(&mut self, status: PrReviewStatus) {
+        self.pr_review_status = Some(status);
+        self.updated_at = Utc::now();
+    }
+
+    /// Update PR merge methods and settings
+    pub fn set_pr_merge_methods(
+        &mut self,
+        methods: Vec<MergeMethod>,
+        default: MergeMethod,
+        delete_branch: bool,
+    ) {
+        self.pr_merge_methods = Some(methods);
+        self.pr_default_merge_method = Some(default);
+        self.pr_delete_branch_on_merge = Some(delete_branch);
         self.updated_at = Utc::now();
     }
 
@@ -481,6 +516,20 @@ impl Session {
                 Some(ReviewDecision::ChangesRequested)
             ),
         }
+    }
+
+    /// Check if PR can be merged based on requirements
+    /// Returns true if all merge requirements are met:
+    /// - PR URL exists
+    /// - CI checks are passing
+    /// - PR is approved
+    /// - No merge conflicts
+    #[must_use]
+    pub fn can_merge_pr(&self) -> bool {
+        self.pr_url.is_some()
+            && self.pr_check_status == Some(CheckStatus::Passing)
+            && self.pr_review_status == Some(PrReviewStatus::Approved)
+            && !self.merge_conflict
     }
 }
 
@@ -790,6 +839,49 @@ pub enum ReviewDecision {
 
     /// PR has been approved
     Approved,
+}
+
+/// PR review status
+#[typeshare]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum PrReviewStatus {
+    /// Review status is unknown or not applicable
+    Unknown,
+
+    /// Review is required but not yet provided
+    ReviewRequired,
+
+    /// Reviewers have requested changes
+    ChangesRequested,
+
+    /// PR has been approved
+    Approved,
+}
+
+/// Git merge method for pull requests
+#[typeshare]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum MergeMethod {
+    /// Create a merge commit
+    Merge,
+
+    /// Squash commits and merge
+    Squash,
+
+    /// Rebase and merge
+    Rebase,
+}
+
+impl MergeMethod {
+    /// Convert to gh CLI flag
+    #[must_use]
+    pub const fn to_gh_flag(self) -> &'static str {
+        match self {
+            Self::Merge => "--merge",
+            Self::Squash => "--squash",
+            Self::Rebase => "--rebase",
+        }
+    }
 }
 
 /// Workflow stage computed from session state
@@ -1444,6 +1536,10 @@ mod tests {
             pr_url: None,
             pr_check_status: None,
             pr_review_decision: None,
+            pr_review_status: None,
+            pr_merge_methods: None,
+            pr_default_merge_method: None,
+            pr_delete_branch_on_merge: None,
             claude_status: ClaudeWorkingStatus::Unknown,
             claude_status_updated_at: None,
             merge_conflict: false,
@@ -1490,6 +1586,10 @@ mod tests {
             pr_url: None,
             pr_check_status: None,
             pr_review_decision: None,
+            pr_review_status: None,
+            pr_merge_methods: None,
+            pr_default_merge_method: None,
+            pr_delete_branch_on_merge: None,
             claude_status: ClaudeWorkingStatus::Unknown,
             claude_status_updated_at: None,
             merge_conflict: false,
@@ -1537,6 +1637,10 @@ mod tests {
             pr_url: None,
             pr_check_status: None,
             pr_review_decision: None,
+            pr_review_status: None,
+            pr_merge_methods: None,
+            pr_default_merge_method: None,
+            pr_delete_branch_on_merge: None,
             claude_status: ClaudeWorkingStatus::Unknown,
             claude_status_updated_at: None,
             merge_conflict: false,
@@ -1580,6 +1684,10 @@ mod tests {
             pr_url: None,
             pr_check_status: None,
             pr_review_decision: None,
+            pr_review_status: None,
+            pr_merge_methods: None,
+            pr_default_merge_method: None,
+            pr_delete_branch_on_merge: None,
             claude_status: ClaudeWorkingStatus::Unknown,
             claude_status_updated_at: None,
             merge_conflict: false,
@@ -1831,6 +1939,10 @@ mod tests {
             pr_url: None,
             pr_check_status: None,
             pr_review_decision: None,
+            pr_review_status: None,
+            pr_merge_methods: None,
+            pr_default_merge_method: None,
+            pr_delete_branch_on_merge: None,
             claude_status: ClaudeWorkingStatus::Unknown,
             claude_status_updated_at: None,
             merge_conflict: false,

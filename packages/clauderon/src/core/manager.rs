@@ -17,7 +17,10 @@ use crate::core::console_manager::ConsoleManager;
 use crate::store::Store;
 
 use super::events::{Event, EventType};
-use super::session::{BackendType, CheckStatus, ClaudeWorkingStatus, Session, SessionStatus};
+use super::session::{
+    BackendType, CheckStatus, ClaudeWorkingStatus, MergeMethod, PrReviewStatus, Session,
+    SessionStatus,
+};
 
 // Import types for WebSocket event broadcasting
 use crate::api::protocol::Event as WsEvent;
@@ -3864,6 +3867,186 @@ impl SessionManager {
         if let Some(ref broadcaster) = self.event_broadcaster {
             broadcast_event(broadcaster, WsEvent::SessionUpdated(session_clone)).await;
         }
+
+        Ok(())
+    }
+
+    /// Update PR review status for a session
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the session is not found or the store update fails.
+    #[instrument(skip(self))]
+    pub async fn update_pr_review_status(
+        &self,
+        session_id: Uuid,
+        status: PrReviewStatus,
+    ) -> anyhow::Result<()> {
+        let mut sessions = self.sessions.write().await;
+        let session = sessions
+            .iter_mut()
+            .find(|s| s.id == session_id)
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {}", session_id))?;
+
+        // Don't update if status hasn't changed
+        if session.pr_review_status == Some(status) {
+            return Ok(());
+        }
+
+        session.set_pr_review_status(status);
+        let session_clone = session.clone();
+        drop(sessions);
+
+        // Update in store
+        self.store.save_session(&session_clone).await?;
+
+        tracing::debug!(
+            session_id = %session_id,
+            status = ?status,
+            "Updated PR review status"
+        );
+
+        // Broadcast event to WebSocket clients if broadcaster available
+        if let Some(ref broadcaster) = self.event_broadcaster {
+            broadcast_event(broadcaster, WsEvent::SessionUpdated(session_clone)).await;
+        }
+
+        Ok(())
+    }
+
+    /// Update PR merge methods and repository settings for a session
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the session is not found or the store update fails.
+    #[instrument(skip(self, methods))]
+    pub async fn update_pr_merge_methods(
+        &self,
+        session_id: Uuid,
+        methods: Vec<MergeMethod>,
+        default: MergeMethod,
+        delete_branch: bool,
+    ) -> anyhow::Result<()> {
+        let mut sessions = self.sessions.write().await;
+        let session = sessions
+            .iter_mut()
+            .find(|s| s.id == session_id)
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {}", session_id))?;
+
+        session.set_pr_merge_methods(methods.clone(), default, delete_branch);
+        let session_clone = session.clone();
+        drop(sessions);
+
+        // Update in store
+        self.store.save_session(&session_clone).await?;
+
+        tracing::info!(
+            session_id = %session_id,
+            methods = ?methods,
+            default = ?default,
+            delete_branch = %delete_branch,
+            "Updated PR merge methods"
+        );
+
+        // Broadcast event to WebSocket clients if broadcaster available
+        if let Some(ref broadcaster) = self.event_broadcaster {
+            broadcast_event(broadcaster, WsEvent::SessionUpdated(session_clone)).await;
+        }
+
+        Ok(())
+    }
+
+    /// Merge a pull request for a session
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - Session is not found
+    /// - PR cannot be merged (requirements not met)
+    /// - gh CLI command fails
+    #[instrument(skip(self), fields(session_id = %session_id, method = ?method))]
+    pub async fn merge_pr(
+        &self,
+        session_id: Uuid,
+        method: MergeMethod,
+        delete_branch: bool,
+    ) -> anyhow::Result<()> {
+        // Get session info
+        let session = self
+            .get_session(&session_id.to_string())
+            .await
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {}", session_id))?;
+
+        // Validate merge requirements
+        if !session.can_merge_pr() {
+            anyhow::bail!(
+                "PR cannot be merged: requirements not met (check status: {:?}, review: {:?}, conflicts: {})",
+                session.pr_check_status,
+                session.pr_review_status,
+                session.merge_conflict
+            );
+        }
+
+        let pr_url = session
+            .pr_url
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("No PR URL for session"))?;
+
+        // Parse PR number from URL
+        let pr_number = pr_url
+            .split('/')
+            .next_back()
+            .and_then(|s| s.parse::<u32>().ok())
+            .ok_or_else(|| anyhow::anyhow!("Invalid PR URL: {}", pr_url))?;
+
+        // Get primary repository path for gh command
+        let repo_path = if let Some(repos) = &session.repositories {
+            repos
+                .iter()
+                .find(|r| r.is_primary)
+                .map(|r| r.repo_path.clone())
+                .unwrap_or_else(|| session.repo_path.clone())
+        } else {
+            session.repo_path.clone()
+        };
+
+        // Execute gh pr merge
+        let mut args = vec![
+            "pr".to_string(),
+            "merge".to_string(),
+            pr_number.to_string(),
+            method.to_gh_flag().to_string(),
+        ];
+
+        if delete_branch {
+            args.push("--delete-branch".to_string());
+        }
+
+        args.push("--auto".to_string()); // Auto-merge when all checks pass
+
+        let output = tokio::process::Command::new("gh")
+            .current_dir(&repo_path)
+            .args(&args)
+            .output()
+            .await
+            .context("Failed to execute gh pr merge")?;
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            anyhow::bail!("gh pr merge failed: {}", stderr);
+        }
+
+        tracing::info!(
+            session_id = %session_id,
+            pr_url = %pr_url,
+            method = ?method,
+            delete_branch = %delete_branch,
+            "Successfully merged PR"
+        );
+
+        // Update PR status to Merged
+        self.update_pr_check_status(session_id, CheckStatus::Merged)
+            .await?;
 
         Ok(())
     }
