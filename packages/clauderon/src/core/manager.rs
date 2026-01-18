@@ -99,6 +99,7 @@ pub struct SessionManager {
     kubernetes: Arc<dyn ExecutionBackend>,
     #[cfg(target_os = "macos")]
     apple_container: Arc<dyn ExecutionBackend>,
+    sprites: Arc<dyn ExecutionBackend>,
     console_manager: Arc<ConsoleManager>,
     sessions: RwLock<Vec<Session>>,
     /// Optional proxy manager for per-session filtering
@@ -133,6 +134,7 @@ impl SessionManager {
         docker: Arc<dyn ExecutionBackend>,
         kubernetes: Arc<dyn ExecutionBackend>,
         #[cfg(target_os = "macos")] apple_container: Arc<dyn ExecutionBackend>,
+        sprites: Arc<dyn ExecutionBackend>,
     ) -> anyhow::Result<Self> {
         let sessions = store.list_sessions().await?;
 
@@ -144,6 +146,7 @@ impl SessionManager {
             kubernetes,
             #[cfg(target_os = "macos")]
             apple_container,
+            sprites,
             console_manager: Arc::new(ConsoleManager::new()),
             sessions: RwLock::new(sessions),
             proxy_manager: None,
@@ -176,6 +179,7 @@ impl SessionManager {
             Arc::new(kubernetes_backend),
             #[cfg(target_os = "macos")]
             Arc::new(AppleContainerBackend::new()),
+            Arc::new(crate::backends::SpritesBackend::new()),
         )
         .await
     }
@@ -916,6 +920,16 @@ impl SessionManager {
                         )
                         .await?
                 }
+                BackendType::Sprites => {
+                    self.sprites
+                        .create(
+                            &full_name,
+                            &worktree_path,
+                            &transformed_prompt,
+                            create_options,
+                        )
+                        .await?
+                }
             };
 
             update_progress(5, "Finalizing session".to_string()).await;
@@ -1464,6 +1478,7 @@ impl SessionManager {
             BackendType::Kubernetes => Ok(self.kubernetes.attach_command(backend_id)),
             #[cfg(target_os = "macos")]
             BackendType::AppleContainer => Ok(self.apple_container.attach_command(backend_id)),
+            BackendType::Sprites => Ok(self.sprites.attach_command(backend_id)),
         }
     }
 
@@ -1701,6 +1716,9 @@ impl SessionManager {
                     BackendType::AppleContainer => {
                         let _ = self.apple_container.delete(backend_id).await;
                     }
+                    BackendType::Sprites => {
+                        let _ = self.sprites.delete(backend_id).await;
+                    }
                 }
             }
 
@@ -1819,6 +1837,9 @@ impl SessionManager {
                 #[cfg(target_os = "macos")]
                 BackendType::AppleContainer => {
                     let _ = self.apple_container.delete(backend_id).await;
+                }
+                BackendType::Sprites => {
+                    let _ = self.sprites.delete(backend_id).await;
                 }
             }
         }
@@ -2098,6 +2119,7 @@ impl SessionManager {
                     BackendType::Kubernetes => self.kubernetes.exists(backend_id).await?,
                     #[cfg(target_os = "macos")]
                     BackendType::AppleContainer => self.apple_container.exists(backend_id).await?,
+                    BackendType::Sprites => self.sprites.exists(backend_id).await?,
                 };
 
                 if !exists {
@@ -2235,6 +2257,9 @@ impl SessionManager {
                                     let _ = proxy_manager.destroy_session_proxy(session.id).await;
                                 }
                             }
+                            BackendType::Sprites => {
+                                let _ = self.sprites.delete(backend_id).await;
+                            }
                         }
                     }
 
@@ -2321,6 +2346,9 @@ impl SessionManager {
                 BackendType::AppleContainer => {
                     let _ = self.apple_container.delete(backend_id).await;
                 }
+                BackendType::Sprites => {
+                    let _ = self.sprites.delete(backend_id).await;
+                }
             }
         }
 
@@ -2365,6 +2393,16 @@ impl SessionManager {
             #[cfg(target_os = "macos")]
             BackendType::AppleContainer => {
                 self.apple_container
+                    .create(
+                        &session.name,
+                        &session.worktree_path,
+                        &session.initial_prompt,
+                        create_options,
+                    )
+                    .await?
+            }
+            BackendType::Sprites => {
+                self.sprites
                     .create(
                         &session.name,
                         &session.worktree_path,

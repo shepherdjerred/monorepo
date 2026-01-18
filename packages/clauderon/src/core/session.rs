@@ -401,6 +401,9 @@ pub enum BackendType {
     /// Apple Container (macOS 26+ with Apple silicon)
     #[cfg(target_os = "macos")]
     AppleContainer,
+
+    /// Sprites.dev cloud container
+    Sprites,
 }
 
 /// AI agent type

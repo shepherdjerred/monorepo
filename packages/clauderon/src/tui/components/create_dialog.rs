@@ -118,6 +118,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
             ("Zellij", dialog.backend == BackendType::Zellij),
             ("Docker", dialog.backend == BackendType::Docker),
             ("Kubernetes", dialog.backend == BackendType::Kubernetes),
+            ("Sprites", dialog.backend == BackendType::Sprites),
         ],
         dialog.focus == CreateDialogFocus::Backend,
         inner[backend_idx],
