@@ -274,6 +274,8 @@ export interface FeatureFlags {
 	enable_proxy_port_reuse: boolean;
 	/** Enable Claude usage tracking via API */
 	enable_usage_tracking: boolean;
+	/** Enable read-only mode (experimental, security issues #424, #205) */
+	enable_readonly_mode: boolean;
 }
 
 /** Feature flags response for the frontend */

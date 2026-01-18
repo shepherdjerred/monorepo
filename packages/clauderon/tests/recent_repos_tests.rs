@@ -77,6 +77,7 @@ async fn create_test_manager() -> (SessionManager, TempDir, TempDir) {
 
     let sprites = Arc::new(MockExecutionBackend::sprites());
 
+    let feature_flags = Arc::new(clauderon::feature_flags::FeatureFlags::default());
     let manager = SessionManager::new(
         store,
         to_git_ops(git),
@@ -85,6 +86,7 @@ async fn create_test_manager() -> (SessionManager, TempDir, TempDir) {
         to_exec_backend(kubernetes),
         None,
         to_exec_backend(sprites),
+        feature_flags,
     )
     .await
     .expect("Failed to create manager");

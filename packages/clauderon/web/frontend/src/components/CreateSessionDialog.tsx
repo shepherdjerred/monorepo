@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import type { CreateSessionRequest, BackendType, AccessMode, StorageClassInfo, CreateRepositoryInput, SessionModel, ClaudeModel, CodexModel, GeminiModel } from "@clauderon/client";
 import { AgentType } from "@clauderon/shared";
 import { useSessionContext } from "../contexts/SessionContext";
+import { useFeatureFlags } from "../contexts/FeatureFlagsContext";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -24,6 +25,7 @@ type RepositoryEntry = {
 
 export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
   const { createSession, client } = useSessionContext();
+  const { flags } = useFeatureFlags();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -329,6 +331,13 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
             </div>
           )}
 
+          {flags?.enable_readonly_mode && (
+            <div className="p-3 border-2 border-yellow-500 bg-yellow-50 text-yellow-900 rounded text-sm">
+              <strong>⚠ Experimental:</strong> Read-only mode is experimental with known security
+              issues. It restricts HTTP proxy to GET/HEAD/OPTIONS requests only.
+            </div>
+          )}
+
           {/* Repositories Section */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
@@ -494,23 +503,28 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
               </select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="access_mode" className="font-semibold">Access Mode</Label>
-              <select
-                id="access_mode"
-                value={formData.access_mode}
-                onChange={(e) =>
-                  { setFormData({
-                    ...formData,
-                    access_mode: e.target.value as AccessMode,
-                  }); }
-                }
-                className="cursor-pointer flex h-10 w-full rounded-md border-2 border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <option value="ReadWrite">Read-Write</option>
-                <option value="ReadOnly">Read-Only</option>
-              </select>
-            </div>
+            {flags?.enable_readonly_mode && (
+              <div className="space-y-2">
+                <Label htmlFor="access_mode" className="font-semibold">
+                  Access Mode
+                  <span className="ml-2 text-xs text-yellow-600 font-bold">EXPERIMENTAL</span>
+                </Label>
+                <select
+                  id="access_mode"
+                  value={formData.access_mode}
+                  onChange={(e) =>
+                    { setFormData({
+                      ...formData,
+                      access_mode: e.target.value as AccessMode,
+                    }); }
+                  }
+                  className="cursor-pointer flex h-10 w-full rounded-md border-2 border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <option value="ReadWrite">Read-Write</option>
+                  <option value="ReadOnly">Read-Only</option>
+                </select>
+              </div>
+            )}
           </div>
 
           {/* Agent Capabilities Info */}
@@ -697,7 +711,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
               className="cursor-pointer w-4 h-4 rounded border-2 border-input"
             />
             <Label htmlFor="plan-mode" className="cursor-pointer">
-              Start in plan mode (read-only)
+              Start in plan mode{flags?.enable_readonly_mode ? " (read-only)" : ""}
             </Label>
           </div>
 

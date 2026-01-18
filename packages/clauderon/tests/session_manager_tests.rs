@@ -84,6 +84,7 @@ async fn create_test_manager() -> (
         arc
     }
 
+    let feature_flags = Arc::new(clauderon::feature_flags::FeatureFlags::default());
     let manager = SessionManager::new(
         store,
         to_git_ops(Arc::clone(&git)),
@@ -92,6 +93,7 @@ async fn create_test_manager() -> (
         to_exec_backend(Arc::clone(&kubernetes)),
         None,
         to_exec_backend(Arc::clone(&sprites)),
+        feature_flags,
     )
     .await
     .expect("Failed to create manager");

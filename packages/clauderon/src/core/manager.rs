@@ -118,6 +118,8 @@ pub struct SessionManager {
     http_port: Option<u16>,
     /// Cache for Claude Code usage data
     usage_cache: Arc<RwLock<UsageCache>>,
+    /// Feature flags configuration
+    feature_flags: Arc<crate::feature_flags::FeatureFlags>,
 }
 
 impl SessionManager {
@@ -138,6 +140,7 @@ impl SessionManager {
         kubernetes_backend: Option<Arc<crate::backends::KubernetesBackend>>,
         #[cfg(target_os = "macos")] apple_container: Arc<dyn ExecutionBackend>,
         sprites: Arc<dyn ExecutionBackend>,
+        feature_flags: Arc<crate::feature_flags::FeatureFlags>,
     ) -> anyhow::Result<Self> {
         let sessions = store.list_sessions().await?;
 
@@ -160,6 +163,7 @@ impl SessionManager {
             max_sessions: 15,
             http_port: None,
             usage_cache: Arc::new(RwLock::new(UsageCache::new())),
+            feature_flags,
         })
     }
 
@@ -171,7 +175,10 @@ impl SessionManager {
     /// # Errors
     ///
     /// Returns an error if the store cannot be read or Kubernetes client fails.
-    pub async fn with_defaults(store: Arc<dyn Store>) -> anyhow::Result<Self> {
+    pub async fn with_defaults(
+        store: Arc<dyn Store>,
+        feature_flags: Arc<crate::feature_flags::FeatureFlags>,
+    ) -> anyhow::Result<Self> {
         let kubernetes_backend = Arc::new(
             KubernetesBackend::new(crate::backends::KubernetesConfig::load_or_default()).await?,
         );
@@ -186,6 +193,7 @@ impl SessionManager {
             #[cfg(target_os = "macos")]
             Arc::new(AppleContainerBackend::new()),
             Arc::new(crate::backends::SpritesBackend::new()),
+            feature_flags,
         )
         .await
     }
@@ -200,6 +208,7 @@ impl SessionManager {
     pub async fn with_docker_backend(
         store: Arc<dyn Store>,
         docker: DockerBackend,
+        feature_flags: Arc<crate::feature_flags::FeatureFlags>,
     ) -> anyhow::Result<Self> {
         let kubernetes_backend = Arc::new(
             KubernetesBackend::new(crate::backends::KubernetesConfig::load_or_default()).await?,
@@ -215,6 +224,7 @@ impl SessionManager {
             #[cfg(target_os = "macos")]
             Arc::new(AppleContainerBackend::new()),
             Arc::new(SpritesBackend::new()),
+            feature_flags,
         )
         .await
     }
@@ -246,6 +256,25 @@ impl SessionManager {
     #[must_use]
     pub fn console_manager(&self) -> Arc<ConsoleManager> {
         Arc::clone(&self.console_manager)
+    }
+
+    /// Validate that read-only mode is allowed if requested
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if read-only mode is requested but the feature flag is disabled.
+    fn validate_readonly_mode_allowed(
+        &self,
+        access_mode: super::session::AccessMode,
+    ) -> anyhow::Result<()> {
+        if access_mode == super::session::AccessMode::ReadOnly
+            && !self.feature_flags.enable_readonly_mode
+        {
+            anyhow::bail!(
+                "Read-only mode is not available. This feature is experimental and must be explicitly enabled."
+            );
+        }
+        Ok(())
     }
 
     /// Get reference to Kubernetes backend
@@ -387,6 +416,9 @@ impl SessionManager {
                 self.max_sessions
             );
         }
+
+        // Validate read-only mode is enabled if requested
+        self.validate_readonly_mode_allowed(access_mode)?;
 
         // Process repositories (multi-repo mode or legacy single-repo mode)
         let repo_inputs = if let Some(repos) = repositories {
@@ -1165,6 +1197,9 @@ impl SessionManager {
                 Use asynchronous session creation for multi-repo support."
             );
         }
+
+        // Validate read-only mode is enabled if requested
+        self.validate_readonly_mode_allowed(access_mode)?;
 
         // Validate and resolve git repository path
         let repo_path_buf = std::path::PathBuf::from(&repo_path);
@@ -2502,6 +2537,9 @@ impl SessionManager {
             .iter_mut()
             .find(|s| s.name == id_or_name || s.id.to_string() == id_or_name)
             .ok_or_else(|| anyhow::anyhow!("Session not found: {id_or_name}"))?;
+
+        // Validate read-only mode is enabled if requested
+        self.validate_readonly_mode_allowed(new_mode)?;
 
         let session_id = session.id;
         let backend = session.backend;
