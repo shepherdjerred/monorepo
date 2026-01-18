@@ -9,11 +9,15 @@ export const typography = {
     regular: Platform.select({
       ios: "System",
       android: "Roboto",
+      macos: "System",
+      windows: "Segoe UI",
       default: "System",
     }),
     mono: Platform.select({
       ios: "Menlo",
       android: "monospace",
+      macos: "Menlo",
+      windows: "Consolas",
       default: "monospace",
     }),
   },

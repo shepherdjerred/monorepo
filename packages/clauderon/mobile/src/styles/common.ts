@@ -26,6 +26,18 @@ export const commonStyles = StyleSheet.create({
         shadowOpacity: 1,
         shadowRadius: 0,
       },
+      macos: {
+        shadowColor: colors.border,
+        shadowOffset: { width: 4, height: 4 },
+        shadowOpacity: 1,
+        shadowRadius: 0,
+      },
+      windows: {
+        shadowColor: colors.border,
+        shadowOffset: { width: 4, height: 4 },
+        shadowOpacity: 1,
+        shadowRadius: 0,
+      },
       android: {
         elevation: 4,
       },
@@ -76,6 +88,18 @@ export const commonStyles = StyleSheet.create({
     paddingHorizontal: 20,
     ...Platform.select({
       ios: {
+        shadowColor: colors.border,
+        shadowOffset: { width: 3, height: 3 },
+        shadowOpacity: 1,
+        shadowRadius: 0,
+      },
+      macos: {
+        shadowColor: colors.border,
+        shadowOffset: { width: 3, height: 3 },
+        shadowOpacity: 1,
+        shadowRadius: 0,
+      },
+      windows: {
         shadowColor: colors.border,
         shadowOffset: { width: 3, height: 3 },
         shadowOpacity: 1,
