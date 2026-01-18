@@ -101,6 +101,7 @@ async fn test_recent_repo_tracked_on_session_create() {
     let (_session, _warnings) = manager
         .create_session(
             repo_path.to_string_lossy().to_string(),
+            None,
             "Test prompt".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
@@ -148,6 +149,7 @@ async fn test_path_canonicalization_prevents_duplicates() {
     manager
         .create_session(
             canonical.to_string_lossy().to_string(),
+            None,
             "Prompt 1".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
@@ -169,6 +171,7 @@ async fn test_path_canonicalization_prevents_duplicates() {
     manager
         .create_session(
             path_with_dot,
+            None,
             "Prompt 2".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
@@ -207,6 +210,7 @@ async fn test_limit_enforcement_removes_oldest() {
         manager
             .create_session(
                 repo_path.to_string_lossy().to_string(),
+                None,
                 format!("Prompt {i}"),
                 BackendType::Zellij,
                 AgentType::ClaudeCode,
@@ -258,6 +262,7 @@ async fn test_upsert_behavior_updates_timestamp() {
     manager
         .create_session(
             repo_path.to_string_lossy().to_string(),
+            None,
             "Prompt 1".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
@@ -288,6 +293,7 @@ async fn test_upsert_behavior_updates_timestamp() {
     manager
         .create_session(
             repo_path.to_string_lossy().to_string(),
+            None,
             "Prompt 2".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
@@ -331,6 +337,7 @@ async fn test_recent_repos_ordered_by_most_recent() {
         manager
             .create_session(
                 repo_path.to_string_lossy().to_string(),
+                None,
                 format!("Prompt {i}"),
                 BackendType::Zellij,
                 AgentType::ClaudeCode,
@@ -376,6 +383,7 @@ async fn test_nonexistent_repo_handles_gracefully() {
     let result = manager
         .create_session(
             "/nonexistent/repo/path".to_string(),
+            None,
             "Prompt".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
@@ -436,6 +444,7 @@ async fn test_subdirectories_tracked_separately() {
     manager
         .create_session(
             packages_foo.to_string_lossy().to_string(),
+            None,
             "Prompt 1".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
@@ -459,6 +468,7 @@ async fn test_subdirectories_tracked_separately() {
     manager
         .create_session(
             packages_bar.to_string_lossy().to_string(),
+            None,
             "Prompt 2".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
@@ -521,6 +531,7 @@ async fn test_same_subdir_updates_timestamp() {
     manager
         .create_session(
             packages_foo.to_string_lossy().to_string(),
+            None,
             "Prompt 1".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
@@ -551,6 +562,7 @@ async fn test_same_subdir_updates_timestamp() {
     manager
         .create_session(
             packages_foo.to_string_lossy().to_string(),
+            None,
             "Prompt 2".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
@@ -603,6 +615,7 @@ async fn test_subdirectories_respect_limit() {
         manager
             .create_session(
                 subdir.to_string_lossy().to_string(),
+                None,
                 format!("Prompt {i}"),
                 BackendType::Zellij,
                 AgentType::ClaudeCode,

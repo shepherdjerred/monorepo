@@ -254,6 +254,7 @@ async fn create_session(
         .session_manager
         .start_session_creation(
             request.repo_path,
+            request.repositories,
             request.initial_prompt,
             request.backend,
             request.agent,
@@ -668,8 +669,11 @@ async fn get_session_history(
     }
 
     // Verify path matches expected pattern (defense in depth)
-    let expected_path =
-        crate::core::session::get_history_file_path(&session.worktree_path, &session.id);
+    let expected_path = crate::core::session::get_history_file_path(
+        &session.worktree_path,
+        &session.id,
+        &session.subdirectory,
+    );
     if history_path != expected_path {
         return Err(AppError::BadRequest(
             "Invalid history file path: pattern mismatch".to_string(),
