@@ -9,7 +9,7 @@ use k8s_openapi::api::storage::v1::StorageClass;
 use k8s_openapi::apimachinery::pkg::api::resource::Quantity;
 use k8s_openapi::apimachinery::pkg::apis::meta::v1::ObjectMeta;
 use kube::Client;
-use kube::api::{Api, DeleteParams, LogParams, PostParams};
+use kube::api::{Api, DeleteParams, ListParams, LogParams, PostParams};
 use std::collections::BTreeMap;
 use std::path::Path;
 use std::time::Duration;
