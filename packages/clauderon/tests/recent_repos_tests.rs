@@ -166,6 +166,7 @@ async fn test_path_canonicalization_prevents_duplicates() {
             None,
             None,
             None,
+            None, // storage_class
         )
         .await
         .expect("Failed to create session 1");
@@ -189,6 +190,7 @@ async fn test_path_canonicalization_prevents_duplicates() {
             None,
             None,
             None,
+            None, // storage_class
         )
         .await
         .expect("Failed to create session 2");
@@ -282,6 +284,7 @@ async fn test_upsert_behavior_updates_timestamp() {
             None,
             None,
             None,
+            None, // storage_class
         )
         .await
         .expect("Failed to create session 1");
@@ -314,6 +317,7 @@ async fn test_upsert_behavior_updates_timestamp() {
             None,
             None,
             None,
+            None, // storage_class
         )
         .await
         .expect("Failed to create session 2");
@@ -406,6 +410,7 @@ async fn test_nonexistent_repo_handles_gracefully() {
             None,
             None,
             None,
+            None, // storage_class
         )
         .await;
 
@@ -468,6 +473,7 @@ async fn test_subdirectories_tracked_separately() {
             None,
             None,
             None,
+            None, // storage_class
         )
         .await
         .expect("Failed to create session in packages/foo");
@@ -493,6 +499,7 @@ async fn test_subdirectories_tracked_separately() {
             None,
             None,
             None,
+            None, // storage_class
         )
         .await
         .expect("Failed to create session in packages/bar");
@@ -557,6 +564,7 @@ async fn test_same_subdir_updates_timestamp() {
             None,
             None,
             None,
+            None, // storage_class
         )
         .await
         .expect("Failed to create session 1");
@@ -589,6 +597,7 @@ async fn test_same_subdir_updates_timestamp() {
             None,
             None,
             None,
+            None, // storage_class
         )
         .await
         .expect("Failed to create session 2");
