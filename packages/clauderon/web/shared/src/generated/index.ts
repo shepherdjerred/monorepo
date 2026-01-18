@@ -128,6 +128,8 @@ export enum BackendType {
 	Kubernetes = "Kubernetes",
 	/** Apple Container (macOS 26+ with Apple silicon) */
 	AppleContainer = "AppleContainer",
+	/** Sprites.dev cloud container */
+	Sprites = "Sprites",
 }
 
 /** AI agent type */
