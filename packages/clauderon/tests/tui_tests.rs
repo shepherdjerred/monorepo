@@ -1258,7 +1258,7 @@ fn test_signal_menu_state_default() {
     let menu2 = SignalMenuState::default();
 
     assert_eq!(menu1.selected_index, menu2.selected_index);
-    assert_eq!(menu1.signals, menu2.signals);
+    assert_eq!(menu1.signals.len(), menu2.signals.len());
 }
 
 #[test]

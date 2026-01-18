@@ -28,7 +28,7 @@ pub enum ConsoleMessage {
 }
 
 /// Unix signal types that can be sent to the PTY process.
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum SignalType {
     /// SIGINT - Interrupt signal (Ctrl+C)
