@@ -1390,6 +1390,16 @@ impl SessionManager {
                     )
                     .await?
             }
+            BackendType::Sprites => {
+                self.sprites
+                    .create(
+                        &full_name,
+                        &worktree_path,
+                        &transformed_prompt,
+                        create_options,
+                    )
+                    .await?
+            }
         };
 
         session.set_backend_id(backend_id.clone());
@@ -2983,6 +2993,32 @@ impl SessionManager {
                     .args(["action", "write-chars", prompt, "-s", backend_id])
                     .output()
                     .await?;
+
+                if !output.status.success() {
+                    anyhow::bail!(
+                        "Failed to send prompt: {}",
+                        String::from_utf8_lossy(&output.stderr)
+                    );
+                }
+            }
+            BackendType::Sprites => {
+                // Send prompt via sprite CLI exec (similar to kubectl exec)
+                let mut child = tokio::process::Command::new("sprite")
+                    .args(["exec", "-i", backend_id, "claude"])
+                    .stdin(std::process::Stdio::piped())
+                    .stdout(std::process::Stdio::piped())
+                    .stderr(std::process::Stdio::piped())
+                    .spawn()?;
+
+                // Write prompt to stdin
+                if let Some(mut stdin) = child.stdin.take() {
+                    use tokio::io::AsyncWriteExt;
+                    stdin.write_all(prompt.as_bytes()).await?;
+                    stdin.write_all(b"\n").await?;
+                    drop(stdin); // Close stdin to signal end of input
+                }
+
+                let output = child.wait_with_output().await?;
 
                 if !output.status.success() {
                     anyhow::bail!(

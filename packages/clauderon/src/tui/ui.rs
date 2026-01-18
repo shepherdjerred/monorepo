@@ -235,7 +235,7 @@ fn render_help(frame: &mut Frame, app: &App, area: Rect) {
         |session| match session.backend {
             BackendType::Zellij => vec![("Ctrl+O, d", "Detach from session")],
             #[cfg(target_os = "macos")]
-            BackendType::Docker | BackendType::Kubernetes | BackendType::AppleContainer => vec![
+            BackendType::Docker | BackendType::Kubernetes | BackendType::Sprites | BackendType::AppleContainer => vec![
                 ("Ctrl+Q", "Detach"),
                 ("Ctrl+P/N", "Switch session (Prev/Next)"),
                 ("Ctrl+S", "Enter scroll mode"),
@@ -243,7 +243,7 @@ fn render_help(frame: &mut Frame, app: &App, area: Rect) {
                 ("?", "Show help"),
             ],
             #[cfg(not(target_os = "macos"))]
-            BackendType::Docker | BackendType::Kubernetes => vec![
+            BackendType::Docker | BackendType::Kubernetes | BackendType::Sprites => vec![
                 ("Ctrl+Q", "Detach"),
                 ("Ctrl+P/N", "Switch session (Prev/Next)"),
                 ("Ctrl+S", "Enter scroll mode"),
