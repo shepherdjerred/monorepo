@@ -6,12 +6,12 @@ use ratatui::{
     widgets::{Block, Borders, Clear, Paragraph, Wrap},
 };
 
+use super::SPINNER_FRAMES;
 use crate::core::{
     AccessMode, AgentType, BackendType,
     session::{ClaudeModel, CodexModel, GeminiModel, SessionModel},
 };
 use crate::tui::app::{App, CreateDialogFocus};
-use super::SPINNER_FRAMES;
 
 /// Render the create session dialog
 pub fn render(frame: &mut Frame, app: &App, area: Rect) {

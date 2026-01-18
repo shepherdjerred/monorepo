@@ -7,9 +7,9 @@ use ratatui::{
 };
 use unicode_width::UnicodeWidthStr;
 
+use super::SPINNER_FRAMES;
 use crate::core::{CheckStatus, ClaudeWorkingStatus, Session, SessionStatus};
 use crate::tui::app::App;
-use super::SPINNER_FRAMES;
 
 /// Number of spaces between columns
 const COLUMN_PADDING: usize = 2;
