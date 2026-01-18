@@ -130,6 +130,10 @@ impl SqliteStore {
             Self::migrate_to_v13(pool).await?;
         }
 
+        if current_version < 14 {
+            Self::migrate_to_v14(pool).await?;
+        }
+
         Ok(())
     }
 
@@ -880,6 +884,38 @@ impl SqliteStore {
         tracing::info!("Migration v13 complete");
         Ok(())
     }
+
+    /// Migration v14: Add model column for model selection
+    async fn migrate_to_v14(pool: &SqlitePool) -> anyhow::Result<()> {
+        tracing::info!("Applying migration v14: Add model selection");
+
+        // Check if column exists
+        let model_exists: bool = sqlx::query_scalar(
+            "SELECT COUNT(*) > 0 FROM pragma_table_info('sessions') WHERE name = 'model'",
+        )
+        .fetch_one(pool)
+        .await?;
+
+        if !model_exists {
+            // Store as TEXT with JSON serialization for SessionModel enum
+            // NULL for legacy sessions created before model selection was added
+            sqlx::query("ALTER TABLE sessions ADD COLUMN model TEXT")
+                .execute(pool)
+                .await?;
+            tracing::debug!("Added model column to sessions table");
+        }
+
+        // Record migration
+        let now = Utc::now();
+        sqlx::query("INSERT OR REPLACE INTO schema_version (version, applied_at) VALUES (?, ?)")
+            .bind(14)
+            .bind(now.to_rfc3339())
+            .execute(pool)
+            .await?;
+
+        tracing::info!("Migration v14 complete");
+        Ok(())
+    }
 }
 
 #[async_trait]
@@ -995,13 +1031,13 @@ impl Store for SqliteStore {
         sqlx::query(
             r"
             INSERT OR REPLACE INTO sessions (
-                id, name, title, description, status, backend, agent, repo_path, worktree_path,
+                id, name, title, description, status, backend, agent, model, repo_path, worktree_path,
                 subdirectory, branch_name, backend_id, initial_prompt, dangerous_skip_checks,
                 pr_url, pr_check_status, claude_status, claude_status_updated_at,
                 merge_conflict, worktree_dirty, worktree_changed_files, access_mode, proxy_port, history_file_path,
                 reconcile_attempts, last_reconcile_error, last_reconcile_at, error_message,
                 created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ",
         )
         .bind(session.id.to_string())
@@ -1011,6 +1047,13 @@ impl Store for SqliteStore {
         .bind(serde_json::to_string(&session.status)?)
         .bind(serde_json::to_string(&session.backend)?)
         .bind(serde_json::to_string(&session.agent)?)
+        .bind(
+            session
+                .model
+                .as_ref()
+                .map(serde_json::to_string)
+                .transpose()?,
+        )
         .bind(session.repo_path.to_string_lossy().to_string())
         .bind(session.worktree_path.to_string_lossy().to_string())
         .bind(session.subdirectory.to_string_lossy().to_string())
@@ -1298,6 +1341,7 @@ struct SessionRow {
     status: String,
     backend: String,
     agent: String,
+    model: Option<String>,
     repo_path: String,
     worktree_path: String,
     subdirectory: String,
@@ -1357,6 +1401,15 @@ impl TryFrom<SessionRow> for Session {
                 e
             )
         })?;
+
+        let model = row
+            .model
+            .map(|s| {
+                serde_json::from_str(&s).map_err(|e| {
+                    anyhow::anyhow!("session '{}': invalid model '{}': {}", row.name, s, e)
+                })
+            })
+            .transpose()?;
 
         let pr_check_status = row
             .pr_check_status
@@ -1448,6 +1501,7 @@ impl TryFrom<SessionRow> for Session {
             status,
             backend,
             agent,
+            model,
             repo_path: row.repo_path.into(),
             worktree_path: row.worktree_path.into(),
             subdirectory: row.subdirectory.into(),

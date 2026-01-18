@@ -39,6 +39,10 @@ pub struct CreateOptions {
     /// Agent to run (Claude Code, Codex, or Gemini).
     pub agent: AgentType,
 
+    /// Optional model CLI flag value (e.g., "sonnet", "gpt-4o", "gemini-2.5-pro").
+    /// If None, the CLI will use its default model.
+    pub model: Option<String>,
+
     /// Run in print mode (non-interactive, outputs response and exits).
     /// Only applicable to Docker backend.
     pub print_mode: bool,

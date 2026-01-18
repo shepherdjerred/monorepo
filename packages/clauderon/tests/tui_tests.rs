@@ -161,6 +161,7 @@ fn test_create_dialog_focus_cycle() {
         CreateDialogFocus::RepoPath,
         CreateDialogFocus::Backend,
         CreateDialogFocus::Agent,
+        CreateDialogFocus::Model,
         CreateDialogFocus::AccessMode,
         CreateDialogFocus::SkipChecks,
         CreateDialogFocus::PlanMode,
@@ -173,7 +174,8 @@ fn test_create_dialog_focus_cycle() {
             CreateDialogFocus::Prompt => CreateDialogFocus::RepoPath,
             CreateDialogFocus::RepoPath => CreateDialogFocus::Backend,
             CreateDialogFocus::Backend => CreateDialogFocus::Agent,
-            CreateDialogFocus::Agent => CreateDialogFocus::AccessMode,
+            CreateDialogFocus::Agent => CreateDialogFocus::Model,
+            CreateDialogFocus::Model => CreateDialogFocus::AccessMode,
             CreateDialogFocus::AccessMode => CreateDialogFocus::SkipChecks,
             CreateDialogFocus::SkipChecks => CreateDialogFocus::PlanMode,
             CreateDialogFocus::PlanMode => CreateDialogFocus::Buttons,
@@ -290,6 +292,9 @@ async fn test_create_dialog_tab_navigation() {
 
     handle_key_event(&mut app, key(KeyCode::Tab)).await.unwrap();
     assert_eq!(app.create_dialog.focus, CreateDialogFocus::Agent);
+
+    handle_key_event(&mut app, key(KeyCode::Tab)).await.unwrap();
+    assert_eq!(app.create_dialog.focus, CreateDialogFocus::Model);
 
     handle_key_event(&mut app, key(KeyCode::Tab)).await.unwrap();
     assert_eq!(app.create_dialog.focus, CreateDialogFocus::AccessMode);

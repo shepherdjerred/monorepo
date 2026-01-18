@@ -48,6 +48,7 @@ async fn test_claude_starts_in_docker() {
             "echo 'smoke test' && exit",
             CreateOptions {
                 agent: AgentType::ClaudeCode,
+                model: None,
                 print_mode: false,
                 plan_mode: true,
                 session_proxy_port: None,
@@ -124,6 +125,7 @@ async fn test_claude_writes_debug_files() {
             "echo 'testing debug write'",
             CreateOptions {
                 agent: AgentType::ClaudeCode,
+                model: None,
                 print_mode: false,
                 plan_mode: true,
                 session_proxy_port: None,
@@ -188,6 +190,7 @@ async fn test_container_runs_as_non_root() {
             "id -u",
             CreateOptions {
                 agent: AgentType::ClaudeCode,
+                model: None,
                 print_mode: false,
                 plan_mode: true,
                 session_proxy_port: None,
@@ -264,6 +267,7 @@ async fn test_initial_prompt_executed() {
             "read the file test-file.txt and print its contents exactly",
             CreateOptions {
                 agent: AgentType::ClaudeCode,
+                model: None,
                 print_mode: false,
                 plan_mode: true,
                 session_proxy_port: None,
@@ -385,6 +389,7 @@ async fn test_claude_print_mode_e2e() {
     // Use print mode - Claude will output response and exit
     let options = CreateOptions {
         agent: AgentType::ClaudeCode,
+        model: None,
         print_mode: true,
         plan_mode: false, // Don't need plan mode for this test
         session_proxy_port: Some(proxy_port),

@@ -45,6 +45,7 @@ impl Agent for CodexAgent {
         images: &[String],
         dangerous_skip_checks: bool,
         session_id: Option<&uuid::Uuid>,
+        model: Option<&str>,
     ) -> Vec<String> {
         let mut cmd = vec!["codex".to_string()];
 
@@ -52,6 +53,12 @@ impl Agent for CodexAgent {
         if let Some(id) = session_id {
             cmd.push("--session-id".to_string());
             cmd.push(id.to_string());
+        }
+
+        // Add model flag if provided
+        if let Some(model_name) = model {
+            cmd.push("--model".to_string());
+            cmd.push(model_name.to_string());
         }
 
         // Use full auto mode when dangerous skip checks is enabled
@@ -83,7 +90,7 @@ mod tests {
     #[test]
     fn test_start_command_basic_with_full_auto() {
         let agent = CodexAgent::new();
-        let cmd = agent.start_command("Fix the bug", &[], true, None);
+        let cmd = agent.start_command("Fix the bug", &[], true, None, None);
         assert_eq!(cmd.len(), 3);
         assert_eq!(cmd[0], "codex");
         assert_eq!(cmd[1], "--full-auto");
@@ -93,7 +100,7 @@ mod tests {
     #[test]
     fn test_start_command_basic_without_full_auto() {
         let agent = CodexAgent::new();
-        let cmd = agent.start_command("Fix the bug", &[], false, None);
+        let cmd = agent.start_command("Fix the bug", &[], false, None, None);
         assert_eq!(cmd.len(), 2);
         assert_eq!(cmd[0], "codex");
         assert_eq!(cmd[1], "Fix the bug");
@@ -106,7 +113,7 @@ mod tests {
             "/path/to/image1.png".to_string(),
             "/path/to/image2.jpg".to_string(),
         ];
-        let cmd = agent.start_command("Analyze these images", &images, true, None);
+        let cmd = agent.start_command("Analyze these images", &images, true, None, None);
         assert_eq!(cmd.len(), 7); // codex, --full-auto, --image, path1, --image, path2, prompt
         assert_eq!(cmd[0], "codex");
         assert_eq!(cmd[1], "--full-auto");
@@ -121,7 +128,7 @@ mod tests {
     fn test_start_command_with_session_id() {
         let agent = CodexAgent::new();
         let session_id = uuid::Uuid::new_v4();
-        let cmd = agent.start_command("Test prompt", &[], false, Some(&session_id));
+        let cmd = agent.start_command("Test prompt", &[], false, Some(&session_id), None);
         assert_eq!(cmd.len(), 4); // codex, --session-id, <uuid>, prompt
         assert_eq!(cmd[0], "codex");
         assert_eq!(cmd[1], "--session-id");
@@ -133,7 +140,7 @@ mod tests {
     fn test_start_command_with_session_id_and_full_auto() {
         let agent = CodexAgent::new();
         let session_id = uuid::Uuid::new_v4();
-        let cmd = agent.start_command("Test prompt", &[], true, Some(&session_id));
+        let cmd = agent.start_command("Test prompt", &[], true, Some(&session_id), None);
         assert_eq!(cmd.len(), 5); // codex, --session-id, <uuid>, --full-auto, prompt
         assert_eq!(cmd[0], "codex");
         assert_eq!(cmd[1], "--session-id");
@@ -145,7 +152,7 @@ mod tests {
     #[test]
     fn test_start_command_empty_prompt() {
         let agent = CodexAgent::new();
-        let cmd = agent.start_command("", &[], false, None);
+        let cmd = agent.start_command("", &[], false, None, None);
         assert_eq!(cmd.len(), 1); // Just "codex", no prompt
         assert_eq!(cmd[0], "codex");
     }

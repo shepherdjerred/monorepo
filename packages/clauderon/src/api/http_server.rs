@@ -251,6 +251,9 @@ async fn create_session(
     State(state): State<AppState>,
     Json(request): Json<CreateSessionRequest>,
 ) -> Result<Json<serde_json::Value>, AppError> {
+    // Validate model compatibility with agent
+    request.validate()?;
+
     // Start async creation (returns immediately with session ID)
     let session_id = state
         .session_manager
@@ -260,6 +263,7 @@ async fn create_session(
             request.initial_prompt,
             request.backend,
             request.agent,
+            request.model,
             request.dangerous_skip_checks,
             request.print_mode,
             request.plan_mode,

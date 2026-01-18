@@ -25,6 +25,7 @@ fn create_test_session(name: &str) -> Session {
         agent: AgentType::ClaudeCode,
         dangerous_skip_checks: false,
         access_mode: AccessMode::default(),
+        model: None,
     })
 }
 
