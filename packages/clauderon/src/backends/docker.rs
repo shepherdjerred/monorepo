@@ -2108,7 +2108,8 @@ mod tests {
             &DockerConfig::default(),
             None,
             None,
-            &[], // repositories (empty = legacy mode)
+            None, // model
+            &[],  // repositories (empty = legacy mode)
         )
         .expect("Failed to build args");
 
@@ -2150,6 +2151,7 @@ mod tests {
             &DockerConfig::default(),
             None,
             None,
+            None, // model
             &[],
         )
         .expect("Failed to build args");
@@ -2482,7 +2484,8 @@ mod tests {
             &DockerConfig::default(),
             None,
             None,
-            &[], // repositories
+            None, // model
+            &[],  // repositories
         )
         .expect("Failed to build args");
 
@@ -2523,7 +2526,8 @@ mod tests {
             &DockerConfig::default(),
             None,
             None,
-            &[], // repositories
+            None, // model
+            &[],  // repositories
         )
         .expect("Failed to build args");
 

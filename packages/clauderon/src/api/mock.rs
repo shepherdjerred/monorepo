@@ -395,6 +395,7 @@ mod tests {
             initial_prompt: "Test prompt".to_string(),
             backend: BackendType::Zellij,
             agent: AgentType::ClaudeCode,
+            model: None, // Test uses default model
             dangerous_skip_checks: false,
             print_mode: false,
             plan_mode: true,
