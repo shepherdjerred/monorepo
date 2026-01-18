@@ -81,6 +81,12 @@ pub struct CreateOptions {
     /// For Docker: sets --cpus and --memory flags.
     /// For Kubernetes: sets CPU/memory requests and limits in pod spec.
     pub container_resources: Option<ResourceLimits>,
+
+    /// Optional: Override storage class for PVCs (Kubernetes only).
+    ///
+    /// When provided, overrides the default storage class from the backend's config file.
+    /// Applies only to Kubernetes backend for PVC creation.
+    pub storage_class_override: Option<String>,
 }
 
 /// Trait for execution backends (Zellij, Docker, etc.)

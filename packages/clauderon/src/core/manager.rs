@@ -235,6 +235,14 @@ impl SessionManager {
         Arc::clone(&self.console_manager)
     }
 
+    /// Get reference to Kubernetes backend
+    ///
+    /// Returns the Kubernetes backend for API operations like listing storage classes.
+    #[must_use]
+    pub fn kubernetes_backend(&self) -> &crate::backends::KubernetesBackend {
+        &self.kubernetes
+    }
+
     /// List all sessions
     #[instrument(skip(self))]
     pub async fn list_sessions(&self) -> Vec<Session> {
@@ -296,6 +304,7 @@ impl SessionManager {
         pull_policy: Option<String>,
         cpu_limit: Option<String>,
         memory_limit: Option<String>,
+        storage_class: Option<String>,
     ) -> anyhow::Result<Uuid> {
         // Validate session count limit
         let sessions_guard = self.sessions.read().await;
@@ -463,6 +472,7 @@ impl SessionManager {
                     pull_policy,
                     cpu_limit,
                     memory_limit,
+                    storage_class,
                 )
                 .await;
         });
@@ -492,6 +502,7 @@ impl SessionManager {
         pull_policy: Option<String>,
         cpu_limit: Option<String>,
         memory_limit: Option<String>,
+        storage_class: Option<String>,
     ) {
         // Acquire semaphore to limit concurrent creations
         let Ok(_permit) = self.creation_semaphore.acquire().await else {
@@ -675,6 +686,7 @@ impl SessionManager {
                 http_port: self.http_port,
                 container_image: container_image_config,
                 container_resources: container_resource_limits,
+                storage_class_override: storage_class,
             };
             let backend_id = match backend {
                 BackendType::Zellij => {
@@ -909,6 +921,7 @@ impl SessionManager {
         pull_policy: Option<String>,
         cpu_limit: Option<String>,
         memory_limit: Option<String>,
+        storage_class: Option<String>,
     ) -> anyhow::Result<(Session, Option<Vec<String>>)> {
         // Validate and resolve git repository path
         let repo_path_buf = std::path::PathBuf::from(&repo_path);
@@ -1117,6 +1130,7 @@ impl SessionManager {
             http_port: self.http_port,
             container_image: container_image_config,
             container_resources: container_resource_limits,
+            storage_class_override: storage_class,
         };
         let backend_id = match backend {
             BackendType::Zellij => {
