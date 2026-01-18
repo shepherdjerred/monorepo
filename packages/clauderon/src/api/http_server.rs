@@ -1,5 +1,5 @@
 use crate::api::middleware::correlation_id_middleware;
-use crate::api::protocol::{CreateSessionRequest, Event};
+use crate::api::protocol::{CreateSessionRequest, Event, MergePrRequest};
 use crate::api::static_files::{serve_docs, serve_static};
 use crate::api::ws_events::{EventBroadcaster, broadcast_event};
 use crate::auth::{self, AuthState};
@@ -64,6 +64,7 @@ pub fn create_router(auth_state: &Option<AuthState>, dev_mode: bool) -> Router<A
             "/api/sessions/{id}/regenerate-metadata",
             post(regenerate_metadata),
         )
+        .route("/api/sessions/{id}/merge-pr", post(merge_pr))
         .route("/api/sessions/{id}/history", get(get_session_history))
         .route("/api/sessions/{id}/upload", post(upload_file))
         // Health and recreate endpoints
@@ -616,6 +617,31 @@ async fn regenerate_metadata(
     .await;
 
     Ok(Json(json!({ "session": session })))
+}
+
+/// Merge a pull request for a session
+async fn merge_pr(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+    Json(request): Json<MergePrRequest>,
+) -> Result<StatusCode, AppError> {
+    validate_session_id(&id)?;
+    let session_id = Uuid::parse_str(&id)
+        .map_err(|e| AppError::BadRequest(format!("Invalid session ID: {}", e)))?;
+
+    // Merge the PR
+    state
+        .session_manager
+        .merge_pr(session_id, request.method, request.delete_branch)
+        .await
+        .map_err(|e| AppError::SessionManager(e))?;
+
+    // Broadcast session updated event
+    if let Some(session) = state.session_manager.get_session(&id).await {
+        broadcast_event(&state.event_broadcaster, Event::SessionUpdated(session)).await;
+    }
+
+    Ok(StatusCode::OK)
 }
 
 /// Get recent repositories

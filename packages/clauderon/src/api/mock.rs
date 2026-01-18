@@ -449,6 +449,16 @@ impl ApiClient for MockApiClient {
         // Mock implementation - no-op
         Ok(())
     }
+
+    async fn merge_pr(
+        &mut self,
+        _id: &str,
+        _method: crate::core::MergeMethod,
+        _delete_branch: bool,
+    ) -> anyhow::Result<()> {
+        // Mock implementation - no-op
+        Ok(())
+    }
 }
 
 #[cfg(test)]

@@ -21,6 +21,8 @@ import type {
   SessionHealthReport,
   RecreateResult,
   FeatureFlagsResponse,
+  MergeMethod,
+  MergePrRequest,
 } from "@clauderon/shared";
 import { ApiError, NetworkError, SessionNotFoundError } from "./errors.js";
 
@@ -235,6 +237,20 @@ export class ClauderonClient {
   async regenerateMetadata(id: string): Promise<Session> {
     const response = await this.request<{ session: Session }>("POST", `/api/sessions/${encodeURIComponent(id)}/regenerate-metadata`);
     return response.session;
+  }
+
+  /**
+   * Merge a pull request for a session
+   * @param id Session ID
+   * @param method Merge method to use (Merge, Squash, or Rebase)
+   * @param deleteBranch Whether to delete the branch after merge
+   */
+  async mergePr(id: string, method: MergeMethod, deleteBranch: boolean): Promise<void> {
+    const request: MergePrRequest = {
+      method,
+      delete_branch: deleteBranch,
+    };
+    await this.request("POST", `/api/sessions/${encodeURIComponent(id)}/merge-pr`, request);
   }
 
   /**

@@ -4,7 +4,7 @@ use std::time::Duration;
 use tokio::time::interval;
 use uuid::Uuid;
 
-use crate::core::{CheckStatus, ReviewDecision, SessionManager, SessionStatus};
+use crate::core::{CheckStatus, MergeMethod, PrReviewStatus, ReviewDecision, SessionManager, SessionStatus};
 
 /// CI status poller - polls GitHub PR checks for sessions with PRs
 pub struct CIPoller {
@@ -152,6 +152,11 @@ impl CIPoller {
                     "Discovered PR for session"
                 );
                 self.manager.link_pr(*session_id, url.to_string()).await?;
+
+                // Fetch merge methods and repository settings once when PR is discovered
+                self.poll_pr_merge_methods(session_id, repo_path)
+                    .await
+                    .ok(); // Don't fail if merge methods fetch fails
             }
         }
 
@@ -229,7 +234,7 @@ impl CIPoller {
         Ok(())
     }
 
-    /// Poll CI status for a specific PR
+    /// Poll CI status and review status for a specific PR
     async fn poll_pr_status(
         &self,
         session_id: &Uuid,
@@ -243,7 +248,12 @@ impl CIPoller {
             .and_then(|s| s.parse::<u32>().ok())
             .ok_or_else(|| anyhow::anyhow!("Invalid PR URL: {}", pr_url))?;
 
-        // First, get CI check status using gh pr checks
+        // First, get PR review status (from incoming merge button feature)
+        self.poll_pr_review_status(session_id, pr_number, repo_path)
+            .await
+            .ok(); // Don't fail if review status fetch fails
+
+        // Get CI check status using gh pr checks
         let checks_output = tokio::process::Command::new("gh")
             .current_dir(repo_path)
             .args(["pr", "checks", &pr_number.to_string(), "--json", "state"])
@@ -350,6 +360,129 @@ impl CIPoller {
                 }
             }
         }
+
+        Ok(())
+    }
+
+    /// Poll PR review status
+    async fn poll_pr_review_status(
+        &self,
+        session_id: &Uuid,
+        pr_number: u32,
+        repo_path: &Path,
+    ) -> anyhow::Result<()> {
+        // Use gh CLI to check PR review status
+        let output = tokio::process::Command::new("gh")
+            .current_dir(repo_path)
+            .args([
+                "pr",
+                "view",
+                &pr_number.to_string(),
+                "--json",
+                "reviewDecision",
+            ])
+            .output()
+            .await?;
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            return Err(anyhow::anyhow!("gh pr view failed: {}", stderr));
+        }
+
+        let json_output = String::from_utf8_lossy(&output.stdout);
+        let data: serde_json::Value = serde_json::from_str(&json_output)?;
+
+        // GitHub reviewDecision values: "APPROVED", "CHANGES_REQUESTED", "REVIEW_REQUIRED", or null
+        let review_status = match data["reviewDecision"].as_str() {
+            Some("APPROVED") => PrReviewStatus::Approved,
+            Some("CHANGES_REQUESTED") => PrReviewStatus::ChangesRequested,
+            Some("REVIEW_REQUIRED") => PrReviewStatus::ReviewRequired,
+            None | Some(_) => PrReviewStatus::Unknown,
+        };
+
+        // Update session if review status changed
+        let current_session = self.manager.get_session(&session_id.to_string()).await;
+        if let Some(session) = current_session {
+            if session.pr_review_status != Some(review_status) {
+                self.manager
+                    .update_pr_review_status(*session_id, review_status)
+                    .await?;
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Poll PR merge methods and repository settings (called once when PR is discovered)
+    async fn poll_pr_merge_methods(
+        &self,
+        session_id: &Uuid,
+        repo_path: &Path,
+    ) -> anyhow::Result<()> {
+        // Get repository full name (owner/repo) from git remote
+        let output = tokio::process::Command::new("gh")
+            .current_dir(repo_path)
+            .args(["repo", "view", "--json", "owner,name"])
+            .output()
+            .await?;
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            return Err(anyhow::anyhow!("gh repo view failed: {}", stderr));
+        }
+
+        let json_output = String::from_utf8_lossy(&output.stdout);
+        let data: serde_json::Value = serde_json::from_str(&json_output)?;
+
+        let owner = data["owner"]["login"]
+            .as_str()
+            .ok_or_else(|| anyhow::anyhow!("Missing owner in repo info"))?;
+        let name = data["name"]
+            .as_str()
+            .ok_or_else(|| anyhow::anyhow!("Missing name in repo info"))?;
+
+        // Get repository settings via GitHub API
+        let output = tokio::process::Command::new("gh")
+            .current_dir(repo_path)
+            .args([
+                "api",
+                &format!("repos/{}/{}", owner, name),
+                "--jq",
+                "{allow_merge_commit,allow_squash_merge,allow_rebase_merge,delete_branch_on_merge}",
+            ])
+            .output()
+            .await?;
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            return Err(anyhow::anyhow!("gh api failed: {}", stderr));
+        }
+
+        let json_output = String::from_utf8_lossy(&output.stdout);
+        let settings: serde_json::Value = serde_json::from_str(&json_output)?;
+
+        // Build list of available merge methods
+        let mut methods = Vec::new();
+        if settings["allow_merge_commit"].as_bool().unwrap_or(false) {
+            methods.push(MergeMethod::Merge);
+        }
+        if settings["allow_squash_merge"].as_bool().unwrap_or(false) {
+            methods.push(MergeMethod::Squash);
+        }
+        if settings["allow_rebase_merge"].as_bool().unwrap_or(false) {
+            methods.push(MergeMethod::Rebase);
+        }
+
+        // Default to first available method (GitHub's default order)
+        let default_method = methods.first().copied().unwrap_or(MergeMethod::Merge);
+        let delete_branch = settings["delete_branch_on_merge"]
+            .as_bool()
+            .unwrap_or(false);
+
+        // Update session with merge methods
+        self.manager
+            .update_pr_merge_methods(*session_id, methods, default_method, delete_branch)
+            .await?;
 
         Ok(())
     }

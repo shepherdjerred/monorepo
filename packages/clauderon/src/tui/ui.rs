@@ -45,6 +45,11 @@ pub fn render(frame: &mut Frame, app: &App) {
             frame.render_widget(Clear, dialog_area);
             render_confirm_delete(frame, app, dialog_area);
         }
+        AppMode::ConfirmMerge => {
+            let dialog_area = centered_rect(60, 30, frame.area());
+            frame.render_widget(Clear, dialog_area);
+            render_confirm_merge(frame, app, dialog_area);
+        }
         AppMode::Help => {
             let dialog_area = centered_rect(60, 60, frame.area());
             frame.render_widget(Clear, dialog_area);
@@ -208,6 +213,55 @@ fn render_confirm_delete(frame: &mut Frame, app: &App, area: Rect) {
     let paragraph = Paragraph::new(text).block(block).wrap(Wrap { trim: true });
 
     frame.render_widget(paragraph, area);
+}
+
+fn render_confirm_merge(frame: &mut Frame, app: &App, area: Rect) {
+    let block = Block::default()
+        .title(" Merge Pull Request ")
+        .borders(Borders::ALL)
+        .border_style(Style::default().fg(Color::Green));
+
+    if let Some(merge_state) = &app.confirm_merge {
+        let method = merge_state.selected_method();
+        let delete_branch_text = if merge_state.delete_branch {
+            "[x]"
+        } else {
+            "[ ]"
+        };
+
+        let text = vec![
+            Line::from(""),
+            Line::from(format!("PR: {}", merge_state.pr_url)),
+            Line::from(""),
+            Line::from(vec![
+                Span::raw("Merge method: "),
+                Span::styled(
+                    format!("{method:?}"),
+                    Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD),
+                ),
+                Span::raw(" (Tab to change)"),
+            ]),
+            Line::from(""),
+            Line::from(vec![
+                Span::raw("Delete branch: "),
+                Span::styled(
+                    delete_branch_text,
+                    Style::default().fg(Color::Yellow),
+                ),
+                Span::raw(" (Space to toggle)"),
+            ]),
+            Line::from(""),
+            Line::from(vec![
+                Span::styled("[Enter]", Style::default().fg(Color::Green)),
+                Span::raw(" Merge  "),
+                Span::styled("[Esc]", Style::default().fg(Color::Red)),
+                Span::raw(" Cancel"),
+            ]),
+        ];
+
+        let paragraph = Paragraph::new(text).block(block).wrap(Wrap { trim: true });
+        frame.render_widget(paragraph, area);
+    }
 }
 
 fn render_help(frame: &mut Frame, app: &App, area: Rect) {

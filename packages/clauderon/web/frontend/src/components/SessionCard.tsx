@@ -1,13 +1,16 @@
 import type { Session, SessionHealthReport, ResourceState } from "@clauderon/client";
 import { SessionStatus, CheckStatus, ClaudeWorkingStatus, WorkflowStage, ReviewDecision } from "@clauderon/shared";
+import type { MergeMethod } from "@clauderon/shared";
 import { formatRelativeTime, cn, getRepoUrlFromPrUrl } from "../lib/utils";
-import { Archive, ArchiveRestore, Trash2, Terminal, CheckCircle2, XCircle, Clock, Loader2, User, Circle, AlertTriangle, Edit, RefreshCw } from "lucide-react";
+import { Archive, ArchiveRestore, Trash2, Terminal, CheckCircle2, XCircle, Clock, Loader2, User, Circle, AlertTriangle, Edit, RefreshCw, GitMerge } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { AGENT_CAPABILITIES } from "@/lib/agent-features";
 import { ProviderIcon } from "./ProviderIcon";
+import { MergePrDialog } from "./MergePrDialog";
+import { useState } from "react";
 
 type SessionCardProps = {
   session: Session;
@@ -18,6 +21,7 @@ type SessionCardProps = {
   onUnarchive: (session: Session) => void;
   onRefresh: (session: Session) => void;
   onDelete: (session: Session) => void;
+  onMergePr: (session: Session, method: MergeMethod, deleteBranch: boolean) => void;
 }
 
 // Helper function to map git status codes to readable labels
@@ -232,7 +236,14 @@ function getHealthDisplay(state: ResourceState): { label: string; className: str
   }
 }
 
-export function SessionCard({ session, healthReport, onAttach, onEdit, onArchive, onUnarchive, onRefresh, onDelete }: SessionCardProps) {
+export function SessionCard({ session, healthReport, onAttach, onEdit, onArchive, onUnarchive, onRefresh, onDelete, onMergePr }: SessionCardProps) {
+  const [mergePrDialogOpen, setMergePrDialogOpen] = useState(false);
+
+  const handleMergePr = (method: MergeMethod, deleteBranch: boolean) => {
+    onMergePr(session, method, deleteBranch);
+    setMergePrDialogOpen(false);
+  };
+
   const statusColors: Record<SessionStatus, string> = {
     [SessionStatus.Creating]: "bg-status-creating",
     [SessionStatus.Deleting]: "bg-status-creating",
@@ -569,6 +580,23 @@ export function SessionCard({ session, healthReport, onAttach, onEdit, onArchive
             </Tooltip>
           )}
 
+          {session.can_merge_pr && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => { setMergePrDialogOpen(true); }}
+                  aria-label="Merge pull request"
+                  className="cursor-pointer transition-all duration-200 hover:scale-110 active:scale-95 hover:shadow-md"
+                >
+                  <GitMerge className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Merge pull request</TooltipContent>
+            </Tooltip>
+          )}
+
           {session.status === SessionStatus.Archived ? (
             <Tooltip>
               <TooltipTrigger asChild>
@@ -617,6 +645,13 @@ export function SessionCard({ session, healthReport, onAttach, onEdit, onArchive
           </Tooltip>
         </TooltipProvider>
       </CardFooter>
+
+      <MergePrDialog
+        isOpen={mergePrDialogOpen}
+        onClose={() => setMergePrDialogOpen(false)}
+        onConfirm={handleMergePr}
+        session={session}
+      />
     </Card>
   );
 }

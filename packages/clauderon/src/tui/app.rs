@@ -10,7 +10,7 @@ use crate::api::console_protocol::SignalType;
 use crate::api::{ApiClient, Client};
 use crate::backends::{ImagePullPolicy, KubernetesConfig, SpritesConfig};
 use crate::core::session::{HealthCheckResult, SessionHealthReport, SessionModel};
-use crate::core::{AccessMode, AgentType, BackendType, Session, SessionStatus};
+use crate::core::{AccessMode, AgentType, BackendType, MergeMethod, Session, SessionStatus};
 use crate::tui::attached::PtySession;
 
 /// Progress update from background session creation task
@@ -86,6 +86,7 @@ pub enum AppMode {
     SessionList,
     CreateDialog,
     ConfirmDelete,
+    ConfirmMerge,
     Help,
     /// Attached to a session via PTY
     Attached,
@@ -194,6 +195,79 @@ impl SignalMenuState {
     #[must_use]
     pub fn selected_signal(&self) -> SignalType {
         self.signals[self.selected_index]
+    }
+}
+
+/// Merge confirmation dialog state
+#[derive(Debug, Clone)]
+pub struct ConfirmMergeState {
+    /// Session ID being merged
+    pub session_id: String,
+
+    /// PR URL
+    pub pr_url: String,
+
+    /// Available merge methods for the repository
+    pub available_methods: Vec<MergeMethod>,
+
+    /// Currently selected merge method index
+    pub selected_method_idx: usize,
+
+    /// Whether to delete branch after merge
+    pub delete_branch: bool,
+}
+
+impl ConfirmMergeState {
+    /// Create new merge confirmation state
+    #[must_use]
+    pub fn new(
+        session_id: String,
+        pr_url: String,
+        available_methods: Vec<MergeMethod>,
+        default_method: MergeMethod,
+        delete_branch: bool,
+    ) -> Self {
+        let selected_method_idx = available_methods
+            .iter()
+            .position(|&m| m == default_method)
+            .unwrap_or(0);
+
+        Self {
+            session_id,
+            pr_url,
+            available_methods,
+            selected_method_idx,
+            delete_branch,
+        }
+    }
+
+    /// Select next merge method
+    pub fn select_next_method(&mut self) {
+        if self.selected_method_idx < self.available_methods.len().saturating_sub(1) {
+            self.selected_method_idx = self.selected_method_idx.saturating_add(1);
+        } else {
+            self.selected_method_idx = 0; // Wrap around
+        }
+    }
+
+    /// Select previous merge method
+    pub fn select_previous_method(&mut self) {
+        if self.selected_method_idx > 0 {
+            self.selected_method_idx = self.selected_method_idx.saturating_sub(1);
+        } else {
+            self.selected_method_idx = self.available_methods.len().saturating_sub(1); // Wrap around
+        }
+    }
+
+    /// Toggle delete branch option
+    pub fn toggle_delete_branch(&mut self) {
+        self.delete_branch = !self.delete_branch;
+    }
+
+    /// Get currently selected merge method
+    #[must_use]
+    pub fn selected_method(&self) -> MergeMethod {
+        self.available_methods[self.selected_method_idx]
     }
 }
 
@@ -905,6 +979,9 @@ pub struct App {
     /// Session pending deletion (for confirm dialog)
     pub pending_delete: Option<String>,
 
+    /// Merge confirmation state (for confirm merge dialog)
+    pub confirm_merge: Option<ConfirmMergeState>,
+
     /// Status message to display
     pub status_message: Option<String>,
 
@@ -993,6 +1070,7 @@ impl App {
             session_filter: SessionFilter::All,
             create_dialog: CreateDialogState::new(),
             pending_delete: None,
+            confirm_merge: None,
             status_message: None,
             should_quit: false,
             client: None,
@@ -1329,6 +1407,54 @@ impl App {
     pub fn cancel_delete(&mut self) {
         self.pending_delete = None;
         self.mode = AppMode::SessionList;
+    }
+
+    /// Open merge confirmation dialog
+    pub fn open_merge_confirm(&mut self) {
+        if let Some(session) = self.selected_session() {
+            if let (Some(pr_url), Some(methods), Some(default), Some(delete_branch)) = (
+                &session.pr_url,
+                &session.pr_merge_methods,
+                session.pr_default_merge_method,
+                session.pr_delete_branch_on_merge,
+            ) {
+                self.confirm_merge = Some(ConfirmMergeState::new(
+                    session.id.to_string(),
+                    pr_url.clone(),
+                    methods.clone(),
+                    default,
+                    delete_branch,
+                ));
+                self.mode = AppMode::ConfirmMerge;
+            }
+        }
+    }
+
+    /// Cancel merge
+    pub fn cancel_merge(&mut self) {
+        self.confirm_merge = None;
+        self.mode = AppMode::SessionList;
+    }
+
+    /// Confirm and execute PR merge
+    pub async fn confirm_merge(&mut self) -> anyhow::Result<()> {
+        if let Some(merge_state) = self.confirm_merge.take() {
+            let method = merge_state.selected_method();
+            let delete_branch = merge_state.delete_branch;
+            let session_id = merge_state.session_id.clone();
+
+            if let Some(client) = &mut self.client {
+                // Execute the merge
+                client.merge_pr(&session_id, method, delete_branch).await?;
+
+                self.status_message = Some("PR merged successfully".to_string());
+                self.mode = AppMode::SessionList;
+            }
+
+            // Refresh sessions to get updated status
+            self.refresh_sessions().await?;
+        }
+        Ok(())
     }
 
     /// Delete the pending session
