@@ -460,6 +460,7 @@ impl ClaudeModel {
     }
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for ClaudeModel {
     fn default() -> Self {
         Self::Sonnet4_5
@@ -468,7 +469,7 @@ impl Default for ClaudeModel {
 
 /// Model selection for Codex agent
 #[typeshare]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum CodexModel {
     /// GPT-5.2-Codex (default, most advanced for software engineering)
     Gpt5_2Codex,
@@ -511,15 +512,9 @@ impl CodexModel {
     }
 }
 
-impl Default for CodexModel {
-    fn default() -> Self {
-        Self::Gpt5_2Codex
-    }
-}
-
 /// Model selection for Gemini agent
 #[typeshare]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum GeminiModel {
     /// Gemini 3 Pro (default, state-of-the-art reasoning with 1M token context)
     Gemini3Pro,
@@ -541,12 +536,6 @@ impl GeminiModel {
             Self::Gemini2_5Pro => "gemini-2-5-pro",
             Self::Gemini2_0Flash => "gemini-2-0-flash",
         }
-    }
-}
-
-impl Default for GeminiModel {
-    fn default() -> Self {
-        Self::Gemini3Pro
     }
 }
 

@@ -476,7 +476,6 @@ impl CreateDialogState {
 
         self.model = match self.agent {
             AgentType::ClaudeCode => match &self.model {
-                None => Some(SessionModel::Claude(ClaudeModel::Sonnet4_5)),
                 Some(SessionModel::Claude(ClaudeModel::Sonnet4_5)) => {
                     Some(SessionModel::Claude(ClaudeModel::Opus4_5))
                 }
@@ -493,10 +492,9 @@ impl CreateDialogState {
                     Some(SessionModel::Claude(ClaudeModel::Sonnet4))
                 }
                 Some(SessionModel::Claude(ClaudeModel::Sonnet4)) => None,
-                _ => Some(SessionModel::Claude(ClaudeModel::Sonnet4_5)),
+                None | _ => Some(SessionModel::Claude(ClaudeModel::Sonnet4_5)),
             },
             AgentType::Codex => match &self.model {
-                None => Some(SessionModel::Codex(CodexModel::Gpt5_2Codex)),
                 Some(SessionModel::Codex(CodexModel::Gpt5_2Codex)) => {
                     Some(SessionModel::Codex(CodexModel::Gpt5_2))
                 }
@@ -525,10 +523,9 @@ impl CreateDialogState {
                     Some(SessionModel::Codex(CodexModel::O3Mini))
                 }
                 Some(SessionModel::Codex(CodexModel::O3Mini)) => None,
-                _ => Some(SessionModel::Codex(CodexModel::Gpt5_2Codex)),
+                None | _ => Some(SessionModel::Codex(CodexModel::Gpt5_2Codex)),
             },
             AgentType::Gemini => match &self.model {
-                None => Some(SessionModel::Gemini(GeminiModel::Gemini3Pro)),
                 Some(SessionModel::Gemini(GeminiModel::Gemini3Pro)) => {
                     Some(SessionModel::Gemini(GeminiModel::Gemini3Flash))
                 }
@@ -539,7 +536,7 @@ impl CreateDialogState {
                     Some(SessionModel::Gemini(GeminiModel::Gemini2_0Flash))
                 }
                 Some(SessionModel::Gemini(GeminiModel::Gemini2_0Flash)) => None,
-                _ => Some(SessionModel::Gemini(GeminiModel::Gemini3Pro)),
+                None | _ => Some(SessionModel::Gemini(GeminiModel::Gemini3Pro)),
             },
         };
     }
