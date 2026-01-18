@@ -273,6 +273,12 @@ impl SessionManager {
         Arc::clone(&self.console_manager)
     }
 
+    /// Get the feature flags configuration
+    #[must_use]
+    pub const fn feature_flags(&self) -> &crate::feature_flags::FeatureFlags {
+        &self.feature_flags
+    }
+
     /// Get reference to Kubernetes backend
     ///
     /// Returns the Kubernetes backend for API operations like listing storage classes.
@@ -415,6 +421,14 @@ impl SessionManager {
                 self.max_sessions
             );
         }
+
+        // Validate experimental models are enabled
+        crate::core::session::validate_experimental_agent(
+            agent,
+            model.as_ref(),
+            self.feature_flags.enable_experimental_models,
+        )
+        .with_context(|| format!("Cannot create session with agent {:?}", agent))?;
 
         // Process repositories (multi-repo mode or legacy single-repo mode)
         let repo_inputs = if let Some(repos) = repositories {

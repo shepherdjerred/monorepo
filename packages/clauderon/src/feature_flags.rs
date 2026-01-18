@@ -27,6 +27,9 @@ pub struct FeatureFlags {
 
     /// Enable Kubernetes backend (experimental, disabled by default)
     pub enable_kubernetes_backend: bool,
+
+    /// Enable experimental AI models (Codex, Gemini)
+    pub enable_experimental_models: bool,
 }
 
 impl Default for FeatureFlags {
@@ -38,6 +41,7 @@ impl Default for FeatureFlags {
             enable_proxy_port_reuse: false,
             enable_usage_tracking: false,
             enable_kubernetes_backend: false,
+            enable_experimental_models: false,
         }
     }
 }
@@ -110,6 +114,9 @@ impl FeatureFlags {
             enable_kubernetes_backend: parse_env_bool_option(
                 "CLAUDERON_FEATURE_ENABLE_KUBERNETES_BACKEND",
             ),
+            enable_experimental_models: parse_env_bool_option(
+                "CLAUDERON_FEATURE_ENABLE_EXPERIMENTAL_MODELS",
+            ),
         }
     }
 
@@ -136,6 +143,9 @@ impl FeatureFlags {
         if other.enable_kubernetes_backend != defaults.enable_kubernetes_backend {
             self.enable_kubernetes_backend = other.enable_kubernetes_backend;
         }
+        if other.enable_experimental_models != defaults.enable_experimental_models {
+            self.enable_experimental_models = other.enable_experimental_models;
+        }
     }
 
     /// Merge environment variable overrides (which are Option<bool> to distinguish "not set")
@@ -157,6 +167,9 @@ impl FeatureFlags {
         }
         if let Some(val) = env.enable_kubernetes_backend {
             self.enable_kubernetes_backend = val;
+        }
+        if let Some(val) = env.enable_experimental_models {
+            self.enable_experimental_models = val;
         }
     }
 
@@ -180,6 +193,9 @@ impl FeatureFlags {
         if let Some(val) = cli.enable_kubernetes_backend {
             self.enable_kubernetes_backend = val;
         }
+        if let Some(val) = cli.enable_experimental_models {
+            self.enable_experimental_models = val;
+        }
     }
 
     /// Log the current feature flag state (for observability)
@@ -198,6 +214,10 @@ impl FeatureFlags {
             "  enable_kubernetes_backend: {}",
             self.enable_kubernetes_backend
         );
+        tracing::info!(
+            "  enable_experimental_models: {}",
+            self.enable_experimental_models
+        );
     }
 }
 
@@ -210,6 +230,7 @@ pub struct CliFeatureFlags {
     pub enable_proxy_port_reuse: Option<bool>,
     pub enable_usage_tracking: Option<bool>,
     pub enable_kubernetes_backend: Option<bool>,
+    pub enable_experimental_models: Option<bool>,
 }
 
 /// Environment variable feature flag overrides (returns Option<bool> to distinguish "not set")
@@ -221,6 +242,7 @@ struct EnvFeatureFlags {
     pub enable_proxy_port_reuse: Option<bool>,
     pub enable_usage_tracking: Option<bool>,
     pub enable_kubernetes_backend: Option<bool>,
+    pub enable_experimental_models: Option<bool>,
 }
 
 /// Configuration file structure
@@ -320,6 +342,7 @@ mod tests {
             enable_proxy_port_reuse: true,
             enable_usage_tracking: true,
             enable_kubernetes_backend: true,
+            enable_experimental_models: false,
         };
 
         // Merge with defaults - should not change anything
@@ -405,5 +428,21 @@ mod tests {
         assert!(flags.enable_auto_reconcile);
         assert!(!flags.enable_proxy_port_reuse);
         assert!(!flags.enable_usage_tracking);
+    }
+
+    #[test]
+    fn test_experimental_models_defaults_to_false() {
+        let flags = FeatureFlags::default();
+        assert!(!flags.enable_experimental_models);
+    }
+
+    #[test]
+    fn test_experimental_models_cli_override() {
+        let cli = CliFeatureFlags {
+            enable_experimental_models: Some(true),
+            ..Default::default()
+        };
+        let flags = FeatureFlags::load(Some(cli)).expect("Failed to load flags");
+        assert!(flags.enable_experimental_models);
     }
 }

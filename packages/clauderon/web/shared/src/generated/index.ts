@@ -274,6 +274,8 @@ export interface FeatureFlags {
 	enable_proxy_port_reuse: boolean;
 	/** Enable Claude usage tracking via API */
 	enable_usage_tracking: boolean;
+	/** Enable experimental AI models (Codex, Gemini) */
+	enable_experimental_models: boolean;
 }
 
 /** Feature flags response for the frontend */
