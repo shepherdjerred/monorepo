@@ -519,6 +519,7 @@ impl Default for GeminiModel {
 /// Model configuration for a session
 #[typeshare]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "type", content = "content")]
 pub enum SessionModel {
     /// Claude Code model
     Claude(ClaudeModel),
