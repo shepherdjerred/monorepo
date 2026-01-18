@@ -6,13 +6,16 @@ const CHARSET: &[u8] = b"abcdefghijklmnopqrstuvwxyz0123456789";
 /// Length of the random suffix
 const SUFFIX_LENGTH: usize = 4;
 
-/// Sanitize a string to be valid as a git branch name.
+/// Sanitize a string to be valid as both a git branch name and Docker container name.
 ///
 /// Git branch names cannot contain:
 /// - Spaces, ~, ^, :, ?, *, [, \, @, {, }
 /// - Two consecutive dots (..)
 /// - Leading or trailing dots, slashes, or hyphens
 /// - The suffix `.lock` (reserved by git)
+///
+/// Additionally, forward slashes (/) are replaced with hyphens to ensure
+/// Docker container name compatibility (Docker names cannot contain slashes).
 ///
 /// Also enforces a maximum length to prevent DoS via extremely long names.
 ///
@@ -30,8 +33,8 @@ pub fn sanitize_branch_name(name: &str) -> String {
     let sanitized: String = name
         .chars()
         .map(|c| match c {
-            ' ' | '~' | '^' | ':' | '?' | '*' | '[' | '\\' | '@' | '{' | '}' => '-',
-            c if c.is_ascii_alphanumeric() || c == '-' || c == '_' || c == '/' || c == '.' => c,
+            ' ' | '~' | '^' | ':' | '?' | '*' | '[' | '\\' | '@' | '{' | '}' | '/' => '-',
+            c if c.is_ascii_alphanumeric() || c == '-' || c == '_' || c == '.' => c,
             _ => '-',
         })
         .collect();
@@ -178,6 +181,15 @@ mod tests {
     }
 
     #[test]
+    fn test_sanitize_forward_slash() {
+        // Forward slashes must be replaced to ensure Docker container name compatibility
+        assert_eq!(sanitize_branch_name("feature/branch"), "feature-branch");
+        assert_eq!(sanitize_branch_name("fix/bug/123"), "fix-bug-123");
+        assert_eq!(sanitize_branch_name("/leading-slash"), "leading-slash");
+        assert_eq!(sanitize_branch_name("trailing-slash/"), "trailing-slash");
+    }
+
+    #[test]
     fn test_sanitize_max_length() {
         let long_name = "a".repeat(300);
         let sanitized = sanitize_branch_name(&long_name);
@@ -196,7 +208,7 @@ mod tests {
     fn test_sanitize_preserves_valid() {
         assert_eq!(sanitize_branch_name("valid-name"), "valid-name");
         assert_eq!(sanitize_branch_name("valid_name"), "valid_name");
-        assert_eq!(sanitize_branch_name("feature/branch"), "feature/branch");
+        assert_eq!(sanitize_branch_name("feature/branch"), "feature-branch");
         assert_eq!(sanitize_branch_name("v1.2.3"), "v1.2.3");
     }
 

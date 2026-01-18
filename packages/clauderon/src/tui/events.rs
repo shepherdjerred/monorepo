@@ -3,6 +3,7 @@ use futures::StreamExt;
 use tokio::sync::mpsc;
 
 use crate::api::Client;
+use crate::api::console_protocol::SignalType;
 use crate::api::protocol::CreateSessionRequest;
 use crate::core::{AgentType, BackendType};
 
@@ -170,7 +171,8 @@ pub async fn handle_paste_event(app: &mut App, text: &str) -> anyhow::Result<()>
         | AppMode::Help
         | AppMode::Locked
         | AppMode::Scroll
-        | AppMode::ReconcileError => {
+        | AppMode::ReconcileError
+        | AppMode::SignalMenu => {
             // Ignore paste events in these modes
         }
     }
@@ -184,8 +186,15 @@ pub async fn handle_paste_event(app: &mut App, text: &str) -> anyhow::Result<()>
 ///
 /// Returns an error if session operations fail during event handling.
 pub async fn handle_key_event(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
-    // Global quit with Ctrl+C
-    if key.modifiers.contains(KeyModifiers::CONTROL) && key.code == KeyCode::Char('c') {
+    // Global quit with Ctrl+C ONLY when not in Attached/Locked modes
+    // In Attached/Locked modes, Ctrl+C sends SIGINT to the container
+    if key.modifiers.contains(KeyModifiers::CONTROL)
+        && key.code == KeyCode::Char('c')
+        && !matches!(
+            app.mode,
+            AppMode::Attached | AppMode::Locked | AppMode::SignalMenu
+        )
+    {
         app.quit();
         return Ok(());
     }
@@ -200,6 +209,7 @@ pub async fn handle_key_event(app: &mut App, key: KeyEvent) -> anyhow::Result<()
         AppMode::Locked => handle_locked_key(app, key).await?,
         AppMode::Scroll => handle_scroll_mode_key(app, key),
         AppMode::ReconcileError => handle_reconcile_error_key(app, key).await?,
+        AppMode::SignalMenu => handle_signal_menu_key(app, key).await?,
     }
     Ok(())
 }
@@ -379,6 +389,7 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                     // Capture data for the background task
                     let request = CreateSessionRequest {
                         repo_path: app.create_dialog.repo_path.clone(),
+                        repositories: None, // TUI doesn't support multi-repo yet
                         initial_prompt: app.create_dialog.prompt.clone(),
                         backend: app.create_dialog.backend,
                         agent: app.create_dialog.agent,
@@ -549,10 +560,18 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                 app.create_dialog.ensure_cursor_visible();
             }
             CreateDialogFocus::Backend => {
-                app.create_dialog.toggle_backend();
+                if key.code == KeyCode::Left {
+                    app.create_dialog.toggle_backend_reverse();
+                } else {
+                    app.create_dialog.toggle_backend();
+                }
             }
             CreateDialogFocus::Agent => {
-                app.create_dialog.toggle_agent();
+                if key.code == KeyCode::Left {
+                    app.create_dialog.toggle_agent_reverse();
+                } else {
+                    app.create_dialog.toggle_agent();
+                }
             }
             CreateDialogFocus::AccessMode => {
                 app.create_dialog.toggle_access_mode();
@@ -795,6 +814,10 @@ async fn handle_reconcile_error_key(app: &mut App, key: KeyEvent) -> anyhow::Res
 /// - Ctrl+L: Toggle locked mode (forwards all keys to app)
 /// - Ctrl+S: Enter scroll mode
 /// - Ctrl+P/N: Switch between Docker sessions
+/// - Ctrl+C: Send SIGINT signal
+/// - Ctrl+Z: Send SIGTSTP signal
+/// - Ctrl+\: Send SIGQUIT signal
+/// - Ctrl+M: Open signal menu
 async fn handle_attached_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
     use crate::tui::attached::encode_key;
 
@@ -805,6 +828,33 @@ async fn handle_attached_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()>
         key.code,
         key.modifiers
     );
+
+    // Signal forwarding BEFORE other handlers (highest priority)
+    if key.modifiers.contains(KeyModifiers::CONTROL) {
+        match key.code {
+            // Ctrl+C sends SIGINT
+            KeyCode::Char('c') => {
+                app.send_signal(SignalType::Sigint).await?;
+                return Ok(());
+            }
+            // Ctrl+\ sends SIGQUIT
+            KeyCode::Char('\\') => {
+                app.send_signal(SignalType::Sigquit).await?;
+                return Ok(());
+            }
+            // Ctrl+Z sends SIGTSTP
+            KeyCode::Char('z') => {
+                app.send_signal(SignalType::Sigtstp).await?;
+                return Ok(());
+            }
+            // Ctrl+M opens signal menu
+            KeyCode::Char('m') => {
+                app.open_signal_menu();
+                return Ok(());
+            }
+            _ => {}
+        }
+    }
 
     // Ctrl+Q: instant detach (no double-tap delay)
     if key.modifiers.contains(KeyModifiers::CONTROL) {
@@ -888,6 +938,7 @@ async fn handle_attached_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()>
 ///
 /// In Locked mode, all keys are forwarded to the application except Ctrl+L which unlocks.
 /// This provides an "escape hatch" when clauderon keybindings conflict with applications.
+/// Signals (Ctrl+C/Z/\) are also intercepted and sent as signals instead of being encoded.
 async fn handle_locked_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
     use crate::tui::attached::encode_key;
 
@@ -896,6 +947,25 @@ async fn handle_locked_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
         if key.code == KeyCode::Char('l') {
             app.exit_locked_mode();
             return Ok(());
+        }
+    }
+
+    // Signal forwarding (same as attached mode)
+    if key.modifiers.contains(KeyModifiers::CONTROL) {
+        match key.code {
+            KeyCode::Char('c') => {
+                app.send_signal(SignalType::Sigint).await?;
+                return Ok(());
+            }
+            KeyCode::Char('\\') => {
+                app.send_signal(SignalType::Sigquit).await?;
+                return Ok(());
+            }
+            KeyCode::Char('z') => {
+                app.send_signal(SignalType::Sigtstp).await?;
+                return Ok(());
+            }
+            _ => {}
         }
     }
 
@@ -954,6 +1024,40 @@ fn handle_scroll_mode_key(app: &mut App, key: KeyEvent) {
         }
         _ => {}
     }
+}
+
+/// Handle key events when in Signal menu.
+///
+/// Keys:
+/// - Up/k: Select previous signal
+/// - Down/j: Select next signal
+/// - Enter/Space: Send selected signal
+/// - Esc/q: Close menu
+async fn handle_signal_menu_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
+    match key.code {
+        KeyCode::Esc | KeyCode::Char('q') => {
+            app.close_signal_menu();
+        }
+        KeyCode::Up | KeyCode::Char('k') => {
+            if let Some(menu) = &mut app.signal_menu {
+                menu.select_previous();
+            }
+        }
+        KeyCode::Down | KeyCode::Char('j') => {
+            if let Some(menu) = &mut app.signal_menu {
+                menu.select_next();
+            }
+        }
+        KeyCode::Enter | KeyCode::Char(' ') => {
+            if let Some(menu) = &app.signal_menu {
+                let signal = menu.selected_signal();
+                app.close_signal_menu();
+                app.send_signal(signal).await?;
+            }
+        }
+        _ => {}
+    }
+    Ok(())
 }
 
 /// Check if a pasted text string is an image file path

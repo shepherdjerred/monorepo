@@ -8,11 +8,24 @@ React Native mobile app for Clauderon, targeting iOS, Android, macOS, and Window
 - **Session Management**: View and manage all your Clauderon sessions
 - **Real-time Updates**: WebSocket-based live updates for session changes
 - **Type Safety**: Full TypeScript integration with types generated from Rust backend
-- **Cross-platform**: Supports iOS, Android, macOS, and Windows
+- **Cross-platform**: Supports iOS, Android, iPad, macOS, and Windows
+
+## Platform Support
+
+✅ **Fully Supported:**
+- iOS (15.1+)
+- Android (API 24+)
+- iPad (universal iOS app)
+- macOS (12.0+)
+- Windows (10/11)
+
+See [PLATFORM_SUPPORT.md](./PLATFORM_SUPPORT.md) for detailed platform-specific instructions and build guides.
 
 ## System Requirements
 
-> **This project uses React Native 0.83.1 with React 19.2** (December 2025)
+> **This project uses React Native 0.81.5 with React 19.2**
+>
+> Note: Downgraded from 0.83 to support macOS and Windows. Desktop platforms lag behind core React Native releases.
 
 ### All Platforms
 

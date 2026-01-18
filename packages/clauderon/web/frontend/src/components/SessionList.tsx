@@ -21,7 +21,7 @@ type SessionListProps = {
 
 type FilterStatus = "all" | "running" | "idle" | "completed" | "archived";
 
-const TAB_TRIGGER_CLASS = "cursor-pointer transition-all duration-200 hover:bg-primary/20 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-b-4 data-[state=active]:border-foreground";
+const TAB_TRIGGER_CLASS = "cursor-pointer transition-all duration-200 hover:bg-primary/20 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-2 data-[state=active]:border-primary data-[state=active]:shadow-[4px_4px_0_hsl(220,85%,25%)] data-[state=active]:font-bold";
 
 export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
   const { sessions, isLoading, error, refreshSessions, archiveSession, unarchiveSession, refreshSession, deleteSession } =
@@ -200,7 +200,7 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
       {/* Filters */}
       <nav className="p-4 border-b-2" aria-label="Session filters">
         <Tabs value={filter} onValueChange={(v) => { setFilter(v as FilterStatus); }}>
-          <TabsList className="grid w-full grid-cols-5 border-2">
+          <TabsList className="grid w-full grid-cols-5 border-2 gap-2 p-2">
             <TabsTrigger
               value="all"
               className={`font-semibold ${TAB_TRIGGER_CLASS}`}
@@ -244,7 +244,13 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
         )}
 
         {isLoading ? (
-          <div className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+          <div
+            className="grid gap-4 auto-rows-auto"
+            style={{
+              gridTemplateColumns: 'repeat(auto-fill, minmax(min(350px, 100%), 1fr))',
+              gridAutoFlow: 'dense'
+            }}
+          >
             {[1, 2, 3].map((i) => (
               <Card key={i} className="border-2">
                 <CardHeader className="pb-3">
@@ -278,7 +284,13 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
             <p className="text-sm">Create a new session to get started</p>
           </div>
         ) : (
-          <div className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+          <div
+            className="grid gap-4 auto-rows-auto"
+            style={{
+              gridTemplateColumns: 'repeat(auto-fill, minmax(min(350px, 100%), 1fr))',
+              gridAutoFlow: 'dense'
+            }}
+          >
             {filteredSessions.map((session) => (
               <SessionCard
                 key={session.id}

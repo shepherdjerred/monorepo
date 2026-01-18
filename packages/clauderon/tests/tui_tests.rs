@@ -358,29 +358,32 @@ async fn test_create_dialog_toggle_backend() {
 
     assert_eq!(app.create_dialog.backend, BackendType::Zellij); // Default is Zellij
 
-    // Toggle to Docker (Left and Right both toggle forward)
-    handle_key_event(&mut app, key(KeyCode::Left))
-        .await
-        .unwrap();
-    assert_eq!(app.create_dialog.backend, BackendType::Docker);
-
-    // Toggle to Kubernetes
-    handle_key_event(&mut app, key(KeyCode::Left))
-        .await
-        .unwrap();
-    assert_eq!(app.create_dialog.backend, BackendType::Kubernetes);
-
-    // Toggle back to Zellij
-    handle_key_event(&mut app, key(KeyCode::Left))
-        .await
-        .unwrap();
-    assert_eq!(app.create_dialog.backend, BackendType::Zellij);
-
-    // Verify Right key also toggles (same direction as Left)
+    // Test Right key (forward): Zellij → Docker → Kubernetes → Zellij
     handle_key_event(&mut app, key(KeyCode::Right))
         .await
         .unwrap();
     assert_eq!(app.create_dialog.backend, BackendType::Docker);
+
+    handle_key_event(&mut app, key(KeyCode::Right))
+        .await
+        .unwrap();
+    assert_eq!(app.create_dialog.backend, BackendType::Kubernetes);
+
+    handle_key_event(&mut app, key(KeyCode::Right))
+        .await
+        .unwrap();
+    // On macOS, this would cycle through AppleContainer. On other platforms, it goes directly to Zellij
+    #[cfg(target_os = "macos")]
+    assert_eq!(app.create_dialog.backend, BackendType::AppleContainer);
+    #[cfg(not(target_os = "macos"))]
+    assert_eq!(app.create_dialog.backend, BackendType::Zellij);
+
+    // Test Left key (backward): should go reverse direction
+    handle_key_event(&mut app, key(KeyCode::Left))
+        .await
+        .unwrap();
+    // Should go back to Kubernetes
+    assert_eq!(app.create_dialog.backend, BackendType::Kubernetes);
 }
 
 #[tokio::test]
@@ -1233,6 +1236,117 @@ fn test_render_directory_picker_without_panic() {
     let mut app = App::new();
     app.open_create_dialog();
     app.create_dialog.directory_picker.open(None);
+
+    // Should render without panicking
+    terminal.draw(|frame| ui::render(frame, &app)).unwrap();
+}
+
+// ========== Signal forwarding tests ==========
+
+#[test]
+fn test_signal_menu_state_new() {
+    use clauderon::tui::app::SignalMenuState;
+
+    let menu = SignalMenuState::new();
+    assert_eq!(menu.selected_index, 0);
+    assert!(!menu.signals.is_empty());
+    assert_eq!(menu.signals.len(), 3); // Only SIGINT, SIGTSTP, SIGQUIT
+}
+
+#[test]
+fn test_signal_menu_state_default() {
+    use clauderon::tui::app::SignalMenuState;
+
+    let menu1 = SignalMenuState::new();
+    let menu2 = SignalMenuState::default();
+
+    assert_eq!(menu1.selected_index, menu2.selected_index);
+    assert_eq!(menu1.signals.len(), menu2.signals.len());
+}
+
+#[test]
+fn test_signal_menu_select_next() {
+    use clauderon::tui::app::SignalMenuState;
+
+    let mut menu = SignalMenuState::new();
+    assert_eq!(menu.selected_index, 0);
+
+    menu.select_next();
+    assert_eq!(menu.selected_index, 1);
+
+    menu.select_next();
+    assert_eq!(menu.selected_index, 2);
+
+    // Should stay at boundary
+    menu.select_next();
+    assert_eq!(menu.selected_index, 2);
+}
+
+#[test]
+fn test_signal_menu_select_previous() {
+    use clauderon::tui::app::SignalMenuState;
+
+    let mut menu = SignalMenuState::new();
+    menu.selected_index = 2;
+
+    menu.select_previous();
+    assert_eq!(menu.selected_index, 1);
+
+    menu.select_previous();
+    assert_eq!(menu.selected_index, 0);
+
+    // Should stay at boundary
+    menu.select_previous();
+    assert_eq!(menu.selected_index, 0);
+}
+
+#[test]
+fn test_signal_menu_selected_signal() {
+    use clauderon::api::console_protocol::SignalType;
+    use clauderon::tui::app::SignalMenuState;
+
+    let menu = SignalMenuState::new();
+    let signal = menu.selected_signal();
+
+    assert_eq!(signal, SignalType::Sigint);
+}
+
+#[test]
+fn test_open_signal_menu() {
+    let mut app = App::new();
+    assert!(app.signal_menu.is_none());
+    assert_ne!(app.mode, AppMode::SignalMenu);
+
+    app.open_signal_menu();
+
+    assert!(app.signal_menu.is_some());
+    assert_eq!(app.mode, AppMode::SignalMenu);
+}
+
+#[test]
+fn test_close_signal_menu() {
+    let mut app = App::new();
+    app.open_signal_menu();
+    assert!(app.signal_menu.is_some());
+    assert_eq!(app.mode, AppMode::SignalMenu);
+
+    app.close_signal_menu();
+
+    assert!(app.signal_menu.is_none());
+    assert_ne!(app.mode, AppMode::SignalMenu);
+}
+
+#[test]
+fn test_render_signal_menu_without_panic() {
+    use clauderon::tui::ui;
+    use ratatui::Terminal;
+    use ratatui::backend::TestBackend;
+
+    let backend = TestBackend::new(80, 24);
+    let mut terminal = Terminal::new(backend).unwrap();
+
+    let mut app = App::new();
+    app.open_signal_menu();
 
     // Should render without panicking
     terminal.draw(|frame| ui::render(frame, &app)).unwrap();

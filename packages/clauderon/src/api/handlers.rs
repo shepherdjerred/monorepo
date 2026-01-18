@@ -13,7 +13,10 @@ use super::types::ReconcileReportDto;
     reason = "Protocol handler with many request types - splitting would reduce clarity"
 )]
 #[instrument(skip(manager), fields(request_type = ?std::mem::discriminant(&request)))]
-pub async fn handle_request(request: Request, manager: &SessionManager) -> Response {
+pub async fn handle_request(
+    request: Request,
+    manager: &std::sync::Arc<SessionManager>,
+) -> Response {
     match request {
         Request::ListSessions => {
             let sessions = manager.list_sessions().await;
@@ -32,46 +35,96 @@ pub async fn handle_request(request: Request, manager: &SessionManager) -> Respo
         ),
 
         Request::CreateSession(req) => {
-            match manager
-                .create_session(
-                    req.repo_path.clone(),
-                    req.initial_prompt,
-                    req.backend,
-                    req.agent,
-                    req.dangerous_skip_checks,
-                    req.print_mode,
-                    req.plan_mode,
-                    req.access_mode,
-                    req.images,
-                    req.container_image,
-                    req.pull_policy,
-                    req.cpu_limit,
-                    req.memory_limit,
-                )
-                .await
-            {
-                Ok((session, warnings)) => {
-                    tracing::info!(
-                        id = %session.id,
-                        name = %session.name,
-                        access_mode = ?session.access_mode,
-                        warnings = ?warnings,
-                        "Session created"
-                    );
-                    Response::Created {
-                        id: session.id.to_string(),
-                        warnings,
+            // Use async creation for multi-repo or when not in print mode
+            let use_async = req.repositories.is_some() || !req.print_mode;
+
+            if use_async {
+                // Async creation: start background task and return immediately
+                match manager
+                    .start_session_creation(
+                        req.repo_path.clone(),
+                        req.repositories.clone(),
+                        req.initial_prompt,
+                        req.backend,
+                        req.agent,
+                        req.dangerous_skip_checks,
+                        req.print_mode,
+                        req.plan_mode,
+                        req.access_mode,
+                        req.images,
+                        req.container_image,
+                        req.pull_policy,
+                        req.cpu_limit,
+                        req.memory_limit,
+                    )
+                    .await
+                {
+                    Ok(session_id) => {
+                        tracing::info!(
+                            id = %session_id,
+                            "Session creation started (async)"
+                        );
+                        Response::Created {
+                            id: session_id.to_string(),
+                            warnings: None,
+                        }
+                    }
+                    Err(e) => {
+                        tracing::error!(
+                            repo_path = %req.repo_path,
+                            error = %e,
+                            "Failed to start session creation"
+                        );
+                        Response::Error {
+                            code: "CREATE_ERROR".to_string(),
+                            message: e.to_string(),
+                        }
                     }
                 }
-                Err(e) => {
-                    tracing::error!(
-                        repo_path = %req.repo_path,
-                        error = %e,
-                        "Failed to create session"
-                    );
-                    Response::Error {
-                        code: "CREATE_ERROR".to_string(),
-                        message: e.to_string(),
+            } else {
+                // Synchronous creation for print mode (single repo only)
+                match manager
+                    .create_session(
+                        req.repo_path.clone(),
+                        req.repositories.clone(),
+                        req.initial_prompt,
+                        req.backend,
+                        req.agent,
+                        req.dangerous_skip_checks,
+                        req.print_mode,
+                        req.plan_mode,
+                        req.access_mode,
+                        req.images,
+                        req.container_image,
+                        req.pull_policy,
+                        req.cpu_limit,
+                        req.memory_limit,
+                    )
+                    .await
+                {
+                    Ok((session, warnings)) => {
+                        tracing::info!(
+                            id = %session.id,
+                            name = %session.name,
+                            access_mode = ?session.access_mode,
+                            warnings = ?warnings,
+                            "Session created (sync)"
+                        );
+                        Response::Created {
+                            id: session.id.to_string(),
+                            warnings,
+                        }
+                    }
+                    Err(e) => {
+                        tracing::error!(
+                            repo_path = %req.repo_path,
+                            error = %e,
+                            "Failed to create session"
+                        );
+                        Response::Error {
+                            code: "CREATE_ERROR".to_string(),
+                            message: e.to_string(),
+                        }
                     }
                 }
             }
@@ -278,6 +331,7 @@ pub async fn handle_create_session_with_progress(
     match manager
         .create_session(
             req.repo_path.clone(),
+            req.repositories.clone(),
             req.initial_prompt,
             req.backend,
             req.agent,

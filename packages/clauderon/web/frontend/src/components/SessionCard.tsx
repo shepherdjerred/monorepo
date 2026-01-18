@@ -1,11 +1,13 @@
 import type { Session } from "@clauderon/client";
 import { SessionStatus, CheckStatus, ClaudeWorkingStatus } from "@clauderon/shared";
-import { formatRelativeTime } from "../lib/utils";
+import { formatRelativeTime, cn, getRepoUrlFromPrUrl } from "../lib/utils";
 import { Archive, ArchiveRestore, Trash2, Terminal, CheckCircle2, XCircle, Clock, Loader2, User, Circle, AlertTriangle, Edit, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { AGENT_CAPABILITIES } from "@/lib/agent-features";
+import { ProviderIcon } from "./ProviderIcon";
 
 type SessionCardProps = {
   session: Session;
@@ -15,6 +17,32 @@ type SessionCardProps = {
   onUnarchive: (session: Session) => void;
   onRefresh: (session: Session) => void;
   onDelete: (session: Session) => void;
+}
+
+// Helper function to map git status codes to readable labels
+function getStatusLabel(status: string): string {
+  // Git status --porcelain format uses 2-char codes
+  const code = status.trim();
+  if (code.startsWith('M')) return 'Modified';
+  if (code.startsWith('A')) return 'Added';
+  if (code.startsWith('D')) return 'Deleted';
+  if (code.startsWith('R')) return 'Renamed';
+  if (code.startsWith('C')) return 'Copied';
+  if (code.startsWith('U')) return 'Unmerged';
+  if (code.startsWith('?')) return 'Untracked';
+  return 'Changed';
+}
+
+function shouldSpanWide(session: Session): boolean {
+  return (
+    session.status === SessionStatus.Running ||
+    (session.pr_url !== null && session.pr_url !== undefined && session.pr_check_status !== null && session.pr_check_status !== undefined) ||
+    session.claude_status === ClaudeWorkingStatus.Working ||
+    session.claude_status === ClaudeWorkingStatus.WaitingApproval ||
+    session.claude_status === ClaudeWorkingStatus.WaitingInput ||
+    session.merge_conflict ||
+    session.worktree_dirty
+  );
 }
 
 export function SessionCard({ session, onAttach, onEdit, onArchive, onUnarchive, onRefresh, onDelete }: SessionCardProps) {
@@ -29,62 +57,140 @@ export function SessionCard({ session, onAttach, onEdit, onArchive, onUnarchive,
   };
 
   const statusColor = statusColors[session.status];
+  const cardSizeClass = shouldSpanWide(session) ? "col-span-1 lg:col-span-2" : "col-span-1";
 
   return (
-    <Card className="border-2 hover:shadow-[4px_4px_0_hsl(var(--foreground))] transition-all">
-      <CardHeader className="pb-3">
-        <div className="flex items-center gap-2">
-          <div className={`w-4 h-4 border-2 border-foreground ${statusColor}`} />
-          <h3 className="font-bold text-lg flex-1">{session.title || session.name}</h3>
-          <Badge variant="outline" className="border-2 font-mono text-xs">
-            {session.backend}
-          </Badge>
-          <Badge variant="outline" className="border-2 font-mono text-xs">
-            {session.agent}
-          </Badge>
+    <Card className={cn(
+      "group border-2 transition-all duration-200",
+      "hover:shadow-[6px_6px_0_hsl(var(--foreground))]",
+      "hover:-translate-x-[2px] hover:-translate-y-[2px]",
+      cardSizeClass
+    )}>
+      <CardHeader className="pb-3 px-6 pt-6">
+        <div className="flex items-start gap-3">
+          <div className={cn(
+            "w-5 h-5 border-2 border-foreground shrink-0 mt-0.5 transition-all duration-300",
+            "group-hover:scale-110",
+            session.status === SessionStatus.Running && "animate-pulse",
+            statusColor
+          )} />
+
+          <div className="flex-1 min-w-0">
+            <h3 className="font-bold text-xl leading-tight tracking-tight mb-1 truncate">
+              {session.title || session.name}
+            </h3>
+
+            <div className="flex gap-2 flex-wrap">
+              <Badge variant="outline" className="border-2 font-mono text-xs">
+                {session.backend}
+              </Badge>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge variant="outline" className="border-2 font-mono text-xs cursor-help flex items-center gap-1">
+                      <ProviderIcon agent={session.agent} />
+                      {session.agent}
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <div className="text-xs max-w-xs">
+                      <p className="font-semibold mb-1">{AGENT_CAPABILITIES[session.agent]?.displayName || session.agent} Capabilities</p>
+                      <ul className="space-y-1">
+                        {AGENT_CAPABILITIES[session.agent]?.features.map((feature, idx) => (
+                          <li key={idx} className="flex items-start gap-1.5">
+                            <span className="flex-shrink-0">{feature.supported ? '✓' : '⚠'}</span>
+                            <span className={feature.supported ? "" : "text-yellow-600"}>
+                              {feature.name}
+                              {feature.note && <span className="text-muted-foreground block text-xs mt-0.5">{feature.note}</span>}
+                            </span>
+                          </li>
+                        )) || <li>No capability information available</li>}
+                      </ul>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <Badge variant="secondary" className="font-mono text-xs">
+                {session.access_mode}
+              </Badge>
+            </div>
+          </div>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-6 pb-6">
+        {/* Description - primary content */}
         {session.description && (
-          <p className="text-sm text-muted-foreground mb-2">
+          <p className="text-base text-foreground/90 leading-relaxed mb-4">
             {session.description}
           </p>
         )}
         {!session.description && (
-          <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+          <p className="text-sm text-muted-foreground leading-relaxed mb-4 line-clamp-2">
             {session.initial_prompt}
           </p>
         )}
 
-        {/* Status Indicators */}
-        <div className="flex flex-col gap-1 mb-3">
-          {/* PR and CI Status */}
+        {/* Repositories Section */}
+        {session.repositories && session.repositories.length > 1 && (
+          <details className="mb-3 border-2 border-primary/20 rounded">
+            <summary className="cursor-pointer px-2 py-1 hover:bg-muted/50 text-xs font-mono font-semibold flex items-center gap-2">
+              <span>📁 {session.repositories.length} Repositories</span>
+            </summary>
+            <div className="px-3 py-2 space-y-1 bg-muted/20">
+              {session.repositories.map((repo, idx) => (
+                <div key={idx} className="text-xs font-mono flex items-center gap-2">
+                  {repo.is_primary && (
+                    <span className="text-yellow-600 font-bold">★</span>
+                  )}
+                  <span className="font-semibold">{repo.mount_name}:</span>
+                  <span className="text-muted-foreground truncate">
+                    {repo.repo_path.split('/').pop()}/{repo.subdirectory || '.'}
+                  </span>
+                  <span className="text-xs text-muted-foreground/70">
+                    → {repo.is_primary ? '/workspace' : `/repos/${repo.mount_name}`}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </details>
+        )}
+
+        {/* Status section - grouped and styled */}
+        <div className="space-y-2 mb-4">
+          {/* PR/CI Status - prominent */}
           {session.pr_url && (
-            <div className="flex items-center gap-2 text-xs">
+            <div className="flex items-center gap-2 p-2 bg-accent/5 border-l-4 border-accent">
               <a
                 href={session.pr_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="cursor-pointer text-blue-500 hover:underline font-mono transition-colors duration-200"
+                className="text-sm font-semibold text-accent hover:text-accent/80 font-mono no-underline"
               >
                 PR #{session.pr_url.split('/').pop()}
               </a>
               {session.pr_check_status && (
-                <span className={`flex items-center gap-1 ${getCheckStatusColor(session.pr_check_status)}`}>
+                <span className={cn(
+                  "flex items-center gap-1.5 text-sm font-mono font-semibold",
+                  getCheckStatusColor(session.pr_check_status)
+                )}>
                   {getCheckStatusIcon(session.pr_check_status)}
-                  <span className="font-mono">{session.pr_check_status}</span>
+                  <span>{session.pr_check_status}</span>
                 </span>
               )}
             </div>
           )}
 
-          {/* Claude Working Status */}
+          {/* Claude Status - when active */}
           {session.claude_status !== ClaudeWorkingStatus.Unknown && (
-            <div className={`flex items-center gap-1 text-xs ${getClaudeStatusColor(session.claude_status)}`}>
+            <div className={cn(
+              "flex items-center gap-2 p-2 border-l-4 text-sm font-mono",
+              getClaudeStatusBorderColor(session.claude_status),
+              getClaudeStatusBgColor(session.claude_status)
+            )}>
               {getClaudeStatusIcon(session.claude_status)}
-              <span className="font-mono">{getClaudeStatusText(session.claude_status)}</span>
+              <span className="font-semibold">{getClaudeStatusText(session.claude_status)}</span>
               {session.claude_status_updated_at && (
-                <span className="text-muted-foreground font-mono">
+                <span className="text-xs text-muted-foreground">
                   ({formatRelativeTime(session.claude_status_updated_at)})
                 </span>
               )}
@@ -93,32 +199,82 @@ export function SessionCard({ session, onAttach, onEdit, onArchive, onUnarchive,
 
           {/* Merge Conflict Warning */}
           {session.merge_conflict && (
-            <div className="flex items-center gap-1 text-xs text-red-500">
-              <AlertTriangle className="w-3 h-3" />
-              <span className="font-mono font-semibold">Merge conflict with main</span>
+            <div className="flex items-center gap-2 p-2 bg-red-500/10 border-l-4 border-red-500">
+              <AlertTriangle className="w-4 h-4 text-red-500" />
+              <span className="text-sm font-mono font-bold text-red-500">
+                Merge conflict with main
+              </span>
             </div>
           )}
 
           {/* Working Tree Dirty Status */}
           {session.worktree_dirty && (
-            <div className="flex items-center gap-1 text-xs text-orange-500">
-              <Edit className="w-3 h-3" />
-              <span className="font-mono font-semibold">Uncommitted changes</span>
-            </div>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center gap-2 p-2 bg-orange-500/10 border-l-4 border-orange-500 cursor-help">
+                  <Edit className="w-3.5 h-3.5 text-orange-500" />
+                  <span className="text-sm font-mono font-semibold text-orange-500">
+                    Uncommitted changes
+                  </span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-md">
+                {session.worktree_changed_files && session.worktree_changed_files.length > 0 ? (
+                  <div className="space-y-2">
+                    {(() => {
+                      // Group files by status
+                      const grouped = session.worktree_changed_files.reduce((acc, file) => {
+                        const statusKey = getStatusLabel(file.status);
+                        if (!acc[statusKey]) acc[statusKey] = [];
+                        acc[statusKey].push(file.path);
+                        return acc;
+                      }, {} as Record<string, string[]>);
+
+                      return Object.entries(grouped).map(([status, files]) => (
+                        <div key={status}>
+                          <div className="font-semibold text-xs mb-1">{status}:</div>
+                          <div className="font-mono text-xs pl-2 space-y-0.5">
+                            {files.slice(0, 5).map((file) => (
+                              <div key={file} className="truncate max-w-xs">{file}</div>
+                            ))}
+                            {files.length > 5 && (
+                              <div className="text-muted-foreground italic">
+                                ...and {files.length - 5} more
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ));
+                    })()}
+                  </div>
+                ) : (
+                  <div>Files have uncommitted changes</div>
+                )}
+              </TooltipContent>
+            </Tooltip>
           )}
         </div>
 
-        <div className="flex items-center gap-4 text-xs">
-          <span className="font-mono text-muted-foreground">
-            {formatRelativeTime(session.created_at)}
-          </span>
-          <span className="text-muted-foreground">{session.branch_name}</span>
-          <Badge variant="secondary" className="font-mono">
-            {session.access_mode}
-          </Badge>
+        {/* Metadata - reduced emphasis with branch link */}
+        <div className="flex items-center gap-3 text-xs text-muted-foreground font-mono">
+          <Clock className="w-3 h-3" />
+          <span>{formatRelativeTime(session.created_at)}</span>
+          <span className="w-1 h-1 rounded-full bg-muted-foreground/50" />
+          {session.pr_url && getRepoUrlFromPrUrl(session.pr_url) ? (
+            <a
+              href={`${getRepoUrlFromPrUrl(session.pr_url)}/tree/${session.branch_name}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:text-primary/80 transition-colors duration-200 truncate"
+            >
+              {session.branch_name}
+            </a>
+          ) : (
+            <span className="truncate">{session.branch_name}</span>
+          )}
         </div>
       </CardContent>
-      <CardFooter className="flex gap-2 border-t-2 pt-4">
+      <CardFooter className="flex gap-2 border-t-2 pt-4 px-6 pb-6 bg-card/50">
         <TooltipProvider>
           {session.status === SessionStatus.Running && (
             <Tooltip>
@@ -128,7 +284,7 @@ export function SessionCard({ session, onAttach, onEdit, onArchive, onUnarchive,
                   size="icon"
                   onClick={() => { onAttach(session); }}
                   aria-label="Attach to console"
-                  className="cursor-pointer transition-all duration-200 hover:scale-110 hover:shadow-md"
+                  className="cursor-pointer transition-all duration-200 hover:scale-110 active:scale-95 hover:shadow-md"
                 >
                   <Terminal className="w-4 h-4" />
                 </Button>
@@ -144,7 +300,7 @@ export function SessionCard({ session, onAttach, onEdit, onArchive, onUnarchive,
                 size="icon"
                 onClick={() => { onEdit(session); }}
                 aria-label="Edit session"
-                className="cursor-pointer transition-all duration-200 hover:scale-110 hover:shadow-md"
+                className="cursor-pointer transition-all duration-200 hover:scale-110 active:scale-95 hover:shadow-md"
               >
                 <Edit className="w-4 h-4" />
               </Button>
@@ -160,7 +316,7 @@ export function SessionCard({ session, onAttach, onEdit, onArchive, onUnarchive,
                   size="icon"
                   onClick={() => { onRefresh(session); }}
                   aria-label="Refresh session"
-                  className="cursor-pointer transition-all duration-200 hover:scale-110 hover:shadow-md"
+                  className="cursor-pointer transition-all duration-200 hover:scale-110 active:scale-95 hover:shadow-md"
                 >
                   <RefreshCw className="w-4 h-4" />
                 </Button>
@@ -177,7 +333,7 @@ export function SessionCard({ session, onAttach, onEdit, onArchive, onUnarchive,
                   size="icon"
                   onClick={() => { onUnarchive(session); }}
                   aria-label="Unarchive session"
-                  className="cursor-pointer transition-all duration-200 hover:scale-110 hover:shadow-md"
+                  className="cursor-pointer transition-all duration-200 hover:scale-110 active:scale-95 hover:shadow-md"
                 >
                   <ArchiveRestore className="w-4 h-4" />
                 </Button>
@@ -192,7 +348,7 @@ export function SessionCard({ session, onAttach, onEdit, onArchive, onUnarchive,
                   size="icon"
                   onClick={() => { onArchive(session); }}
                   aria-label="Archive session"
-                  className="cursor-pointer transition-all duration-200 hover:scale-110 hover:shadow-md"
+                  className="cursor-pointer transition-all duration-200 hover:scale-110 active:scale-95 hover:shadow-md"
                 >
                   <Archive className="w-4 h-4" />
                 </Button>
@@ -208,7 +364,7 @@ export function SessionCard({ session, onAttach, onEdit, onArchive, onUnarchive,
                 size="icon"
                 onClick={() => { onDelete(session); }}
                 aria-label="Delete session"
-                className="cursor-pointer text-destructive hover:bg-destructive/10 transition-all duration-200 hover:scale-110 hover:shadow-md"
+                className="cursor-pointer text-destructive hover:bg-destructive/10 transition-all duration-200 hover:scale-110 active:scale-95 hover:shadow-md"
               >
                 <Trash2 className="w-4 h-4" />
               </Button>
@@ -251,21 +407,6 @@ function getCheckStatusIcon(status: CheckStatus) {
   }
 }
 
-function getClaudeStatusColor(status: ClaudeWorkingStatus): string {
-  switch (status) {
-    case ClaudeWorkingStatus.Working:
-      return "text-blue-500";
-    case ClaudeWorkingStatus.WaitingApproval:
-      return "text-purple-500";
-    case ClaudeWorkingStatus.WaitingInput:
-      return "text-yellow-500";
-    case ClaudeWorkingStatus.Idle:
-      return "text-gray-500";
-    default:
-      return "text-muted-foreground";
-  }
-}
-
 function getClaudeStatusIcon(status: ClaudeWorkingStatus) {
   switch (status) {
     case ClaudeWorkingStatus.Working:
@@ -293,5 +434,35 @@ function getClaudeStatusText(status: ClaudeWorkingStatus): string {
       return "Idle";
     default:
       return "Unknown";
+  }
+}
+
+function getClaudeStatusBorderColor(status: ClaudeWorkingStatus): string {
+  switch (status) {
+    case ClaudeWorkingStatus.Working:
+      return "border-blue-500";
+    case ClaudeWorkingStatus.WaitingApproval:
+      return "border-purple-500";
+    case ClaudeWorkingStatus.WaitingInput:
+      return "border-yellow-500";
+    case ClaudeWorkingStatus.Idle:
+      return "border-gray-500";
+    default:
+      return "border-muted";
+  }
+}
+
+function getClaudeStatusBgColor(status: ClaudeWorkingStatus): string {
+  switch (status) {
+    case ClaudeWorkingStatus.Working:
+      return "bg-blue-500/10";
+    case ClaudeWorkingStatus.WaitingApproval:
+      return "bg-purple-500/10";
+    case ClaudeWorkingStatus.WaitingInput:
+      return "bg-yellow-500/10";
+    case ClaudeWorkingStatus.Idle:
+      return "bg-gray-500/10";
+    default:
+      return "bg-muted/10";
   }
 }
