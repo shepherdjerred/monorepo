@@ -91,6 +91,7 @@ async fn create_test_manager() -> (
         to_exec_backend(Arc::clone(&docker)),
         to_exec_backend(Arc::clone(&kubernetes)),
         to_exec_backend(Arc::clone(&sprites)),
+        Arc::new(clauderon::feature_flags::FeatureFlags::default()),
     )
     .await
     .expect("Failed to create manager");

@@ -84,6 +84,7 @@ async fn create_test_manager() -> (SessionManager, TempDir, TempDir) {
         to_exec_backend(docker),
         to_exec_backend(kubernetes),
         to_exec_backend(sprites),
+        Arc::new(clauderon::feature_flags::FeatureFlags::default()),
     )
     .await
     .expect("Failed to create manager");
