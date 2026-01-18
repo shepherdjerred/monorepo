@@ -363,7 +363,8 @@ async fn test_create_dialog_toggle_backend() {
 
     assert_eq!(app.create_dialog.backend, BackendType::Zellij); // Default is Zellij
 
-    // Test Right key (forward): Zellij → Docker → Kubernetes → Sprites → [AppleContainer] → Zellij
+    // Test Right key (forward): Zellij → Docker → Sprites → [AppleContainer] → Zellij
+    // Note: Kubernetes is skipped because enable_kubernetes_backend defaults to false
     handle_key_event(&mut app, key(KeyCode::Right))
         .await
         .unwrap();
@@ -372,11 +373,7 @@ async fn test_create_dialog_toggle_backend() {
     handle_key_event(&mut app, key(KeyCode::Right))
         .await
         .unwrap();
-    assert_eq!(app.create_dialog.backend, BackendType::Kubernetes);
-
-    handle_key_event(&mut app, key(KeyCode::Right))
-        .await
-        .unwrap();
+    // Kubernetes is skipped when feature flag is disabled, so we go directly to Sprites
     assert_eq!(app.create_dialog.backend, BackendType::Sprites);
 
     handle_key_event(&mut app, key(KeyCode::Right))

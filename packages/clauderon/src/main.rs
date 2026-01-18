@@ -149,6 +149,11 @@ ENVIRONMENT:
         /// Can also be set via CLAUDERON_FEATURE_ENABLE_USAGE_TRACKING environment variable
         #[arg(long)]
         enable_usage_tracking: Option<bool>,
+
+        /// Enable Kubernetes backend (experimental, disabled by default)
+        /// Can also be set via CLAUDERON_FEATURE_ENABLE_KUBERNETES_BACKEND environment variable
+        #[arg(long)]
+        enable_kubernetes_backend: Option<bool>,
     },
 
     /// Launch the terminal UI
@@ -521,6 +526,7 @@ async fn main() -> anyhow::Result<()> {
             enable_auto_reconcile,
             enable_proxy_port_reuse,
             enable_usage_tracking,
+            enable_kubernetes_backend,
         } => {
             tracing::info!("Starting clauderon daemon");
 
@@ -531,6 +537,7 @@ async fn main() -> anyhow::Result<()> {
                 enable_auto_reconcile,
                 enable_proxy_port_reuse,
                 enable_usage_tracking,
+                enable_kubernetes_backend,
             };
 
             // Load feature flags with priority: CLI → env → TOML → defaults
