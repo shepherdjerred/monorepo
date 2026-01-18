@@ -61,8 +61,8 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
         setFeatureFlags(data.flags);
       } catch (error) {
         console.error('Failed to fetch feature flags:', error);
-        // Default to disabled if fetch fails
-        setFeatureFlags({ enable_experimental_models: false });
+        // Default to null if fetch fails (all features disabled)
+        setFeatureFlags(null);
       }
     };
 

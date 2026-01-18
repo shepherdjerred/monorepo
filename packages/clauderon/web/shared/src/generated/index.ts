@@ -274,6 +274,8 @@ export interface FeatureFlags {
 	enable_proxy_port_reuse: boolean;
 	/** Enable Claude usage tracking via API */
 	enable_usage_tracking: boolean;
+	/** Enable Kubernetes backend (experimental, disabled by default) */
+	enable_kubernetes_backend: boolean;
 	/** Enable experimental AI models (Codex, Gemini) */
 	enable_experimental_models: boolean;
 }
