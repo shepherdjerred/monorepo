@@ -374,6 +374,15 @@ impl ApiClient for MockApiClient {
             },
         ])
     }
+
+    async fn get_feature_flags(&mut self) -> anyhow::Result<crate::feature_flags::FeatureFlags> {
+        if self.should_fail() {
+            let msg = self.error_message.read().await.clone();
+            anyhow::bail!("{msg}");
+        }
+
+        Ok(crate::feature_flags::FeatureFlags::default())
+    }
 }
 
 #[cfg(test)]

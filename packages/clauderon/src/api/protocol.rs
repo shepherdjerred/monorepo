@@ -53,6 +53,9 @@ pub enum Request {
 
     /// Refresh a session (pull latest image and recreate container)
     RefreshSession { id: String },
+
+    /// Get current feature flags
+    GetFeatureFlags,
 }
 
 /// Recent repository entry with timestamp
@@ -316,6 +319,11 @@ pub enum Response {
 
     /// Session ID returned
     SessionId { session_id: String },
+
+    /// Current feature flags
+    FeatureFlags {
+        flags: crate::feature_flags::FeatureFlags,
+    },
 
     /// Generic success response
     Ok,
