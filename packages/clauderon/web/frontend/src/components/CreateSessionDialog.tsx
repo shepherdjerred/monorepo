@@ -54,32 +54,32 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
     switch (formData.agent) {
       case AgentType.ClaudeCode:
         return [
-          { value: { Claude: "Sonnet4_5" as ClaudeModel }, label: "Sonnet 4.5 (Default - Balanced)" },
-          { value: { Claude: "Opus4_5" as ClaudeModel }, label: "Opus 4.5 (Most Capable)" },
-          { value: { Claude: "Haiku4_5" as ClaudeModel }, label: "Haiku 4.5 (Fastest)" },
-          { value: { Claude: "Opus4_1" as ClaudeModel }, label: "Opus 4.1 (Agentic)" },
-          { value: { Claude: "Opus4" as ClaudeModel }, label: "Opus 4" },
-          { value: { Claude: "Sonnet4" as ClaudeModel }, label: "Sonnet 4" },
+          { value: { type: "Claude" as const, content: "Sonnet4_5" as ClaudeModel }, label: "Sonnet 4.5 (Default - Balanced)" },
+          { value: { type: "Claude" as const, content: "Opus4_5" as ClaudeModel }, label: "Opus 4.5 (Most Capable)" },
+          { value: { type: "Claude" as const, content: "Haiku4_5" as ClaudeModel }, label: "Haiku 4.5 (Fastest)" },
+          { value: { type: "Claude" as const, content: "Opus4_1" as ClaudeModel }, label: "Opus 4.1 (Agentic)" },
+          { value: { type: "Claude" as const, content: "Opus4" as ClaudeModel }, label: "Opus 4" },
+          { value: { type: "Claude" as const, content: "Sonnet4" as ClaudeModel }, label: "Sonnet 4" },
         ];
       case AgentType.Codex:
         return [
-          { value: { Codex: "Gpt5_2Codex" as CodexModel }, label: "GPT-5.2-Codex (Default - Best for Code)" },
-          { value: { Codex: "Gpt5_2" as CodexModel }, label: "GPT-5.2" },
-          { value: { Codex: "Gpt5_2Instant" as CodexModel }, label: "GPT-5.2 Instant (Fast)" },
-          { value: { Codex: "Gpt5_2Thinking" as CodexModel }, label: "GPT-5.2 Thinking (Reasoning)" },
-          { value: { Codex: "Gpt5_2Pro" as CodexModel }, label: "GPT-5.2 Pro (Premium)" },
-          { value: { Codex: "Gpt5_1" as CodexModel }, label: "GPT-5.1" },
-          { value: { Codex: "Gpt5_1Instant" as CodexModel }, label: "GPT-5.1 Instant" },
-          { value: { Codex: "Gpt5_1Thinking" as CodexModel }, label: "GPT-5.1 Thinking" },
-          { value: { Codex: "Gpt4_1" as CodexModel }, label: "GPT-4.1 (Coding Specialist)" },
-          { value: { Codex: "O3Mini" as CodexModel }, label: "o3-mini (Small Reasoning)" },
+          { value: { type: "Codex" as const, content: "Gpt5_2Codex" as CodexModel }, label: "GPT-5.2-Codex (Default - Best for Code)" },
+          { value: { type: "Codex" as const, content: "Gpt5_2" as CodexModel }, label: "GPT-5.2" },
+          { value: { type: "Codex" as const, content: "Gpt5_2Instant" as CodexModel }, label: "GPT-5.2 Instant (Fast)" },
+          { value: { type: "Codex" as const, content: "Gpt5_2Thinking" as CodexModel }, label: "GPT-5.2 Thinking (Reasoning)" },
+          { value: { type: "Codex" as const, content: "Gpt5_2Pro" as CodexModel }, label: "GPT-5.2 Pro (Premium)" },
+          { value: { type: "Codex" as const, content: "Gpt5_1" as CodexModel }, label: "GPT-5.1" },
+          { value: { type: "Codex" as const, content: "Gpt5_1Instant" as CodexModel }, label: "GPT-5.1 Instant" },
+          { value: { type: "Codex" as const, content: "Gpt5_1Thinking" as CodexModel }, label: "GPT-5.1 Thinking" },
+          { value: { type: "Codex" as const, content: "Gpt4_1" as CodexModel }, label: "GPT-4.1 (Coding Specialist)" },
+          { value: { type: "Codex" as const, content: "O3Mini" as CodexModel }, label: "o3-mini (Small Reasoning)" },
         ];
       case AgentType.Gemini:
         return [
-          { value: { Gemini: "Gemini3Pro" as GeminiModel }, label: "Gemini 3 Pro (Default - 1M Context)" },
-          { value: { Gemini: "Gemini3Flash" as GeminiModel }, label: "Gemini 3 Flash (Fast)" },
-          { value: { Gemini: "Gemini2_5Pro" as GeminiModel }, label: "Gemini 2.5 Pro" },
-          { value: { Gemini: "Gemini2_0Flash" as GeminiModel }, label: "Gemini 2.0 Flash" },
+          { value: { type: "Gemini" as const, content: "Gemini3Pro" as GeminiModel }, label: "Gemini 3 Pro (Default - 1M Context)" },
+          { value: { type: "Gemini" as const, content: "Gemini3Flash" as GeminiModel }, label: "Gemini 3 Flash (Fast)" },
+          { value: { type: "Gemini" as const, content: "Gemini2_5Pro" as GeminiModel }, label: "Gemini 2.5 Pro" },
+          { value: { type: "Gemini" as const, content: "Gemini2_0Flash" as GeminiModel }, label: "Gemini 2.0 Flash" },
         ];
       default:
         return [];
