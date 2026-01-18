@@ -169,8 +169,9 @@ impl SessionManager {
     ///
     /// Returns an error if the store cannot be read or Kubernetes client fails.
     pub async fn with_defaults(store: Arc<dyn Store>) -> anyhow::Result<Self> {
-        let kubernetes_backend =
-            Arc::new(KubernetesBackend::new(crate::backends::KubernetesConfig::load_or_default()).await?);
+        let kubernetes_backend = Arc::new(
+            KubernetesBackend::new(crate::backends::KubernetesConfig::load_or_default()).await?,
+        );
 
         Self::new(
             store,
@@ -196,8 +197,9 @@ impl SessionManager {
         store: Arc<dyn Store>,
         docker: DockerBackend,
     ) -> anyhow::Result<Self> {
-        let kubernetes_backend =
-            Arc::new(KubernetesBackend::new(crate::backends::KubernetesConfig::load_or_default()).await?);
+        let kubernetes_backend = Arc::new(
+            KubernetesBackend::new(crate::backends::KubernetesConfig::load_or_default()).await?,
+        );
 
         Self::new(
             store,
