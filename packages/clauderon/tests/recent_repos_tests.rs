@@ -102,7 +102,7 @@ async fn test_recent_repo_tracked_on_session_create() {
     let (_session, _warnings) = manager
         .create_session(
             repo_path.to_string_lossy().to_string(),
-        None,
+            None,
             "Test prompt".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
@@ -151,7 +151,7 @@ async fn test_path_canonicalization_prevents_duplicates() {
     manager
         .create_session(
             canonical.to_string_lossy().to_string(),
-        None,
+            None,
             "Prompt 1".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
@@ -264,7 +264,7 @@ async fn test_upsert_behavior_updates_timestamp() {
     manager
         .create_session(
             repo_path.to_string_lossy().to_string(),
-        None,
+            None,
             "Prompt 1".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
@@ -295,7 +295,7 @@ async fn test_upsert_behavior_updates_timestamp() {
     manager
         .create_session(
             repo_path.to_string_lossy().to_string(),
-        None,
+            None,
             "Prompt 2".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
@@ -446,7 +446,7 @@ async fn test_subdirectories_tracked_separately() {
     manager
         .create_session(
             packages_foo.to_string_lossy().to_string(),
-        None,
+            None,
             "Prompt 1".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
@@ -470,7 +470,7 @@ async fn test_subdirectories_tracked_separately() {
     manager
         .create_session(
             packages_bar.to_string_lossy().to_string(),
-        None,
+            None,
             "Prompt 2".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
@@ -533,7 +533,7 @@ async fn test_same_subdir_updates_timestamp() {
     manager
         .create_session(
             packages_foo.to_string_lossy().to_string(),
-        None,
+            None,
             "Prompt 1".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
@@ -564,7 +564,7 @@ async fn test_same_subdir_updates_timestamp() {
     manager
         .create_session(
             packages_foo.to_string_lossy().to_string(),
-        None,
+            None,
             "Prompt 2".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
