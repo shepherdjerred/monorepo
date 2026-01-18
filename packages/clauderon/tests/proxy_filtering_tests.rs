@@ -660,8 +660,8 @@ fn test_access_mode_display() {
 
 #[test]
 fn test_access_mode_default() {
-    // ReadOnly is the secure default (principle of least privilege)
-    assert_eq!(AccessMode::default(), AccessMode::ReadOnly);
+    // ReadWrite is the default for convenience in development workflows
+    assert_eq!(AccessMode::default(), AccessMode::ReadWrite);
 }
 
 // ========== HTTP Method Filtering Tests ==========
