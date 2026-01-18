@@ -74,7 +74,7 @@ impl SpritesResources {
 }
 
 /// Lifecycle configuration for sprites
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub struct SpritesLifecycle {
     /// Automatically destroy sprite on session deletion
     /// If false, sprite persists for reuse (incurs storage costs)
@@ -85,15 +85,6 @@ pub struct SpritesLifecycle {
     /// Enables faster cold starts (~300ms) at cost of storage
     #[serde(default)]
     pub auto_checkpoint: bool,
-}
-
-impl Default for SpritesLifecycle {
-    fn default() -> Self {
-        Self {
-            auto_destroy: false,
-            auto_checkpoint: false,
-        }
-    }
 }
 
 /// Network configuration for sprites
@@ -142,7 +133,7 @@ pub struct SpritesImage {
     pub install_claude: bool,
 
     /// Additional packages to install via apt-get
-    /// Example: ["git", "curl", "build-essential"]
+    /// Example: `["git", "curl", "build-essential"]`
     #[serde(default)]
     pub packages: Vec<String>,
 }
@@ -206,7 +197,7 @@ impl SpritesImage {
 }
 
 /// Complete sprites.dev backend configuration
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub struct SpritesConfig {
     /// Authentication token (can also be set via SPRITES_TOKEN env var)
     /// Environment variable takes precedence over config file
@@ -228,18 +219,6 @@ pub struct SpritesConfig {
     /// Image configuration
     #[serde(default)]
     pub image: SpritesImage,
-}
-
-impl Default for SpritesConfig {
-    fn default() -> Self {
-        Self {
-            token: None,
-            resources: SpritesResources::default(),
-            lifecycle: SpritesLifecycle::default(),
-            network: SpritesNetwork::default(),
-            image: SpritesImage::default(),
-        }
-    }
 }
 
 impl SpritesConfig {

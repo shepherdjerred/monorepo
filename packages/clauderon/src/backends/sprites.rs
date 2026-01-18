@@ -947,7 +947,7 @@ mod tests {
             ..Default::default()
         };
 
-        let backend = SpritesBackend::with_config(config.clone());
+        let backend = SpritesBackend::with_config(config);
         assert_eq!(backend.config.resources.cpu, Some(4));
         assert_eq!(backend.config.resources.memory, Some(8));
         assert!(backend.config.lifecycle.auto_destroy);
