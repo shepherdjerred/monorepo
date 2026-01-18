@@ -237,6 +237,7 @@ fn test_print_mode_flows_to_docker_args() {
         &clauderon::backends::DockerConfig::default(),
         None,
         None,
+        None, // model
         &[],
     )
     .expect("Failed to build args");
@@ -351,6 +352,7 @@ fn test_interactive_mode_no_print_flag_in_docker_args() {
         &clauderon::backends::DockerConfig::default(),
         None,
         None,
+        None, // model
         &[],
     )
     .expect("Failed to build args");
