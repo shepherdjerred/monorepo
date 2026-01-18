@@ -3978,7 +3978,7 @@ impl SessionManager {
             .ok_or_else(|| anyhow::anyhow!("Session not found: {}", session_id))?;
 
         // Validate merge requirements
-        if !session.can_merge_pr() {
+        if !session.can_merge_pr {
             anyhow::bail!(
                 "PR cannot be merged: requirements not met (check status: {:?}, review: {:?}, conflicts: {})",
                 session.pr_check_status,

@@ -1,7 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import { CheckCircle } from "lucide-react";
 import { useState } from "react";
 import type { Session, MergeMethod } from "@clauderon/shared";
@@ -14,12 +13,21 @@ interface MergePrDialogProps {
 }
 
 export function MergePrDialog({ isOpen, onClose, onConfirm, session }: MergePrDialogProps) {
-  const [selectedMethod, setSelectedMethod] = useState<MergeMethod>(
-    session.pr_default_merge_method || "Merge"
+  // Get the initial method from session, or use the first available method
+  const initialMethod = session.pr_default_merge_method ?? session.pr_merge_methods?.[0];
+
+  const [selectedMethod, setSelectedMethod] = useState<MergeMethod | undefined>(
+    initialMethod
   );
-  const [deleteBranch, setDeleteBranch] = useState(
+  const [deleteBranch, setDeleteBranch] = useState<boolean>(
     session.pr_delete_branch_on_merge ?? false
   );
+
+  const handleConfirm = () => {
+    if (selectedMethod) {
+      onConfirm(selectedMethod, deleteBranch);
+    }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -48,9 +56,12 @@ export function MergePrDialog({ isOpen, onClose, onConfirm, session }: MergePrDi
           {/* Merge method dropdown */}
           <div className="space-y-2">
             <label className="text-sm font-medium">Merge method</label>
-            <Select value={selectedMethod} onValueChange={(v) => setSelectedMethod(v as MergeMethod)}>
+            <Select
+              value={selectedMethod || ""}
+              onValueChange={(v) => setSelectedMethod(v as MergeMethod)}
+            >
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue placeholder="Select merge method" />
               </SelectTrigger>
               <SelectContent>
                 {session.pr_merge_methods?.map((method) => (
@@ -64,10 +75,12 @@ export function MergePrDialog({ isOpen, onClose, onConfirm, session }: MergePrDi
 
           {/* Delete branch checkbox */}
           <div className="flex items-center space-x-2">
-            <Checkbox
+            <input
               id="delete-branch"
+              type="checkbox"
               checked={deleteBranch}
-              onCheckedChange={(checked) => setDeleteBranch(checked === true)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDeleteBranch(e.target.checked)}
+              className="w-4 h-4 rounded border-gray-300"
             />
             <label htmlFor="delete-branch" className="text-sm cursor-pointer">
               Delete branch after merge
@@ -79,7 +92,7 @@ export function MergePrDialog({ isOpen, onClose, onConfirm, session }: MergePrDi
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={() => onConfirm(selectedMethod, deleteBranch)}>
+          <Button onClick={handleConfirm} disabled={!selectedMethod}>
             Merge Pull Request
           </Button>
         </DialogFooter>

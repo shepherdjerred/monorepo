@@ -1818,6 +1818,10 @@ impl TryFrom<SessionRow> for Session {
             pr_merge_methods,
             pr_default_merge_method,
             pr_delete_branch_on_merge,
+            can_merge_pr: row.pr_url.is_some()
+                && pr_check_status == Some(crate::core::CheckStatus::Passing)
+                && pr_review_status == Some(crate::core::PrReviewStatus::Approved)
+                && !row.merge_conflict,
             claude_status,
             claude_status_updated_at,
             merge_conflict: row.merge_conflict,
