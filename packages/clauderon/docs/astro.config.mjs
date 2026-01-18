@@ -3,6 +3,7 @@ import starlight from "@astrojs/starlight";
 
 export default defineConfig({
   site: "https://clauderon.dev",
+  base: "/docs",
   integrations: [
     starlight({
       title: "clauderon",
