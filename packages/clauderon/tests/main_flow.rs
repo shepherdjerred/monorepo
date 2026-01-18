@@ -19,6 +19,7 @@ fn create_test_session(name: &str) -> Session {
         worktree_path: format!("/tmp/worktrees/{name}").into(),
         subdirectory: std::path::PathBuf::new(),
         branch_name: name.to_string(),
+        repositories: None,
         initial_prompt: "Test prompt".to_string(),
         backend: BackendType::Zellij,
         agent: AgentType::ClaudeCode,
