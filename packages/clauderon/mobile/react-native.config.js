@@ -7,5 +7,16 @@ module.exports = {
     android: {
       sourceDir: './android',
     },
+    macos: {
+      sourceDir: './macos',
+      automaticPodsInstallation: false,
+    },
+    windows: {
+      sourceDir: './windows',
+      solutionFile: 'ClauderonMobile.sln',
+      project: {
+        projectFile: 'ClauderonMobile/ClauderonMobile.vcxproj',
+      },
+    },
   },
 };
