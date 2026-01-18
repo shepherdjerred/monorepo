@@ -82,12 +82,34 @@ async fn handle_console_socket(socket: WebSocket, session_id: String, state: App
                         // Convert bytes to base64 for binary-safe transmission
                         let data = base64::prelude::BASE64_STANDARD.encode(&bytes);
 
+                        // Log encoding details for debugging
+                        tracing::debug!(
+                            session_id = %session_id,
+                            bytes_len = bytes.len(),
+                            encoded_len = data.len(),
+                            is_valid_utf8 = std::str::from_utf8(&bytes).is_ok(),
+                            "Encoded console output"
+                        );
+
                         // Validate encoded data
                         if data.is_empty() && !bytes.is_empty() {
                             tracing::error!(
                                 session_id = %session_id,
                                 bytes_read = bytes.len(),
+                                bytes_sample = format!("{:?}", &bytes[..bytes.len().min(32)]),
                                 "Base64 encoding produced empty string from non-empty input"
+                            );
+                            continue;
+                        }
+
+                        // Validate base64 roundtrip
+                        if let Err(e) = base64::prelude::BASE64_STANDARD.decode(&data) {
+                            tracing::error!(
+                                session_id = %session_id,
+                                error = %e,
+                                encoded_len = data.len(),
+                                encoded_sample = &data[..data.len().min(100)],
+                                "Generated invalid base64 that cannot be decoded"
                             );
                             continue;
                         }
@@ -106,7 +128,14 @@ async fn handle_console_socket(socket: WebSocket, session_id: String, state: App
                             break;
                         }
                     }
-                    Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => {}
+                    Err(tokio::sync::broadcast::error::RecvError::Lagged(dropped)) => {
+                        tracing::warn!(
+                            session_id = %session_id,
+                            dropped_messages = dropped,
+                            "Broadcast channel lagged, console output dropped"
+                        );
+                        // Continue processing - don't break
+                    }
                     Err(tokio::sync::broadcast::error::RecvError::Closed) => break,
                 }
             }

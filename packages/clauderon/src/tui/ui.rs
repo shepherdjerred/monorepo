@@ -71,6 +71,11 @@ pub fn render(frame: &mut Frame, app: &App) {
         AppMode::ReconcileError => {
             reconcile_error_dialog::render(frame, app, frame.area());
         }
+        AppMode::SignalMenu => {
+            let dialog_area = centered_rect(60, 70, frame.area());
+            frame.render_widget(Clear, dialog_area);
+            render_signal_menu(frame, app, dialog_area);
+        }
         AppMode::SessionList
         | AppMode::Attached
         | AppMode::CopyMode
@@ -232,24 +237,25 @@ fn render_help(frame: &mut Frame, app: &App, area: Rect) {
                 ("?", "Show help"),
             ]
         },
-        |session| match session.backend {
-            BackendType::Zellij => vec![("Ctrl+O, d", "Detach from session")],
-            #[cfg(target_os = "macos")]
-            BackendType::Docker | BackendType::Kubernetes | BackendType::AppleContainer => vec![
+        |session| {
+            let container_hints = vec![
                 ("Ctrl+Q", "Detach"),
                 ("Ctrl+P/N", "Switch session (Prev/Next)"),
+                ("Ctrl+C", "Send SIGINT to container"),
+                ("Ctrl+Z", "Send SIGTSTP to container (suspend)"),
+                ("Ctrl+\\", "Send SIGQUIT to container"),
+                ("Ctrl+M", "Open signal menu"),
                 ("Ctrl+S", "Enter scroll mode"),
                 ("Ctrl+L", "Toggle locked mode"),
                 ("?", "Show help"),
-            ],
-            #[cfg(not(target_os = "macos"))]
-            BackendType::Docker | BackendType::Kubernetes => vec![
-                ("Ctrl+Q", "Detach"),
-                ("Ctrl+P/N", "Switch session (Prev/Next)"),
-                ("Ctrl+S", "Enter scroll mode"),
-                ("Ctrl+L", "Toggle locked mode"),
-                ("?", "Show help"),
-            ],
+            ];
+
+            match session.backend {
+                BackendType::Zellij => vec![("Ctrl+O, d", "Detach from session")],
+                BackendType::Docker | BackendType::Kubernetes => container_hints,
+                #[cfg(target_os = "macos")]
+                BackendType::AppleContainer => container_hints,
+            }
         },
     );
 
@@ -331,6 +337,55 @@ fn render_help(frame: &mut Frame, app: &App, area: Rect) {
         }
         items.push(ListItem::new(Line::from("")));
     }
+
+    let list = List::new(items).block(block);
+    frame.render_widget(list, area);
+}
+
+/// Render the signal menu dialog.
+fn render_signal_menu(frame: &mut Frame, app: &App, area: Rect) {
+    let Some(menu) = &app.signal_menu else {
+        return;
+    };
+
+    let block = Block::default()
+        .title(" Send Signal (↑/↓ to select, Enter to send, Esc to cancel) ")
+        .borders(Borders::ALL)
+        .border_style(Style::default().fg(Color::Yellow));
+
+    let items: Vec<ListItem> = menu
+        .signals
+        .iter()
+        .enumerate()
+        .map(|(i, signal)| {
+            let is_selected = i == menu.selected_index;
+            let style = if is_selected {
+                Style::default()
+                    .bg(Color::Blue)
+                    .fg(Color::White)
+                    .add_modifier(Modifier::BOLD)
+            } else {
+                Style::default().fg(Color::White)
+            };
+
+            let lines = vec![
+                Line::from(vec![Span::styled(
+                    format!("  {:<25}", signal.display_name()),
+                    style,
+                )]),
+                Line::from(vec![Span::styled(
+                    format!("    {}", signal.description()),
+                    if is_selected {
+                        style
+                    } else {
+                        Style::default().fg(Color::Gray)
+                    },
+                )]),
+            ];
+
+            ListItem::new(lines).style(style)
+        })
+        .collect();
 
     let list = List::new(items).block(block);
     frame.render_widget(list, area);
