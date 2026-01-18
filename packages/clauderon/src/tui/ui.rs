@@ -216,6 +216,10 @@ fn render_help(frame: &mut Frame, app: &App, area: Rect) {
             let container_hints = vec![
                 ("Ctrl+Q", "Detach"),
                 ("Ctrl+P/N", "Switch session (Prev/Next)"),
+                ("Ctrl+C", "Send SIGINT to container"),
+                ("Ctrl+Z", "Send SIGTSTP to container (suspend)"),
+                ("Ctrl+\\", "Send SIGQUIT to container"),
+                ("Ctrl+M", "Open signal menu"),
                 ("Ctrl+S", "Enter scroll mode"),
                 ("Ctrl+L", "Toggle locked mode"),
                 ("?", "Show help"),
