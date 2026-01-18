@@ -75,12 +75,15 @@ async fn create_test_manager() -> (SessionManager, TempDir, TempDir) {
         arc
     }
 
+    let sprites = Arc::new(MockExecutionBackend::sprites());
+
     let manager = SessionManager::new(
         store,
         to_git_ops(git),
         to_exec_backend(zellij),
         to_exec_backend(docker),
         to_exec_backend(kubernetes),
+        to_exec_backend(sprites),
     )
     .await
     .expect("Failed to create manager");
