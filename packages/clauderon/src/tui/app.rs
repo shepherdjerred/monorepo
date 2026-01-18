@@ -1252,6 +1252,7 @@ impl App {
             pull_policy: None,
             cpu_limit: None,
             memory_limit: None,
+            storage_class: None, // TUI doesn't support storage class selection yet
         };
 
         if let Some(client) = &mut self.client {

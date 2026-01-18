@@ -91,6 +91,7 @@ async fn create_test_manager() -> (
         to_exec_backend(Arc::clone(&zellij)),
         to_exec_backend(Arc::clone(&docker)),
         to_exec_backend(Arc::clone(&kubernetes)),
+        None,
         to_exec_backend(Arc::clone(&sprites)),
         feature_flags,
     )
@@ -124,6 +125,7 @@ async fn test_create_session_zellij_success() {
             None,                  // pull_policy
             None,                  // cpu_limit
             None,                  // memory_limit
+            None,                  // storage_class
         )
         .await
         .expect("Failed to create session");
@@ -173,6 +175,7 @@ async fn test_create_session_docker_success() {
             None,                  // pull_policy
             None,                  // cpu_limit
             None,                  // memory_limit
+            None,                  // storage_class
         )
         .await
         .expect("Failed to create session");
@@ -215,6 +218,7 @@ async fn test_create_session_git_fails() {
             None,                  // pull_policy
             None,                  // cpu_limit
             None,                  // memory_limit
+            None,                  // storage_class
         )
         .await;
 
@@ -255,6 +259,7 @@ async fn test_create_session_backend_fails() {
             None,                  // pull_policy
             None,                  // cpu_limit
             None,                  // memory_limit
+            None,                  // storage_class
         )
         .await;
 
@@ -295,6 +300,7 @@ async fn test_get_session_by_name() {
             None,                  // pull_policy
             None,                  // cpu_limit
             None,                  // memory_limit
+            None,                  // storage_class
         )
         .await
         .unwrap();
@@ -327,6 +333,7 @@ async fn test_get_session_by_uuid() {
             None,                  // pull_policy
             None,                  // cpu_limit
             None,                  // memory_limit
+            None,                  // storage_class
         )
         .await
         .unwrap();
@@ -369,6 +376,7 @@ async fn test_delete_session_success() {
             None,                  // pull_policy
             None,                  // cpu_limit
             None,                  // memory_limit
+            None,                  // storage_class
         )
         .await
         .unwrap();
@@ -424,6 +432,7 @@ async fn test_archive_session_success() {
             None,                  // pull_policy
             None,                  // cpu_limit
             None,                  // memory_limit
+            None,                  // storage_class
         )
         .await
         .unwrap();
@@ -471,6 +480,7 @@ async fn test_unarchive_session_success() {
             None,                  // pull_policy
             None,                  // cpu_limit
             None,                  // memory_limit
+            None,                  // storage_class
         )
         .await
         .unwrap();
@@ -510,6 +520,7 @@ async fn test_unarchive_session_not_archived() {
             None,                  // pull_policy
             None,                  // cpu_limit
             None,                  // memory_limit
+            None,                  // storage_class
         )
         .await
         .unwrap();
@@ -553,6 +564,7 @@ async fn test_get_attach_command_zellij() {
             None,                  // pull_policy
             None,                  // cpu_limit
             None,                  // memory_limit
+            None,                  // storage_class
         )
         .await
         .unwrap();
@@ -586,6 +598,7 @@ async fn test_get_attach_command_docker() {
             None,
             None,
             None, // container settings
+            None, // storage_class
         )
         .await
         .unwrap();
@@ -629,6 +642,7 @@ async fn test_reconcile_healthy_session() {
             None,                  // pull_policy
             None,                  // cpu_limit
             None,                  // memory_limit
+            None,                  // storage_class
         )
         .await
         .unwrap();
@@ -664,6 +678,7 @@ async fn test_reconcile_missing_backend() {
             None,                  // pull_policy
             None,                  // cpu_limit
             None,                  // memory_limit
+            None,                  // storage_class
         )
         .await
         .unwrap();
@@ -711,6 +726,7 @@ async fn test_list_sessions_multiple() {
             None,                  // pull_policy
             None,                  // cpu_limit
             None,                  // memory_limit
+            None,                  // storage_class
         )
         .await
         .unwrap();
@@ -732,6 +748,7 @@ async fn test_list_sessions_multiple() {
             None,                  // pull_policy
             None,                  // cpu_limit
             None,                  // memory_limit
+            None,                  // storage_class
         )
         .await
         .unwrap();
@@ -753,6 +770,7 @@ async fn test_list_sessions_multiple() {
             None,                  // pull_policy
             None,                  // cpu_limit
             None,                  // memory_limit
+            None,                  // storage_class
         )
         .await
         .unwrap();
@@ -785,6 +803,7 @@ async fn test_update_metadata_success() {
             None,                  // pull_policy
             None,                  // cpu_limit
             None,                  // memory_limit
+            None,                  // storage_class
         )
         .await
         .unwrap();
@@ -830,6 +849,7 @@ async fn test_update_metadata_by_uuid() {
             None,                  // pull_policy
             None,                  // cpu_limit
             None,                  // memory_limit
+            None,                  // storage_class
         )
         .await
         .unwrap();
@@ -871,6 +891,7 @@ async fn test_update_metadata_partial() {
             None,                  // pull_policy
             None,                  // cpu_limit
             None,                  // memory_limit
+            None,                  // storage_class
         )
         .await
         .unwrap();
@@ -937,6 +958,7 @@ async fn test_session_lifecycle() {
             None,                  // pull_policy
             None,                  // cpu_limit
             None,                  // memory_limit
+            None,                  // storage_class
         )
         .await
         .unwrap();
