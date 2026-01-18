@@ -111,7 +111,9 @@ impl SpritesBackend {
 
         // Add network policy configuration
         body["network_policy"] = serde_json::json!(self.config.network.default_policy.to_string());
-        if self.config.network.default_policy == crate::backends::sprites_config::NetworkPolicy::AllowList {
+        if self.config.network.default_policy
+            == crate::backends::sprites_config::NetworkPolicy::AllowList
+        {
             body["allowed_domains"] = serde_json::json!(self.config.network.allowed_domains);
         }
 
