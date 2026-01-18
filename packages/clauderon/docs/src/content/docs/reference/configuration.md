@@ -1,28 +1,28 @@
 ---
 title: Configuration
-description: Complete configuration reference for mux
+description: Complete configuration reference for clauderon
 ---
 
-mux uses a TOML configuration file located at `~/.config/mux/config.toml`.
+clauderon uses a TOML configuration file located at `~/.config/clauderon/config.toml`.
 
 ## Configuration File Location
 
 The configuration file is searched in this order:
 
 1. `$MUX_CONFIG` environment variable
-2. `~/.config/mux/config.toml`
-3. `/etc/mux/config.toml`
+2. `~/.config/clauderon/config.toml`
+3. `/etc/clauderon/config.toml`
 
 Create a default configuration:
 
 ```bash
-mux config init
+clauderon config init
 ```
 
 ## Full Configuration Reference
 
 ```toml
-# ~/.config/mux/config.toml
+# ~/.config/clauderon/config.toml
 
 #
 # General Settings
@@ -32,13 +32,13 @@ mux config init
 default_backend = "docker"  # docker, zellij
 
 # Data directory for session storage
-data_dir = "~/.local/share/mux"
+data_dir = "~/.local/share/clauderon"
 
 # Log level: error, warn, info, debug, trace
 log_level = "info"
 
 # Log file (optional, logs to stderr if not set)
-log_file = "~/.config/mux/mux.log"
+log_file = "~/.config/clauderon/clauderon.log"
 
 #
 # Proxy Configuration
@@ -54,7 +54,7 @@ bind = "127.0.0.1"
 generate_certs = true
 
 # CA certificate directory
-ca_dir = "~/.config/mux/ca"
+ca_dir = "~/.config/clauderon/ca"
 
 # CA certificate lifetime in days
 ca_lifetime = 365
@@ -70,7 +70,7 @@ max_connections = 100
 log_requests = false
 
 # Log file for requests
-log_file = "~/.config/mux/proxy.log"
+log_file = "~/.config/clauderon/proxy.log"
 
 # Log response bodies (careful with large responses)
 log_responses = false
@@ -227,13 +227,13 @@ on_stop = []
 experimental = false
 
 # Database path (SQLite)
-database = "~/.local/share/mux/sessions.db"
+database = "~/.local/share/clauderon/sessions.db"
 
 # PID file for daemon
-pidfile = "~/.local/share/mux/mux.pid"
+pidfile = "~/.local/share/clauderon/clauderon.pid"
 
 # Socket path for IPC
-socket = "~/.local/share/mux/mux.sock"
+socket = "~/.local/share/clauderon/clauderon.sock"
 ```
 
 ## Environment Variable Expansion

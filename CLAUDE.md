@@ -175,7 +175,7 @@ bun run dev:all          # Both concurrently
 
 ### clauderon
 
-Rust-based session manager with web interface. Contains nested TypeScript workspaces:
+Rust-based session manager with web interface. Contains nested TypeScript workspaces and documentation:
 
 ```bash
 cd packages/clauderon
@@ -188,13 +188,25 @@ bun install              # Install web dependencies
 bun run build            # Build all web packages
 bun run test             # Run web tests
 bun run lint             # Lint web packages
+
+# Documentation site (Astro + Starlight)
+cd docs
+bun install              # Install docs dependencies
+bun run dev              # Start docs dev server
+bun run build            # Build static site
+bun run preview          # Preview built docs
 ```
 
-**Build Order**: The frontend must be built before the Rust binary (static files are embedded):
-1. `cd packages/clauderon/web/frontend && bun run build`
-2. `cd packages/clauderon && cargo build`
+**Build Order**: Both frontend and docs must be built before the Rust binary (static files are embedded):
+1. `cd packages/clauderon/docs && bun run build`
+2. `cd packages/clauderon/web/frontend && bun run build`
+3. `cd packages/clauderon && cargo build`
 
-**Nested Workspace Exception**: The web packages (`packages/clauderon/web/*`) use standalone ESLint configs instead of `@shepherdjerred/eslint-config` due to Bun workspace resolution limitations with deeply nested packages. These configs follow the same patterns and rules as the shared config.
+**Documentation**: The docs are built with Astro + Starlight and served in two ways:
+- Embedded in Rust binary at `/docs` route (localhost:3030/docs)
+- Standalone static site for S3 deployment (from `docs/dist/`)
+
+**Nested Workspace Exception**: The web packages (`packages/clauderon/web/*`) and docs package use standalone ESLint configs instead of `@shepherdjerred/eslint-config` due to Bun workspace resolution limitations with deeply nested packages. These configs follow the same patterns and rules as the shared config.
 
 ## Observability & Debugging Guidelines
 

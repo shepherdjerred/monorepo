@@ -1,6 +1,6 @@
 use crate::api::middleware::correlation_id_middleware;
 use crate::api::protocol::{CreateSessionRequest, Event};
-use crate::api::static_files::serve_static;
+use crate::api::static_files::{serve_docs, serve_static};
 use crate::api::ws_events::{EventBroadcaster, broadcast_event};
 use crate::auth::{self, AuthState};
 use crate::core::manager::SessionManager;
@@ -90,7 +90,17 @@ pub fn create_router(auth_state: &Option<AuthState>, dev_mode: bool) -> Router<A
         // Hook endpoint (public - used by containers without auth)
         .route("/api/hooks", post(receive_hook))
         // Merge protected routes
-        .merge(protected_routes);
+        .merge(protected_routes)
+        // Serve docs at /docs
+        .nest_service(
+            "/docs",
+            axum::routing::get_service(tower::service_fn(
+                |req: axum::http::Request<axum::body::Body>| async move {
+                    let uri = req.uri().clone();
+                    Ok::<_, std::convert::Infallible>(serve_docs(uri).await)
+                },
+            )),
+        );
 
     // Serve static files - from filesystem in dev mode, embedded otherwise
     let router = if dev_mode {

@@ -1,9 +1,9 @@
 ---
 title: Introduction
-description: Learn what mux is and why you might want to use it
+description: Learn what clauderon is and why you might want to use it
 ---
 
-**mux** is a session management system for AI coding agents. It enables Claude Code and other AI tools to run in isolated environments with secure credential handling.
+**clauderon** is a session management system for AI coding agents. It enables Claude Code and other AI tools to run in isolated environments with secure credential handling.
 
 ## The Problem
 
@@ -14,10 +14,10 @@ When running AI coding agents, you face a security dilemma:
 
 ## The Solution
 
-mux solves this with a **zero-credential proxy architecture**:
+clauderon solves this with a **zero-credential proxy architecture**:
 
 1. AI agents run with placeholder credentials (e.g., `ANTHROPIC_API_KEY=placeholder`)
-2. mux's HTTP proxy intercepts outgoing requests
+2. clauderon's HTTP proxy intercepts outgoing requests
 3. Real credentials are injected at request time
 4. Agents never see your actual tokens
 
@@ -26,7 +26,7 @@ mux solves this with a **zero-credential proxy architecture**:
 ### Multiple Backends
 
 - **Docker**: Full container isolation with mounted volumes
-- **Zellij**: Lightweight terminal multiplexer sessions
+- **Zellij**: Lightweight terminal clauderon sessions
 - **Git-based**: Clone repositories into isolated workspaces
 
 ### Credential Proxy
