@@ -110,7 +110,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
   // Reset backend if Kubernetes is disabled
   useEffect(() => {
     if (formData.backend === "Kubernetes" && featureFlags && !featureFlags.enable_kubernetes_backend) {
-      setFormData(prev => ({ ...prev, backend: "Docker" }));
+      setFormData(prev => ({ ...prev, backend: "Docker" as BackendType }));
     }
   }, [featureFlags, formData.backend]);
 
