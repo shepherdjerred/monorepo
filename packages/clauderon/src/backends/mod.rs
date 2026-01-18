@@ -5,6 +5,8 @@ pub mod git;
 pub mod kubernetes;
 pub mod kubernetes_config;
 pub mod mock;
+pub mod sprites;
+pub mod sprites_config;
 pub mod traits;
 pub mod zellij;
 
@@ -21,6 +23,8 @@ pub use git::GitBackend;
 pub use kubernetes::KubernetesBackend;
 pub use kubernetes_config::{KubernetesConfig, KubernetesProxyConfig, ProxyMode};
 pub use mock::{MockExecutionBackend, MockGitBackend};
+pub use sprites::SpritesBackend;
+pub use sprites_config::SpritesConfig;
 pub use traits::{CreateOptions, ExecutionBackend, GitOperations};
 pub use zellij::ZellijBackend;
 

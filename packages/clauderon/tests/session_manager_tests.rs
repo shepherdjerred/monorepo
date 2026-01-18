@@ -73,6 +73,7 @@ async fn create_test_manager() -> (
     let zellij = Arc::new(MockExecutionBackend::zellij());
     let docker = Arc::new(MockExecutionBackend::docker());
     let kubernetes = Arc::new(MockExecutionBackend::kubernetes());
+    let sprites = Arc::new(MockExecutionBackend::sprites());
 
     // Helper functions to coerce Arc<Concrete> to Arc<dyn Trait>
     // The coercion happens at the function return site
@@ -89,6 +90,7 @@ async fn create_test_manager() -> (
         to_exec_backend(Arc::clone(&zellij)),
         to_exec_backend(Arc::clone(&docker)),
         to_exec_backend(Arc::clone(&kubernetes)),
+        to_exec_backend(Arc::clone(&sprites)),
     )
     .await
     .expect("Failed to create manager");

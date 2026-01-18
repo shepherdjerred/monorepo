@@ -179,6 +179,10 @@ async fn run_main_loop(
                             // TODO: Implement Kubernetes PTY attach
                             app.status_message = Some("Kubernetes attach not yet implemented".to_string());
                         }
+                        Some(BackendType::Sprites) => {
+                            // TODO: Implement Sprites PTY attach
+                            app.status_message = Some("Sprites attach not yet implemented".to_string());
+                        }
                         #[cfg(target_os = "macos")]
                         Some(BackendType::AppleContainer) => {
                             // Use PTY-based attachment for Apple Container
