@@ -333,7 +333,8 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
             // Cycle through fields
             app.create_dialog.focus = match app.create_dialog.focus {
                 CreateDialogFocus::Prompt => CreateDialogFocus::RepoPath,
-                CreateDialogFocus::RepoPath => CreateDialogFocus::Backend,
+                CreateDialogFocus::RepoPath => CreateDialogFocus::MultiRepoToggle,
+                CreateDialogFocus::MultiRepoToggle => CreateDialogFocus::Backend,
                 CreateDialogFocus::Backend => CreateDialogFocus::Agent,
                 CreateDialogFocus::Agent => CreateDialogFocus::Model,
                 CreateDialogFocus::Model => CreateDialogFocus::AccessMode,
@@ -348,7 +349,8 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
             app.create_dialog.focus = match app.create_dialog.focus {
                 CreateDialogFocus::Prompt => CreateDialogFocus::Buttons,
                 CreateDialogFocus::RepoPath => CreateDialogFocus::Prompt,
-                CreateDialogFocus::Backend => CreateDialogFocus::RepoPath,
+                CreateDialogFocus::MultiRepoToggle => CreateDialogFocus::RepoPath,
+                CreateDialogFocus::Backend => CreateDialogFocus::MultiRepoToggle,
                 CreateDialogFocus::Agent => CreateDialogFocus::Backend,
                 CreateDialogFocus::Model => CreateDialogFocus::Agent,
                 CreateDialogFocus::AccessMode => CreateDialogFocus::Model,
@@ -501,7 +503,8 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                 app.create_dialog.focus = match app.create_dialog.focus {
                     CreateDialogFocus::Prompt => CreateDialogFocus::Buttons,
                     CreateDialogFocus::RepoPath => CreateDialogFocus::Prompt,
-                    CreateDialogFocus::Backend => CreateDialogFocus::RepoPath,
+                    CreateDialogFocus::MultiRepoToggle => CreateDialogFocus::RepoPath,
+                    CreateDialogFocus::Backend => CreateDialogFocus::MultiRepoToggle,
                     CreateDialogFocus::Agent => CreateDialogFocus::Backend,
                     CreateDialogFocus::Model => CreateDialogFocus::Agent,
                     CreateDialogFocus::AccessMode => CreateDialogFocus::Model,
@@ -534,7 +537,8 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                 // Navigate to next field
                 app.create_dialog.focus = match app.create_dialog.focus {
                     CreateDialogFocus::Prompt => CreateDialogFocus::RepoPath,
-                    CreateDialogFocus::RepoPath => CreateDialogFocus::Backend,
+                    CreateDialogFocus::RepoPath => CreateDialogFocus::MultiRepoToggle,
+                    CreateDialogFocus::MultiRepoToggle => CreateDialogFocus::Backend,
                     CreateDialogFocus::Backend => CreateDialogFocus::Agent,
                     CreateDialogFocus::Agent => CreateDialogFocus::Model,
                     CreateDialogFocus::Model => CreateDialogFocus::AccessMode,
@@ -545,100 +549,119 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                 };
             }
         }
-        KeyCode::Left | KeyCode::Right => match app.create_dialog.focus {
-            CreateDialogFocus::Prompt => {
-                (
-                    app.create_dialog.prompt_cursor_line,
-                    app.create_dialog.prompt_cursor_col,
-                ) = if key.code == KeyCode::Left {
-                    super::text_input::move_cursor_left_multiline(
-                        &app.create_dialog.prompt,
+        KeyCode::Left | KeyCode::Right => {
+            match app.create_dialog.focus {
+                CreateDialogFocus::Prompt => {
+                    (
                         app.create_dialog.prompt_cursor_line,
                         app.create_dialog.prompt_cursor_col,
-                    )
-                } else {
-                    super::text_input::move_cursor_right_multiline(
-                        &app.create_dialog.prompt,
-                        app.create_dialog.prompt_cursor_line,
-                        app.create_dialog.prompt_cursor_col,
-                    )
-                };
-                app.create_dialog.ensure_cursor_visible();
+                    ) = if key.code == KeyCode::Left {
+                        super::text_input::move_cursor_left_multiline(
+                            &app.create_dialog.prompt,
+                            app.create_dialog.prompt_cursor_line,
+                            app.create_dialog.prompt_cursor_col,
+                        )
+                    } else {
+                        super::text_input::move_cursor_right_multiline(
+                            &app.create_dialog.prompt,
+                            app.create_dialog.prompt_cursor_line,
+                            app.create_dialog.prompt_cursor_col,
+                        )
+                    };
+                    app.create_dialog.ensure_cursor_visible();
+                }
+                CreateDialogFocus::Backend => {
+                    if key.code == KeyCode::Left {
+                        app.create_dialog.toggle_backend_reverse();
+                    } else {
+                        app.create_dialog.toggle_backend();
+                    }
+                }
+                CreateDialogFocus::Agent => {
+                    if key.code == KeyCode::Left {
+                        app.create_dialog.toggle_agent_reverse();
+                    } else {
+                        app.create_dialog.toggle_agent();
+                    }
+                }
+                CreateDialogFocus::Model => {
+                    app.create_dialog.toggle_model();
+                }
+                CreateDialogFocus::AccessMode => {
+                    app.create_dialog.toggle_access_mode();
+                }
+                CreateDialogFocus::MultiRepoToggle => {
+                    // Toggle the checkbox, but show a message that it's not supported in TUI
+                    app.create_dialog.multi_repo_enabled = !app.create_dialog.multi_repo_enabled;
+                    if app.create_dialog.multi_repo_enabled {
+                        app.status_message = Some("Multi-repository mode is not yet supported in TUI. Please use the Web UI.".to_string());
+                    }
+                }
+                CreateDialogFocus::SkipChecks => {
+                    app.create_dialog.skip_checks = !app.create_dialog.skip_checks;
+                }
+                CreateDialogFocus::PlanMode => {
+                    app.create_dialog.plan_mode = !app.create_dialog.plan_mode;
+                }
+                CreateDialogFocus::Buttons => {
+                    app.create_dialog.button_create_focused =
+                        !app.create_dialog.button_create_focused;
+                }
+                CreateDialogFocus::RepoPath => {}
             }
-            CreateDialogFocus::Backend => {
-                if key.code == KeyCode::Left {
-                    app.create_dialog.toggle_backend_reverse();
-                } else {
+        }
+        KeyCode::Char(' ') => {
+            match app.create_dialog.focus {
+                CreateDialogFocus::Backend => {
                     app.create_dialog.toggle_backend();
                 }
-            }
-            CreateDialogFocus::Agent => {
-                if key.code == KeyCode::Left {
-                    app.create_dialog.toggle_agent_reverse();
-                } else {
+                CreateDialogFocus::Agent => {
                     app.create_dialog.toggle_agent();
                 }
+                CreateDialogFocus::Model => {
+                    app.create_dialog.toggle_model();
+                }
+                CreateDialogFocus::AccessMode => {
+                    app.create_dialog.toggle_access_mode();
+                }
+                CreateDialogFocus::MultiRepoToggle => {
+                    // Toggle the checkbox, but show a message that it's not supported in TUI
+                    app.create_dialog.multi_repo_enabled = !app.create_dialog.multi_repo_enabled;
+                    if app.create_dialog.multi_repo_enabled {
+                        app.status_message = Some("Multi-repository mode is not yet supported in TUI. Please use the Web UI.".to_string());
+                    }
+                }
+                CreateDialogFocus::SkipChecks => {
+                    app.create_dialog.skip_checks = !app.create_dialog.skip_checks;
+                }
+                CreateDialogFocus::PlanMode => {
+                    app.create_dialog.plan_mode = !app.create_dialog.plan_mode;
+                }
+                CreateDialogFocus::Prompt => {
+                    (
+                        app.create_dialog.prompt_cursor_line,
+                        app.create_dialog.prompt_cursor_col,
+                    ) = super::text_input::insert_char_at_cursor_multiline(
+                        &mut app.create_dialog.prompt,
+                        app.create_dialog.prompt_cursor_line,
+                        app.create_dialog.prompt_cursor_col,
+                        ' ',
+                    );
+                    app.create_dialog.ensure_cursor_visible();
+                }
+                CreateDialogFocus::RepoPath => {
+                    // Load recent repos and open directory picker when space is pressed on RepoPath
+                    app.load_recent_repos().await;
+                    let initial_path = if app.create_dialog.repo_path.is_empty() {
+                        None
+                    } else {
+                        Some(crate::utils::expand_tilde(&app.create_dialog.repo_path))
+                    };
+                    app.create_dialog.directory_picker.open(initial_path);
+                }
+                CreateDialogFocus::Buttons => {}
             }
-            CreateDialogFocus::Model => {
-                app.create_dialog.toggle_model();
-            }
-            CreateDialogFocus::AccessMode => {
-                app.create_dialog.toggle_access_mode();
-            }
-            CreateDialogFocus::SkipChecks => {
-                app.create_dialog.skip_checks = !app.create_dialog.skip_checks;
-            }
-            CreateDialogFocus::PlanMode => {
-                app.create_dialog.plan_mode = !app.create_dialog.plan_mode;
-            }
-            CreateDialogFocus::Buttons => {
-                app.create_dialog.button_create_focused = !app.create_dialog.button_create_focused;
-            }
-            CreateDialogFocus::RepoPath => {}
-        },
-        KeyCode::Char(' ') => match app.create_dialog.focus {
-            CreateDialogFocus::Backend => {
-                app.create_dialog.toggle_backend();
-            }
-            CreateDialogFocus::Agent => {
-                app.create_dialog.toggle_agent();
-            }
-            CreateDialogFocus::Model => {
-                app.create_dialog.toggle_model();
-            }
-            CreateDialogFocus::AccessMode => {
-                app.create_dialog.toggle_access_mode();
-            }
-            CreateDialogFocus::SkipChecks => {
-                app.create_dialog.skip_checks = !app.create_dialog.skip_checks;
-            }
-            CreateDialogFocus::PlanMode => {
-                app.create_dialog.plan_mode = !app.create_dialog.plan_mode;
-            }
-            CreateDialogFocus::Prompt => {
-                (
-                    app.create_dialog.prompt_cursor_line,
-                    app.create_dialog.prompt_cursor_col,
-                ) = super::text_input::insert_char_at_cursor_multiline(
-                    &mut app.create_dialog.prompt,
-                    app.create_dialog.prompt_cursor_line,
-                    app.create_dialog.prompt_cursor_col,
-                    ' ',
-                );
-                app.create_dialog.ensure_cursor_visible();
-            }
-            CreateDialogFocus::RepoPath => {
-                // Load recent repos and open directory picker when space is pressed on RepoPath
-                app.load_recent_repos().await;
-                let initial_path = if app.create_dialog.repo_path.is_empty() {
-                    None
-                } else {
-                    Some(crate::utils::expand_tilde(&app.create_dialog.repo_path))
-                };
-                app.create_dialog.directory_picker.open(initial_path);
-            }
-            CreateDialogFocus::Buttons => {}
-        },
+        }
         KeyCode::Char(c) => match app.create_dialog.focus {
             CreateDialogFocus::Prompt => {
                 (

@@ -205,6 +205,7 @@ pub enum CreateDialogFocus {
     #[default]
     Prompt,
     RepoPath,
+    MultiRepoToggle,
     Backend,
     Agent,
     Model,
@@ -257,6 +258,7 @@ pub struct DirectoryPickerState {
 pub struct CreateDialogState {
     pub prompt: String,
     pub repo_path: String,
+    pub multi_repo_enabled: bool,
     pub backend: BackendType,
     pub agent: AgentType,
     pub model: Option<SessionModel>,
@@ -771,6 +773,7 @@ impl Default for CreateDialogState {
         Self {
             prompt: String::new(),
             repo_path: String::new(),
+            multi_repo_enabled: false, // Multi-repo disabled by default in TUI
             backend: BackendType::Zellij, // Default to Zellij
             agent: AgentType::ClaudeCode,
             model: None, // Default to CLI default
