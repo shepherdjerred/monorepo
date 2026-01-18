@@ -283,6 +283,7 @@ impl ZellijBackend {
             initial_prompt,
             super::traits::CreateOptions {
                 agent: AgentType::ClaudeCode,
+                model: None, // Use default model
                 print_mode: false,
                 plan_mode: true, // Default to plan mode
                 session_proxy_port: None,
