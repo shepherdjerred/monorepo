@@ -526,15 +526,15 @@ export class Monorepo {
         );
       }
 
-      // Deploy mux-site to S3
+      // Deploy clauderon docs to S3
       if (s3AccessKeyId && s3SecretAccessKey) {
-        outputs.push("\n--- Mux Site Deployment ---");
+        outputs.push("\n--- Clauderon Docs Deployment ---");
         try {
           const deployOutput = await this.muxSiteDeploy(source, s3AccessKeyId, s3SecretAccessKey);
           outputs.push(deployOutput);
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : String(error);
-          outputs.push(`✗ Failed to deploy mux-site: ${errorMessage}`);
+          outputs.push(`✗ Failed to deploy clauderon docs: ${errorMessage}`);
         }
       }
 
@@ -798,7 +798,7 @@ export class Monorepo {
   }
 
   /**
-   * Build the mux marketing site
+   * Build the clauderon docs site
    */
   @func()
   muxSiteBuild(source: Directory): Container {
@@ -807,13 +807,13 @@ export class Monorepo {
       .from(`oven/bun:${BUN_VERSION}-debian`)
       .withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-cache"))
       .withWorkdir("/workspace")
-      .withDirectory("/workspace", source.directory("packages/mux-site"))
+      .withDirectory("/workspace", source.directory("packages/clauderon/docs"))
       .withExec(["bun", "install"])
       .withExec(["bun", "run", "build"]);
   }
 
   /**
-   * Get the built mux site as a directory
+   * Get the built clauderon docs as a directory
    */
   @func()
   async muxSiteOutput(source: Directory): Promise<Directory> {
@@ -822,7 +822,7 @@ export class Monorepo {
   }
 
   /**
-   * Deploy mux site to SeaweedFS S3
+   * Deploy clauderon docs to SeaweedFS S3
    */
   @func()
   async muxSiteDeploy(
@@ -834,7 +834,7 @@ export class Monorepo {
 
     // Build the site
     const siteDir = await this.muxSiteOutput(source);
-    outputs.push("✓ Built mux-site");
+    outputs.push("✓ Built clauderon docs");
 
     // Deploy to SeaweedFS S3
     const syncOutput = await syncToS3({
