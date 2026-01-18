@@ -28,6 +28,7 @@ fn create_test_session(name: &str, worktree_path: &std::path::Path) -> Session {
         dangerous_skip_checks: true,
         access_mode: AccessMode::default(),
         repositories: None,
+        model: None,
     });
     session.set_status(SessionStatus::Running);
     session.set_backend_id(format!("clauderon-{name}"));
