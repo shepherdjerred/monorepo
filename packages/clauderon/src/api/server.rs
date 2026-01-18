@@ -32,7 +32,8 @@ pub async fn run_daemon() -> anyhow::Result<()> {
 /// Returns an error if the database cannot be opened, the socket cannot be
 /// bound, or other I/O errors occur.
 pub async fn run_daemon_with_options(enable_proxy: bool) -> anyhow::Result<()> {
-    run_daemon_with_http(enable_proxy, Some(3030), false).await
+    let flags = crate::feature_flags::FeatureFlags::load(None)?;
+    run_daemon_with_http(enable_proxy, Some(3030), false, flags).await
 }
 
 /// Run the clauderon daemon with HTTP server option
@@ -51,6 +52,7 @@ pub async fn run_daemon_with_http(
     enable_proxy: bool,
     http_port: Option<u16>,
     dev_mode: bool,
+    feature_flags: crate::feature_flags::FeatureFlags,
 ) -> anyhow::Result<()> {
     // Write daemon info for auto-restart detection
     use crate::utils::binary_info::DaemonInfo;
@@ -187,6 +189,7 @@ pub async fn run_daemon_with_http(
             Arc::clone(&console_state),
             dev_mode,
             db_pool,
+            feature_flags.clone(),
         );
 
         tracing::info!(
@@ -288,6 +291,7 @@ async fn run_http_server(
     console_state: Arc<crate::api::console_state::ConsoleState>,
     dev_mode: bool,
     db_pool: sqlx::SqlitePool,
+    feature_flags: crate::feature_flags::FeatureFlags,
 ) -> anyhow::Result<()> {
     use crate::api::http_server::create_router;
     use crate::api::ws_console::ws_console_handler;
@@ -412,12 +416,16 @@ async fn run_http_server(
         None
     };
 
+    // Wrap feature flags in Arc for sharing
+    let feature_flags = Arc::new(feature_flags);
+
     // Create state with the provided event broadcaster
     let state = crate::api::http_server::AppState {
         session_manager: Arc::clone(&manager),
         event_broadcaster,
         auth_state: auth_state.clone(),
         console_state,
+        feature_flags: Arc::clone(&feature_flags),
     };
 
     // Create the HTTP router with all routes and state
