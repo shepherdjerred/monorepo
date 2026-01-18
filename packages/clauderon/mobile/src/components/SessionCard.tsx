@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from "react-native";
 import type { Session } from "../types/generated";
-import { BackendType, CheckStatus, ClaudeWorkingStatus, SessionStatus } from "../types/generated";
+import { BackendType, CheckStatus, ClaudeWorkingStatus, SessionStatus, WorkflowStage, ReviewDecision } from "../types/generated";
 import { useTheme } from "../contexts/ThemeContext";
 import { typography } from "../styles/typography";
 import { formatRelativeTime } from "../lib/utils";
@@ -15,6 +15,83 @@ type SessionCardProps = {
   onDelete?: () => void;
   onRefresh?: () => void;
 };
+
+// Compute workflow stage from session state (mirrors Rust logic)
+function getWorkflowStage(session: Session): WorkflowStage {
+  // Check if PR is merged first
+  if (session.pr_check_status === CheckStatus.Merged) {
+    return WorkflowStage.Merged;
+  }
+
+  // No PR yet - still planning
+  if (!session.pr_url) {
+    return WorkflowStage.Planning;
+  }
+
+  // Check for blockers
+  const ciBlocked = session.pr_check_status === CheckStatus.Failing;
+  const conflictBlocked = session.merge_conflict;
+  const changesRequested = session.pr_review_decision === ReviewDecision.ChangesRequested;
+
+  if (ciBlocked || conflictBlocked || changesRequested) {
+    return WorkflowStage.Blocked;
+  }
+
+  // Ready to merge
+  const checksPass =
+    session.pr_check_status === CheckStatus.Passing ||
+    session.pr_check_status === CheckStatus.Mergeable;
+  const approved = session.pr_review_decision === ReviewDecision.Approved;
+  const noConflicts = !session.merge_conflict;
+
+  if (checksPass && approved && noConflicts) {
+    return WorkflowStage.ReadyToMerge;
+  }
+
+  // Waiting for review
+  if (
+    session.pr_review_decision === ReviewDecision.ReviewRequired ||
+    !session.pr_review_decision
+  ) {
+    return WorkflowStage.Review;
+  }
+
+  return WorkflowStage.Implementation;
+}
+
+function getStageColor(stage: WorkflowStage): string {
+  switch (stage) {
+    case WorkflowStage.Planning:
+      return "#3b82f6"; // blue
+    case WorkflowStage.Implementation:
+      return "#06b6d4"; // cyan
+    case WorkflowStage.Review:
+      return "#eab308"; // yellow
+    case WorkflowStage.Blocked:
+      return "#ef4444"; // red
+    case WorkflowStage.ReadyToMerge:
+      return "#22c55e"; // green
+    case WorkflowStage.Merged:
+      return "#9ca3af"; // gray
+  }
+}
+
+function getStageLabel(stage: WorkflowStage): string {
+  switch (stage) {
+    case WorkflowStage.Planning:
+      return "Plan";
+    case WorkflowStage.Implementation:
+      return "Impl";
+    case WorkflowStage.Review:
+      return "Review";
+    case WorkflowStage.Blocked:
+      return "Blocked";
+    case WorkflowStage.ReadyToMerge:
+      return "Ready";
+    case WorkflowStage.Merged:
+      return "Merged";
+  }
+}
 
 export function SessionCard({
   session,
@@ -39,8 +116,17 @@ export function SessionCard({
         <Text style={[styles.name, { color: colors.textDark }]} numberOfLines={1}>
           {session.name}
         </Text>
-        <View style={[styles.statusBadge, { backgroundColor: statusColor, borderColor: colors.border }]}>
-          <Text style={[styles.statusText, { color: colors.textWhite }]}>{session.status}</Text>
+        <View style={styles.badgesContainer}>
+          {session.pr_url && (
+            <View style={[styles.stageBadge, { backgroundColor: getStageColor(getWorkflowStage(session)), borderColor: colors.border }]}>
+              <Text style={[styles.badgeText, { color: colors.textWhite }]}>
+                {getStageLabel(getWorkflowStage(session))}
+              </Text>
+            </View>
+          )}
+          <View style={[styles.statusBadge, { backgroundColor: statusColor, borderColor: colors.border }]}>
+            <Text style={[styles.statusText, { color: colors.textWhite }]}>{session.status}</Text>
+          </View>
         </View>
       </View>
 
@@ -320,10 +406,25 @@ const styles = StyleSheet.create({
     fontWeight: typography.fontWeight.bold,
     marginRight: 12,
   },
+  badgesContainer: {
+    flexDirection: "row",
+    gap: 6,
+    alignItems: "center",
+  },
   statusBadge: {
     paddingVertical: 4,
     paddingHorizontal: 8,
     borderWidth: 2,
+  },
+  stageBadge: {
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderWidth: 2,
+  },
+  badgeText: {
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.bold,
+    textTransform: "uppercase",
   },
   statusText: {
     fontSize: typography.fontSize.xs,
