@@ -221,6 +221,8 @@ pub struct DirEntry {
     pub name: String,
     /// Full path to the entry
     pub path: PathBuf,
+    /// Subdirectory component (for recent repos with subdirectories)
+    pub subdirectory: PathBuf,
     /// Whether this is the parent directory (..)
     pub is_parent: bool,
     /// Whether this is from recent repos list
@@ -300,6 +302,9 @@ impl DirectoryPickerState {
                     |n| n.to_string_lossy().to_string(),
                 );
 
+                // Store subdirectory component
+                let subdirectory = PathBuf::from(&dto.subdirectory);
+
                 // Include subdirectory in the display name if present
                 let name = if dto.subdirectory.is_empty() {
                     repo_name
@@ -310,6 +315,7 @@ impl DirectoryPickerState {
                 Some(DirEntry {
                     name,
                     path,
+                    subdirectory,
                     is_parent: false,
                     is_recent: true,
                 })
@@ -353,6 +359,7 @@ impl DirectoryPickerState {
             self.all_entries.push(DirEntry {
                 name: "..".to_string(),
                 path: parent.to_path_buf(),
+                subdirectory: PathBuf::new(),
                 is_parent: true,
                 is_recent: false,
             });
@@ -366,6 +373,7 @@ impl DirectoryPickerState {
                         self.all_entries.push(DirEntry {
                             name: name.to_string_lossy().to_string(),
                             path: dir,
+                            subdirectory: PathBuf::new(),
                             is_parent: false,
                             is_recent: false,
                         });
