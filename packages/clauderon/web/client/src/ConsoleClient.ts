@@ -187,12 +187,26 @@ export class ConsoleClient {
               return;
             }
 
+            // Log raw message for debugging
+            console.debug(
+              `[ConsoleClient] Processing output message for session ${this.sessionId}. ` +
+              `Data length: ${message.data.length}, ` +
+              `First 50 chars: ${message.data.substring(0, 50)}`
+            );
+
             // Decode base64 data with staged error handling for better debugging
             // Stage 1: Decode base64 to binary (atob)
             let bytes: Uint8Array;
             try {
               const binaryString = atob(message.data);
               bytes = Uint8Array.from(binaryString, (char) => char.charCodeAt(0));
+
+              // Log decoded bytes for debugging
+              console.debug(
+                `[ConsoleClient] Base64 decoded for session ${this.sessionId}. ` +
+                `Bytes length: ${bytes.length}, ` +
+                `First 32 bytes: ${Array.from(bytes.slice(0, 32)).map(b => '0x' + b.toString(16).padStart(2, '0')).join(' ')}`
+              );
             } catch (atobError) {
               if (this.shouldEmitError()) {
                 const errorMsg = atobError instanceof Error ? atobError.message : String(atobError);
@@ -235,7 +249,10 @@ export class ConsoleClient {
                 console.error(
                   `[ConsoleClient] UTF-8 decode error (stage: utf8) for session ${this.sessionId}: ${errorMsg}. ` +
                   `Bytes length: ${bytes.length}, ` +
-                  `Hex sample: ${hexSample}`
+                  `Hex sample: ${hexSample}, ` +
+                  `Decoder state: ${this.decoder ? 'initialized' : 'null'}, ` +
+                  `Original base64 length: ${message.data.length}, ` +
+                  `Original base64 sample: ${message.data.substring(0, 100)}`
                 );
                 this.emit(
                   "error",
