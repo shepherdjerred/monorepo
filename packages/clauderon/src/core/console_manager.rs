@@ -278,12 +278,11 @@ impl ConsoleManager {
         let session = match backend {
             BackendType::Docker => ConsoleSession::spawn_docker(backend_id).await?,
             BackendType::Zellij => ConsoleSession::spawn_zellij(backend_id).await?,
-            #[cfg(target_os = "macos")]
-            BackendType::Kubernetes | BackendType::AppleContainer => {
+            BackendType::Kubernetes => {
                 anyhow::bail!("Console manager not supported for backend: {backend:?}")
             }
-            #[cfg(not(target_os = "macos"))]
-            BackendType::Kubernetes => {
+            #[cfg(target_os = "macos")]
+            BackendType::AppleContainer => {
                 anyhow::bail!("Console manager not supported for backend: {backend:?}")
             }
         };
