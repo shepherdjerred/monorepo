@@ -12,9 +12,8 @@ import {
 } from "react-native";
 import type { RootStackScreenProps } from "../types/navigation";
 import { useSessionContext } from "../contexts/SessionContext";
-import { colors } from "../styles/colors";
+import { useTheme } from "../contexts/ThemeContext";
 import { typography } from "../styles/typography";
-import { commonStyles } from "../styles/common";
 
 type EditSessionScreenProps = RootStackScreenProps<"EditSession">;
 
@@ -24,6 +23,7 @@ export function EditSessionScreen({
 }: EditSessionScreenProps) {
   const { session } = route.params;
   const { client } = useSessionContext();
+  const { colors } = useTheme();
 
   const [title, setTitle] = useState(session.title || session.name);
   const [description, setDescription] = useState(session.description || "");
@@ -60,25 +60,26 @@ export function EditSessionScreen({
   }, [client, session.id]);
 
   const isLoading = isSaving || isRegenerating;
+  const themedStyles = getThemedStyles(colors);
 
   return (
-    <View style={commonStyles.container}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
         {/* Session Info */}
-        <View style={styles.infoSection}>
-          <Text style={styles.infoLabel}>Session Name</Text>
-          <Text style={styles.infoValue}>{session.name}</Text>
+        <View style={[styles.infoSection, { borderBottomColor: colors.borderLight }]}>
+          <Text style={[styles.infoLabel, { color: colors.textLight }]}>Session Name</Text>
+          <Text style={[styles.infoValue, { color: colors.textDark }]}>{session.name}</Text>
         </View>
 
         {/* Title */}
         <View style={styles.field}>
-          <Text style={styles.label}>Title</Text>
+          <Text style={[styles.label, { color: colors.textDark }]}>Title</Text>
           <TextInput
-            style={styles.input}
+            style={[themedStyles.input, { color: colors.text }]}
             value={title}
             onChangeText={setTitle}
             placeholder="Session title"
@@ -89,9 +90,9 @@ export function EditSessionScreen({
 
         {/* Description */}
         <View style={styles.field}>
-          <Text style={styles.label}>Description</Text>
+          <Text style={[styles.label, { color: colors.textDark }]}>Description</Text>
           <TextInput
-            style={[styles.input, styles.multilineInput]}
+            style={[themedStyles.input, styles.multilineInput, { color: colors.text }]}
             value={description}
             onChangeText={setDescription}
             placeholder="Session description"
@@ -106,7 +107,7 @@ export function EditSessionScreen({
         {/* Regenerate Button */}
         <TouchableOpacity
           style={[
-            styles.regenerateButton,
+            themedStyles.regenerateButton,
             isLoading && styles.buttonDisabled,
           ]}
           onPress={handleRegenerate}
@@ -115,7 +116,7 @@ export function EditSessionScreen({
           {isRegenerating ? (
             <ActivityIndicator size="small" color={colors.textDark} />
           ) : (
-            <Text style={styles.regenerateButtonText}>
+            <Text style={[styles.regenerateButtonText, { color: colors.textDark }]}>
               Regenerate with AI
             </Text>
           )}
@@ -123,18 +124,18 @@ export function EditSessionScreen({
       </ScrollView>
 
       {/* Action Buttons */}
-      <View style={styles.actionBar}>
+      <View style={themedStyles.actionBar}>
         <TouchableOpacity
-          style={[styles.actionButton, styles.cancelButton]}
+          style={[themedStyles.actionButton, { backgroundColor: colors.surface }]}
           onPress={() => navigation.goBack()}
           disabled={isLoading}
         >
-          <Text style={styles.cancelButtonText}>Cancel</Text>
+          <Text style={[styles.buttonText, { color: colors.textDark }]}>Cancel</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[
-            styles.actionButton,
-            styles.saveButton,
+            themedStyles.actionButton,
+            { backgroundColor: colors.primary },
             isLoading && styles.buttonDisabled,
           ]}
           onPress={handleSave}
@@ -143,12 +144,69 @@ export function EditSessionScreen({
           {isSaving ? (
             <ActivityIndicator color={colors.textWhite} size="small" />
           ) : (
-            <Text style={styles.saveButtonText}>Save</Text>
+            <Text style={[styles.buttonText, { color: colors.textWhite }]}>Save</Text>
           )}
         </TouchableOpacity>
       </View>
     </View>
   );
+}
+
+function getThemedStyles(colors: { surface: string; border: string }) {
+  return StyleSheet.create({
+    input: {
+      backgroundColor: colors.surface,
+      borderWidth: 2,
+      borderColor: colors.border,
+      padding: 12,
+      fontSize: typography.fontSize.base,
+    },
+    regenerateButton: {
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      borderWidth: 2,
+      borderColor: colors.border,
+      backgroundColor: colors.surface,
+      alignItems: "center" as const,
+      ...Platform.select({
+        ios: {
+          shadowColor: colors.border,
+          shadowOffset: { width: 2, height: 2 },
+          shadowOpacity: 1,
+          shadowRadius: 0,
+        },
+        android: {
+          elevation: 2,
+        },
+      }),
+    },
+    actionBar: {
+      flexDirection: "row" as const,
+      gap: 12,
+      padding: 16,
+      borderTopWidth: 3,
+      borderTopColor: colors.border,
+      backgroundColor: colors.surface,
+    },
+    actionButton: {
+      flex: 1,
+      paddingVertical: 14,
+      alignItems: "center" as const,
+      borderWidth: 3,
+      borderColor: colors.border,
+      ...Platform.select({
+        ios: {
+          shadowColor: colors.border,
+          shadowOffset: { width: 3, height: 3 },
+          shadowOpacity: 1,
+          shadowRadius: 0,
+        },
+        android: {
+          elevation: 3,
+        },
+      }),
+    },
+  });
 }
 
 const styles = StyleSheet.create({
@@ -162,19 +220,16 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     paddingBottom: 16,
     borderBottomWidth: 2,
-    borderBottomColor: colors.borderLight,
   },
   infoLabel: {
     fontSize: typography.fontSize.xs,
     fontWeight: typography.fontWeight.bold,
-    color: colors.textLight,
     textTransform: "uppercase",
     marginBottom: 4,
   },
   infoValue: {
     fontSize: typography.fontSize.base,
     fontFamily: typography.fontFamily.mono,
-    color: colors.textDark,
   },
   field: {
     marginBottom: 20,
@@ -182,89 +237,21 @@ const styles = StyleSheet.create({
   label: {
     fontSize: typography.fontSize.sm,
     fontWeight: typography.fontWeight.bold,
-    color: colors.textDark,
     textTransform: "uppercase",
     marginBottom: 8,
-  },
-  input: {
-    backgroundColor: colors.surface,
-    borderWidth: 2,
-    borderColor: colors.border,
-    padding: 12,
-    fontSize: typography.fontSize.base,
-    color: colors.text,
   },
   multilineInput: {
     minHeight: 100,
     textAlignVertical: "top",
   },
-  regenerateButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderWidth: 2,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-    alignItems: "center",
-    ...Platform.select({
-      ios: {
-        shadowColor: colors.border,
-        shadowOffset: { width: 2, height: 2 },
-        shadowOpacity: 1,
-        shadowRadius: 0,
-      },
-      android: {
-        elevation: 2,
-      },
-    }),
-  },
   regenerateButtonText: {
     fontSize: typography.fontSize.sm,
     fontWeight: typography.fontWeight.bold,
-    color: colors.textDark,
     textTransform: "uppercase",
   },
-  actionBar: {
-    flexDirection: "row",
-    gap: 12,
-    padding: 16,
-    borderTopWidth: 3,
-    borderTopColor: colors.border,
-    backgroundColor: colors.surface,
-  },
-  actionButton: {
-    flex: 1,
-    paddingVertical: 14,
-    alignItems: "center",
-    borderWidth: 3,
-    borderColor: colors.border,
-    ...Platform.select({
-      ios: {
-        shadowColor: colors.border,
-        shadowOffset: { width: 3, height: 3 },
-        shadowOpacity: 1,
-        shadowRadius: 0,
-      },
-      android: {
-        elevation: 3,
-      },
-    }),
-  },
-  cancelButton: {
-    backgroundColor: colors.surface,
-  },
-  saveButton: {
-    backgroundColor: colors.primary,
-  },
-  cancelButtonText: {
+  buttonText: {
     fontSize: typography.fontSize.base,
     fontWeight: typography.fontWeight.bold,
-    color: colors.textDark,
-    textTransform: "uppercase",
-  },
-  saveButtonText: {
-    fontSize: typography.fontSize.base,
-    fontWeight: typography.fontWeight.bold,
-    color: colors.textWhite,
     textTransform: "uppercase",
   },
   buttonDisabled: {

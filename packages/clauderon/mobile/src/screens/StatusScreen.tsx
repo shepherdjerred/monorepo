@@ -10,16 +10,16 @@ import {
 import type { RootStackScreenProps } from "../types/navigation";
 import type { SystemStatus } from "../types/generated";
 import { useSessionContext } from "../contexts/SessionContext";
+import { useTheme } from "../contexts/ThemeContext";
 import { CredentialRow } from "../components/CredentialRow";
 import { UsageProgressBar } from "../components/UsageProgressBar";
-import { colors } from "../styles/colors";
 import { typography } from "../styles/typography";
-import { commonStyles } from "../styles/common";
 
 type StatusScreenProps = RootStackScreenProps<"Status">;
 
 export function StatusScreen(_props: StatusScreenProps) {
   const { client } = useSessionContext();
+  const { colors } = useTheme();
   const [status, setStatus] = useState<SystemStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -57,24 +57,24 @@ export function StatusScreen(_props: StatusScreenProps) {
 
   if (isLoading) {
     return (
-      <View style={commonStyles.centered}>
+      <View style={[styles.centered, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={styles.loadingText}>Loading system status...</Text>
+        <Text style={[styles.loadingText, { color: colors.textLight }]}>Loading system status...</Text>
       </View>
     );
   }
 
   if (error) {
     return (
-      <View style={commonStyles.centered}>
-        <Text style={styles.errorText}>{error}</Text>
+      <View style={[styles.centered, { backgroundColor: colors.background }]}>
+        <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
       </View>
     );
   }
 
   return (
     <ScrollView
-      style={commonStyles.container}
+      style={{ flex: 1, backgroundColor: colors.background }}
       contentContainerStyle={styles.content}
       refreshControl={
         <RefreshControl
@@ -87,7 +87,7 @@ export function StatusScreen(_props: StatusScreenProps) {
     >
       {/* Credentials Section */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Credentials</Text>
+        <Text style={[styles.sectionTitle, { color: colors.textDark, borderBottomColor: colors.border }]}>Credentials</Text>
         {status?.credentials.map((credential) => (
           <CredentialRow
             key={credential.service_id}
@@ -100,23 +100,23 @@ export function StatusScreen(_props: StatusScreenProps) {
       {/* Usage Section */}
       {status?.claude_usage && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Claude Code Usage</Text>
+          <Text style={[styles.sectionTitle, { color: colors.textDark, borderBottomColor: colors.border }]}>Claude Code Usage</Text>
           {status.claude_usage.organization_name && (
-            <Text style={styles.orgName}>
+            <Text style={[styles.orgName, { color: colors.textLight }]}>
               {status.claude_usage.organization_name}
             </Text>
           )}
 
           {status.claude_usage.error ? (
-            <View style={styles.usageError}>
-              <Text style={styles.usageErrorTitle}>
+            <View style={[styles.usageError, { borderColor: colors.error }]}>
+              <Text style={[styles.usageErrorTitle, { color: colors.error }]}>
                 {status.claude_usage.error.error_type}
               </Text>
-              <Text style={styles.usageErrorMessage}>
+              <Text style={[styles.usageErrorMessage, { color: colors.text }]}>
                 {status.claude_usage.error.message}
               </Text>
               {status.claude_usage.error.suggestion && (
-                <Text style={styles.usageErrorSuggestion}>
+                <Text style={[styles.usageErrorSuggestion, { color: colors.textLight }]}>
                   {status.claude_usage.error.suggestion}
                 </Text>
               )}
@@ -140,7 +140,7 @@ export function StatusScreen(_props: StatusScreenProps) {
             </>
           )}
 
-          <Text style={styles.fetchedAt}>
+          <Text style={[styles.fetchedAt, { color: colors.textLight }]}>
             Updated: {new Date(status.claude_usage.fetched_at).toLocaleString()}
           </Text>
         </View>
@@ -148,25 +148,26 @@ export function StatusScreen(_props: StatusScreenProps) {
 
       {/* Proxies Section */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Proxies</Text>
+        <Text style={[styles.sectionTitle, { color: colors.textDark, borderBottomColor: colors.border }]}>Proxies</Text>
         {status?.proxies.length === 0 ? (
-          <Text style={styles.emptyText}>No active proxies</Text>
+          <Text style={[styles.emptyText, { color: colors.textLight }]}>No active proxies</Text>
         ) : (
           status?.proxies.map((proxy) => (
-            <View key={`${proxy.name}-${proxy.port}`} style={styles.proxyRow}>
+            <View key={`${proxy.name}-${proxy.port}`} style={[styles.proxyRow, { borderBottomColor: colors.borderLight }]}>
               <View style={styles.proxyInfo}>
-                <Text style={styles.proxyName}>{proxy.name}</Text>
-                <Text style={styles.proxyMeta}>
+                <Text style={[styles.proxyName, { color: colors.textDark }]}>{proxy.name}</Text>
+                <Text style={[styles.proxyMeta, { color: colors.textLight }]}>
                   Port {proxy.port} - {proxy.proxy_type}
                 </Text>
               </View>
               <View
                 style={[
                   styles.proxyStatus,
-                  proxy.active ? styles.proxyActive : styles.proxyInactive,
+                  { borderColor: colors.border },
+                  { backgroundColor: proxy.active ? colors.success : colors.surface },
                 ]}
               >
-                <Text style={styles.proxyStatusText}>
+                <Text style={[styles.proxyStatusText, { color: proxy.active ? colors.textWhite : colors.textDark }]}>
                   {proxy.active ? "Active" : "Inactive"}
                 </Text>
               </View>
@@ -174,7 +175,7 @@ export function StatusScreen(_props: StatusScreenProps) {
           ))
         )}
         {status && status.active_session_proxies > 0 && (
-          <Text style={styles.sessionProxyCount}>
+          <Text style={[styles.sessionProxyCount, { color: colors.textLight }]}>
             {status.active_session_proxies} session-specific{" "}
             {status.active_session_proxies === 1 ? "proxy" : "proxies"} active
           </Text>
@@ -185,6 +186,12 @@ export function StatusScreen(_props: StatusScreenProps) {
 }
 
 const styles = StyleSheet.create({
+  centered: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+  },
   content: {
     padding: 16,
   },
@@ -194,59 +201,48 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: typography.fontSize.lg,
     fontWeight: typography.fontWeight.bold,
-    color: colors.textDark,
     textTransform: "uppercase",
     marginBottom: 12,
     paddingBottom: 8,
     borderBottomWidth: 2,
-    borderBottomColor: colors.border,
   },
   loadingText: {
     marginTop: 12,
     fontSize: typography.fontSize.base,
-    color: colors.textLight,
   },
   errorText: {
     fontSize: typography.fontSize.base,
-    color: colors.error,
     textAlign: "center",
   },
   orgName: {
     fontSize: typography.fontSize.sm,
-    color: colors.textLight,
     marginBottom: 12,
   },
   usageError: {
     backgroundColor: "#fef2f2",
     borderWidth: 2,
-    borderColor: colors.error,
     padding: 12,
   },
   usageErrorTitle: {
     fontSize: typography.fontSize.sm,
     fontWeight: typography.fontWeight.bold,
-    color: colors.error,
     textTransform: "uppercase",
     marginBottom: 4,
   },
   usageErrorMessage: {
     fontSize: typography.fontSize.base,
-    color: colors.text,
     marginBottom: 8,
   },
   usageErrorSuggestion: {
     fontSize: typography.fontSize.sm,
-    color: colors.textLight,
     fontStyle: "italic",
   },
   fetchedAt: {
     fontSize: typography.fontSize.xs,
-    color: colors.textLight,
     marginTop: 12,
   },
   emptyText: {
     fontSize: typography.fontSize.base,
-    color: colors.textLight,
   },
   proxyRow: {
     flexDirection: "row",
@@ -254,7 +250,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: colors.borderLight,
   },
   proxyInfo: {
     flex: 1,
@@ -262,34 +257,23 @@ const styles = StyleSheet.create({
   proxyName: {
     fontSize: typography.fontSize.base,
     fontWeight: typography.fontWeight.medium,
-    color: colors.textDark,
   },
   proxyMeta: {
     fontSize: typography.fontSize.xs,
-    color: colors.textLight,
     marginTop: 2,
   },
   proxyStatus: {
     paddingVertical: 4,
     paddingHorizontal: 8,
     borderWidth: 2,
-    borderColor: colors.border,
-  },
-  proxyActive: {
-    backgroundColor: colors.success,
-  },
-  proxyInactive: {
-    backgroundColor: colors.surface,
   },
   proxyStatusText: {
     fontSize: typography.fontSize.xs,
     fontWeight: typography.fontWeight.bold,
-    color: colors.textDark,
     textTransform: "uppercase",
   },
   sessionProxyCount: {
     fontSize: typography.fontSize.sm,
-    color: colors.textLight,
     marginTop: 12,
   },
 });

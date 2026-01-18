@@ -10,14 +10,13 @@ import {
 } from "react-native";
 import type { MainTabScreenProps } from "../types/navigation";
 import { useSessionContext } from "../contexts/SessionContext";
+import { useTheme } from "../contexts/ThemeContext";
 import { SessionCard } from "../components/SessionCard";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { FilterTabs, type FilterStatus } from "../components/FilterTabs";
 import type { Session } from "../types/generated";
 import { SessionStatus } from "../types/generated";
-import { colors } from "../styles/colors";
 import { typography } from "../styles/typography";
-import { commonStyles } from "../styles/common";
 
 type SessionListScreenProps = MainTabScreenProps<"Sessions">;
 
@@ -31,6 +30,7 @@ export function SessionListScreen({ navigation }: SessionListScreenProps) {
     unarchiveSession,
     refreshSession,
   } = useSessionContext();
+  const { colors } = useTheme();
 
   const [filter, setFilter] = useState<FilterStatus>("all");
   const [deleteTarget, setDeleteTarget] = useState<Session | null>(null);
@@ -45,14 +45,14 @@ export function SessionListScreen({ navigation }: SessionListScreenProps) {
     navigation.setOptions({
       headerRight: () => (
         <TouchableOpacity
-          style={styles.headerButton}
+          style={[styles.headerButton, { borderColor: colors.textWhite }]}
           onPress={() => navigation.navigate("CreateSession")}
         >
-          <Text style={styles.headerButtonText}>+ New</Text>
+          <Text style={[styles.headerButtonText, { color: colors.textWhite }]}>+ New</Text>
         </TouchableOpacity>
       ),
     });
-  }, [navigation]);
+  }, [navigation, colors]);
 
   const handleEditSession = useCallback(
     (session: Session) => {
@@ -126,26 +126,26 @@ export function SessionListScreen({ navigation }: SessionListScreenProps) {
 
   if (isLoading && filteredSessions.length === 0 && sessions.size === 0) {
     return (
-      <View style={commonStyles.centered}>
+      <View style={[styles.centered, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={styles.loadingText}>Loading sessions...</Text>
+        <Text style={[styles.loadingText, { color: colors.textLight }]}>Loading sessions...</Text>
       </View>
     );
   }
 
   return (
-    <View style={commonStyles.container}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <FilterTabs value={filter} onChange={setFilter} />
 
       {filteredSessions.length === 0 ? (
-        <View style={commonStyles.emptyState}>
-          <Text style={commonStyles.emptyStateText}>
+        <View style={styles.emptyState}>
+          <Text style={[styles.emptyStateText, { color: colors.textLight }]}>
             {sessions.size === 0
               ? "No sessions found"
               : `No ${filter} sessions`}
           </Text>
           {sessions.size === 0 && (
-            <Text style={styles.emptySubtext}>
+            <Text style={[styles.emptySubtext, { color: colors.textLight }]}>
               Configure the daemon URL in Settings to get started
             </Text>
           )}
@@ -235,26 +235,38 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     marginRight: 8,
     borderWidth: 2,
-    borderColor: colors.textWhite,
   },
   headerButtonText: {
     fontSize: typography.fontSize.sm,
     fontWeight: typography.fontWeight.bold,
-    color: colors.textWhite,
     textTransform: "uppercase",
   },
   listContent: {
     paddingVertical: 16,
   },
+  centered: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+  },
   loadingText: {
     marginTop: 12,
-    fontSize: 16,
-    color: colors.textLight,
+    fontSize: typography.fontSize.base,
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+  },
+  emptyStateText: {
+    fontSize: typography.fontSize.lg,
+    textAlign: "center",
   },
   emptySubtext: {
     marginTop: 8,
-    fontSize: 14,
-    color: colors.textLight,
+    fontSize: typography.fontSize.sm,
     textAlign: "center",
   },
 });
