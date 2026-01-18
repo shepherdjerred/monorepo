@@ -546,6 +546,14 @@ pub enum AgentType {
     Gemini,
 }
 
+impl AgentType {
+    /// Returns true if this agent is experimental (Codex or Gemini)
+    #[must_use]
+    pub const fn is_experimental(self) -> bool {
+        matches!(self, Self::Codex | Self::Gemini)
+    }
+}
+
 /// Model selection for Claude Code agent
 #[typeshare]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -704,6 +712,50 @@ impl SessionModel {
                 | (Self::Gemini(_), AgentType::Gemini)
         )
     }
+
+    /// Returns true if this model is experimental (Codex or Gemini)
+    #[must_use]
+    pub const fn is_experimental(&self) -> bool {
+        matches!(self, Self::Codex(_) | Self::Gemini(_))
+    }
+}
+
+/// Validate that agent/model is allowed based on feature flags
+///
+/// # Errors
+///
+/// Returns an error if the agent or model is experimental and the flag is disabled
+pub fn validate_experimental_agent(
+    agent: AgentType,
+    model: Option<&SessionModel>,
+    enable_experimental: bool,
+) -> anyhow::Result<()> {
+    if agent.is_experimental() && !enable_experimental {
+        anyhow::bail!(
+            "Agent {:?} is experimental and requires the enable_experimental_models feature flag.\n\
+            \n\
+            Enable via:\n\
+            - CLI: clauderon daemon --enable-experimental-models\n\
+            - Environment: CLAUDERON_FEATURE_ENABLE_EXPERIMENTAL_MODELS=true\n\
+            - Config file (~/.clauderon/config.toml):\n\
+              [feature_flags]\n\
+              enable_experimental_models = true\n\
+            \n\
+            Restart the daemon after changing configuration.",
+            agent
+        );
+    }
+
+    if let Some(m) = model {
+        if m.is_experimental() && !enable_experimental {
+            anyhow::bail!(
+                "Model {:?} is experimental and requires the enable_experimental_models feature flag",
+                m
+            );
+        }
+    }
+
+    Ok(())
 }
 
 /// PR check status
@@ -1874,5 +1926,64 @@ mod tests {
             &worktree,
             &session_id
         ));
+    }
+
+    // ========== Experimental agent/model tests ==========
+
+    #[test]
+    fn test_agent_is_experimental() {
+        assert!(!AgentType::ClaudeCode.is_experimental());
+        assert!(AgentType::Codex.is_experimental());
+        assert!(AgentType::Gemini.is_experimental());
+    }
+
+    #[test]
+    fn test_model_is_experimental() {
+        assert!(!SessionModel::Claude(ClaudeModel::Sonnet4_5).is_experimental());
+        assert!(SessionModel::Codex(CodexModel::Gpt5_2Codex).is_experimental());
+        assert!(SessionModel::Gemini(GeminiModel::Gemini3Pro).is_experimental());
+    }
+
+    #[test]
+    fn test_validate_experimental_blocks_codex() {
+        let result = validate_experimental_agent(AgentType::Codex, None, false);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("experimental"));
+    }
+
+    #[test]
+    fn test_validate_experimental_blocks_gemini() {
+        let result = validate_experimental_agent(AgentType::Gemini, None, false);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("experimental"));
+    }
+
+    #[test]
+    fn test_validate_experimental_allows_with_flag() {
+        let result = validate_experimental_agent(AgentType::Codex, None, true);
+        assert!(result.is_ok());
+
+        let result = validate_experimental_agent(AgentType::Gemini, None, true);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_validate_experimental_always_allows_claude() {
+        let result = validate_experimental_agent(AgentType::ClaudeCode, None, false);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_validate_experimental_blocks_codex_model() {
+        let model = SessionModel::Codex(CodexModel::Gpt5_2Codex);
+        let result = validate_experimental_agent(AgentType::Codex, Some(&model), false);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_validate_experimental_allows_claude_model() {
+        let model = SessionModel::Claude(ClaudeModel::Sonnet4_5);
+        let result = validate_experimental_agent(AgentType::ClaudeCode, Some(&model), false);
+        assert!(result.is_ok());
     }
 }
