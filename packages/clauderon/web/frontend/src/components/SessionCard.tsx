@@ -333,21 +333,6 @@ function getCheckStatusIcon(status: CheckStatus) {
   }
 }
 
-function getClaudeStatusColor(status: ClaudeWorkingStatus): string {
-  switch (status) {
-    case ClaudeWorkingStatus.Working:
-      return "text-blue-500";
-    case ClaudeWorkingStatus.WaitingApproval:
-      return "text-purple-500";
-    case ClaudeWorkingStatus.WaitingInput:
-      return "text-yellow-500";
-    case ClaudeWorkingStatus.Idle:
-      return "text-gray-500";
-    default:
-      return "text-muted-foreground";
-  }
-}
-
 function getClaudeStatusIcon(status: ClaudeWorkingStatus) {
   switch (status) {
     case ClaudeWorkingStatus.Working:
