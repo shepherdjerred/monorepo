@@ -97,19 +97,15 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
   useEffect(() => {
     if (multiRepoEnabled) {
       // When enabled: Ensure at least 2 repos (add empty second repo if needed)
-      if (repositories.length === 1) {
-        setRepositories([
-          repositories[0]!,
-          { id: String(Date.now()), repo_path: '', mount_name: '', is_primary: false }
-        ]);
-      }
+      setRepositories(prev => prev.length === 1
+        ? [...prev, { id: String(Date.now()), repo_path: '', mount_name: '', is_primary: false }]
+        : prev
+      );
     } else {
       // When disabled: Keep only first repo, discard others immediately
-      if (repositories.length > 1) {
-        setRepositories([repositories[0]!]);
-      }
+      setRepositories(prev => prev.length > 1 ? [prev[0]!] : prev);
     }
-  }, [multiRepoEnabled, repositories]);
+  }, [multiRepoEnabled]);
 
   // Compute available models based on selected agent
   const availableModels = useMemo(() => {
