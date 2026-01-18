@@ -98,7 +98,7 @@ async fn create_test_manager_with_proxy() -> (
         to_exec_backend(Arc::clone(&zellij)),
         to_exec_backend(Arc::clone(&docker)),
         to_exec_backend(Arc::clone(&kubernetes)),
-            None,
+        None,
     )
     .await
     .expect("Failed to create manager");
@@ -145,7 +145,7 @@ async fn test_create_session_with_read_only_mode() {
     let (session, _warnings) = manager
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
-            None,
+        None,
             "Test prompt".to_string(),
             BackendType::Docker,
             AgentType::ClaudeCode,
@@ -180,7 +180,7 @@ async fn test_create_session_with_read_write_mode() {
     let (session, _warnings) = manager
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
-            None,
+        None,
             "Test prompt".to_string(),
             BackendType::Docker,
             AgentType::ClaudeCode,
@@ -211,7 +211,7 @@ async fn test_zellij_backend_ignores_proxy_port() {
     let (session, _warnings) = manager
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
-            None,
+        None,
             "Test prompt".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
@@ -244,7 +244,7 @@ async fn test_update_access_mode_by_name() {
     let (session, _warnings) = manager
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
-            None,
+        None,
             "Test prompt".to_string(),
             BackendType::Docker,
             AgentType::ClaudeCode,
@@ -287,7 +287,7 @@ async fn test_update_access_mode_by_id() {
     let (session, _warnings) = manager
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
-            None,
+        None,
             "Test prompt".to_string(),
             BackendType::Docker,
             AgentType::ClaudeCode,
@@ -436,7 +436,7 @@ async fn test_access_mode_persists_across_restarts() {
             to_exec_backend(zellij),
             to_exec_backend(docker),
             to_exec_backend(kubernetes),
-            None,
+        None,
         )
         .await
         .expect("Failed to create manager");
@@ -489,7 +489,7 @@ async fn test_access_mode_persists_across_restarts() {
             to_exec_backend(zellij),
             to_exec_backend(docker),
             to_exec_backend(kubernetes),
-            None,
+        None,
         )
         .await
         .expect("Failed to create manager");
@@ -579,7 +579,7 @@ async fn test_delete_session_cleans_up_proxy() {
     let (session, _warnings) = manager
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
-            None,
+        None,
             "Test prompt".to_string(),
             BackendType::Docker,
             AgentType::ClaudeCode,
