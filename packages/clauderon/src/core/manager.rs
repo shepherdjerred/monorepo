@@ -206,6 +206,7 @@ impl SessionManager {
             Arc::new(kubernetes_backend),
             #[cfg(target_os = "macos")]
             Arc::new(AppleContainerBackend::new()),
+            Arc::new(SpritesBackend::new()),
         )
         .await
     }

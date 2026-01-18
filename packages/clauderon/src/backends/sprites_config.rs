@@ -505,7 +505,9 @@ mod tests {
     #[test]
     fn test_get_token_from_env() {
         // Set environment variable
-        std::env::set_var("SPRITES_TOKEN", "env_token");
+        unsafe {
+            std::env::set_var("SPRITES_TOKEN", "env_token");
+        }
 
         let config = SpritesConfig {
             token: Some("file_token".to_string()),
@@ -517,13 +519,17 @@ mod tests {
         assert_eq!(token, "env_token");
 
         // Clean up
-        std::env::remove_var("SPRITES_TOKEN");
+        unsafe {
+            std::env::remove_var("SPRITES_TOKEN");
+        }
     }
 
     #[test]
     fn test_get_token_from_config() {
         // Ensure env var is not set
-        std::env::remove_var("SPRITES_TOKEN");
+        unsafe {
+            std::env::remove_var("SPRITES_TOKEN");
+        }
 
         let config = SpritesConfig {
             token: Some("file_token".to_string()),
@@ -537,7 +543,9 @@ mod tests {
     #[test]
     fn test_get_token_fails_when_missing() {
         // Ensure env var is not set
-        std::env::remove_var("SPRITES_TOKEN");
+        unsafe {
+            std::env::remove_var("SPRITES_TOKEN");
+        }
 
         let config = SpritesConfig::default();
         assert!(config.get_token().is_err());
