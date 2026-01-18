@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import type { AuthStatus, AuthUser } from "@clauderon/shared";
 import { useClauderonClient } from "../hooks/useClauderonClient";
 
-interface AuthContextValue {
+type AuthContextValue = {
   authStatus: AuthStatus | null;
   currentUser: AuthUser | null;
   isLoading: boolean;

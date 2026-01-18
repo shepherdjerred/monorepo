@@ -265,6 +265,46 @@ impl SessionManager {
         self.store.get_recent_repos().await
     }
 
+    /// Generate a mount name from a repository path
+    ///
+    /// Extracts the repository name from the path and converts it to a valid mount name.
+    /// Example: `/path/to/my-repo` → `my-repo`
+    fn generate_mount_name(repo_path: &std::path::Path) -> String {
+        repo_path.file_name().and_then(|n| n.to_str()).map_or_else(
+            || "repo".to_string(),
+            |s| {
+                // Convert to lowercase and replace underscores with hyphens
+                s.to_lowercase().replace('_', "-")
+            },
+        )
+    }
+
+    /// Ensure mount names are unique by appending -2, -3, etc. for duplicates
+    fn deduplicate_mount_names(mount_names: &mut [String]) {
+        use std::collections::HashMap;
+        let mut counts: HashMap<String, usize> = HashMap::new();
+        let mut seen: HashMap<String, usize> = HashMap::new();
+
+        // Count occurrences of each base name
+        for name in mount_names.iter() {
+            *counts.entry(name.clone()).or_insert(0) += 1;
+        }
+
+        // Rename duplicates
+        for mount_name in mount_names.iter_mut() {
+            let base_name = mount_name.clone();
+            let count = counts.get(&base_name).copied().unwrap_or(1);
+
+            if count > 1 {
+                let occurrence = seen.entry(base_name.clone()).or_insert(0);
+                *occurrence += 1;
+                if *occurrence > 1 {
+                    *mount_name = format!("{}-{}", base_name, occurrence);
+                }
+            }
+        }
+    }
+
     /// Start session creation asynchronously (returns immediately)
     ///
     /// Creates a session in "Creating" status and spawns a background task to complete
@@ -284,6 +324,7 @@ impl SessionManager {
     pub async fn start_session_creation(
         self: &Arc<Self>,
         repo_path: String,
+        repositories: Option<Vec<crate::api::protocol::CreateRepositoryInput>>,
         initial_prompt: String,
         backend: BackendType,
         agent: super::session::AgentType,
@@ -324,26 +365,99 @@ impl SessionManager {
             );
         }
 
-        // Validate and resolve git repository path
-        let repo_path_buf = std::path::PathBuf::from(&repo_path);
-        let git_info = crate::utils::git::find_git_root(&repo_path_buf)
-            .with_context(|| format!("Failed to find git repository for path: {}", repo_path))?;
+        // Process repositories (multi-repo mode or legacy single-repo mode)
+        let repo_inputs = if let Some(repos) = repositories {
+            // Multi-repo mode: validate and process
+            if repos.is_empty() {
+                anyhow::bail!("repositories array cannot be empty");
+            }
+            if repos.len() > 5 {
+                anyhow::bail!("Maximum 5 repositories per session (got {})", repos.len());
+            }
 
-        // Use git root for worktree creation
-        let repo_path = git_info.git_root.to_string_lossy().to_string();
-        let subdirectory = git_info.subdirectory;
+            // Validate exactly one primary
+            let primary_count = repos.iter().filter(|r| r.is_primary).count();
+            if primary_count != 1 {
+                anyhow::bail!(
+                    "Exactly one repository must be marked as primary (got {})",
+                    primary_count
+                );
+            }
 
-        // Validate subdirectory path for security
-        if subdirectory.is_absolute()
-            || subdirectory
-                .components()
-                .any(|c| matches!(c, std::path::Component::ParentDir))
-        {
-            anyhow::bail!(
-                "Invalid subdirectory path: must be relative without '..' components. Got: {}",
-                subdirectory.display()
-            );
+            repos
+        } else {
+            // Legacy mode: convert single repo_path to repository input
+            vec![crate::api::protocol::CreateRepositoryInput {
+                repo_path: repo_path.clone(),
+                mount_name: Some("primary".to_string()),
+                is_primary: true,
+            }]
+        };
+
+        // Validate and resolve git repository paths for all repos
+        struct ResolvedRepo {
+            git_root: PathBuf,
+            subdirectory: PathBuf,
+            mount_name: String,
+            is_primary: bool,
         }
+
+        let mut resolved_repos = Vec::new();
+        for repo_input in &repo_inputs {
+            let repo_path_buf = PathBuf::from(&repo_input.repo_path);
+            let git_info = crate::utils::git::find_git_root(&repo_path_buf).with_context(|| {
+                format!(
+                    "Failed to find git repository for path: {}",
+                    repo_input.repo_path
+                )
+            })?;
+
+            // Validate subdirectory path for security
+            if git_info.subdirectory.is_absolute()
+                || git_info
+                    .subdirectory
+                    .components()
+                    .any(|c| matches!(c, std::path::Component::ParentDir))
+            {
+                anyhow::bail!(
+                    "Invalid subdirectory path: must be relative without '..' components. Got: {}",
+                    git_info.subdirectory.display()
+                );
+            }
+
+            // Generate or use provided mount name
+            let mount_name = if let Some(ref name) = repo_input.mount_name {
+                name.clone()
+            } else {
+                Self::generate_mount_name(&git_info.git_root)
+            };
+
+            resolved_repos.push(ResolvedRepo {
+                git_root: git_info.git_root,
+                subdirectory: git_info.subdirectory,
+                mount_name,
+                is_primary: repo_input.is_primary,
+            });
+        }
+
+        // Deduplicate mount names
+        let mut mount_names: Vec<String> = resolved_repos
+            .iter()
+            .map(|r| r.mount_name.clone())
+            .collect();
+        Self::deduplicate_mount_names(&mut mount_names);
+        for (i, repo) in resolved_repos.iter_mut().enumerate() {
+            repo.mount_name.clone_from(&mount_names[i]);
+        }
+
+        // Get primary repository for session metadata
+        let primary_repo = resolved_repos
+            .iter()
+            .find(|r| r.is_primary)
+            .ok_or_else(|| anyhow::anyhow!("No primary repository found"))?;
+
+        let repo_path = primary_repo.git_root.to_string_lossy().to_string();
+        let subdirectory = primary_repo.subdirectory.clone();
 
         // Generate metadata using AI (with fallback to defaults)
         let metadata = crate::utils::generate_session_name_ai(&repo_path, &initial_prompt).await;
@@ -376,7 +490,8 @@ impl SessionManager {
             repo_path: repo_path.clone().into(),
             worktree_path: worktree_path.clone(),
             subdirectory: subdirectory.clone(),
-            branch_name: metadata.branch_name,
+            branch_name: full_name.clone(), // Use full name WITH suffix to match actual git branch
+            repositories: None,             // Will be set after worktree creation
             initial_prompt: initial_prompt.clone(),
             backend,
             agent,
@@ -441,6 +556,19 @@ impl SessionManager {
             let _ = broadcaster.send(WsEvent::SessionCreated(session.clone()));
         }
 
+        // Convert resolved repos to simpler structure for passing to async task
+        let repos_for_task: Vec<(PathBuf, PathBuf, String, bool)> = resolved_repos
+            .iter()
+            .map(|r| {
+                (
+                    r.git_root.clone(),
+                    r.subdirectory.clone(),
+                    r.mount_name.clone(),
+                    r.is_primary,
+                )
+            })
+            .collect();
+
         // Spawn background task for actual creation
         let manager_clone = Arc::clone(self);
         tokio::spawn(async move {
@@ -451,6 +579,7 @@ impl SessionManager {
                     full_name,
                     worktree_path,
                     subdirectory,
+                    repos_for_task,
                     initial_prompt,
                     backend,
                     agent,
@@ -480,6 +609,7 @@ impl SessionManager {
         full_name: String,
         worktree_path: PathBuf,
         subdirectory: PathBuf,
+        repos_for_task: Vec<(PathBuf, PathBuf, String, bool)>,
         initial_prompt: String,
         backend: BackendType,
         agent: super::session::AgentType,
@@ -537,14 +667,51 @@ impl SessionManager {
 
         // Execute creation steps
         let result: anyhow::Result<()> = async {
-            update_progress(1, "Creating git worktree".to_string()).await;
-            let repo_path_buf = PathBuf::from(&repo_path);
-            let _worktree_warning = self
-                .git
-                .create_worktree(&repo_path_buf, &worktree_path, &full_name)
-                .await?;
+            update_progress(1, "Creating git worktrees".to_string()).await;
 
-            // Create history directory
+            // Create worktrees for all repositories in parallel
+            let worktree_futures: Vec<_> = repos_for_task
+                .iter()
+                .map(|(git_root, _subdirectory, mount_name, _is_primary)| {
+                    let worktree_path = crate::utils::paths::worktree_path(&format!(
+                        "{}-{}",
+                        full_name, mount_name
+                    ));
+                    let git_root = git_root.clone();
+                    let branch_name = full_name.clone();
+
+                    async move {
+                        tracing::info!(
+                            session_id = %session_id,
+                            mount_name = %mount_name,
+                            git_root = %git_root.display(),
+                            worktree_path = %worktree_path.display(),
+                            "Creating worktree for repository"
+                        );
+
+                        let warning = self
+                            .git
+                            .create_worktree(&git_root, &worktree_path, &branch_name)
+                            .await?;
+
+                        Ok::<(PathBuf, Option<String>), anyhow::Error>((worktree_path, warning))
+                    }
+                })
+                .collect();
+
+            let worktree_results = futures::future::join_all(worktree_futures).await;
+
+            // Check for any failures and collect worktree paths
+            let mut created_worktrees = Vec::new();
+            for (idx, result) in worktree_results.into_iter().enumerate() {
+                let (worktree_path, _warning) = result.with_context(|| {
+                    let (_, _, mount_name, _) = &repos_for_task[idx];
+                    format!("Failed to create worktree for repository '{}'", mount_name)
+                })?;
+                created_worktrees.push(worktree_path);
+            }
+
+            // Create history directory (for primary repo worktree)
             let history_path =
                 super::session::get_history_file_path(&worktree_path, &session_id, &subdirectory);
             if let Some(parent_dir) = history_path.parent() {
@@ -557,6 +724,36 @@ impl SessionManager {
                     );
                 }
             }
+
+            // Build SessionRepository entries from created worktrees
+            let session_repos: Vec<super::session::SessionRepository> = repos_for_task
+                .iter()
+                .zip(created_worktrees.iter())
+                .map(
+                    |((git_root, subdirectory, mount_name, is_primary), worktree_path)| {
+                        super::session::SessionRepository {
+                            repo_path: git_root.clone(),
+                            subdirectory: subdirectory.clone(),
+                            worktree_path: worktree_path.clone(),
+                            branch_name: full_name.clone(),
+                            mount_name: mount_name.clone(),
+                            is_primary: *is_primary,
+                        }
+                    },
+                )
+                .collect();
+
+            // Save repositories to database (junction table)
+            self.store
+                .save_session_repositories(session_id, &session_repos)
+                .await
+                .context("Failed to save session repositories to database")?;
+
+            tracing::info!(
+                session_id = %session_id,
+                repo_count = session_repos.len(),
+                "Saved repository configuration to database"
+            );
 
             update_progress(2, "Setting up session proxy".to_string()).await;
             // Create per-session proxy for container backends (Docker and Apple Container)
@@ -675,6 +872,7 @@ impl SessionManager {
                 http_port: self.http_port,
                 container_image: container_image_config,
                 container_resources: container_resource_limits,
+                repositories: session_repos.clone(),
             };
             let backend_id = match backend {
                 BackendType::Zellij => {
@@ -771,14 +969,20 @@ impl SessionManager {
             );
             self.store.record_event(&event).await?;
 
-            // Track this repo in recent repos
-            let repo_path_buf = PathBuf::from(&repo_path);
-            if let Err(e) = self
-                .store
-                .add_recent_repo(repo_path_buf, subdirectory.clone())
-                .await
-            {
-                tracing::warn!("Failed to add repo to recent list: {e}");
+            // Track all repos in recent repos
+            for repo in &session_repos {
+                if let Err(e) = self
+                    .store
+                    .add_recent_repo(repo.repo_path.clone(), repo.subdirectory.clone())
+                    .await
+                {
+                    tracing::warn!(
+                        repo_path = %repo.repo_path.display(),
+                        mount_name = %repo.mount_name,
+                        error = %e,
+                        "Failed to add repo to recent list"
+                    );
+                }
             }
 
             Ok(())
@@ -897,6 +1101,7 @@ impl SessionManager {
     pub async fn create_session(
         &self,
         repo_path: String,
+        repositories: Option<Vec<crate::api::protocol::CreateRepositoryInput>>,
         initial_prompt: String,
         backend: BackendType,
         agent: super::session::AgentType,
@@ -910,6 +1115,15 @@ impl SessionManager {
         cpu_limit: Option<String>,
         memory_limit: Option<String>,
     ) -> anyhow::Result<(Session, Option<Vec<String>>)> {
+        // Multi-repository sessions are not supported in synchronous mode (used for print mode)
+        // Use start_session_creation() for multi-repo support
+        if repositories.is_some() && !repositories.as_ref().unwrap().is_empty() {
+            anyhow::bail!(
+                "Multi-repository sessions are not supported in synchronous/print mode. \
+                Use asynchronous session creation for multi-repo support."
+            );
+        }
+
         // Validate and resolve git repository path
         let repo_path_buf = std::path::PathBuf::from(&repo_path);
         let git_info = crate::utils::git::find_git_root(&repo_path_buf)
@@ -969,7 +1183,8 @@ impl SessionManager {
             repo_path: repo_path.clone().into(),
             worktree_path: worktree_path.clone(),
             subdirectory: subdirectory.clone(),
-            branch_name: metadata.branch_name, // Use AI branch_name (no suffix)
+            branch_name: full_name.clone(), // Use full name WITH suffix to match actual git branch
+            repositories: None,             // Single-repo mode (no multi-repo support)
             initial_prompt: initial_prompt.clone(),
             backend,
             agent,
@@ -1117,6 +1332,7 @@ impl SessionManager {
             http_port: self.http_port,
             container_image: container_image_config,
             container_resources: container_resource_limits,
+            repositories: vec![], // Legacy single-repo mode (synchronous creation)
         };
         let backend_id = match backend {
             BackendType::Zellij => {
@@ -1629,11 +1845,36 @@ impl SessionManager {
             }
         }
 
-        // Delete git worktree
-        let _ = self
-            .git
-            .delete_worktree(&session.repo_path, &session.worktree_path)
-            .await;
+        // Delete git worktrees for all repositories
+        if let Some(ref repositories) = session.repositories {
+            // Multi-repo session: delete all worktrees
+            for repo in repositories {
+                tracing::info!(
+                    session_id = %session.id,
+                    mount_name = %repo.mount_name,
+                    worktree_path = %repo.worktree_path.display(),
+                    "Deleting worktree for repository"
+                );
+                if let Err(e) = self
+                    .git
+                    .delete_worktree(&repo.repo_path, &repo.worktree_path)
+                    .await
+                {
+                    tracing::warn!(
+                        session_id = %session.id,
+                        mount_name = %repo.mount_name,
+                        error = %e,
+                        "Failed to delete worktree"
+                    );
+                }
+            }
+        } else {
+            // Legacy single-repo session: delete the single worktree
+            let _ = self
+                .git
+                .delete_worktree(&session.repo_path, &session.worktree_path)
+                .await;
+        }
 
         // Record deletion event
         let event = Event::new(session.id, EventType::SessionDeleted { reason: None });
@@ -1760,6 +2001,7 @@ impl SessionManager {
                 http_port: self.http_port,
                 container_image: None,
                 container_resources: None,
+                repositories: vec![], // Legacy single-repo mode (refresh operation)
             };
 
             let new_backend_id = self
@@ -2095,6 +2337,7 @@ impl SessionManager {
             http_port: self.http_port,
             container_image: None,
             container_resources: None,
+            repositories: vec![], // Legacy single-repo mode (recreation)
         };
 
         // Recreate container

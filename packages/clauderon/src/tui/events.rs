@@ -379,6 +379,7 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                     // Capture data for the background task
                     let request = CreateSessionRequest {
                         repo_path: app.create_dialog.repo_path.clone(),
+                        repositories: None, // TUI doesn't support multi-repo yet
                         initial_prompt: app.create_dialog.prompt.clone(),
                         backend: app.create_dialog.backend,
                         agent: app.create_dialog.agent,
@@ -549,10 +550,18 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                 app.create_dialog.ensure_cursor_visible();
             }
             CreateDialogFocus::Backend => {
-                app.create_dialog.toggle_backend();
+                if key.code == KeyCode::Left {
+                    app.create_dialog.toggle_backend_reverse();
+                } else {
+                    app.create_dialog.toggle_backend();
+                }
             }
             CreateDialogFocus::Agent => {
-                app.create_dialog.toggle_agent();
+                if key.code == KeyCode::Left {
+                    app.create_dialog.toggle_agent_reverse();
+                } else {
+                    app.create_dialog.toggle_agent();
+                }
             }
             CreateDialogFocus::AccessMode => {
                 app.create_dialog.toggle_access_mode();

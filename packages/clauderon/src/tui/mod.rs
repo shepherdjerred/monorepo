@@ -179,6 +179,7 @@ async fn run_main_loop(
                             // TODO: Implement Kubernetes PTY attach
                             app.status_message = Some("Kubernetes attach not yet implemented".to_string());
                         }
+                        #[cfg(target_os = "macos")]
                         Some(BackendType::AppleContainer) => {
                             // TODO: Implement Apple Container PTY attach
                             app.status_message = Some("Apple Container attach not yet implemented".to_string());
