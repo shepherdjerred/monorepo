@@ -8,6 +8,11 @@ pub mod mock;
 pub mod traits;
 pub mod zellij;
 
+#[cfg(target_os = "macos")]
+pub mod apple_container;
+#[cfg(target_os = "macos")]
+pub mod apple_container_config;
+
 pub use container_config::{
     DockerConfig, ImageConfig, ImagePullPolicy, RegistryAuth, ResourceLimits,
 };
@@ -18,3 +23,8 @@ pub use kubernetes_config::{KubernetesConfig, KubernetesProxyConfig, ProxyMode};
 pub use mock::{MockExecutionBackend, MockGitBackend};
 pub use traits::{CreateOptions, ExecutionBackend, GitOperations};
 pub use zellij::ZellijBackend;
+
+#[cfg(target_os = "macos")]
+pub use apple_container::{AppleContainerBackend, AppleContainerProxyConfig};
+#[cfg(target_os = "macos")]
+pub use apple_container_config::AppleContainerConfig;

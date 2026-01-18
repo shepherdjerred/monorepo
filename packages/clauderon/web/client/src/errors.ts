@@ -51,3 +51,23 @@ export class WebSocketError extends ClauderonError {
     this.name = "WebSocketError";
   }
 }
+
+/**
+ * Error thrown when decoding terminal data fails
+ * Includes rich context for debugging
+ */
+export class DecodeError extends WebSocketError {
+  constructor(
+    message: string,
+    public readonly stage: 'validation' | 'base64' | 'utf8',
+    public readonly context: {
+      sessionId: string | null;
+      dataLength: number;
+      dataSample: string;
+    },
+    cause?: unknown
+  ) {
+    super(message, cause);
+    this.name = "DecodeError";
+  }
+}
