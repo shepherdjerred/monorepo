@@ -1141,4 +1141,251 @@ mod tests {
         // Legacy sessions return None (no --model flag passed to CLI)
         assert_eq!(session.model_cli_flag(), None);
     }
+
+    #[test]
+    fn test_workflow_stage_planning_no_pr() {
+        let session = Session {
+            pr_url: None,
+            pr_check_status: None,
+            pr_review_decision: None,
+            merge_conflict: false,
+            ..create_test_session()
+        };
+
+        assert_eq!(session.workflow_stage(), WorkflowStage::Planning);
+    }
+
+    #[test]
+    fn test_workflow_stage_merged() {
+        let session = Session {
+            pr_url: Some("https://github.com/test/test/pull/1".to_string()),
+            pr_check_status: Some(CheckStatus::Merged),
+            pr_review_decision: None,
+            ..create_test_session()
+        };
+
+        assert_eq!(session.workflow_stage(), WorkflowStage::Merged);
+    }
+
+    #[test]
+    fn test_workflow_stage_blocked_by_ci_failure() {
+        let session = Session {
+            pr_url: Some("https://github.com/test/test/pull/1".to_string()),
+            pr_check_status: Some(CheckStatus::Failing),
+            pr_review_decision: Some(ReviewDecision::ReviewRequired),
+            merge_conflict: false,
+            ..create_test_session()
+        };
+
+        assert_eq!(session.workflow_stage(), WorkflowStage::Blocked);
+    }
+
+    #[test]
+    fn test_workflow_stage_blocked_by_merge_conflict() {
+        let session = Session {
+            pr_url: Some("https://github.com/test/test/pull/1".to_string()),
+            pr_check_status: Some(CheckStatus::Passing),
+            pr_review_decision: Some(ReviewDecision::Approved),
+            merge_conflict: true,
+            ..create_test_session()
+        };
+
+        assert_eq!(session.workflow_stage(), WorkflowStage::Blocked);
+    }
+
+    #[test]
+    fn test_workflow_stage_blocked_by_changes_requested() {
+        let session = Session {
+            pr_url: Some("https://github.com/test/test/pull/1".to_string()),
+            pr_check_status: Some(CheckStatus::Passing),
+            pr_review_decision: Some(ReviewDecision::ChangesRequested),
+            merge_conflict: false,
+            ..create_test_session()
+        };
+
+        assert_eq!(session.workflow_stage(), WorkflowStage::Blocked);
+    }
+
+    #[test]
+    fn test_workflow_stage_ready_to_merge() {
+        let session = Session {
+            pr_url: Some("https://github.com/test/test/pull/1".to_string()),
+            pr_check_status: Some(CheckStatus::Passing),
+            pr_review_decision: Some(ReviewDecision::Approved),
+            merge_conflict: false,
+            ..create_test_session()
+        };
+
+        assert_eq!(session.workflow_stage(), WorkflowStage::ReadyToMerge);
+    }
+
+    #[test]
+    fn test_workflow_stage_ready_to_merge_with_mergeable() {
+        let session = Session {
+            pr_url: Some("https://github.com/test/test/pull/1".to_string()),
+            pr_check_status: Some(CheckStatus::Mergeable),
+            pr_review_decision: Some(ReviewDecision::Approved),
+            merge_conflict: false,
+            ..create_test_session()
+        };
+
+        assert_eq!(session.workflow_stage(), WorkflowStage::ReadyToMerge);
+    }
+
+    #[test]
+    fn test_workflow_stage_review_awaiting() {
+        let session = Session {
+            pr_url: Some("https://github.com/test/test/pull/1".to_string()),
+            pr_check_status: Some(CheckStatus::Passing),
+            pr_review_decision: Some(ReviewDecision::ReviewRequired),
+            merge_conflict: false,
+            ..create_test_session()
+        };
+
+        assert_eq!(session.workflow_stage(), WorkflowStage::Review);
+    }
+
+    #[test]
+    fn test_workflow_stage_review_no_decision() {
+        let session = Session {
+            pr_url: Some("https://github.com/test/test/pull/1".to_string()),
+            pr_check_status: Some(CheckStatus::Passing),
+            pr_review_decision: None,
+            merge_conflict: false,
+            ..create_test_session()
+        };
+
+        assert_eq!(session.workflow_stage(), WorkflowStage::Review);
+    }
+
+    #[test]
+    fn test_workflow_stage_implementation_pending_ci() {
+        let session = Session {
+            pr_url: Some("https://github.com/test/test/pull/1".to_string()),
+            pr_check_status: Some(CheckStatus::Pending),
+            pr_review_decision: Some(ReviewDecision::Approved),
+            merge_conflict: false,
+            ..create_test_session()
+        };
+
+        assert_eq!(session.workflow_stage(), WorkflowStage::Implementation);
+    }
+
+    #[test]
+    fn test_has_blockers_ci_failing() {
+        let session = Session {
+            pr_check_status: Some(CheckStatus::Failing),
+            merge_conflict: false,
+            pr_review_decision: None,
+            ..create_test_session()
+        };
+
+        assert!(session.has_blockers());
+    }
+
+    #[test]
+    fn test_has_blockers_merge_conflict() {
+        let session = Session {
+            pr_check_status: Some(CheckStatus::Passing),
+            merge_conflict: true,
+            pr_review_decision: None,
+            ..create_test_session()
+        };
+
+        assert!(session.has_blockers());
+    }
+
+    #[test]
+    fn test_has_blockers_changes_requested() {
+        let session = Session {
+            pr_check_status: Some(CheckStatus::Passing),
+            merge_conflict: false,
+            pr_review_decision: Some(ReviewDecision::ChangesRequested),
+            ..create_test_session()
+        };
+
+        assert!(session.has_blockers());
+    }
+
+    #[test]
+    fn test_has_blockers_none() {
+        let session = Session {
+            pr_check_status: Some(CheckStatus::Passing),
+            merge_conflict: false,
+            pr_review_decision: Some(ReviewDecision::Approved),
+            ..create_test_session()
+        };
+
+        assert!(!session.has_blockers());
+    }
+
+    #[test]
+    fn test_blocker_details_all_blockers() {
+        let session = Session {
+            pr_check_status: Some(CheckStatus::Failing),
+            merge_conflict: true,
+            pr_review_decision: Some(ReviewDecision::ChangesRequested),
+            ..create_test_session()
+        };
+
+        let blockers = session.blocker_details();
+        assert!(blockers.ci_failing);
+        assert!(blockers.merge_conflict);
+        assert!(blockers.changes_requested);
+    }
+
+    #[test]
+    fn test_blocker_details_single_blocker() {
+        let session = Session {
+            pr_check_status: Some(CheckStatus::Failing),
+            merge_conflict: false,
+            pr_review_decision: None,
+            ..create_test_session()
+        };
+
+        let blockers = session.blocker_details();
+        assert!(blockers.ci_failing);
+        assert!(!blockers.merge_conflict);
+        assert!(!blockers.changes_requested);
+    }
+
+    /// Helper function to create a test session with default values
+    fn create_test_session() -> Session {
+        Session {
+            id: Uuid::new_v4(),
+            name: "test".to_string(),
+            title: None,
+            description: None,
+            status: SessionStatus::Running,
+            backend: BackendType::Docker,
+            agent: AgentType::ClaudeCode,
+            model: None,
+            repo_path: PathBuf::from("/test"),
+            worktree_path: PathBuf::from("/test/worktree"),
+            subdirectory: PathBuf::new(),
+            branch_name: "test".to_string(),
+            repositories: None,
+            backend_id: None,
+            initial_prompt: "test".to_string(),
+            dangerous_skip_checks: false,
+            pr_url: None,
+            pr_check_status: None,
+            pr_review_decision: None,
+            claude_status: ClaudeWorkingStatus::Unknown,
+            claude_status_updated_at: None,
+            merge_conflict: false,
+            worktree_dirty: false,
+            worktree_changed_files: None,
+            access_mode: AccessMode::ReadOnly,
+            proxy_port: None,
+            history_file_path: None,
+            reconcile_attempts: 0,
+            last_reconcile_error: None,
+            last_reconcile_at: None,
+            error_message: None,
+            progress: None,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+        }
+    }
 }

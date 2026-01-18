@@ -327,8 +327,8 @@ impl CIPoller {
             }
 
             // Update review decision if changed
-            if new_review_decision.is_some() && session.pr_review_decision != new_review_decision {
-                if let Some(decision) = new_review_decision {
+            if let Some(decision) = new_review_decision {
+                if session.pr_review_decision != Some(decision) {
                     self.manager
                         .update_pr_review_decision(*session_id, decision)
                         .await?;
