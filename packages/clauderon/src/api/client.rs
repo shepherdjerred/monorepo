@@ -436,4 +436,8 @@ impl ApiClient for Client {
     async fn get_recent_repos(&mut self) -> anyhow::Result<Vec<super::protocol::RecentRepoDto>> {
         Self::get_recent_repos(self).await
     }
+
+    async fn get_feature_flags(&mut self) -> anyhow::Result<crate::feature_flags::FeatureFlags> {
+        Self::get_feature_flags(self).await
+    }
 }
