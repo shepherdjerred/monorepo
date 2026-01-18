@@ -146,10 +146,8 @@ export function EditSessionDialog({ session, onClose }: EditSessionDialogProps) 
                   disabled={isSubmitting}
                   className="flex items-center gap-2"
                 >
-                  <>
-                    <RefreshCw className="w-4 h-4" />
-                    Regenerate with AI
-                  </>
+                  <RefreshCw className="w-4 h-4" />
+                  Regenerate with AI
                 </Button>
               </div>
             </div>
