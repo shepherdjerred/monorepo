@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import type { Session } from "@clauderon/client";
 import { SessionStatus } from "@clauderon/shared";
+import type { MergeMethod } from "@clauderon/shared";
 import { SessionCard } from "./SessionCard";
 import { ThemeToggle } from "./ThemeToggle";
 import { ConfirmDialog } from "./ConfirmDialog";
@@ -24,7 +25,7 @@ type FilterStatus = "all" | "running" | "idle" | "completed" | "archived";
 const TAB_TRIGGER_CLASS = "cursor-pointer transition-all duration-200 hover:bg-primary/20 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-2 data-[state=active]:border-primary data-[state=active]:shadow-[4px_4px_0_hsl(220,85%,25%)] data-[state=active]:font-bold";
 
 export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
-  const { sessions, isLoading, error, refreshSessions, archiveSession, unarchiveSession, refreshSession, deleteSession } =
+  const { sessions, isLoading, error, refreshSessions, archiveSession, unarchiveSession, refreshSession, deleteSession, mergePr } =
     useSessionContext();
 
   // Initialize filter from URL parameter
@@ -119,6 +120,14 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
 
   const handleRefresh = (session: Session) => {
     setConfirmDialog({ type: "refresh", session });
+  };
+
+  const handleMergePr = (session: Session, method: MergeMethod, deleteBranch: boolean) => {
+    void mergePr(session.id, method, deleteBranch).then(() => {
+      toast.success(`Pull request for "${session.name}" merged successfully`);
+    }).catch((err) => {
+      toast.error(`Failed to merge PR: ${err instanceof Error ? err.message : String(err)}`);
+    });
   };
 
   const handleConfirm = () => {
@@ -301,6 +310,7 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
                 onUnarchive={handleUnarchive}
                 onRefresh={handleRefresh}
                 onDelete={handleDelete}
+                onMergePr={handleMergePr}
               />
             ))}
           </div>

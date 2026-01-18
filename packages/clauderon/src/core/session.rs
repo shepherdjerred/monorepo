@@ -97,6 +97,18 @@ pub struct Session {
     /// Status of PR checks
     pub pr_check_status: Option<CheckStatus>,
 
+    /// PR review status (approved, changes requested, etc.)
+    pub pr_review_status: Option<PrReviewStatus>,
+
+    /// Available merge methods for the repository
+    pub pr_merge_methods: Option<Vec<MergeMethod>>,
+
+    /// Default merge method based on repository settings
+    pub pr_default_merge_method: Option<MergeMethod>,
+
+    /// Whether to delete branch after merge (from repository settings)
+    pub pr_delete_branch_on_merge: Option<bool>,
+
     /// Current Claude agent working status (from hooks)
     pub claude_status: ClaudeWorkingStatus,
 
@@ -204,6 +216,10 @@ impl Session {
             dangerous_skip_checks: config.dangerous_skip_checks,
             pr_url: None,
             pr_check_status: None,
+            pr_review_status: None,
+            pr_merge_methods: None,
+            pr_default_merge_method: None,
+            pr_delete_branch_on_merge: None,
             claude_status: ClaudeWorkingStatus::Unknown,
             claude_status_updated_at: None,
             merge_conflict: false,
@@ -243,6 +259,25 @@ impl Session {
     /// Update PR check status
     pub fn set_check_status(&mut self, status: CheckStatus) {
         self.pr_check_status = Some(status);
+        self.updated_at = Utc::now();
+    }
+
+    /// Update PR review status
+    pub fn set_pr_review_status(&mut self, status: PrReviewStatus) {
+        self.pr_review_status = Some(status);
+        self.updated_at = Utc::now();
+    }
+
+    /// Update PR merge methods and settings
+    pub fn set_pr_merge_methods(
+        &mut self,
+        methods: Vec<MergeMethod>,
+        default: MergeMethod,
+        delete_branch: bool,
+    ) {
+        self.pr_merge_methods = Some(methods);
+        self.pr_default_merge_method = Some(default);
+        self.pr_delete_branch_on_merge = Some(delete_branch);
         self.updated_at = Utc::now();
     }
 
@@ -378,6 +413,20 @@ impl Session {
     #[must_use]
     pub fn model_cli_flag(&self) -> Option<&'static str> {
         self.model.as_ref().map(SessionModel::to_cli_flag)
+    }
+
+    /// Check if PR can be merged based on requirements
+    /// Returns true if all merge requirements are met:
+    /// - PR URL exists
+    /// - CI checks are passing
+    /// - PR is approved
+    /// - No merge conflicts
+    #[must_use]
+    pub fn can_merge_pr(&self) -> bool {
+        self.pr_url.is_some()
+            && self.pr_check_status == Some(CheckStatus::Passing)
+            && self.pr_review_status == Some(PrReviewStatus::Approved)
+            && !self.merge_conflict
     }
 }
 
@@ -623,6 +672,49 @@ pub enum CheckStatus {
     Merged,
 }
 
+/// PR review status
+#[typeshare]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum PrReviewStatus {
+    /// Review status is unknown or not applicable
+    Unknown,
+
+    /// Review is required but not yet provided
+    ReviewRequired,
+
+    /// Reviewers have requested changes
+    ChangesRequested,
+
+    /// PR has been approved
+    Approved,
+}
+
+/// Git merge method for pull requests
+#[typeshare]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum MergeMethod {
+    /// Create a merge commit
+    Merge,
+
+    /// Squash commits and merge
+    Squash,
+
+    /// Rebase and merge
+    Rebase,
+}
+
+impl MergeMethod {
+    /// Convert to gh CLI flag
+    #[must_use]
+    pub const fn to_gh_flag(self) -> &'static str {
+        match self {
+            Self::Merge => "--merge",
+            Self::Squash => "--squash",
+            Self::Rebase => "--rebase",
+        }
+    }
+}
+
 /// Claude agent working status
 #[typeshare]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
@@ -853,6 +945,10 @@ mod tests {
             dangerous_skip_checks: false,
             pr_url: None,
             pr_check_status: None,
+            pr_review_status: None,
+            pr_merge_methods: None,
+            pr_default_merge_method: None,
+            pr_delete_branch_on_merge: None,
             claude_status: ClaudeWorkingStatus::Unknown,
             claude_status_updated_at: None,
             merge_conflict: false,
@@ -897,6 +993,10 @@ mod tests {
             dangerous_skip_checks: false,
             pr_url: None,
             pr_check_status: None,
+            pr_review_status: None,
+            pr_merge_methods: None,
+            pr_default_merge_method: None,
+            pr_delete_branch_on_merge: None,
             claude_status: ClaudeWorkingStatus::Unknown,
             claude_status_updated_at: None,
             merge_conflict: false,
@@ -942,6 +1042,10 @@ mod tests {
             dangerous_skip_checks: false,
             pr_url: None,
             pr_check_status: None,
+            pr_review_status: None,
+            pr_merge_methods: None,
+            pr_default_merge_method: None,
+            pr_delete_branch_on_merge: None,
             claude_status: ClaudeWorkingStatus::Unknown,
             claude_status_updated_at: None,
             merge_conflict: false,
@@ -983,6 +1087,10 @@ mod tests {
             dangerous_skip_checks: false,
             pr_url: None,
             pr_check_status: None,
+            pr_review_status: None,
+            pr_merge_methods: None,
+            pr_default_merge_method: None,
+            pr_delete_branch_on_merge: None,
             claude_status: ClaudeWorkingStatus::Unknown,
             claude_status_updated_at: None,
             merge_conflict: false,
