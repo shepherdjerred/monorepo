@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from "react-native";
-import { colors } from "../styles/colors";
+import { useTheme } from "../contexts/ThemeContext";
 import { typography } from "../styles/typography";
 
 export type FilterStatus = "all" | "running" | "idle" | "completed" | "archived";
@@ -25,8 +25,10 @@ const TABS: { key: FilterStatus; label: string }[] = [
 ];
 
 export function FilterTabs({ value, onChange }: FilterTabsProps) {
+  const { colors } = useTheme();
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -35,11 +37,19 @@ export function FilterTabs({ value, onChange }: FilterTabsProps) {
         {TABS.map((tab) => (
           <TouchableOpacity
             key={tab.key}
-            style={[styles.tab, value === tab.key && styles.activeTab]}
+            style={[
+              styles.tab,
+              { borderColor: colors.border, backgroundColor: colors.surface },
+              value === tab.key && { backgroundColor: colors.primary },
+            ]}
             onPress={() => onChange(tab.key)}
           >
             <Text
-              style={[styles.tabText, value === tab.key && styles.activeTabText]}
+              style={[
+                styles.tabText,
+                { color: colors.textDark },
+                value === tab.key && { color: colors.textWhite },
+              ]}
             >
               {tab.label}
             </Text>
@@ -52,9 +62,7 @@ export function FilterTabs({ value, onChange }: FilterTabsProps) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.surface,
     borderBottomWidth: 3,
-    borderBottomColor: colors.border,
   },
   scrollContent: {
     paddingHorizontal: 12,
@@ -65,19 +73,10 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderWidth: 2,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-  },
-  activeTab: {
-    backgroundColor: colors.primary,
   },
   tabText: {
     fontSize: typography.fontSize.sm,
     fontWeight: typography.fontWeight.bold,
-    color: colors.textDark,
     textTransform: "uppercase",
-  },
-  activeTabText: {
-    color: colors.textWhite,
   },
 });
