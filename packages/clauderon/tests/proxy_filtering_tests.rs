@@ -171,7 +171,9 @@ async fn create_test_manager_with_proxy_and_readonly() -> (
         None,
         to_exec_backend(Arc::clone(&sprites)),
         feature_flags,
-    );
+    )
+    .await
+    .expect("Failed to create manager");
 
     // Create proxy manager
     use rand::Rng;
