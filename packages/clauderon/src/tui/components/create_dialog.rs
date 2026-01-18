@@ -596,8 +596,6 @@ fn render_buttons(frame: &mut Frame, focused: bool, create_focused: bool, area: 
     frame.render_widget(paragraph, area);
 }
 
-/// Spinner frames for loading animation
-
 fn render_loading(
     frame: &mut Frame,
     message: &str,
