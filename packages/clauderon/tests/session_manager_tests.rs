@@ -8,6 +8,7 @@ use std::sync::Arc;
 
 use clauderon::backends::{ExecutionBackend, GitOperations, MockExecutionBackend, MockGitBackend};
 use clauderon::core::{AccessMode, AgentType, BackendType, SessionManager, SessionStatus};
+use clauderon::feature_flags::FeatureFlags;
 use clauderon::store::SqliteStore;
 use tempfile::TempDir;
 
@@ -92,7 +93,7 @@ async fn create_test_manager() -> (
         to_exec_backend(Arc::clone(&kubernetes)),
         None,
         to_exec_backend(Arc::clone(&sprites)),
-        crate::feature_flags::FeatureFlags::default(),
+        FeatureFlags::default(),
     )
     .await
     .expect("Failed to create manager");
