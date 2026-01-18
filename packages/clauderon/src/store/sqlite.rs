@@ -1017,7 +1017,7 @@ impl Store for SqliteStore {
             session
                 .model
                 .as_ref()
-                .map(|m| serde_json::to_string(m))
+                .map(serde_json::to_string)
                 .transpose()?,
         )
         .bind(session.repo_path.to_string_lossy().to_string())
