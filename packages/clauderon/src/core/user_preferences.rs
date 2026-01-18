@@ -1,10 +1,10 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use ts_rs::TS;
+use typeshare::typeshare;
 
 /// User experience level for progressive disclosure
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]
-#[ts(export)]
+#[typeshare]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "PascalCase")]
 pub enum ExperienceLevel {
     /// First-time user (0-2 sessions, < 7 days)
@@ -45,8 +45,8 @@ impl std::str::FromStr for ExperienceLevel {
 }
 
 /// User preferences for progressive disclosure and UI customization
-#[derive(Debug, Clone, Serialize, Deserialize, TS)]
-#[ts(export)]
+#[typeshare]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UserPreferences {
     /// User ID
     pub user_id: String,
