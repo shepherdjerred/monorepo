@@ -294,7 +294,7 @@ impl KubernetesBackend {
             },
             spec: Some(PersistentVolumeClaimSpec {
                 access_modes: Some(access_modes.clone()),
-                storage_class_name: options
+                storage_class_name: _options
                     .storage_class_override
                     .clone()
                     .or_else(|| self.config.storage_class.clone()),
@@ -352,7 +352,7 @@ impl KubernetesBackend {
                     },
                     spec: Some(PersistentVolumeClaimSpec {
                         access_modes: Some(vec!["ReadWriteOnce".to_string()]),
-                        storage_class_name: options
+                        storage_class_name: _options
                             .storage_class_override
                             .clone()
                             .or_else(|| self.config.storage_class.clone()),
