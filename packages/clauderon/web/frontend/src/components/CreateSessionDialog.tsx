@@ -32,7 +32,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
 
   // Multi-repo state
   const [repositories, setRepositories] = useState<RepositoryEntry[]>([
-    { id: '1', repo_path: '', mount_name: 'primary', is_primary: true }
+    { id: '1', repo_path: '', mount_name: '', is_primary: true }
   ]);
 
   const [formData, setFormData] = useState({
@@ -129,40 +129,9 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
     }
   }, [formData.agent]);
 
-  // Auto-generate mount name from repo path
-  const generateMountName = (repoPath: string): string => {
-    if (!repoPath) return '';
-
-    // Extract last part of path and convert to valid mount name
-    const pathParts = repoPath.split('/');
-    const lastName = pathParts[pathParts.length - 1] || pathParts[pathParts.length - 2] || 'repo';
-
-    return lastName
-      .toLowerCase()
-      .replace(/[^a-z0-9-_]/g, '-')
-      .replace(/_/g, '-')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '');
-  };
-
   const handleRepoPathChange = (id: string, newPath: string) => {
-    setRepositories(repos => repos.map(repo => {
-      if (repo.id === id) {
-        // Auto-generate mount name if it hasn't been manually edited
-        const shouldAutoGenerate = !repo.mount_name || repo.mount_name === generateMountName(repo.repo_path);
-        return {
-          ...repo,
-          repo_path: newPath,
-          mount_name: shouldAutoGenerate ? generateMountName(newPath) : repo.mount_name
-        };
-      }
-      return repo;
-    }));
-  };
-
-  const handleMountNameChange = (id: string, newMountName: string) => {
     setRepositories(repos => repos.map(repo =>
-      repo.id === id ? { ...repo, mount_name: newMountName } : repo
+      repo.id === id ? { ...repo, repo_path: newPath } : repo
     ));
   };
 
@@ -222,34 +191,6 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
       return "Exactly one repository must be marked as primary";
     }
 
-    // Check mount names are valid and unique
-    const mountNames = new Set<string>();
-    for (const repo of repositories) {
-      const name = repo.mount_name.trim();
-
-      if (!name) {
-        return "All repositories must have a mount name";
-      }
-
-      if (!/^[a-z0-9]([a-z0-9-_]{0,62}[a-z0-9])?$/.test(name)) {
-        return `Invalid mount name "${name}": must be alphanumeric with hyphens/underscores, 1-64 characters`;
-      }
-
-      if (mountNames.has(name)) {
-        return `Duplicate mount name: "${name}"`;
-      }
-
-      mountNames.add(name);
-    }
-
-    // Check for reserved names
-    const reserved = ['workspace', 'clauderon', 'repos', 'primary'];
-    for (const repo of repositories) {
-      if (reserved.includes(repo.mount_name.toLowerCase())) {
-        return `Mount name "${repo.mount_name}" is reserved`;
-      }
-    }
-
     return null;
   };
 
@@ -281,7 +222,6 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
       const repoInputs: CreateRepositoryInput[] | undefined = repositories.length > 1
         ? repositories.map(repo => ({
             repo_path: repo.repo_path,
-            ...(repo.mount_name && { mount_name: repo.mount_name }),
             is_primary: repo.is_primary
           }))
         : undefined;
@@ -451,26 +391,6 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                     onChange={(path) => { handleRepoPathChange(repo.id, path); }}
                     required
                   />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor={`mount-name-${repo.id}`} className="text-sm">
-                    Mount Name <span className="text-xs text-muted-foreground">(alphanumeric + hyphens/underscores)</span>
-                  </Label>
-                  <input
-                    type="text"
-                    id={`mount-name-${repo.id}`}
-                    value={repo.mount_name}
-                    onChange={(e) => { handleMountNameChange(repo.id, e.target.value); }}
-                    placeholder="auto-generated"
-                    className="w-full px-3 py-2 border-2 rounded font-mono text-sm"
-                    pattern="[a-z0-9][a-z0-9-_]{0,62}[a-z0-9]"
-                    maxLength={64}
-                    required
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Container path: {repo.is_primary ? '/workspace' : `/repos/${repo.mount_name || '...'}`}
-                  </p>
                 </div>
               </div>
             ))}
