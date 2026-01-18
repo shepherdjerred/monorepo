@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { AGENT_CAPABILITIES } from "@/lib/agent-features";
 import { ProviderIcon } from "./ProviderIcon";
-import { useFeatureFlags } from "../contexts/FeatureFlagsContext";
 
 type SessionCardProps = {
   session: Session;
