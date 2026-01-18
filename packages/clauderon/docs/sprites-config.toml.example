@@ -65,6 +65,11 @@ base_image = "ubuntu:22.04"
 # Default: true
 install_claude = true
 
+# Claude Code installation URL
+# WARNING: Verify this URL before use
+# Default: "https://claude.ai/install.sh"
+claude_install_url = "https://claude.ai/install.sh"
+
 # Additional packages to install via apt-get
 # Installed before Claude Code installation
 # Default: [] (no additional packages)
@@ -75,6 +80,13 @@ packages = [
     # "python3",
     # "nodejs",
 ]
+
+[git]
+# Use shallow clone (--depth 1) for faster cloning
+# Shallow clones are faster but may break git describe, rebasing, and full history viewing
+# Set to false if you need full git history or plan to rebase/use git describe
+# Default: true
+shallow_clone = true
 
 # Cost Estimation Examples
 # =======================
