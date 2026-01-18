@@ -711,7 +711,13 @@ fn handle_directory_picker_key(app: &mut App, key: KeyEvent) {
         // Tab selects the highlighted directory and closes the picker
         KeyCode::Tab => {
             if let Some(entry) = picker.selected_entry() {
-                let entry_path = entry.path.clone();
+                // Concatenate path and subdirectory for recent repos
+                let entry_path = if entry.is_recent && !entry.subdirectory.as_os_str().is_empty() {
+                    entry.path.join(&entry.subdirectory)
+                } else {
+                    entry.path.clone()
+                };
+
                 if entry.is_parent {
                     // Select parent directory
                     app.create_dialog.repo_path = entry_path.to_string_lossy().to_string();
