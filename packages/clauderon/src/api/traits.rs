@@ -47,4 +47,7 @@ pub trait ApiClient: Send + Sync {
 
     /// Get recent repositories with timestamps.
     async fn get_recent_repos(&mut self) -> anyhow::Result<Vec<super::protocol::RecentRepoDto>>;
+
+    /// Get current feature flags from the daemon.
+    async fn get_feature_flags(&mut self) -> anyhow::Result<crate::feature_flags::FeatureFlags>;
 }
