@@ -365,11 +365,17 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
             let claude_indicator = match session.claude_status {
                 ClaudeWorkingStatus::Working => {
                     // Animate based on spinner tick
-                    let spinner = match app.spinner_tick % 4 {
+                    let spinner = match app.spinner_tick % 10 {
                         0 => "⠋",
                         1 => "⠙",
                         2 => "⠹",
-                        _ => "⠸",
+                        3 => "⠸",
+                        4 => "⠼",
+                        5 => "⠴",
+                        6 => "⠦",
+                        7 => "⠧",
+                        8 => "⠇",
+                        _ => "⠏",
                     };
                     Span::styled(spinner, Style::default().fg(Color::Green))
                 }
@@ -430,11 +436,17 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
 
             // Add deletion indicator if deleting
             if is_deleting {
-                let spinner = match app.spinner_tick % 4 {
+                let spinner = match app.spinner_tick % 10 {
                     0 => "⠋",
                     1 => "⠙",
                     2 => "⠹",
-                    _ => "⠸",
+                    3 => "⠸",
+                    4 => "⠼",
+                    5 => "⠴",
+                    6 => "⠦",
+                    7 => "⠧",
+                    8 => "⠇",
+                    _ => "⠏",
                 };
                 spans.push(Span::styled(
                     format!("{spinner} "),
