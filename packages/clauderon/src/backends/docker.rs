@@ -291,6 +291,7 @@ impl DockerBackend {
         config: &DockerConfig,
         image_override: Option<&ImageConfig>,
         resource_override: Option<&ResourceLimits>,
+        model: Option<&str>,
         repositories: &[crate::core::SessionRepository],
     ) -> anyhow::Result<Vec<String>> {
         let container_name = format!("clauderon-{name}");
@@ -875,6 +876,7 @@ impl DockerBackend {
                         &translated_images,
                         dangerous_skip_checks,
                         None,
+                        model,
                     ); // Don't pass session_id here, we handle it in the wrapper
 
                     // Add print mode flags if enabled
@@ -987,6 +989,7 @@ fi"#;
                             images,
                             dangerous_skip_checks,
                             None,
+                            model,
                         );
                         let create_cmd_str = create_cmd_vec
                             .iter()
@@ -1027,6 +1030,7 @@ fi"#,
                         &translated_images,
                         dangerous_skip_checks,
                         None,
+                        model,
                     );
 
                     // Add print mode flags if enabled
@@ -1188,6 +1192,7 @@ impl ExecutionBackend for DockerBackend {
             &self.config,
             options.container_image.as_ref(),
             options.container_resources.as_ref(),
+            options.model.as_deref(),
             &options.repositories,
         )?;
         let output = Command::new("docker").args(&args).output().await?;
@@ -1315,6 +1320,7 @@ impl DockerBackend {
             initial_prompt,
             super::traits::CreateOptions {
                 agent: AgentType::ClaudeCode,
+                model: None, // Use default model
                 print_mode: false,
                 plan_mode: true, // Default to plan mode
                 session_proxy_port: None,
@@ -1371,6 +1377,7 @@ mod tests {
             &DockerConfig::default(),
             None, // image_override
             None, // resource_override
+            None, // model
             &[],  // repositories (empty = legacy mode)
         )
         .expect("Failed to build args");
@@ -1446,6 +1453,7 @@ mod tests {
             &DockerConfig::default(),
             None, // image_override
             None, // resource_override
+            None, // model
             &[],  // repositories (empty = legacy mode)
         )
         .expect("Failed to build args");
@@ -1482,6 +1490,7 @@ mod tests {
             &DockerConfig::default(),
             None, // image_override
             None, // resource_override
+            None, // model
             &[],  // repositories (empty = legacy mode)
         )
         .expect("Failed to build args");
@@ -1521,6 +1530,7 @@ mod tests {
             &DockerConfig::default(),
             None, // image_override
             None, // resource_override
+            None, // model
             &[],  // repositories (empty = legacy mode)
         )
         .expect("Failed to build args");
@@ -1560,6 +1570,7 @@ mod tests {
             &DockerConfig::default(),
             None, // image_override
             None, // resource_override
+            None, // model
             &[],  // repositories (empty = legacy mode)
         )
         .expect("Failed to build args");
@@ -1660,6 +1671,7 @@ mod tests {
             &DockerConfig::default(),
             None, // image_override
             None, // resource_override
+            None, // model
             &[],  // repositories (empty = legacy mode)
         )
         .expect("Failed to build args");
@@ -1695,6 +1707,7 @@ mod tests {
             &DockerConfig::default(),
             None, // image_override
             None, // resource_override
+            None, // model
             &[],  // repositories (empty = legacy mode)
         )
         .expect("Failed to build args");
@@ -1743,6 +1756,7 @@ mod tests {
             &DockerConfig::default(),
             None, // image_override
             None, // resource_override
+            None, // model
             &[],  // repositories (empty = legacy mode)
         )
         .expect("Failed to build args");
@@ -1789,6 +1803,7 @@ mod tests {
             &DockerConfig::default(),
             None, // image_override
             None, // resource_override
+            None, // model
             &[],  // repositories (empty = legacy mode)
         )
         .expect("Failed to build args");
@@ -1819,6 +1834,7 @@ mod tests {
             &DockerConfig::default(),
             None, // image_override
             None, // resource_override
+            None, // model
             &[],  // repositories (empty = legacy mode)
         )
         .expect("Failed to build args");
@@ -1859,6 +1875,7 @@ mod tests {
             &DockerConfig::default(),
             None, // image_override
             None, // resource_override
+            None, // model
             &[],  // repositories (empty = legacy mode)
         )
         .expect("Failed to build args");
@@ -1898,6 +1915,7 @@ mod tests {
             &DockerConfig::default(),
             None, // image_override
             None, // resource_override
+            None, // model
             &[],  // repositories (empty = legacy mode)
         )
         .expect("Failed to build args");
@@ -1934,6 +1952,7 @@ mod tests {
             &DockerConfig::default(),
             None, // image_override
             None, // resource_override
+            None, // model
             &[],  // repositories (empty = legacy mode)
         )
         .expect("Failed to build args");
@@ -1992,6 +2011,7 @@ mod tests {
             &DockerConfig::default(),
             None, // image_override
             None, // resource_override
+            None, // model
             &[],  // repositories (empty = legacy mode)
         )
         .expect("Failed to build args");
@@ -2049,6 +2069,7 @@ mod tests {
             &DockerConfig::default(),
             None, // image_override
             None, // resource_override
+            None, // model
             &[],  // repositories (empty = legacy mode)
         )
         .expect("Failed to build args");
@@ -2089,7 +2110,8 @@ mod tests {
             &DockerConfig::default(),
             None,
             None,
-            &[], // repositories (empty = legacy mode)
+            None, // model
+            &[],  // repositories (empty = legacy mode)
         )
         .expect("Failed to build args");
 
@@ -2131,6 +2153,7 @@ mod tests {
             &DockerConfig::default(),
             None,
             None,
+            None, // model
             &[],
         )
         .expect("Failed to build args");
@@ -2191,6 +2214,7 @@ mod tests {
             &DockerConfig::default(),
             None, // image_override
             None, // resource_override
+            None, // model
             &[],  // repositories (empty = legacy mode)
         )
         .expect("Failed to build args");
@@ -2247,6 +2271,7 @@ mod tests {
             &DockerConfig::default(),
             None, // image_override
             None, // resource_override
+            None, // model
             &[],  // repositories (empty = legacy mode)
         )
         .expect("Failed to build args");
@@ -2293,6 +2318,7 @@ mod tests {
             &DockerConfig::default(),
             None, // image_override
             None, // resource_override
+            None, // model
             &[],  // repositories (empty = legacy mode)
         )
         .expect("Failed to build args");
@@ -2340,6 +2366,7 @@ mod tests {
             &DockerConfig::default(),
             None, // image_override
             None, // resource_override
+            None, // model
             &[],  // repositories (empty = legacy mode)
         )
         .expect("Failed to build args");
@@ -2374,6 +2401,7 @@ mod tests {
             &DockerConfig::default(),
             None, // image_override
             None, // resource_override
+            None, // model
             &[],  // repositories (empty = legacy mode)
         )
         .expect("Failed to build args");
@@ -2421,6 +2449,7 @@ mod tests {
             &DockerConfig::default(),
             None, // image_override
             None, // resource_override
+            None, // model
             &[],  // repositories (empty = legacy mode)
         )
         .expect("Failed to build args");
@@ -2457,7 +2486,8 @@ mod tests {
             &DockerConfig::default(),
             None,
             None,
-            &[], // repositories
+            None, // model
+            &[],  // repositories
         )
         .expect("Failed to build args");
 
@@ -2498,7 +2528,8 @@ mod tests {
             &DockerConfig::default(),
             None,
             None,
-            &[], // repositories
+            None, // model
+            &[],  // repositories
         )
         .expect("Failed to build args");
 

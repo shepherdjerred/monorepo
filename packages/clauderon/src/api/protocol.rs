@@ -1,7 +1,9 @@
 use serde::{Deserialize, Serialize};
 use typeshare::typeshare;
 
-use crate::core::session::{AccessMode, AgentType, BackendType, Session, SessionStatus};
+use crate::core::session::{
+    AccessMode, AgentType, BackendType, Session, SessionModel, SessionStatus,
+};
 
 use super::types::ReconcileReportDto;
 
@@ -145,6 +147,13 @@ pub struct CreateSessionRequest {
     /// AI agent to use
     pub agent: AgentType,
 
+    /// Optional model selection (must be compatible with selected agent).
+    ///
+    /// If not specified, the CLI will use its default model.
+    /// Examples: "sonnet" (Claude), "gpt-4o" (Codex), "gemini-2.5-pro" (Gemini)
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub model: Option<SessionModel>,
+
     /// Skip safety checks
     pub dangerous_skip_checks: bool,
 
@@ -217,6 +226,22 @@ pub struct CreateSessionRequest {
 /// the codebase before making changes. Users must explicitly opt-out.
 fn default_plan_mode() -> bool {
     true
+}
+
+impl CreateSessionRequest {
+    /// Validate that the model is compatible with the selected agent
+    pub fn validate(&self) -> anyhow::Result<()> {
+        if let Some(model) = &self.model {
+            if !model.is_compatible_with(self.agent) {
+                anyhow::bail!(
+                    "Model {:?} is not compatible with agent {:?}",
+                    model,
+                    self.agent
+                );
+            }
+        }
+        Ok(())
+    }
 }
 
 /// Progress step during session creation

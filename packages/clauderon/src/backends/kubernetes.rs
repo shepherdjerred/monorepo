@@ -16,6 +16,7 @@ use std::time::Duration;
 use tokio::process::Command;
 use tokio::time::timeout;
 
+use super::container_config::ImageConfig;
 use super::kubernetes_config::{KubernetesConfig, KubernetesProxyConfig};
 use super::traits::{CreateOptions, ExecutionBackend};
 use crate::core::AgentType;
@@ -38,6 +39,20 @@ pub struct StorageClassInfo {
 /// Removes all control characters (including newlines, tabs, etc.) that could be used for injection attacks
 fn sanitize_git_config_value(value: &str) -> String {
     value.chars().filter(|c| !c.is_control()).collect()
+}
+
+/// Validate image name to prevent command injection
+///
+/// Validates using the ImageConfig validation logic to ensure consistency
+/// across all backends.
+fn validate_image_name(image: &str) -> anyhow::Result<()> {
+    // Create a temporary ImageConfig to reuse Docker's validation logic
+    let image_config = ImageConfig {
+        image: image.to_string(),
+        pull_policy: super::container_config::ImagePullPolicy::IfNotPresent,
+        registry_auth: None,
+    };
+    image_config.validate()
 }
 
 /// Kubernetes backend for running Claude Code sessions in pods
@@ -558,6 +573,55 @@ impl KubernetesBackend {
         Ok(())
     }
 
+    /// Create ConfigMap for managed settings (bypass permissions mode)
+    ///
+    /// This ConfigMap provides Claude Code with managed settings that enable
+    /// bypass permissions mode when proxy is enabled.
+    async fn create_managed_settings_configmap(&self, pod_name: &str) -> anyhow::Result<()> {
+        // Only create managed settings when proxy is enabled
+        let Some(ref proxy_config) = self.proxy_config else {
+            return Ok(());
+        };
+
+        if !proxy_config.enabled {
+            return Ok(());
+        }
+
+        let cms: Api<ConfigMap> = Api::namespaced(self.client.clone(), &self.config.namespace);
+
+        // Managed settings content (same as Docker backend)
+        let managed_settings = serde_json::json!({
+            "permissions": {
+                "defaultMode": "bypassPermissions"
+            }
+        });
+
+        let mut data = BTreeMap::new();
+        data.insert(
+            "managed-settings.json".to_string(),
+            managed_settings.to_string(),
+        );
+
+        let cm = ConfigMap {
+            metadata: ObjectMeta {
+                name: Some(format!("{pod_name}-managed-settings")),
+                namespace: Some(self.config.namespace.clone()),
+                labels: Some({
+                    let mut labels = BTreeMap::new();
+                    labels.insert("clauderon.io/managed".to_string(), "true".to_string());
+                    labels
+                }),
+                ..Default::default()
+            },
+            data: Some(data),
+            ..Default::default()
+        };
+
+        cms.create(&PostParams::default(), &cm).await?;
+        tracing::info!("Created managed settings ConfigMap for {pod_name}");
+        Ok(())
+    }
+
     /// Create ConfigMap for kubeconfig (for kubectl access in containers)
     async fn create_kube_config_configmap(&self, pod_name: &str) -> anyhow::Result<()> {
         let cms: Api<ConfigMap> = Api::namespaced(self.client.clone(), &self.config.namespace);
@@ -702,6 +766,11 @@ fi
 if [ -n "$GIT_AUTHOR_EMAIL" ]; then
   git config user.email "$GIT_AUTHOR_EMAIL"
 fi
+
+# Create cache directories with correct permissions
+# This prevents PVC mounts from being owned by root
+mkdir -p .cargo/registry .cargo/git .cache/sccache
+echo "Created cache directories"
 
 echo "Git setup complete: branch ${BRANCH_NAME}"
 "#;
@@ -1241,6 +1310,19 @@ fi"#,
             }
         }
 
+        // Add managed settings mount if proxy is enabled
+        if let Some(ref proxy_config) = self.proxy_config {
+            if proxy_config.enabled {
+                volume_mounts.push(VolumeMount {
+                    name: "managed-settings".to_string(),
+                    mount_path: "/etc/claude-code/managed-settings.json".to_string(),
+                    sub_path: Some("managed-settings.json".to_string()),
+                    read_only: Some(true),
+                    ..Default::default()
+                });
+            }
+        }
+
         // Add kubeconfig mount for kubectl access
         volume_mounts.push(VolumeMount {
             name: "kube-config".to_string(),
@@ -1450,6 +1532,20 @@ fi"#,
             }
         }
 
+        // Add managed settings volume if proxy is enabled
+        if let Some(ref proxy_config) = self.proxy_config {
+            if proxy_config.enabled {
+                volumes.push(Volume {
+                    name: "managed-settings".to_string(),
+                    config_map: Some(k8s_openapi::api::core::v1::ConfigMapVolumeSource {
+                        name: format!("{pod_name}-managed-settings"),
+                        ..Default::default()
+                    }),
+                    ..Default::default()
+                });
+            }
+        }
+
         // Add kubeconfig volume for kubectl access
         volumes.push(Volume {
             name: "kube-config".to_string(),
@@ -1488,11 +1584,19 @@ fi"#,
             None
         };
 
+        // Build annotations from extra_annotations config
+        let annotations = if self.config.extra_annotations.is_empty() {
+            None
+        } else {
+            Some(self.config.extra_annotations.clone())
+        };
+
         Pod {
             metadata: ObjectMeta {
                 name: Some(pod_name.to_string()),
                 namespace: Some(self.config.namespace.clone()),
                 labels: Some(labels),
+                annotations,
                 ..Default::default()
             },
             spec: Some(PodSpec {
@@ -1596,6 +1700,14 @@ impl ExecutionBackend for KubernetesBackend {
         // Ensure namespace exists
         self.ensure_namespace_exists().await?;
 
+        // Validate image names (security: prevent command injection)
+        validate_image_name(&self.config.image).context("Invalid container image in config")?;
+        if let Some(ref image_config) = options.container_image {
+            image_config
+                .validate()
+                .context("Invalid container image override")?;
+        }
+
         // Detect or use configured git remote URL
         let git_remote_url = if let Some(ref url) = self.config.git_remote_url {
             url.clone()
@@ -1623,6 +1735,9 @@ impl ExecutionBackend for KubernetesBackend {
         if options.agent == AgentType::Codex {
             self.create_codex_config_configmap(&pod_name).await?;
         }
+
+        // Create managed settings ConfigMap (for bypass permissions mode)
+        self.create_managed_settings_configmap(&pod_name).await?;
 
         // Create kubeconfig ConfigMap
         self.create_kube_config_configmap(&pod_name).await?;
@@ -1696,6 +1811,19 @@ impl ExecutionBackend for KubernetesBackend {
                 tracing::debug!("ConfigMap {codex_config_name} already deleted");
             }
             Err(e) => tracing::warn!("Failed to delete ConfigMap {codex_config_name}: {e}"),
+        }
+
+        // Delete managed settings ConfigMap
+        let managed_settings_name = format!("{id}-managed-settings");
+        match cms
+            .delete(&managed_settings_name, &DeleteParams::default())
+            .await
+        {
+            Ok(_) => tracing::info!("Deleted ConfigMap {managed_settings_name}"),
+            Err(kube::Error::Api(err)) if err.code == 404 => {
+                tracing::debug!("ConfigMap {managed_settings_name} already deleted");
+            }
+            Err(e) => tracing::warn!("Failed to delete ConfigMap {managed_settings_name}: {e}"),
         }
 
         // Delete kubeconfig ConfigMap

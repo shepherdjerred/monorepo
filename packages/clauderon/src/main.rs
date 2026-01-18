@@ -582,6 +582,7 @@ async fn main() -> anyhow::Result<()> {
                     initial_prompt: prompt,
                     backend: backend_type,
                     agent: agent_type,
+                    model: None, // CLI doesn't support model selection yet
                     dangerous_skip_checks,
                     print_mode: print,
                     plan_mode: !no_plan_mode,

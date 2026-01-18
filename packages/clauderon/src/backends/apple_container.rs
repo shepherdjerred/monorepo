@@ -229,22 +229,41 @@ impl AppleContainerBackend {
         let container_name = format!("clauderon-{name}");
         let escaped_prompt = initial_prompt.replace('\'', "'\\''");
 
-        // Determine effective image configuration (override > config > default)
-        let image_str = if let Some(image_cfg) = image_override {
+        // Determine effective image configuration and pull policy (override > config > default)
+        let (image_str, pull_policy) = if let Some(image_cfg) = image_override {
+            // Validate override image
             image_cfg.validate()?;
-            &image_cfg.image
+            (image_cfg.image.as_str(), image_cfg.pull_policy.clone())
         } else if let Some(ref img) = config.container_image {
-            img
+            // Validate config image using ImageConfig validation
+            let temp_config = ImageConfig {
+                image: img.clone(),
+                pull_policy: super::container_config::ImagePullPolicy::IfNotPresent,
+                registry_auth: None,
+            };
+            temp_config.validate()?;
+            (
+                img.as_str(),
+                super::container_config::ImagePullPolicy::IfNotPresent,
+            )
         } else {
-            "ghcr.io/anthropics/claude-code"
+            // Use default image (no validation needed for hardcoded constant)
+            (
+                "ghcr.io/anthropics/claude-code",
+                super::container_config::ImagePullPolicy::IfNotPresent,
+            )
         };
 
-        let mut args = vec![
-            "run".to_string(),
-            "-d".to_string(),
-            "-i".to_string(),
-            "-t".to_string(),
-        ];
+        let mut args = vec!["run".to_string()];
+
+        // Add pull policy flag if not default (IfNotPresent is the default)
+        // Apple Container supports the same --pull flag as Docker
+        if let Some(pull_flag) = pull_policy.to_docker_flag() {
+            args.push("--pull".to_string());
+            args.push(pull_flag.to_string());
+        }
+
+        args.extend(["-d".to_string(), "-i".to_string(), "-t".to_string()]);
 
         // Set container name
         args.extend(["--name".to_string(), container_name]);
@@ -653,6 +672,7 @@ impl AppleContainerBackend {
                         &translated_images,
                         dangerous_skip_checks,
                         None,
+                        None,
                     );
 
                     if print_mode {
@@ -751,6 +771,7 @@ fi"#;
                             images,
                             dangerous_skip_checks,
                             None,
+                            None,
                         );
                         let create_cmd_str = create_cmd_vec
                             .iter()
@@ -767,6 +788,7 @@ fi"#;
                         &translated_images,
                         dangerous_skip_checks,
                         None,
+                        None,
                     );
 
                     if print_mode {
@@ -782,6 +804,11 @@ fi"#;
                 }
             }
         };
+
+        // Add extra flags from config (advanced users only)
+        for flag in &config.extra_flags {
+            args.push(flag.clone());
+        }
 
         // Add image and command
         args.push(image_str.to_string());

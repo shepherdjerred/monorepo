@@ -63,7 +63,10 @@ pub enum EventType {
     ConflictStatusChanged { has_conflict: bool },
 
     /// Working tree status changed (dirty/clean)
-    WorktreeStatusChanged { is_dirty: bool },
+    WorktreeStatusChanged {
+        is_dirty: bool,
+        changed_files: Option<Vec<crate::utils::git::ChangedFile>>,
+    },
 
     /// Session was archived
     SessionArchived,
@@ -124,6 +127,7 @@ pub fn replay_events(events: &[Event]) -> Option<Session> {
         initial_prompt: initial_prompt.clone(),
         backend: *backend,
         agent: super::session::AgentType::ClaudeCode,
+        model: None, // Legacy sessions don't have model
         dangerous_skip_checks: false,
         access_mode: AccessMode::default(),
     });
@@ -153,8 +157,12 @@ pub fn replay_events(events: &[Event]) -> Option<Session> {
             EventType::ConflictStatusChanged { has_conflict } => {
                 session.set_merge_conflict(*has_conflict);
             }
-            EventType::WorktreeStatusChanged { is_dirty } => {
+            EventType::WorktreeStatusChanged {
+                is_dirty,
+                changed_files,
+            } => {
                 session.set_worktree_dirty(*is_dirty);
+                session.set_worktree_changed_files(changed_files.clone());
             }
             EventType::SessionArchived => {
                 session.set_status(super::session::SessionStatus::Archived);

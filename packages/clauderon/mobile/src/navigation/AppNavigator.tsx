@@ -1,17 +1,28 @@
 import React from "react";
-import { NavigationContainer } from "@react-navigation/native";
+import { Platform } from "react-native";
+import { NavigationContainer, DefaultTheme, DarkTheme, type Theme } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { createStackNavigator } from "@react-navigation/stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import type { RootStackParamList, MainTabParamList } from "../types/navigation";
 import { SessionListScreen } from "../screens/SessionListScreen";
 import { ChatScreen } from "../screens/ChatScreen";
 import { SettingsScreen } from "../screens/SettingsScreen";
-import { colors } from "../styles/colors";
+import { CreateSessionScreen } from "../screens/CreateSessionScreen";
+import { EditSessionScreen } from "../screens/EditSessionScreen";
+import { StatusScreen } from "../screens/StatusScreen";
+import { useTheme } from "../contexts/ThemeContext";
 
-const Stack = createNativeStackNavigator<RootStackParamList>();
+// Use JS-based stack navigator on macOS (react-native-screens doesn't support macOS)
+// Use native stack navigator on other platforms for better performance
+const Stack = Platform.OS === "macos"
+  ? createStackNavigator<RootStackParamList>()
+  : createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 function MainTabs() {
+  const { colors } = useTheme();
+
   return (
     <Tab.Navigator
       screenOptions={{
@@ -59,8 +70,24 @@ function MainTabs() {
 }
 
 export function AppNavigator() {
+  const { isDark, colors } = useTheme();
+
+  // Create a custom navigation theme based on current mode
+  const navigationTheme: Theme = {
+    ...(isDark ? DarkTheme : DefaultTheme),
+    colors: {
+      ...(isDark ? DarkTheme.colors : DefaultTheme.colors),
+      primary: colors.primary,
+      background: colors.background,
+      card: colors.surface,
+      text: colors.text,
+      border: colors.border,
+      notification: colors.error,
+    },
+  };
+
   return (
-    <NavigationContainer>
+    <NavigationContainer theme={navigationTheme}>
       <Stack.Navigator
         screenOptions={{
           headerStyle: {
@@ -81,6 +108,21 @@ export function AppNavigator() {
           name="Chat"
           component={ChatScreen}
           options={{ title: "Chat" }}
+        />
+        <Stack.Screen
+          name="CreateSession"
+          component={CreateSessionScreen}
+          options={{ title: "New Session" }}
+        />
+        <Stack.Screen
+          name="EditSession"
+          component={EditSessionScreen}
+          options={{ title: "Edit Session" }}
+        />
+        <Stack.Screen
+          name="Status"
+          component={StatusScreen}
+          options={{ title: "System Status" }}
         />
       </Stack.Navigator>
     </NavigationContainer>

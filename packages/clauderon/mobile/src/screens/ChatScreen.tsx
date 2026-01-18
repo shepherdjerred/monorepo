@@ -11,8 +11,9 @@ import {
   ActivityIndicator,
   Image,
   ScrollView,
+  Alert,
 } from "react-native";
-import { launchImageLibrary, launchCamera } from "react-native-image-picker";
+import { launchImageLibrary, launchCamera } from "../lib/imagePicker";
 import type { RootStackScreenProps } from "../types/navigation";
 import { useConsole } from "../hooks/useConsole";
 import { useSessionHistory } from "../hooks/useSessionHistory";
@@ -63,6 +64,11 @@ export function ChatScreen({ route, navigation }: ChatScreenProps) {
       quality: 0.8,
     });
 
+    if (result.errorMessage) {
+      Alert.alert("Image Picker Not Available", result.errorMessage);
+      return;
+    }
+
     if (result.assets) {
       const newImages = result.assets.map((asset) => ({
         uri: asset.uri!,
@@ -78,6 +84,11 @@ export function ChatScreen({ route, navigation }: ChatScreenProps) {
       quality: 0.8,
       saveToPhotos: false,
     });
+
+    if (result.errorMessage) {
+      Alert.alert("Camera Not Available", result.errorMessage);
+      return;
+    }
 
     if (result.assets && result.assets[0]) {
       const asset = result.assets[0];
@@ -114,11 +125,20 @@ export function ChatScreen({ route, navigation }: ChatScreenProps) {
     setInput("");
   };
 
+  // On desktop platforms, don't use KeyboardAvoidingView
+  const isDesktop = Platform.OS === "macos" || Platform.OS === "windows";
+  const ContainerView = isDesktop ? View : KeyboardAvoidingView;
+  const keyboardProps = isDesktop
+    ? {}
+    : {
+        behavior: Platform.OS === "ios" ? ("padding" as const) : ("height" as const),
+        keyboardVerticalOffset: Platform.OS === "ios" ? 90 : 0,
+      };
+
   return (
-    <KeyboardAvoidingView
+    <ContainerView
       style={commonStyles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
+      {...keyboardProps}
     >
       {/* Header with connection status */}
       <View style={styles.header}>
@@ -227,7 +247,7 @@ export function ChatScreen({ route, navigation }: ChatScreenProps) {
           <Text style={commonStyles.buttonText}>Send</Text>
         </TouchableOpacity>
       </View>
-    </KeyboardAvoidingView>
+    </ContainerView>
   );
 }
 

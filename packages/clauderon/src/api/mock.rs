@@ -90,6 +90,7 @@ impl MockApiClient {
             initial_prompt: "Mock prompt".to_string(),
             backend: BackendType::Zellij,
             agent: AgentType::ClaudeCode,
+            model: None, // Mock uses default model
             dangerous_skip_checks: false,
             access_mode: crate::core::AccessMode::default(),
         };
@@ -173,6 +174,7 @@ impl ApiClient for MockApiClient {
             initial_prompt: request.initial_prompt,
             backend: request.backend,
             agent: request.agent,
+            model: request.model.clone(),
             dangerous_skip_checks: request.dangerous_skip_checks,
             access_mode: request.access_mode,
         };
@@ -395,6 +397,7 @@ mod tests {
             initial_prompt: "Test prompt".to_string(),
             backend: BackendType::Zellij,
             agent: AgentType::ClaudeCode,
+            model: None, // Test uses default model
             dangerous_skip_checks: false,
             print_mode: false,
             plan_mode: true,

@@ -63,8 +63,28 @@ fn main() {
         }
     }
 
+    // Check that docs dist directory exists
+    // Docs must be built before Rust compilation for static file embedding
+    let docs_dist = PathBuf::from("docs/dist");
+    if !docs_dist.is_dir() {
+        let msg = "Docs dist directory not found. Build the docs first: cd docs && bun run build";
+        if is_ci {
+            panic!("{msg}");
+        } else {
+            if let Err(e) = std::fs::create_dir_all(&docs_dist) {
+                println!(
+                    "cargo:warning=Failed to create docs dist directory {}: {e}",
+                    docs_dist.display()
+                );
+            }
+            println!("cargo:warning={msg}");
+        }
+    }
+
     // Trigger rebuild if any Rust source files change
     println!("cargo:rerun-if-changed=src/");
     // Also rebuild if frontend dist changes
     println!("cargo:rerun-if-changed=web/frontend/dist/");
+    // Also rebuild if docs dist changes
+    println!("cargo:rerun-if-changed=docs/dist/");
 }

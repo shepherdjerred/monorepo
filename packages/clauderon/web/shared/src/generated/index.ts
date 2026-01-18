@@ -48,6 +48,17 @@ export interface BrowseDirectoryResponse {
 	error?: string;
 }
 
+/** Represents a file with uncommitted changes in a git worktree */
+export interface ChangedFile {
+	/**
+	 * Git status code (e.g., "M", "A", "D", "??", "MM")
+	 * First character is index status, second is working tree status
+	 */
+	status: string;
+	/** File path relative to worktree root */
+	path: string;
+}
+
 /** Claude Code usage data for a specific time window */
 export interface UsageWindow {
 	/** Current usage (e.g., number of requests or tokens) */
@@ -90,6 +101,23 @@ export interface ClaudeUsage {
 	error?: UsageError;
 }
 
+/** Input for a single repository in a multi-repo session */
+export interface CreateRepositoryInput {
+	/** Path to the repository (can include subdirectory, e.g., "/path/to/monorepo/packages/foo") */
+	repo_path: string;
+	/**
+	 * Optional mount name for the repository in the container.
+	 * If None, will be auto-generated from repo name.
+	 * Examples: "primary", "shared-lib", "api-service"
+	 */
+	mount_name?: string;
+	/**
+	 * Whether this is the primary repository (determines working directory).
+	 * Exactly one repository must be marked as primary in multi-repo sessions.
+	 */
+	is_primary: boolean;
+}
+
 /** Execution backend type */
 export enum BackendType {
 	/** Zellij terminal multiplexer */
@@ -112,6 +140,15 @@ export enum AgentType {
 	Gemini = "Gemini",
 }
 
+/** Model configuration for a session */
+export type SessionModel = 
+	/** Claude Code model */
+	| { type: "Claude", content: ClaudeModel }
+	/** Codex model */
+	| { type: "Codex", content: CodexModel }
+	/** Gemini model */
+	| { type: "Gemini", content: GeminiModel };
+
 /** Access mode for proxy filtering */
 export enum AccessMode {
 	/** Read-only: GET, HEAD, OPTIONS allowed; POST, PUT, DELETE, PATCH blocked */
@@ -122,14 +159,26 @@ export enum AccessMode {
 
 /** Request to create a new session */
 export interface CreateSessionRequest {
-	/** Path to the repository */
+	/** Path to the repository (LEGACY: used when repositories is None) */
 	repo_path: string;
+	/**
+	 * Multiple repositories (NEW: when provided, overrides repo_path).
+	 * Maximum 5 repositories per session.
+	 */
+	repositories?: CreateRepositoryInput[];
 	/** Initial prompt for the AI agent */
 	initial_prompt: string;
 	/** Execution backend */
 	backend: BackendType;
 	/** AI agent to use */
 	agent: AgentType;
+	/**
+	 * Optional model selection (must be compatible with selected agent).
+	 * 
+	 * If not specified, the CLI will use its default model.
+	 * Examples: "sonnet" (Claude), "gpt-4o" (Codex), "gemini-2.5-pro" (Gemini)
+	 */
+	model?: SessionModel;
 	/** Skip safety checks */
 	dangerous_skip_checks: boolean;
 	/** Run in print mode (non-interactive, outputs response and exits) */
@@ -198,6 +247,31 @@ export interface CredentialStatus {
 	readonly: boolean;
 	/** Optional masked preview like "ghp_****...abc123" */
 	masked_value?: string;
+}
+
+/**
+ * Feature flags configuration for the daemon.
+ * Flags are loaded at startup and require daemon restart to change.
+ */
+export interface FeatureFlags {
+	/** Enable experimental WebAuthn passwordless authentication */
+	enable_webauthn_auth: boolean;
+	/** Enable AI-powered session metadata generation */
+	enable_ai_metadata: boolean;
+	/** Enable automatic session reconciliation on startup */
+	enable_auto_reconcile: boolean;
+	/** Enable session proxy port reuse (experimental) */
+	enable_proxy_port_reuse: boolean;
+	/** Enable Claude usage tracking via API */
+	enable_usage_tracking: boolean;
+}
+
+/** Feature flags response for the frontend */
+export interface FeatureFlagsResponse {
+	/** Current feature flag values */
+	flags: FeatureFlags;
+	/** Whether flags require daemon restart to change */
+	requires_restart: boolean;
 }
 
 /** Request to finish passkey authentication */
@@ -314,6 +388,22 @@ export enum SessionStatus {
 	Archived = "Archived",
 }
 
+/** Represents a repository mounted in a session */
+export interface SessionRepository {
+	/** Path to the repository root (git root) */
+	repo_path: string;
+	/** Subdirectory path relative to git root (empty if at root) */
+	subdirectory: string;
+	/** Path to the git worktree for this repository */
+	worktree_path: string;
+	/** Git branch name for this repository's worktree */
+	branch_name: string;
+	/** Mount name in the container (e.g., "primary", "shared-lib") */
+	mount_name: string;
+	/** Whether this is the primary repository (determines working directory) */
+	is_primary: boolean;
+}
+
 /** PR check status */
 export enum CheckStatus {
 	/** Checks are pending */
@@ -358,6 +448,8 @@ export interface Session {
 	backend: BackendType;
 	/** AI agent running in this session */
 	agent: AgentType;
+	/** AI model for this session (None for sessions created before model selection was added) */
+	model?: SessionModel;
 	/** Path to the source repository */
 	repo_path: string;
 	/** Path to the git worktree */
@@ -369,6 +461,11 @@ export interface Session {
 	subdirectory: string;
 	/** Git branch name */
 	branch_name: string;
+	/**
+	 * Multiple repositories mounted in this session (when Some, overrides single-repo fields above)
+	 * None indicates a legacy single-repo session using the fields above
+	 */
+	repositories?: SessionRepository[];
 	/** Backend-specific identifier (zellij session name, docker container id, or kubernetes pod name) */
 	backend_id?: string;
 	/** Initial prompt given to the AI agent */
@@ -387,6 +484,8 @@ export interface Session {
 	merge_conflict: boolean;
 	/** Whether the worktree has uncommitted changes (dirty working tree) */
 	worktree_dirty: boolean;
+	/** List of changed files in the worktree with their git status */
+	worktree_changed_files?: ChangedFile[];
 	/** Access mode for proxy filtering */
 	access_mode: AccessMode;
 	/** Port for session-specific HTTP proxy (container backends: Docker and Apple Container) */
@@ -455,6 +554,46 @@ export enum AgentState {
 	Unknown = "Unknown",
 }
 
+/** Model selection for Claude Code agent */
+export enum ClaudeModel {
+	/** Claude Opus 4.5 (most capable, best for complex workflows) */
+	Opus4_5 = "Opus4_5",
+	/** Claude Sonnet 4.5 (default, balanced performance for agents and coding) */
+	Sonnet4_5 = "Sonnet4_5",
+	/** Claude Haiku 4.5 (fastest, optimized for low latency) */
+	Haiku4_5 = "Haiku4_5",
+	/** Claude Opus 4.1 (focused on agentic tasks and reasoning) */
+	Opus4_1 = "Opus4_1",
+	/** Claude Opus 4 (previous generation flagship) */
+	Opus4 = "Opus4",
+	/** Claude Sonnet 4 (previous generation balanced) */
+	Sonnet4 = "Sonnet4",
+}
+
+/** Model selection for Codex agent */
+export enum CodexModel {
+	/** GPT-5.2-Codex (default, most advanced for software engineering) */
+	Gpt5_2Codex = "Gpt5_2Codex",
+	/** GPT-5.2 (most capable for professional knowledge work) */
+	Gpt5_2 = "Gpt5_2",
+	/** GPT-5.2 Instant (fast variant) */
+	Gpt5_2Instant = "Gpt5_2Instant",
+	/** GPT-5.2 Thinking (reasoning variant) */
+	Gpt5_2Thinking = "Gpt5_2Thinking",
+	/** GPT-5.2 Pro (premium variant) */
+	Gpt5_2Pro = "Gpt5_2Pro",
+	/** GPT-5.1 (previous flagship) */
+	Gpt5_1 = "Gpt5_1",
+	/** GPT-5.1 Instant (fast variant) */
+	Gpt5_1Instant = "Gpt5_1Instant",
+	/** GPT-5.1 Thinking (reasoning variant) */
+	Gpt5_1Thinking = "Gpt5_1Thinking",
+	/** GPT-4.1 (specialized for coding) */
+	Gpt4_1 = "Gpt4_1",
+	/** o3-mini (small reasoning model for science/math/coding) */
+	O3Mini = "O3Mini",
+}
+
 /** Real-time events from the server */
 export type Event = 
 	/** A new session was created */
@@ -521,6 +660,7 @@ export type EventType =
 	/** Working tree status changed (dirty/clean) */
 	| { type: "WorktreeStatusChanged", payload: {
 	is_dirty: boolean;
+	changed_files?: ChangedFile[];
 }}
 	/** Session was archived */
 	| { type: "SessionArchived", payload?: undefined }
@@ -530,6 +670,18 @@ export type EventType =
 }}
 	/** Session was restored from archive */
 	| { type: "SessionRestored", payload?: undefined };
+
+/** Model selection for Gemini agent */
+export enum GeminiModel {
+	/** Gemini 3 Pro (default, state-of-the-art reasoning with 1M token context) */
+	Gemini3Pro = "Gemini3Pro",
+	/** Gemini 3 Flash (fast frontier-class performance at lower cost) */
+	Gemini3Flash = "Gemini3Flash",
+	/** Gemini 2.5 Pro (production tier) */
+	Gemini2_5Pro = "Gemini2_5Pro",
+	/** Gemini 2.0 Flash (previous generation fast model) */
+	Gemini2_0Flash = "Gemini2_0Flash",
+}
 
 /** Request types for the API */
 export type Request = 

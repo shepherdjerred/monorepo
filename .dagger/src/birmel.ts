@@ -83,7 +83,10 @@ function installWorkspaceDeps(workspaceSource: Directory, useMounts: boolean): C
       .withMountedFile(
         "/workspace/packages/clauderon/web/frontend/package.json",
         workspaceSource.file("packages/clauderon/web/frontend/package.json"),
-      );
+      )
+      // Clauderon docs package (mount full directory in PHASE 1 for workspace validation)
+      .withExec(["mkdir", "-p", "/workspace/packages/clauderon/docs"])
+      .withMountedDirectory("/workspace/packages/clauderon/docs", workspaceSource.directory("packages/clauderon/docs"));
   } else {
     container = container
       .withFile("/workspace/package.json", workspaceSource.file("package.json"))
@@ -121,7 +124,9 @@ function installWorkspaceDeps(workspaceSource: Directory, useMounts: boolean): C
       .withFile(
         "/workspace/packages/clauderon/web/frontend/package.json",
         workspaceSource.file("packages/clauderon/web/frontend/package.json"),
-      );
+      )
+      // Clauderon docs package (copy full directory in PHASE 1 for workspace validation)
+      .withDirectory("/workspace/packages/clauderon/docs", workspaceSource.directory("packages/clauderon/docs"));
   }
 
   // PHASE 2: Install dependencies (cached if lockfile + package.jsons unchanged)
