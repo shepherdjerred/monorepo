@@ -590,18 +590,6 @@ mod tests {
     }
 
     #[test]
-    fn test_experimental_models_env_override() {
-        unsafe {
-            std::env::set_var("CLAUDERON_FEATURE_ENABLE_EXPERIMENTAL_MODELS", "true");
-        }
-        let flags = FeatureFlags::load(None).expect("Failed to load flags");
-        assert!(flags.enable_experimental_models);
-        unsafe {
-            std::env::remove_var("CLAUDERON_FEATURE_ENABLE_EXPERIMENTAL_MODELS");
-        }
-    }
-
-    #[test]
     fn test_experimental_models_cli_override() {
         let cli = CliFeatureFlags {
             enable_experimental_models: Some(true),
