@@ -347,7 +347,9 @@ impl SpritesConfig {
 
         Err(anyhow::anyhow!(
             "No Sprites authentication token found. Set SPRITES_TOKEN environment variable or add 'token' to {}",
-            Self::config_path().unwrap_or_else(|_| PathBuf::from("~/.clauderon/sprites-config.toml")).display()
+            Self::config_path()
+                .unwrap_or_else(|_| PathBuf::from("~/.clauderon/sprites-config.toml"))
+                .display()
         ))
     }
 
@@ -493,7 +495,10 @@ mod tests {
         assert_eq!(deserialized.token, config.token);
         assert_eq!(deserialized.resources, config.resources);
         assert_eq!(deserialized.lifecycle, config.lifecycle);
-        assert_eq!(deserialized.network.default_policy, config.network.default_policy);
+        assert_eq!(
+            deserialized.network.default_policy,
+            config.network.default_policy
+        );
         assert_eq!(deserialized.image, config.image);
     }
 
