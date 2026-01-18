@@ -47,6 +47,7 @@ pub async fn handle_request(
                         req.initial_prompt,
                         req.backend,
                         req.agent,
+                        req.model.clone(),
                         req.dangerous_skip_checks,
                         req.print_mode,
                         req.plan_mode,
