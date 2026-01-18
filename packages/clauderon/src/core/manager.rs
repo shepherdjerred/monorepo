@@ -3459,14 +3459,14 @@ impl SessionManager {
         id_or_name: &str,
         new_mode: super::session::AccessMode,
     ) -> anyhow::Result<()> {
-        // Validate read-only mode is enabled if requested
-        self.validate_readonly_mode_allowed(new_mode)?;
-
         let mut sessions = self.sessions.write().await;
         let session = sessions
             .iter_mut()
             .find(|s| s.name == id_or_name || s.id.to_string() == id_or_name)
             .ok_or_else(|| anyhow::anyhow!("Session not found: {id_or_name}"))?;
+
+        // Validate read-only mode is enabled if requested
+        self.validate_readonly_mode_allowed(new_mode)?;
 
         let session_id = session.id;
         let backend = session.backend;
