@@ -251,7 +251,8 @@ pub struct DirectoryPickerState {
     matcher: nucleo_matcher::Matcher,
 }
 
-/// Create dialog state
+/// Create dialog state for managing session creation UI.
+/// Contains multiple bool fields for distinct state flags (skip_checks, plan_mode, button_create_focused, multi_repo_enabled).
 #[derive(Debug, Clone)]
 #[allow(clippy::struct_excessive_bools)]
 pub struct CreateDialogState {
