@@ -1,15 +1,15 @@
 ---
 title: Credential Proxy
-description: How mux secures credentials with HTTP proxy interception
+description: How clauderon secures credentials with HTTP proxy interception
 ---
 
-The credential proxy is the core security component of mux. It intercepts HTTP/HTTPS requests and injects credentials at request time.
+The credential proxy is the core security component of clauderon. It intercepts HTTP/HTTPS requests and injects credentials at request time.
 
 ## Architecture
 
 ```
 ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│   AI Agent      │────▶│   mux Proxy     │────▶│   API Server    │
+│   AI Agent      │────▶│   clauderon Proxy     │────▶│   API Server    │
 │ (placeholder    │     │ (injects real   │     │ (receives real  │
 │  credentials)   │     │  credentials)   │     │  credentials)   │
 └─────────────────┘     └─────────────────┘     └─────────────────┘
@@ -25,7 +25,7 @@ The credential proxy is the core security component of mux. It intercepts HTTP/H
 
 ## TLS Interception
 
-For HTTPS traffic, mux generates a Certificate Authority (CA) that:
+For HTTPS traffic, clauderon generates a Certificate Authority (CA) that:
 
 - Signs certificates for each requested domain
 - Is trusted by the session environment
@@ -36,14 +36,14 @@ For HTTPS traffic, mux generates a Certificate Authority (CA) that:
 The CA certificate is stored at:
 
 ```
-~/.config/mux/ca/ca.crt
+~/.config/clauderon/ca/ca.crt
 ```
 
 Sessions automatically trust this CA via environment configuration.
 
 ## Configuration
 
-Configure the proxy in `~/.config/mux/config.toml`:
+Configure the proxy in `~/.config/clauderon/config.toml`:
 
 ```toml
 [proxy]
@@ -67,7 +67,7 @@ timeout = 30
 log_requests = false
 
 # Log file location
-log_file = "~/.config/mux/proxy.log"
+log_file = "~/.config/clauderon/proxy.log"
 ```
 
 ## Credential Configuration
@@ -153,8 +153,8 @@ If you see certificate verification errors:
 
 ```bash
 # Regenerate the CA
-rm -rf ~/.config/mux/ca
-mux proxy --regenerate-ca
+rm -rf ~/.config/clauderon/ca
+clauderon proxy --regenerate-ca
 ```
 
 ### Credentials Not Injecting
@@ -162,7 +162,7 @@ mux proxy --regenerate-ca
 Check the proxy logs:
 
 ```bash
-tail -f ~/.config/mux/proxy.log
+tail -f ~/.config/clauderon/proxy.log
 ```
 
 Verify domain patterns match:

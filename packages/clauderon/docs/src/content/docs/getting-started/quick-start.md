@@ -1,16 +1,16 @@
 ---
 title: Quick Start
-description: Create your first mux session in minutes
+description: Create your first clauderon session in minutes
 ---
 
-This guide will walk you through creating your first mux session.
+This guide will walk you through creating your first clauderon session.
 
 ## Start the TUI
 
-Launch mux without any arguments to open the terminal user interface:
+Launch clauderon without any arguments to open the terminal user interface:
 
 ```bash
-mux
+clauderon
 ```
 
 You'll see the main session list view. Use the keyboard to navigate:
@@ -31,7 +31,7 @@ Press `n` to create a new session. You'll be prompted to configure:
 
 ## Configure Credentials
 
-Create a configuration file at `~/.config/mux/config.toml`:
+Create a configuration file at `~/.config/clauderon/config.toml`:
 
 ```toml
 [credentials]
@@ -64,17 +64,17 @@ echo $ANTHROPIC_API_KEY  # Shows "placeholder"
 
 ## Session Lifecycle
 
-Sessions persist across mux restarts:
+Sessions persist across clauderon restarts:
 
 ```bash
 # List all sessions
-mux list
+clauderon list
 
 # Attach to an existing session
-mux attach <session-name>
+clauderon attach <session-name>
 
 # Delete a session
-mux delete <session-name>
+clauderon delete <session-name>
 ```
 
 ## Next Steps

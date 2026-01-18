@@ -1,5 +1,5 @@
 ---
-title: mux
+title: clauderon
 description: Session management for AI coding agents
 template: splash
 hero:
@@ -11,14 +11,14 @@ hero:
       link: /getting-started/introduction/
       icon: right-arrow
     - text: View on GitHub
-      link: https://github.com/shepherdjerred/monorepo/tree/main/packages/multiplexer
+      link: https://github.com/shepherdjerred/monorepo/tree/main/packages/clauderon
       icon: external
       variant: minimal
 ---
 
 import { Card, CardGrid } from "@astrojs/starlight/components";
 
-## Why mux?
+## Why clauderon?
 
 <CardGrid stagger>
   <Card title="Zero-Credential Security" icon="shield">
@@ -46,20 +46,20 @@ import { Card, CardGrid } from "@astrojs/starlight/components";
 
 ```bash
 # Download the latest release
-curl -fsSL https://github.com/shepherdjerred/monorepo/releases/latest/download/mux-linux-x86_64 -o mux
-chmod +x mux
-sudo mv mux /usr/local/bin/
+curl -fsSL https://github.com/shepherdjerred/monorepo/releases/latest/download/clauderon-linux-x86_64 -o clauderon
+chmod +x clauderon
+sudo mv clauderon /usr/local/bin/
 
 # Start a session
-mux
+clauderon
 ```
 
 ## Architecture
 
-mux uses an HTTP proxy with TLS interception to securely manage credentials:
+clauderon uses an HTTP proxy with TLS interception to securely manage credentials:
 
 1. **Session Creation**: Create isolated environments (Docker/Zellij)
-2. **Proxy Configuration**: Sessions route traffic through mux's proxy
+2. **Proxy Configuration**: Sessions route traffic through clauderon's proxy
 3. **Credential Injection**: OAuth tokens injected at request time
 4. **Request Filtering**: Malicious requests blocked before reaching APIs
 

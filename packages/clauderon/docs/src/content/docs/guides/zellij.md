@@ -3,11 +3,11 @@ title: Zellij Backend
 description: Running sessions in Zellij terminal panes
 ---
 
-The Zellij backend provides lightweight session isolation using terminal multiplexer panes.
+The Zellij backend provides lightweight session isolation using terminal clauderon panes.
 
 ## How It Works
 
-When you create a Zellij session, mux:
+When you create a Zellij session, clauderon:
 
 1. Creates a new Zellij session or pane
 2. Configures proxy environment variables
@@ -20,11 +20,11 @@ Choose Zellij over Docker when you:
 - Need faster session startup
 - Don't need full container isolation
 - Want access to host system tools
-- Are debugging or developing mux itself
+- Are debugging or developing clauderon itself
 
 ## Configuration
 
-Configure Zellij settings in `~/.config/mux/config.toml`:
+Configure Zellij settings in `~/.config/clauderon/config.toml`:
 
 ```toml
 [zellij]
@@ -47,7 +47,7 @@ env = [
 Sessions start in the specified working directory:
 
 ```bash
-mux new --backend zellij --workdir /home/user/projects my-session
+clauderon new --backend zellij --workdir /home/user/projects my-session
 ```
 
 ### Named Sessions
@@ -56,7 +56,7 @@ Zellij sessions are named for easy reattachment:
 
 ```bash
 # Create a named session
-mux new --backend zellij --name my-project project-session
+clauderon new --backend zellij --name my-project project-session
 
 # Attach from Zellij
 zellij attach my-project-project-session
@@ -64,7 +64,7 @@ zellij attach my-project-project-session
 
 ## Zellij Layouts
 
-Create custom layouts for mux sessions in `~/.config/zellij/layouts/mux.kdl`:
+Create custom layouts for clauderon sessions in `~/.config/zellij/layouts/clauderon.kdl`:
 
 ```kdl
 layout {
@@ -83,11 +83,11 @@ layout {
 }
 ```
 
-Then configure mux to use it:
+Then configure clauderon to use it:
 
 ```toml
 [zellij]
-layout = "mux"
+layout = "clauderon"
 ```
 
 ## Comparison with Docker

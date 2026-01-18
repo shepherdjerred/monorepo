@@ -1,6 +1,6 @@
 ---
 title: CLI Commands
-description: Complete reference for mux command-line interface
+description: Complete reference for clauderon command-line interface
 ---
 
 ## Global Options
@@ -8,7 +8,7 @@ description: Complete reference for mux command-line interface
 These options are available for all commands:
 
 ```
---config <PATH>    Path to config file (default: ~/.config/mux/config.toml)
+--config <PATH>    Path to config file (default: ~/.config/clauderon/config.toml)
 --verbose, -v      Enable verbose output
 --quiet, -q        Suppress non-essential output
 --help, -h         Print help
@@ -17,24 +17,24 @@ These options are available for all commands:
 
 ## Commands
 
-### `mux` (default)
+### `clauderon` (default)
 
 Launch the terminal user interface.
 
 ```bash
-mux
+clauderon
 ```
 
 Opens the interactive TUI for managing sessions.
 
 ---
 
-### `mux new`
+### `clauderon new`
 
 Create a new session.
 
 ```bash
-mux new [OPTIONS] <NAME>
+clauderon new [OPTIONS] <NAME>
 ```
 
 **Arguments:**
@@ -53,23 +53,23 @@ mux new [OPTIONS] <NAME>
 **Examples:**
 ```bash
 # Create a Docker session
-mux new --backend docker --workdir /home/user/project my-session
+clauderon new --backend docker --workdir /home/user/project my-session
 
 # Create from a git repo
-mux new --repo https://github.com/user/repo --branch main project-work
+clauderon new --repo https://github.com/user/repo --branch main project-work
 
 # Create with custom image
-mux new --backend docker --image rust:1.85 rust-dev
+clauderon new --backend docker --image rust:1.85 rust-dev
 ```
 
 ---
 
-### `mux list`
+### `clauderon list`
 
 List all sessions.
 
 ```bash
-mux list [OPTIONS]
+clauderon list [OPTIONS]
 ```
 
 **Options:**
@@ -88,12 +88,12 @@ mux list [OPTIONS]
 
 ---
 
-### `mux attach`
+### `clauderon attach`
 
 Attach to an existing session.
 
 ```bash
-mux attach <NAME>
+clauderon attach <NAME>
 ```
 
 **Arguments:**
@@ -103,12 +103,12 @@ If the session is stopped, it will be started first.
 
 ---
 
-### `mux delete`
+### `clauderon delete`
 
 Delete a session.
 
 ```bash
-mux delete [OPTIONS] <NAME>
+clauderon delete [OPTIONS] <NAME>
 ```
 
 **Arguments:**
@@ -122,12 +122,12 @@ mux delete [OPTIONS] <NAME>
 
 ---
 
-### `mux stop`
+### `clauderon stop`
 
 Stop a running session.
 
 ```bash
-mux stop <NAME>
+clauderon stop <NAME>
 ```
 
 **Arguments:**
@@ -135,12 +135,12 @@ mux stop <NAME>
 
 ---
 
-### `mux start`
+### `clauderon start`
 
 Start a stopped session.
 
 ```bash
-mux start <NAME>
+clauderon start <NAME>
 ```
 
 **Arguments:**
@@ -148,22 +148,22 @@ mux start <NAME>
 
 ---
 
-### `mux proxy`
+### `clauderon proxy`
 
 Manage the credential proxy.
 
 ```bash
-mux proxy <SUBCOMMAND>
+clauderon proxy <SUBCOMMAND>
 ```
 
 **Subcommands:**
 
-#### `mux proxy start`
+#### `clauderon proxy start`
 
 Start the proxy server.
 
 ```bash
-mux proxy start [OPTIONS]
+clauderon proxy start [OPTIONS]
 ```
 
 **Options:**
@@ -173,28 +173,28 @@ mux proxy start [OPTIONS]
 --foreground, -f       Run in foreground
 ```
 
-#### `mux proxy stop`
+#### `clauderon proxy stop`
 
 Stop the proxy server.
 
 ```bash
-mux proxy stop
+clauderon proxy stop
 ```
 
-#### `mux proxy status`
+#### `clauderon proxy status`
 
 Show proxy status.
 
 ```bash
-mux proxy status
+clauderon proxy status
 ```
 
-#### `mux proxy regenerate-ca`
+#### `clauderon proxy regenerate-ca`
 
 Regenerate the CA certificate.
 
 ```bash
-mux proxy regenerate-ca [OPTIONS]
+clauderon proxy regenerate-ca [OPTIONS]
 ```
 
 **Options:**
@@ -204,48 +204,48 @@ mux proxy regenerate-ca [OPTIONS]
 
 ---
 
-### `mux config`
+### `clauderon config`
 
 Manage configuration.
 
 ```bash
-mux config <SUBCOMMAND>
+clauderon config <SUBCOMMAND>
 ```
 
 **Subcommands:**
 
-#### `mux config show`
+#### `clauderon config show`
 
 Show current configuration.
 
 ```bash
-mux config show [--json]
+clauderon config show [--json]
 ```
 
-#### `mux config edit`
+#### `clauderon config edit`
 
 Open configuration in editor.
 
 ```bash
-mux config edit
+clauderon config edit
 ```
 
-#### `mux config init`
+#### `clauderon config init`
 
 Create default configuration file.
 
 ```bash
-mux config init [--force]
+clauderon config init [--force]
 ```
 
 ---
 
-### `mux daemon`
+### `clauderon daemon`
 
-Run mux as a background daemon.
+Run clauderon as a background daemon.
 
 ```bash
-mux daemon [OPTIONS]
+clauderon daemon [OPTIONS]
 ```
 
 **Options:**
@@ -260,8 +260,8 @@ The daemon manages the proxy and session lifecycle.
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `MUX_CONFIG` | Config file path | `~/.config/mux/config.toml` |
-| `MUX_DATA_DIR` | Data directory | `~/.local/share/mux` |
+| `MUX_CONFIG` | Config file path | `~/.config/clauderon/config.toml` |
+| `MUX_DATA_DIR` | Data directory | `~/.local/share/clauderon` |
 | `MUX_LOG_LEVEL` | Log level (error, warn, info, debug, trace) | `info` |
 | `MUX_PROXY_PORT` | Proxy listen port | `8080` |
 

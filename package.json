@@ -2,11 +2,14 @@
   "name": "@shepherdjerred/share",
   "type": "module",
   "private": true,
-  "workspaces": ["packages/*", "!packages/mux-site", "packages/clauderon/web/*"],
+  "workspaces": ["packages/*", "packages/clauderon/web/*", "packages/clauderon/docs"],
   "scripts": {
     "build": "bun run --filter='./packages/**' build",
     "test": "bun run --filter='./packages/**' test",
     "typecheck": "bun run --filter='./packages/**' typecheck",
+    "docs:dev": "bun run --filter='./packages/clauderon/docs' dev",
+    "docs:build": "bun run --filter='./packages/clauderon/docs' build",
+    "docs:preview": "bun run --filter='./packages/clauderon/docs' preview",
     "prepare": "husky"
   },
   "devDependencies": {
