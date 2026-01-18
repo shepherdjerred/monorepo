@@ -160,10 +160,10 @@ async fn test_path_canonicalization_prevents_duplicates() {
             false,
             AccessMode::default(),
             vec![],
-        None,
-        None,
-        None,
-        None,
+            None,
+            None,
+            None,
+            None,
         )
         .await
         .expect("Failed to create session 1");
@@ -173,7 +173,7 @@ async fn test_path_canonicalization_prevents_duplicates() {
     manager
         .create_session(
             path_with_dot,
-        None,
+            None,
             "Prompt 2".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
@@ -182,10 +182,10 @@ async fn test_path_canonicalization_prevents_duplicates() {
             false,
             AccessMode::default(),
             vec![],
-        None,
-        None,
-        None,
-        None,
+            None,
+            None,
+            None,
+            None,
         )
         .await
         .expect("Failed to create session 2");
@@ -273,10 +273,10 @@ async fn test_upsert_behavior_updates_timestamp() {
             false,
             AccessMode::default(),
             vec![],
-        None,
-        None,
-        None,
-        None,
+            None,
+            None,
+            None,
+            None,
         )
         .await
         .expect("Failed to create session 1");
@@ -304,10 +304,10 @@ async fn test_upsert_behavior_updates_timestamp() {
             false,
             AccessMode::default(),
             vec![],
-        None,
-        None,
-        None,
-        None,
+            None,
+            None,
+            None,
+            None,
         )
         .await
         .expect("Failed to create session 2");
@@ -385,7 +385,7 @@ async fn test_nonexistent_repo_handles_gracefully() {
     let result = manager
         .create_session(
             "/nonexistent/repo/path".to_string(),
-        None,
+            None,
             "Prompt".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
@@ -394,10 +394,10 @@ async fn test_nonexistent_repo_handles_gracefully() {
             false,
             AccessMode::default(),
             vec![],
-        None,
-        None,
-        None,
-        None,
+            None,
+            None,
+            None,
+            None,
         )
         .await;
 
@@ -455,10 +455,10 @@ async fn test_subdirectories_tracked_separately() {
             false,
             AccessMode::default(),
             vec![],
-        None,
-        None,
-        None,
-        None,
+            None,
+            None,
+            None,
+            None,
         )
         .await
         .expect("Failed to create session in packages/foo");
@@ -479,10 +479,10 @@ async fn test_subdirectories_tracked_separately() {
             false,
             AccessMode::default(),
             vec![],
-        None,
-        None,
-        None,
-        None,
+            None,
+            None,
+            None,
+            None,
         )
         .await
         .expect("Failed to create session in packages/bar");
@@ -542,10 +542,10 @@ async fn test_same_subdir_updates_timestamp() {
             false,
             AccessMode::default(),
             vec![],
-        None,
-        None,
-        None,
-        None,
+            None,
+            None,
+            None,
+            None,
         )
         .await
         .expect("Failed to create session 1");
@@ -573,10 +573,10 @@ async fn test_same_subdir_updates_timestamp() {
             false,
             AccessMode::default(),
             vec![],
-        None,
-        None,
-        None,
-        None,
+            None,
+            None,
+            None,
+            None,
         )
         .await
         .expect("Failed to create session 2");

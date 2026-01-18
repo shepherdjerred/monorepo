@@ -441,7 +441,7 @@ async fn test_access_mode_persists_across_restarts() {
             to_exec_backend(zellij),
             to_exec_backend(docker),
             to_exec_backend(kubernetes),
-        None,
+            None,
         )
         .await
         .expect("Failed to create manager");
@@ -462,7 +462,7 @@ async fn test_access_mode_persists_across_restarts() {
                 None,   // pull_policy
                 None,   // cpu_limit
                 None,   // memory_limit
-            None,   // storage_class
+                None,   // storage_class
             )
             .await
             .expect("Failed to create session");
@@ -495,7 +495,7 @@ async fn test_access_mode_persists_across_restarts() {
             to_exec_backend(zellij),
             to_exec_backend(docker),
             to_exec_backend(kubernetes),
-        None,
+            None,
         )
         .await
         .expect("Failed to create manager");

@@ -578,9 +578,9 @@ async fn test_get_attach_command_docker() {
             true,                  // plan_mode
             AccessMode::default(), // access_mode
             vec![],                // images
-        None,
-        None,
-        None,
+            None,
+            None,
+            None,
             None, // container settings
         )
         .await
@@ -835,7 +835,7 @@ async fn test_update_metadata_by_uuid() {
         .update_metadata(
             &session.id.to_string(),
             Some("UUID Title".to_string()),
-        None,
+            None,
         )
         .await
         .unwrap();

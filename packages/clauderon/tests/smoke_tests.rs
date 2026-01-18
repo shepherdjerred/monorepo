@@ -400,7 +400,7 @@ async fn test_claude_print_mode_e2e() {
         container_image: None,
         container_resources: None,
         repositories: vec![],
-                storage_class_override: None,
+        storage_class_override: None,
     };
 
     // Simple prompt that should produce predictable-ish output
