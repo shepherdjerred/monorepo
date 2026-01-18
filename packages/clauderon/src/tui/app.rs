@@ -152,23 +152,21 @@ pub struct SignalMenuState {
     pub signals: Vec<SignalType>,
 }
 
+impl Default for SignalMenuState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SignalMenuState {
     /// Create new signal menu state
+    /// Note: Only signals with control character equivalents are included (SIGINT, SIGTSTP, SIGQUIT).
+    /// Other signals like SIGTERM, SIGKILL, etc. are not yet supported for PTY-based forwarding.
     #[must_use]
     pub fn new() -> Self {
         Self {
             selected_index: 0,
-            signals: vec![
-                SignalType::Sigint,
-                SignalType::Sigquit,
-                SignalType::Sigtstp,
-                SignalType::Sigcont,
-                SignalType::Sigterm,
-                SignalType::Sigkill,
-                SignalType::Sighup,
-                SignalType::Sigusr1,
-                SignalType::Sigusr2,
-            ],
+            signals: vec![SignalType::Sigint, SignalType::Sigtstp, SignalType::Sigquit],
         }
     }
 
