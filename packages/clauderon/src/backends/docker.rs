@@ -173,7 +173,7 @@ impl DockerBackend {
         }
 
         // Check for reserved names
-        let reserved = ["workspace", "clauderon", "repos", "primary"];
+        let reserved = ["workspace", "clauderon", "repos"];
         if reserved.contains(&mount_name.to_lowercase().as_str()) {
             anyhow::bail!("Mount name '{}' is reserved", mount_name);
         }
