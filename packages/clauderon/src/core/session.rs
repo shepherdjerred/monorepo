@@ -418,7 +418,6 @@ impl Session {
     pub fn model_cli_flag(&self) -> Option<&'static str> {
         self.model.as_ref().map(SessionModel::to_cli_flag)
     }
-
 }
 
 /// Session lifecycle status
