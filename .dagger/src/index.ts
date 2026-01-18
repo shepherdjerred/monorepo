@@ -82,7 +82,8 @@ function installWorkspaceDeps(source: Directory): Container {
     .withMountedFile("/workspace/packages/clauderon/web/shared/package.json", source.file("packages/clauderon/web/shared/package.json"))
     .withMountedFile("/workspace/packages/clauderon/web/client/package.json", source.file("packages/clauderon/web/client/package.json"))
     .withMountedFile("/workspace/packages/clauderon/web/frontend/package.json", source.file("packages/clauderon/web/frontend/package.json"))
-    // Clauderon docs package (mount full directory in PHASE 1 for workspace validation)
+    // Clauderon docs package (create directory structure then mount)
+    .withExec(["mkdir", "-p", "/workspace/packages/clauderon/docs"])
     .withMountedDirectory("/workspace/packages/clauderon/docs", source.directory("packages/clauderon/docs"));
 
   // PHASE 2: Install dependencies (cached if lockfile + package.jsons unchanged)
