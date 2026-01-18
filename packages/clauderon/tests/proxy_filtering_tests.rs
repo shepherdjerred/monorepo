@@ -98,7 +98,7 @@ async fn create_test_manager_with_proxy() -> (
         to_exec_backend(Arc::clone(&zellij)),
         to_exec_backend(Arc::clone(&docker)),
         to_exec_backend(Arc::clone(&kubernetes)),
-        None,
+            None,
     )
     .await
     .expect("Failed to create manager");
@@ -436,7 +436,7 @@ async fn test_access_mode_persists_across_restarts() {
             to_exec_backend(zellij),
             to_exec_backend(docker),
             to_exec_backend(kubernetes),
-        None,
+            None,
         )
         .await
         .expect("Failed to create manager");
@@ -489,7 +489,7 @@ async fn test_access_mode_persists_across_restarts() {
             to_exec_backend(zellij),
             to_exec_backend(docker),
             to_exec_backend(kubernetes),
-        None,
+            None,
         )
         .await
         .expect("Failed to create manager");
