@@ -3,6 +3,7 @@ import { StatusBar, Text, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as Sentry from '@sentry/react-native';
 import { SessionProvider } from './src/contexts/SessionContext';
+import { ThemeProvider, useTheme } from './src/contexts/ThemeContext';
 import { AppNavigator } from './src/navigation/AppNavigator';
 import { SENTRY_DSN } from './src/config';
 
@@ -12,6 +13,20 @@ if (SENTRY_DSN) {
     dsn: SENTRY_DSN,
     environment: __DEV__ ? 'development' : 'production',
   });
+}
+
+function ThemedApp(): React.JSX.Element {
+  const { isDark, colors } = useTheme();
+
+  return (
+    <SessionProvider>
+      <StatusBar
+        barStyle={isDark ? "light-content" : "dark-content"}
+        backgroundColor={colors.primary}
+      />
+      <AppNavigator />
+    </SessionProvider>
+  );
 }
 
 function App(): React.JSX.Element {
@@ -27,10 +42,9 @@ function App(): React.JSX.Element {
       )}
     >
       <SafeAreaProvider>
-        <SessionProvider>
-          <StatusBar barStyle="light-content" backgroundColor="#1e40af" />
-          <AppNavigator />
-        </SessionProvider>
+        <ThemeProvider>
+          <ThemedApp />
+        </ThemeProvider>
       </SafeAreaProvider>
     </Sentry.ErrorBoundary>
   );
