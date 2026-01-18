@@ -358,29 +358,32 @@ async fn test_create_dialog_toggle_backend() {
 
     assert_eq!(app.create_dialog.backend, BackendType::Zellij); // Default is Zellij
 
-    // Toggle to Docker (Left and Right both toggle forward)
-    handle_key_event(&mut app, key(KeyCode::Left))
-        .await
-        .unwrap();
-    assert_eq!(app.create_dialog.backend, BackendType::Docker);
-
-    // Toggle to Kubernetes
-    handle_key_event(&mut app, key(KeyCode::Left))
-        .await
-        .unwrap();
-    assert_eq!(app.create_dialog.backend, BackendType::Kubernetes);
-
-    // Toggle back to Zellij
-    handle_key_event(&mut app, key(KeyCode::Left))
-        .await
-        .unwrap();
-    assert_eq!(app.create_dialog.backend, BackendType::Zellij);
-
-    // Verify Right key also toggles (same direction as Left)
+    // Test Right key (forward): Zellij → Docker → Kubernetes → Zellij
     handle_key_event(&mut app, key(KeyCode::Right))
         .await
         .unwrap();
     assert_eq!(app.create_dialog.backend, BackendType::Docker);
+
+    handle_key_event(&mut app, key(KeyCode::Right))
+        .await
+        .unwrap();
+    assert_eq!(app.create_dialog.backend, BackendType::Kubernetes);
+
+    handle_key_event(&mut app, key(KeyCode::Right))
+        .await
+        .unwrap();
+    // On macOS, this would cycle through AppleContainer. On other platforms, it goes directly to Zellij
+    #[cfg(target_os = "macos")]
+    assert_eq!(app.create_dialog.backend, BackendType::AppleContainer);
+    #[cfg(not(target_os = "macos"))]
+    assert_eq!(app.create_dialog.backend, BackendType::Zellij);
+
+    // Test Left key (backward): should go reverse direction
+    handle_key_event(&mut app, key(KeyCode::Left))
+        .await
+        .unwrap();
+    // Should go back to Kubernetes
+    assert_eq!(app.create_dialog.backend, BackendType::Kubernetes);
 }
 
 #[tokio::test]

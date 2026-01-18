@@ -34,7 +34,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
 
     // Calculate dynamic height for prompt field based on content
     let prompt_lines = dialog.prompt.lines().count().max(1);
-    let prompt_height = prompt_lines.clamp(5, 15); // Min 5, max 15 lines
+    let prompt_height = prompt_lines.max(5); // Min 5 lines, no max
 
     // Calculate images height (0 if no images, or limited height if images present)
     let images_height = if dialog.images.is_empty() {

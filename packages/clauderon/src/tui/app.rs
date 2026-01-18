@@ -233,10 +233,18 @@ impl DirectoryPickerState {
                 if !path.exists() {
                     return None;
                 }
-                let name = path
-                    .file_name()
-                    .map(|n| n.to_string_lossy().to_string())
-                    .unwrap_or(dto.repo_path);
+                let repo_name = path.file_name().map_or_else(
+                    || dto.repo_path.clone(),
+                    |n| n.to_string_lossy().to_string(),
+                );
+
+                // Include subdirectory in the display name if present
+                let name = if dto.subdirectory.is_empty() {
+                    repo_name
+                } else {
+                    format!("{} → {}", repo_name, dto.subdirectory)
+                };
+
                 Some(DirEntry {
                     name,
                     path,
@@ -432,22 +440,47 @@ impl CreateDialogState {
         *self = Self::new();
     }
 
-    /// Cycle through backends: Zellij → Docker → Kubernetes → AppleContainer → Zellij, auto-adjusting skip_checks
+    /// Cycle through backends: Zellij → Docker → Kubernetes → [AppleContainer] → Zellij, auto-adjusting skip_checks
     pub fn toggle_backend(&mut self) {
         self.backend = match self.backend {
             BackendType::Zellij => BackendType::Docker,
             BackendType::Docker => BackendType::Kubernetes,
             #[cfg(target_os = "macos")]
             BackendType::Kubernetes => BackendType::AppleContainer,
-            #[cfg(not(target_os = "macos"))]
-            BackendType::Kubernetes => BackendType::Zellij,
             #[cfg(target_os = "macos")]
             BackendType::AppleContainer => BackendType::Zellij,
+            #[cfg(not(target_os = "macos"))]
+            BackendType::Kubernetes => BackendType::Zellij,
         };
 
         // Auto-toggle skip_checks based on backend:
         // Docker, Kubernetes, and AppleContainer benefit from skipping checks (isolated environments)
         // Zellij runs locally so checks are more important
+        #[cfg(target_os = "macos")]
+        let is_container_backend = matches!(
+            self.backend,
+            BackendType::Docker | BackendType::Kubernetes | BackendType::AppleContainer
+        );
+        #[cfg(not(target_os = "macos"))]
+        let is_container_backend =
+            matches!(self.backend, BackendType::Docker | BackendType::Kubernetes);
+        self.skip_checks = is_container_backend;
+    }
+
+    /// Cycle through backends in reverse: Zellij → [AppleContainer] → Kubernetes → Docker → Zellij
+    pub fn toggle_backend_reverse(&mut self) {
+        self.backend = match self.backend {
+            #[cfg(target_os = "macos")]
+            BackendType::Zellij => BackendType::AppleContainer,
+            #[cfg(target_os = "macos")]
+            BackendType::AppleContainer => BackendType::Kubernetes,
+            #[cfg(not(target_os = "macos"))]
+            BackendType::Zellij => BackendType::Kubernetes,
+            BackendType::Kubernetes => BackendType::Docker,
+            BackendType::Docker => BackendType::Zellij,
+        };
+
+        // Auto-toggle skip_checks based on backend (same logic as forward toggle)
         #[cfg(target_os = "macos")]
         let is_container_backend = matches!(
             self.backend,
@@ -473,6 +506,15 @@ impl CreateDialogState {
             AgentType::ClaudeCode => AgentType::Codex,
             AgentType::Codex => AgentType::Gemini,
             AgentType::Gemini => AgentType::ClaudeCode,
+        };
+    }
+
+    /// Cycle through agents in reverse: ClaudeCode -> Gemini -> Codex -> ClaudeCode
+    pub fn toggle_agent_reverse(&mut self) {
+        self.agent = match self.agent {
+            AgentType::ClaudeCode => AgentType::Gemini,
+            AgentType::Gemini => AgentType::Codex,
+            AgentType::Codex => AgentType::ClaudeCode,
         };
     }
 
