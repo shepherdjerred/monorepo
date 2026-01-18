@@ -6,7 +6,8 @@ const rnwPath = fs.realpathSync(
   path.resolve(require.resolve('react-native-windows/package.json'), '..'),
 );
 
-//
+// Resolve the symlinked shared types directory
+const sharedTypesPath = path.resolve(__dirname, '../web/shared/src');
 
 /**
  * Metro configuration
@@ -16,7 +17,7 @@ const rnwPath = fs.realpathSync(
  */
 
 const config = {
-  //
+  watchFolders: [sharedTypesPath],
   resolver: {
     blockList: [
       // This stops "npx @react-native-community/cli run-windows" from causing the metro server to crash if its already running

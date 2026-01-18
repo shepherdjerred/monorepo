@@ -209,8 +209,9 @@ export function SessionCard({ session, onAttach, onEdit, onArchive, onUnarchive,
 
           {/* Working Tree Dirty Status */}
           {session.worktree_dirty && (
-            <Tooltip>
-              <TooltipTrigger asChild>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
                 <div className="flex items-center gap-2 p-2 bg-orange-500/10 border-l-4 border-orange-500 cursor-help">
                   <Edit className="w-3.5 h-3.5 text-orange-500" />
                   <span className="text-sm font-mono font-semibold text-orange-500">
@@ -252,6 +253,7 @@ export function SessionCard({ session, onAttach, onEdit, onArchive, onUnarchive,
                 )}
               </TooltipContent>
             </Tooltip>
+            </TooltipProvider>
           )}
         </div>
 

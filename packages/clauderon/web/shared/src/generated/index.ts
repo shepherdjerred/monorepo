@@ -233,6 +233,31 @@ export interface CredentialStatus {
 	masked_value?: string;
 }
 
+/**
+ * Feature flags configuration for the daemon.
+ * Flags are loaded at startup and require daemon restart to change.
+ */
+export interface FeatureFlags {
+	/** Enable experimental WebAuthn passwordless authentication */
+	enable_webauthn_auth: boolean;
+	/** Enable AI-powered session metadata generation */
+	enable_ai_metadata: boolean;
+	/** Enable automatic session reconciliation on startup */
+	enable_auto_reconcile: boolean;
+	/** Enable session proxy port reuse (experimental) */
+	enable_proxy_port_reuse: boolean;
+	/** Enable Claude usage tracking via API */
+	enable_usage_tracking: boolean;
+}
+
+/** Feature flags response for the frontend */
+export interface FeatureFlagsResponse {
+	/** Current feature flag values */
+	flags: FeatureFlags;
+	/** Whether flags require daemon restart to change */
+	requires_restart: boolean;
+}
+
 /** Request to finish passkey authentication */
 export interface LoginFinishRequest {
 	username: string;
