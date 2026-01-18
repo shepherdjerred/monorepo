@@ -98,6 +98,8 @@ export enum BackendType {
 	Docker = "Docker",
 	/** Kubernetes pod */
 	Kubernetes = "Kubernetes",
+	/** Apple Container (macOS 26+ with Apple silicon) */
+	AppleContainer = "AppleContainer",
 }
 
 /** AI agent type */
@@ -454,7 +456,7 @@ export interface Session {
 	worktree_dirty: boolean;
 	/** Access mode for proxy filtering */
 	access_mode: AccessMode;
-	/** Port for session-specific HTTP proxy (Docker only) */
+	/** Port for session-specific HTTP proxy (container backends: Docker and Apple Container) */
 	proxy_port?: number;
 	/** Path to Claude Code's session history file (.jsonl) */
 	history_file_path: string;
