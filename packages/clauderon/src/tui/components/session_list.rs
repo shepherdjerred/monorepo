@@ -9,6 +9,7 @@ use unicode_width::UnicodeWidthStr;
 
 use crate::core::{CheckStatus, ClaudeWorkingStatus, Session, SessionStatus};
 use crate::tui::app::App;
+use super::SPINNER_FRAMES;
 
 /// Number of spaces between columns
 const COLUMN_PADDING: usize = 2;
@@ -365,18 +366,8 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
             let claude_indicator = match session.claude_status {
                 ClaudeWorkingStatus::Working => {
                     // Animate based on spinner tick
-                    let spinner = match app.spinner_tick % 10 {
-                        0 => "⠋",
-                        1 => "⠙",
-                        2 => "⠹",
-                        3 => "⠸",
-                        4 => "⠼",
-                        5 => "⠴",
-                        6 => "⠦",
-                        7 => "⠧",
-                        8 => "⠇",
-                        _ => "⠏",
-                    };
+                    let spinner_idx = (app.spinner_tick % SPINNER_FRAMES.len() as u64) as usize;
+                    let spinner = SPINNER_FRAMES[spinner_idx];
                     Span::styled(spinner, Style::default().fg(Color::Green))
                 }
                 ClaudeWorkingStatus::WaitingApproval => {
@@ -436,18 +427,8 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
 
             // Add deletion indicator if deleting
             if is_deleting {
-                let spinner = match app.spinner_tick % 10 {
-                    0 => "⠋",
-                    1 => "⠙",
-                    2 => "⠹",
-                    3 => "⠸",
-                    4 => "⠼",
-                    5 => "⠴",
-                    6 => "⠦",
-                    7 => "⠧",
-                    8 => "⠇",
-                    _ => "⠏",
-                };
+                let spinner_idx = (app.spinner_tick % SPINNER_FRAMES.len() as u64) as usize;
+                let spinner = SPINNER_FRAMES[spinner_idx];
                 spans.push(Span::styled(
                     format!("{spinner} "),
                     Style::default().fg(Color::Yellow),
