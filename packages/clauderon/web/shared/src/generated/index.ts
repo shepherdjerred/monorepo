@@ -166,9 +166,9 @@ export enum GeminiModel {
 
 /** Model configuration for a session */
 export type SessionModel =
-	| { Claude: ClaudeModel }
-	| { Codex: CodexModel }
-	| { Gemini: GeminiModel };
+	| { type: "Claude"; content: ClaudeModel }
+	| { type: "Codex"; content: CodexModel }
+	| { type: "Gemini"; content: GeminiModel };
 
 /** Access mode for proxy filtering */
 export enum AccessMode {
