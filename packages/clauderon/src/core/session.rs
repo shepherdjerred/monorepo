@@ -97,6 +97,9 @@ pub struct Session {
     /// Status of PR checks
     pub pr_check_status: Option<CheckStatus>,
 
+    /// PR review decision (approval status)
+    pub pr_review_decision: Option<ReviewDecision>,
+
     /// Current Claude agent working status (from hooks)
     pub claude_status: ClaudeWorkingStatus,
 
@@ -204,6 +207,7 @@ impl Session {
             dangerous_skip_checks: config.dangerous_skip_checks,
             pr_url: None,
             pr_check_status: None,
+            pr_review_decision: None,
             claude_status: ClaudeWorkingStatus::Unknown,
             claude_status_updated_at: None,
             merge_conflict: false,
@@ -243,6 +247,12 @@ impl Session {
     /// Update PR check status
     pub fn set_check_status(&mut self, status: CheckStatus) {
         self.pr_check_status = Some(status);
+        self.updated_at = Utc::now();
+    }
+
+    /// Update PR review decision
+    pub fn set_pr_review_decision(&mut self, decision: ReviewDecision) {
+        self.pr_review_decision = Some(decision);
         self.updated_at = Utc::now();
     }
 
@@ -378,6 +388,77 @@ impl Session {
     #[must_use]
     pub fn model_cli_flag(&self) -> Option<&'static str> {
         self.model.as_ref().map(SessionModel::to_cli_flag)
+    }
+
+    /// Compute the current workflow stage from session state
+    #[must_use]
+    pub fn workflow_stage(&self) -> WorkflowStage {
+        // Check if PR is merged first
+        if let Some(CheckStatus::Merged) = self.pr_check_status {
+            return WorkflowStage::Merged;
+        }
+
+        // No PR yet - still planning
+        if self.pr_url.is_none() {
+            return WorkflowStage::Planning;
+        }
+
+        // PR exists - check for blockers
+        if self.has_blockers() {
+            return WorkflowStage::Blocked;
+        }
+
+        // Check if ready to merge (all checks pass, approved, no conflicts)
+        let checks_pass = matches!(
+            self.pr_check_status,
+            Some(CheckStatus::Passing) | Some(CheckStatus::Mergeable)
+        );
+        let approved = matches!(self.pr_review_decision, Some(ReviewDecision::Approved));
+        let no_conflicts = !self.merge_conflict;
+
+        if checks_pass && approved && no_conflicts {
+            return WorkflowStage::ReadyToMerge;
+        }
+
+        // Check if waiting for review
+        if matches!(
+            self.pr_review_decision,
+            Some(ReviewDecision::ReviewRequired) | None
+        ) {
+            return WorkflowStage::Review;
+        }
+
+        // Default to implementation phase (PR exists but not ready)
+        WorkflowStage::Implementation
+    }
+
+    /// Check if the session has any blockers
+    #[must_use]
+    pub fn has_blockers(&self) -> bool {
+        // CI is failing
+        let ci_failing = matches!(self.pr_check_status, Some(CheckStatus::Failing));
+
+        // Has merge conflicts
+        let has_conflict = self.merge_conflict;
+
+        // Changes requested on PR
+        let changes_requested =
+            matches!(self.pr_review_decision, Some(ReviewDecision::ChangesRequested));
+
+        ci_failing || has_conflict || changes_requested
+    }
+
+    /// Get detailed blocker information
+    #[must_use]
+    pub fn blocker_details(&self) -> BlockerDetails {
+        BlockerDetails {
+            ci_failing: matches!(self.pr_check_status, Some(CheckStatus::Failing)),
+            merge_conflict: self.merge_conflict,
+            changes_requested: matches!(
+                self.pr_review_decision,
+                Some(ReviewDecision::ChangesRequested)
+            ),
+        }
     }
 }
 
@@ -623,6 +704,57 @@ pub enum CheckStatus {
     Merged,
 }
 
+/// PR review decision status
+#[typeshare]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum ReviewDecision {
+    /// Review is required but not yet provided
+    ReviewRequired,
+
+    /// Changes have been requested
+    ChangesRequested,
+
+    /// PR has been approved
+    Approved,
+}
+
+/// Workflow stage computed from session state
+#[typeshare]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum WorkflowStage {
+    /// Planning phase - no PR yet, Claude is working
+    Planning,
+
+    /// Implementation phase - PR created, CI running or waiting
+    Implementation,
+
+    /// Review phase - PR waiting for approval
+    Review,
+
+    /// Blocked phase - has blockers (CI failing, conflicts, changes requested)
+    Blocked,
+
+    /// Ready to merge - all checks pass, approved, no conflicts
+    ReadyToMerge,
+
+    /// Merged - PR has been merged
+    Merged,
+}
+
+/// Blocker details for a session
+#[typeshare]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct BlockerDetails {
+    /// Whether CI checks are failing
+    pub ci_failing: bool,
+
+    /// Whether the branch has merge conflicts
+    pub merge_conflict: bool,
+
+    /// Whether changes have been requested on the PR
+    pub changes_requested: bool,
+}
+
 /// Claude agent working status
 #[typeshare]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
@@ -853,6 +985,7 @@ mod tests {
             dangerous_skip_checks: false,
             pr_url: None,
             pr_check_status: None,
+            pr_review_decision: None,
             claude_status: ClaudeWorkingStatus::Unknown,
             claude_status_updated_at: None,
             merge_conflict: false,
@@ -897,6 +1030,7 @@ mod tests {
             dangerous_skip_checks: false,
             pr_url: None,
             pr_check_status: None,
+            pr_review_decision: None,
             claude_status: ClaudeWorkingStatus::Unknown,
             claude_status_updated_at: None,
             merge_conflict: false,
@@ -942,6 +1076,7 @@ mod tests {
             dangerous_skip_checks: false,
             pr_url: None,
             pr_check_status: None,
+            pr_review_decision: None,
             claude_status: ClaudeWorkingStatus::Unknown,
             claude_status_updated_at: None,
             merge_conflict: false,
@@ -983,6 +1118,7 @@ mod tests {
             dangerous_skip_checks: false,
             pr_url: None,
             pr_check_status: None,
+            pr_review_decision: None,
             claude_status: ClaudeWorkingStatus::Unknown,
             claude_status_updated_at: None,
             merge_conflict: false,

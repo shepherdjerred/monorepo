@@ -7,7 +7,7 @@ use ratatui::{
 };
 use unicode_width::UnicodeWidthStr;
 
-use crate::core::{CheckStatus, ClaudeWorkingStatus, Session, SessionStatus};
+use crate::core::{CheckStatus, ClaudeWorkingStatus, Session, SessionStatus, WorkflowStage};
 use crate::tui::app::App;
 
 /// Number of spaces between columns
@@ -19,6 +19,7 @@ struct ColumnWidths {
     name: usize,
     repository: usize,
     status: usize,
+    stage: usize,
     backend: usize,
     branch_pr: usize,
     prefix_width: usize,
@@ -32,6 +33,7 @@ impl ColumnWidths {
     const NAME_RANGE: (usize, usize) = (15, 40);
     const REPO_RANGE: (usize, usize) = (12, 30);
     const STATUS_RANGE: (usize, usize) = (8, 15);
+    const STAGE_RANGE: (usize, usize) = (6, 8);
     const BACKEND_RANGE: (usize, usize) = (10, 15);
     const BRANCH_PR_RANGE: (usize, usize) = (10, 25);
 
@@ -46,6 +48,7 @@ impl ColumnWidths {
         let mut max_name = Self::NAME_RANGE.0;
         let mut max_repo = Self::REPO_RANGE.0;
         let mut max_status = Self::STATUS_RANGE.0;
+        let mut max_stage = Self::STAGE_RANGE.0;
         let mut max_backend = Self::BACKEND_RANGE.0;
         let mut max_branch = Self::BRANCH_PR_RANGE.0;
 
@@ -83,6 +86,17 @@ impl ColumnWidths {
                 .max(status_text.width())
                 .min(Self::STATUS_RANGE.1);
 
+            // Stage text
+            let stage_text = match session.workflow_stage() {
+                WorkflowStage::Planning => "Plan",
+                WorkflowStage::Implementation => "Impl",
+                WorkflowStage::Review => "Review",
+                WorkflowStage::Blocked => "Blocked",
+                WorkflowStage::ReadyToMerge => "Ready",
+                WorkflowStage::Merged => "Merged",
+            };
+            max_stage = max_stage.max(stage_text.width()).min(Self::STAGE_RANGE.1);
+
             // Backend (using Debug format)
             let backend_text = format!("{:?}", session.backend);
             max_backend = max_backend
@@ -101,6 +115,7 @@ impl ColumnWidths {
             name: max_name,
             repository: max_repo,
             status: max_status,
+            stage: max_stage,
             backend: max_backend,
             branch_pr: max_branch,
             prefix_width: Self::PREFIX_WIDTH,
@@ -119,13 +134,14 @@ impl ColumnWidths {
 
     /// Get total required width
     fn total_width(&self) -> usize {
-        // 4 gaps between the 5 main columns (name, repo, status, backend, branch)
-        let padding_width = 4 * COLUMN_PADDING;
+        // 5 gaps between the 6 main columns (name, repo, status, stage, backend, branch)
+        let padding_width = 5 * COLUMN_PADDING;
 
         self.prefix_width
             + self.name
             + self.repository
             + self.status
+            + self.stage
             + self.backend
             + self.branch_pr
             + self.claude_indicator
@@ -136,7 +152,7 @@ impl ColumnWidths {
 
     /// Shrink proportionally if total exceeds available width
     fn fit_to_width(&mut self, available_width: u16) {
-        let padding_width = 4 * COLUMN_PADDING;
+        let padding_width = 5 * COLUMN_PADDING;
         let fixed_width = self.prefix_width
             + self.claude_indicator
             + self.ci_indicator
@@ -145,7 +161,7 @@ impl ColumnWidths {
         let available_for_columns = (available_width as usize).saturating_sub(fixed_width);
 
         let total_current =
-            self.name + self.repository + self.status + self.backend + self.branch_pr;
+            self.name + self.repository + self.status + self.stage + self.backend + self.branch_pr;
 
         if total_current <= available_for_columns {
             return; // Already fits
@@ -185,6 +201,14 @@ impl ColumnWidths {
             clippy::cast_sign_loss,
             clippy::cast_precision_loss
         )]
+        let stage_shrunk = (self.stage as f64 * shrink_ratio).max(0.0).round() as usize;
+        self.stage = stage_shrunk.max(Self::STAGE_RANGE.0);
+
+        #[allow(
+            clippy::cast_possible_truncation,
+            clippy::cast_sign_loss,
+            clippy::cast_precision_loss
+        )]
         let backend_shrunk = (self.backend as f64 * shrink_ratio).max(0.0).round() as usize;
         self.backend = backend_shrunk.max(Self::BACKEND_RANGE.0);
 
@@ -197,11 +221,12 @@ impl ColumnWidths {
         self.branch_pr = branch_pr_shrunk.max(Self::BRANCH_PR_RANGE.0);
 
         // If still doesn't fit after respecting minimums, force to minimums
-        let new_total = self.name + self.repository + self.status + self.backend + self.branch_pr;
+        let new_total = self.name + self.repository + self.status + self.stage + self.backend + self.branch_pr;
         if new_total > available_for_columns {
             self.name = Self::NAME_RANGE.0;
             self.repository = Self::REPO_RANGE.0;
             self.status = Self::STATUS_RANGE.0;
+            self.stage = Self::STAGE_RANGE.0;
             self.backend = Self::BACKEND_RANGE.0;
             self.branch_pr = Self::BRANCH_PR_RANGE.0;
         }
@@ -316,6 +341,11 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         Span::raw("  "), // Column padding
         Span::styled(
             pad_to_width("Status", widths.status),
+            Style::default().fg(Color::DarkGray),
+        ),
+        Span::raw("  "), // Column padding
+        Span::styled(
+            pad_to_width("Stage", widths.stage),
             Style::default().fg(Color::DarkGray),
         ),
         Span::raw("  "), // Column padding
@@ -476,6 +506,18 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
             let status_truncated = truncate_with_ellipsis(status_text, widths.status);
             let status_padded = pad_to_width(&status_truncated, widths.status);
 
+            // Workflow stage text and color
+            let (stage_text, stage_color) = match session.workflow_stage() {
+                WorkflowStage::Planning => ("Plan", Color::Blue),
+                WorkflowStage::Implementation => ("Impl", Color::Cyan),
+                WorkflowStage::Review => ("Review", Color::Yellow),
+                WorkflowStage::Blocked => ("Blocked", Color::Red),
+                WorkflowStage::ReadyToMerge => ("Ready", Color::Green),
+                WorkflowStage::Merged => ("Merged", Color::DarkGray),
+            };
+            let stage_truncated = truncate_with_ellipsis(stage_text, widths.stage);
+            let stage_padded = pad_to_width(&stage_truncated, widths.stage);
+
             let backend_truncated = truncate_with_ellipsis(&backend_text, widths.backend);
             let backend_padded = pad_to_width(&backend_truncated, widths.backend);
 
@@ -488,6 +530,8 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
                 Span::raw(repo_padded),
                 Span::raw("  "), // Column padding
                 Span::styled(status_padded, status_style),
+                Span::raw("  "), // Column padding
+                Span::styled(stage_padded, Style::default().fg(stage_color)),
                 Span::raw("  "), // Column padding
                 Span::raw(backend_padded),
                 Span::raw("  "), // Column padding
