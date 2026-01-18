@@ -321,7 +321,9 @@ pub enum Response {
     SessionId { session_id: String },
 
     /// Current feature flags
-    FeatureFlags { flags: crate::feature_flags::FeatureFlags },
+    FeatureFlags {
+        flags: crate::feature_flags::FeatureFlags,
+    },
 
     /// Generic success response
     Ok,
