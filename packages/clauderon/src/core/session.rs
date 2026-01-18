@@ -110,6 +110,9 @@ pub struct Session {
     /// Whether the worktree has uncommitted changes (dirty working tree)
     pub worktree_dirty: bool,
 
+    /// List of changed files in the worktree with their git status
+    pub worktree_changed_files: Option<Vec<crate::utils::git::ChangedFile>>,
+
     /// Access mode for proxy filtering
     pub access_mode: AccessMode,
 
@@ -205,6 +208,7 @@ impl Session {
             claude_status_updated_at: None,
             merge_conflict: false,
             worktree_dirty: false,
+            worktree_changed_files: None,
             access_mode: config.access_mode,
             proxy_port: None,
             history_file_path: None,
@@ -282,6 +286,15 @@ impl Session {
     /// Set the working tree dirty status
     pub fn set_worktree_dirty(&mut self, is_dirty: bool) {
         self.worktree_dirty = is_dirty;
+        self.updated_at = Utc::now();
+    }
+
+    /// Set the list of changed files in the worktree
+    pub fn set_worktree_changed_files(
+        &mut self,
+        files: Option<Vec<crate::utils::git::ChangedFile>>,
+    ) {
+        self.worktree_changed_files = files;
         self.updated_at = Utc::now();
     }
 
@@ -648,9 +661,9 @@ impl std::str::FromStr for ClaudeWorkingStatus {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum AccessMode {
     /// Read-only: GET, HEAD, OPTIONS allowed; POST, PUT, DELETE, PATCH blocked
-    #[default]
     ReadOnly,
     /// Read-write: All HTTP methods allowed
+    #[default]
     ReadWrite,
 }
 
