@@ -3,7 +3,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { LoginPage } from "../pages/LoginPage";
 import { RegistrationPage } from "../pages/RegistrationPage";
 
-interface AuthGuardProps {
+type AuthGuardProps = {
   children: ReactNode;
 }
 
