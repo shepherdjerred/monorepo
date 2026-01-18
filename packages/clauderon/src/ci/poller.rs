@@ -331,15 +331,13 @@ impl CIPoller {
     ) -> anyhow::Result<()> {
         use crate::utils::git;
 
-        let is_dirty = git::check_worktree_dirty(worktree_path).await?;
-        let changed_files = if is_dirty {
-            Some(git::get_worktree_changed_files(worktree_path).await?)
-        } else {
-            None
-        };
+        // Get changed files list (empty if worktree is clean)
+        let changed_files = git::get_worktree_changed_files(worktree_path).await?;
+        let is_dirty = !changed_files.is_empty();
+        let changed_files_opt = if is_dirty { Some(changed_files) } else { None };
 
         self.manager
-            .update_worktree_dirty_status(*session_id, is_dirty, changed_files)
+            .update_worktree_dirty_status(*session_id, is_dirty, changed_files_opt)
             .await?;
 
         Ok(())
