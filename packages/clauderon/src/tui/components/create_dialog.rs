@@ -55,6 +55,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
             Constraint::Length(prompt_height as u16 + 2), // Prompt (dynamic + borders)
             Constraint::Length(images_height),            // Images (dynamic)
             Constraint::Length(3),                        // Repo path
+            Constraint::Length(2),                        // Multi-repo toggle
             Constraint::Length(2),                        // Backend
             Constraint::Length(2),                        // Agent
             Constraint::Length(2),                        // Model
@@ -73,6 +74,8 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
     let images_idx = layout_idx;
     layout_idx += 1;
     let repo_idx = layout_idx;
+    layout_idx += 1;
+    let multi_repo_idx = layout_idx;
     layout_idx += 1;
     let backend_idx = layout_idx;
     layout_idx += 1;
@@ -115,6 +118,15 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         &dialog.repo_path,
         dialog.focus == CreateDialogFocus::RepoPath,
         inner[repo_idx],
+    );
+
+    // Multi-repository mode toggle (disabled in TUI - shows info message)
+    render_checkbox_field(
+        frame,
+        "Multi-Repository Mode (Docker only, Web UI only)",
+        dialog.multi_repo_enabled,
+        dialog.focus == CreateDialogFocus::MultiRepoToggle,
+        inner[multi_repo_idx],
     );
 
     // Backend selection
