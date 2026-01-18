@@ -235,7 +235,7 @@ impl KubernetesBackend {
     }
 
     /// Ensure shared cache PVCs exist (cargo and sccache)
-    async fn ensure_shared_pvcs_exist(&self, options: &CreateOptions) -> anyhow::Result<()> {
+    async fn ensure_shared_pvcs_exist(&self, _options: &CreateOptions) -> anyhow::Result<()> {
         let pvcs: Api<PersistentVolumeClaim> =
             Api::namespaced(self.client.clone(), &self.config.namespace);
 
