@@ -123,6 +123,10 @@ pub struct Session {
     /// Whether to delete branch after merge (from repository settings)
     pub pr_delete_branch_on_merge: Option<bool>,
 
+    /// Whether this PR can be merged (all requirements met: PR exists, checks passing, approved, no conflicts)
+    #[serde(skip_deserializing)]
+    pub can_merge_pr: bool,
+
     /// Current Claude agent working status (from hooks)
     pub claude_status: ClaudeWorkingStatus,
 
@@ -445,6 +449,7 @@ impl Session {
         self.model.as_ref().map(SessionModel::to_cli_flag)
     }
 
+<<<<<<< HEAD
     /// Compute the current workflow stage from session state
     #[must_use]
     pub fn workflow_stage(&self) -> WorkflowStage {
