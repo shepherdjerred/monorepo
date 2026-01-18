@@ -231,6 +231,85 @@ impl DockerBackend {
         }
     }
 
+    /// Ensure cache volumes exist with correct ownership for the current user.
+    ///
+    /// Docker named volumes are created with root ownership by default. When containers
+    /// run as non-root users (via --user), they can't write to these volumes.
+    ///
+    /// This function creates each cache volume and fixes ownership by running a small
+    /// alpine container that chowns the volume contents to the specified UID:GID.
+    ///
+    /// This is idempotent - if the volume already has correct ownership, the chown
+    /// is a fast no-op.
+    #[instrument(skip(self))]
+    async fn ensure_cache_volumes_with_ownership(&self, uid: u32, gid: u32) {
+        let volumes = [
+            "clauderon-cargo-registry",
+            "clauderon-cargo-git",
+            "clauderon-sccache",
+        ];
+
+        for volume_name in volumes {
+            // Create volume if it doesn't exist (idempotent)
+            let create_output = Command::new("docker")
+                .args(["volume", "create", volume_name])
+                .output()
+                .await;
+
+            if let Err(e) = create_output {
+                tracing::warn!(
+                    volume = volume_name,
+                    error = %e,
+                    "Failed to create Docker volume"
+                );
+                continue;
+            }
+
+            // Fix ownership using alpine container
+            // This is fast if ownership is already correct (chown is a no-op)
+            let chown_output = Command::new("docker")
+                .args([
+                    "run",
+                    "--rm",
+                    "-v",
+                    &format!("{volume_name}:/vol"),
+                    "alpine:latest",
+                    "chown",
+                    "-R",
+                    &format!("{uid}:{gid}"),
+                    "/vol",
+                ])
+                .output()
+                .await;
+
+            match chown_output {
+                Ok(output) if output.status.success() => {
+                    tracing::debug!(
+                        volume = volume_name,
+                        uid = uid,
+                        gid = gid,
+                        "Ensured volume ownership"
+                    );
+                }
+                Ok(output) => {
+                    let stderr = String::from_utf8_lossy(&output.stderr);
+                    tracing::warn!(
+                        volume = volume_name,
+                        stderr = %stderr,
+                        "Failed to fix volume ownership"
+                    );
+                }
+                Err(e) => {
+                    tracing::warn!(
+                        volume = volume_name,
+                        error = %e,
+                        "Failed to run ownership fix container"
+                    );
+                }
+            }
+        }
+    }
+
     /// Pull the latest version of the Docker image
     ///
     /// # Errors
@@ -1159,6 +1238,11 @@ impl ExecutionBackend for DockerBackend {
         // Create the container with the worktree mounted
         // Run as current user to avoid root privileges (claude refuses --dangerously-skip-permissions as root)
         let uid = std::process::id();
+        let gid = users::get_current_gid();
+
+        // Ensure cache volumes exist with correct ownership before creating container
+        // This fixes permission issues with Docker named volumes (which are created as root by default)
+        self.ensure_cache_volumes_with_ownership(uid, gid).await;
 
         // Build proxy config dynamically from session-specific port
         let proxy_config = options
