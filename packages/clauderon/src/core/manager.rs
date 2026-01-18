@@ -273,12 +273,6 @@ impl SessionManager {
         Arc::clone(&self.console_manager)
     }
 
-    /// Get the feature flags configuration
-    #[must_use]
-    pub fn feature_flags(&self) -> &crate::feature_flags::FeatureFlags {
-        &self.feature_flags
-    }
-
     /// Get reference to Kubernetes backend
     ///
     /// Returns the Kubernetes backend for API operations like listing storage classes.
