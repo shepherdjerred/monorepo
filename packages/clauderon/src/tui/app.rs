@@ -221,6 +221,8 @@ pub struct DirEntry {
     pub name: String,
     /// Full path to the entry
     pub path: PathBuf,
+    /// Subdirectory component (for recent repos with subdirectories)
+    pub subdirectory: PathBuf,
     /// Whether this is the parent directory (..)
     pub is_parent: bool,
     /// Whether this is from recent repos list
@@ -276,6 +278,8 @@ pub struct CreateDialogState {
     pub focus: CreateDialogFocus,
     pub button_create_focused: bool, // true = Create, false = Cancel
     pub directory_picker: DirectoryPickerState,
+    /// Feature flags (for conditional backend availability)
+    pub feature_flags: std::sync::Arc<crate::feature_flags::FeatureFlags>,
 }
 
 impl DirectoryPickerState {
@@ -300,6 +304,9 @@ impl DirectoryPickerState {
                     |n| n.to_string_lossy().to_string(),
                 );
 
+                // Store subdirectory component
+                let subdirectory = PathBuf::from(&dto.subdirectory);
+
                 // Include subdirectory in the display name if present
                 let name = if dto.subdirectory.is_empty() {
                     repo_name
@@ -310,6 +317,7 @@ impl DirectoryPickerState {
                 Some(DirEntry {
                     name,
                     path,
+                    subdirectory,
                     is_parent: false,
                     is_recent: true,
                 })
@@ -353,6 +361,7 @@ impl DirectoryPickerState {
             self.all_entries.push(DirEntry {
                 name: "..".to_string(),
                 path: parent.to_path_buf(),
+                subdirectory: PathBuf::new(),
                 is_parent: true,
                 is_recent: false,
             });
@@ -366,6 +375,7 @@ impl DirectoryPickerState {
                         self.all_entries.push(DirEntry {
                             name: name.to_string_lossy().to_string(),
                             path: dir,
+                            subdirectory: PathBuf::new(),
                             is_parent: false,
                             is_recent: false,
                         });
@@ -506,7 +516,14 @@ impl CreateDialogState {
     pub fn toggle_backend(&mut self) {
         self.backend = match self.backend {
             BackendType::Zellij => BackendType::Docker,
-            BackendType::Docker => BackendType::Kubernetes,
+            BackendType::Docker => {
+                // Skip Kubernetes if feature flag is disabled
+                if self.feature_flags.enable_kubernetes_backend {
+                    BackendType::Kubernetes
+                } else {
+                    BackendType::Sprites
+                }
+            }
             BackendType::Kubernetes => BackendType::Sprites,
             #[cfg(target_os = "macos")]
             BackendType::Sprites => BackendType::AppleContainer,
@@ -547,7 +564,14 @@ impl CreateDialogState {
             BackendType::AppleContainer => BackendType::Sprites,
             #[cfg(not(target_os = "macos"))]
             BackendType::Zellij => BackendType::Sprites,
-            BackendType::Sprites => BackendType::Kubernetes,
+            BackendType::Sprites => {
+                // Skip Kubernetes if feature flag is disabled
+                if self.feature_flags.enable_kubernetes_backend {
+                    BackendType::Kubernetes
+                } else {
+                    BackendType::Docker
+                }
+            }
             BackendType::Kubernetes => BackendType::Docker,
             BackendType::Docker => BackendType::Zellij,
         };
@@ -760,6 +784,7 @@ impl Default for CreateDialogState {
             focus: CreateDialogFocus::default(),
             button_create_focused: false,
             directory_picker: DirectoryPickerState::new(),
+            feature_flags: std::sync::Arc::new(crate::feature_flags::FeatureFlags::default()),
         }
     }
 }
@@ -888,7 +913,11 @@ impl App {
     /// Returns an error if the daemon connection fails.
     pub async fn connect(&mut self) -> anyhow::Result<()> {
         match Client::connect().await {
-            Ok(client) => {
+            Ok(mut client) => {
+                // Fetch feature flags from the daemon
+                if let Ok(flags) = client.get_feature_flags().await {
+                    self.create_dialog.feature_flags = std::sync::Arc::new(flags);
+                }
                 self.client = Some(Box::new(client));
                 self.connection_error = None;
                 Ok(())

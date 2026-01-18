@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import type { CreateSessionRequest, BackendType, AccessMode, StorageClassInfo, CreateRepositoryInput, SessionModel, ClaudeModel, CodexModel, GeminiModel } from "@clauderon/client";
-import { AgentType } from "@clauderon/shared";
+import { AgentType, type FeatureFlags } from "@clauderon/shared";
 import { useSessionContext } from "../contexts/SessionContext";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -27,13 +27,14 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [featureFlags, setFeatureFlags] = useState<FeatureFlags | null>(null);
   const [storageClasses, setStorageClasses] = useState<StorageClassInfo[]>([]);
   const [loadingStorageClasses, setLoadingStorageClasses] = useState(false);
 
   // Multi-repo state
   const [multiRepoEnabled, setMultiRepoEnabled] = useState(false);
   const [repositories, setRepositories] = useState<RepositoryEntry[]>([
-    { id: '1', repo_path: '', mount_name: 'primary', is_primary: true }
+    { id: '1', repo_path: '', mount_name: '', is_primary: true }
   ]);
 
   const [formData, setFormData] = useState({
@@ -52,11 +53,11 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
     storage_class: "",
   });
 
-  // Auto-check dangerous_skip_checks for Docker and Kubernetes, uncheck for Zellij
+  // Auto-check dangerous_skip_checks for Docker, Kubernetes, and Sprites, uncheck for Zellij
   useEffect(() => {
     setFormData(prev => ({
       ...prev,
-      dangerous_skip_checks: prev.backend === "Docker" || prev.backend === "Kubernetes"
+      dangerous_skip_checks: prev.backend === "Docker" || prev.backend === "Kubernetes" || prev.backend === "Sprites"
     }));
   }, [formData.backend]);
 
@@ -92,6 +93,27 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
   useEffect(() => {
     setFormData(prev => ({ ...prev, model: undefined }));
   }, [formData.agent]);
+
+  // Fetch feature flags on mount
+  useEffect(() => {
+    const fetchFlags = async () => {
+      try {
+        const response = await fetch('/api/feature-flags');
+        const data = await response.json();
+        setFeatureFlags(data.flags);
+      } catch (error) {
+        console.error('Failed to fetch feature flags:', error);
+      }
+    };
+    fetchFlags();
+  }, []);
+
+  // Reset backend if Kubernetes is disabled
+  useEffect(() => {
+    if (formData.backend === "Kubernetes" && featureFlags && !featureFlags.enable_kubernetes_backend) {
+      setFormData(prev => ({ ...prev, backend: "Docker" as BackendType }));
+    }
+  }, [featureFlags, formData.backend]);
 
   // Sync repositories array with multi-repo toggle
   useEffect(() => {
@@ -144,40 +166,9 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
     }
   }, [formData.agent]);
 
-  // Auto-generate mount name from repo path
-  const generateMountName = (repoPath: string): string => {
-    if (!repoPath) return '';
-
-    // Extract last part of path and convert to valid mount name
-    const pathParts = repoPath.split('/');
-    const lastName = pathParts[pathParts.length - 1] || pathParts[pathParts.length - 2] || 'repo';
-
-    return lastName
-      .toLowerCase()
-      .replace(/[^a-z0-9-_]/g, '-')
-      .replace(/_/g, '-')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '');
-  };
-
   const handleRepoPathChange = (id: string, newPath: string) => {
-    setRepositories(repos => repos.map(repo => {
-      if (repo.id === id) {
-        // Auto-generate mount name if it hasn't been manually edited
-        const shouldAutoGenerate = !repo.mount_name || repo.mount_name === generateMountName(repo.repo_path);
-        return {
-          ...repo,
-          repo_path: newPath,
-          mount_name: shouldAutoGenerate ? generateMountName(newPath) : repo.mount_name
-        };
-      }
-      return repo;
-    }));
-  };
-
-  const handleMountNameChange = (id: string, newMountName: string) => {
     setRepositories(repos => repos.map(repo =>
-      repo.id === id ? { ...repo, mount_name: newMountName } : repo
+      repo.id === id ? { ...repo, repo_path: newPath } : repo
     ));
   };
 
@@ -314,7 +305,6 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
       const repoInputs: CreateRepositoryInput[] | undefined = multiRepoEnabled
         ? repositories.map(repo => ({
             repo_path: repo.repo_path,
-            ...(repo.mount_name && { mount_name: repo.mount_name }),
             is_primary: repo.is_primary
           }))
         : undefined;
@@ -542,6 +532,17 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                 )}
               </div>
             ))}
+
+            {repositories.length > 1 && formData.backend !== "Docker" && (
+              <div className="p-3 border-2 text-sm font-mono" style={{
+                backgroundColor: 'hsl(45, 75%, 95%)',
+                borderColor: 'hsl(45, 75%, 50%)',
+                color: 'hsl(45, 75%, 30%)'
+              }}>
+                <strong>Warning:</strong> Multi-repository sessions are only supported with Docker backend.
+                Zellij, Kubernetes, and Sprites backends will reject multi-repo sessions.
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -571,7 +572,10 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
               >
                 <option value="Docker">Docker</option>
                 <option value="Zellij">Zellij</option>
-                <option value="Kubernetes">Kubernetes</option>
+                {featureFlags?.enable_kubernetes_backend && (
+                  <option value="Kubernetes">Kubernetes</option>
+                )}
+                <option value="Sprites">Sprites</option>
               </select>
             </div>
 

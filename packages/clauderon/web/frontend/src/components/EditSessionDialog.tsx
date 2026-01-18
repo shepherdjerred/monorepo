@@ -3,7 +3,7 @@ import type { Session } from "@clauderon/client";
 import { useSessionContext } from "../contexts/SessionContext";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { X, RefreshCw, Loader2 } from "lucide-react";
+import { X, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 
 type EditSessionDialogProps = {
@@ -14,7 +14,6 @@ type EditSessionDialogProps = {
 export function EditSessionDialog({ session, onClose }: EditSessionDialogProps) {
   const { updateSession, regenerateMetadata } = useSessionContext();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isRegenerating, setIsRegenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
@@ -52,21 +51,22 @@ export function EditSessionDialog({ session, onClose }: EditSessionDialogProps) 
     }
   };
 
-  const handleRegenerate = async () => {
-    setIsRegenerating(true);
+  const handleRegenerate = () => {
     setError(null);
 
-    try {
-      await regenerateMetadata(session.id);
-      toast.success("Metadata regenerated successfully");
-      // Update form data with regenerated values (will come through WebSocket event)
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : String(err);
-      setError(errorMsg);
-      toast.error(`Failed to regenerate metadata: ${errorMsg}`);
-    } finally {
-      setIsRegenerating(false);
-    }
+    // Show initial toast and close modal immediately
+    toast.info("Regenerating session metadata...");
+    onClose();
+
+    // Fire-and-forget operation
+    void regenerateMetadata(session.id)
+      .then(() => {
+        toast.success("Session metadata regenerated");
+      })
+      .catch((err) => {
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        toast.error(`Failed to regenerate metadata: ${errorMsg}`);
+      });
   };
 
   return (
@@ -143,20 +143,11 @@ export function EditSessionDialog({ session, onClose }: EditSessionDialogProps) 
                   type="button"
                   variant="outline"
                   onClick={() => { void handleRegenerate(); }}
-                  disabled={isRegenerating || isSubmitting}
+                  disabled={isSubmitting}
                   className="flex items-center gap-2"
                 >
-                  {isRegenerating ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Regenerating...
-                    </>
-                  ) : (
-                    <>
-                      <RefreshCw className="w-4 h-4" />
-                      Regenerate with AI
-                    </>
-                  )}
+                  <RefreshCw className="w-4 h-4" />
+                  Regenerate with AI
                 </Button>
               </div>
             </div>

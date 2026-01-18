@@ -233,6 +233,14 @@ export interface CreateSessionRequest {
 	 * - Kubernetes: `"2Gi"` (2 gibibytes), `"512Mi"` (512 mebibytes)
 	 */
 	memory_limit?: string;
+	/**
+	 * Optional: Storage class for persistent volumes (Kubernetes only).
+	 * 
+	 * Format: Storage class name (e.g., `"gp2"`, `"standard"`)
+	 * Only applicable to Kubernetes backend.
+	 * If not specified, uses cluster default or config file setting.
+	 */
+	storage_class?: string;
 }
 
 /** Credential availability status */
