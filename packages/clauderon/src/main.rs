@@ -591,6 +591,7 @@ async fn main() -> anyhow::Result<()> {
                     pull_policy,
                     cpu_limit,
                     memory_limit,
+                    storage_class: None,
                 })
                 .await?;
 

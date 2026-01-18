@@ -98,7 +98,7 @@ pub struct SessionManager {
     docker: Arc<dyn ExecutionBackend>,
     kubernetes: Arc<dyn ExecutionBackend>,
     /// Concrete Kubernetes backend for API operations (e.g., listing storage classes)
-    kubernetes_backend: Arc<crate::backends::KubernetesBackend>,
+    kubernetes_backend: Option<Arc<crate::backends::KubernetesBackend>>,
     #[cfg(target_os = "macos")]
     apple_container: Arc<dyn ExecutionBackend>,
     console_manager: Arc<ConsoleManager>,
@@ -134,7 +134,7 @@ impl SessionManager {
         zellij: Arc<dyn ExecutionBackend>,
         docker: Arc<dyn ExecutionBackend>,
         kubernetes: Arc<dyn ExecutionBackend>,
-        kubernetes_backend: Arc<crate::backends::KubernetesBackend>,
+        kubernetes_backend: Option<Arc<crate::backends::KubernetesBackend>>,
         #[cfg(target_os = "macos")] apple_container: Arc<dyn ExecutionBackend>,
     ) -> anyhow::Result<Self> {
         let sessions = store.list_sessions().await?;
@@ -179,7 +179,7 @@ impl SessionManager {
             Arc::new(ZellijBackend::new()),
             Arc::new(DockerBackend::new()),
             kubernetes_backend.clone(),
-            kubernetes_backend,
+            Some(kubernetes_backend),
             #[cfg(target_os = "macos")]
             Arc::new(AppleContainerBackend::new()),
         )
@@ -207,7 +207,7 @@ impl SessionManager {
             Arc::new(ZellijBackend::new()),
             Arc::new(docker),
             kubernetes_backend.clone(),
-            kubernetes_backend,
+            Some(kubernetes_backend),
             #[cfg(target_os = "macos")]
             Arc::new(AppleContainerBackend::new()),
         )
@@ -247,8 +247,8 @@ impl SessionManager {
     ///
     /// Returns the Kubernetes backend for API operations like listing storage classes.
     #[must_use]
-    pub fn kubernetes_backend(&self) -> &crate::backends::KubernetesBackend {
-        &self.kubernetes_backend
+    pub fn kubernetes_backend(&self) -> Option<&crate::backends::KubernetesBackend> {
+        self.kubernetes_backend.as_ref().map(Arc::as_ref)
     }
 
     /// List all sessions

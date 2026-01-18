@@ -548,7 +548,10 @@ async fn get_system_status(
 async fn get_storage_classes(
     State(state): State<AppState>,
 ) -> Result<Json<serde_json::Value>, AppError> {
-    let k8s_backend = state.session_manager.kubernetes_backend();
+    let k8s_backend = state
+        .session_manager
+        .kubernetes_backend()
+        .ok_or_else(|| AppError::BadRequest("Kubernetes backend not available".to_string()))?;
 
     let storage_classes = k8s_backend
         .list_storage_classes()

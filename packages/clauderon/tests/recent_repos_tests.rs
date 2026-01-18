@@ -81,6 +81,7 @@ async fn create_test_manager() -> (SessionManager, TempDir, TempDir) {
         to_exec_backend(zellij),
         to_exec_backend(docker),
         to_exec_backend(kubernetes),
+        None,
     )
     .await
     .expect("Failed to create manager");
@@ -114,6 +115,7 @@ async fn test_recent_repo_tracked_on_session_create() {
             None,                  // pull_policy
             None,                  // cpu_limit
             None,                  // memory_limit
+            None,                  // storage_class
         )
         .await
         .expect("Failed to create session");
