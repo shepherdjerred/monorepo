@@ -345,7 +345,7 @@ pub fn parse_github_repo_from_url(url: &str) -> anyhow::Result<String> {
 }
 
 /// Represents a file with uncommitted changes in a git worktree
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[typeshare::typeshare]
 pub struct ChangedFile {
     /// Git status code (e.g., "M", "A", "D", "??", "MM")
