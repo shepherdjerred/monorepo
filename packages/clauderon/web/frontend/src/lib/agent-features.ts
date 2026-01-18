@@ -1,4 +1,4 @@
-export type AgentType = 'ClaudeCode' | 'Codex' | 'Gemini';
+import { AgentType } from '@clauderon/shared';
 
 export interface AgentFeature {
   name: string;
@@ -12,7 +12,7 @@ export interface AgentCapabilities {
 }
 
 export const AGENT_CAPABILITIES: Record<AgentType, AgentCapabilities> = {
-  ClaudeCode: {
+  [AgentType.ClaudeCode]: {
     displayName: 'Claude Code',
     features: [
       { name: 'Real-time state detection', supported: true },
@@ -21,24 +21,16 @@ export const AGENT_CAPABILITIES: Record<AgentType, AgentCapabilities> = {
       { name: 'Permissions bypass mode', supported: true },
     ],
   },
-  Codex: {
+  [AgentType.Codex]: {
     displayName: 'Codex',
     features: [
-      {
-        name: 'Real-time state detection',
-        supported: false,
-        note: 'Sessions will always show "Unknown" state'
-      },
-      {
-        name: 'Session ID support',
-        supported: false,
-        note: 'May not work correctly in multi-session scenarios'
-      },
+      { name: 'Real-time state detection', supported: true },
+      { name: 'Session ID support', supported: true },
       { name: 'Image/screenshot support', supported: true },
       { name: 'Permissions bypass mode', supported: true },
     ],
   },
-  Gemini: {
+  [AgentType.Gemini]: {
     displayName: 'Gemini Code',
     features: [
       { name: 'Real-time state detection', supported: true },
