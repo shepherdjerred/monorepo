@@ -189,8 +189,14 @@ export class ClauderonClient {
     const formData = new FormData();
 
     // React Native FormData expects an object with uri, type, and name
+    // iOS and macOS need "file://" prefix removed, Android and Windows use as-is
+    const normalizedUri =
+      Platform.OS === "ios" || Platform.OS === "macos"
+        ? imageUri.replace("file://", "")
+        : imageUri;
+
     formData.append("file", {
-      uri: Platform.OS === "ios" ? imageUri.replace("file://", "") : imageUri,
+      uri: normalizedUri,
       type: "image/jpeg", // Default to JPEG, could be improved to detect actual type
       name: fileName,
     } as any);
