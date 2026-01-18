@@ -228,13 +228,15 @@ async function buildMuxBinary(
 
 /**
  * Upload release assets to a GitHub release
+ * Returns both outputs (for logging) and errors (for failure tracking)
  */
 async function uploadReleaseAssets(
   githubToken: Secret,
   version: string,
   assets: Array<{ name: string; data: string }>
-): Promise<string[]> {
+): Promise<{ outputs: string[]; errors: string[] }> {
   const outputs: string[] = [];
+  const errors: string[] = [];
 
   // Use gh CLI to upload assets
   let container = dag
@@ -270,11 +272,13 @@ async function uploadReleaseAssets(
       outputs.push(`✓ Uploaded ${asset.name}`);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      outputs.push(`✗ Failed to upload ${asset.name}: ${errorMessage}`);
+      const failureMsg = `Failed to upload ${asset.name}: ${errorMessage}`;
+      outputs.push(`✗ ${failureMsg}`);
+      errors.push(failureMsg);
     }
   }
 
-  return outputs;
+  return { outputs, errors };
 }
 
 /**
@@ -445,6 +449,7 @@ export class Monorepo {
 
     if (isRelease && githubToken && npmToken) {
       outputs.push("\n--- Release Workflow ---");
+      const releaseErrors: string[] = [];
 
       // Create/update release PRs using non-deprecated release-pr command
       const prContainer = getReleasePleaseContainer()
@@ -492,7 +497,9 @@ export class Monorepo {
             outputs.push(`✓ Published @shepherdjerred/${pkg}`);
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : String(error);
-            outputs.push(`✗ Failed to publish @shepherdjerred/${pkg}: ${errorMessage}`);
+            const failureMsg = `Failed to publish @shepherdjerred/${pkg}: ${errorMessage}`;
+            outputs.push(`✗ ${failureMsg}`);
+            releaseErrors.push(failureMsg);
           }
         }
       } else {
@@ -534,7 +541,9 @@ export class Monorepo {
           outputs.push(deployOutput);
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : String(error);
-          outputs.push(`✗ Failed to deploy clauderon docs: ${errorMessage}`);
+          const failureMsg = `Failed to deploy clauderon docs: ${errorMessage}`;
+          outputs.push(`✗ ${failureMsg}`);
+          releaseErrors.push(failureMsg);
         }
       }
 
@@ -567,11 +576,22 @@ export class Monorepo {
 
           // Upload to GitHub release
           const uploadResults = await uploadReleaseAssets(githubToken, muxVersion, assets);
-          outputs.push(...uploadResults);
+          outputs.push(...uploadResults.outputs);
+          releaseErrors.push(...uploadResults.errors);
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : String(error);
-          outputs.push(`✗ Failed to build/upload mux binaries: ${errorMessage}`);
+          const failureMsg = `Failed to build/upload mux binaries: ${errorMessage}`;
+          outputs.push(`✗ ${failureMsg}`);
+          releaseErrors.push(failureMsg);
         }
+      }
+
+      // Fail CI if any release phase errors occurred
+      if (releaseErrors.length > 0) {
+        outputs.push(`\n--- Release Phase Failed ---`);
+        outputs.push(`${releaseErrors.length} error(s) occurred during release:`);
+        releaseErrors.forEach((err, i) => outputs.push(`  ${i + 1}. ${err}`));
+        throw new Error(`Release phase failed with ${releaseErrors.length} error(s):\n${releaseErrors.join("\n")}`);
       }
     }
 
@@ -792,7 +812,11 @@ export class Monorepo {
     // Upload to GitHub release
     outputs.push("\n--- Uploading to GitHub Release ---");
     const uploadResults = await uploadReleaseAssets(githubToken, version, assets);
-    outputs.push(...uploadResults);
+    outputs.push(...uploadResults.outputs);
+
+    if (uploadResults.errors.length > 0) {
+      throw new Error(`Failed to upload ${uploadResults.errors.length} asset(s):\n${uploadResults.errors.join("\n")}`);
+    }
 
     return outputs.join("\n");
   }
