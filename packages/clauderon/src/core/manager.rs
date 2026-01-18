@@ -275,7 +275,7 @@ impl SessionManager {
 
     /// Get the feature flags configuration
     #[must_use]
-    pub const fn feature_flags(&self) -> &crate::feature_flags::FeatureFlags {
+    pub fn feature_flags(&self) -> &crate::feature_flags::FeatureFlags {
         &self.feature_flags
     }
 
