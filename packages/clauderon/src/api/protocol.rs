@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use typeshare::typeshare;
 
+use crate::core::UserPreferences;
 use crate::core::session::{
     AccessMode, AgentType, BackendType, Session, SessionModel, SessionStatus,
 };
@@ -358,6 +359,9 @@ pub enum Event {
 
     /// Session operation failed
     SessionFailed { id: String, error: String },
+
+    /// User preferences updated
+    PreferencesUpdated { preferences: UserPreferences },
 }
 
 /// Credential availability status

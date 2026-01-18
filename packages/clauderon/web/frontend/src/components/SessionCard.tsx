@@ -1,5 +1,5 @@
 import type { Session } from "@clauderon/client";
-import { SessionStatus, CheckStatus, ClaudeWorkingStatus } from "@clauderon/shared";
+import { SessionStatus, CheckStatus, ClaudeWorkingStatus, type ExperienceLevel } from "@clauderon/shared";
 import { formatRelativeTime, cn, getRepoUrlFromPrUrl } from "../lib/utils";
 import { Archive, ArchiveRestore, Trash2, Terminal, CheckCircle2, XCircle, Clock, Loader2, User, Circle, AlertTriangle, Edit, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
@@ -8,15 +8,20 @@ import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { AGENT_CAPABILITIES } from "@/lib/agent-features";
 import { ProviderIcon } from "./ProviderIcon";
+import { OperationsDropdown } from "./OperationsDropdown";
 
 type SessionCardProps = {
   session: Session;
+  experienceLevel?: ExperienceLevel;
   onAttach: (session: Session) => void;
   onEdit: (session: Session) => void;
   onArchive: (session: Session) => void;
   onUnarchive: (session: Session) => void;
   onRefresh: (session: Session) => void;
   onDelete: (session: Session) => void;
+  onRegenerateMetadata?: (session: Session) => void;
+  onUpdateAccessMode?: (session: Session) => void;
+  onTrackAdvancedOperation?: () => void;
 }
 
 // Helper function to map git status codes to readable labels
@@ -45,7 +50,19 @@ function shouldSpanWide(session: Session): boolean {
   );
 }
 
-export function SessionCard({ session, onAttach, onEdit, onArchive, onUnarchive, onRefresh, onDelete }: SessionCardProps) {
+export function SessionCard({
+  session,
+  experienceLevel = "FirstTime",
+  onAttach,
+  onEdit,
+  onArchive,
+  onUnarchive,
+  onRefresh,
+  onDelete,
+  onRegenerateMetadata,
+  onUpdateAccessMode,
+  onTrackAdvancedOperation,
+}: SessionCardProps) {
   const statusColors: Record<SessionStatus, string> = {
     [SessionStatus.Creating]: "bg-status-creating",
     [SessionStatus.Deleting]: "bg-status-creating",
@@ -310,13 +327,17 @@ export function SessionCard({ session, onAttach, onEdit, onArchive, onUnarchive,
             <TooltipContent>Edit title/description</TooltipContent>
           </Tooltip>
 
-          {session.backend === "Docker" && (
+          {/* Refresh button: Advanced users only (direct button) */}
+          {session.backend === "Docker" && experienceLevel === "Advanced" && (
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => { onRefresh(session); }}
+                  onClick={() => {
+                    onTrackAdvancedOperation?.();
+                    onRefresh(session);
+                  }}
                   aria-label="Refresh session"
                   className="cursor-pointer transition-all duration-200 hover:scale-110 active:scale-95 hover:shadow-md"
                 >
@@ -373,6 +394,17 @@ export function SessionCard({ session, onAttach, onEdit, onArchive, onUnarchive,
             </TooltipTrigger>
             <TooltipContent>Delete session</TooltipContent>
           </Tooltip>
+
+          {/* Operations dropdown for Regular and Advanced users */}
+          <OperationsDropdown
+            experienceLevel={experienceLevel}
+            sessionId={session.id}
+            isDockerBackend={session.backend === "Docker"}
+            onRefresh={() => onRefresh(session)}
+            onRegenerateMetadata={onRegenerateMetadata ? () => onRegenerateMetadata(session) : undefined}
+            onUpdateAccessMode={onUpdateAccessMode ? () => onUpdateAccessMode(session) : undefined}
+            onTrackAdvancedOperation={onTrackAdvancedOperation}
+          />
         </TooltipProvider>
       </CardFooter>
     </Card>

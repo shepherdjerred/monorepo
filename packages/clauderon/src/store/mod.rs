@@ -5,7 +5,7 @@ use chrono::{DateTime, Utc};
 use std::path::PathBuf;
 use uuid::Uuid;
 
-use crate::core::{Event, Session, SessionRepository};
+use crate::core::{Event, Session, SessionRepository, UserPreferences};
 
 pub use sqlite::SqliteStore;
 
@@ -68,4 +68,29 @@ pub trait Store: Send + Sync {
         session_id: Uuid,
         repositories: &[SessionRepository],
     ) -> anyhow::Result<()>;
+
+    /// Get user preferences by user ID
+    /// Returns None if preferences don't exist yet
+    async fn get_user_preferences(&self, user_id: &str) -> anyhow::Result<Option<UserPreferences>>;
+
+    /// Save or update user preferences
+    async fn save_user_preferences(&self, preferences: &UserPreferences) -> anyhow::Result<()>;
+
+    /// Track a user operation (creates preferences if they don't exist)
+    async fn track_user_operation(
+        &self,
+        user_id: &str,
+        operation: UserOperation,
+    ) -> anyhow::Result<()>;
+}
+
+/// User operations that can be tracked
+#[derive(Debug, Clone, Copy)]
+pub enum UserOperation {
+    /// User created a session
+    SessionCreated,
+    /// User attached to a session
+    SessionAttached,
+    /// User used an advanced operation (Refresh, Reconcile, Regenerate Metadata, Update Access Mode)
+    AdvancedOperation,
 }

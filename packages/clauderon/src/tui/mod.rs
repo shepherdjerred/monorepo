@@ -3,6 +3,8 @@ pub mod attached;
 pub mod components;
 pub mod events;
 mod events_copy_mode;
+pub mod first_run;
+pub mod preferences;
 pub mod text_input;
 pub mod ui;
 
@@ -47,8 +49,16 @@ pub async fn run() -> anyhow::Result<()> {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    // Create app and connect
+    // Create app and load preferences
     let mut app = App::new();
+    app.load_preferences().await;
+
+    // Check if First Run Experience should be shown
+    if app.should_show_first_run() {
+        app.mode = AppMode::FirstRun;
+        app.fre_screen = Some(first_run::FREScreen::Welcome);
+    }
+
     let _ = app.connect().await; // Connection errors are displayed in the UI
     if app.is_connected() {
         let _ = app.refresh_sessions().await;

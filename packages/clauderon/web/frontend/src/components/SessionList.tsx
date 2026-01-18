@@ -6,7 +6,9 @@ import { ThemeToggle } from "./ThemeToggle";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { StatusDialog } from "./StatusDialog";
 import { EditSessionDialog } from "./EditSessionDialog";
+import { HintBanner } from "./HintBanner";
 import { useSessionContext } from "../contexts/SessionContext";
+import { usePreferences } from "../contexts/PreferencesContext";
 import { toast } from "sonner";
 import { Plus, RefreshCw, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -24,8 +26,9 @@ type FilterStatus = "all" | "running" | "idle" | "completed" | "archived";
 const TAB_TRIGGER_CLASS = "cursor-pointer transition-all duration-200 hover:bg-primary/20 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-2 data-[state=active]:border-primary data-[state=active]:shadow-[4px_4px_0_hsl(220,85%,25%)] data-[state=active]:font-bold";
 
 export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
-  const { sessions, isLoading, error, refreshSessions, archiveSession, unarchiveSession, refreshSession, deleteSession } =
+  const { sessions, isLoading, error, refreshSessions, archiveSession, unarchiveSession, refreshSession, deleteSession, regenerateMetadata, updateAccessMode } =
     useSessionContext();
+  const { experienceLevel, dismissHint, isHintDismissed, trackOperation } = usePreferences();
 
   // Initialize filter from URL parameter
   const getInitialFilter = (): FilterStatus => {
@@ -237,6 +240,29 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
 
       {/* Content */}
       <main className="flex-1 overflow-auto p-4">
+        {/* Contextual hints for FirstTime users */}
+        {experienceLevel === "FirstTime" && filteredSessions.length > 0 && !isHintDismissed("first-session-created") && (
+          <HintBanner
+            hintId="first-session-created"
+            message="Welcome! Click the Terminal icon to attach to your session and start coding."
+            onDismiss={dismissHint}
+          />
+        )}
+        {experienceLevel === "FirstTime" && filteredSessions.length >= 3 && !isHintDismissed("archive-hint") && (
+          <HintBanner
+            hintId="archive-hint"
+            message="Tip: Use Archive to hide completed sessions without deleting them."
+            onDismiss={dismissHint}
+          />
+        )}
+        {experienceLevel === "Regular" && !isHintDismissed("regular-promotion") && (
+          <HintBanner
+            hintId="regular-promotion"
+            message="You've been promoted! More options are now available in the ⋮ menu on each session."
+            onDismiss={dismissHint}
+          />
+        )}
+
         {error && (
           <div className="p-4 bg-destructive/10 text-destructive border-2 border-destructive rounded-md mb-4">
             <strong className="font-mono">Error:</strong> {error.message}
@@ -295,12 +321,19 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
               <SessionCard
                 key={session.id}
                 session={session}
-                onAttach={onAttach}
+                experienceLevel={experienceLevel}
+                onAttach={(s) => {
+                  void trackOperation("session_attached");
+                  onAttach(s);
+                }}
                 onEdit={handleEdit}
                 onArchive={handleArchive}
                 onUnarchive={handleUnarchive}
                 onRefresh={handleRefresh}
                 onDelete={handleDelete}
+                onRegenerateMetadata={regenerateMetadata ? (s) => void regenerateMetadata(s.id) : undefined}
+                onUpdateAccessMode={updateAccessMode ? (s) => void updateAccessMode(s.id, s.access_mode === "ReadWrite" ? "ReadOnly" : "ReadWrite") : undefined}
+                onTrackAdvancedOperation={() => void trackOperation("advanced_operation")}
               />
             ))}
           </div>

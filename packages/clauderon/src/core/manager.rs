@@ -273,6 +273,12 @@ impl SessionManager {
         Arc::clone(&self.console_manager)
     }
 
+    /// Get reference to the store
+    #[must_use]
+    pub fn store(&self) -> &Arc<dyn Store> {
+        &self.store
+    }
+
     /// Get reference to Kubernetes backend
     ///
     /// Returns the Kubernetes backend for API operations like listing storage classes.
