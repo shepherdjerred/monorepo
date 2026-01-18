@@ -235,20 +235,20 @@ impl KubernetesBackend {
     }
 
     /// Ensure shared cache PVCs exist (cargo and sccache)
-    async fn ensure_shared_pvcs_exist(&self, _options: &CreateOptions) -> anyhow::Result<()> {
+    async fn ensure_shared_pvcs_exist(&self, options: &CreateOptions) -> anyhow::Result<()> {
         let pvcs: Api<PersistentVolumeClaim> =
             Api::namespaced(self.client.clone(), &self.config.namespace);
 
         // Create cargo cache PVC if it doesn't exist
         if pvcs.get("clauderon-cargo-cache").await.is_err() {
-            self.create_shared_pvc("clauderon-cargo-cache", &self.config.cargo_cache_size)
+            self.create_shared_pvc("clauderon-cargo-cache", &self.config.cargo_cache_size, options)
                 .await?;
             tracing::info!("Created shared cargo cache PVC");
         }
 
         // Create sccache PVC if it doesn't exist
         if pvcs.get("clauderon-sccache").await.is_err() {
-            self.create_shared_pvc("clauderon-sccache", &self.config.sccache_cache_size)
+            self.create_shared_pvc("clauderon-sccache", &self.config.sccache_cache_size, options)
                 .await?;
             tracing::info!("Created shared sccache PVC");
         }
@@ -256,7 +256,8 @@ impl KubernetesBackend {
         // Create uploads PVC for image attachments (shared across sessions)
         // Unlike workspace PVCs which are per-session, uploads are shared with session-id subdirectories
         if pvcs.get("clauderon-uploads").await.is_err() {
-            self.create_shared_pvc("clauderon-uploads", "10Gi").await?;
+            self.create_shared_pvc("clauderon-uploads", "10Gi", options)
+                .await?;
             tracing::info!("Created shared uploads PVC");
         }
 
@@ -266,7 +267,12 @@ impl KubernetesBackend {
     /// Create a shared PVC for caching
     ///
     /// Tries ReadWriteMany first, falls back to ReadWriteOnce if RWX is not available
-    async fn create_shared_pvc(&self, name: &str, size: &str) -> anyhow::Result<()> {
+    async fn create_shared_pvc(
+        &self,
+        name: &str,
+        size: &str,
+        options: &CreateOptions,
+    ) -> anyhow::Result<()> {
         let pvcs: Api<PersistentVolumeClaim> =
             Api::namespaced(self.client.clone(), &self.config.namespace);
 
@@ -294,7 +300,7 @@ impl KubernetesBackend {
             },
             spec: Some(PersistentVolumeClaimSpec {
                 access_modes: Some(access_modes.clone()),
-                storage_class_name: _options
+                storage_class_name: options
                     .storage_class_override
                     .clone()
                     .or_else(|| self.config.storage_class.clone()),
@@ -352,7 +358,7 @@ impl KubernetesBackend {
                     },
                     spec: Some(PersistentVolumeClaimSpec {
                         access_modes: Some(vec!["ReadWriteOnce".to_string()]),
-                        storage_class_name: _options
+                        storage_class_name: options
                             .storage_class_override
                             .clone()
                             .or_else(|| self.config.storage_class.clone()),
