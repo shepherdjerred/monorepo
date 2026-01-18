@@ -253,6 +253,7 @@ pub struct DirectoryPickerState {
 
 /// Create dialog state
 #[derive(Debug, Clone)]
+#[allow(clippy::struct_excessive_bools)]
 pub struct CreateDialogState {
     pub prompt: String,
     pub repo_path: String,
