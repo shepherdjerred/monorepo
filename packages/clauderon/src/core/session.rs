@@ -394,7 +394,7 @@ impl Session {
     #[must_use]
     pub fn workflow_stage(&self) -> WorkflowStage {
         // Check if PR is merged first
-        if let Some(CheckStatus::Merged) = self.pr_check_status {
+        if self.pr_check_status == Some(CheckStatus::Merged) {
             return WorkflowStage::Merged;
         }
 
