@@ -27,6 +27,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [featureFlags, setFeatureFlags] = useState<{ enable_experimental_models: boolean } | null>(null);
 
   // Multi-repo state
   const [repositories, setRepositories] = useState<RepositoryEntry[]>([
@@ -47,6 +48,13 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
     cpu_limit: "",
     memory_limit: "",
   });
+
+  // Fetch feature flags on mount
+  useEffect(() => {
+    // TODO: This requires a new API endpoint to expose feature flags
+    // For now, default to disabled
+    setFeatureFlags({ enable_experimental_models: false });
+  }, []);
 
   // Auto-check dangerous_skip_checks for Docker and Kubernetes, uncheck for Zellij
   useEffect(() => {
@@ -494,21 +502,36 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                       <span>Claude Code</span>
                     </div>
                   </SelectItem>
-                  <SelectItem value={AgentType.Codex}>
-                    <div className="flex items-center gap-2">
-                      <ProviderIcon agent={AgentType.Codex} />
-                      <span>Codex</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value={AgentType.Gemini}>
-                    <div className="flex items-center gap-2">
-                      <ProviderIcon agent={AgentType.Gemini} />
-                      <span>Gemini</span>
-                    </div>
-                  </SelectItem>
+                  {featureFlags?.enable_experimental_models && (
+                    <>
+                      <SelectItem value={AgentType.Codex}>
+                        <div className="flex items-center gap-2">
+                          <ProviderIcon agent={AgentType.Codex} />
+                          <span>Codex</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value={AgentType.Gemini}>
+                        <div className="flex items-center gap-2">
+                          <ProviderIcon agent={AgentType.Gemini} />
+                          <span>Gemini</span>
+                        </div>
+                      </SelectItem>
+                    </>
+                  )}
                 </SelectContent>
               </Select>
             </div>
+
+            {!featureFlags?.enable_experimental_models && (
+              <div className="p-3 text-sm border-2 rounded" style={{
+                backgroundColor: 'hsl(220, 15%, 95%)',
+                borderColor: 'hsl(220, 85%, 70%)',
+                color: 'hsl(220, 85%, 30%)'
+              }}>
+                <strong>Note:</strong> Experimental models (Codex, Gemini) are disabled by default.
+                Enable via <code className="px-1 py-0.5 bg-white/60 rounded">--enable-experimental-models</code> flag or config file.
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="model" className="font-semibold">

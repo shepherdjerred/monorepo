@@ -116,6 +116,8 @@ pub struct SessionManager {
     http_port: Option<u16>,
     /// Cache for Claude Code usage data
     usage_cache: Arc<RwLock<UsageCache>>,
+    /// Feature flags configuration
+    feature_flags: crate::feature_flags::FeatureFlags,
 }
 
 impl SessionManager {
@@ -135,6 +137,7 @@ impl SessionManager {
         kubernetes: Arc<dyn ExecutionBackend>,
         #[cfg(target_os = "macos")] apple_container: Arc<dyn ExecutionBackend>,
         sprites: Arc<dyn ExecutionBackend>,
+        feature_flags: crate::feature_flags::FeatureFlags,
     ) -> anyhow::Result<Self> {
         let sessions = store.list_sessions().await?;
 
@@ -156,6 +159,7 @@ impl SessionManager {
             max_sessions: 15,
             http_port: None,
             usage_cache: Arc::new(RwLock::new(UsageCache::new())),
+            feature_flags,
         })
     }
 
@@ -167,7 +171,10 @@ impl SessionManager {
     /// # Errors
     ///
     /// Returns an error if the store cannot be read or Kubernetes client fails.
-    pub async fn with_defaults(store: Arc<dyn Store>) -> anyhow::Result<Self> {
+    pub async fn with_defaults(
+        store: Arc<dyn Store>,
+        feature_flags: crate::feature_flags::FeatureFlags,
+    ) -> anyhow::Result<Self> {
         let kubernetes_backend =
             KubernetesBackend::new(crate::backends::KubernetesConfig::load_or_default()).await?;
 
@@ -180,6 +187,7 @@ impl SessionManager {
             #[cfg(target_os = "macos")]
             Arc::new(AppleContainerBackend::new()),
             Arc::new(crate::backends::SpritesBackend::new()),
+            feature_flags,
         )
         .await
     }
@@ -194,6 +202,7 @@ impl SessionManager {
     pub async fn with_docker_backend(
         store: Arc<dyn Store>,
         docker: DockerBackend,
+        feature_flags: crate::feature_flags::FeatureFlags,
     ) -> anyhow::Result<Self> {
         let kubernetes_backend =
             KubernetesBackend::new(crate::backends::KubernetesConfig::load_or_default()).await?;
@@ -207,6 +216,7 @@ impl SessionManager {
             #[cfg(target_os = "macos")]
             Arc::new(AppleContainerBackend::new()),
             Arc::new(SpritesBackend::new()),
+            feature_flags,
         )
         .await
     }
@@ -238,6 +248,12 @@ impl SessionManager {
     #[must_use]
     pub fn console_manager(&self) -> Arc<ConsoleManager> {
         Arc::clone(&self.console_manager)
+    }
+
+    /// Get the feature flags configuration
+    #[must_use]
+    pub const fn feature_flags(&self) -> &crate::feature_flags::FeatureFlags {
+        &self.feature_flags
     }
 
     /// List all sessions
@@ -370,6 +386,14 @@ impl SessionManager {
                 self.max_sessions
             );
         }
+
+        // Validate experimental models are enabled
+        crate::core::session::validate_experimental_agent(
+            agent,
+            model.as_ref(),
+            self.feature_flags.enable_experimental_models,
+        )
+        .with_context(|| format!("Cannot create session with agent {:?}", agent))?;
 
         // Process repositories (multi-repo mode or legacy single-repo mode)
         let repo_inputs = if let Some(repos) = repositories {

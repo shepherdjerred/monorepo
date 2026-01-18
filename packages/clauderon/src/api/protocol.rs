@@ -222,7 +222,16 @@ fn default_plan_mode() -> bool {
 
 impl CreateSessionRequest {
     /// Validate that the model is compatible with the selected agent
-    pub fn validate(&self) -> anyhow::Result<()> {
+    /// and that experimental models are enabled if needed
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if validation fails
+    pub fn validate(
+        &self,
+        feature_flags: &crate::feature_flags::FeatureFlags,
+    ) -> anyhow::Result<()> {
+        // Existing model compatibility check
         if let Some(model) = &self.model {
             if !model.is_compatible_with(self.agent) {
                 anyhow::bail!(
@@ -232,6 +241,14 @@ impl CreateSessionRequest {
                 );
             }
         }
+
+        // Experimental models check
+        crate::core::session::validate_experimental_agent(
+            self.agent,
+            self.model.as_ref(),
+            feature_flags.enable_experimental_models,
+        )?;
+
         Ok(())
     }
 }
