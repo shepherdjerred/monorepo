@@ -109,6 +109,10 @@ pub struct Session {
     /// Whether to delete branch after merge (from repository settings)
     pub pr_delete_branch_on_merge: Option<bool>,
 
+    /// Whether this PR can be merged (all requirements met: PR exists, checks passing, approved, no conflicts)
+    #[serde(skip_deserializing)]
+    pub can_merge_pr: bool,
+
     /// Current Claude agent working status (from hooks)
     pub claude_status: ClaudeWorkingStatus,
 
@@ -415,19 +419,6 @@ impl Session {
         self.model.as_ref().map(SessionModel::to_cli_flag)
     }
 
-    /// Check if PR can be merged based on requirements
-    /// Returns true if all merge requirements are met:
-    /// - PR URL exists
-    /// - CI checks are passing
-    /// - PR is approved
-    /// - No merge conflicts
-    #[must_use]
-    pub fn can_merge_pr(&self) -> bool {
-        self.pr_url.is_some()
-            && self.pr_check_status == Some(CheckStatus::Passing)
-            && self.pr_review_status == Some(PrReviewStatus::Approved)
-            && !self.merge_conflict
-    }
 }
 
 /// Session lifecycle status
