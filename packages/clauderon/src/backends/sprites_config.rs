@@ -511,7 +511,11 @@ mod tests {
             image: SpritesImage {
                 base_image: "ubuntu:22.04".to_string(),
                 install_claude: true,
+                claude_install_url: "https://claude.ai/install.sh".to_string(),
                 packages: vec!["git".to_string()],
+            },
+            git: SpritesGit {
+                shallow_clone: true,
             },
         };
 
