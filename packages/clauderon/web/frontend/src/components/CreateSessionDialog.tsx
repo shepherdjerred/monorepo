@@ -52,11 +52,11 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
     storage_class: "",
   });
 
-  // Auto-check dangerous_skip_checks for Docker and Kubernetes, uncheck for Zellij
+  // Auto-check dangerous_skip_checks for Docker, Kubernetes, and Sprites, uncheck for Zellij
   useEffect(() => {
     setFormData(prev => ({
       ...prev,
-      dangerous_skip_checks: prev.backend === "Docker" || prev.backend === "Kubernetes"
+      dangerous_skip_checks: prev.backend === "Docker" || prev.backend === "Kubernetes" || prev.backend === "Sprites"
     }));
   }, [formData.backend]);
 
@@ -424,7 +424,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                 color: 'hsl(45, 75%, 30%)'
               }}>
                 <strong>Warning:</strong> Multi-repository sessions are only supported with Docker backend.
-                Zellij and Kubernetes backends will reject multi-repo sessions.
+                Zellij, Kubernetes, and Sprites backends will reject multi-repo sessions.
               </div>
             )}
           </div>
@@ -459,6 +459,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                 {featureFlags?.enable_kubernetes_backend && (
                   <option value="Kubernetes">Kubernetes</option>
                 )}
+                <option value="Sprites">Sprites</option>
               </select>
             </div>
 

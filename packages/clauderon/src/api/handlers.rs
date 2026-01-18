@@ -290,6 +290,10 @@ pub async fn handle_request(
                 message: format!("Session not found: {name}"),
             },
         },
+
+        Request::GetFeatureFlags => Response::FeatureFlags {
+            flags: (*manager.feature_flags()).clone(),
+        },
     }
 }
 
