@@ -154,9 +154,7 @@ impl CIPoller {
                 self.manager.link_pr(*session_id, url.to_string()).await?;
 
                 // Fetch merge methods and repository settings once when PR is discovered
-                self.poll_pr_merge_methods(session_id, repo_path)
-                    .await
-                    .ok(); // Don't fail if merge methods fetch fails
+                self.poll_pr_merge_methods(session_id, repo_path).await.ok(); // Don't fail if merge methods fetch fails
             }
         }
 

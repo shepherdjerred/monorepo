@@ -237,17 +237,16 @@ fn render_confirm_merge(frame: &mut Frame, app: &App, area: Rect) {
                 Span::raw("Merge method: "),
                 Span::styled(
                     format!("{method:?}"),
-                    Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD),
+                    Style::default()
+                        .fg(Color::Cyan)
+                        .add_modifier(Modifier::BOLD),
                 ),
                 Span::raw(" (Tab to change)"),
             ]),
             Line::from(""),
             Line::from(vec![
                 Span::raw("Delete branch: "),
-                Span::styled(
-                    delete_branch_text,
-                    Style::default().fg(Color::Yellow),
-                ),
+                Span::styled(delete_branch_text, Style::default().fg(Color::Yellow)),
                 Span::raw(" (Space to toggle)"),
             ]),
             Line::from(""),

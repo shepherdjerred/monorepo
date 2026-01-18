@@ -295,29 +295,25 @@ pub async fn handle_request(
             id,
             method,
             delete_branch,
-        } => {
-            match uuid::Uuid::parse_str(&id) {
-                Ok(session_id) => {
-                    match manager.merge_pr(session_id, method, delete_branch).await {
-                        Ok(()) => {
-                            tracing::info!(session_id = %id, "PR merged successfully");
-                            Response::Ok
-                        }
-                        Err(e) => {
-                            tracing::error!(session_id = %id, error = %e, "Failed to merge PR");
-                            Response::Error {
-                                code: "MERGE_PR_ERROR".to_string(),
-                                message: e.to_string(),
-                            }
-                        }
+        } => match uuid::Uuid::parse_str(&id) {
+            Ok(session_id) => match manager.merge_pr(session_id, method, delete_branch).await {
+                Ok(()) => {
+                    tracing::info!(session_id = %id, "PR merged successfully");
+                    Response::Ok
+                }
+                Err(e) => {
+                    tracing::error!(session_id = %id, error = %e, "Failed to merge PR");
+                    Response::Error {
+                        code: "MERGE_PR_ERROR".to_string(),
+                        message: e.to_string(),
                     }
                 }
-                Err(e) => Response::Error {
-                    code: "INVALID_ID".to_string(),
-                    message: format!("Invalid session ID: {e}"),
-                },
-            }
-        }
+            },
+            Err(e) => Response::Error {
+                code: "INVALID_ID".to_string(),
+                message: format!("Invalid session ID: {e}"),
+            },
+        },
 
         Request::GetSessionIdByName { name } => match manager.get_session(&name).await {
             Some(session) => Response::SessionId {
