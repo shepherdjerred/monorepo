@@ -152,7 +152,7 @@ mod tests {
     #[test]
     fn test_start_command_empty_prompt() {
         let agent = CodexAgent::new();
-        let cmd = agent.start_command("", &[], false, None);
+        let cmd = agent.start_command("", &[], false, None, None);
         assert_eq!(cmd.len(), 1); // Just "codex", no prompt
         assert_eq!(cmd[0], "codex");
     }
