@@ -611,7 +611,8 @@ curl -fsSL https://claude.ai/install.sh | sh
                     cmd.push_str(" --bypass-permissions");
                 }
                 for image in images {
-                    cmd.push_str(&format!(" --image '{}'", image.replace('\'', "'\\''")));
+                    use std::fmt::Write;
+                    let _ = write!(cmd, " --image '{}'", image.replace('\'', "'\\''"));
                 }
                 cmd
             }
