@@ -1487,6 +1487,20 @@ impl ExecutionBackend for KubernetesBackend {
         initial_prompt: &str,
         options: CreateOptions,
     ) -> anyhow::Result<String> {
+        // TODO: Add multi-repository support
+        // When options.repositories is non-empty:
+        // 1. Create multiple PVCs (one per repo)
+        // 2. Clone each repo into its respective PVC
+        // 3. Mount primary PVC to /workspace
+        // 4. Mount secondary PVCs to /repos/{mount_name}
+        // 5. Handle git worktree parent .git directories for each repo
+        if !options.repositories.is_empty() {
+            anyhow::bail!(
+                "Multi-repository sessions are not yet supported for Kubernetes backend. \
+                Please use Docker backend for multi-repo sessions."
+            );
+        }
+
         let pod_name = Self::pod_name(name);
 
         // Ensure namespace exists
