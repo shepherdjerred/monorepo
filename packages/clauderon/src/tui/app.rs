@@ -8,6 +8,7 @@ use uuid::Uuid;
 
 use crate::api::console_protocol::SignalType;
 use crate::api::{ApiClient, Client};
+use crate::core::session::SessionModel;
 use crate::core::{AccessMode, AgentType, BackendType, Session, SessionStatus};
 use crate::tui::attached::PtySession;
 
@@ -206,6 +207,7 @@ pub enum CreateDialogFocus {
     RepoPath,
     Backend,
     Agent,
+    Model,
     AccessMode,
     SkipChecks,
     PlanMode,
@@ -255,6 +257,7 @@ pub struct CreateDialogState {
     pub repo_path: String,
     pub backend: BackendType,
     pub agent: AgentType,
+    pub model: Option<SessionModel>,
     pub skip_checks: bool,
     pub plan_mode: bool,
     pub access_mode: AccessMode,
@@ -562,6 +565,77 @@ impl CreateDialogState {
         };
     }
 
+    /// Toggle through available models for the current agent
+    pub fn toggle_model(&mut self) {
+        use crate::core::session::{ClaudeModel, CodexModel, GeminiModel};
+
+        self.model = match self.agent {
+            AgentType::ClaudeCode => match &self.model {
+                Some(SessionModel::Claude(ClaudeModel::Sonnet4_5)) => {
+                    Some(SessionModel::Claude(ClaudeModel::Opus4_5))
+                }
+                Some(SessionModel::Claude(ClaudeModel::Opus4_5)) => {
+                    Some(SessionModel::Claude(ClaudeModel::Haiku4_5))
+                }
+                Some(SessionModel::Claude(ClaudeModel::Haiku4_5)) => {
+                    Some(SessionModel::Claude(ClaudeModel::Opus4_1))
+                }
+                Some(SessionModel::Claude(ClaudeModel::Opus4_1)) => {
+                    Some(SessionModel::Claude(ClaudeModel::Opus4))
+                }
+                Some(SessionModel::Claude(ClaudeModel::Opus4)) => {
+                    Some(SessionModel::Claude(ClaudeModel::Sonnet4))
+                }
+                Some(SessionModel::Claude(ClaudeModel::Sonnet4)) => None,
+                None | _ => Some(SessionModel::Claude(ClaudeModel::Sonnet4_5)),
+            },
+            AgentType::Codex => match &self.model {
+                Some(SessionModel::Codex(CodexModel::Gpt5_2Codex)) => {
+                    Some(SessionModel::Codex(CodexModel::Gpt5_2))
+                }
+                Some(SessionModel::Codex(CodexModel::Gpt5_2)) => {
+                    Some(SessionModel::Codex(CodexModel::Gpt5_2Instant))
+                }
+                Some(SessionModel::Codex(CodexModel::Gpt5_2Instant)) => {
+                    Some(SessionModel::Codex(CodexModel::Gpt5_2Thinking))
+                }
+                Some(SessionModel::Codex(CodexModel::Gpt5_2Thinking)) => {
+                    Some(SessionModel::Codex(CodexModel::Gpt5_2Pro))
+                }
+                Some(SessionModel::Codex(CodexModel::Gpt5_2Pro)) => {
+                    Some(SessionModel::Codex(CodexModel::Gpt5_1))
+                }
+                Some(SessionModel::Codex(CodexModel::Gpt5_1)) => {
+                    Some(SessionModel::Codex(CodexModel::Gpt5_1Instant))
+                }
+                Some(SessionModel::Codex(CodexModel::Gpt5_1Instant)) => {
+                    Some(SessionModel::Codex(CodexModel::Gpt5_1Thinking))
+                }
+                Some(SessionModel::Codex(CodexModel::Gpt5_1Thinking)) => {
+                    Some(SessionModel::Codex(CodexModel::Gpt4_1))
+                }
+                Some(SessionModel::Codex(CodexModel::Gpt4_1)) => {
+                    Some(SessionModel::Codex(CodexModel::O3Mini))
+                }
+                Some(SessionModel::Codex(CodexModel::O3Mini)) => None,
+                None | _ => Some(SessionModel::Codex(CodexModel::Gpt5_2Codex)),
+            },
+            AgentType::Gemini => match &self.model {
+                Some(SessionModel::Gemini(GeminiModel::Gemini3Pro)) => {
+                    Some(SessionModel::Gemini(GeminiModel::Gemini3Flash))
+                }
+                Some(SessionModel::Gemini(GeminiModel::Gemini3Flash)) => {
+                    Some(SessionModel::Gemini(GeminiModel::Gemini2_5Pro))
+                }
+                Some(SessionModel::Gemini(GeminiModel::Gemini2_5Pro)) => {
+                    Some(SessionModel::Gemini(GeminiModel::Gemini2_0Flash))
+                }
+                Some(SessionModel::Gemini(GeminiModel::Gemini2_0Flash)) => None,
+                None | _ => Some(SessionModel::Gemini(GeminiModel::Gemini3Pro)),
+            },
+        };
+    }
+
     /// Cycle through agents: ClaudeCode -> Codex -> Gemini -> ClaudeCode
     pub fn toggle_agent(&mut self) {
         self.agent = match self.agent {
@@ -663,6 +737,7 @@ impl Default for CreateDialogState {
             repo_path: String::new(),
             backend: BackendType::Zellij, // Default to Zellij
             agent: AgentType::ClaudeCode,
+            model: None, // Default to CLI default
             skip_checks: false,
             plan_mode: true,                    // Default to plan mode ON
             access_mode: AccessMode::default(), // ReadOnly by default (secure)
@@ -1155,6 +1230,7 @@ impl App {
             initial_prompt: self.create_dialog.prompt.clone(),
             backend: self.create_dialog.backend,
             agent: self.create_dialog.agent,
+            model: self.create_dialog.model.clone(), // Use selected model from dialog
             dangerous_skip_checks: self.create_dialog.skip_checks,
             print_mode: false, // TUI always uses interactive mode
             plan_mode: self.create_dialog.plan_mode,

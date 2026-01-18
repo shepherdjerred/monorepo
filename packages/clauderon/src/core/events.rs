@@ -127,6 +127,7 @@ pub fn replay_events(events: &[Event]) -> Option<Session> {
         initial_prompt: initial_prompt.clone(),
         backend: *backend,
         agent: super::session::AgentType::ClaudeCode,
+        model: None, // Legacy sessions don't have model
         dangerous_skip_checks: false,
         access_mode: AccessMode::default(),
     });

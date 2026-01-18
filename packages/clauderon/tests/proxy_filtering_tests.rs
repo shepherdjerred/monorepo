@@ -148,6 +148,7 @@ async fn test_create_session_with_read_only_mode() {
             "Test prompt".to_string(),
             BackendType::Docker,
             AgentType::ClaudeCode,
+            None, // model
             true,
             false, // print_mode
             false, // plan_mode
@@ -183,6 +184,7 @@ async fn test_create_session_with_read_write_mode() {
             "Test prompt".to_string(),
             BackendType::Docker,
             AgentType::ClaudeCode,
+            None, // model
             true,
             false, // print_mode
             false, // plan_mode
@@ -214,6 +216,7 @@ async fn test_zellij_backend_ignores_proxy_port() {
             "Test prompt".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
+            None, // model
             true,
             false, // print_mode
             false, // plan_mode
@@ -247,6 +250,7 @@ async fn test_update_access_mode_by_name() {
             "Test prompt".to_string(),
             BackendType::Docker,
             AgentType::ClaudeCode,
+            None, // model
             true,
             false, // print_mode
             false, // plan_mode
@@ -290,6 +294,7 @@ async fn test_update_access_mode_by_id() {
             "Test prompt".to_string(),
             BackendType::Docker,
             AgentType::ClaudeCode,
+            None, // model
             true,
             false, // print_mode
             false, // plan_mode
@@ -446,6 +451,7 @@ async fn test_access_mode_persists_across_restarts() {
                 "Test".to_string(),
                 BackendType::Zellij, // Changed from Docker to avoid proxy requirement
                 AgentType::ClaudeCode,
+                None, // model
                 true,
                 false, // print_mode
                 false, // plan_mode
@@ -529,6 +535,7 @@ async fn test_proxy_port_persists_in_database() {
             dangerous_skip_checks: true,
             access_mode: AccessMode::ReadWrite,
             repositories: None,
+            model: None,
         });
 
         session.set_proxy_port(18234);
@@ -580,6 +587,7 @@ async fn test_delete_session_cleans_up_proxy() {
             "Test prompt".to_string(),
             BackendType::Docker,
             AgentType::ClaudeCode,
+            None, // model
             true,
             false, // print_mode
             false, // plan_mode

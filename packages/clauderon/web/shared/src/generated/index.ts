@@ -140,6 +140,64 @@ export enum AgentType {
 	Gemini = "Gemini",
 }
 
+/** Model selection for Claude Code agent */
+export enum ClaudeModel {
+	/** Claude Opus 4.5 (most capable, best for complex workflows) */
+	Opus4_5 = "Opus4_5",
+	/** Claude Sonnet 4.5 (default, balanced performance for agents and coding) */
+	Sonnet4_5 = "Sonnet4_5",
+	/** Claude Haiku 4.5 (fastest, optimized for low latency) */
+	Haiku4_5 = "Haiku4_5",
+	/** Claude Opus 4.1 (focused on agentic tasks and reasoning) */
+	Opus4_1 = "Opus4_1",
+	/** Claude Opus 4 (previous generation flagship) */
+	Opus4 = "Opus4",
+	/** Claude Sonnet 4 (previous generation balanced) */
+	Sonnet4 = "Sonnet4",
+}
+
+/** Model selection for Codex agent */
+export enum CodexModel {
+	/** GPT-5.2-Codex (default, most advanced for software engineering) */
+	Gpt5_2Codex = "Gpt5_2Codex",
+	/** GPT-5.2 (most capable for professional knowledge work) */
+	Gpt5_2 = "Gpt5_2",
+	/** GPT-5.2 Instant (fast variant) */
+	Gpt5_2Instant = "Gpt5_2Instant",
+	/** GPT-5.2 Thinking (reasoning variant) */
+	Gpt5_2Thinking = "Gpt5_2Thinking",
+	/** GPT-5.2 Pro (premium variant) */
+	Gpt5_2Pro = "Gpt5_2Pro",
+	/** GPT-5.1 (previous flagship) */
+	Gpt5_1 = "Gpt5_1",
+	/** GPT-5.1 Instant (fast variant) */
+	Gpt5_1Instant = "Gpt5_1Instant",
+	/** GPT-5.1 Thinking (reasoning variant) */
+	Gpt5_1Thinking = "Gpt5_1Thinking",
+	/** GPT-4.1 (specialized for coding) */
+	Gpt4_1 = "Gpt4_1",
+	/** o3-mini (small reasoning model for science/math/coding) */
+	O3Mini = "O3Mini",
+}
+
+/** Model selection for Gemini agent */
+export enum GeminiModel {
+	/** Gemini 3 Pro (default, state-of-the-art reasoning with 1M token context) */
+	Gemini3Pro = "Gemini3Pro",
+	/** Gemini 3 Flash (fast frontier-class performance at lower cost) */
+	Gemini3Flash = "Gemini3Flash",
+	/** Gemini 2.5 Pro (production tier) */
+	Gemini2_5Pro = "Gemini2_5Pro",
+	/** Gemini 2.0 Flash (previous generation fast model) */
+	Gemini2_0Flash = "Gemini2_0Flash",
+}
+
+/** Model configuration for a session */
+export type SessionModel =
+	| { type: "Claude"; content: ClaudeModel }
+	| { type: "Codex"; content: CodexModel }
+	| { type: "Gemini"; content: GeminiModel };
+
 /** Access mode for proxy filtering */
 export enum AccessMode {
 	/** Read-only: GET, HEAD, OPTIONS allowed; POST, PUT, DELETE, PATCH blocked */
@@ -163,6 +221,13 @@ export interface CreateSessionRequest {
 	backend: BackendType;
 	/** AI agent to use */
 	agent: AgentType;
+	/**
+	 * Optional model selection (must be compatible with selected agent).
+	 *
+	 * If not specified, the CLI will use its default model.
+	 * Examples: "sonnet" (Claude), "gpt-4o" (Codex), "gemini-2.5-pro" (Gemini)
+	 */
+	model?: SessionModel;
 	/** Skip safety checks */
 	dangerous_skip_checks: boolean;
 	/** Run in print mode (non-interactive, outputs response and exits) */
@@ -432,6 +497,8 @@ export interface Session {
 	backend: BackendType;
 	/** AI agent running in this session */
 	agent: AgentType;
+	/** AI model for this session (None for sessions created before model selection was added) */
+	model?: SessionModel;
 	/** Path to the source repository */
 	repo_path: string;
 	/** Path to the git worktree */

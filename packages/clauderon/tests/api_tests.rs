@@ -23,6 +23,7 @@ fn test_create_session_request_serialization() {
         initial_prompt: "Fix the bug".to_string(),
         backend: BackendType::Zellij,
         agent: AgentType::ClaudeCode,
+        model: None,
         dangerous_skip_checks: false,
         print_mode: false,
         plan_mode: true,
@@ -161,6 +162,7 @@ fn test_print_mode_serialization() {
         initial_prompt: "Generate a hello world".to_string(),
         backend: BackendType::Docker,
         agent: AgentType::ClaudeCode,
+        model: None,
         dangerous_skip_checks: true,
         print_mode: true,
         plan_mode: false,
@@ -235,6 +237,7 @@ fn test_print_mode_flows_to_docker_args() {
         &clauderon::backends::DockerConfig::default(),
         None,
         None,
+        None, // model
         &[],
     )
     .expect("Failed to build args");
@@ -349,6 +352,7 @@ fn test_interactive_mode_no_print_flag_in_docker_args() {
         &clauderon::backends::DockerConfig::default(),
         None,
         None,
+        None, // model
         &[],
     )
     .expect("Failed to build args");
