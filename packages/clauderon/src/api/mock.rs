@@ -86,6 +86,7 @@ impl MockApiClient {
             worktree_path: PathBuf::from(format!("/mock/worktrees/{name}")),
             subdirectory: PathBuf::new(),
             branch_name: format!("feature/{name}"),
+            repositories: None, // Mock session uses legacy single-repo mode
             initial_prompt: "Mock prompt".to_string(),
             backend: BackendType::Zellij,
             agent: AgentType::ClaudeCode,
@@ -168,6 +169,7 @@ impl ApiClient for MockApiClient {
             worktree_path: PathBuf::from(format!("/mock/worktrees/{session_name}")),
             subdirectory: PathBuf::new(),
             branch_name: format!("feature/{session_name}"),
+            repositories: None, // Mock session uses legacy single-repo mode
             initial_prompt: request.initial_prompt,
             backend: request.backend,
             agent: request.agent,
@@ -389,6 +391,7 @@ mod tests {
 
         let request = CreateSessionRequest {
             repo_path: "/tmp/repo".to_string(),
+            repositories: None, // Test uses legacy single-repo mode
             initial_prompt: "Test prompt".to_string(),
             backend: BackendType::Zellij,
             agent: AgentType::ClaudeCode,

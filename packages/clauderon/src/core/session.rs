@@ -6,6 +6,32 @@ use uuid::Uuid;
 
 use crate::api::protocol::ProgressStep;
 
+/// Represents a repository mounted in a session
+#[typeshare]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct SessionRepository {
+    /// Path to the repository root (git root)
+    #[typeshare(serialized_as = "String")]
+    pub repo_path: PathBuf,
+
+    /// Subdirectory path relative to git root (empty if at root)
+    #[typeshare(serialized_as = "String")]
+    pub subdirectory: PathBuf,
+
+    /// Path to the git worktree for this repository
+    #[typeshare(serialized_as = "String")]
+    pub worktree_path: PathBuf,
+
+    /// Git branch name for this repository's worktree
+    pub branch_name: String,
+
+    /// Mount name in the container (e.g., "primary", "shared-lib")
+    pub mount_name: String,
+
+    /// Whether this is the primary repository (determines working directory)
+    pub is_primary: bool,
+}
+
 /// Represents a single AI coding session
 #[typeshare]
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -47,6 +73,11 @@ pub struct Session {
 
     /// Git branch name
     pub branch_name: String,
+
+    /// Multiple repositories mounted in this session (when Some, overrides single-repo fields above)
+    /// None indicates a legacy single-repo session using the fields above
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub repositories: Option<Vec<SessionRepository>>,
 
     /// Backend-specific identifier (zellij session name, docker container id, or kubernetes pod name)
     pub backend_id: Option<String>,
@@ -119,14 +150,16 @@ pub struct SessionConfig {
     pub title: Option<String>,
     /// AI-generated description of the task (optional)
     pub description: Option<String>,
-    /// Path to the source repository
+    /// Path to the source repository (LEGACY: used when repositories is None)
     pub repo_path: PathBuf,
-    /// Path to the git worktree
+    /// Path to the git worktree (LEGACY: used when repositories is None)
     pub worktree_path: PathBuf,
-    /// Subdirectory path relative to git root (empty if at root)
+    /// Subdirectory path relative to git root (LEGACY: used when repositories is None)
     pub subdirectory: PathBuf,
-    /// Git branch name
+    /// Git branch name (LEGACY: used when repositories is None)
     pub branch_name: String,
+    /// Multiple repositories (NEW: when Some, overrides legacy fields above)
+    pub repositories: Option<Vec<SessionRepository>>,
     /// Initial prompt given to the AI agent
     pub initial_prompt: String,
     /// Execution backend
@@ -156,6 +189,7 @@ impl Session {
             worktree_path: config.worktree_path,
             subdirectory: config.subdirectory,
             branch_name: config.branch_name,
+            repositories: config.repositories,
             backend_id: None,
             initial_prompt: config.initial_prompt,
             dangerous_skip_checks: config.dangerous_skip_checks,
@@ -461,19 +495,35 @@ impl std::str::FromStr for AccessMode {
 /// Get the path to the Claude Code session history file
 ///
 /// Claude Code stores session history at:
-/// `<worktree>/.claude/projects/-workspace/<session-id>.jsonl`
+/// - Root directory: `<worktree>/.claude/projects/-workspace/<session-id>.jsonl`
+/// - Subdirectory: `<worktree>/.claude/projects/-workspace-<subdir>/<session-id>.jsonl`
+///   where <subdir> has `/` replaced with `-`
 ///
 /// # Arguments
 /// * `worktree_path` - Path to the git worktree
 /// * `session_id` - UUID of the session
+/// * `subdirectory` - Subdirectory path relative to git root (empty if at root)
 ///
 /// # Returns
 /// The path to the history file (may not exist yet)
 #[must_use]
-pub fn get_history_file_path(worktree_path: &Path, session_id: &Uuid) -> PathBuf {
+pub fn get_history_file_path(
+    worktree_path: &Path,
+    session_id: &Uuid,
+    subdirectory: &Path,
+) -> PathBuf {
+    let project_path = if subdirectory.as_os_str().is_empty() {
+        "-workspace".to_string()
+    } else {
+        format!(
+            "-workspace-{}",
+            subdirectory.display().to_string().replace('/', "-")
+        )
+    };
+
     worktree_path
         .join(".claude")
         .join("projects")
-        .join("-workspace")
+        .join(project_path)
         .join(format!("{session_id}.jsonl"))
 }

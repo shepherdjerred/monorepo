@@ -493,7 +493,7 @@ impl CreateDialogState {
         *self = Self::new();
     }
 
-    /// Cycle through backends: Zellij → Docker → Kubernetes → [AppleContainer →] Zellij, auto-adjusting skip_checks
+    /// Cycle through backends: Zellij → Docker → Kubernetes → AppleContainer → Zellij, auto-adjusting skip_checks
     pub fn toggle_backend(&mut self) {
         self.backend = match self.backend {
             BackendType::Zellij => BackendType::Docker,
@@ -1111,6 +1111,7 @@ impl App {
 
         let request = CreateSessionRequest {
             repo_path: self.create_dialog.repo_path.clone(),
+            repositories: None, // TUI doesn't support multi-repo yet
             initial_prompt: self.create_dialog.prompt.clone(),
             backend: self.create_dialog.backend,
             agent: self.create_dialog.agent,
