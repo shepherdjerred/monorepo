@@ -1818,6 +1818,9 @@ impl SessionManager {
             }
         }
 
+        // Validate read-only mode is enabled if requested
+        self.validate_readonly_mode_allowed(access_mode)?;
+
         // Validate and resolve git repository path
         let repo_path_buf = std::path::PathBuf::from(&repo_path);
         let git_info = crate::utils::git::find_git_root(&repo_path_buf)
