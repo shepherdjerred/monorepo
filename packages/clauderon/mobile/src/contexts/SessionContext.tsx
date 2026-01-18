@@ -25,6 +25,8 @@ type SessionContextValue = {
   createSession: (request: CreateSessionRequest) => Promise<string | null>;
   deleteSession: (id: string) => Promise<void>;
   archiveSession: (id: string) => Promise<void>;
+  unarchiveSession: (id: string) => Promise<void>;
+  refreshSession: (id: string) => Promise<void>;
   updateAccessMode: (id: string, mode: AccessMode) => Promise<void>;
   refreshSessions: () => Promise<void>;
 };
@@ -169,6 +171,42 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     [client]
   );
 
+  const unarchiveSession = useCallback(
+    async (id: string): Promise<void> => {
+      if (!client) {
+        throw new Error("No daemon URL configured");
+      }
+
+      try {
+        await client.unarchiveSession(id);
+      } catch (err) {
+        setError(
+          err instanceof Error ? err : new Error("Failed to unarchive session")
+        );
+        throw err;
+      }
+    },
+    [client]
+  );
+
+  const refreshSession = useCallback(
+    async (id: string): Promise<void> => {
+      if (!client) {
+        throw new Error("No daemon URL configured");
+      }
+
+      try {
+        await client.refreshSession(id);
+      } catch (err) {
+        setError(
+          err instanceof Error ? err : new Error("Failed to refresh session")
+        );
+        throw err;
+      }
+    },
+    [client]
+  );
+
   const updateAccessMode = useCallback(
     async (id: string, mode: AccessMode): Promise<void> => {
       if (!client) {
@@ -195,6 +233,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     createSession,
     deleteSession,
     archiveSession,
+    unarchiveSession,
+    refreshSession,
     updateAccessMode,
     refreshSessions,
   };

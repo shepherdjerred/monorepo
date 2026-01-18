@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import type { Session } from "../types/generated";
-import { CheckStatus, ClaudeWorkingStatus } from "../types/generated";
+import { BackendType, CheckStatus, ClaudeWorkingStatus, SessionStatus } from "../types/generated";
 import { colors } from "../styles/colors";
 import { typography } from "../styles/typography";
 import { commonStyles } from "../styles/common";
@@ -10,9 +10,22 @@ import { formatRelativeTime } from "../lib/utils";
 type SessionCardProps = {
   session: Session;
   onPress: () => void;
+  onEdit?: () => void;
+  onArchive?: () => void;
+  onUnarchive?: () => void;
+  onDelete?: () => void;
+  onRefresh?: () => void;
 };
 
-export function SessionCard({ session, onPress }: SessionCardProps) {
+export function SessionCard({
+  session,
+  onPress,
+  onEdit,
+  onArchive,
+  onUnarchive,
+  onDelete,
+  onRefresh,
+}: SessionCardProps) {
   const statusColor = getStatusColor(session.status);
 
   return (
@@ -71,11 +84,93 @@ export function SessionCard({ session, onPress }: SessionCardProps) {
             <Text style={styles.conflictWarning}>⚠ Merge conflict with main</Text>
           </View>
         )}
+
+        {/* Dirty Worktree Warning */}
+        {session.worktree_dirty && (
+          <View style={styles.statusRow}>
+            <Text style={styles.dirtyWarning}>● Uncommitted changes</Text>
+          </View>
+        )}
+
+        {/* Reconciliation Error */}
+        {session.last_reconcile_error && (
+          <View style={styles.reconcileError}>
+            <Text style={styles.reconcileErrorTitle}>
+              Reconcile error (attempt {session.reconcile_attempts})
+            </Text>
+            <Text style={styles.reconcileErrorMessage} numberOfLines={2}>
+              {session.last_reconcile_error}
+            </Text>
+          </View>
+        )}
       </View>
 
       <Text style={styles.timestamp}>
         {formatRelativeTime(new Date(session.created_at))}
       </Text>
+
+      {/* Action buttons */}
+      {(onEdit || onArchive || onUnarchive || onDelete || onRefresh) && (
+        <View style={styles.actionRow}>
+          {onRefresh && session.backend === BackendType.Docker && (
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={(e) => {
+                e.stopPropagation();
+                onRefresh();
+              }}
+            >
+              <Text style={styles.actionButtonText}>Refresh</Text>
+            </TouchableOpacity>
+          )}
+          {onEdit && (
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={(e) => {
+                e.stopPropagation();
+                onEdit();
+              }}
+            >
+              <Text style={styles.actionButtonText}>Edit</Text>
+            </TouchableOpacity>
+          )}
+          {onArchive && session.status !== SessionStatus.Archived && (
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={(e) => {
+                e.stopPropagation();
+                onArchive();
+              }}
+            >
+              <Text style={styles.actionButtonText}>Archive</Text>
+            </TouchableOpacity>
+          )}
+          {onUnarchive && session.status === SessionStatus.Archived && (
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={(e) => {
+                e.stopPropagation();
+                onUnarchive();
+              }}
+            >
+              <Text style={styles.actionButtonText}>Unarchive</Text>
+            </TouchableOpacity>
+          )}
+          {onDelete && (
+            <TouchableOpacity
+              style={[styles.actionButton, styles.deleteButton]}
+              onPress={(e) => {
+                e.stopPropagation();
+                onDelete();
+              }}
+            >
+              <Text style={[styles.actionButtonText, styles.deleteButtonText]}>
+                Delete
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
     </TouchableOpacity>
   );
 }
@@ -236,5 +331,58 @@ const styles = StyleSheet.create({
     fontFamily: typography.fontFamily.mono,
     color: "#ef4444", // red
     fontWeight: typography.fontWeight.bold,
+  },
+  dirtyWarning: {
+    fontSize: typography.fontSize.xs,
+    fontFamily: typography.fontFamily.mono,
+    color: "#f59e0b", // amber
+    fontWeight: typography.fontWeight.medium,
+  },
+  reconcileError: {
+    marginTop: 8,
+    padding: 8,
+    backgroundColor: "#fef2f2",
+    borderWidth: 1,
+    borderColor: "#ef4444",
+  },
+  reconcileErrorTitle: {
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.bold,
+    color: "#ef4444",
+    textTransform: "uppercase",
+    marginBottom: 2,
+  },
+  reconcileErrorMessage: {
+    fontSize: typography.fontSize.xs,
+    color: "#6b7280",
+    fontFamily: typography.fontFamily.mono,
+  },
+  actionRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 2,
+    borderTopColor: colors.borderLight,
+  },
+  actionButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderWidth: 2,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  actionButtonText: {
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.bold,
+    color: colors.textDark,
+    textTransform: "uppercase",
+  },
+  deleteButton: {
+    backgroundColor: colors.error,
+    borderColor: colors.border,
+  },
+  deleteButtonText: {
+    color: colors.textWhite,
   },
 });

@@ -98,6 +98,52 @@ export class ClauderonClient {
   }
 
   /**
+   * Unarchive a session
+   */
+  async unarchiveSession(id: string): Promise<void> {
+    await this.request(
+      "POST",
+      `/api/sessions/${encodeURIComponent(id)}/unarchive`
+    );
+  }
+
+  /**
+   * Update session metadata (title and/or description)
+   */
+  async updateSessionMetadata(
+    id: string,
+    title?: string,
+    description?: string
+  ): Promise<void> {
+    await this.request(
+      "POST",
+      `/api/sessions/${encodeURIComponent(id)}/metadata`,
+      { title, description }
+    );
+  }
+
+  /**
+   * Regenerate session metadata using AI
+   */
+  async regenerateMetadata(id: string): Promise<Session> {
+    const response = await this.request<{ session: Session }>(
+      "POST",
+      `/api/sessions/${encodeURIComponent(id)}/regenerate-metadata`
+    );
+    return response.session;
+  }
+
+  /**
+   * Refresh a Docker session (pull latest image and recreate container)
+   */
+  async refreshSession(id: string): Promise<void> {
+    await this.request(
+      "POST",
+      `/api/sessions/${encodeURIComponent(id)}/refresh`
+    );
+  }
+
+  /**
    * Get recent repositories
    */
   async getRecentRepos(): Promise<RecentRepoDto[]> {
