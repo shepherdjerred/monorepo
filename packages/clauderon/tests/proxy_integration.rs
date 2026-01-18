@@ -43,6 +43,7 @@ fn test_proxy_config_flows_to_container_args() {
         &clauderon::backends::DockerConfig::default(),
         None,
         None,
+        &[],
     )
     .expect("Failed to build args");
 
@@ -130,6 +131,7 @@ fn test_disabled_proxy_config_no_args() {
         &clauderon::backends::DockerConfig::default(),
         None,
         None,
+        &[],
     )
     .expect("Failed to build args");
 
@@ -168,6 +170,7 @@ fn test_none_proxy_config_no_args() {
         &clauderon::backends::DockerConfig::default(),
         None,
         None,
+        &[],
     )
     .expect("Failed to build args");
 
@@ -209,6 +212,7 @@ fn test_proxy_port_in_env_vars() {
         &clauderon::backends::DockerConfig::default(),
         None,
         None,
+        &[],
     )
     .expect("Failed to build args");
 
@@ -257,6 +261,7 @@ fn test_clauderon_dir_in_volume_mounts() {
         &clauderon::backends::DockerConfig::default(),
         None,
         None,
+        &[],
     )
     .expect("Failed to build args");
 

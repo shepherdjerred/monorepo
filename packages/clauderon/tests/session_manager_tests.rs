@@ -106,6 +106,7 @@ async fn test_create_session_zellij_success() {
     let (session, _warnings) = manager
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
+            None,
             "Test prompt".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
@@ -153,6 +154,7 @@ async fn test_create_session_docker_success() {
     let (session, _warnings) = manager
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
+            None,
             "Zellij prompt".to_string(),
             BackendType::Zellij, // Changed from Docker to avoid proxy requirement
             AgentType::ClaudeCode,
@@ -193,6 +195,7 @@ async fn test_create_session_git_fails() {
     let result = manager
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
+            None,
             "Test prompt".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
@@ -231,6 +234,7 @@ async fn test_create_session_backend_fails() {
     let result = manager
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
+            None,
             "Test prompt".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
@@ -269,6 +273,7 @@ async fn test_get_session_by_name() {
     let (created, _) = manager
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
+            None,
             "prompt".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
@@ -299,6 +304,7 @@ async fn test_get_session_by_uuid() {
     let (created, _) = manager
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
+            None,
             "prompt".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
@@ -339,6 +345,7 @@ async fn test_delete_session_success() {
     let (session, _) = manager
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
+            None,
             "prompt".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
@@ -392,6 +399,7 @@ async fn test_archive_session_success() {
     let (session, _) = manager
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
+            None,
             "prompt".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
@@ -437,6 +445,7 @@ async fn test_unarchive_session_success() {
     let (session, _) = manager
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
+            None,
             "prompt".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
@@ -474,6 +483,7 @@ async fn test_unarchive_session_not_archived() {
     let (session, _) = manager
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
+            None,
             "prompt".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
@@ -515,6 +525,7 @@ async fn test_get_attach_command_zellij() {
     let (session, _) = manager
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
+            None,
             "prompt".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
@@ -546,6 +557,7 @@ async fn test_get_attach_command_docker() {
     let (session, _) = manager
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
+            None,
             "prompt".to_string(),
             BackendType::Zellij, // Changed from Docker to avoid proxy requirement
             AgentType::ClaudeCode,
@@ -587,6 +599,7 @@ async fn test_reconcile_healthy_session() {
     let (session, _) = manager
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
+            None,
             "prompt".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
@@ -620,6 +633,7 @@ async fn test_reconcile_missing_backend() {
     let (session, _) = manager
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
+            None,
             "prompt".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
@@ -665,6 +679,7 @@ async fn test_list_sessions_multiple() {
     let _ = manager
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
+            None,
             "prompt 1".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
@@ -684,6 +699,7 @@ async fn test_list_sessions_multiple() {
     let _ = manager
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
+            None,
             "prompt 2".to_string(),
             BackendType::Zellij, // Changed from Docker to avoid proxy requirement
             AgentType::ClaudeCode,
@@ -703,6 +719,7 @@ async fn test_list_sessions_multiple() {
     let _ = manager
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
+            None,
             "prompt 3".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
@@ -733,6 +750,7 @@ async fn test_update_metadata_success() {
     let (session, _) = manager
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
+            None,
             "prompt".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
@@ -776,6 +794,7 @@ async fn test_update_metadata_by_uuid() {
     let (session, _) = manager
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
+            None,
             "prompt".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
@@ -815,6 +834,7 @@ async fn test_update_metadata_partial() {
     let (session, _) = manager
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
+            None,
             "prompt".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
@@ -879,6 +899,7 @@ async fn test_session_lifecycle() {
     let (session, _) = manager
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
+            None,
             "prompt".to_string(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
