@@ -2,10 +2,10 @@ import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
 
 export default defineConfig({
-  site: "https://mux.dev",
+  site: "https://clauderon.dev",
   integrations: [
     starlight({
-      title: "mux",
+      title: "clauderon",
       description: "Session management for AI coding agents",
       social: {
         github: "https://github.com/shepherdjerred/monorepo/tree/main/packages/clauderon",

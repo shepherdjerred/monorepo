@@ -1,26 +1,26 @@
 ---
 title: Installation
-description: How to install mux on your system
+description: How to install clauderon on your system
 ---
 
 ## Download Pre-built Binary
 
-The easiest way to install mux is to download a pre-built binary from GitHub releases.
+The easiest way to install clauderon is to download a pre-built binary from GitHub releases.
 
 ### Linux (x86_64)
 
 ```bash
-curl -fsSL https://github.com/shepherdjerred/monorepo/releases/latest/download/mux-linux-x86_64 -o mux
-chmod +x mux
-sudo mv mux /usr/local/bin/
+curl -fsSL https://github.com/shepherdjerred/monorepo/releases/latest/download/clauderon-linux-x86_64 -o clauderon
+chmod +x clauderon
+sudo mv clauderon /usr/local/bin/
 ```
 
 ### Linux (ARM64)
 
 ```bash
-curl -fsSL https://github.com/shepherdjerred/monorepo/releases/latest/download/mux-linux-arm64 -o mux
-chmod +x mux
-sudo mv mux /usr/local/bin/
+curl -fsSL https://github.com/shepherdjerred/monorepo/releases/latest/download/clauderon-linux-arm64 -o clauderon
+chmod +x clauderon
+sudo mv clauderon /usr/local/bin/
 ```
 
 ## Build from Source
@@ -36,13 +36,13 @@ cd monorepo/packages/clauderon
 cargo build --release
 
 # Install to your path
-sudo cp target/release/mux /usr/local/bin/
+sudo cp target/release/clauderon /usr/local/bin/
 ```
 
 ## Verify Installation
 
 ```bash
-mux --version
+clauderon --version
 ```
 
 ## Requirements

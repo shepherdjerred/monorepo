@@ -7,7 +7,7 @@ The Docker backend provides full container isolation for your AI agent sessions.
 
 ## How It Works
 
-When you create a Docker session, mux:
+When you create a Docker session, clauderon:
 
 1. Creates a new container with your specified image
 2. Mounts your working directory
@@ -16,7 +16,7 @@ When you create a Docker session, mux:
 
 ## Configuration
 
-Configure Docker settings in `~/.config/mux/config.toml`:
+Configure Docker settings in `~/.config/clauderon/config.toml`:
 
 ```toml
 [docker]
@@ -54,7 +54,7 @@ The working directory is mounted at `/workspace` inside the container:
 
 ### Git Repository
 
-If you specify a git repository, mux will:
+If you specify a git repository, clauderon will:
 
 1. Clone the repo into a temporary directory
 2. Mount it as the working directory
@@ -65,12 +65,12 @@ If you specify a git repository, mux will:
 You can specify a custom Docker image per-session:
 
 ```bash
-mux new --backend docker --image rust:1.85 my-rust-session
+clauderon new --backend docker --image rust:1.85 my-rust-session
 ```
 
 ## Rust Compiler Caching
 
-mux supports sccache for Rust compiler caching across sessions:
+clauderon supports sccache for Rust compiler caching across sessions:
 
 ```toml
 [docker.rust]
@@ -122,5 +122,5 @@ docker info
 Check for conflicting containers:
 
 ```bash
-docker ps -a | grep mux
+docker ps -a | grep clauderon
 ```

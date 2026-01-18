@@ -13,4 +13,9 @@ managed-settings.json
 .claude/statsig/
 .claude/todos/
 
+# Docs build artifacts
+docs/dist/
+docs/node_modules/
+docs/.astro/
+
 # Trigger CI
