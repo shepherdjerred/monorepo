@@ -276,6 +276,8 @@ pub struct CreateDialogState {
     pub focus: CreateDialogFocus,
     pub button_create_focused: bool, // true = Create, false = Cancel
     pub directory_picker: DirectoryPickerState,
+    /// Feature flags (for conditional backend availability)
+    pub feature_flags: std::sync::Arc<crate::feature_flags::FeatureFlags>,
 }
 
 impl DirectoryPickerState {
@@ -506,7 +508,14 @@ impl CreateDialogState {
     pub fn toggle_backend(&mut self) {
         self.backend = match self.backend {
             BackendType::Zellij => BackendType::Docker,
-            BackendType::Docker => BackendType::Kubernetes,
+            BackendType::Docker => {
+                // Skip Kubernetes if feature flag is disabled
+                if self.feature_flags.enable_kubernetes_backend {
+                    BackendType::Kubernetes
+                } else {
+                    BackendType::Sprites
+                }
+            }
             BackendType::Kubernetes => BackendType::Sprites,
             #[cfg(target_os = "macos")]
             BackendType::Sprites => BackendType::AppleContainer,
@@ -547,7 +556,14 @@ impl CreateDialogState {
             BackendType::AppleContainer => BackendType::Sprites,
             #[cfg(not(target_os = "macos"))]
             BackendType::Zellij => BackendType::Sprites,
-            BackendType::Sprites => BackendType::Kubernetes,
+            BackendType::Sprites => {
+                // Skip Kubernetes if feature flag is disabled
+                if self.feature_flags.enable_kubernetes_backend {
+                    BackendType::Kubernetes
+                } else {
+                    BackendType::Docker
+                }
+            }
             BackendType::Kubernetes => BackendType::Docker,
             BackendType::Docker => BackendType::Zellij,
         };
@@ -760,6 +776,7 @@ impl Default for CreateDialogState {
             focus: CreateDialogFocus::default(),
             button_create_focused: false,
             directory_picker: DirectoryPickerState::new(),
+            feature_flags: std::sync::Arc::new(crate::feature_flags::FeatureFlags::default()),
         }
     }
 }
