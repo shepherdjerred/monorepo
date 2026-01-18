@@ -1120,6 +1120,7 @@ impl App {
             initial_prompt: self.create_dialog.prompt.clone(),
             backend: self.create_dialog.backend,
             agent: self.create_dialog.agent,
+            model: self.create_dialog.model.clone(), // Use selected model from dialog
             dangerous_skip_checks: self.create_dialog.skip_checks,
             print_mode: false, // TUI always uses interactive mode
             plan_mode: self.create_dialog.plan_mode,
