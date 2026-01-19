@@ -32,7 +32,7 @@ export function getS3Container(customVersion?: string): Container {
   return dag
     .container()
     .from(`alpine:${version}`)
-    .withExec(["apk", "add", "--no-cache", "aws-cli"])
+    .withExec(["apk", "add", "--no-cache", "aws-cli", "mailcap"])
     .withWorkdir("/workspace");
 }
 
