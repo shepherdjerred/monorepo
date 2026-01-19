@@ -20,6 +20,16 @@ export interface AuthStatus {
 	current_user?: AuthUser;
 }
 
+/** Blocker details for a session */
+export interface BlockerDetails {
+	/** Whether CI checks are failing */
+	ci_failing: boolean;
+	/** Whether the branch has merge conflicts */
+	merge_conflict: boolean;
+	/** Whether changes have been requested on the PR */
+	changes_requested: boolean;
+}
+
 /** Request to browse a directory on the daemon's filesystem */
 export interface BrowseDirectoryRequest {
 	/** Path to the directory to browse */
@@ -274,6 +284,8 @@ export interface FeatureFlags {
 	enable_proxy_port_reuse: boolean;
 	/** Enable Claude usage tracking via API */
 	enable_usage_tracking: boolean;
+	/** Enable Kubernetes backend (experimental, disabled by default) */
+	enable_kubernetes_backend: boolean;
 }
 
 /** Feature flags response for the frontend */
@@ -428,30 +440,14 @@ export enum CheckStatus {
 	Merged = "Merged",
 }
 
-/** PR review decision from GitHub */
+/** PR review decision status */
 export enum ReviewDecision {
-	/** Review is required */
+	/** Review is required but not yet provided */
 	ReviewRequired = "ReviewRequired",
 	/** Changes have been requested */
 	ChangesRequested = "ChangesRequested",
 	/** PR has been approved */
 	Approved = "Approved",
-}
-
-/** Workflow stage in the PR lifecycle */
-export enum WorkflowStage {
-	/** No PR yet, still planning */
-	Planning = "Planning",
-	/** PR created, implementation in progress */
-	Implementation = "Implementation",
-	/** PR waiting for review */
-	Review = "Review",
-	/** PR blocked by CI, conflicts, or requested changes */
-	Blocked = "Blocked",
-	/** PR ready to merge (checks pass, approved, no conflicts) */
-	ReadyToMerge = "ReadyToMerge",
-	/** PR has been merged */
-	Merged = "Merged",
 }
 
 /** Claude agent working status */
@@ -512,7 +508,7 @@ export interface Session {
 	pr_url?: string;
 	/** Status of PR checks */
 	pr_check_status?: CheckStatus;
-	/** Review decision on the PR from GitHub */
+	/** PR review decision (approval status) */
 	pr_review_decision?: ReviewDecision;
 	/** Current Claude agent working status (from hooks) */
 	claude_status: ClaudeWorkingStatus;
@@ -770,7 +766,9 @@ export type Request =
 	/** Refresh a session (pull latest image and recreate container) */
 	| { type: "RefreshSession", payload: {
 	id: string;
-}};
+}}
+	/** Get current feature flags */
+	| { type: "GetFeatureFlags", payload?: undefined };
 
 /** Response types for the API */
 export type Response = 
@@ -809,6 +807,10 @@ export type Response =
 	| { type: "SessionId", payload: {
 	session_id: string;
 }}
+	/** Current feature flags */
+	| { type: "FeatureFlags", payload: {
+	flags: FeatureFlags;
+}}
 	/** Generic success response */
 	| { type: "Ok", payload?: undefined }
 	/** Error response */
@@ -816,4 +818,20 @@ export type Response =
 	code: string;
 	message: string;
 }};
+
+/** Workflow stage computed from session state */
+export enum WorkflowStage {
+	/** Planning phase - no PR yet, Claude is working */
+	Planning = "Planning",
+	/** Implementation phase - PR created, CI running or waiting */
+	Implementation = "Implementation",
+	/** Review phase - PR waiting for approval */
+	Review = "Review",
+	/** Blocked phase - has blockers (CI failing, conflicts, changes requested) */
+	Blocked = "Blocked",
+	/** Ready to merge - all checks pass, approved, no conflicts */
+	ReadyToMerge = "ReadyToMerge",
+	/** Merged - PR has been merged */
+	Merged = "Merged",
+}
 
