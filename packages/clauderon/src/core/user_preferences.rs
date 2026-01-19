@@ -67,7 +67,7 @@ pub struct UserPreferences {
     /// List of dismissed hint IDs
     pub dismissed_hints: Vec<String>,
     /// Custom UI preferences (JSON blob)
-    #[typeshare(serialized_as = "Record<string, any>")]
+    #[typeshare(serialized_as = "object")]
     pub ui_preferences: serde_json::Value,
     /// Timestamp of record creation
     #[typeshare(serialized_as = "string")]
