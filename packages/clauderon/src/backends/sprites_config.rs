@@ -2,77 +2,6 @@ use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use tracing::{debug, info, warn};
 
-/// Network policy for sprites
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
-#[serde(rename_all = "kebab-case")]
-pub enum NetworkPolicy {
-    /// Allow all network access
-    #[default]
-    AllowAll,
-    /// Block all network access
-    BlockAll,
-    /// Allow only specified domains (allowlist)
-    AllowList,
-}
-
-impl std::fmt::Display for NetworkPolicy {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::AllowAll => write!(f, "allow-all"),
-            Self::BlockAll => write!(f, "block-all"),
-            Self::AllowList => write!(f, "allow-list"),
-        }
-    }
-}
-
-/// Resource configuration for sprites
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub struct SpritesResources {
-    /// Number of CPU cores (1-8)
-    #[serde(default)]
-    pub cpu: Option<u8>,
-
-    /// Memory in gigabytes (1-16)
-    #[serde(default)]
-    pub memory: Option<u8>,
-}
-
-impl Default for SpritesResources {
-    fn default() -> Self {
-        Self {
-            cpu: Some(2),
-            memory: Some(4),
-        }
-    }
-}
-
-impl SpritesResources {
-    /// Validate resource limits
-    ///
-    /// Checks that CPU and memory are within sprites.dev limits.
-    pub fn validate(&self) -> anyhow::Result<()> {
-        if let Some(cpu) = self.cpu {
-            if !(1..=8).contains(&cpu) {
-                return Err(anyhow::anyhow!(
-                    "CPU must be between 1 and 8 cores, got: {}",
-                    cpu
-                ));
-            }
-        }
-
-        if let Some(memory) = self.memory {
-            if !(1..=16).contains(&memory) {
-                return Err(anyhow::anyhow!(
-                    "Memory must be between 1 and 16 GB, got: {}",
-                    memory
-                ));
-            }
-        }
-
-        Ok(())
-    }
-}
-
 /// Lifecycle configuration for sprites
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub struct SpritesLifecycle {
@@ -85,39 +14,6 @@ pub struct SpritesLifecycle {
     /// Enables faster cold starts (~300ms) at cost of storage
     #[serde(default)]
     pub auto_checkpoint: bool,
-}
-
-/// Network configuration for sprites
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub struct SpritesNetwork {
-    /// Default network policy
-    #[serde(default)]
-    pub default_policy: NetworkPolicy,
-
-    /// Allowed domains when policy is AllowList
-    /// Supports wildcards (e.g., "*.github.com")
-    #[serde(default = "default_allowed_domains")]
-    pub allowed_domains: Vec<String>,
-}
-
-fn default_allowed_domains() -> Vec<String> {
-    vec![
-        "api.anthropic.com".to_string(),
-        "github.com".to_string(),
-        "*.githubusercontent.com".to_string(),
-        "crates.io".to_string(),
-        "static.crates.io".to_string(),
-        "index.crates.io".to_string(),
-    ]
-}
-
-impl Default for SpritesNetwork {
-    fn default() -> Self {
-        Self {
-            default_policy: NetworkPolicy::AllowAll,
-            allowed_domains: default_allowed_domains(),
-        }
-    }
 }
 
 /// Git repository configuration for sprites
@@ -141,127 +37,17 @@ impl Default for SpritesGit {
     }
 }
 
-/// Image configuration for sprites
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub struct SpritesImage {
-    /// Base image to use for sprites
-    /// Default: "ubuntu:22.04" (standard Ubuntu LTS)
-    #[serde(default = "default_base_image")]
-    pub base_image: String,
-
-    /// Automatically install Claude Code if not present in image
-    #[serde(default = "default_install_claude")]
-    pub install_claude: bool,
-
-    /// Claude Code installation URL
-    /// WARNING: This URL should be verified before use
-    #[serde(default = "default_claude_install_url")]
-    pub claude_install_url: String,
-
-    /// Additional packages to install via apt-get
-    /// Example: `["git", "curl", "build-essential"]`
-    #[serde(default)]
-    pub packages: Vec<String>,
-}
-
-fn default_base_image() -> String {
-    "ubuntu:22.04".to_string()
-}
-
-fn default_install_claude() -> bool {
-    true
-}
-
-fn default_claude_install_url() -> String {
-    // TODO: Verify this is the correct Claude Code installation URL
-    "https://claude.ai/install.sh".to_string()
-}
-
-impl Default for SpritesImage {
-    fn default() -> Self {
-        Self {
-            base_image: default_base_image(),
-            install_claude: default_install_claude(),
-            claude_install_url: default_claude_install_url(),
-            packages: vec![],
-        }
-    }
-}
-
-impl SpritesImage {
-    /// Validate image configuration
-    pub fn validate(&self) -> anyhow::Result<()> {
-        if self.base_image.is_empty() {
-            return Err(anyhow::anyhow!("Base image cannot be empty"));
-        }
-
-        // Check for dangerous characters in image name
-        if self.base_image.contains(';')
-            || self.base_image.contains('&')
-            || self.base_image.contains('|')
-            || self.base_image.contains('\n')
-        {
-            return Err(anyhow::anyhow!(
-                "Base image contains dangerous characters: '{}'",
-                self.base_image
-            ));
-        }
-
-        // Validate Claude install URL
-        if self.claude_install_url.is_empty() {
-            return Err(anyhow::anyhow!("Claude install URL cannot be empty"));
-        }
-        if !self.claude_install_url.starts_with("https://") {
-            tracing::warn!(
-                "Claude install URL does not use HTTPS: {}",
-                self.claude_install_url
-            );
-        }
-
-        // Validate package names
-        for package in &self.packages {
-            if package.is_empty() {
-                return Err(anyhow::anyhow!("Package name cannot be empty"));
-            }
-            if package.contains(';')
-                || package.contains('&')
-                || package.contains('|')
-                || package.contains('\n')
-            {
-                return Err(anyhow::anyhow!(
-                    "Package name contains dangerous characters: '{}'",
-                    package
-                ));
-            }
-        }
-
-        Ok(())
-    }
-}
-
 /// Complete sprites.dev backend configuration
+///
+/// Note: The sprites CLI handles authentication via `sprite login` or the
+/// SPRITES_TOKEN environment variable. Resource allocation (CPU, memory)
+/// and image selection are not configurable - sprites use a fixed environment
+/// of Ubuntu 24.04 with 8 vCPUs, 8GB RAM, and 100GB storage.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub struct SpritesConfig {
-    /// Authentication token (can also be set via SPRITES_TOKEN env var)
-    /// Environment variable takes precedence over config file
-    #[serde(default)]
-    pub token: Option<String>,
-
-    /// Resource limits
-    #[serde(default)]
-    pub resources: SpritesResources,
-
     /// Lifecycle management
     #[serde(default)]
     pub lifecycle: SpritesLifecycle,
-
-    /// Network configuration
-    #[serde(default)]
-    pub network: SpritesNetwork,
-
-    /// Image configuration
-    #[serde(default)]
-    pub image: SpritesImage,
 
     /// Git repository configuration
     #[serde(default)]
@@ -305,14 +91,9 @@ impl SpritesConfig {
             )
         })?;
 
-        // Validate the loaded configuration
-        config.validate()?;
-
         info!(
-            image = %config.image.base_image,
-            cpu = ?config.resources.cpu,
-            memory = ?config.resources.memory,
             auto_destroy = config.lifecycle.auto_destroy,
+            shallow_clone = config.git.shallow_clone,
             "Sprites configuration loaded successfully"
         );
 
@@ -349,57 +130,6 @@ impl SpritesConfig {
             .ok_or_else(|| anyhow::anyhow!("Failed to determine home directory"))?;
         Ok(home.join(".clauderon").join("sprites-config.toml"))
     }
-
-    /// Get the authentication token.
-    ///
-    /// Checks environment variable first (SPRITES_TOKEN), then falls back to config file.
-    /// Environment variable takes precedence for security (avoid storing tokens in files).
-    pub fn get_token(&self) -> anyhow::Result<String> {
-        // Check environment variable first
-        if let Ok(token) = std::env::var("SPRITES_TOKEN") {
-            if !token.is_empty() {
-                debug!("Using SPRITES_TOKEN from environment variable");
-                return Ok(token);
-            }
-        }
-
-        // Fall back to config file
-        if let Some(token) = &self.token {
-            if !token.is_empty() {
-                debug!("Using token from config file");
-                return Ok(token.clone());
-            }
-        }
-
-        Err(anyhow::anyhow!(
-            "No Sprites authentication token found. Set SPRITES_TOKEN environment variable or add 'token' to {}",
-            Self::config_path()
-                .unwrap_or_else(|_| PathBuf::from("~/.clauderon/sprites-config.toml"))
-                .display()
-        ))
-    }
-
-    /// Validate the configuration.
-    ///
-    /// Checks that all values are valid and safe to use.
-    pub fn validate(&self) -> anyhow::Result<()> {
-        // Validate resources
-        self.resources.validate()?;
-
-        // Validate image configuration
-        self.image.validate()?;
-
-        // Validate allowed domains for network policy
-        if self.network.default_policy == NetworkPolicy::AllowList
-            && self.network.allowed_domains.is_empty()
-        {
-            return Err(anyhow::anyhow!(
-                "Network policy is 'allow-list' but no allowed domains are specified"
-            ));
-        }
-
-        Ok(())
-    }
 }
 
 #[cfg(test)]
@@ -423,151 +153,46 @@ mod tests {
     fn test_load_or_default_returns_default() {
         let config = SpritesConfig::load_or_default();
         // Should return a valid config (either loaded or default)
-        assert!(!config.image.base_image.is_empty());
+        assert!(config.git.shallow_clone); // default is true
     }
 
     #[test]
-    fn test_validate_default_config() {
+    fn test_default_config() {
         let config = SpritesConfig::default();
-        assert!(config.validate().is_ok());
-    }
-
-    #[test]
-    fn test_validate_rejects_invalid_cpu() {
-        let mut config = SpritesConfig::default();
-        config.resources.cpu = Some(0); // Too low
-        assert!(config.validate().is_err());
-
-        config.resources.cpu = Some(9); // Too high
-        assert!(config.validate().is_err());
-    }
-
-    #[test]
-    fn test_validate_rejects_invalid_memory() {
-        let mut config = SpritesConfig::default();
-        config.resources.memory = Some(0); // Too low
-        assert!(config.validate().is_err());
-
-        config.resources.memory = Some(17); // Too high
-        assert!(config.validate().is_err());
-    }
-
-    #[test]
-    fn test_validate_accepts_valid_resources() {
-        let mut config = SpritesConfig::default();
-        config.resources.cpu = Some(4);
-        config.resources.memory = Some(8);
-        assert!(config.validate().is_ok());
-    }
-
-    #[test]
-    fn test_validate_rejects_dangerous_image_chars() {
-        let mut config = SpritesConfig::default();
-        config.image.base_image = "bad;image".to_string();
-        assert!(config.validate().is_err());
-
-        config.image.base_image = "bad&image".to_string();
-        assert!(config.validate().is_err());
-    }
-
-    #[test]
-    fn test_validate_rejects_dangerous_package_chars() {
-        let mut config = SpritesConfig::default();
-        config.image.packages = vec!["git; rm -rf /".to_string()];
-        assert!(config.validate().is_err());
-    }
-
-    #[test]
-    fn test_validate_rejects_empty_image() {
-        let mut config = SpritesConfig::default();
-        config.image.base_image = String::new();
-        assert!(config.validate().is_err());
-    }
-
-    #[test]
-    fn test_validate_rejects_empty_allowlist() {
-        let mut config = SpritesConfig::default();
-        config.network.default_policy = NetworkPolicy::AllowList;
-        config.network.allowed_domains = vec![];
-        assert!(config.validate().is_err());
+        assert!(!config.lifecycle.auto_destroy);
+        assert!(!config.lifecycle.auto_checkpoint);
+        assert!(config.git.shallow_clone);
     }
 
     #[test]
     fn test_toml_serialization() {
         let config = SpritesConfig {
-            token: Some("test_token".to_string()),
-            resources: SpritesResources {
-                cpu: Some(4),
-                memory: Some(8),
-            },
             lifecycle: SpritesLifecycle {
                 auto_destroy: true,
                 auto_checkpoint: true,
             },
-            network: SpritesNetwork {
-                default_policy: NetworkPolicy::AllowList,
-                allowed_domains: vec!["example.com".to_string()],
-            },
-            image: SpritesImage {
-                base_image: "ubuntu:22.04".to_string(),
-                install_claude: true,
-                claude_install_url: "https://claude.ai/install.sh".to_string(),
-                packages: vec!["git".to_string()],
-            },
             git: SpritesGit {
-                shallow_clone: true,
+                shallow_clone: false,
             },
         };
 
         let toml = toml::to_string(&config).unwrap();
         let deserialized: SpritesConfig = toml::from_str(&toml).unwrap();
 
-        assert_eq!(deserialized.token, config.token);
-        assert_eq!(deserialized.resources, config.resources);
         assert_eq!(deserialized.lifecycle, config.lifecycle);
-        assert_eq!(
-            deserialized.network.default_policy,
-            config.network.default_policy
-        );
-        assert_eq!(deserialized.image, config.image);
-    }
-
-    // Note: This test manipulates environment variables and cannot be run in CI
-    // due to the project's forbid(unsafe_code) policy. It can be run manually with:
-    // cargo test --package clauderon --lib backends::sprites_config::tests::test_get_token_from_env -- --ignored --exact
-    #[test]
-    #[ignore = "Requires unsafe code to manipulate env vars, run manually"]
-    fn test_get_token_from_env() {
-        // This test is ignored in CI but documents the expected behavior:
-        // Environment variable SPRITES_TOKEN should take precedence over config file token
-        //
-        // To test manually:
-        // 1. Set SPRITES_TOKEN=env_token in your shell
-        // 2. Run: cargo test --package clauderon --lib -- test_get_token_from_env --ignored --exact
-        // 3. Unset SPRITES_TOKEN after testing
+        assert_eq!(deserialized.git, config.git);
     }
 
     #[test]
-    fn test_get_token_from_config() {
-        // Note: This test assumes SPRITES_TOKEN env var is not set in the test environment
-        let config = SpritesConfig {
-            token: Some("file_token".to_string()),
-            ..Default::default()
-        };
-
-        // If SPRITES_TOKEN env var is not set, should use config file token
-        // (This test will fail if SPRITES_TOKEN is set in the environment)
-        let token = config.get_token().unwrap();
-        assert_eq!(token, "file_token");
-    }
-
-    #[test]
-    fn test_get_token_fails_when_missing() {
-        // Note: This test assumes SPRITES_TOKEN env var is not set in the test environment
-        let config = SpritesConfig::default();
-
-        // Should fail when neither env var nor config token is set
-        // (This test will fail if SPRITES_TOKEN is set in the environment)
-        assert!(config.get_token().is_err());
+    fn test_toml_deserialization_with_defaults() {
+        // Test that missing fields use defaults
+        let toml = r#"
+[lifecycle]
+auto_destroy = true
+"#;
+        let config: SpritesConfig = toml::from_str(toml).unwrap();
+        assert!(config.lifecycle.auto_destroy);
+        assert!(!config.lifecycle.auto_checkpoint); // default
+        assert!(config.git.shallow_clone); // default
     }
 }
