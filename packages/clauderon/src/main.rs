@@ -154,6 +154,11 @@ ENVIRONMENT:
         /// Can also be set via CLAUDERON_FEATURE_ENABLE_KUBERNETES_BACKEND environment variable
         #[arg(long)]
         enable_kubernetes_backend: Option<bool>,
+
+        /// Enable experimental AI models (Codex, Gemini)
+        /// Can also be set via CLAUDERON_FEATURE_ENABLE_EXPERIMENTAL_MODELS environment variable
+        #[arg(long)]
+        enable_experimental_models: Option<bool>,
     },
 
     /// Launch the terminal UI
@@ -527,6 +532,7 @@ async fn main() -> anyhow::Result<()> {
             enable_proxy_port_reuse,
             enable_usage_tracking,
             enable_kubernetes_backend,
+            enable_experimental_models,
         } => {
             tracing::info!("Starting clauderon daemon");
 
@@ -538,6 +544,7 @@ async fn main() -> anyhow::Result<()> {
                 enable_proxy_port_reuse,
                 enable_usage_tracking,
                 enable_kubernetes_backend,
+                enable_experimental_models,
             };
 
             // Load feature flags with priority: CLI → env → TOML → defaults
