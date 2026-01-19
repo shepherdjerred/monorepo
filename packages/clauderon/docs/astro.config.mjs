@@ -49,6 +49,14 @@ export default defineConfig({
             content: "/og-image.png",
           },
         },
+        {
+          tag: "script",
+          attrs: {
+            defer: true,
+            "data-domain": "clauderon.com",
+            src: "https://plausible.sjer.red/js/script.js",
+          },
+        },
       ],
     }),
   ],
