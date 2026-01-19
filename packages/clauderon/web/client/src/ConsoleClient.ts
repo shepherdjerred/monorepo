@@ -6,6 +6,10 @@ import { WebSocketError, DecodeError } from "./errors.js";
 type ConsoleMessage = {
   type: string;
   data?: string;
+  rows?: number;
+  cols?: number;
+  cursor_row?: number;
+  cursor_col?: number;
 };
 
 /**
@@ -127,7 +131,7 @@ export class ConsoleClient {
         try {
           const message = JSON.parse(event.data) as ConsoleMessage;
 
-          if (message.type === "output") {
+          if (message.type === "snapshot" || message.type === "output") {
             // Validate data field exists and is a string
             if (typeof message.data !== "string") {
               console.warn(

@@ -56,7 +56,11 @@ async fn handle_console_socket(socket: WebSocket, session_id: String, state: App
             return;
         }
     };
-    let mut output_rx = console_handle.subscribe();
+
+    // Atomically get snapshot and subscribe to prevent race conditions
+    let (snapshot_bytes, snap_rows, snap_cols, cursor_row, cursor_col, output_rx) =
+        console_handle.snapshot_and_subscribe().await;
+    let mut output_rx = output_rx;
 
     state
         .console_state
@@ -64,6 +68,24 @@ async fn handle_console_socket(socket: WebSocket, session_id: String, state: App
         .await;
 
     let (mut ws_sender, mut ws_receiver) = socket.split();
+
+    // Send snapshot to client so they see current terminal state
+    let snapshot_data = base64::prelude::BASE64_STANDARD.encode(&snapshot_bytes);
+    let snapshot = ConsoleMessage::Snapshot {
+        data: snapshot_data,
+        rows: snap_rows,
+        cols: snap_cols,
+        cursor_row,
+        cursor_col,
+    };
+    let payload = json!(snapshot);
+    if let Err(e) = ws_sender
+        .send(Message::Text(payload.to_string().into()))
+        .await
+    {
+        tracing::debug!("Failed to send snapshot to WebSocket: {}", e);
+        return;
+    }
 
     loop {
         tokio::select! {

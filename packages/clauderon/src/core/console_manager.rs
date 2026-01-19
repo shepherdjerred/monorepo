@@ -138,6 +138,26 @@ impl ConsoleSession {
         self.output_tx.subscribe()
     }
 
+    /// Atomically take a snapshot of the terminal buffer and subscribe to output.
+    ///
+    /// This ensures no race condition where data could appear in both the snapshot
+    /// and the first broadcast message. The lock is held while both operations occur.
+    ///
+    /// Returns: (snapshot_bytes, rows, cols, cursor_row, cursor_col, receiver)
+    async fn snapshot_and_subscribe(
+        &self,
+    ) -> (Vec<u8>, u16, u16, u16, u16, broadcast::Receiver<Vec<u8>>) {
+        let buffer = self.terminal_buffer.lock().await;
+        let snapshot = buffer.snapshot();
+        let (rows, cols) = buffer.size();
+        let (cursor_row, cursor_col) = buffer.screen().cursor_position();
+
+        // Subscribe while still holding the lock
+        let receiver = self.output_tx.subscribe();
+
+        (snapshot, rows, cols, cursor_row, cursor_col, receiver)
+    }
+
     async fn send_input(&self, data: Vec<u8>) -> anyhow::Result<()> {
         self.write_tx
             .send(WriteRequest::Bytes(data))
@@ -208,10 +228,11 @@ impl ConsoleSession {
                                         }
                                     }
                                 }
-                            }
-
-                            if !output.is_empty() {
-                                let _ = output_tx.send(output);
+                                // Broadcast inside lock to prevent race conditions
+                                // where a snapshot captures data that's also in a pending broadcast
+                                if !output.is_empty() {
+                                    let _ = output_tx.send(output);
+                                }
                             }
 
                             for response in responses {
@@ -365,6 +386,16 @@ impl ConsoleSessionHandle {
     #[must_use]
     pub fn subscribe(&self) -> broadcast::Receiver<Vec<u8>> {
         self.session.subscribe()
+    }
+
+    /// Atomically take a snapshot of the terminal buffer and subscribe to output.
+    ///
+    /// This prevents race conditions where data appears in both snapshot and stream.
+    /// Returns: (snapshot_bytes, rows, cols, cursor_row, cursor_col, receiver)
+    pub async fn snapshot_and_subscribe(
+        &self,
+    ) -> (Vec<u8>, u16, u16, u16, u16, broadcast::Receiver<Vec<u8>>) {
+        self.session.snapshot_and_subscribe().await
     }
 
     pub async fn send_input(&self, data: Vec<u8>) -> anyhow::Result<()> {
