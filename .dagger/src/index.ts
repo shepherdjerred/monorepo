@@ -752,7 +752,7 @@ export class Monorepo {
     const container = getCrossCompileContainer(source);
 
     // Build for Linux targets only (cross-compiling to macOS requires different tooling)
-    const linuxTargets = MUX_TARGETS.filter(t => t.os === "linux");
+    const linuxTargets = CLAUDERON_TARGETS.filter(t => t.os === "linux");
 
     let outputContainer = dag.directory();
 
