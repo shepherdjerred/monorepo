@@ -186,10 +186,10 @@ mod tests {
     #[test]
     fn test_toml_deserialization_with_defaults() {
         // Test that missing fields use defaults
-        let toml = r#"
+        let toml = r"
 [lifecycle]
 auto_destroy = true
-"#;
+";
         let config: SpritesConfig = toml::from_str(toml).unwrap();
         assert!(config.lifecycle.auto_destroy);
         assert!(!config.lifecycle.auto_checkpoint); // default

@@ -312,7 +312,7 @@ impl AppleContainerBackend {
         let (image_str, pull_policy) = if let Some(image_cfg) = image_override {
             // Validate override image
             image_cfg.validate()?;
-            (image_cfg.image.as_str(), image_cfg.pull_policy.clone())
+            (image_cfg.image.as_str(), image_cfg.pull_policy)
         } else if let Some(ref img) = config.container_image {
             // Validate config image using ImageConfig validation
             let temp_config = ImageConfig {
@@ -836,7 +836,7 @@ fi"#;
                             cmd_vec.push(image.clone());
                         }
                         if !escaped_prompt.is_empty() {
-                            cmd_vec.push(escaped_prompt.clone());
+                            cmd_vec.push(escaped_prompt);
                         }
                         let cmd = cmd_vec
                             .iter()
@@ -899,6 +899,7 @@ fi"#;
     }
 
     /// Build the attach command arguments
+    #[must_use]
     pub fn build_attach_args(name: &str) -> Vec<String> {
         vec![
             "bash".to_string(),
