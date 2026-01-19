@@ -111,20 +111,6 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
     setFormData(prev => ({ ...prev, model: undefined }));
   }, [formData.agent]);
 
-  // Fetch feature flags on mount
-  useEffect(() => {
-    const fetchFlags = async () => {
-      try {
-        const response = await fetch('/api/feature-flags');
-        const data = await response.json();
-        setFeatureFlags(data.flags);
-      } catch (error) {
-        console.error('Failed to fetch feature flags:', error);
-      }
-    };
-    fetchFlags();
-  }, []);
-
   // Reset backend if Kubernetes is disabled
   useEffect(() => {
     if (formData.backend === "Kubernetes" && featureFlags && !featureFlags.enable_kubernetes_backend) {
