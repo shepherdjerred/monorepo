@@ -382,7 +382,9 @@ impl Session {
         }
 
         // If there's a merge conflict or reconcile error, show blocked
-        if self.merge_conflict || (self.reconcile_attempts > 0 && self.last_reconcile_error.is_some()) {
+        if self.merge_conflict
+            || (self.reconcile_attempts > 0 && self.last_reconcile_error.is_some())
+        {
             return WorkflowStage::Blocked;
         }
 
