@@ -116,11 +116,7 @@ for dirname, commit_date in subdirs_with_dates:
             cog.outl("*No description available.*")
     cog.outl()
 ]]]-->
-**7 active packages**
-
-### [mux-site](https://github.com/shepherdjerred/monorepo/tree/main/packages/mux-site) (2026-01-04)
-
-This project is a website built using Astro, leveraging the @astrojs/starlight theme for documentation and sharp for image processing. TypeScript is used for type safety during development. The source code and static files are organized under the src and public directories, respectively, while Astro's configuration and tooling manage site generation and build processes.
+**6 active packages**
 
 ### [clauderon](https://github.com/shepherdjerred/monorepo/tree/main/packages/clauderon) (2026-01-01)
 
