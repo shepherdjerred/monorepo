@@ -174,6 +174,132 @@ impl TerminalBuffer {
         let screen = self.parser.screen();
         (screen.size().0, screen.size().1)
     }
+
+    /// Generate a snapshot of the current screen state as escape sequences.
+    ///
+    /// This produces a byte sequence that, when written to a terminal, will
+    /// recreate the current screen state including:
+    /// - Screen contents with proper colors and attributes
+    /// - Cursor position
+    ///
+    /// The snapshot uses SGR (Select Graphic Rendition) escape codes for
+    /// colors and attributes (bold, underline, etc.).
+    #[must_use]
+    pub fn snapshot(&self) -> Vec<u8> {
+        let screen = self.parser.screen();
+        let (rows, cols) = screen.size();
+        let mut output = Vec::with_capacity((rows as usize) * (cols as usize) * 4);
+
+        // Reset all attributes and clear screen, move cursor home
+        output.extend_from_slice(b"\x1b[0m\x1b[2J\x1b[H");
+
+        let mut last_attrs: Option<vt100::Cell> = None;
+
+        for row in 0..rows {
+            // Move cursor to beginning of row
+            output.extend_from_slice(format!("\x1b[{};1H", row + 1).as_bytes());
+
+            for col in 0..cols {
+                let cell = screen.cell(row, col);
+                if let Some(cell) = cell {
+                    // Check if we need to update SGR attributes
+                    let need_sgr = match &last_attrs {
+                        None => true,
+                        Some(last) => {
+                            cell.fgcolor() != last.fgcolor()
+                                || cell.bgcolor() != last.bgcolor()
+                                || cell.bold() != last.bold()
+                                || cell.italic() != last.italic()
+                                || cell.underline() != last.underline()
+                                || cell.inverse() != last.inverse()
+                        }
+                    };
+
+                    if need_sgr {
+                        output.extend_from_slice(b"\x1b[0"); // Reset, then set attributes
+
+                        // Bold
+                        if cell.bold() {
+                            output.extend_from_slice(b";1");
+                        }
+
+                        // Italic
+                        if cell.italic() {
+                            output.extend_from_slice(b";3");
+                        }
+
+                        // Underline
+                        if cell.underline() {
+                            output.extend_from_slice(b";4");
+                        }
+
+                        // Inverse
+                        if cell.inverse() {
+                            output.extend_from_slice(b";7");
+                        }
+
+                        // Foreground color
+                        match cell.fgcolor() {
+                            vt100::Color::Default => {}
+                            vt100::Color::Idx(idx) => {
+                                if idx < 8 {
+                                    output.extend_from_slice(format!(";{}", 30 + idx).as_bytes());
+                                } else if idx < 16 {
+                                    output
+                                        .extend_from_slice(format!(";{}", 90 + idx - 8).as_bytes());
+                                } else {
+                                    output.extend_from_slice(format!(";38;5;{idx}").as_bytes());
+                                }
+                            }
+                            vt100::Color::Rgb(r, g, b) => {
+                                output.extend_from_slice(format!(";38;2;{r};{g};{b}").as_bytes());
+                            }
+                        }
+
+                        // Background color
+                        match cell.bgcolor() {
+                            vt100::Color::Default => {}
+                            vt100::Color::Idx(idx) => {
+                                if idx < 8 {
+                                    output.extend_from_slice(format!(";{}", 40 + idx).as_bytes());
+                                } else if idx < 16 {
+                                    output.extend_from_slice(
+                                        format!(";{}", 100 + idx - 8).as_bytes(),
+                                    );
+                                } else {
+                                    output.extend_from_slice(format!(";48;5;{idx}").as_bytes());
+                                }
+                            }
+                            vt100::Color::Rgb(r, g, b) => {
+                                output.extend_from_slice(format!(";48;2;{r};{g};{b}").as_bytes());
+                            }
+                        }
+
+                        output.extend_from_slice(b"m");
+                        last_attrs = Some(cell.clone());
+                    }
+
+                    // Output the character
+                    let contents = cell.contents();
+                    if contents.is_empty() {
+                        output.push(b' ');
+                    } else {
+                        output.extend_from_slice(contents.as_bytes());
+                    }
+                } else {
+                    // Cell doesn't exist, output space
+                    output.push(b' ');
+                }
+            }
+        }
+
+        // Reset attributes and position cursor
+        let (cursor_row, cursor_col) = screen.cursor_position();
+        output.extend_from_slice(b"\x1b[0m");
+        output.extend_from_slice(format!("\x1b[{};{}H", cursor_row + 1, cursor_col + 1).as_bytes());
+
+        output
+    }
 }
 
 impl Default for TerminalBuffer {
