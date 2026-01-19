@@ -941,17 +941,7 @@ async fn track_operation(
         .track_user_operation(&user_id.0.to_string(), operation)
         .await?;
 
-    // Broadcast preferences updated event
-    let prefs = store
-        .get_user_preferences(&user_id.0.to_string())
-        .await?
-        .unwrap_or_else(|| UserPreferences::new(user_id.0.to_string()));
-
-    broadcast_event(
-        &state.event_broadcaster,
-        Event::PreferencesUpdated { preferences: prefs },
-    );
-
+    // Preferences are managed client-side only, no server-side event needed
     Ok(StatusCode::OK)
 }
 
@@ -977,11 +967,7 @@ async fn dismiss_hint(
     prefs.dismiss_hint(request.hint_id);
     store.save_user_preferences(&prefs).await?;
 
-    // Broadcast preferences updated event
-    broadcast_event(
-        &state.event_broadcaster,
-        Event::PreferencesUpdated { preferences: prefs },
-    );
+    // Preferences are managed client-side only, no server-side event needed
 
     Ok(StatusCode::OK)
 }
@@ -1002,11 +988,6 @@ async fn complete_first_run(
     prefs.mark_first_run_complete();
     store.save_user_preferences(&prefs).await?;
 
-    // Broadcast preferences updated event
-    broadcast_event(
-        &state.event_broadcaster,
-        Event::PreferencesUpdated { preferences: prefs },
-    );
-
+    // Preferences are managed client-side only, no server-side event needed
     Ok(StatusCode::OK)
 }
