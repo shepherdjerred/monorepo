@@ -23,8 +23,8 @@ Sprites.dev provides managed Linux VMs running in hardware-isolated Firecracker 
 - **Individual HTTPS URLs** - Each sprite has its own URL (https://{name}.sprites.app)
 - **Sub-1-second cold starts** - Fast startup times (~100-300ms with checkpoint/restore)
 - **Automatic hibernation** - Sprites hibernate when idle, reducing costs
-- **Layer 3 network controls** - Configure network policies per sprite
 - **Hardware isolation** - Each sprite runs in its own Firecracker microVM
+- **Fixed environment** - Ubuntu 24.04, 8 vCPUs, 8GB RAM, 100GB storage
 
 ### Why Use Sprites Backend?
 
@@ -34,34 +34,33 @@ Sprites.dev provides managed Linux VMs running in hardware-isolated Firecracker 
 - **Hardware isolation** - True VM-level isolation, not just containerization
 - **Automatic persistence** - Filesystems persist by default without volume management
 - **Fast cold starts** - Quick startup even after hibernation
+- **Simple CLI** - Uses the `sprite` CLI for all operations
 
 **Trade-offs:**
 - **Higher cost** - Pay-per-use pricing vs free local containers
 - **Repository cloning** - Cannot mount local directories, must clone from git remotes
 - **Network dependency** - Requires internet connectivity
-- **API rate limits** - Subject to sprites.dev API rate limiting
+- **Fixed resources** - Cannot customize CPU, memory, or base image
 
 ## Architecture
 
 ### How It Works
 
 1. **Session Creation:**
-   - clauderon creates a sprite via REST API
-   - Waits for sprite to reach "running" status
-   - Detects git remote URLs from local worktrees
+   - clauderon creates a sprite via `sprite create` CLI command
    - Clones repositories into sprite from git remotes
-   - Installs Claude Code (if not present in base image)
+   - Installs Claude Code (if not present)
    - Starts AI agent in tmux session for persistence
 
 2. **Session Execution:**
    - Agent runs inside sprite's tmux session
-   - Output available via `sprite console` command or API exec
+   - Output available via `sprite console` command
    - Sprites auto-hibernate when idle (saves costs)
    - Wake up automatically on access
 
 3. **Session Deletion:**
    - Optionally checkpoints sprite (faster future cold starts)
-   - Deletes sprite (if `auto_destroy=true`)
+   - Destroys sprite via `sprite destroy` (if `auto_destroy=true`)
    - Or keeps sprite for reuse (if `auto_destroy=false`)
 
 ### Repository Access Pattern
@@ -81,55 +80,89 @@ Local Machine              Sprites Container
 - Remotes must be accessible from sprites.dev infrastructure
 - SSH keys or HTTPS credentials must be configured in sprite
 
+### CLI Commands Used
+
+| Operation | CLI Command |
+|-----------|-------------|
+| Create | `sprite create {name} --no-console` |
+| Check exists | `sprite list` (parse output) |
+| Run command | `sprite run -s {name} -- {cmd}` |
+| Delete | `sprite destroy {name} --yes` |
+| Attach | `sprite console {name}` |
+
 ## Setup
 
-### 1. Get Sprites Token
+### 1. Install Sprites CLI
 
-Visit [sprites.dev/dashboard/tokens](https://sprites.dev/dashboard/tokens) and create an API token.
-
-### 2. Set Environment Variable
-
-```bash
-export SPRITES_TOKEN="sp_your_token_here"
-```
-
-Or add to your shell profile (~/.bashrc, ~/.zshrc, etc.):
-
-```bash
-echo 'export SPRITES_TOKEN="sp_your_token_here"' >> ~/.bashrc
-```
-
-### 3. (Optional) Install Sprites CLI
-
-For `sprite console` attach functionality:
+The sprites CLI is required for this backend:
 
 ```bash
 # Install sprites CLI tool
 curl -fsSL https://sprites.dev/install.sh | sh
 ```
 
-### 4. (Optional) Configure Sprites Backend
+### 2. Authenticate
 
-Create ~/.clauderon/sprites-config.toml:
+Login to sprites.dev:
+
+```bash
+sprite login
+```
+
+Or set the environment variable:
+
+```bash
+export SPRITES_TOKEN="sp_your_token_here"
+```
+
+### 3. (Optional) Configure Sprites Backend
+
+Create `~/.clauderon/sprites-config.toml`:
 
 ```toml
-# See docs/sprites-config.toml.example for full configuration options
-
-[resources]
-cpu = 2
-memory = 4
-
 [lifecycle]
 auto_destroy = false  # Keep sprites for reuse
 auto_checkpoint = false
 
-[network]
-default_policy = "allow-all"
-
-[image]
-base_image = "ubuntu:22.04"
-install_claude = true
+[git]
+shallow_clone = true  # Use --depth 1 for faster cloning
 ```
+
+## Configuration
+
+### Lifecycle Management
+
+```toml
+[lifecycle]
+# Delete sprite when session is deleted
+auto_destroy = true
+
+# Checkpoint sprite before hibernation (faster cold starts)
+auto_checkpoint = true
+```
+
+**Recommendations:**
+- `auto_destroy=true` for one-off tasks (avoids storage costs)
+- `auto_destroy=false` for recurring work (avoids clone/setup time)
+- `auto_checkpoint=true` for frequently accessed sprites (300ms vs 1s cold start)
+
+### Git Configuration
+
+```toml
+[git]
+# Use shallow clone (--depth 1) for faster cloning
+shallow_clone = true
+```
+
+**Note:** Shallow clones may break `git describe`, rebasing, or viewing full commit history.
+
+### Fixed Environment
+
+Sprites use a fixed environment that cannot be customized:
+- **OS:** Ubuntu 24.04
+- **CPU:** 8 vCPUs
+- **Memory:** 8GB RAM
+- **Storage:** 100GB
 
 ## Limitations and Known Issues
 
@@ -141,20 +174,20 @@ install_claude = true
 
 1. **Use public repositories** - If possible, use public repositories for clauderon sessions
 
-2. **Pre-configure SSH keys** - If using a custom base image, include SSH keys:
-   ```dockerfile
-   # In your custom image
-   COPY id_ed25519 /root/.ssh/id_ed25519
-   RUN chmod 600 /root/.ssh/id_ed25519
+2. **Pre-configure SSH keys** - Configure SSH keys in the sprite after creation:
+   ```bash
+   sprite console my-sprite
+   # Then inside sprite:
+   mkdir -p ~/.ssh
+   echo "your-private-key" > ~/.ssh/id_ed25519
+   chmod 600 ~/.ssh/id_ed25519
    ```
 
 3. **Use personal access tokens in URLs:**
    ```bash
-   # Configure git to use HTTPS with token
+   # Configure git to use HTTPS with token inside the sprite
    git config --global url."https://${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
    ```
-
-**Future Feature:** Automatic SSH key and credential mounting is planned for a future release.
 
 ### Shallow Clone Limitations
 
@@ -175,95 +208,7 @@ shallow_clone = false
 
 - **No local filesystem mounting** - Unlike Docker/Kubernetes, sprites cannot mount local directories. All code must be cloned from git remotes.
 - **Network dependency** - Requires internet connectivity and access to git remotes
-- **API rate limits** - Subject to sprites.dev API rate limiting
-
-## Configuration
-
-### Authentication
-
-The Sprites backend requires authentication via API token. Token can be provided via:
-
-1. **Environment variable (recommended):**
-   ```bash
-   export SPRITES_TOKEN="sp_your_token_here"
-   ```
-
-2. **Configuration file:**
-   ```toml
-   # ~/.clauderon/sprites-config.toml
-   token = "sp_your_token_here"
-   ```
-
-Environment variable takes precedence over config file.
-
-### Resource Limits
-
-Control CPU and memory allocation:
-
-```toml
-[resources]
-cpu = 4      # 1-8 cores
-memory = 8   # 1-16 GB
-```
-
-**Cost impact:**
-- CPU: $0.07 per CPU-hour
-- Memory: $0.04375 per GB-hour
-
-### Lifecycle Management
-
-```toml
-[lifecycle]
-# Delete sprite when session is deleted
-auto_destroy = true
-
-# Checkpoint sprite before hibernation (faster cold starts)
-auto_checkpoint = true
-```
-
-**Recommendations:**
-- `auto_destroy=true` for one-off tasks (avoids storage costs)
-- `auto_destroy=false` for recurring work (avoids clone/setup time)
-- `auto_checkpoint=true` for frequently accessed sprites (300ms vs 1s cold start)
-
-### Network Policies
-
-```toml
-[network]
-default_policy = "allow-list"
-
-allowed_domains = [
-    "api.anthropic.com",
-    "github.com",
-    "*.githubusercontent.com",
-    "crates.io",
-]
-```
-
-**Policies:**
-- `allow-all` - No restrictions (default)
-- `block-all` - Complete network isolation (offline development)
-- `allow-list` - Whitelist specific domains (security hardening)
-
-### Image Configuration
-
-```toml
-[image]
-# Base image (must be available on sprites.dev)
-base_image = "ubuntu:22.04"
-
-# Auto-install Claude Code
-install_claude = true
-
-# Additional packages
-packages = ["git", "curl", "build-essential"]
-```
-
-**Base images:**
-- `ubuntu:22.04` - Ubuntu 22.04 LTS (default, recommended)
-- `ubuntu:24.04` - Ubuntu 24.04 LTS
-- `debian:12` - Debian 12 Bookworm
-- Custom images (must be configured on sprites.dev)
+- **Fixed resources** - Cannot customize CPU, memory, or base image
 
 ## Usage
 
@@ -287,7 +232,6 @@ packages = ["git", "curl", "build-essential"]
 
 **Via sprites CLI:**
 ```bash
-# Install sprites CLI first (see Setup)
 sprite console clauderon-<session-name>
 ```
 
@@ -339,20 +283,20 @@ Sprites.dev uses pay-per-use pricing:
 
 **Short development session (4 hours active):**
 ```
-Configuration: 2 CPUs, 4GB RAM, 10GB storage
-- CPU: 4h × 2 × $0.07 = $0.56
-- Memory: 4h × 4 × $0.04375 = $0.70
+Configuration: 8 vCPUs, 8GB RAM, 10GB storage (fixed)
+- CPU: 4h × 8 × $0.07 = $2.24
+- Memory: 4h × 8 × $0.04375 = $1.40
 - Storage: 4h × 10 × $0.00068 = $0.03
-Total: $1.29
+Total: $3.67
 ```
 
 **Full work day (8 hours active):**
 ```
-Configuration: 4 CPUs, 8GB RAM, 20GB storage
-- CPU: 8h × 4 × $0.07 = $2.24
+Configuration: 8 vCPUs, 8GB RAM, 20GB storage (fixed)
+- CPU: 8h × 8 × $0.07 = $4.48
 - Memory: 8h × 8 × $0.04375 = $2.80
 - Storage: 8h × 20 × $0.00068 = $0.11
-Total: $5.15
+Total: $7.39
 ```
 
 **Persistent sprite (1 week, idle with auto_destroy=false):**
@@ -366,9 +310,8 @@ Total: $1.14/week (plus active time when resumed)
 
 1. **Use auto_destroy=true for one-off tasks** - Avoid persistent storage costs
 2. **Use auto_destroy=false for recurring work** - Avoid repetitive clone/setup costs
-3. **Right-size resources** - Don't over-allocate CPU/memory
-4. **Clean up old sprites** - Delete sprites you're no longer using
-5. **Use auto_checkpoint sparingly** - Only for frequently accessed sprites
+3. **Clean up old sprites** - Delete sprites you're no longer using
+4. **Use auto_checkpoint sparingly** - Only for frequently accessed sprites
 
 ## Comparison with Other Backends
 
@@ -398,20 +341,31 @@ Total: $1.14/week (plus active time when resumed)
 - Air-gapped or fully offline environments
 - Extremely large monorepos (clone time)
 - Workflows requiring local filesystem access
+- Users needing custom CPU/memory/image configuration
 
 ## Troubleshooting
 
+### CLI Not Found
+
+**Error:** `sprite: command not found`
+
+**Solution:**
+Install sprites CLI:
+```bash
+curl -fsSL https://sprites.dev/install.sh | sh
+```
+
 ### Authentication Errors
 
-**Error:** `No Sprites authentication token found`
+**Error:** `Failed to create sprite: unauthorized`
 
 **Solution:**
 ```bash
-# Set environment variable
-export SPRITES_TOKEN="sp_your_token_here"
+# Login to sprites.dev
+sprite login
 
-# Or add to config file
-echo 'token = "sp_your_token_here"' > ~/.clauderon/sprites-config.toml
+# Or set environment variable
+export SPRITES_TOKEN="sp_your_token_here"
 ```
 
 ### Git Clone Failures
@@ -436,7 +390,7 @@ Configure git credentials in sprite (future feature) or use public repositories.
 
 ### Sprite Creation Timeout
 
-**Error:** `Timeout waiting for sprite to be ready after 120 seconds`
+**Error:** `Timeout waiting for sprite to be ready`
 
 **Possible causes:**
 - Sprites.dev API is slow or down
@@ -453,16 +407,11 @@ Configure git credentials in sprite (future feature) or use public repositories.
 **Error:** `Failed to start agent ... claude: command not found`
 
 **Solution:**
-Ensure `install_claude = true` in config, or use a base image with Claude Code pre-installed.
-
-### Sprite Console Not Working
-
-**Error:** `sprite: command not found`
-
-**Solution:**
-Install sprites CLI:
+Claude Code should be automatically installed. If it fails, you can install manually:
 ```bash
-curl -fsSL https://sprites.dev/install.sh | sh
+sprite console clauderon-<session-name>
+# Inside sprite:
+curl -fsSL https://claude.ai/install.sh | sh
 ```
 
 ### Sprite Persists After Deletion
@@ -470,39 +419,10 @@ curl -fsSL https://sprites.dev/install.sh | sh
 **Expected behavior if `auto_destroy = false`:**
 Sprites are kept for reuse by default. To delete:
 ```bash
-sprite delete clauderon-<session-name>
+sprite destroy clauderon-<session-name>
 ```
 
 Or set `auto_destroy = true` in config to auto-delete on session deletion.
-
-## Advanced Usage
-
-### Custom Base Images
-
-You can use custom base images with pre-installed tools:
-
-```toml
-[image]
-base_image = "myregistry/my-dev-image:latest"
-install_claude = false  # Already in image
-```
-
-### Network Policies for Security
-
-Restrict network access to specific services:
-
-```toml
-[network]
-default_policy = "allow-list"
-allowed_domains = [
-    "api.anthropic.com",  # Required for Claude
-    "github.com",         # Required for git operations
-]
-```
-
-### Resource Override per Session
-
-Override resources for specific sessions via API (future feature).
 
 ## Support
 
