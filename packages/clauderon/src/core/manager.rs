@@ -780,8 +780,7 @@ impl SessionManager {
                 .iter()
                 .zip(repos_for_task.iter())
                 .find(|(_, (_, _, _, is_primary))| *is_primary)
-                .map(|(path, _)| path.clone())
-                .unwrap_or_else(|| created_worktrees[0].clone());
+                .map_or_else(|| created_worktrees[0].clone(), |(path, _)| path.clone());
 
             // Create history directory (for primary repo worktree)
             let history_path = super::session::get_history_file_path(
@@ -834,7 +833,7 @@ impl SessionManager {
             {
                 let mut sessions = self.sessions.write().await;
                 if let Some(session) = sessions.iter_mut().find(|s| s.id == session_id) {
-                    session.worktree_path = primary_worktree_path.clone();
+                    session.worktree_path.clone_from(&primary_worktree_path);
                     if session.agent == super::session::AgentType::ClaudeCode {
                         session.history_file_path = Some(super::session::get_history_file_path(
                             &primary_worktree_path,
