@@ -188,6 +188,16 @@ impl PtySession {
                                         let _ = event_tx.send(PtyEvent::Output).await;
                                     }
                                 }
+                                Ok(ConsoleMessage::Snapshot { data, rows, cols, .. }) => {
+                                    // Process snapshot data to recreate terminal state
+                                    if let Ok(bytes) = base64::prelude::BASE64_STANDARD.decode(data) {
+                                        let mut buffer = terminal_buffer.lock().await;
+                                        buffer.resize(rows, cols);
+                                        buffer.process(&bytes);
+                                        drop(buffer);
+                                        let _ = event_tx.send(PtyEvent::Output).await;
+                                    }
+                                }
                                 Ok(ConsoleMessage::Error { message }) => {
                                     let _ = event_tx.send(PtyEvent::Error(message)).await;
                                 }

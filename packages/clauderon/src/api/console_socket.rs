@@ -97,7 +97,24 @@ async fn handle_console_connection(
     writer.write_all(attached_payload.as_bytes()).await?;
     writer.write_all(b"\n").await?;
 
-    let mut output_rx = console_handle.subscribe();
+    // Atomically get snapshot and subscribe to prevent race conditions
+    let (snapshot_bytes, snap_rows, snap_cols, cursor_row, cursor_col, output_rx) =
+        console_handle.snapshot_and_subscribe().await;
+
+    // Send snapshot to client so they see current terminal state
+    let snapshot_data = base64::prelude::BASE64_STANDARD.encode(&snapshot_bytes);
+    let snapshot = ConsoleMessage::Snapshot {
+        data: snapshot_data,
+        rows: snap_rows,
+        cols: snap_cols,
+        cursor_row,
+        cursor_col,
+    };
+    let snapshot_payload = serde_json::to_string(&snapshot)?;
+    writer.write_all(snapshot_payload.as_bytes()).await?;
+    writer.write_all(b"\n").await?;
+
+    let mut output_rx = output_rx;
     line.clear();
 
     loop {

@@ -15,6 +15,20 @@ pub enum ConsoleMessage {
     Output {
         data: String,
     },
+    /// Initial snapshot of terminal state when connecting.
+    /// Contains the complete screen buffer as escape sequences.
+    Snapshot {
+        /// Base64-encoded terminal content as escape sequences.
+        data: String,
+        /// Current terminal rows.
+        rows: u16,
+        /// Current terminal columns.
+        cols: u16,
+        /// Current cursor row (0-indexed).
+        cursor_row: u16,
+        /// Current cursor column (0-indexed).
+        cursor_col: u16,
+    },
     Input {
         data: String,
     },
