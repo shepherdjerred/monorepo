@@ -2,7 +2,7 @@
 
 use async_trait::async_trait;
 
-use crate::core::Session;
+use crate::core::{MergeMethod, Session};
 
 use super::protocol::CreateSessionRequest;
 use super::types::ReconcileReportDto;
@@ -50,4 +50,12 @@ pub trait ApiClient: Send + Sync {
 
     /// Get current feature flags from the daemon.
     async fn get_feature_flags(&mut self) -> anyhow::Result<crate::feature_flags::FeatureFlags>;
+
+    /// Merge a pull request for a session.
+    async fn merge_pr(
+        &mut self,
+        id: &str,
+        method: MergeMethod,
+        delete_branch: bool,
+    ) -> anyhow::Result<()>;
 }

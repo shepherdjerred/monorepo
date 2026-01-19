@@ -921,24 +921,65 @@ impl SqliteStore {
         Ok(())
     }
 
-    /// Migration v15: Add pr_review_decision column for workflow stages
+    /// Migration v15: Add PR merge fields (review status, merge methods, delete branch setting)
     async fn migrate_to_v15(pool: &SqlitePool) -> anyhow::Result<()> {
-        tracing::info!("Applying migration v15: Add PR review decision");
+        tracing::info!("Applying migration v15: Add PR merge fields");
 
-        // Check if column exists
-        let review_decision_exists: bool = sqlx::query_scalar(
-            "SELECT COUNT(*) > 0 FROM pragma_table_info('sessions') WHERE name = 'pr_review_decision'",
+        // Check if pr_review_status column exists
+        let pr_review_status_exists: bool = sqlx::query_scalar(
+            "SELECT COUNT(*) > 0 FROM pragma_table_info('sessions') WHERE name = 'pr_review_status'",
         )
         .fetch_one(pool)
         .await?;
 
-        if !review_decision_exists {
-            // Store as TEXT with serialization for ReviewDecision enum
-            // NULL for sessions without PR review data
-            sqlx::query("ALTER TABLE sessions ADD COLUMN pr_review_decision TEXT")
+        if !pr_review_status_exists {
+            sqlx::query("ALTER TABLE sessions ADD COLUMN pr_review_status TEXT")
                 .execute(pool)
                 .await?;
-            tracing::debug!("Added pr_review_decision column to sessions table");
+            tracing::debug!("Added pr_review_status column to sessions table");
+        }
+
+        // Check if pr_merge_methods column exists
+        let pr_merge_methods_exists: bool = sqlx::query_scalar(
+            "SELECT COUNT(*) > 0 FROM pragma_table_info('sessions') WHERE name = 'pr_merge_methods'",
+        )
+        .fetch_one(pool)
+        .await?;
+
+        if !pr_merge_methods_exists {
+            // Store as JSON array of merge methods
+            sqlx::query("ALTER TABLE sessions ADD COLUMN pr_merge_methods TEXT")
+                .execute(pool)
+                .await?;
+            tracing::debug!("Added pr_merge_methods column to sessions table");
+        }
+
+        // Check if pr_default_merge_method column exists
+        let pr_default_merge_method_exists: bool = sqlx::query_scalar(
+            "SELECT COUNT(*) > 0 FROM pragma_table_info('sessions') WHERE name = 'pr_default_merge_method'",
+        )
+        .fetch_one(pool)
+        .await?;
+
+        if !pr_default_merge_method_exists {
+            sqlx::query("ALTER TABLE sessions ADD COLUMN pr_default_merge_method TEXT")
+                .execute(pool)
+                .await?;
+            tracing::debug!("Added pr_default_merge_method column to sessions table");
+        }
+
+        // Check if pr_delete_branch_on_merge column exists
+        let pr_delete_branch_on_merge_exists: bool = sqlx::query_scalar(
+            "SELECT COUNT(*) > 0 FROM pragma_table_info('sessions') WHERE name = 'pr_delete_branch_on_merge'",
+        )
+        .fetch_one(pool)
+        .await?;
+
+        if !pr_delete_branch_on_merge_exists {
+            sqlx::query("ALTER TABLE sessions ADD COLUMN pr_delete_branch_on_merge INTEGER")
+                .execute(pool)
+                .await?;
+            tracing::debug!("Added pr_delete_branch_on_merge column to sessions table");
         }
 
         // Record migration
@@ -1077,11 +1118,12 @@ impl Store for SqliteStore {
             INSERT OR REPLACE INTO sessions (
                 id, name, title, description, status, backend, agent, model, repo_path, worktree_path,
                 subdirectory, branch_name, backend_id, initial_prompt, dangerous_skip_checks,
-                pr_url, pr_check_status, pr_review_decision, claude_status, claude_status_updated_at,
+                pr_url, pr_check_status, pr_review_status, pr_merge_methods, pr_default_merge_method,
+                pr_delete_branch_on_merge, claude_status, claude_status_updated_at,
                 merge_conflict, worktree_dirty, worktree_changed_files, access_mode, proxy_port, history_file_path,
                 reconcile_attempts, last_reconcile_error, last_reconcile_at, error_message,
                 created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ",
         )
         .bind(session.id.to_string())
@@ -1113,9 +1155,21 @@ impl Store for SqliteStore {
         )
         .bind(
             session
-                .pr_review_decision
+                .pr_review_status
                 .and_then(|s| serde_json::to_string(&s).ok()),
         )
+        .bind(
+            session
+                .pr_merge_methods
+                .as_ref()
+                .and_then(|methods| serde_json::to_string(methods).ok()),
+        )
+        .bind(
+            session
+                .pr_default_merge_method
+                .and_then(|m| serde_json::to_string(&m).ok()),
+        )
+        .bind(session.pr_delete_branch_on_merge.map(i64::from))
         .bind(serde_json::to_string(&session.claude_status)?)
         .bind(session.claude_status_updated_at.map(|t| t.to_rfc3339()))
         .bind(session.merge_conflict)
@@ -1400,7 +1454,10 @@ struct SessionRow {
     dangerous_skip_checks: bool,
     pr_url: Option<String>,
     pr_check_status: Option<String>,
-    pr_review_decision: Option<String>,
+    pr_review_status: Option<String>,
+    pr_merge_methods: Option<String>,
+    pr_default_merge_method: Option<String>,
+    pr_delete_branch_on_merge: Option<i64>,
     claude_status: String,
     claude_status_updated_at: Option<String>,
     merge_conflict: bool,
@@ -1475,12 +1532,12 @@ impl TryFrom<SessionRow> for Session {
             })
             .transpose()?;
 
-        let pr_review_decision = row
-            .pr_review_decision
+        let pr_review_status = row
+            .pr_review_status
             .map(|s| {
                 serde_json::from_str(&s).map_err(|e| {
                     anyhow::anyhow!(
-                        "session '{}': invalid pr_review_decision '{}': {}",
+                        "session '{}': invalid pr_review_status '{}': {}",
                         row.name,
                         s,
                         e
@@ -1488,6 +1545,36 @@ impl TryFrom<SessionRow> for Session {
                 })
             })
             .transpose()?;
+
+        let pr_merge_methods = row
+            .pr_merge_methods
+            .map(|s| {
+                serde_json::from_str(&s).map_err(|e| {
+                    anyhow::anyhow!(
+                        "session '{}': invalid pr_merge_methods '{}': {}",
+                        row.name,
+                        s,
+                        e
+                    )
+                })
+            })
+            .transpose()?;
+
+        let pr_default_merge_method = row
+            .pr_default_merge_method
+            .map(|s| {
+                serde_json::from_str(&s).map_err(|e| {
+                    anyhow::anyhow!(
+                        "session '{}': invalid pr_default_merge_method '{}': {}",
+                        row.name,
+                        s,
+                        e
+                    )
+                })
+            })
+            .transpose()?;
+
+        let pr_delete_branch_on_merge = row.pr_delete_branch_on_merge.map(|v| v != 0);
 
         // Try JSON first, then fall back to parsing raw enum variant name
         // (migration v3 used DEFAULT 'Unknown' which is not valid JSON)
@@ -1575,7 +1662,14 @@ impl TryFrom<SessionRow> for Session {
             dangerous_skip_checks: row.dangerous_skip_checks,
             pr_url: row.pr_url,
             pr_check_status,
-            pr_review_decision,
+            pr_review_status,
+            pr_merge_methods,
+            pr_default_merge_method,
+            pr_delete_branch_on_merge,
+            can_merge_pr: row.pr_url.is_some()
+                && pr_check_status == Some(crate::core::CheckStatus::Passing)
+                && pr_review_status == Some(crate::core::PrReviewStatus::Approved)
+                && !row.merge_conflict,
             claude_status,
             claude_status_updated_at,
             merge_conflict: row.merge_conflict,
