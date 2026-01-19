@@ -998,7 +998,7 @@ impl std::str::FromStr for ClaudeWorkingStatus {
 }
 
 /// Workflow stage for session display
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum WorkflowStage {
     /// Planning stage: Session created, waiting for or in early work
     Planning,
