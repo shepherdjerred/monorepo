@@ -71,9 +71,17 @@ impl SpritesBackend {
             })?;
 
         if !output.status.success() {
+            use std::fmt::Write;
             let stderr = String::from_utf8_lossy(&output.stderr);
             let stdout = String::from_utf8_lossy(&output.stdout);
-            anyhow::bail!("Failed to create sprite '{}': {} {}", name, stderr, stdout);
+            let mut error_msg = format!("Failed to create sprite '{}'", name);
+            if !stderr.is_empty() {
+                let _ = write!(error_msg, "\nstderr: {}", stderr.trim());
+            }
+            if !stdout.is_empty() {
+                let _ = write!(error_msg, "\nstdout: {}", stdout.trim());
+            }
+            anyhow::bail!("{}", error_msg);
         }
 
         tracing::info!(sprite_name = %name, "Sprite created successfully");
@@ -275,18 +283,26 @@ impl SpritesBackend {
                 format!("/home/sprite/repos/{}", repo.mount_name)
             };
 
-            // Build clone command
-            let mut clone_cmd = format!("git clone --branch {} --single-branch", repo.branch_name);
+            // Build clone command with explicit arguments (avoids shell injection)
+            let mut clone_args = vec![
+                "git",
+                "clone",
+                "--branch",
+                &repo.branch_name,
+                "--single-branch",
+            ];
 
             // Add shallow clone flags if configured
             if self.config.git.shallow_clone {
-                clone_cmd.push_str(" --depth 1");
+                clone_args.push("--depth");
+                clone_args.push("1");
             }
 
-            clone_cmd.push_str(&format!(" {} {}", remote_url, target_path));
+            clone_args.push(&remote_url);
+            clone_args.push(&target_path);
 
-            // Clone the repository
-            let clone_result = self.sprite_shell_run(sprite_name, &clone_cmd).await?;
+            // Clone the repository using explicit args (not shell interpolation)
+            let clone_result = self.sprite_run(sprite_name, &clone_args).await?;
 
             if clone_result.exit_code != 0 {
                 tracing::error!(
@@ -565,7 +581,13 @@ impl ExecutionBackend for SpritesBackend {
             })?;
 
         let stdout = String::from_utf8_lossy(&output.stdout);
-        let exists = stdout.lines().any(|line| line.contains(id));
+        // Use exact matching on first whitespace-delimited word to avoid false positives
+        // (e.g., "test" should not match "test-session" or "my-test")
+        let exists = stdout.lines().any(|line| {
+            line.split_whitespace()
+                .next()
+                .is_some_and(|name| name == id)
+        });
 
         tracing::debug!(sprite_name = %id, exists = exists, "Sprite existence check complete");
         Ok(exists)
