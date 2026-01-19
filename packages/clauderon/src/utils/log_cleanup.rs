@@ -1,13 +1,25 @@
 use std::path::Path;
 use std::time::{Duration, SystemTime};
-use tracing::{info, warn};
 
 const DEFAULT_MAX_AGE_DAYS: u64 = 7;
+
+/// Result of log cleanup operation.
+#[derive(Debug, Default)]
+pub struct CleanupResult {
+    /// Number of files successfully removed.
+    pub removed: usize,
+    /// Files that failed to be removed.
+    pub failed: Vec<String>,
+}
 
 /// Clean up old log files from the logs directory.
 ///
 /// Removes log files older than `max_age_days` (default: 7 days).
 /// Symlinks and non-clauderon files are skipped.
+///
+/// Note: This function does not use tracing because it may be called
+/// before the tracing subscriber is initialized. The caller should
+/// log the results after logging is set up.
 ///
 /// # Arguments
 ///
@@ -16,11 +28,14 @@ const DEFAULT_MAX_AGE_DAYS: u64 = 7;
 ///
 /// # Returns
 ///
-/// The number of files removed, or an error if the directory couldn't be read.
-pub fn cleanup_old_logs(logs_dir: &Path, max_age_days: Option<u64>) -> anyhow::Result<usize> {
+/// A `CleanupResult` with counts and any failures, or an error if the directory couldn't be read.
+pub fn cleanup_old_logs(
+    logs_dir: &Path,
+    max_age_days: Option<u64>,
+) -> anyhow::Result<CleanupResult> {
     let max_age = Duration::from_secs(max_age_days.unwrap_or(DEFAULT_MAX_AGE_DAYS) * 24 * 60 * 60);
     let now = SystemTime::now();
-    let mut removed = 0;
+    let mut result = CleanupResult::default();
 
     let entries = std::fs::read_dir(logs_dir)?;
     for entry in entries.flatten() {
@@ -43,10 +58,9 @@ pub fn cleanup_old_logs(logs_dir: &Path, max_age_days: Option<u64>) -> anyhow::R
                 if let Ok(age) = now.duration_since(modified) {
                     if age > max_age {
                         if std::fs::remove_file(&path).is_ok() {
-                            info!(file = %name, "Removed old log file");
-                            removed += 1;
+                            result.removed += 1;
                         } else {
-                            warn!(file = %name, "Failed to remove old log file");
+                            result.failed.push(name.to_string());
                         }
                     }
                 }
@@ -54,5 +68,5 @@ pub fn cleanup_old_logs(logs_dir: &Path, max_age_days: Option<u64>) -> anyhow::R
         }
     }
 
-    Ok(removed)
+    Ok(result)
 }
