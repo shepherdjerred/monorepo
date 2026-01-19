@@ -775,9 +775,20 @@ impl SessionManager {
                 created_worktrees.push(worktree_path);
             }
 
+            // Find the primary repository's actual worktree path
+            let primary_worktree_path = created_worktrees
+                .iter()
+                .zip(repos_for_task.iter())
+                .find(|(_, (_, _, _, is_primary))| *is_primary)
+                .map(|(path, _)| path.clone())
+                .unwrap_or_else(|| created_worktrees[0].clone());
+
             // Create history directory (for primary repo worktree)
-            let history_path =
-                super::session::get_history_file_path(&worktree_path, &session_id, &subdirectory);
+            let history_path = super::session::get_history_file_path(
+                &primary_worktree_path,
+                &session_id,
+                &subdirectory,
+            );
             if let Some(parent_dir) = history_path.parent() {
                 if let Err(e) = tokio::fs::create_dir_all(parent_dir).await {
                     tracing::warn!(
@@ -818,6 +829,34 @@ impl SessionManager {
                 repo_count = session_repos.len(),
                 "Saved repository configuration to database"
             );
+
+            // Update session with correct primary worktree path and history file path
+            {
+                let mut sessions = self.sessions.write().await;
+                if let Some(session) = sessions.iter_mut().find(|s| s.id == session_id) {
+                    session.worktree_path = primary_worktree_path.clone();
+                    if session.agent == super::session::AgentType::ClaudeCode {
+                        session.history_file_path = Some(super::session::get_history_file_path(
+                            &primary_worktree_path,
+                            &session_id,
+                            &subdirectory,
+                        ));
+                    }
+                    tracing::debug!(
+                        session_id = %session_id,
+                        worktree_path = %primary_worktree_path.display(),
+                        "Updated session with primary worktree path"
+                    );
+                }
+            }
+
+            // Persist updated worktree_path and history_file_path to database
+            {
+                let sessions = self.sessions.read().await;
+                if let Some(session) = sessions.iter().find(|s| s.id == session_id) {
+                    self.store.save_session(session).await?;
+                }
+            }
 
             update_progress(2, "Setting up session proxy".to_string()).await;
             // Create per-session proxy for container backends (Docker and Apple Container)
