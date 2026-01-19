@@ -1,5 +1,5 @@
 use clap::{Parser, Subcommand};
-use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+use tracing_subscriber::{Layer, layer::SubscriberExt, util::SubscriberInitExt};
 
 use clauderon::{api, core, tui, utils};
 
@@ -483,19 +483,51 @@ async fn main() -> anyhow::Result<()> {
         .expect("Failed to install rustls crypto provider");
 
     // Ensure log directory exists
-    let log_path = utils::paths::log_path();
-    if let Some(log_dir) = log_path.parent() {
-        std::fs::create_dir_all(log_dir)?;
+    let logs_dir = utils::paths::logs_dir();
+    std::fs::create_dir_all(&logs_dir)?;
+
+    // Clean up old log files (older than 7 days) - do this before logging is initialized
+    // We can't log the result yet, so we'll store it for later
+    let cleanup_result = utils::log_cleanup::cleanup_old_logs(&logs_dir, None);
+
+    // Generate timestamped log filenames for this daemon instance
+    let timestamp = chrono::Local::now().format("%Y-%m-%dT%H-%M-%S");
+    let log_filename = format!("clauderon.{timestamp}.log");
+    let debug_log_filename = format!("clauderon.{timestamp}.debug.log");
+    let error_log_filename = format!("clauderon.{timestamp}.error.log");
+
+    // Set up file appenders (new files per daemon start)
+    let file_appender = tracing_appender::rolling::never(&logs_dir, &log_filename);
+    let debug_file_appender = tracing_appender::rolling::never(&logs_dir, &debug_log_filename);
+    let error_file_appender = tracing_appender::rolling::never(&logs_dir, &error_log_filename);
+
+    // Create/update symlinks to latest logs
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::symlink;
+        let _ = std::fs::remove_file(logs_dir.join("latest.log"));
+        let _ = std::fs::remove_file(logs_dir.join("latest.debug.log"));
+        let _ = std::fs::remove_file(logs_dir.join("latest.error.log"));
+        let _ = symlink(&log_filename, logs_dir.join("latest.log"));
+        let _ = symlink(&debug_log_filename, logs_dir.join("latest.debug.log"));
+        let _ = symlink(&error_log_filename, logs_dir.join("latest.error.log"));
     }
 
-    // Set up file appender
-    let file_appender =
-        tracing_appender::rolling::daily(log_path.parent().unwrap(), log_path.file_name().unwrap());
+    // Check if JSON format is requested
+    let json_format = std::env::var("CLAUDERON_LOG_FORMAT")
+        .map(|v| v.to_lowercase() == "json")
+        .unwrap_or(false);
 
-    // Initialize tracing with both console and file output
+    // Initialize tracing with console, normal file, debug file, and error file output
     let env_filter = tracing_subscriber::EnvFilter::new(
         std::env::var("RUST_LOG").unwrap_or_else(|_| "clauderon=info".into()),
     );
+
+    // Debug file always captures debug-level logs
+    let debug_filter = tracing_subscriber::EnvFilter::new("clauderon=debug");
+
+    // Error file captures warn and error level logs only
+    let error_filter = tracing_subscriber::EnvFilter::new("clauderon=warn");
 
     // Configure console output with structured logging
     let console_layer = tracing_subscriber::fmt::layer()
@@ -504,15 +536,80 @@ async fn main() -> anyhow::Result<()> {
         .with_thread_ids(cfg!(debug_assertions))
         .with_line_number(cfg!(debug_assertions));
 
-    tracing_subscriber::registry()
-        .with(env_filter)
-        .with(console_layer)
-        .with(
-            tracing_subscriber::fmt::layer()
-                .with_writer(file_appender)
-                .with_ansi(false),
-        )
-        .init();
+    // Build the subscriber with conditional JSON formatting
+    if json_format {
+        tracing_subscriber::registry()
+            .with(console_layer.with_filter(env_filter))
+            .with(
+                tracing_subscriber::fmt::layer()
+                    .json()
+                    .with_writer(file_appender)
+                    .with_filter(tracing_subscriber::EnvFilter::new(
+                        std::env::var("RUST_LOG").unwrap_or_else(|_| "clauderon=info".into()),
+                    )),
+            )
+            .with(
+                tracing_subscriber::fmt::layer()
+                    .json()
+                    .with_writer(debug_file_appender)
+                    .with_filter(debug_filter),
+            )
+            .with(
+                tracing_subscriber::fmt::layer()
+                    .json()
+                    .with_writer(error_file_appender)
+                    .with_filter(error_filter),
+            )
+            .init();
+    } else {
+        tracing_subscriber::registry()
+            .with(console_layer.with_filter(env_filter))
+            .with(
+                tracing_subscriber::fmt::layer()
+                    .with_writer(file_appender)
+                    .with_ansi(false)
+                    .with_filter(tracing_subscriber::EnvFilter::new(
+                        std::env::var("RUST_LOG").unwrap_or_else(|_| "clauderon=info".into()),
+                    )),
+            )
+            .with(
+                tracing_subscriber::fmt::layer()
+                    .with_writer(debug_file_appender)
+                    .with_ansi(false)
+                    .with_filter(debug_filter),
+            )
+            .with(
+                tracing_subscriber::fmt::layer()
+                    .with_writer(error_file_appender)
+                    .with_ansi(false)
+                    .with_filter(error_filter),
+            )
+            .init();
+    }
+
+    // Log startup banner (now that logging is initialized)
+    tracing::info!("========================================");
+    tracing::info!("     clauderon daemon v{}     ", env!("CARGO_PKG_VERSION"));
+    tracing::info!("========================================");
+    tracing::info!("PID: {}", std::process::id());
+    tracing::info!("Log directory: {}", logs_dir.display());
+    tracing::info!("  Info log: {}", log_filename);
+    tracing::info!("  Debug log: {}", debug_log_filename);
+    tracing::info!("  Error log: {}", error_log_filename);
+    if json_format {
+        tracing::info!("  Format: JSON");
+    }
+    tracing::info!(
+        "Log level: {}",
+        std::env::var("RUST_LOG").unwrap_or_else(|_| "clauderon=info".into())
+    );
+
+    // Now log the cleanup result
+    match cleanup_result {
+        Ok(count) if count > 0 => tracing::info!("Cleaned up {} old log files", count),
+        Err(e) => tracing::warn!("Failed to clean up old logs: {}", e),
+        _ => {}
+    }
 
     let cli = Cli::parse();
 

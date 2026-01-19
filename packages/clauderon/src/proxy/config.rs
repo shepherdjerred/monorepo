@@ -55,6 +55,7 @@ pub struct ProxyConfig {
     pub audit_enabled: bool,
 
     /// Audit log file path.
+    #[serde(default = "default_audit_log_path")]
     pub audit_log_path: PathBuf,
 
     /// Optional path to the host Codex auth.json file.
@@ -65,6 +66,14 @@ pub struct ProxyConfig {
     pub onepassword: OnePasswordConfig,
 }
 
+fn default_audit_log_path() -> PathBuf {
+    let home = dirs::home_dir().unwrap_or_else(|| PathBuf::from("/tmp"));
+    let logs_dir = home.join(".clauderon/logs");
+    let timestamp = chrono::Local::now().format("%Y-%m-%dT%H-%M-%S");
+    let audit_filename = format!("audit.{timestamp}.jsonl");
+    logs_dir.join(audit_filename)
+}
+
 impl Default for ProxyConfig {
     fn default() -> Self {
         let home = dirs::home_dir().unwrap_or_else(|| PathBuf::from("/tmp"));
@@ -73,7 +82,7 @@ impl Default for ProxyConfig {
             talos_gateway_port: 18082,
             kubectl_proxy_port: 18081,
             audit_enabled: true,
-            audit_log_path: home.join(".clauderon/audit.jsonl"),
+            audit_log_path: default_audit_log_path(),
             codex_auth_json_path: Some(home.join(".codex/auth.json")),
             onepassword: OnePasswordConfig::default(),
         }
