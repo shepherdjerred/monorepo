@@ -3,102 +3,110 @@ title: Zellij Backend
 description: Running sessions in Zellij terminal panes
 ---
 
-The Zellij backend provides lightweight session isolation using terminal clauderon panes.
+The Zellij backend provides lightweight session isolation using terminal multiplexer panes. Sessions run directly on your host system, providing fast startup and full access to installed tools.
 
 ## How It Works
 
 When you create a Zellij session, clauderon:
 
-1. Creates a new Zellij session or pane
-2. Configures proxy environment variables
-3. Starts your shell with the working directory
+1. Creates a git worktree in `~/.clauderon/worktrees/<session-name>/`
+2. Creates a new Zellij session
+3. Configures proxy environment variables
+4. Starts Claude Code (or your chosen agent) with your prompt
+
+## Creating Zellij Sessions
+
+Zellij is the default backend, so you don't need to specify it:
+
+```bash
+clauderon create --repo ~/project --prompt "Explore the codebase"
+```
+
+Or explicitly:
+
+```bash
+clauderon create --backend zellij --repo ~/project --prompt "Task"
+```
 
 ## When to Use Zellij
 
 Choose Zellij over Docker when you:
 
-- Need faster session startup
-- Don't need full container isolation
-- Want access to host system tools
+- Need faster session startup (~100ms vs ~2-5s)
+- Want access to host system tools (compilers, debuggers, etc.)
+- Don't need strict isolation
+- Are working on projects that use host-specific configurations
 - Are debugging or developing clauderon itself
+
+## Backend Comparison
+
+| Feature | Zellij | Docker | Kubernetes | Sprites | Apple |
+|---------|--------|--------|------------|---------|-------|
+| Isolation | Process | Container | Pod | Container | Container |
+| Startup | ~100ms | ~2-5s | ~10-30s | ~5-10s | ~1s |
+| Host tools | Full | Limited | None | None | Limited |
+| Custom image | No | Yes | Yes | Yes | No |
+| Resource limits | No | Yes | Yes | Yes | Yes |
+| Cloud native | No | No | Yes | Yes | No |
+| Platform | Any | Any | Any | Any | macOS 26+ |
 
 ## Configuration
 
-Configure Zellij settings in `~/.config/clauderon/config.toml`:
+Zellij doesn't require much configuration, but you can set defaults in `~/.clauderon/config.toml`:
 
 ```toml
-[zellij]
-# Shell to use in sessions
-shell = "/bin/zsh"
-
-# Layout for new sessions
-layout = "default"
-
-# Additional environment variables
-env = [
-  "TERM=xterm-256color"
-]
+[general]
+# Set Zellij as default (already the default)
+default_backend = "zellij"
 ```
 
-## Session Options
+## Attaching to Sessions
 
-### Working Directory
-
-Sessions start in the specified working directory:
+Attach to a Zellij session:
 
 ```bash
-clauderon new --backend zellij --workdir /home/user/projects my-session
+clauderon attach <session-name>
 ```
 
-### Named Sessions
-
-Zellij sessions are named for easy reattachment:
+You can also attach directly via Zellij:
 
 ```bash
-# Create a named session
-clauderon new --backend zellij --name my-project project-session
-
-# Attach from Zellij
-zellij attach my-project-project-session
+zellij attach clauderon-<session-name>
 ```
 
-## Zellij Layouts
+## Environment Variables
 
-Create custom layouts for clauderon sessions in `~/.config/zellij/layouts/clauderon.kdl`:
+The following environment variables are set in Zellij sessions:
 
-```kdl
-layout {
-    pane size=1 borderless=true {
-        plugin location="tab-bar"
-    }
-    pane {
-        // Main working pane
-    }
-    pane size=10 {
-        // Log/status pane
-    }
-    pane size=2 borderless=true {
-        plugin location="status-bar"
-    }
-}
+| Variable | Purpose |
+|----------|---------|
+| `HTTP_PROXY` | Points to clauderon proxy |
+| `HTTPS_PROXY` | Points to clauderon proxy |
+| `SSL_CERT_FILE` | CA certificate path |
+| `NODE_EXTRA_CA_CERTS` | CA for Node.js |
+| `REQUESTS_CA_BUNDLE` | CA for Python |
+
+## Multiple Sessions
+
+You can run multiple Zellij sessions simultaneously:
+
+```bash
+clauderon create --repo ~/project-a --prompt "Work on feature A"
+clauderon create --repo ~/project-b --prompt "Work on feature B"
+
+# List all sessions
+clauderon list
 ```
 
-Then configure clauderon to use it:
+Each session gets its own Zellij session and git worktree.
 
-```toml
-[zellij]
-layout = "clauderon"
-```
+## Zellij Key Bindings
 
-## Comparison with Docker
+While attached to a session:
 
-| Feature | Docker | Zellij |
-|---------|--------|--------|
-| Isolation | Full container | Process-level |
-| Startup time | ~2-5 seconds | ~100ms |
-| Host tool access | Limited | Full |
-| Resource overhead | Higher | Lower |
-| Network isolation | Optional | None |
+- `Ctrl+p` - Zellij mode selection
+- `Ctrl+p` then `d` - Detach from session
+- `Ctrl+p` then `q` - Quit Zellij
 
 ## Troubleshooting
 
@@ -112,14 +120,45 @@ zellij list-sessions
 
 # Kill orphaned sessions
 zellij kill-session <name>
+
+# Reconcile clauderon database
+clauderon reconcile
 ```
 
 ### Environment Not Set
 
-If proxy variables aren't set, check your shell initialization:
+If proxy variables aren't set:
 
 ```bash
-# Variables should be set
+# Check variables in the session
 echo $HTTP_PROXY
 echo $HTTPS_PROXY
 ```
+
+If empty, the session may have been started without the daemon running. Delete and recreate:
+
+```bash
+clauderon delete <session-name>
+clauderon create --repo ~/project --prompt "Task"
+```
+
+### Zellij Not Found
+
+Ensure Zellij is installed and in your PATH:
+
+```bash
+# Check version
+zellij --version
+
+# Install if needed (macOS)
+brew install zellij
+
+# Install if needed (cargo)
+cargo install zellij
+```
+
+## See Also
+
+- [Backends Comparison](/getting-started/backends/) - Compare all backends
+- [Docker Backend](/guides/docker/) - For isolated container sessions
+- [Troubleshooting](/guides/troubleshooting/) - Common issues and solutions

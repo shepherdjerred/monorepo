@@ -23,14 +23,37 @@ export default defineConfig({
             { label: "Introduction", slug: "getting-started/introduction" },
             { label: "Installation", slug: "getting-started/installation" },
             { label: "Quick Start", slug: "getting-started/quick-start" },
+            { label: "Backends", slug: "getting-started/backends" },
+            { label: "Agents", slug: "getting-started/agents" },
           ],
         },
         {
           label: "Guides",
           items: [
-            { label: "Docker Backend", slug: "guides/docker" },
-            { label: "Zellij Backend", slug: "guides/zellij" },
+            { label: "Web Interface", slug: "guides/web-ui" },
             { label: "Credential Proxy", slug: "guides/proxy" },
+            { label: "1Password", slug: "guides/onepassword" },
+            { label: "Access Modes", slug: "guides/access-modes" },
+            { label: "Hooks", slug: "guides/hooks" },
+            {
+              label: "Backends",
+              items: [
+                { label: "Zellij", slug: "guides/zellij" },
+                { label: "Docker", slug: "guides/docker" },
+                { label: "Custom Images", slug: "guides/custom-images" },
+                { label: "Kubernetes", slug: "guides/kubernetes" },
+                { label: "Sprites", slug: "guides/sprites" },
+                { label: "Apple Container", slug: "guides/apple-container" },
+              ],
+            },
+            { label: "Troubleshooting", slug: "guides/troubleshooting" },
+          ],
+        },
+        {
+          label: "Mobile",
+          items: [
+            { label: "Overview", slug: "mobile/overview" },
+            { label: "Setup", slug: "mobile/setup" },
           ],
         },
         {
@@ -38,6 +61,9 @@ export default defineConfig({
           items: [
             { label: "CLI Commands", slug: "reference/cli" },
             { label: "Configuration", slug: "reference/configuration" },
+            { label: "API", slug: "reference/api" },
+            { label: "Environment Variables", slug: "reference/environment-variables" },
+            { label: "File Locations", slug: "reference/file-locations" },
           ],
         },
       ],

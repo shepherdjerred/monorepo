@@ -1,70 +1,141 @@
 ---
-title: CLI Commands
-description: Complete reference for clauderon command-line interface
+title: CLI Reference
+description: Complete command-line interface reference
 ---
 
 ## Global Options
 
-These options are available for all commands:
-
 ```
---config <PATH>    Path to config file (default: ~/.config/clauderon/config.toml)
---verbose, -v      Enable verbose output
---quiet, -q        Suppress non-essential output
---help, -h         Print help
---version, -V      Print version
+--help, -h       Print help
+--version, -V    Print version
 ```
 
 ## Commands
 
-### `clauderon` (default)
+### clauderon daemon
 
-Launch the terminal user interface.
+Start the background daemon (required for all operations).
 
 ```bash
-clauderon
+clauderon daemon [OPTIONS]
 ```
 
-Opens the interactive TUI for managing sessions.
+**Options:**
+```
+--http-port <PORT>           HTTP server port (default: 3030, 0 to disable)
+--no-proxy                   Disable credential proxy
+--dev                        Development mode (serve frontend from filesystem)
+```
+
+**Feature Flags:**
+```
+--enable-webauthn-auth       Enable passwordless WebAuthn authentication
+--enable-ai-metadata         Enable AI-generated session titles
+--enable-auto-reconcile      Auto-reconcile sessions on startup
+--enable-usage-tracking      Enable Claude usage tracking
+--enable-kubernetes-backend  Enable Kubernetes backend (experimental)
+--enable-proxy-port-reuse    Enable proxy port reuse (experimental)
+```
+
+**Example:**
+```bash
+# Start daemon with default settings
+clauderon daemon
+
+# Start with AI-generated session titles
+clauderon daemon --enable-ai-metadata
+
+# Start with Kubernetes backend enabled
+clauderon daemon --enable-kubernetes-backend
+```
 
 ---
 
-### `clauderon new`
+### clauderon create
 
 Create a new session.
 
 ```bash
-clauderon new [OPTIONS] <NAME>
+clauderon create --repo <PATH> --prompt <TEXT> [OPTIONS]
 ```
 
-**Arguments:**
-- `<NAME>` - Session name (required)
+**Required:**
+```
+--repo <PATH>                Git repository path
+--prompt <TEXT>              Initial prompt for the AI agent
+```
 
 **Options:**
 ```
---backend <BACKEND>      Backend type: docker, zellij (default: docker)
---workdir <PATH>         Working directory to mount/use
---repo <URL>             Git repository to clone
---image <IMAGE>          Docker image (docker backend only)
---branch <BRANCH>        Git branch to checkout (with --repo)
---env <KEY=VALUE>        Additional environment variables
+--backend <BACKEND>          Backend: zellij (default), docker, kubernetes, sprites, apple
+--agent <AGENT>              Agent: claude (default), codex, gemini
+--access-mode <MODE>         Access mode: read-write (default), read-only
+--no-plan-mode               Skip plan mode, go straight to implementation
+--print                      Non-interactive mode (print output, exit when done)
+--dangerous-skip-checks      Bypass dirty repo checks
+```
+
+**Docker-specific:**
+```
+--image <IMAGE>              Custom container image
+--pull-policy <POLICY>       Pull policy: always, if-not-present (default), never
+--cpu-limit <LIMIT>          CPU limit (e.g., "2.0" or "500m")
+--memory-limit <LIMIT>       Memory limit (e.g., "2g" or "512m")
 ```
 
 **Examples:**
 ```bash
-# Create a Docker session
-clauderon new --backend docker --workdir /home/user/project my-session
+# Basic session with default backend (Zellij)
+clauderon create --repo ~/project --prompt "Fix the login bug"
 
-# Create from a git repo
-clauderon new --repo https://github.com/user/repo --branch main project-work
+# Docker with custom image
+clauderon create --backend docker --image rust:1.85 \
+  --repo ~/project --prompt "Build the project"
 
-# Create with custom image
-clauderon new --backend docker --image rust:1.85 rust-dev
+# Read-only exploration
+clauderon create --access-mode read-only \
+  --repo ~/project --prompt "Explain the architecture"
+
+# Non-interactive for scripts
+clauderon create --print \
+  --repo ~/project --prompt "Generate documentation"
+
+# Skip plan mode for quick tasks
+clauderon create --no-plan-mode \
+  --repo ~/project --prompt "Add a console.log statement"
+
+# Docker with resource limits
+clauderon create --backend docker \
+  --cpu-limit 4 --memory-limit 8g \
+  --repo ~/project --prompt "Heavy computation task"
 ```
 
 ---
 
-### `clauderon list`
+### clauderon tui
+
+Launch the terminal user interface.
+
+```bash
+clauderon tui
+```
+
+**Keyboard shortcuts:**
+| Key | Action |
+|-----|--------|
+| `n` | Create new session |
+| `Enter` | Attach to session |
+| `a` | Archive session |
+| `u` | Unarchive session |
+| `d` | Delete session |
+| `j` / `k` | Navigate down/up |
+| `g` / `G` | Go to first/last |
+| `r` | Refresh list |
+| `q` | Quit |
+
+---
+
+### clauderon list
 
 List all sessions.
 
@@ -74,23 +145,22 @@ clauderon list [OPTIONS]
 
 **Options:**
 ```
---json           Output as JSON
---running        Only show running sessions
---stopped        Only show stopped sessions
+--archived                   Include archived sessions
 ```
 
 **Output columns:**
 - Name
 - Backend
+- Agent
 - Status
+- Access Mode
 - Created
-- Working Directory
 
 ---
 
-### `clauderon attach`
+### clauderon attach
 
-Attach to an existing session.
+Attach to a session's terminal.
 
 ```bash
 clauderon attach <NAME>
@@ -99,13 +169,41 @@ clauderon attach <NAME>
 **Arguments:**
 - `<NAME>` - Session name
 
-If the session is stopped, it will be started first.
+Attaches to the running session's terminal. For Zellij sessions, this opens the Zellij pane. For Docker sessions, this attaches to the container's TTY.
 
 ---
 
-### `clauderon delete`
+### clauderon archive
 
-Delete a session.
+Archive a session (hide from default list but preserve).
+
+```bash
+clauderon archive <NAME>
+```
+
+**Arguments:**
+- `<NAME>` - Session name
+
+Archived sessions are hidden from `clauderon list` but can be seen with `clauderon list --archived`. Use this to keep completed sessions without cluttering your active list.
+
+---
+
+### clauderon unarchive
+
+Restore an archived session.
+
+```bash
+clauderon unarchive <NAME>
+```
+
+**Arguments:**
+- `<NAME>` - Session name
+
+---
+
+### clauderon delete
+
+Delete a session permanently.
 
 ```bash
 clauderon delete [OPTIONS] <NAME>
@@ -116,154 +214,165 @@ clauderon delete [OPTIONS] <NAME>
 
 **Options:**
 ```
---force, -f      Force delete running sessions
---all            Delete all sessions
+--force, -f                  Force delete without confirmation
 ```
+
+This removes the session from the database, deletes the git worktree, and cleans up backend resources (container, Zellij session, etc.).
 
 ---
 
-### `clauderon stop`
+### clauderon refresh
 
-Stop a running session.
+Refresh a Docker session (pull latest image, recreate container).
 
 ```bash
-clauderon stop <NAME>
+clauderon refresh <NAME>
 ```
 
 **Arguments:**
 - `<NAME>` - Session name
 
+This command:
+1. Stops the existing container
+2. Pulls the latest version of the image
+3. Creates a new container with the same configuration
+4. Starts the new container
+
+Useful for updating to newer Claude Code versions.
+
 ---
 
-### `clauderon start`
+### clauderon set-access-mode
 
-Start a stopped session.
+Change a session's proxy access mode.
 
 ```bash
-clauderon start <NAME>
+clauderon set-access-mode <NAME> <MODE>
 ```
 
 **Arguments:**
 - `<NAME>` - Session name
+- `<MODE>` - Access mode: `read-only` or `read-write`
 
----
+**Modes:**
+- `read-only` - Only allows GET, HEAD, OPTIONS requests
+- `read-write` - Allows all HTTP methods (default)
 
-### `clauderon proxy`
-
-Manage the credential proxy.
-
+**Example:**
 ```bash
-clauderon proxy <SUBCOMMAND>
-```
+# Restrict a session to read-only
+clauderon set-access-mode my-session read-only
 
-**Subcommands:**
-
-#### `clauderon proxy start`
-
-Start the proxy server.
-
-```bash
-clauderon proxy start [OPTIONS]
-```
-
-**Options:**
-```
---port <PORT>          Listen port (default: 8080)
---bind <ADDRESS>       Bind address (default: 127.0.0.1)
---foreground, -f       Run in foreground
-```
-
-#### `clauderon proxy stop`
-
-Stop the proxy server.
-
-```bash
-clauderon proxy stop
-```
-
-#### `clauderon proxy status`
-
-Show proxy status.
-
-```bash
-clauderon proxy status
-```
-
-#### `clauderon proxy regenerate-ca`
-
-Regenerate the CA certificate.
-
-```bash
-clauderon proxy regenerate-ca [OPTIONS]
-```
-
-**Options:**
-```
---force    Overwrite existing CA
+# Re-enable write access
+clauderon set-access-mode my-session read-write
 ```
 
 ---
 
-### `clauderon config`
+### clauderon reconcile
 
-Manage configuration.
+Synchronize database with actual backend state.
+
+```bash
+clauderon reconcile
+```
+
+Useful after:
+- System crashes
+- Manual backend changes (manually deleting containers, etc.)
+- Database corruption
+
+This command scans all backends and updates the database to match reality.
+
+---
+
+### clauderon clean-cache
+
+Manage Docker cache volumes.
+
+```bash
+clauderon clean-cache [OPTIONS]
+```
+
+**Options:**
+```
+--force                      Actually remove volumes (default: dry run)
+```
+
+clauderon creates shared Docker volumes for caching:
+- `clauderon-cargo-registry` - Cargo package cache
+- `clauderon-cargo-git` - Git dependencies
+- `clauderon-sccache` - Compilation cache
+
+Without `--force`, shows what would be cleaned. With `--force`, removes the volumes.
+
+---
+
+### clauderon config
+
+Configuration management subcommands.
 
 ```bash
 clauderon config <SUBCOMMAND>
 ```
 
-**Subcommands:**
+#### clauderon config show
 
-#### `clauderon config show`
-
-Show current configuration.
+Show current configuration values.
 
 ```bash
-clauderon config show [--json]
+clauderon config show
 ```
 
-#### `clauderon config edit`
+#### clauderon config paths
 
-Open configuration in editor.
+List all file paths used by clauderon.
 
 ```bash
-clauderon config edit
+clauderon config paths
 ```
 
-#### `clauderon config init`
+#### clauderon config env
 
-Create default configuration file.
+List all environment variables and their values.
 
 ```bash
-clauderon config init [--force]
+clauderon config env
+```
+
+#### clauderon config credentials
+
+Show credential status (which credentials are configured).
+
+```bash
+clauderon config credentials
 ```
 
 ---
-
-### `clauderon daemon`
-
-Run clauderon as a background daemon.
-
-```bash
-clauderon daemon [OPTIONS]
-```
-
-**Options:**
-```
---foreground, -f     Run in foreground
---pidfile <PATH>     PID file location
-```
-
-The daemon manages the proxy and session lifecycle.
 
 ## Environment Variables
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `MUX_CONFIG` | Config file path | `~/.config/clauderon/config.toml` |
-| `MUX_DATA_DIR` | Data directory | `~/.local/share/clauderon` |
-| `MUX_LOG_LEVEL` | Log level (error, warn, info, debug, trace) | `info` |
-| `MUX_PROXY_PORT` | Proxy listen port | `8080` |
+| `RUST_LOG` | Log level filter | `clauderon=info` |
+| `CLAUDERON_BIND_ADDR` | HTTP bind address | `127.0.0.1` |
+| `CLAUDERON_ORIGIN` | WebAuthn origin URL | Auto-detected |
+| `CLAUDERON_DEV` | Enable dev mode | `0` |
+
+### Feature Flags (Environment)
+
+Feature flags can also be set via environment variables:
+
+| Variable | Description |
+|----------|-------------|
+| `CLAUDERON_FEATURE_ENABLE_WEBAUTHN_AUTH` | Passwordless auth |
+| `CLAUDERON_FEATURE_ENABLE_AI_METADATA` | AI session titles |
+| `CLAUDERON_FEATURE_ENABLE_AUTO_RECONCILE` | Auto-reconcile |
+| `CLAUDERON_FEATURE_ENABLE_USAGE_TRACKING` | Usage tracking |
+| `CLAUDERON_FEATURE_ENABLE_KUBERNETES_BACKEND` | K8s backend |
+| `CLAUDERON_FEATURE_ENABLE_PROXY_PORT_REUSE` | Proxy port reuse |
+
+Set to `1` or `true` to enable.
 
 ## Exit Codes
 
@@ -274,4 +383,9 @@ The daemon manages the proxy and session lifecycle.
 | 2 | Configuration error |
 | 3 | Session not found |
 | 4 | Backend error |
-| 5 | Proxy error |
+
+## See Also
+
+- [Configuration Reference](/reference/configuration/) - Configuration file options
+- [Environment Variables](/reference/environment-variables/) - Complete environment variable reference
+- [File Locations](/reference/file-locations/) - Where clauderon stores data
