@@ -59,16 +59,21 @@ pub struct UserPreferences {
     /// Number of advanced operations used
     pub advanced_operations_used_count: u32,
     /// Timestamp of first session creation
+    #[typeshare(serialized_as = "string | null")]
     pub first_session_at: Option<DateTime<Utc>>,
     /// Timestamp of last activity
+    #[typeshare(serialized_as = "string")]
     pub last_activity_at: DateTime<Utc>,
     /// List of dismissed hint IDs
     pub dismissed_hints: Vec<String>,
     /// Custom UI preferences (JSON blob)
+    #[typeshare(serialized_as = "Record<string, any>")]
     pub ui_preferences: serde_json::Value,
     /// Timestamp of record creation
+    #[typeshare(serialized_as = "string")]
     pub created_at: DateTime<Utc>,
     /// Timestamp of last update
+    #[typeshare(serialized_as = "string")]
     pub updated_at: DateTime<Utc>,
 }
 
