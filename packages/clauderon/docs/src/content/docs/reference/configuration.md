@@ -1,300 +1,298 @@
 ---
-title: Configuration
-description: Complete configuration reference for clauderon
+title: Configuration Reference
+description: Complete configuration file reference
 ---
 
-clauderon uses a TOML configuration file located at `~/.config/clauderon/config.toml`.
+## File Locations
 
-## Configuration File Location
+clauderon uses the `~/.clauderon/` directory for all configuration and data:
 
-The configuration file is searched in this order:
-
-1. `$MUX_CONFIG` environment variable
-2. `~/.config/clauderon/config.toml`
-3. `/etc/clauderon/config.toml`
-
-Create a default configuration:
-
-```bash
-clauderon config init
+```
+~/.clauderon/
+├── config.toml              # Main configuration
+├── proxy.toml               # Proxy configuration
+├── db.sqlite                # Session database
+├── proxy-ca.pem             # CA certificate (public)
+├── proxy-ca-key.pem         # CA private key (host only)
+├── claude.json              # Claude Code settings
+├── managed-settings.json    # Bypass permissions
+├── audit.jsonl              # Proxy audit log
+├── secrets/                 # Credential files
+│   ├── github_token
+│   ├── anthropic_oauth_token
+│   └── ...
+├── worktrees/               # Git worktrees
+├── uploads/                 # Uploaded images
+├── logs/                    # Log files
+├── codex/                   # Codex auth
+└── talos/                   # Talos kubeconfig
 ```
 
-## Full Configuration Reference
+## Main Configuration (config.toml)
 
 ```toml
-# ~/.config/clauderon/config.toml
+# ~/.clauderon/config.toml
 
 #
 # General Settings
 #
 [general]
 # Default backend for new sessions
-default_backend = "docker"  # docker, zellij
+default_backend = "zellij"  # zellij, docker, kubernetes, sprites, apple
 
-# Data directory for session storage
-data_dir = "~/.local/share/clauderon"
-
-# Log level: error, warn, info, debug, trace
-log_level = "info"
-
-# Log file (optional, logs to stderr if not set)
-log_file = "~/.config/clauderon/clauderon.log"
+# Default agent
+default_agent = "claude"    # claude, codex, gemini
 
 #
-# Proxy Configuration
+# Feature Flags
 #
-[proxy]
-# Proxy listen port
-port = 8080
-
-# Bind address
-bind = "127.0.0.1"
-
-# Auto-generate TLS certificates
-generate_certs = true
-
-# CA certificate directory
-ca_dir = "~/.config/clauderon/ca"
-
-# CA certificate lifetime in days
-ca_lifetime = 365
-
-# Request timeout in seconds
-timeout = 30
-
-# Maximum concurrent connections
-max_connections = 100
-
-[proxy.logging]
-# Log all requests
-log_requests = false
-
-# Log file for requests
-log_file = "~/.config/clauderon/proxy.log"
-
-# Log response bodies (careful with large responses)
-log_responses = false
-
-[proxy.filters]
-# Block requests to these domains (supports wildcards)
-blocked_domains = []
-
-# Block requests containing these patterns
-blocked_patterns = []
-
-# Allow-list mode (only allow specified domains)
-allowlist_only = false
-allowed_domains = []
-
-#
-# Credentials
-#
-# Each credential section defines what to inject for matching domains
-
-[credentials.anthropic]
-# Which header to inject
-header = "x-api-key"
-
-# Or use Authorization header with type
-# auth_type = "bearer"  # bearer, basic
-
-# The credential value (supports env var expansion)
-value = "${ANTHROPIC_API_KEY}"
-
-# Domains to match (supports wildcards)
-domains = ["api.anthropic.com"]
-
-[credentials.github]
-header = "Authorization"
-auth_type = "bearer"
-value = "${GITHUB_TOKEN}"
-domains = ["api.github.com"]
-
-[credentials.github_git]
-# HTTP Basic Auth for git operations
-auth_type = "basic"
-username = "x-access-token"
-password = "${GITHUB_TOKEN}"
-domains = ["github.com"]
+[features]
+webauthn_auth = false        # Passwordless authentication
+ai_metadata = false          # AI-generated session titles
+auto_reconcile = false       # Auto-reconcile on startup
+usage_tracking = false       # Claude usage tracking
+kubernetes_backend = false   # Enable Kubernetes backend
 
 #
 # Docker Backend
 #
 [docker]
-# Base image for containers
-image = "ubuntu:22.04"
+default_image = "ghcr.io/anthropics/claude-code:latest"
+pull_policy = "if-not-present"  # always, if-not-present, never
 
-# Default shell
-shell = "/bin/bash"
-
-# Network mode: host, bridge, none
-network = "host"
-
-# Additional volumes to mount (host:container:mode)
-volumes = []
-
-# Additional environment variables
-env = []
-
-# Run containers as current user
-run_as_user = true
-
-# Enable sccache for Rust
-[docker.rust]
-sccache = false
-cache_dir = "~/.cache/sccache"
-
-# Resource limits
 [docker.limits]
-memory = ""      # e.g., "4g"
-cpus = ""        # e.g., "2"
-memory_swap = "" # e.g., "4g"
+cpu = ""        # e.g., "2.0"
+memory = ""     # e.g., "4g"
 
 #
-# Zellij Backend
+# Kubernetes Backend
 #
-[zellij]
-# Shell to use
-shell = "/bin/bash"
-
-# Default layout
-layout = "default"
-
-# Additional environment variables
-env = []
+[kubernetes]
+namespace = "default"
+storage_class = ""           # Use cluster default if empty
+image_pull_secrets = []
 
 #
-# Git Configuration
+# Sprites Backend
 #
-[git]
-# Inject git config into sessions
-inject_config = true
-
-# User name for commits
-user_name = "${GIT_USER_NAME}"
-
-# User email for commits
-user_email = "${GIT_USER_EMAIL}"
-
-# SSH key to mount (Docker only)
-ssh_key = "~/.ssh/id_ed25519"
-
-#
-# TUI Configuration
-#
-[tui]
-# Color theme: dark, light, auto
-theme = "auto"
-
-# Show session status in header
-show_status = true
-
-# Refresh interval in milliseconds
-refresh_interval = 1000
-
-# Key bindings (vim-style by default)
-[tui.keys]
-quit = "q"
-new_session = "n"
-delete_session = "d"
-attach = "Enter"
-up = "k"
-down = "j"
+[sprites]
+api_key = ""                 # Or use SPRITES_API_KEY env var
 
 #
 # Hooks
 #
-# Execute commands on session events
-
 [hooks]
-# Run after session creation
-on_create = []
-
-# Run before session deletion
-on_delete = []
-
-# Run when session starts
-on_start = []
-
-# Run when session stops
-on_stop = []
-
-#
-# Advanced
-#
-[advanced]
-# Enable experimental features
-experimental = false
-
-# Database path (SQLite)
-database = "~/.local/share/clauderon/sessions.db"
-
-# PID file for daemon
-pidfile = "~/.local/share/clauderon/clauderon.pid"
-
-# Socket path for IPC
-socket = "~/.local/share/clauderon/clauderon.sock"
+on_create = ""               # Command to run on session create
+on_delete = ""               # Command to run on session delete
+on_start = ""                # Command to run on session start
+on_stop = ""                 # Command to run on session stop
 ```
 
-## Environment Variable Expansion
+## Proxy Configuration (proxy.toml)
 
-Configuration values support environment variable expansion:
+```toml
+# ~/.clauderon/proxy.toml
 
-- `${VAR}` - Required variable (error if not set)
-- `${VAR:-default}` - Variable with default value
-- `$VAR` - Simple expansion (legacy support)
+#
+# Secrets Directory
+#
+secrets_dir = "~/.clauderon/secrets"
+
+#
+# Audit Logging
+#
+audit_enabled = true
+audit_log_path = "~/.clauderon/audit.jsonl"
+
+#
+# Talos Gateway
+#
+talos_gateway_port = 18082
+kubectl_proxy_port = 18081
+
+#
+# Codex Auth
+#
+codex_auth_json_path = ""    # Path to host Codex auth.json
+
+#
+# 1Password Integration
+#
+[onepassword]
+enabled = false
+op_path = "op"               # Path to 1Password CLI
+
+# Credential references (op://vault/item/field format)
+[onepassword.credentials]
+github_token = ""
+anthropic_oauth_token = ""
+openai_api_key = ""
+pagerduty_token = ""
+sentry_auth_token = ""
+grafana_api_key = ""
+npm_token = ""
+```
+
+## Credential Files
+
+Store credentials as plain text files in `~/.clauderon/secrets/`:
+
+```bash
+mkdir -p ~/.clauderon/secrets
+echo "your-github-token" > ~/.clauderon/secrets/github_token
+echo "your-anthropic-token" > ~/.clauderon/secrets/anthropic_oauth_token
+chmod 600 ~/.clauderon/secrets/*
+```
+
+### Supported Credential Files
+
+| File Name | Service | Injected As |
+|-----------|---------|-------------|
+| `github_token` | GitHub API & git | `Authorization: Bearer` |
+| `anthropic_oauth_token` | Anthropic API | `Authorization: Bearer` |
+| `openai_api_key` | OpenAI/Codex | `Authorization: Bearer` |
+| `pagerduty_token` | PagerDuty API | `Authorization: Token` |
+| `sentry_auth_token` | Sentry API | `Authorization: Bearer` |
+| `grafana_api_key` | Grafana API | `Authorization: Bearer` |
+| `npm_token` | npm registry | `Authorization: Bearer` |
+| `docker_token` | Docker Hub | `Authorization: Bearer` |
+| `k8s_token` | Kubernetes API | `Authorization: Bearer` |
+| `talos_token` | Talos API | mTLS |
 
 ## Credential Priority
 
-When multiple credential rules match a request:
+When multiple sources define the same credential:
 
-1. More specific domain patterns take priority
-2. Later definitions override earlier ones
-3. Exact matches override wildcards
+1. **Environment variables** (highest priority)
+2. **1Password references** (if configured)
+3. **Secret files** (lowest priority)
 
 ## Example Configurations
 
-### Minimal Configuration
+### Minimal Setup
 
 ```toml
-[proxy]
-port = 8080
-
-[credentials.anthropic]
-header = "x-api-key"
-value = "${ANTHROPIC_API_KEY}"
-domains = ["api.anthropic.com"]
+# ~/.clauderon/config.toml
+[general]
+default_backend = "zellij"
 ```
 
-### Full Development Setup
+No config file is required - clauderon uses sensible defaults.
+
+### Docker Development
 
 ```toml
+# ~/.clauderon/config.toml
 [general]
 default_backend = "docker"
-log_level = "debug"
 
 [docker]
-image = "ubuntu:22.04"
-volumes = [
-  "~/.ssh:/root/.ssh:ro",
-  "~/.gitconfig:/root/.gitconfig:ro",
-]
+default_image = "ubuntu:22.04"
 
-[docker.rust]
-sccache = true
-
-[git]
-inject_config = true
-user_name = "Your Name"
-user_email = "your@email.com"
-
-[credentials.anthropic]
-header = "x-api-key"
-value = "${ANTHROPIC_API_KEY}"
-domains = ["api.anthropic.com"]
-
-[credentials.github]
-auth_type = "bearer"
-value = "${GITHUB_TOKEN}"
-domains = ["api.github.com", "github.com"]
+[docker.limits]
+cpu = "4"
+memory = "8g"
 ```
+
+### With 1Password
+
+```toml
+# ~/.clauderon/proxy.toml
+[onepassword]
+enabled = true
+
+[onepassword.credentials]
+github_token = "op://Private/GitHub/token"
+anthropic_oauth_token = "op://Private/Claude/oauth-token"
+```
+
+See [1Password Guide](/guides/onepassword/) for detailed setup.
+
+### Kubernetes Cluster
+
+```toml
+# ~/.clauderon/config.toml
+[general]
+default_backend = "kubernetes"
+
+[features]
+kubernetes_backend = true
+
+[kubernetes]
+namespace = "clauderon"
+storage_class = "fast-ssd"
+```
+
+### With Hooks
+
+```toml
+# ~/.clauderon/config.toml
+[hooks]
+# Send notification when session starts
+on_start = "notify-send 'clauderon' 'Session started: $SESSION_NAME'"
+
+# Clean up custom resources
+on_delete = "/usr/local/bin/cleanup-session.sh $SESSION_NAME"
+```
+
+See [Hooks Guide](/guides/hooks/) for details.
+
+### Full Production Setup
+
+```toml
+# ~/.clauderon/config.toml
+[general]
+default_backend = "docker"
+default_agent = "claude"
+
+[features]
+ai_metadata = true
+auto_reconcile = true
+usage_tracking = true
+
+[docker]
+default_image = "ghcr.io/anthropics/claude-code:latest"
+pull_policy = "if-not-present"
+
+[docker.limits]
+cpu = "4"
+memory = "8g"
+
+[hooks]
+on_create = "logger -t clauderon 'Session created: $SESSION_NAME'"
+on_delete = "logger -t clauderon 'Session deleted: $SESSION_NAME'"
+```
+
+```toml
+# ~/.clauderon/proxy.toml
+[onepassword]
+enabled = true
+
+[onepassword.credentials]
+github_token = "op://Work/GitHub/token"
+anthropic_oauth_token = "op://Work/Claude/oauth-token"
+
+audit_enabled = true
+```
+
+## Configuration Validation
+
+Check your configuration:
+
+```bash
+# Show current configuration
+clauderon config show
+
+# List all file paths
+clauderon config paths
+
+# Show credential status
+clauderon config credentials
+```
+
+## See Also
+
+- [File Locations](/reference/file-locations/) - Detailed file structure
+- [Environment Variables](/reference/environment-variables/) - All environment variables
+- [1Password Guide](/guides/onepassword/) - Setting up 1Password
+- [Hooks Guide](/guides/hooks/) - Configuring hooks
