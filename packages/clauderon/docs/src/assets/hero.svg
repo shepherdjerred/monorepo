@@ -17,7 +17,7 @@
 
   <!-- Proxy box -->
   <rect x="170" y="90" width="100" height="100" rx="8" fill="#eef2ff" stroke="#6366f1" stroke-width="2"/>
-  <text x="220" y="130" text-anchor="middle" font-family="system-ui" font-size="12" font-weight="600" fill="#4f46e5">mux</text>
+  <text x="220" y="130" text-anchor="middle" font-family="system-ui" font-size="12" font-weight="600" fill="#4f46e5">clauderon</text>
   <text x="220" y="150" text-anchor="middle" font-family="system-ui" font-size="10" fill="#6366f1">Proxy</text>
   <rect x="185" y="160" width="70" height="20" rx="4" fill="#6366f1"/>
   <text x="220" y="174" text-anchor="middle" font-family="monospace" font-size="8" fill="white">inject creds</text>
