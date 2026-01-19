@@ -242,6 +242,7 @@ impl Session {
             pr_merge_methods: None,
             pr_default_merge_method: None,
             pr_delete_branch_on_merge: None,
+            can_merge_pr: false,
             claude_status: ClaudeWorkingStatus::Unknown,
             claude_status_updated_at: None,
             merge_conflict: false,
