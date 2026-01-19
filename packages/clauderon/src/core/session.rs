@@ -368,6 +368,41 @@ impl Session {
         self.updated_at = Utc::now();
     }
 
+    /// Get the current workflow stage based on session state
+    #[must_use]
+    pub fn workflow_stage(&self) -> WorkflowStage {
+        // If PR has been merged, show merged
+        if self.pr_check_status == Some(CheckStatus::Merged) {
+            return WorkflowStage::Merged;
+        }
+
+        // If ready to merge, show ready
+        if self.can_merge_pr {
+            return WorkflowStage::ReadyToMerge;
+        }
+
+        // If there's a merge conflict or reconcile error, show blocked
+        if self.merge_conflict || (self.reconcile_attempts > 0 && self.last_reconcile_error.is_some()) {
+            return WorkflowStage::Blocked;
+        }
+
+        // If PR exists but not ready yet, show review
+        if self.pr_url.is_some() {
+            return WorkflowStage::Review;
+        }
+
+        // If Claude is actively working or we have dirty/uncommitted changes, show implementation
+        if self.claude_status == ClaudeWorkingStatus::Working
+            || self.claude_status == ClaudeWorkingStatus::WaitingApproval
+            || self.worktree_dirty
+        {
+            return WorkflowStage::Implementation;
+        }
+
+        // Default to planning
+        WorkflowStage::Planning
+    }
+
     /// Record a failed reconciliation attempt
     pub fn record_reconcile_failure(&mut self, error: String) {
         self.reconcile_attempts += 1;
@@ -960,6 +995,23 @@ impl std::str::FromStr for ClaudeWorkingStatus {
             _ => anyhow::bail!("unknown ClaudeWorkingStatus: {s}"),
         }
     }
+}
+
+/// Workflow stage for session display
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum WorkflowStage {
+    /// Planning stage: Session created, waiting for or in early work
+    Planning,
+    /// Implementation stage: Claude is actively working or code has been written
+    Implementation,
+    /// Review stage: PR exists but not ready to merge (pending checks or approval)
+    Review,
+    /// Blocked stage: Merge conflicts or other blockers present
+    Blocked,
+    /// Ready to merge: All requirements met, can merge PR
+    ReadyToMerge,
+    /// Merged: PR has been successfully merged
+    Merged,
 }
 
 /// Access mode for proxy filtering
