@@ -1200,17 +1200,18 @@ impl App {
             let delete_branch = merge_state.delete_branch;
             let session_id = merge_state.session_id.clone();
 
-            // Get the client
-            let client = self.get_client()?;
+            if let Some(client) = &mut self.client {
+                // Execute the merge
+                client.merge_pr(&session_id, method, delete_branch).await?;
 
-            // Execute the merge
-            client.merge_pr(&session_id, method, delete_branch).await?;
+                self.status_message = Some("PR merged successfully".to_string());
+                self.mode = AppMode::SessionList;
 
-            self.status_message = Some("PR merged successfully".to_string());
-            self.mode = AppMode::SessionList;
-
-            // Refresh sessions to get updated status
-            self.refresh_sessions().await?;
+                // Refresh sessions to get updated status
+                self.refresh_sessions().await?;
+            } else {
+                self.status_message = Some("Error: Not connected to daemon".to_string());
+            }
         }
         Ok(())
     }
