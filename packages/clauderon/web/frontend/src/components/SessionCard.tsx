@@ -1,5 +1,5 @@
 import type { Session } from "@clauderon/client";
-import { SessionStatus, CheckStatus, ClaudeWorkingStatus, WorkflowStage, ReviewDecision } from "@clauderon/shared";
+import { SessionStatus, CheckStatus, ClaudeWorkingStatus, type ExperienceLevel } from "@clauderon/shared";
 import { formatRelativeTime, cn, getRepoUrlFromPrUrl } from "../lib/utils";
 import { Archive, ArchiveRestore, Trash2, Terminal, CheckCircle2, XCircle, Clock, Loader2, User, Circle, AlertTriangle, Edit, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
@@ -8,15 +8,20 @@ import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { AGENT_CAPABILITIES } from "@/lib/agent-features";
 import { ProviderIcon } from "./ProviderIcon";
+import { OperationsDropdown } from "./OperationsDropdown";
 
 type SessionCardProps = {
   session: Session;
+  experienceLevel?: ExperienceLevel;
   onAttach: (session: Session) => void;
   onEdit: (session: Session) => void;
   onArchive: (session: Session) => void;
   onUnarchive: (session: Session) => void;
   onRefresh: (session: Session) => void;
   onDelete: (session: Session) => void;
+  onRegenerateMetadata?: (session: Session) => void;
+  onUpdateAccessMode?: (session: Session) => void;
+  onTrackAdvancedOperation?: () => void;
 }
 
 // Helper function to map git status codes to readable labels
@@ -45,121 +50,19 @@ function shouldSpanWide(session: Session): boolean {
   );
 }
 
-// Compute workflow stage from session state (mirrors Rust logic)
-function getWorkflowStage(session: Session): WorkflowStage {
-  // Check if PR is merged first
-  if (session.pr_check_status === CheckStatus.Merged) {
-    return WorkflowStage.Merged;
-  }
-
-  // No PR yet - still planning
-  if (!session.pr_url) {
-    return WorkflowStage.Planning;
-  }
-
-  // Check for blockers
-  const ciBlocked = session.pr_check_status === CheckStatus.Failing;
-  const conflictBlocked = session.merge_conflict;
-  const changesRequested = session.pr_review_decision === ReviewDecision.ChangesRequested;
-
-  if (ciBlocked || conflictBlocked || changesRequested) {
-    return WorkflowStage.Blocked;
-  }
-
-  // Ready to merge
-  const checksPass =
-    session.pr_check_status === CheckStatus.Passing ||
-    session.pr_check_status === CheckStatus.Mergeable;
-  const approved = session.pr_review_decision === ReviewDecision.Approved;
-  const noConflicts = !session.merge_conflict;
-
-  if (checksPass && approved && noConflicts) {
-    return WorkflowStage.ReadyToMerge;
-  }
-
-  // Waiting for review
-  if (
-    session.pr_review_decision === ReviewDecision.ReviewRequired ||
-    !session.pr_review_decision
-  ) {
-    return WorkflowStage.Review;
-  }
-
-  return WorkflowStage.Implementation;
-}
-
-function getStageColor(stage: WorkflowStage): string {
-  switch (stage) {
-    case WorkflowStage.Planning:
-      return "bg-blue-500";
-    case WorkflowStage.Implementation:
-      return "bg-cyan-500";
-    case WorkflowStage.Review:
-      return "bg-yellow-500";
-    case WorkflowStage.Blocked:
-      return "bg-red-500";
-    case WorkflowStage.ReadyToMerge:
-      return "bg-green-500";
-    case WorkflowStage.Merged:
-      return "bg-gray-500";
-    default:
-      return "bg-gray-500";
-  }
-}
-
-// WorkflowProgress component showing the full progress stepper
-function WorkflowProgress({ session }: { session: Session }) {
-  const stage = getWorkflowStage(session);
-  const stages = [
-    { name: "Plan", value: WorkflowStage.Planning },
-    { name: "Impl", value: WorkflowStage.Implementation },
-    { name: "Review", value: WorkflowStage.Review },
-    { name: "Ready", value: WorkflowStage.ReadyToMerge },
-    { name: "Merged", value: WorkflowStage.Merged },
-  ];
-
-  // Check for blockers
-  const ciBlocked = session.pr_check_status === CheckStatus.Failing;
-  const conflictBlocked = session.merge_conflict;
-  const changesRequested = session.pr_review_decision === ReviewDecision.ChangesRequested;
-  const hasBlockers = ciBlocked || conflictBlocked || changesRequested;
-
-  return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        {stages.map((s, idx) => (
-          <div key={s.value} className="flex items-center flex-1">
-            <Badge
-              variant={stage === s.value ? "default" : "outline"}
-              className={cn(
-                "text-xs flex-shrink-0",
-                stage === s.value && getStageColor(s.value)
-              )}
-            >
-              {idx + 1}. {s.name}
-            </Badge>
-            {idx < stages.length - 1 && (
-              <div className="flex-1 mx-2 h-0.5 bg-muted-foreground/30" />
-            )}
-          </div>
-        ))}
-      </div>
-
-      {stage === WorkflowStage.Blocked && hasBlockers && (
-        <div className="mt-2 p-2 bg-red-500/10 border-l-4 border-red-500">
-          <div className="text-sm font-semibold text-red-500 mb-1">Blockers:</div>
-          <ul className="text-xs space-y-1 ml-4 text-red-600">
-            {ciBlocked && <li>• CI checks failing</li>}
-            {conflictBlocked && <li>• Merge conflicts with main</li>}
-            {changesRequested && <li>• Changes requested on PR</li>}
-          </ul>
-        </div>
-      )}
-    </div>
-  );
-}
-
-export function SessionCard({ session, onAttach, onEdit, onArchive, onUnarchive, onRefresh, onDelete }: SessionCardProps) {
+export function SessionCard({
+  session,
+  experienceLevel = "FirstTime",
+  onAttach,
+  onEdit,
+  onArchive,
+  onUnarchive,
+  onRefresh,
+  onDelete,
+  onRegenerateMetadata,
+  onUpdateAccessMode,
+  onTrackAdvancedOperation,
+}: SessionCardProps) {
   const statusColors: Record<SessionStatus, string> = {
     [SessionStatus.Creating]: "bg-status-creating",
     [SessionStatus.Deleting]: "bg-status-creating",
@@ -242,13 +145,6 @@ export function SessionCard({ session, onAttach, onEdit, onArchive, onUnarchive,
           <p className="text-sm text-muted-foreground leading-relaxed mb-4 line-clamp-2">
             {session.initial_prompt}
           </p>
-        )}
-
-        {/* Workflow Progress - shows PR workflow stage progression */}
-        {session.pr_url && (
-          <div className="mb-4 p-3 bg-accent/5 border-2 border-accent/20 rounded">
-            <WorkflowProgress session={session} />
-          </div>
         )}
 
         {/* Repositories Section */}
@@ -431,13 +327,17 @@ export function SessionCard({ session, onAttach, onEdit, onArchive, onUnarchive,
             <TooltipContent>Edit title/description</TooltipContent>
           </Tooltip>
 
-          {session.backend === "Docker" && (
+          {/* Refresh button: Advanced users only (direct button) */}
+          {session.backend === "Docker" && experienceLevel === "Advanced" && (
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => { onRefresh(session); }}
+                  onClick={() => {
+                    onTrackAdvancedOperation?.();
+                    onRefresh(session);
+                  }}
                   aria-label="Refresh session"
                   className="cursor-pointer transition-all duration-200 hover:scale-110 active:scale-95 hover:shadow-md"
                 >
@@ -494,6 +394,17 @@ export function SessionCard({ session, onAttach, onEdit, onArchive, onUnarchive,
             </TooltipTrigger>
             <TooltipContent>Delete session</TooltipContent>
           </Tooltip>
+
+          {/* Operations dropdown for Regular and Advanced users */}
+          <OperationsDropdown
+            experienceLevel={experienceLevel}
+            sessionId={session.id}
+            isDockerBackend={session.backend === "Docker"}
+            onRefresh={() => onRefresh(session)}
+            onRegenerateMetadata={onRegenerateMetadata ? () => onRegenerateMetadata(session) : undefined}
+            onUpdateAccessMode={onUpdateAccessMode ? () => onUpdateAccessMode(session) : undefined}
+            onTrackAdvancedOperation={onTrackAdvancedOperation}
+          />
         </TooltipProvider>
       </CardFooter>
     </Card>

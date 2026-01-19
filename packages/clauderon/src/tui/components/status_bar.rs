@@ -6,6 +6,7 @@ use ratatui::{
     widgets::Paragraph,
 };
 
+use crate::core::ExperienceLevel;
 use crate::tui::app::{App, AppMode};
 
 // Platform-specific scrolling key hints
@@ -155,17 +156,39 @@ fn render_scroll_status(_app: &App) -> Line<'static> {
 
 /// Render status bar for normal mode
 fn render_normal_status(app: &App) -> Line<'static> {
+    let experience_level = app.experience_level();
+
     let status_text = app.status_message.clone().unwrap_or_else(|| {
-        if app.is_connected() {
-            let filtered_count = app.get_filtered_sessions().len();
-            let total_count = app.sessions.len();
-            let filter_name = app.session_filter.display_name();
-            format!(
-                "Filter: {} ({}/{} sessions) | Press 1-5 to change filter",
-                filter_name, filtered_count, total_count
-            )
-        } else {
-            "Disconnected".to_string()
+        if !app.is_connected() {
+            return "Disconnected".to_string();
+        }
+
+        let filtered_count = app.get_filtered_sessions().len();
+        let total_count = app.sessions.len();
+        let filter_name = app.session_filter.display_name();
+
+        match experience_level {
+            ExperienceLevel::FirstTime => {
+                if total_count == 0 {
+                    "Press 'n' to create your first session".to_string()
+                } else if filtered_count > 0 {
+                    "Session ready! Press Enter to attach | ?:help".to_string()
+                } else {
+                    "Press 1-5 to change filter | ?:help".to_string()
+                }
+            }
+            ExperienceLevel::Regular => {
+                format!(
+                    "Filter: {} ({}/{}) | [n]ew [d]elete [a]rchive [?]help [q]uit",
+                    filter_name, filtered_count, total_count
+                )
+            }
+            ExperienceLevel::Advanced => {
+                format!(
+                    "Filter: {} ({}/{} sessions) | Press 1-5 to change filter",
+                    filter_name, filtered_count, total_count
+                )
+            }
         }
     });
 
