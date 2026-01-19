@@ -55,6 +55,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
             Constraint::Length(prompt_height as u16 + 2), // Prompt (dynamic + borders)
             Constraint::Length(images_height),            // Images (dynamic)
             Constraint::Length(3),                        // Repo path
+            Constraint::Length(2),                        // Multi-repo toggle
             Constraint::Length(2),                        // Backend
             Constraint::Length(2),                        // Agent
             Constraint::Length(2),                        // Model

@@ -2810,6 +2810,45 @@ impl SessionManager {
         Ok(())
     }
 
+    /// Update PR review decision for a session
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the session is not found or the store update fails.
+    pub async fn update_pr_review_decision(
+        &self,
+        session_id: Uuid,
+        new_decision: crate::core::ReviewDecision,
+    ) -> anyhow::Result<()> {
+        let mut sessions = self.sessions.write().await;
+        let session = sessions
+            .iter_mut()
+            .find(|s| s.id == session_id)
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {}", session_id))?;
+
+        let old_decision = session.pr_review_decision;
+        session.set_pr_review_decision(new_decision);
+        let session_clone = session.clone();
+        drop(sessions);
+
+        // Update in store
+        self.store.save_session(&session_clone).await?;
+
+        tracing::debug!(
+            session_id = %session_id,
+            old = ?old_decision,
+            new = ?new_decision,
+            "Updated PR review decision"
+        );
+
+        // Broadcast event to WebSocket clients if broadcaster available
+        if let Some(ref broadcaster) = self.event_broadcaster {
+            broadcast_event(broadcaster, WsEvent::SessionUpdated(session_clone)).await;
+        }
+
+        Ok(())
+    }
+
     /// Link a PR URL to a session
     ///
     /// # Errors

@@ -597,49 +597,51 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
             }
             CreateDialogFocus::RepoPath => {}
         },
-        KeyCode::Char(' ') => match app.create_dialog.focus {
-            CreateDialogFocus::Backend => {
-                app.create_dialog.toggle_backend();
+        KeyCode::Char(' ') => {
+            match app.create_dialog.focus {
+                CreateDialogFocus::Backend => {
+                    app.create_dialog.toggle_backend();
+                }
+                CreateDialogFocus::Agent => {
+                    app.create_dialog.toggle_agent();
+                }
+                CreateDialogFocus::Model => {
+                    app.create_dialog.toggle_model();
+                }
+                CreateDialogFocus::AccessMode => {
+                    app.create_dialog.toggle_access_mode();
+                }
+                CreateDialogFocus::SkipChecks => {
+                    app.create_dialog.skip_checks = !app.create_dialog.skip_checks;
+                }
+                CreateDialogFocus::PlanMode => {
+                    app.create_dialog.plan_mode = !app.create_dialog.plan_mode;
+                }
+                CreateDialogFocus::Prompt => {
+                    (
+                        app.create_dialog.prompt_cursor_line,
+                        app.create_dialog.prompt_cursor_col,
+                    ) = super::text_input::insert_char_at_cursor_multiline(
+                        &mut app.create_dialog.prompt,
+                        app.create_dialog.prompt_cursor_line,
+                        app.create_dialog.prompt_cursor_col,
+                        ' ',
+                    );
+                    app.create_dialog.ensure_cursor_visible();
+                }
+                CreateDialogFocus::RepoPath => {
+                    // Load recent repos and open directory picker when space is pressed on RepoPath
+                    app.load_recent_repos().await;
+                    let initial_path = if app.create_dialog.repo_path.is_empty() {
+                        None
+                    } else {
+                        Some(crate::utils::expand_tilde(&app.create_dialog.repo_path))
+                    };
+                    app.create_dialog.directory_picker.open(initial_path);
+                }
+                CreateDialogFocus::Buttons => {}
             }
-            CreateDialogFocus::Agent => {
-                app.create_dialog.toggle_agent();
-            }
-            CreateDialogFocus::Model => {
-                app.create_dialog.toggle_model();
-            }
-            CreateDialogFocus::AccessMode => {
-                app.create_dialog.toggle_access_mode();
-            }
-            CreateDialogFocus::SkipChecks => {
-                app.create_dialog.skip_checks = !app.create_dialog.skip_checks;
-            }
-            CreateDialogFocus::PlanMode => {
-                app.create_dialog.plan_mode = !app.create_dialog.plan_mode;
-            }
-            CreateDialogFocus::Prompt => {
-                (
-                    app.create_dialog.prompt_cursor_line,
-                    app.create_dialog.prompt_cursor_col,
-                ) = super::text_input::insert_char_at_cursor_multiline(
-                    &mut app.create_dialog.prompt,
-                    app.create_dialog.prompt_cursor_line,
-                    app.create_dialog.prompt_cursor_col,
-                    ' ',
-                );
-                app.create_dialog.ensure_cursor_visible();
-            }
-            CreateDialogFocus::RepoPath => {
-                // Load recent repos and open directory picker when space is pressed on RepoPath
-                app.load_recent_repos().await;
-                let initial_path = if app.create_dialog.repo_path.is_empty() {
-                    None
-                } else {
-                    Some(crate::utils::expand_tilde(&app.create_dialog.repo_path))
-                };
-                app.create_dialog.directory_picker.open(initial_path);
-            }
-            CreateDialogFocus::Buttons => {}
-        },
+        }
         KeyCode::Char(c) => match app.create_dialog.focus {
             CreateDialogFocus::Prompt => {
                 (

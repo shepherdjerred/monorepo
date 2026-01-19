@@ -4,7 +4,7 @@ use std::time::Duration;
 use tokio::time::interval;
 use uuid::Uuid;
 
-use crate::core::{CheckStatus, SessionManager};
+use crate::core::{CheckStatus, ReviewDecision, SessionManager};
 
 /// CI status poller - polls GitHub PR checks for sessions with PRs
 pub struct CIPoller {
@@ -228,16 +228,15 @@ impl CIPoller {
             .and_then(|s| s.parse::<u32>().ok())
             .ok_or_else(|| anyhow::anyhow!("Invalid PR URL: {}", pr_url))?;
 
-        // Use gh CLI to check PR status
-        // gh infers the repo from the git remote in the working directory
-        let output = tokio::process::Command::new("gh")
+        // First, get CI check status using gh pr checks
+        let checks_output = tokio::process::Command::new("gh")
             .current_dir(repo_path)
             .args(["pr", "checks", &pr_number.to_string(), "--json", "state"])
             .output()
             .await?;
 
-        if !output.status.success() {
-            let stderr = String::from_utf8_lossy(&output.stderr);
+        if !checks_output.status.success() {
+            let stderr = String::from_utf8_lossy(&checks_output.stderr);
             // Check for expected failures (PR not found, already merged, etc.)
             if stderr.contains("not found") || stderr.contains("no pull request") {
                 tracing::debug!(
@@ -255,26 +254,26 @@ impl CIPoller {
             return Ok(()); // Don't crash the poller
         }
 
-        let json_output = String::from_utf8_lossy(&output.stdout);
-        if json_output.trim().is_empty() {
+        let checks_json = String::from_utf8_lossy(&checks_output.stdout);
+        if checks_json.trim().is_empty() {
             tracing::debug!(pr_url = %pr_url, "gh pr checks returned empty output");
             return Ok(());
         }
-        let checks: Vec<serde_json::Value> = serde_json::from_str(&json_output).map_err(|e| {
+        let checks: Vec<serde_json::Value> = serde_json::from_str(&checks_json).map_err(|e| {
             anyhow::anyhow!(
                 "Failed to parse gh pr checks output: {}. Raw output: {:?}",
                 e,
-                if json_output.len() > 200 {
-                    &json_output[..200]
+                if checks_json.len() > 200 {
+                    &checks_json[..200]
                 } else {
-                    &json_output
+                    &checks_json
                 }
             )
         })?;
 
-        // Determine overall status
+        // Determine overall check status
         // State values from gh pr checks: SUCCESS, FAILURE, PENDING, SKIPPED, CANCELLED, etc.
-        let new_status = if checks.is_empty() {
+        let new_check_status = if checks.is_empty() {
             CheckStatus::Pending
         } else if checks
             .iter()
@@ -290,13 +289,50 @@ impl CIPoller {
             CheckStatus::Pending
         };
 
+        // Second, get review decision using gh pr view
+        let review_output = tokio::process::Command::new("gh")
+            .current_dir(repo_path)
+            .args([
+                "pr",
+                "view",
+                &pr_number.to_string(),
+                "--json",
+                "reviewDecision",
+            ])
+            .output()
+            .await?;
+
+        let mut new_review_decision: Option<ReviewDecision> = None;
+        if review_output.status.success() {
+            let review_json = String::from_utf8_lossy(&review_output.stdout);
+            if let Ok(data) = serde_json::from_str::<serde_json::Value>(&review_json) {
+                // GitHub reviewDecision values: APPROVED, CHANGES_REQUESTED, REVIEW_REQUIRED, null
+                new_review_decision = match data["reviewDecision"].as_str() {
+                    Some("APPROVED") => Some(ReviewDecision::Approved),
+                    Some("CHANGES_REQUESTED") => Some(ReviewDecision::ChangesRequested),
+                    Some("REVIEW_REQUIRED") | None => Some(ReviewDecision::ReviewRequired),
+                    _ => None,
+                };
+            }
+        }
+
         // Update session if status changed
         let current_session = self.manager.get_session(&session_id.to_string()).await;
         if let Some(session) = current_session {
-            if session.pr_check_status != Some(new_status) {
+            // Update check status if changed
+            if session.pr_check_status != Some(new_check_status) {
                 self.manager
-                    .update_pr_check_status(*session_id, new_status)
+                    .update_pr_check_status(*session_id, new_check_status)
                     .await?;
+            }
+
+            // Update review decision if changed
+            if let Some(decision) = new_review_decision {
+                if session.pr_review_decision != Some(decision) {
+                    self.manager
+                        .update_pr_review_decision(*session_id, decision)
+                        .await?;
+                }
             }
         }
 
