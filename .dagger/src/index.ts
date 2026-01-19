@@ -19,8 +19,8 @@ const RUST_VERSION = "1.85";
 // sccache version for Rust compilation caching
 const SCCACHE_VERSION = "0.9.1";
 
-// Cross-compilation targets for mux binary
-const MUX_TARGETS = [
+// Cross-compilation targets for clauderon binary
+const CLAUDERON_TARGETS = [
   { target: "x86_64-unknown-linux-gnu", os: "linux", arch: "x86_64" },
   { target: "aarch64-unknown-linux-gnu", os: "linux", arch: "arm64" },
   { target: "x86_64-apple-darwin", os: "darwin", arch: "x86_64" },
@@ -165,7 +165,7 @@ function withSccache(container: Container): Container {
 }
 
 /**
- * Get a Rust container with cross-compilation toolchains for mux builds
+ * Get a Rust container with cross-compilation toolchains for clauderon builds
  */
 function getCrossCompileContainer(source: Directory): Container {
   let container = dag
@@ -198,7 +198,7 @@ function getCrossCompileContainer(source: Directory): Container {
 }
 
 /**
- * Build mux binary for a specific target
+ * Build clauderon binary for a specific target
  */
 async function buildMuxBinary(
   container: Container,
@@ -219,10 +219,10 @@ async function buildMuxBinary(
   ]);
 
   // Get the binary
-  const binaryPath = `/workspace/target-cross/${target}/release/mux`;
+  const binaryPath = `/workspace/target-cross/${target}/release/clauderon`;
   const binary = await buildContainer.file(binaryPath).contents();
 
-  const filename = `mux-${os}-${arch}`;
+  const filename = `clauderon-${os}-${arch}`;
   return { file: filename, content: binary };
 }
 
@@ -263,7 +263,7 @@ async function uploadReleaseAssets(
       await container
         .withExec([
           "gh", "release", "upload",
-          `mux-v${version}`,
+          `clauderon-v${version}`,
           asset.name,
           "--repo", REPO_URL,
           "--clobber"
@@ -547,40 +547,40 @@ export class Monorepo {
         }
       }
 
-      // Check if a mux release was created and upload binaries
-      const muxReleaseCreated = releaseResult.output.includes("mux-v") ||
+      // Check if a clauderon release was created and upload binaries
+      const clauderonReleaseCreated = releaseResult.output.includes("clauderon-v") ||
         releaseResult.output.includes("packages/clauderon");
 
-      if (muxReleaseCreated) {
+      if (clauderonReleaseCreated) {
         outputs.push("\n--- Multiplexer Release ---");
 
-        // Extract mux version from release output or Cargo.toml
+        // Extract clauderon version from release output or Cargo.toml
         // For now, build and upload with the current version
         try {
           const binaries = await this.multiplexerBuild(source);
 
           // Get binary contents for upload
-          const linuxTargets = MUX_TARGETS.filter(t => t.os === "linux");
+          const linuxTargets = CLAUDERON_TARGETS.filter(t => t.os === "linux");
           const assets: Array<{ name: string; data: string }> = [];
 
           for (const { os, arch } of linuxTargets) {
-            const filename = `mux-${os}-${arch}`;
+            const filename = `clauderon-${os}-${arch}`;
             const content = await binaries.file(filename).contents();
             assets.push({ name: filename, data: content });
             outputs.push(`✓ Built ${filename}`);
           }
 
-          // Find the mux version from the release output
-          const muxVersionMatch = releaseResult.output.match(/mux-v([\d.]+)/);
-          const muxVersion = muxVersionMatch?.[1] ?? "0.1.0";
+          // Find the clauderon version from the release output
+          const clauderonVersionMatch = releaseResult.output.match(/clauderon-v([\d.]+)/);
+          const clauderonVersion = clauderonVersionMatch?.[1] ?? "0.1.0";
 
           // Upload to GitHub release
-          const uploadResults = await uploadReleaseAssets(githubToken, muxVersion, assets);
+          const uploadResults = await uploadReleaseAssets(githubToken, clauderonVersion, assets);
           outputs.push(...uploadResults.outputs);
           releaseErrors.push(...uploadResults.errors);
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : String(error);
-          const failureMsg = `Failed to build/upload mux binaries: ${errorMessage}`;
+          const failureMsg = `Failed to build/upload clauderon binaries: ${errorMessage}`;
           outputs.push(`✗ ${failureMsg}`);
           releaseErrors.push(failureMsg);
         }
@@ -744,7 +744,7 @@ export class Monorepo {
   }
 
   /**
-   * Build mux binaries for Linux (x86_64 and ARM64)
+   * Build clauderon binaries for Linux (x86_64 and ARM64)
    * Returns the built binaries as files
    */
   @func()
@@ -771,8 +771,8 @@ export class Monorepo {
       ]);
 
       // Get the binary and add to output directory
-      const binaryPath = `/workspace/target-cross/${target}/release/mux`;
-      const filename = `mux-${os}-${arch}`;
+      const binaryPath = `/workspace/target-cross/${target}/release/clauderon`;
+      const filename = `clauderon-${os}-${arch}`;
       outputContainer = outputContainer.withFile(filename, buildContainer.file(binaryPath));
     }
 
@@ -799,11 +799,11 @@ export class Monorepo {
     const binaries = await this.multiplexerBuild(source);
 
     // Get binary contents for upload
-    const linuxTargets = MUX_TARGETS.filter(t => t.os === "linux");
+    const linuxTargets = CLAUDERON_TARGETS.filter(t => t.os === "linux");
     const assets: Array<{ name: string; data: string }> = [];
 
     for (const { os, arch } of linuxTargets) {
-      const filename = `mux-${os}-${arch}`;
+      const filename = `clauderon-${os}-${arch}`;
       const content = await binaries.file(filename).contents();
       assets.push({ name: filename, data: content });
       outputs.push(`✓ Built ${filename}`);
