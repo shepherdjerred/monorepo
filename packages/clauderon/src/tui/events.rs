@@ -239,13 +239,7 @@ async fn handle_session_list_key(app: &mut App, key: KeyEvent) -> anyhow::Result
             }
         }
         KeyCode::Char('m') => {
-            if let Some(session) = app.selected_session() {
-                if session.can_merge_pr() {
-                    app.open_merge_confirm();
-                } else {
-                    app.status_message = Some("Cannot merge: requirements not met".to_string());
-                }
-            }
+            app.open_merge_confirm();
         }
         KeyCode::Char('f') => {
             if let Err(e) = app.refresh_selected().await {
