@@ -14,3 +14,4 @@ pub mod store;
 pub mod tui;
 pub mod uploads;
 pub mod utils;
+pub mod pricing;

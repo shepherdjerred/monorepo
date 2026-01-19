@@ -149,6 +149,27 @@ pub struct Session {
     /// When the session was last updated
     #[typeshare(serialized_as = "String")]
     pub updated_at: DateTime<Utc>,
+
+    /// Total input tokens used in this session
+    #[serde(default)]
+    pub total_input_tokens: u32,
+
+    /// Total output tokens generated in this session
+    #[serde(default)]
+    pub total_output_tokens: u32,
+
+    /// Total cached input tokens (sum of cache creation and read tokens)
+    #[serde(default)]
+    pub total_cached_input_tokens: u32,
+
+    /// Total cost in USD for this session
+    #[serde(default)]
+    pub total_cost_usd: f64,
+
+    /// When usage data was last calculated/updated
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[typeshare(serialized_as = "String")]
+    pub usage_last_updated_at: Option<DateTime<Utc>>,
 }
 
 /// Configuration for creating a new session
@@ -223,6 +244,11 @@ impl Session {
             progress: None,
             created_at: now,
             updated_at: now,
+            total_input_tokens: 0,
+            total_output_tokens: 0,
+            total_cached_input_tokens: 0,
+            total_cost_usd: 0.0,
+            usage_last_updated_at: None,
         }
     }
 
