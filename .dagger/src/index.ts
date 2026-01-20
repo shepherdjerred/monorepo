@@ -118,6 +118,11 @@ function getRustContainer(source: Directory, frontendDist?: Directory): Containe
     .container()
     .from(`rust:${RUST_VERSION}-bookworm`)
     .withWorkdir("/workspace")
+    // Install mold linker for faster linking (~5-10x faster than ld)
+    .withMountedCache("/var/cache/apt", dag.cacheVolume(`apt-cache-rust-${RUST_VERSION}`))
+    .withMountedCache("/var/lib/apt", dag.cacheVolume(`apt-lib-rust-${RUST_VERSION}`))
+    .withExec(["apt-get", "update"])
+    .withExec(["apt-get", "install", "-y", "mold", "clang"])
     .withMountedCache("/usr/local/cargo/registry", dag.cacheVolume("cargo-registry"))
     .withMountedCache("/usr/local/cargo/git", dag.cacheVolume("cargo-git"))
     .withMountedCache("/workspace/target", dag.cacheVolume("clauderon-target"))
@@ -172,15 +177,17 @@ function getCrossCompileContainer(source: Directory): Container {
     .container()
     .from(`rust:${RUST_VERSION}-bookworm`)
     .withWorkdir("/workspace")
+    .withMountedCache("/var/cache/apt", dag.cacheVolume(`apt-cache-rust-${RUST_VERSION}`))
+    .withMountedCache("/var/lib/apt", dag.cacheVolume(`apt-lib-rust-${RUST_VERSION}`))
     .withMountedCache("/usr/local/cargo/registry", dag.cacheVolume("cargo-registry"))
     .withMountedCache("/usr/local/cargo/git", dag.cacheVolume("cargo-git"))
     // Use separate target directories for cross-compilation to avoid conflicts
     .withEnvVariable("CARGO_TARGET_DIR", "/workspace/target-cross")
     .withMountedCache("/workspace/target-cross", dag.cacheVolume("clauderon-cross-target"))
     .withMountedDirectory("/workspace", source.directory("packages/clauderon"))
-    // Install cross-compilation dependencies
+    // Install cross-compilation dependencies and mold linker
     .withExec(["apt-get", "update"])
-    .withExec(["apt-get", "install", "-y", "gcc-aarch64-linux-gnu", "libc6-dev-arm64-cross"])
+    .withExec(["apt-get", "install", "-y", "gcc-aarch64-linux-gnu", "libc6-dev-arm64-cross", "mold", "clang"])
     // Add cross-compilation targets
     .withExec(["rustup", "target", "add", "x86_64-unknown-linux-gnu"])
     .withExec(["rustup", "target", "add", "aarch64-unknown-linux-gnu"]);

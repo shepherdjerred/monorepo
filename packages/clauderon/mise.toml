@@ -2,6 +2,64 @@
 rust = "latest"
 
 # =============================================================================
+# Setup Tasks (one-time setup for faster builds)
+# =============================================================================
+
+[tasks.setup-linker]
+description = "Install fast linker for your platform (mold on Linux, lld on macOS)"
+run = """
+#!/usr/bin/env bash
+set -e
+
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    echo "macOS detected - installing lld via Homebrew..."
+    if ! command -v lld &> /dev/null; then
+        brew install llvm
+        LLVM_PATH="$(brew --prefix llvm)/bin"
+        echo "lld installed. Add to your shell profile:"
+        echo "  export PATH=$LLVM_PATH:$""PATH"
+    else
+        echo "lld already installed"
+    fi
+elif [[ "$OSTYPE" == "linux"* ]]; then
+    echo "Linux detected - installing mold..."
+    if ! command -v mold &> /dev/null; then
+        if command -v apt-get &> /dev/null; then
+            sudo apt-get update && sudo apt-get install -y mold clang
+        elif command -v dnf &> /dev/null; then
+            sudo dnf install -y mold clang
+        elif command -v pacman &> /dev/null; then
+            sudo pacman -S mold clang
+        else
+            echo "Please install mold manually: https://github.com/rui314/mold"
+            exit 1
+        fi
+    else
+        echo "mold already installed"
+    fi
+fi
+echo "Done! Your builds should now link much faster."
+"""
+
+[tasks.setup-tools]
+description = "Install optional dev tools (cargo-nextest for faster tests, bacon for watching)"
+run = """
+#!/usr/bin/env bash
+set -e
+
+echo "Installing cargo-nextest (faster test runner)..."
+cargo install cargo-nextest --locked
+
+echo "Installing bacon (cargo watcher with better UX)..."
+cargo install bacon --locked
+
+echo "Installing cargo-watch (for cargo watch commands)..."
+cargo install cargo-watch --locked
+
+echo "Done! Use 'mise run test-fast' for faster tests."
+"""
+
+# =============================================================================
 # Frontend Build Tasks
 # =============================================================================
 
@@ -56,6 +114,11 @@ run = "cargo install --path ."
 description = "Run Rust tests"
 depends = ["build-docs", "build-web"]
 run = "cargo test"
+
+[tasks.test-fast]
+description = "Run Rust tests with nextest (faster, requires cargo-nextest)"
+depends = ["build-docs", "build-web"]
+run = "cargo nextest run"
 
 [tasks.check]
 description = "Run cargo check"
@@ -134,6 +197,34 @@ cargo check
 description = "Build and run daemon in dev mode (one-shot)"
 depends = ["install"]
 run = "CLAUDERON_DEV=1 clauderon daemon"
+
+[tasks.watch]
+description = "Watch for changes and run cargo check (requires bacon or cargo-watch)"
+run = """
+#!/usr/bin/env bash
+if command -v bacon &> /dev/null; then
+    bacon
+elif command -v cargo-watch &> /dev/null; then
+    cargo watch -x check
+else
+    echo "Please install bacon or cargo-watch: mise run setup-tools"
+    exit 1
+fi
+"""
+
+[tasks.watch-test]
+description = "Watch for changes and run tests"
+run = """
+#!/usr/bin/env bash
+if command -v bacon &> /dev/null; then
+    bacon test
+elif command -v cargo-watch &> /dev/null; then
+    cargo watch -x test
+else
+    echo "Please install bacon or cargo-watch: mise run setup-tools"
+    exit 1
+fi
+"""
 
 [tasks.dev-watch]
 description = "Watch for git changes, rebuild, and run daemon in dev mode"
