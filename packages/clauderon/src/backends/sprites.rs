@@ -525,8 +525,8 @@ impl SpritesBackend {
     async fn install_abduco(&self, sprite_name: &str) -> anyhow::Result<()> {
         tracing::info!(sprite_name = %sprite_name, "Installing abduco");
 
-        // Install abduco using apt (Debian/Ubuntu-based sprites)
-        let install_cmd = "apt-get update && apt-get install -y abduco";
+        // Build abduco from source (not in Ubuntu 24.04 repos)
+        let install_cmd = "apt-get update && apt-get install -y build-essential curl && curl -sL https://github.com/martanne/abduco/releases/download/v0.6/abduco-0.6.tar.gz | tar xz -C /tmp && cd /tmp/abduco-0.6 && ./configure && make && make install && rm -rf /tmp/abduco-0.6";
 
         let result = self.sprite_shell_run(sprite_name, install_cmd).await?;
 
