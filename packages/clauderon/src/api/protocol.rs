@@ -56,6 +56,13 @@ pub enum Request {
 
     /// Get current feature flags
     GetFeatureFlags,
+
+    /// Merge a pull request for a session
+    MergePr {
+        id: String,
+        method: crate::core::MergeMethod,
+        delete_branch: bool,
+    },
 }
 
 /// Recent repository entry with timestamp
@@ -427,6 +434,17 @@ pub struct UpdateCredentialRequest {
 
     /// The credential token/key value
     pub value: String,
+}
+
+/// Request to merge a pull request
+#[typeshare]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MergePrRequest {
+    /// Merge method to use
+    pub method: crate::core::MergeMethod,
+
+    /// Whether to delete the branch after merge
+    pub delete_branch: bool,
 }
 
 /// Error details for usage tracking failures
