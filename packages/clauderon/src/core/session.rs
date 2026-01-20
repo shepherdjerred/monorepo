@@ -874,60 +874,77 @@ pub fn get_history_file_path(
 /// Find Codex history file by searching <worktree>/.codex/sessions
 ///
 /// Codex stores session history at:
-/// `<worktree>/.codex/sessions/{year}/{month}/{day}/*-{session_id}.jsonl`
+/// `<worktree>/.codex/sessions/{year}/{month}/{day}/*-{codex_session_id}.jsonl`
 ///
-/// This function searches the sessions directory to find the matching file.
+/// Note: Codex uses its own internal session IDs, not clauderon session IDs.
+/// This function finds the most recently modified `.jsonl` file in the sessions directory.
 ///
 /// # Arguments
 /// * `worktree_path` - Path to the git worktree
-/// * `session_id` - UUID of the session
+/// * `_session_id` - Unused (kept for API compatibility, but Codex uses its own session IDs)
 ///
 /// # Returns
-/// The path to the history file if found, None otherwise
+/// The path to the most recent history file if found, None otherwise
 #[must_use]
-pub fn find_codex_history_file(worktree_path: &Path, session_id: &Uuid) -> Option<PathBuf> {
+pub fn find_codex_history_file(worktree_path: &Path, _session_id: &Uuid) -> Option<PathBuf> {
     let codex_sessions = worktree_path.join(".codex/sessions");
     if !codex_sessions.exists() {
         return None;
     }
 
-    let session_id_str = session_id.to_string();
+    // Find all .jsonl files and return the most recently modified one
+    let mut most_recent: Option<(PathBuf, std::time::SystemTime)> = None;
 
     for entry in walkdir::WalkDir::new(&codex_sessions)
         .max_depth(4) // year/month/day/file
         .into_iter()
         .filter_map(Result::ok)
     {
-        if let Some(filename) = entry.path().file_name().and_then(|n| n.to_str()) {
-            if filename.ends_with(&format!("{session_id_str}.jsonl")) {
-                return Some(entry.path().to_path_buf());
+        let path = entry.path();
+        if let Some(filename) = path.file_name().and_then(|n| n.to_str()) {
+            if filename.ends_with(".jsonl") {
+                if let Ok(metadata) = path.metadata() {
+                    if let Ok(modified) = metadata.modified() {
+                        match &most_recent {
+                            None => most_recent = Some((path.to_path_buf(), modified)),
+                            Some((_, prev_time)) if modified > *prev_time => {
+                                most_recent = Some((path.to_path_buf(), modified));
+                            }
+                            _ => {}
+                        }
+                    }
+                }
             }
         }
     }
-    None
+
+    most_recent.map(|(path, _)| path)
 }
 
 /// Validate Codex history path is safe to serve
 ///
 /// Ensures the path:
 /// - Starts with `<worktree>/.codex/sessions`
-/// - Contains the session ID in the filename
+/// - Is a `.jsonl` file
+///
+/// Note: We don't validate the session ID in the filename because Codex uses
+/// its own internal session IDs, not clauderon session IDs.
 ///
 /// # Arguments
 /// * `path` - Path to validate
 /// * `worktree_path` - Path to the git worktree
-/// * `session_id` - UUID of the session
+/// * `_session_id` - Unused (kept for API compatibility)
 ///
 /// # Returns
 /// True if the path is valid and safe to serve
 #[must_use]
-pub fn validate_codex_history_path(path: &Path, worktree_path: &Path, session_id: &Uuid) -> bool {
+pub fn validate_codex_history_path(path: &Path, worktree_path: &Path, _session_id: &Uuid) -> bool {
     let codex_sessions = worktree_path.join(".codex/sessions");
     path.starts_with(&codex_sessions)
         && path
             .file_name()
             .and_then(|n| n.to_str())
-            .map_or(false, |n| n.contains(&session_id.to_string()))
+            .map_or(false, |n| n.ends_with(".jsonl"))
 }
 
 #[cfg(test)]
@@ -1492,18 +1509,21 @@ mod tests {
     }
 
     #[test]
-    fn test_validate_codex_history_path_wrong_session_id() {
+    fn test_validate_codex_history_path_different_codex_session_id() {
+        // Codex uses its own internal session IDs, not clauderon session IDs.
+        // Validation should pass as long as it's a .jsonl file in .codex/sessions.
         let worktree = PathBuf::from("/workspace");
-        let session_id = Uuid::parse_str("12345678-1234-1234-1234-123456789abc").unwrap();
-        // Different session ID in filename
+        let clauderon_session_id = Uuid::parse_str("12345678-1234-1234-1234-123456789abc").unwrap();
+        // Different session ID in filename (this is normal for Codex)
         let path = PathBuf::from(
             "/workspace/.codex/sessions/2025/01/15/test-20250115-aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee.jsonl",
         );
 
-        assert!(!super::validate_codex_history_path(
+        // Should pass because we don't validate session ID for Codex
+        assert!(super::validate_codex_history_path(
             &path,
             &worktree,
-            &session_id
+            &clauderon_session_id
         ));
     }
 
@@ -1513,6 +1533,20 @@ mod tests {
         let session_id = Uuid::parse_str("12345678-1234-1234-1234-123456789abc").unwrap();
         // Attempted path traversal
         let path = PathBuf::from("/other/location/12345678-1234-1234-1234-123456789abc.jsonl");
+
+        assert!(!super::validate_codex_history_path(
+            &path,
+            &worktree,
+            &session_id
+        ));
+    }
+
+    #[test]
+    fn test_validate_codex_history_path_non_jsonl_file() {
+        let worktree = PathBuf::from("/workspace");
+        let session_id = Uuid::parse_str("12345678-1234-1234-1234-123456789abc").unwrap();
+        // Non-jsonl file should be rejected
+        let path = PathBuf::from("/workspace/.codex/sessions/2025/01/15/config.toml");
 
         assert!(!super::validate_codex_history_path(
             &path,
