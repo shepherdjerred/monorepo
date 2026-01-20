@@ -60,7 +60,7 @@ impl SpritesBackend {
         tracing::info!(sprite_name = %name, "Creating sprite via CLI");
 
         let output = Command::new("sprite")
-            .args(["create", name, "--no-console"])
+            .args(["create", "--no-console", name])
             .output()
             .await
             .map_err(|e| {
@@ -620,7 +620,7 @@ impl ExecutionBackend for SpritesBackend {
         }
 
         let output = Command::new("sprite")
-            .args(["destroy", id, "--yes"])
+            .args(["destroy", "--yes", id])
             .output()
             .await
             .map_err(|e| {
