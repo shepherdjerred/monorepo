@@ -1,49 +1,139 @@
 [tools]
 rust = "latest"
 
+# =============================================================================
+# Frontend Build Tasks
+# =============================================================================
+
+[tasks.build-docs]
+description = "Build the documentation site"
+sources = ["docs/src/**/*", "docs/public/**/*", "docs/astro.config.mjs", "docs/package.json"]
+outputs = ["docs/dist/**/*"]
+run = "cd docs && bun install && bun run build"
+
+[tasks.build-web]
+description = "Build the web frontend"
+sources = ["web/shared/src/**/*", "web/client/src/**/*", "web/frontend/src/**/*", "web/*/package.json"]
+outputs = ["web/frontend/dist/**/*", "web/client/dist/**/*", "web/shared/dist/**/*"]
+run = "cd web && bun install && bun run build"
+
+[tasks.lint-web]
+description = "Lint web packages"
+run = "cd web && bun run lint"
+
+[tasks.typecheck-web]
+description = "Typecheck web packages"
+run = "cd web && bun run typecheck"
+
+[tasks.typecheck-docs]
+description = "Typecheck documentation"
+run = "cd docs && bun run typecheck"
+
+# =============================================================================
+# Rust Build Tasks
+# =============================================================================
+
 [tasks.build]
-description = "Build the project"
+description = "Build the project (builds docs and web first)"
+depends = ["build-docs", "build-web"]
 run = "cargo build"
 
 [tasks.release]
-description = "Build in release mode"
+description = "Build in release mode (builds docs and web first)"
+depends = ["build-docs", "build-web"]
 run = "cargo build --release"
 
+[tasks.install]
+description = "Install clauderon binary to ~/.cargo/bin (builds docs and web first)"
+depends = ["build-docs", "build-web"]
+run = "cargo install --path ."
+
+# =============================================================================
+# Rust Quality Tasks
+# =============================================================================
+
 [tasks.test]
-description = "Run tests"
+description = "Run Rust tests"
+depends = ["build-docs", "build-web"]
 run = "cargo test"
 
 [tasks.check]
 description = "Run cargo check"
+depends = ["build-docs", "build-web"]
 run = "cargo check"
 
 [tasks.clippy]
 description = "Run clippy linter"
+depends = ["build-docs", "build-web"]
 run = "cargo clippy"
 
+[tasks.clippy-strict]
+description = "Run clippy with warnings as errors (for CI)"
+depends = ["build-docs", "build-web"]
+run = "cargo clippy -- -D warnings"
+
 [tasks.fmt]
-description = "Format code"
+description = "Format Rust code"
 run = "cargo fmt"
 
 [tasks.fmt-check]
-description = "Check formatting"
+description = "Check Rust formatting"
 run = "cargo fmt --check"
 
+# =============================================================================
+# Cleanup Tasks
+# =============================================================================
+
 [tasks.clean]
-description = "Clean build artifacts"
+description = "Clean all build artifacts"
+run = """
+cargo clean
+rm -rf docs/dist
+rm -rf web/shared/dist web/client/dist web/frontend/dist
+rm -rf web/shared/src/generated/*
+"""
+
+[tasks.clean-rust]
+description = "Clean only Rust build artifacts"
 run = "cargo clean"
 
-[tasks.install]
-description = "Install clauderon binary to ~/.cargo/bin"
-run = "cargo install --path ."
+[tasks.clean-web]
+description = "Clean only web build artifacts"
+run = "cd web && bun run clean"
+
+# =============================================================================
+# CI Tasks
+# =============================================================================
+
+[tasks.ci]
+description = "Run all CI checks (format, lint, typecheck, test, build)"
+depends = ["fmt-check", "build-docs", "build-web"]
+run = """
+cargo clippy -- -D warnings
+cd web && bun run lint
+cd docs && bun run typecheck
+cd web && bun run typecheck
+cargo test
+cargo build --release
+"""
+
+[tasks.ci-quick]
+description = "Quick CI check (no release build)"
+depends = ["fmt-check", "build-docs", "build-web"]
+run = """
+cargo clippy -- -D warnings
+cargo test
+cargo check
+"""
+
+# =============================================================================
+# Development Tasks
+# =============================================================================
 
 [tasks.dev]
 description = "Build and run daemon in dev mode (one-shot)"
-run = """
-mise run install
-cd web && bun run build && cd ..
-CLAUDERON_DEV=1 clauderon daemon
-"""
+depends = ["install"]
+run = "CLAUDERON_DEV=1 clauderon daemon"
 
 [tasks.dev-watch]
 description = "Watch for git changes, rebuild, and run daemon in dev mode"
@@ -58,7 +148,6 @@ pkill -f 'clauderon daemon' 2>/dev/null || true
 if ! command -v clauderon &> /dev/null; then
     echo "Initial build..."
     mise run install
-    cd web && bun run build && cd ..
 fi
 
 while true; do
@@ -71,11 +160,8 @@ while true; do
         echo "New commits on origin/main, pulling..."
         git pull --rebase --autostash --quiet
 
-        echo "Building Rust binary..."
+        echo "Rebuilding (docs, web, binary)..."
         mise run install
-
-        echo "Building frontend..."
-        cd web && bun run build && cd ..
 
         echo "Restarting daemon..."
         pkill -f 'clauderon daemon' 2>/dev/null || true
@@ -91,4 +177,3 @@ while true; do
     sleep 10
 done
 """
-
