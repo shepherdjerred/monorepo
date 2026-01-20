@@ -49,8 +49,7 @@ impl SpritesBackend {
 
     /// Create a sprite via CLI
     ///
-    /// Uses `sprite create {name} --no-console` to create a new sprite.
-    /// The --no-console flag prevents the CLI from opening an interactive console.
+    /// Uses `sprite create {name}` to create a new sprite.
     ///
     /// # Errors
     ///
@@ -60,7 +59,7 @@ impl SpritesBackend {
         tracing::info!(sprite_name = %name, "Creating sprite via CLI");
 
         let output = Command::new("sprite")
-            .args(["create", "--no-console", name])
+            .args(["create", name])
             .output()
             .await
             .map_err(|e| {
