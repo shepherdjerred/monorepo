@@ -195,3 +195,39 @@ manual_let_else = "allow"
 cast_possible_truncation = "allow"
 # Cast sign loss - common in conversions with known bounds
 cast_sign_loss = "allow"
+
+# =============================================================================
+# Build Profiles - Optimized for compile time
+# =============================================================================
+
+[profile.dev]
+# Faster incremental builds
+incremental = true
+# Minimal debug info (faster compile, still get backtraces)
+debug = 1
+# Split debug info on macOS for faster linking
+split-debuginfo = "unpacked"
+
+[profile.dev.package."*"]
+# Optimize dependencies even in dev mode
+# This makes dependencies compile slower ONCE, but run much faster
+# Net win because deps are cached and your code changes frequently
+opt-level = 2
+
+[profile.release]
+# Use thin LTO for faster release builds (vs fat LTO)
+# ~10-20% faster compile, ~5% slower runtime (usually acceptable)
+lto = "thin"
+# Single codegen unit for better optimization (worth it for release)
+codegen-units = 1
+# Strip symbols for smaller binary
+strip = true
+
+[profile.test]
+# Faster test compilation
+incremental = true
+debug = 1
+
+[profile.bench]
+# Inherit from release
+inherits = "release"

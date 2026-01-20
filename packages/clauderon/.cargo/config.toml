@@ -1,12 +1,34 @@
+# Faster linking and build configuration
+# See: https://doc.rust-lang.org/cargo/reference/config.html
+
+[registries.crates-io]
+# Use sparse protocol for faster crate index updates (~60% faster)
+protocol = "sparse"
+
 [build]
-# Use all available CPU cores for builds
+# Use all available CPU cores
 jobs = -1
 
-# Use lld linker on Linux for faster linking
+# Use mold linker on Linux (fastest available, ~5-10x faster than ld)
+# Install: https://github.com/rui314/mold
+# Falls back to lld if mold isn't available
 [target.x86_64-unknown-linux-gnu]
-rustflags = ["-C", "link-arg=-fuse-ld=lld"]
+linker = "clang"
+rustflags = ["-C", "link-arg=-fuse-ld=mold"]
 
 [target.aarch64-unknown-linux-gnu]
+linker = "clang"
+rustflags = ["-C", "link-arg=-fuse-ld=mold"]
+
+# On macOS, use lld for faster linking (~2x faster than ld64)
+# Install: brew install llvm (lld is included)
+# Note: Requires LLVM's lld in PATH or use full path
+[target.x86_64-apple-darwin]
 rustflags = ["-C", "link-arg=-fuse-ld=lld"]
 
-# On macOS, use the default linker (ld64)
+[target.aarch64-apple-darwin]
+rustflags = ["-C", "link-arg=-fuse-ld=lld"]
+
+[net]
+# Retry downloads on transient failures
+retry = 3
