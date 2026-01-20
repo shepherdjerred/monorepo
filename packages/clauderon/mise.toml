@@ -102,9 +102,20 @@ depends = ["build-docs", "build-web"]
 run = "cargo build --release"
 
 [tasks.install]
-description = "Install clauderon binary to ~/.cargo/bin (builds docs and web first)"
+description = "Install clauderon binary (debug mode, fast build)"
 depends = ["build-docs", "build-web"]
-run = "cargo install --path ."
+run = """
+cargo install --path . --debug
+pkill -f 'clauderon daemon' 2>/dev/null || true
+"""
+
+[tasks.install-release]
+description = "Install clauderon binary (release mode, optimized but slow build)"
+depends = ["build-docs", "build-web"]
+run = """
+cargo install --path .
+pkill -f 'clauderon daemon' 2>/dev/null || true
+"""
 
 # =============================================================================
 # Rust Quality Tasks

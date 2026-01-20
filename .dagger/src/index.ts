@@ -177,17 +177,26 @@ function getCrossCompileContainer(source: Directory): Container {
     .container()
     .from(`rust:${RUST_VERSION}-bookworm`)
     .withWorkdir("/workspace")
-    .withMountedCache("/var/cache/apt", dag.cacheVolume(`apt-cache-rust-${RUST_VERSION}`))
-    .withMountedCache("/var/lib/apt", dag.cacheVolume(`apt-lib-rust-${RUST_VERSION}`))
+    .withMountedCache("/var/cache/apt", dag.cacheVolume(`apt-cache-rust-${RUST_VERSION}-cross`))
+    .withMountedCache("/var/lib/apt", dag.cacheVolume(`apt-lib-rust-${RUST_VERSION}-cross`))
     .withMountedCache("/usr/local/cargo/registry", dag.cacheVolume("cargo-registry"))
     .withMountedCache("/usr/local/cargo/git", dag.cacheVolume("cargo-git"))
     // Use separate target directories for cross-compilation to avoid conflicts
     .withEnvVariable("CARGO_TARGET_DIR", "/workspace/target-cross")
     .withMountedCache("/workspace/target-cross", dag.cacheVolume("clauderon-cross-target"))
     .withMountedDirectory("/workspace", source.directory("packages/clauderon"))
-    // Install cross-compilation dependencies and mold linker
+    // Enable multiarch for ARM64 packages
+    .withExec(["dpkg", "--add-architecture", "arm64"])
+    // Install cross-compilation dependencies, mold linker, and ARM64 OpenSSL
     .withExec(["apt-get", "update"])
-    .withExec(["apt-get", "install", "-y", "gcc-aarch64-linux-gnu", "libc6-dev-arm64-cross", "mold", "clang"])
+    .withExec(["apt-get", "install", "-y",
+      "gcc-aarch64-linux-gnu",
+      "libc6-dev-arm64-cross",
+      "mold",
+      "clang",
+      "libssl-dev:arm64",
+      "pkg-config"
+    ])
     // Add cross-compilation targets
     .withExec(["rustup", "target", "add", "x86_64-unknown-linux-gnu"])
     .withExec(["rustup", "target", "add", "aarch64-unknown-linux-gnu"]);
@@ -766,10 +775,17 @@ export class Monorepo {
     for (const { target, os, arch } of linuxTargets) {
       let buildContainer = container;
 
-      // Configure linker for aarch64 cross-compilation
+      // Configure linker and OpenSSL for aarch64 cross-compilation
       if (target === "aarch64-unknown-linux-gnu") {
         buildContainer = container
-          .withEnvVariable("CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER", "aarch64-linux-gnu-gcc");
+          .withEnvVariable("CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER", "aarch64-linux-gnu-gcc")
+          // Point openssl-sys to the ARM64 OpenSSL installation
+          .withEnvVariable("OPENSSL_DIR", "/usr")
+          .withEnvVariable("OPENSSL_LIB_DIR", "/usr/lib/aarch64-linux-gnu")
+          .withEnvVariable("OPENSSL_INCLUDE_DIR", "/usr/include")
+          // Tell pkg-config to allow cross-compilation
+          .withEnvVariable("PKG_CONFIG_ALLOW_CROSS", "1")
+          .withEnvVariable("PKG_CONFIG_PATH", "/usr/lib/aarch64-linux-gnu/pkgconfig");
       }
 
       // Build the release binary
