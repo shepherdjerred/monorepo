@@ -1616,6 +1616,50 @@ fi"#,
         }
     }
 
+    /// Stop a pod while preserving its workspace PVC
+    ///
+    /// This is used for archiving sessions - the pod and ConfigMaps are deleted
+    /// but the workspace PVC is preserved so the session can be unarchived later.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the Kubernetes API operations fail.
+    pub async fn stop_pod_preserve_storage(&self, id: &str) -> anyhow::Result<()> {
+        let pods: Api<Pod> = Api::namespaced(self.client.clone(), &self.config.namespace);
+        let cms: Api<ConfigMap> = Api::namespaced(self.client.clone(), &self.config.namespace);
+
+        // Delete pod
+        match pods.delete(id, &DeleteParams::default()).await {
+            Ok(_) => tracing::info!("Deleted pod {id}"),
+            Err(kube::Error::Api(err)) if err.code == 404 => {
+                tracing::debug!("Pod {id} already deleted");
+            }
+            Err(e) => return Err(e.into()),
+        }
+
+        // Delete ConfigMaps (but NOT the workspace PVC)
+        let configmaps_to_delete = [
+            format!("{id}-config"),
+            format!("{id}-codex-config"),
+            format!("{id}-managed-settings"),
+            format!("{id}-kube-config"),
+        ];
+
+        for config_name in configmaps_to_delete {
+            match cms.delete(&config_name, &DeleteParams::default()).await {
+                Ok(_) => tracing::info!("Deleted ConfigMap {config_name}"),
+                Err(kube::Error::Api(err)) if err.code == 404 => {
+                    tracing::debug!("ConfigMap {config_name} already deleted");
+                }
+                Err(e) => tracing::warn!("Failed to delete ConfigMap {config_name}: {e}"),
+            }
+        }
+
+        tracing::info!(pod_name = id, "Stopped pod while preserving workspace PVC");
+
+        Ok(())
+    }
+
     /// Wait for pod to reach Running state
     async fn wait_for_pod_running(&self, pod_name: &str) -> anyhow::Result<()> {
         let pods: Api<Pod> = Api::namespaced(self.client.clone(), &self.config.namespace);

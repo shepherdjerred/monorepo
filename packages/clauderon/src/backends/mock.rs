@@ -177,6 +177,13 @@ impl MockExecutionBackend {
         Self::new("sprites")
     }
 
+    /// Create a mock Apple Container backend
+    #[cfg(target_os = "macos")]
+    #[must_use]
+    pub fn apple_container() -> Self {
+        Self::new("apple_container")
+    }
+
     /// Configure the mock to fail all operations
     pub fn set_should_fail(&self, should_fail: bool) {
         self.should_fail.store(should_fail, Ordering::SeqCst);

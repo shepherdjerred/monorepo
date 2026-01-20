@@ -55,7 +55,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
             Constraint::Length(prompt_height as u16 + 2), // Prompt (dynamic + borders)
             Constraint::Length(images_height),            // Images (dynamic)
             Constraint::Length(3),                        // Repo path
-            Constraint::Length(2),                        // Multi-repo toggle
+            Constraint::Length(3),                        // Base branch
             Constraint::Length(2),                        // Backend
             Constraint::Length(2),                        // Agent
             Constraint::Length(2),                        // Model
@@ -74,6 +74,8 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
     let images_idx = layout_idx;
     layout_idx += 1;
     let repo_idx = layout_idx;
+    layout_idx += 1;
+    let base_branch_idx = layout_idx;
     layout_idx += 1;
     let backend_idx = layout_idx;
     layout_idx += 1;
@@ -116,6 +118,15 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         &dialog.repo_path,
         dialog.focus == CreateDialogFocus::RepoPath,
         inner[repo_idx],
+    );
+
+    // Base branch field (for clone-based backends)
+    render_text_field(
+        frame,
+        "Base Branch (optional, empty = default)",
+        &dialog.base_branch,
+        dialog.focus == CreateDialogFocus::BaseBranch,
+        inner[base_branch_idx],
     );
 
     // Backend selection
@@ -357,6 +368,37 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         frame.render_widget(Clear, picker_area);
         directory_picker::render(frame, &app.create_dialog.directory_picker, picker_area);
     }
+}
+
+fn render_text_field(frame: &mut Frame, label: &str, value: &str, focused: bool, area: Rect) {
+    let style = if focused {
+        Style::default().fg(Color::Yellow)
+    } else {
+        Style::default()
+    };
+
+    let block = Block::default()
+        .title(format!(" {label} "))
+        .borders(Borders::ALL)
+        .border_style(style);
+
+    // Show cursor when focused
+    let display_value = if focused {
+        format!("{value}▏")
+    } else if value.is_empty() {
+        "(not set)".to_string()
+    } else {
+        value.to_string()
+    };
+
+    let value_style = if value.is_empty() && !focused {
+        Style::default().fg(Color::DarkGray)
+    } else {
+        Style::default()
+    };
+
+    let paragraph = Paragraph::new(Span::styled(display_value, value_style)).block(block);
+    frame.render_widget(paragraph, area);
 }
 
 fn render_repo_path_field(frame: &mut Frame, label: &str, value: &str, focused: bool, area: Rect) {

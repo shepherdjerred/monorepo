@@ -127,6 +127,12 @@ pub struct CreateRepositoryInput {
     /// Whether this is the primary repository (determines working directory).
     /// Exactly one repository must be marked as primary in multi-repo sessions.
     pub is_primary: bool,
+
+    /// Base branch to clone from (for clone-based backends like Sprites/K8s).
+    /// When None, clones the repository's default branch.
+    /// The session's working branch is always created fresh from this base.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub base_branch: Option<String>,
 }
 
 /// Request to create a new session

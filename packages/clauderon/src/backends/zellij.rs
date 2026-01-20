@@ -296,6 +296,7 @@ impl ZellijBackend {
                 container_resources: None,
                 repositories: vec![], // Legacy single-repo mode
                 storage_class_override: None,
+                volume_mode: false,
             },
         )
         .await

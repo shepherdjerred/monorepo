@@ -241,6 +241,8 @@ fn test_print_mode_flows_to_docker_args() {
         None,
         None, // model
         &[],
+        false, // volume_mode
+        None,  // workspace_volume
     )
     .expect("Failed to build args");
 
@@ -356,6 +358,8 @@ fn test_interactive_mode_no_print_flag_in_docker_args() {
         None,
         None, // model
         &[],
+        false, // volume_mode
+        None,  // workspace_volume
     )
     .expect("Failed to build args");
 

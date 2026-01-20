@@ -159,6 +159,7 @@ fn test_create_dialog_focus_cycle() {
     // Simulate Tab cycling
     let focuses = [
         CreateDialogFocus::RepoPath,
+        CreateDialogFocus::BaseBranch,
         CreateDialogFocus::Backend,
         CreateDialogFocus::Agent,
         CreateDialogFocus::Model,
@@ -172,7 +173,8 @@ fn test_create_dialog_focus_cycle() {
     for expected_focus in focuses {
         app.create_dialog.focus = match app.create_dialog.focus {
             CreateDialogFocus::Prompt => CreateDialogFocus::RepoPath,
-            CreateDialogFocus::RepoPath => CreateDialogFocus::Backend,
+            CreateDialogFocus::RepoPath => CreateDialogFocus::BaseBranch,
+            CreateDialogFocus::BaseBranch => CreateDialogFocus::Backend,
             CreateDialogFocus::Backend => CreateDialogFocus::Agent,
             CreateDialogFocus::Agent => CreateDialogFocus::Model,
             CreateDialogFocus::Model => CreateDialogFocus::AccessMode,
@@ -288,6 +290,9 @@ async fn test_create_dialog_tab_navigation() {
     assert_eq!(app.create_dialog.focus, CreateDialogFocus::RepoPath);
 
     handle_key_event(&mut app, key(KeyCode::Tab)).await.unwrap();
+    assert_eq!(app.create_dialog.focus, CreateDialogFocus::BaseBranch);
+
+    handle_key_event(&mut app, key(KeyCode::Tab)).await.unwrap();
     assert_eq!(app.create_dialog.focus, CreateDialogFocus::Backend);
 
     handle_key_event(&mut app, key(KeyCode::Tab)).await.unwrap();
@@ -298,6 +303,19 @@ async fn test_create_dialog_tab_navigation() {
 
     handle_key_event(&mut app, key(KeyCode::Tab)).await.unwrap();
     assert_eq!(app.create_dialog.focus, CreateDialogFocus::AccessMode);
+
+    handle_key_event(&mut app, key(KeyCode::Tab)).await.unwrap();
+    assert_eq!(app.create_dialog.focus, CreateDialogFocus::SkipChecks);
+
+    handle_key_event(&mut app, key(KeyCode::Tab)).await.unwrap();
+    assert_eq!(app.create_dialog.focus, CreateDialogFocus::PlanMode);
+
+    handle_key_event(&mut app, key(KeyCode::Tab)).await.unwrap();
+    assert_eq!(app.create_dialog.focus, CreateDialogFocus::Buttons);
+
+    // Verify it wraps around to Prompt
+    handle_key_event(&mut app, key(KeyCode::Tab)).await.unwrap();
+    assert_eq!(app.create_dialog.focus, CreateDialogFocus::Prompt);
 }
 
 #[tokio::test]
@@ -309,12 +327,23 @@ async fn test_create_dialog_backtab_navigation() {
     handle_key_event(&mut app, key(KeyCode::BackTab))
         .await
         .unwrap();
+    assert_eq!(app.create_dialog.focus, CreateDialogFocus::BaseBranch);
+
+    handle_key_event(&mut app, key(KeyCode::BackTab))
+        .await
+        .unwrap();
     assert_eq!(app.create_dialog.focus, CreateDialogFocus::RepoPath);
 
     handle_key_event(&mut app, key(KeyCode::BackTab))
         .await
         .unwrap();
     assert_eq!(app.create_dialog.focus, CreateDialogFocus::Prompt);
+
+    // Verify wrapping: Prompt -> Buttons
+    handle_key_event(&mut app, key(KeyCode::BackTab))
+        .await
+        .unwrap();
+    assert_eq!(app.create_dialog.focus, CreateDialogFocus::Buttons);
 }
 
 #[tokio::test]

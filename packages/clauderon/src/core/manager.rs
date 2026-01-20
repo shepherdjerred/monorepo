@@ -450,6 +450,7 @@ impl SessionManager {
                 repo_path: repo_path.clone(),
                 mount_name: Some("primary".to_string()),
                 is_primary: true,
+                base_branch: None,
             }]
         };
 
@@ -459,6 +460,7 @@ impl SessionManager {
             subdirectory: PathBuf,
             mount_name: String,
             is_primary: bool,
+            base_branch: Option<String>,
         }
 
         let mut resolved_repos = Vec::new();
@@ -496,6 +498,7 @@ impl SessionManager {
                 subdirectory: git_info.subdirectory,
                 mount_name,
                 is_primary: repo_input.is_primary,
+                base_branch: repo_input.base_branch.clone(),
             });
         }
 
@@ -617,7 +620,7 @@ impl SessionManager {
         }
 
         // Convert resolved repos to simpler structure for passing to async task
-        let repos_for_task: Vec<(PathBuf, PathBuf, String, bool)> = resolved_repos
+        let repos_for_task: Vec<(PathBuf, PathBuf, String, bool, Option<String>)> = resolved_repos
             .iter()
             .map(|r| {
                 (
@@ -625,6 +628,7 @@ impl SessionManager {
                     r.subdirectory.clone(),
                     r.mount_name.clone(),
                     r.is_primary,
+                    r.base_branch.clone(),
                 )
             })
             .collect();
@@ -664,6 +668,7 @@ impl SessionManager {
     /// Complete session creation in background (spawned by start_session_creation)
     ///
     /// This method should not be called directly - it's spawned as a background task.
+    #[allow(clippy::too_many_arguments)]
     async fn complete_session_creation(
         &self,
         session_id: Uuid,
@@ -671,7 +676,7 @@ impl SessionManager {
         full_name: String,
         worktree_path: PathBuf,
         subdirectory: PathBuf,
-        repos_for_task: Vec<(PathBuf, PathBuf, String, bool)>,
+        repos_for_task: Vec<(PathBuf, PathBuf, String, bool, Option<String>)>,
         initial_prompt: String,
         backend: BackendType,
         agent: super::session::AgentType,
@@ -736,31 +741,33 @@ impl SessionManager {
             // Create worktrees for all repositories in parallel
             let worktree_futures: Vec<_> = repos_for_task
                 .iter()
-                .map(|(git_root, _subdirectory, mount_name, _is_primary)| {
-                    let worktree_path = crate::utils::paths::worktree_path(&format!(
-                        "{}-{}",
-                        full_name, mount_name
-                    ));
-                    let git_root = git_root.clone();
-                    let branch_name = full_name.clone();
+                .map(
+                    |(git_root, _subdirectory, mount_name, _is_primary, _base_branch)| {
+                        let worktree_path = crate::utils::paths::worktree_path(&format!(
+                            "{}-{}",
+                            full_name, mount_name
+                        ));
+                        let git_root = git_root.clone();
+                        let branch_name = full_name.clone();
 
-                    async move {
-                        tracing::info!(
-                            session_id = %session_id,
-                            mount_name = %mount_name,
-                            git_root = %git_root.display(),
-                            worktree_path = %worktree_path.display(),
-                            "Creating worktree for repository"
-                        );
+                        async move {
+                            tracing::info!(
+                                session_id = %session_id,
+                                mount_name = %mount_name,
+                                git_root = %git_root.display(),
+                                worktree_path = %worktree_path.display(),
+                                "Creating worktree for repository"
+                            );
 
-                        let warning = self
-                            .git
-                            .create_worktree(&git_root, &worktree_path, &branch_name)
-                            .await?;
+                            let warning = self
+                                .git
+                                .create_worktree(&git_root, &worktree_path, &branch_name)
+                                .await?;
 
-                        Ok::<(PathBuf, Option<String>), anyhow::Error>((worktree_path, warning))
-                    }
-                })
+                            Ok::<(PathBuf, Option<String>), anyhow::Error>((worktree_path, warning))
+                        }
+                    },
+                )
                 .collect();
 
             let worktree_results = futures::future::join_all(worktree_futures).await;
@@ -769,7 +776,7 @@ impl SessionManager {
             let mut created_worktrees = Vec::new();
             for (idx, result) in worktree_results.into_iter().enumerate() {
                 let (worktree_path, _warning) = result.with_context(|| {
-                    let (_, _, mount_name, _) = &repos_for_task[idx];
+                    let (_, _, mount_name, _, _) = &repos_for_task[idx];
                     format!("Failed to create worktree for repository '{}'", mount_name)
                 })?;
                 created_worktrees.push(worktree_path);
@@ -779,7 +786,7 @@ impl SessionManager {
             let primary_worktree_path = created_worktrees
                 .iter()
                 .zip(repos_for_task.iter())
-                .find(|(_, (_, _, _, is_primary))| *is_primary)
+                .find(|(_, (_, _, _, is_primary, _))| *is_primary)
                 .map_or_else(|| created_worktrees[0].clone(), |(path, _)| path.clone());
 
             // Create history directory (for primary repo worktree)
@@ -804,7 +811,10 @@ impl SessionManager {
                 .iter()
                 .zip(created_worktrees.iter())
                 .map(
-                    |((git_root, subdirectory, mount_name, is_primary), worktree_path)| {
+                    |(
+                        (git_root, subdirectory, mount_name, is_primary, base_branch),
+                        worktree_path,
+                    )| {
                         super::session::SessionRepository {
                             repo_path: git_root.clone(),
                             subdirectory: subdirectory.clone(),
@@ -812,6 +822,7 @@ impl SessionManager {
                             branch_name: full_name.clone(),
                             mount_name: mount_name.clone(),
                             is_primary: *is_primary,
+                            base_branch: base_branch.clone(),
                         }
                     },
                 )
@@ -977,6 +988,7 @@ impl SessionManager {
                 container_resources: container_resource_limits,
                 storage_class_override: storage_class,
                 repositories: session_repos.clone(),
+                volume_mode: false, // TODO: Pass from API when volume mode is exposed
             };
             let backend_id = match backend {
                 BackendType::Zellij => {
@@ -1455,6 +1467,7 @@ impl SessionManager {
             container_resources: container_resource_limits,
             storage_class_override: storage_class,
             repositories: vec![], // Legacy single-repo mode (synchronous creation)
+            volume_mode: false,
         };
         let backend_id = match backend {
             BackendType::Zellij => {
@@ -1581,6 +1594,10 @@ impl SessionManager {
             .await
             .ok_or_else(|| anyhow::anyhow!("Session not found: {id_or_name}"))?;
 
+        if session.status == SessionStatus::Archived {
+            anyhow::bail!("Cannot attach to archived session - unarchive it first");
+        }
+
         let backend_id = session
             .backend_id
             .as_ref()
@@ -1602,6 +1619,14 @@ impl SessionManager {
 
     /// Archive a session
     ///
+    /// Archives a session by:
+    /// 1. Stopping all backend resources (containers, pods, etc.)
+    /// 2. Destroying proxies for Docker/AppleContainer backends
+    /// 3. Clearing the backend_id
+    /// 4. Setting status to Archived
+    ///
+    /// Storage (worktrees, PVCs) is preserved for potential unarchiving.
+    ///
     /// # Errors
     ///
     /// Returns an error if the session is not found or the store update fails.
@@ -1616,6 +1641,94 @@ impl SessionManager {
 
         let old_status = session.status;
         let session_id = session.id;
+        let backend = session.backend;
+        let backend_id = session.backend_id.clone();
+
+        // Stop backend resources (preserving storage)
+        if let Some(ref backend_id) = backend_id {
+            match backend {
+                BackendType::Docker => {
+                    if let Err(e) = self.docker.delete(backend_id).await {
+                        tracing::warn!(
+                            session_id = %session_id,
+                            error = %e,
+                            "Failed to delete Docker container during archive"
+                        );
+                    }
+                }
+                BackendType::Kubernetes => {
+                    // Use special method that preserves the workspace PVC
+                    if let Some(ref k8s_backend) = self.kubernetes_backend {
+                        if let Err(e) = k8s_backend.stop_pod_preserve_storage(backend_id).await {
+                            tracing::warn!(
+                                session_id = %session_id,
+                                error = %e,
+                                "Failed to stop Kubernetes pod during archive"
+                            );
+                        }
+                    } else {
+                        // Fallback to regular delete if concrete backend not available
+                        if let Err(e) = self.kubernetes.delete(backend_id).await {
+                            tracing::warn!(
+                                session_id = %session_id,
+                                error = %e,
+                                "Failed to delete Kubernetes pod during archive"
+                            );
+                        }
+                    }
+                }
+                BackendType::Zellij => {
+                    if let Err(e) = self.zellij.delete(backend_id).await {
+                        tracing::warn!(
+                            session_id = %session_id,
+                            error = %e,
+                            "Failed to delete Zellij session during archive"
+                        );
+                    }
+                }
+                #[cfg(target_os = "macos")]
+                BackendType::AppleContainer => {
+                    if let Err(e) = self.apple_container.delete(backend_id).await {
+                        tracing::warn!(
+                            session_id = %session_id,
+                            error = %e,
+                            "Failed to delete Apple container during archive"
+                        );
+                    }
+                }
+                BackendType::Sprites => {
+                    if let Err(e) = self.sprites.delete(backend_id).await {
+                        tracing::warn!(
+                            session_id = %session_id,
+                            error = %e,
+                            "Failed to delete Sprite during archive"
+                        );
+                    }
+                }
+            }
+        }
+
+        // Destroy proxy for backends that use proxies (Docker and Apple Container)
+        #[cfg(target_os = "macos")]
+        let needs_proxy_cleanup =
+            matches!(backend, BackendType::Docker | BackendType::AppleContainer);
+        #[cfg(not(target_os = "macos"))]
+        let needs_proxy_cleanup = backend == BackendType::Docker;
+
+        if needs_proxy_cleanup {
+            if let Some(ref proxy_manager) = self.proxy_manager {
+                if let Err(e) = proxy_manager.destroy_session_proxy(session_id).await {
+                    tracing::warn!(
+                        session_id = %session_id,
+                        error = %e,
+                        "Failed to destroy proxy during archive"
+                    );
+                }
+            }
+        }
+
+        // Clear backend_id and set status to Archived
+        session.clear_backend_id();
         session.set_status(SessionStatus::Archived);
         let session_clone = session.clone();
         drop(sessions);
@@ -1637,49 +1750,242 @@ impl SessionManager {
         self.store.save_session(&session_clone).await?;
         self.console_manager.remove_session(session_id).await;
 
+        tracing::info!(
+            session_id = %session_id,
+            backend = ?backend,
+            "Session archived - all backend resources stopped, storage preserved"
+        );
+
         Ok(())
     }
 
     /// Unarchive a session
     ///
+    /// Restores an archived session by:
+    /// 1. Setting status to Creating
+    /// 2. Recreating proxy (for Docker/AppleContainer backends)
+    /// 3. Recreating container using existing worktree/PVC
+    /// 4. Updating backend_id
+    /// 5. Setting status to Idle
+    ///
     /// # Errors
     ///
-    /// Returns an error if the session is not found, is not archived, or the store update fails.
+    /// Returns an error if the session is not found, is not archived, or recreation fails.
     #[instrument(skip(self), fields(id_or_name = %id_or_name))]
     pub async fn unarchive_session(&self, id_or_name: &str) -> anyhow::Result<()> {
-        let mut sessions = self.sessions.write().await;
+        // Extract session info while holding the lock briefly
+        let (
+            session_id,
+            session_name,
+            backend,
+            worktree_path,
+            initial_prompt,
+            agent,
+            subdirectory,
+            dangerous_skip_checks,
+            proxy_port,
+            model,
+            access_mode,
+        ) = {
+            let sessions = self.sessions.read().await;
+            let session = sessions
+                .iter()
+                .find(|s| s.name == id_or_name || s.id.to_string() == id_or_name)
+                .ok_or_else(|| anyhow::anyhow!("Session not found: {id_or_name}"))?;
 
-        let session = sessions
-            .iter_mut()
-            .find(|s| s.name == id_or_name || s.id.to_string() == id_or_name)
-            .ok_or_else(|| anyhow::anyhow!("Session not found: {id_or_name}"))?;
+            // Validate that the session is currently archived
+            if session.status != SessionStatus::Archived {
+                anyhow::bail!("Session {id_or_name} is not archived");
+            }
 
-        // Validate that the session is currently archived
-        if session.status != SessionStatus::Archived {
-            anyhow::bail!("Session {id_or_name} is not archived");
+            (
+                session.id,
+                session.name.clone(),
+                session.backend,
+                session.worktree_path.clone(),
+                session.initial_prompt.clone(),
+                session.agent,
+                session.subdirectory.clone(),
+                session.dangerous_skip_checks,
+                session.proxy_port,
+                session.model_cli_flag().map(str::to_string),
+                session.access_mode,
+            )
+        };
+
+        // Set status to Creating
+        {
+            let mut sessions = self.sessions.write().await;
+            if let Some(session) = sessions.iter_mut().find(|s| s.id == session_id) {
+                session.set_status(SessionStatus::Creating);
+            }
         }
 
-        let old_status = session.status;
-        let session_id = session.id;
-        session.set_status(SessionStatus::Idle);
-        let session_clone = session.clone();
-        drop(sessions);
-
-        // Record event
+        // Record restore event
         let event = Event::new(session_id, EventType::SessionRestored);
         self.store.record_event(&event).await?;
 
-        let event = Event::new(
-            session_id,
-            EventType::StatusChanged {
-                old_status,
-                new_status: SessionStatus::Idle,
-            },
-        );
-        self.store.record_event(&event).await?;
+        // Recreate proxy for backends that use proxies (Docker and Apple Container)
+        #[cfg(target_os = "macos")]
+        let needs_proxy = matches!(backend, BackendType::Docker | BackendType::AppleContainer);
+        #[cfg(not(target_os = "macos"))]
+        let needs_proxy = backend == BackendType::Docker;
 
-        // Update in store
-        self.store.save_session(&session_clone).await?;
+        let new_proxy_port = if needs_proxy {
+            if let Some(ref proxy_manager) = self.proxy_manager {
+                // Allocate a new proxy port (or reuse the old one if available)
+                match proxy_manager
+                    .create_session_proxy(session_id, access_mode)
+                    .await
+                {
+                    Ok(port) => Some(port),
+                    Err(e) => {
+                        tracing::warn!(
+                            session_id = %session_id,
+                            error = %e,
+                            "Failed to create proxy during unarchive (continuing without proxy)"
+                        );
+                        proxy_port // Fall back to old port if available
+                    }
+                }
+            } else {
+                proxy_port
+            }
+        } else {
+            None
+        };
+
+        // Build creation options
+        let create_options = crate::backends::CreateOptions {
+            agent,
+            model,
+            print_mode: false,
+            plan_mode: false,
+            session_proxy_port: new_proxy_port,
+            images: vec![],
+            dangerous_skip_checks,
+            session_id: Some(session_id),
+            initial_workdir: subdirectory,
+            http_port: self.http_port,
+            container_image: None,
+            container_resources: None,
+            repositories: vec![],
+            storage_class_override: None,
+            volume_mode: false,
+        };
+
+        // Recreate container based on backend type
+        let new_backend_id = match backend {
+            BackendType::Docker => self
+                .docker
+                .create(
+                    &session_name,
+                    &worktree_path,
+                    &initial_prompt,
+                    create_options,
+                )
+                .await
+                .context("Failed to recreate Docker container")?,
+            BackendType::Kubernetes => self
+                .kubernetes
+                .create(
+                    &session_name,
+                    &worktree_path,
+                    &initial_prompt,
+                    create_options,
+                )
+                .await
+                .context("Failed to recreate Kubernetes pod")?,
+            BackendType::Zellij => self
+                .zellij
+                .create(
+                    &session_name,
+                    &worktree_path,
+                    &initial_prompt,
+                    create_options,
+                )
+                .await
+                .context("Failed to recreate Zellij session")?,
+            #[cfg(target_os = "macos")]
+            BackendType::AppleContainer => self
+                .apple_container
+                .create(
+                    &session_name,
+                    &worktree_path,
+                    &initial_prompt,
+                    create_options,
+                )
+                .await
+                .context("Failed to recreate Apple container")?,
+            BackendType::Sprites => self
+                .sprites
+                .create(
+                    &session_name,
+                    &worktree_path,
+                    &initial_prompt,
+                    create_options,
+                )
+                .await
+                .context("Failed to recreate Sprite")?,
+        };
+
+        // Update session with new backend ID and set to Idle
+        {
+            let mut sessions = self.sessions.write().await;
+            if let Some(session) = sessions.iter_mut().find(|s| s.id == session_id) {
+                session.set_backend_id(new_backend_id.clone());
+                if let Some(port) = new_proxy_port {
+                    session.proxy_port = Some(port);
+                }
+                session.set_status(SessionStatus::Idle);
+                session.reset_reconcile_state();
+                let session_clone = session.clone();
+                drop(sessions);
+
+                // Update in store
+                self.store.save_session(&session_clone).await?;
+
+                // Record status change event
+                let event = Event::new(
+                    session_id,
+                    EventType::StatusChanged {
+                        old_status: SessionStatus::Archived,
+                        new_status: SessionStatus::Idle,
+                    },
+                );
+                self.store.record_event(&event).await?;
+
+                // Record backend ID event
+                let event = Event::new(
+                    session_id,
+                    EventType::BackendIdSet {
+                        backend_id: new_backend_id.clone(),
+                    },
+                );
+                self.store.record_event(&event).await?;
+
+                // Broadcast event to WebSocket clients if broadcaster available
+                if let Some(ref broadcaster) = self.event_broadcaster {
+                    broadcast_event(broadcaster, WsEvent::SessionUpdated(session_clone)).await;
+                }
+            }
+        }
+
+        // Start console session for the recreated container
+        if let Err(err) = self
+            .console_manager
+            .ensure_session(session_id, backend, &new_backend_id)
+            .await
+        {
+            tracing::warn!(error = %err, "Failed to start console session after unarchive");
+        }
+
+        tracing::info!(
+            session_id = %session_id,
+            backend = ?backend,
+            new_backend_id = %new_backend_id,
+            "Session unarchived - container recreated successfully"
+        );
 
         Ok(())
     }
@@ -2059,6 +2365,10 @@ impl SessionManager {
             .await
             .ok_or_else(|| anyhow::anyhow!("Session not found: {id_or_name}"))?;
 
+        if session.status == SessionStatus::Archived {
+            anyhow::bail!("Cannot refresh archived session - unarchive it first");
+        }
+
         if session.backend != BackendType::Docker {
             anyhow::bail!("Refresh only supported for Docker sessions");
         }
@@ -2143,6 +2453,7 @@ impl SessionManager {
                 container_resources: None,
                 repositories: vec![], // Legacy single-repo mode (refresh operation)
                 storage_class_override: None,
+                volume_mode: false,
             };
 
             let new_backend_id = self
@@ -2440,6 +2751,11 @@ impl SessionManager {
             .find(|s| s.id == session_id)
             .ok_or_else(|| anyhow::anyhow!("Session not found: {}", session_id))?;
 
+        // Cannot recreate archived sessions - use unarchive instead
+        if session.status == SessionStatus::Archived {
+            anyhow::bail!("Cannot recreate container for archived session - unarchive it first");
+        }
+
         // Only Docker and Kubernetes backends support recreation
         if session.backend == BackendType::Zellij {
             anyhow::bail!("Zellij sessions cannot be recreated automatically");
@@ -2488,6 +2804,7 @@ impl SessionManager {
             container_resources: None,
             repositories: vec![], // Legacy single-repo mode (recreation)
             storage_class_override: None,
+            volume_mode: false,
         };
 
         // Recreate container
@@ -3032,6 +3349,42 @@ impl SessionManager {
         Ok(())
     }
 
+    /// Update the cached history file path for a session
+    ///
+    /// Used by the history API endpoint to cache discovered Codex history file paths.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the session is not found or the store update fails.
+    #[instrument(skip(self), fields(session_id = %session_id, path = %path.display()))]
+    pub async fn update_history_file_path(
+        &self,
+        session_id: Uuid,
+        path: &std::path::PathBuf,
+    ) -> anyhow::Result<()> {
+        let mut sessions = self.sessions.write().await;
+        let session = sessions
+            .iter_mut()
+            .find(|s| s.id == session_id)
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {}", session_id))?;
+
+        session.history_file_path = Some(path.clone());
+        session.updated_at = chrono::Utc::now();
+        let session_clone = session.clone();
+        drop(sessions);
+
+        // Update in store
+        self.store.save_session(&session_clone).await?;
+
+        tracing::debug!(
+            session_id = %session_id,
+            path = %path.display(),
+            "Updated history file path"
+        );
+
+        Ok(())
+    }
+
     /// Send a prompt to a Claude session (for hotkey triggers)
     ///
     /// # Errors
@@ -3047,6 +3400,10 @@ impl SessionManager {
             .get_session(id_or_name)
             .await
             .ok_or_else(|| anyhow::anyhow!("Session not found: {}", id_or_name))?;
+
+        if session.status == SessionStatus::Archived {
+            anyhow::bail!("Cannot send prompt to archived session - unarchive it first");
+        }
 
         let backend_id = session
             .backend_id
@@ -3154,8 +3511,9 @@ impl SessionManager {
             }
             BackendType::Sprites => {
                 // Send prompt via sprite CLI exec (similar to kubectl exec)
+                // Use -s global flag to specify which sprite
                 let mut child = tokio::process::Command::new("sprite")
-                    .args(["exec", "-i", backend_id, "claude"])
+                    .args(["-s", backend_id, "exec", "claude"])
                     .stdin(std::process::Stdio::piped())
                     .stdout(std::process::Stdio::piped())
                     .stderr(std::process::Stdio::piped())

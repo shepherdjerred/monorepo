@@ -298,6 +298,52 @@ pub async fn get_github_repo(repo_path: &Path) -> anyhow::Result<String> {
     parse_github_repo_from_url(&url)
 }
 
+/// Get the git remote URL (origin) from a local git repository
+///
+/// Executes `git remote get-url origin` to find the remote URL.
+///
+/// # Arguments
+///
+/// * `repo_path` - Path to the git repository
+///
+/// # Returns
+///
+/// Returns the remote URL as a string
+///
+/// # Errors
+///
+/// Returns an error if:
+/// - The git command fails
+/// - The repository has no origin remote
+///
+/// # Example
+///
+/// ```no_run
+/// use std::path::PathBuf;
+/// use clauderon::utils::git::get_remote_url;
+///
+/// # async fn example() -> anyhow::Result<()> {
+/// let url = get_remote_url(&PathBuf::from("/path/to/repo")).await?;
+/// println!("Remote URL: {}", url);
+/// # Ok(())
+/// # }
+/// ```
+pub async fn get_remote_url(repo_path: &Path) -> anyhow::Result<String> {
+    let output = Command::new("git")
+        .args(["remote", "get-url", "origin"])
+        .current_dir(repo_path)
+        .output()
+        .await
+        .context("Failed to execute git remote get-url origin")?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        anyhow::bail!("git remote get-url origin failed: {}", stderr.trim());
+    }
+
+    Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
+}
+
 /// Parse a GitHub repository URL and extract the owner/repo
 ///
 /// Supports both SSH and HTTPS URL formats:
