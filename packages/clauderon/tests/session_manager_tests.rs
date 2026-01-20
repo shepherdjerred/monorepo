@@ -74,6 +74,8 @@ async fn create_test_manager() -> (
     let docker = Arc::new(MockExecutionBackend::docker());
     let kubernetes = Arc::new(MockExecutionBackend::kubernetes());
     let sprites = Arc::new(MockExecutionBackend::sprites());
+    #[cfg(target_os = "macos")]
+    let apple_container = Arc::new(MockExecutionBackend::apple_container());
 
     // Helper functions to coerce Arc<Concrete> to Arc<dyn Trait>
     // The coercion happens at the function return site
@@ -91,6 +93,8 @@ async fn create_test_manager() -> (
         to_exec_backend(Arc::clone(&docker)),
         to_exec_backend(Arc::clone(&kubernetes)),
         None,
+        #[cfg(target_os = "macos")]
+        to_exec_backend(Arc::clone(&apple_container)),
         to_exec_backend(Arc::clone(&sprites)),
         Arc::new(clauderon::feature_flags::FeatureFlags::default()),
     )

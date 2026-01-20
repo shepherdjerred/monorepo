@@ -710,6 +710,7 @@ dependencies = [
  "users",
  "uuid",
  "vt100",
+ "walkdir",
  "webauthn-rs",
  "webauthn-rs-proto",
 ]

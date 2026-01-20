@@ -195,7 +195,8 @@ function getCrossCompileContainer(source: Directory): Container {
       "mold",
       "clang",
       "libssl-dev:arm64",
-      "pkg-config"
+      "pkg-config",
+      "binutils"
     ])
     // Add cross-compilation targets
     .withExec(["rustup", "target", "add", "x86_64-unknown-linux-gnu"])

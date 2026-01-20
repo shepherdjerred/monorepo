@@ -84,6 +84,8 @@ async fn create_test_manager_with_proxy() -> (
     let docker = Arc::new(MockExecutionBackend::docker());
     let kubernetes = Arc::new(MockExecutionBackend::kubernetes());
     let sprites = Arc::new(MockExecutionBackend::sprites());
+    #[cfg(target_os = "macos")]
+    let apple_container = Arc::new(MockExecutionBackend::apple_container());
 
     // Helper functions to coerce Arc<Concrete> to Arc<dyn Trait>
     fn to_git_ops(arc: Arc<MockGitBackend>) -> Arc<dyn GitOperations> {
@@ -100,6 +102,8 @@ async fn create_test_manager_with_proxy() -> (
         to_exec_backend(Arc::clone(&docker)),
         to_exec_backend(Arc::clone(&kubernetes)),
         None,
+        #[cfg(target_os = "macos")]
+        to_exec_backend(Arc::clone(&apple_container)),
         to_exec_backend(Arc::clone(&sprites)),
         Arc::new(clauderon::feature_flags::FeatureFlags::default()),
     )
@@ -436,6 +440,8 @@ async fn test_access_mode_persists_across_restarts() {
         let docker = Arc::new(MockExecutionBackend::docker());
         let kubernetes = Arc::new(MockExecutionBackend::kubernetes());
         let sprites = Arc::new(MockExecutionBackend::sprites());
+        #[cfg(target_os = "macos")]
+        let apple_container = Arc::new(MockExecutionBackend::apple_container());
 
         fn to_git_ops(arc: Arc<MockGitBackend>) -> Arc<dyn GitOperations> {
             arc
@@ -451,6 +457,8 @@ async fn test_access_mode_persists_across_restarts() {
             to_exec_backend(docker),
             to_exec_backend(kubernetes),
             None,
+            #[cfg(target_os = "macos")]
+            to_exec_backend(apple_container),
             to_exec_backend(sprites),
             Arc::new(clauderon::feature_flags::FeatureFlags::default()),
         )
@@ -494,6 +502,8 @@ async fn test_access_mode_persists_across_restarts() {
         let docker = Arc::new(MockExecutionBackend::docker());
         let kubernetes = Arc::new(MockExecutionBackend::kubernetes());
         let sprites = Arc::new(MockExecutionBackend::sprites());
+        #[cfg(target_os = "macos")]
+        let apple_container = Arc::new(MockExecutionBackend::apple_container());
 
         fn to_git_ops(arc: Arc<MockGitBackend>) -> Arc<dyn GitOperations> {
             arc
@@ -509,6 +519,8 @@ async fn test_access_mode_persists_across_restarts() {
             to_exec_backend(docker),
             to_exec_backend(kubernetes),
             None,
+            #[cfg(target_os = "macos")]
+            to_exec_backend(apple_container),
             to_exec_backend(sprites),
             Arc::new(clauderon::feature_flags::FeatureFlags::default()),
         )

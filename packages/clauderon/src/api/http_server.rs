@@ -5,6 +5,7 @@ use crate::api::ws_events::{EventBroadcaster, broadcast_event};
 use crate::auth::{self, AuthState};
 use crate::core::manager::SessionManager;
 use crate::core::session::AccessMode;
+use crate::core::session::AgentType;
 use crate::core::session::ClaudeWorkingStatus;
 use crate::hooks::{HookEvent, HookMessage};
 use axum::{
@@ -674,7 +675,11 @@ async fn upload_file(
     }))
 }
 
-/// Get session history from Claude Code's JSONL file
+/// Get session history from agent's JSONL file
+///
+/// Supports both Claude Code and Codex history formats:
+/// - Claude Code: `<worktree>/.claude/projects/-workspace/<session-id>.jsonl`
+/// - Codex: `<worktree>/.codex/sessions/{year}/{month}/{day}/*-{session_id}.jsonl`
 ///
 /// Query parameters:
 /// - `since_line`: Optional line number to start from (for incremental updates)
@@ -692,28 +697,96 @@ async fn get_session_history(
         .await
         .ok_or_else(|| AppError::NotFound(format!("Session not found: {id}")))?;
 
-    let history_path = session
-        .history_file_path
-        .ok_or_else(|| AppError::NotFound("History file path not configured".to_string()))?;
+    // Get history path based on agent type
+    let history_path = match session.agent {
+        AgentType::ClaudeCode => {
+            // Use cached path for Claude Code
+            let path = session.history_file_path.ok_or_else(|| {
+                AppError::NotFound("History file path not configured".to_string())
+            })?;
 
-    // Security: Validate path is within worktree bounds and matches expected pattern
-    if !history_path.starts_with(&session.worktree_path) {
-        return Err(AppError::BadRequest(
-            "Invalid history file path: outside worktree".to_string(),
-        ));
-    }
+            // Security: Validate path is within worktree bounds and matches expected pattern
+            if !path.starts_with(&session.worktree_path) {
+                return Err(AppError::BadRequest(
+                    "Invalid history file path: outside worktree".to_string(),
+                ));
+            }
 
-    // Verify path matches expected pattern (defense in depth)
-    let expected_path = crate::core::session::get_history_file_path(
-        &session.worktree_path,
-        &session.id,
-        &session.subdirectory,
-    );
-    if history_path != expected_path {
-        return Err(AppError::BadRequest(
-            "Invalid history file path: pattern mismatch".to_string(),
-        ));
-    }
+            // Verify path matches expected pattern (defense in depth)
+            let expected_path = crate::core::session::get_history_file_path(
+                &session.worktree_path,
+                &session.id,
+                &session.subdirectory,
+            );
+            if path != expected_path {
+                return Err(AppError::BadRequest(
+                    "Invalid history file path: pattern mismatch".to_string(),
+                ));
+            }
+
+            path
+        }
+        AgentType::Codex => {
+            // For Codex: use cached path if available, otherwise search
+            if let Some(ref cached_path) = session.history_file_path {
+                // Validate cached path
+                if !crate::core::session::validate_codex_history_path(
+                    cached_path,
+                    &session.worktree_path,
+                    &session.id,
+                ) {
+                    return Err(AppError::BadRequest(
+                        "Invalid Codex history path".to_string(),
+                    ));
+                }
+                cached_path.clone()
+            } else {
+                // Search for the history file
+                let found_path = crate::core::session::find_codex_history_file(
+                    &session.worktree_path,
+                    &session.id,
+                )
+                .ok_or_else(|| {
+                    AppError::NotFound("Codex history file not found yet".to_string())
+                })?;
+
+                // Validate the found path
+                if !crate::core::session::validate_codex_history_path(
+                    &found_path,
+                    &session.worktree_path,
+                    &session.id,
+                ) {
+                    return Err(AppError::BadRequest(
+                        "Invalid Codex history path".to_string(),
+                    ));
+                }
+
+                // Cache the discovered path (fire-and-forget)
+                let session_manager = state.session_manager.clone();
+                let session_id = session.id;
+                let path_to_cache = found_path.clone();
+                tokio::spawn(async move {
+                    if let Err(e) = session_manager
+                        .update_history_file_path(session_id, &path_to_cache)
+                        .await
+                    {
+                        tracing::warn!(
+                            session_id = %session_id,
+                            error = %e,
+                            "Failed to cache Codex history file path"
+                        );
+                    }
+                });
+
+                found_path
+            }
+        }
+        AgentType::Gemini => {
+            return Err(AppError::NotFound(
+                "Gemini history not yet supported".to_string(),
+            ));
+        }
+    };
 
     // Check if file exists
     if !history_path.exists() {

@@ -138,6 +138,10 @@ impl SqliteStore {
             Self::migrate_to_v15(pool).await?;
         }
 
+        if current_version < 16 {
+            Self::migrate_to_v16(pool).await?;
+        }
+
         Ok(())
     }
 
@@ -952,6 +956,37 @@ impl SqliteStore {
         tracing::info!("Migration v15 complete");
         Ok(())
     }
+
+    /// Migration v16: Add base_branch column to session_repositories for clone-based backends
+    async fn migrate_to_v16(pool: &SqlitePool) -> anyhow::Result<()> {
+        tracing::info!("Applying migration v16: Add base_branch column to session_repositories");
+
+        // Check if column exists
+        let base_branch_exists: bool = sqlx::query_scalar(
+            "SELECT COUNT(*) > 0 FROM pragma_table_info('session_repositories') WHERE name = 'base_branch'",
+        )
+        .fetch_one(pool)
+        .await?;
+
+        if !base_branch_exists {
+            // NULL means use repository's default branch
+            sqlx::query("ALTER TABLE session_repositories ADD COLUMN base_branch TEXT")
+                .execute(pool)
+                .await?;
+            tracing::debug!("Added base_branch column to session_repositories table");
+        }
+
+        // Record migration
+        let now = Utc::now();
+        sqlx::query("INSERT OR REPLACE INTO schema_version (version, applied_at) VALUES (?, ?)")
+            .bind(16)
+            .bind(now.to_rfc3339())
+            .execute(pool)
+            .await?;
+
+        tracing::info!("Migration v16 complete");
+        Ok(())
+    }
 }
 
 #[async_trait]
@@ -990,6 +1025,7 @@ impl Store for SqliteStore {
                         branch_name: session.branch_name.clone(),
                         mount_name: "primary".to_string(),
                         is_primary: true,
+                        base_branch: None,
                     }]);
                 }
                 Err(e) => {
@@ -1006,6 +1042,7 @@ impl Store for SqliteStore {
                         branch_name: session.branch_name.clone(),
                         mount_name: "primary".to_string(),
                         is_primary: true,
+                        base_branch: None,
                     }]);
                 }
             }
@@ -1045,6 +1082,7 @@ impl Store for SqliteStore {
                             branch_name: session.branch_name.clone(),
                             mount_name: "primary".to_string(),
                             is_primary: true,
+                            base_branch: None,
                         }]);
                     }
                     Err(e) => {
@@ -1060,6 +1098,7 @@ impl Store for SqliteStore {
                             branch_name: session.branch_name.clone(),
                             mount_name: "primary".to_string(),
                             is_primary: true,
+                            base_branch: None,
                         }]);
                     }
                 }
@@ -1278,7 +1317,7 @@ impl Store for SqliteStore {
 
         let rows = sqlx::query(
             r"
-            SELECT repo_path, subdirectory, worktree_path, branch_name, mount_name, is_primary
+            SELECT repo_path, subdirectory, worktree_path, branch_name, mount_name, is_primary, base_branch
             FROM session_repositories
             WHERE session_id = ?
             ORDER BY display_order ASC, is_primary DESC
@@ -1297,6 +1336,7 @@ impl Store for SqliteStore {
                 branch_name: row.try_get("branch_name")?,
                 mount_name: row.try_get("mount_name")?,
                 is_primary: row.try_get::<i64, _>("is_primary")? != 0,
+                base_branch: row.try_get::<Option<String>, _>("base_branch")?,
             });
         }
 
@@ -1332,9 +1372,9 @@ impl Store for SqliteStore {
                 r"
                 INSERT INTO session_repositories (
                     session_id, repo_path, subdirectory, worktree_path,
-                    branch_name, mount_name, is_primary, display_order
+                    branch_name, mount_name, is_primary, display_order, base_branch
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ",
             )
             .bind(session_id.to_string())
@@ -1345,6 +1385,7 @@ impl Store for SqliteStore {
             .bind(&repo.mount_name)
             .bind(i64::from(repo.is_primary))
             .bind(display_order)
+            .bind(&repo.base_branch)
             .execute(&mut *tx)
             .await?;
         }
