@@ -205,6 +205,7 @@ pub enum CreateDialogFocus {
     #[default]
     Prompt,
     RepoPath,
+    BaseBranch,
     Backend,
     Agent,
     Model,
@@ -263,6 +264,10 @@ pub struct CreateDialogState {
     pub skip_checks: bool,
     pub plan_mode: bool,
     pub access_mode: AccessMode,
+
+    /// Base branch to clone from (for clone-based backends like Sprites/K8s).
+    /// When empty, clones the repository's default branch.
+    pub base_branch: String,
 
     /// Image file paths to attach to the prompt.
     ///
@@ -777,6 +782,7 @@ impl Default for CreateDialogState {
             skip_checks: false,
             plan_mode: true,                    // Default to plan mode ON
             access_mode: AccessMode::default(), // ReadOnly by default (secure)
+            base_branch: String::new(),         // Empty = use repo default branch
             images: Vec::new(),
             prompt_cursor_line: 0,
             prompt_cursor_col: 0,

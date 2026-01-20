@@ -126,6 +126,12 @@ export interface CreateRepositoryInput {
 	 * Exactly one repository must be marked as primary in multi-repo sessions.
 	 */
 	is_primary: boolean;
+	/**
+	 * Base branch to clone from (for clone-based backends like Sprites/K8s).
+	 * When None, clones the repository's default branch.
+	 * The session's working branch is always created fresh from this base.
+	 */
+	base_branch?: string;
 }
 
 /** Execution backend type */
@@ -424,6 +430,11 @@ export interface SessionRepository {
 	mount_name: string;
 	/** Whether this is the primary repository (determines working directory) */
 	is_primary: boolean;
+	/**
+	 * Base branch to clone from (for clone-based backends like Sprites)
+	 * When None, clones the repository's default branch
+	 */
+	base_branch?: string;
 }
 
 /** PR check status */

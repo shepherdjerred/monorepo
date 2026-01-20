@@ -96,6 +96,13 @@ pub struct CreateOptions {
     /// When empty, use single-repo legacy mode with workdir parameter.
     /// When non-empty, use multi-repo mode and ignore workdir parameter.
     pub repositories: Vec<SessionRepository>,
+
+    /// Use volume mode instead of bind mounts (Docker only).
+    ///
+    /// When true, creates a Docker volume and clones repositories into it
+    /// (similar to Sprites/K8s backends). When false (default), bind mounts
+    /// local worktrees directly.
+    pub volume_mode: bool,
 }
 
 /// Trait for execution backends (Zellij, Docker, etc.)

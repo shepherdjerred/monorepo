@@ -89,7 +89,7 @@ impl SpritesBackend {
 
     /// Run a command in a sprite via CLI
     ///
-    /// Uses `sprite run -s {name} -- {command...}` to run commands.
+    /// Uses `sprite exec -s {name} -- {command...}` to run commands.
     ///
     /// # Errors
     ///
@@ -102,7 +102,7 @@ impl SpritesBackend {
             "Running command in sprite"
         );
 
-        let mut args = vec!["run", "-s", name, "--"];
+        let mut args = vec!["exec", "-s", name, "--"];
         args.extend(command);
 
         let output = Command::new("sprite")
@@ -111,7 +111,7 @@ impl SpritesBackend {
             .await
             .map_err(|e| {
                 anyhow::anyhow!(
-                    "Failed to run 'sprite run' command: {}. Is the sprite CLI installed?",
+                    "Failed to run 'sprite exec' command: {}. Is the sprite CLI installed?",
                     e
                 )
             })?;
@@ -282,14 +282,17 @@ impl SpritesBackend {
                 format!("/home/sprite/repos/{}", repo.mount_name)
             };
 
-            // Build clone command with explicit arguments (avoids shell injection)
-            let mut clone_args = vec![
-                "git",
-                "clone",
-                "--branch",
-                &repo.branch_name,
-                "--single-branch",
-            ];
+            // Step 1: Clone the repository
+            // Use base_branch if specified, otherwise clone the default branch
+            let mut clone_args = vec!["git", "clone"];
+
+            // Only use --branch if we have a base_branch specified
+            // (otherwise, clone the default branch and we'll switch later)
+            let base_branch_str: String;
+            if let Some(ref base) = repo.base_branch {
+                base_branch_str = base.clone();
+                clone_args.extend(["--branch", &base_branch_str, "--single-branch"]);
+            }
 
             // Add shallow clone flags if configured
             if self.config.git.shallow_clone {
@@ -308,16 +311,144 @@ impl SpritesBackend {
                     sprite_name = %sprite_name,
                     mount_name = %repo.mount_name,
                     remote_url = %remote_url,
-                    branch = %repo.branch_name,
+                    base_branch = ?repo.base_branch,
                     stderr = %clone_result.stderr,
                     "Failed to clone repository"
                 );
                 anyhow::bail!(
-                    "Failed to clone repository '{}' (branch '{}') into sprite: {}",
+                    "Failed to clone repository '{}' into sprite: {}",
                     repo.mount_name,
-                    repo.branch_name,
                     clone_result.stderr
                 );
+            }
+
+            // Step 2: Check if the target branch exists on remote
+            let check_result = self
+                .sprite_run(
+                    sprite_name,
+                    &[
+                        "git",
+                        "-C",
+                        &target_path,
+                        "ls-remote",
+                        "--heads",
+                        "origin",
+                        &repo.branch_name,
+                    ],
+                )
+                .await?;
+
+            // Step 3: Create or checkout branch
+            if check_result.stdout.trim().is_empty() {
+                // Branch doesn't exist remotely - create new local branch
+                tracing::info!(
+                    sprite_name = %sprite_name,
+                    mount_name = %repo.mount_name,
+                    branch = %repo.branch_name,
+                    "Branch doesn't exist on remote, creating new local branch"
+                );
+
+                let checkout_result = self
+                    .sprite_run(
+                        sprite_name,
+                        &[
+                            "git",
+                            "-C",
+                            &target_path,
+                            "checkout",
+                            "-b",
+                            &repo.branch_name,
+                        ],
+                    )
+                    .await?;
+
+                if checkout_result.exit_code != 0 {
+                    tracing::error!(
+                        sprite_name = %sprite_name,
+                        mount_name = %repo.mount_name,
+                        branch = %repo.branch_name,
+                        stderr = %checkout_result.stderr,
+                        "Failed to create new branch"
+                    );
+                    anyhow::bail!(
+                        "Failed to create branch '{}' in repository '{}': {}",
+                        repo.branch_name,
+                        repo.mount_name,
+                        checkout_result.stderr
+                    );
+                }
+            } else {
+                // Branch exists on remote - fetch and checkout tracking branch
+                tracing::info!(
+                    sprite_name = %sprite_name,
+                    mount_name = %repo.mount_name,
+                    branch = %repo.branch_name,
+                    "Branch exists on remote, checking out tracking branch"
+                );
+
+                // Fetch the specific branch
+                let fetch_result = self
+                    .sprite_run(
+                        sprite_name,
+                        &[
+                            "git",
+                            "-C",
+                            &target_path,
+                            "fetch",
+                            "origin",
+                            &repo.branch_name,
+                        ],
+                    )
+                    .await?;
+
+                if fetch_result.exit_code != 0 {
+                    tracing::error!(
+                        sprite_name = %sprite_name,
+                        mount_name = %repo.mount_name,
+                        branch = %repo.branch_name,
+                        stderr = %fetch_result.stderr,
+                        "Failed to fetch branch from remote"
+                    );
+                    anyhow::bail!(
+                        "Failed to fetch branch '{}' for repository '{}': {}",
+                        repo.branch_name,
+                        repo.mount_name,
+                        fetch_result.stderr
+                    );
+                }
+
+                // Checkout the branch with upstream tracking
+                let tracking_ref = format!("origin/{}", repo.branch_name);
+                let checkout_result = self
+                    .sprite_run(
+                        sprite_name,
+                        &[
+                            "git",
+                            "-C",
+                            &target_path,
+                            "checkout",
+                            "-b",
+                            &repo.branch_name,
+                            &tracking_ref,
+                        ],
+                    )
+                    .await?;
+
+                if checkout_result.exit_code != 0 {
+                    tracing::error!(
+                        sprite_name = %sprite_name,
+                        mount_name = %repo.mount_name,
+                        branch = %repo.branch_name,
+                        stderr = %checkout_result.stderr,
+                        "Failed to checkout tracking branch"
+                    );
+                    anyhow::bail!(
+                        "Failed to checkout branch '{}' for repository '{}': {}",
+                        repo.branch_name,
+                        repo.mount_name,
+                        checkout_result.stderr
+                    );
+                }
             }
 
             tracing::info!(
@@ -374,7 +505,49 @@ impl SpritesBackend {
         Ok(())
     }
 
-    /// Start the agent in a detached session (tmux or screen)
+    /// Check if abduco is installed in the sprite
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the command fails (not if abduco is missing).
+    #[instrument(skip(self))]
+    async fn is_abduco_installed(&self, sprite_name: &str) -> anyhow::Result<bool> {
+        let result = self.sprite_run(sprite_name, &["which", "abduco"]).await?;
+        Ok(result.exit_code == 0)
+    }
+
+    /// Install abduco in the sprite for session management
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if installation fails.
+    #[instrument(skip(self))]
+    async fn install_abduco(&self, sprite_name: &str) -> anyhow::Result<()> {
+        tracing::info!(sprite_name = %sprite_name, "Installing abduco");
+
+        // Install abduco using apt (Debian/Ubuntu-based sprites)
+        let install_cmd = "apt-get update && apt-get install -y abduco";
+
+        let result = self.sprite_shell_run(sprite_name, install_cmd).await?;
+
+        if result.exit_code != 0 {
+            tracing::error!(
+                sprite_name = %sprite_name,
+                stderr = %result.stderr,
+                "Failed to install abduco"
+            );
+            anyhow::bail!(
+                "Failed to install abduco in sprite '{}': {}",
+                sprite_name,
+                result.stderr
+            );
+        }
+
+        tracing::info!(sprite_name = %sprite_name, "abduco installed successfully");
+        Ok(())
+    }
+
+    /// Start the agent in a detached abduco session
     ///
     /// # Errors
     ///
@@ -426,13 +599,16 @@ impl SpritesBackend {
             format!("/home/sprite/workspace/{}", workdir.display())
         };
 
-        // Start agent in a tmux session for persistence
-        let tmux_cmd = format!(
-            "tmux new-session -d -s clauderon -c '{}' '{}'",
-            work_path, agent_cmd
+        // Start agent in a detached abduco session for persistence
+        // abduco -n creates a new detached session
+        // script -q -f captures terminal output to a log file for later retrieval
+        let escaped_agent_cmd = agent_cmd.replace('\'', "'\\''");
+        let abduco_cmd = format!(
+            "cd '{}' && abduco -n clauderon script -q -f /tmp/clauderon.log -c '{}'",
+            work_path, escaped_agent_cmd
         );
 
-        let result = self.sprite_shell_run(sprite_name, &tmux_cmd).await?;
+        let result = self.sprite_shell_run(sprite_name, &abduco_cmd).await?;
 
         if result.exit_code != 0 {
             tracing::error!(
@@ -507,6 +683,7 @@ impl ExecutionBackend for SpritesBackend {
                 branch_name: branch,
                 mount_name: "primary".to_string(),
                 is_primary: true,
+                base_branch: None,
             }]
         } else {
             options.repositories
@@ -543,7 +720,26 @@ impl ExecutionBackend for SpritesBackend {
             }
         }
 
-        // Step 4: Start the agent
+        // Step 4: Install abduco if needed (for session management)
+        let abduco_installed = self
+            .is_abduco_installed(&sprite_name)
+            .await
+            .unwrap_or(false);
+
+        if !abduco_installed {
+            tracing::info!(sprite_name = %sprite_name, "abduco not found, installing");
+            self.install_abduco(&sprite_name).await.map_err(|e| {
+                anyhow::anyhow!(
+                    "Failed to install abduco in sprite '{}': {}",
+                    sprite_name,
+                    e
+                )
+            })?;
+        } else {
+            tracing::info!(sprite_name = %sprite_name, "abduco already installed");
+        }
+
+        // Step 5: Start the agent
         self.start_agent(
             &sprite_name,
             options.agent,
@@ -619,7 +815,7 @@ impl ExecutionBackend for SpritesBackend {
         }
 
         let output = Command::new("sprite")
-            .args(["destroy", "--yes", id])
+            .args(["-s", id, "destroy"])
             .output()
             .await
             .map_err(|e| {
@@ -646,18 +842,27 @@ impl ExecutionBackend for SpritesBackend {
     fn attach_command(&self, id: &str) -> Vec<String> {
         // Return the command to attach to a sprite using the sprites CLI
         // User must have `sprite` CLI installed
-        vec!["sprite".to_string(), "console".to_string(), id.to_string()]
+        // Use -s global flag to specify which sprite
+        vec![
+            "sprite".to_string(),
+            "-s".to_string(),
+            id.to_string(),
+            "console".to_string(),
+        ]
     }
 
     #[instrument(skip(self))]
     async fn get_output(&self, id: &str, lines: usize) -> anyhow::Result<String> {
         tracing::debug!(sprite_name = %id, lines = lines, "Getting output from sprite");
 
-        // Get logs from the tmux session
-        let tmux_cmd = format!("tmux capture-pane -t clauderon -p -S -{}", lines);
+        // Get the last N lines from the script log file
+        let tail_cmd = format!(
+            "tail -n {} /tmp/clauderon.log 2>/dev/null || echo ''",
+            lines
+        );
 
         let result = self
-            .sprite_shell_run(id, &tmux_cmd)
+            .sprite_shell_run(id, &tail_cmd)
             .await
             .map_err(|e| anyhow::anyhow!("Failed to get output from sprite '{}': {}", id, e))?;
 
@@ -665,10 +870,10 @@ impl ExecutionBackend for SpritesBackend {
             tracing::warn!(
                 sprite_name = %id,
                 stderr = %result.stderr,
-                "Failed to capture tmux pane"
+                "Failed to read log file"
             );
-            // Return stderr as output if capture failed (tmux might not be running)
-            return Ok(result.stderr);
+            // Return empty string if log file doesn't exist yet
+            return Ok(String::new());
         }
 
         Ok(result.stdout)
@@ -698,7 +903,7 @@ mod tests {
     fn test_attach_command() {
         let backend = SpritesBackend::new();
         let cmd = backend.attach_command("clauderon-test");
-        assert_eq!(cmd, vec!["sprite", "console", "clauderon-test"]);
+        assert_eq!(cmd, vec!["sprite", "-s", "clauderon-test", "console"]);
     }
 
     #[test]

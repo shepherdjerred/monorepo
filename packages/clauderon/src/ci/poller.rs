@@ -4,7 +4,7 @@ use std::time::Duration;
 use tokio::time::interval;
 use uuid::Uuid;
 
-use crate::core::{CheckStatus, ReviewDecision, SessionManager};
+use crate::core::{CheckStatus, ReviewDecision, SessionManager, SessionStatus};
 
 /// CI status poller - polls GitHub PR checks for sessions with PRs
 pub struct CIPoller {
@@ -58,6 +58,11 @@ impl CIPoller {
         let sessions = self.manager.list_sessions().await;
 
         for session in sessions {
+            // Skip archived sessions - they have no active resources
+            if session.status == SessionStatus::Archived {
+                continue;
+            }
+
             // Only poll sessions with PRs
             if let Some(ref pr_url) = session.pr_url {
                 if let Err(e) = self
@@ -80,6 +85,11 @@ impl CIPoller {
         let sessions = self.manager.list_sessions().await;
 
         for session in sessions {
+            // Skip archived sessions - they have no active resources
+            if session.status == SessionStatus::Archived {
+                continue;
+            }
+
             // Only discover PRs for sessions without pr_url
             if session.pr_url.is_none() {
                 if let Err(e) = self
@@ -153,6 +163,11 @@ impl CIPoller {
         let sessions = self.manager.list_sessions().await;
 
         for session in sessions {
+            // Skip archived sessions - they have no active resources
+            if session.status == SessionStatus::Archived {
+                continue;
+            }
+
             // Only check sessions with PRs
             if let Some(ref pr_url) = session.pr_url {
                 if let Err(e) = self
@@ -344,6 +359,11 @@ impl CIPoller {
         let sessions = self.manager.list_sessions().await;
 
         for session in sessions {
+            // Skip archived sessions - they have no active resources
+            if session.status == SessionStatus::Archived {
+                continue;
+            }
+
             // Check all sessions (not just those with PRs)
             if let Err(e) = self
                 .check_session_dirty_status(&session.id, &session.worktree_path)

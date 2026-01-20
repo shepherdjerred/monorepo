@@ -333,7 +333,8 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
             // Cycle through fields
             app.create_dialog.focus = match app.create_dialog.focus {
                 CreateDialogFocus::Prompt => CreateDialogFocus::RepoPath,
-                CreateDialogFocus::RepoPath => CreateDialogFocus::Backend,
+                CreateDialogFocus::RepoPath => CreateDialogFocus::BaseBranch,
+                CreateDialogFocus::BaseBranch => CreateDialogFocus::Backend,
                 CreateDialogFocus::Backend => CreateDialogFocus::Agent,
                 CreateDialogFocus::Agent => CreateDialogFocus::Model,
                 CreateDialogFocus::Model => CreateDialogFocus::AccessMode,
@@ -348,7 +349,8 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
             app.create_dialog.focus = match app.create_dialog.focus {
                 CreateDialogFocus::Prompt => CreateDialogFocus::Buttons,
                 CreateDialogFocus::RepoPath => CreateDialogFocus::Prompt,
-                CreateDialogFocus::Backend => CreateDialogFocus::RepoPath,
+                CreateDialogFocus::BaseBranch => CreateDialogFocus::RepoPath,
+                CreateDialogFocus::Backend => CreateDialogFocus::BaseBranch,
                 CreateDialogFocus::Agent => CreateDialogFocus::Backend,
                 CreateDialogFocus::Model => CreateDialogFocus::Agent,
                 CreateDialogFocus::AccessMode => CreateDialogFocus::Model,
@@ -501,7 +503,8 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                 app.create_dialog.focus = match app.create_dialog.focus {
                     CreateDialogFocus::Prompt => CreateDialogFocus::Buttons,
                     CreateDialogFocus::RepoPath => CreateDialogFocus::Prompt,
-                    CreateDialogFocus::Backend => CreateDialogFocus::RepoPath,
+                    CreateDialogFocus::BaseBranch => CreateDialogFocus::RepoPath,
+                    CreateDialogFocus::Backend => CreateDialogFocus::BaseBranch,
                     CreateDialogFocus::Agent => CreateDialogFocus::Backend,
                     CreateDialogFocus::Model => CreateDialogFocus::Agent,
                     CreateDialogFocus::AccessMode => CreateDialogFocus::Model,
@@ -534,7 +537,8 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                 // Navigate to next field
                 app.create_dialog.focus = match app.create_dialog.focus {
                     CreateDialogFocus::Prompt => CreateDialogFocus::RepoPath,
-                    CreateDialogFocus::RepoPath => CreateDialogFocus::Backend,
+                    CreateDialogFocus::RepoPath => CreateDialogFocus::BaseBranch,
+                    CreateDialogFocus::BaseBranch => CreateDialogFocus::Backend,
                     CreateDialogFocus::Backend => CreateDialogFocus::Agent,
                     CreateDialogFocus::Agent => CreateDialogFocus::Model,
                     CreateDialogFocus::Model => CreateDialogFocus::AccessMode,
@@ -594,7 +598,7 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
             CreateDialogFocus::Buttons => {
                 app.create_dialog.button_create_focused = !app.create_dialog.button_create_focused;
             }
-            CreateDialogFocus::RepoPath => {}
+            CreateDialogFocus::RepoPath | CreateDialogFocus::BaseBranch => {}
         },
         KeyCode::Char(' ') => {
             match app.create_dialog.focus {
@@ -638,6 +642,10 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                     };
                     app.create_dialog.directory_picker.open(initial_path);
                 }
+                CreateDialogFocus::BaseBranch => {
+                    // Insert space character in base branch field
+                    app.create_dialog.base_branch.push(' ');
+                }
                 CreateDialogFocus::Buttons => {}
             }
         }
@@ -653,6 +661,10 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                     c,
                 );
                 app.create_dialog.ensure_cursor_visible();
+            }
+            CreateDialogFocus::BaseBranch => {
+                // Insert character in base branch field
+                app.create_dialog.base_branch.push(c);
             }
             // RepoPath no longer accepts typed input - use directory picker instead
             _ => {}
@@ -672,6 +684,10 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
             CreateDialogFocus::RepoPath => {
                 // Clear the repo path on backspace
                 app.create_dialog.repo_path.clear();
+            }
+            CreateDialogFocus::BaseBranch => {
+                // Delete last character from base branch
+                app.create_dialog.base_branch.pop();
             }
             _ => {}
         },

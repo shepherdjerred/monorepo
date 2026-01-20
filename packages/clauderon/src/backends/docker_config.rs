@@ -221,6 +221,7 @@ mod tests {
                 memory: Some("2g".to_string()),
             }),
             extra_flags: vec!["--cap-add=SYS_PTRACE".to_string()],
+            use_volume_mode: false,
         };
 
         let toml = toml::to_string(&config).unwrap();

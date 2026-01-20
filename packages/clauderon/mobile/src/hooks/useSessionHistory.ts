@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { parseHistoryLines } from "../lib/historyParser";
+import { parseHistoryLinesAuto } from "../lib/historyParser";
 import type { Message } from "../lib/claudeParser";
 import { useClauderonClient } from "./useClauderonClient";
 
@@ -61,8 +61,8 @@ export function useSessionHistory(
         }
 
         if (response.lines.length > 0) {
-          // Parse new messages
-          const newMessages = parseHistoryLines(response.lines);
+          // Parse new messages (auto-detects Claude Code vs Codex format)
+          const newMessages = parseHistoryLinesAuto(response.lines);
 
           // Append to existing messages
           setMessages((prev) => [...prev, ...newMessages]);

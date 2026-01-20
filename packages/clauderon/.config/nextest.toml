@@ -1,0 +1,19 @@
+# cargo-nextest configuration
+# https://nexte.st/book/configuration.html
+#
+# Install: cargo install cargo-nextest
+# Run: cargo nextest run
+
+[profile.default]
+# No retries in local development
+retries = 0
+# Mark tests as slow after 60s
+slow-timeout = { period = "60s" }
+# Show failures immediately
+failure-output = "immediate"
+
+[profile.ci]
+# Retry flaky tests in CI
+retries = 2
+# Don't stop on first failure in CI
+fail-fast = false

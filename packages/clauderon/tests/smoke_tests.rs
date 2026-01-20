@@ -61,6 +61,7 @@ async fn test_claude_starts_in_docker() {
                 container_resources: None,
                 repositories: vec![],
                 storage_class_override: None,
+                volume_mode: false,
             },
         )
         .await;
@@ -139,6 +140,7 @@ async fn test_claude_writes_debug_files() {
                 container_resources: None,
                 repositories: vec![],
                 storage_class_override: None,
+                volume_mode: false,
             },
         )
         .await;
@@ -205,6 +207,7 @@ async fn test_container_runs_as_non_root() {
                 container_resources: None,
                 repositories: vec![],
                 storage_class_override: None,
+                volume_mode: false,
             },
         )
         .await;
@@ -283,6 +286,7 @@ async fn test_initial_prompt_executed() {
                 container_resources: None,
                 repositories: vec![],
                 storage_class_override: None,
+                volume_mode: false,
             },
         )
         .await;
@@ -406,6 +410,7 @@ async fn test_claude_print_mode_e2e() {
         container_resources: None,
         repositories: vec![],
         storage_class_override: None,
+        volume_mode: false,
     };
 
     // Simple prompt that should produce predictable-ish output

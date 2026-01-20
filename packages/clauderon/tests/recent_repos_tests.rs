@@ -67,6 +67,9 @@ async fn create_test_manager() -> (SessionManager, TempDir, TempDir) {
     let zellij = Arc::new(MockExecutionBackend::zellij());
     let docker = Arc::new(MockExecutionBackend::docker());
     let kubernetes = Arc::new(MockExecutionBackend::kubernetes());
+    let sprites = Arc::new(MockExecutionBackend::sprites());
+    #[cfg(target_os = "macos")]
+    let apple_container = Arc::new(MockExecutionBackend::apple_container());
 
     fn to_git_ops(arc: Arc<MockGitBackend>) -> Arc<dyn GitOperations> {
         arc
@@ -75,8 +78,6 @@ async fn create_test_manager() -> (SessionManager, TempDir, TempDir) {
         arc
     }
 
-    let sprites = Arc::new(MockExecutionBackend::sprites());
-
     let manager = SessionManager::new(
         store,
         to_git_ops(git),
@@ -84,6 +85,8 @@ async fn create_test_manager() -> (SessionManager, TempDir, TempDir) {
         to_exec_backend(docker),
         to_exec_backend(kubernetes),
         None,
+        #[cfg(target_os = "macos")]
+        to_exec_backend(apple_container),
         to_exec_backend(sprites),
         Arc::new(clauderon::feature_flags::FeatureFlags::default()),
     )

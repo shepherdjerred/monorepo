@@ -30,6 +30,11 @@ pub struct SessionRepository {
 
     /// Whether this is the primary repository (determines working directory)
     pub is_primary: bool,
+
+    /// Base branch to clone from (for clone-based backends like Sprites)
+    /// When None, clones the repository's default branch
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub base_branch: Option<String>,
 }
 
 /// Represents a single AI coding session
@@ -235,6 +240,12 @@ impl Session {
     /// Set the backend identifier
     pub fn set_backend_id(&mut self, backend_id: String) {
         self.backend_id = Some(backend_id);
+        self.updated_at = Utc::now();
+    }
+
+    /// Clear the backend identifier (used when archiving)
+    pub fn clear_backend_id(&mut self) {
+        self.backend_id = None;
         self.updated_at = Utc::now();
     }
 
@@ -860,6 +871,65 @@ pub fn get_history_file_path(
         .join(format!("{session_id}.jsonl"))
 }
 
+/// Find Codex history file by searching <worktree>/.codex/sessions
+///
+/// Codex stores session history at:
+/// `<worktree>/.codex/sessions/{year}/{month}/{day}/*-{session_id}.jsonl`
+///
+/// This function searches the sessions directory to find the matching file.
+///
+/// # Arguments
+/// * `worktree_path` - Path to the git worktree
+/// * `session_id` - UUID of the session
+///
+/// # Returns
+/// The path to the history file if found, None otherwise
+#[must_use]
+pub fn find_codex_history_file(worktree_path: &Path, session_id: &Uuid) -> Option<PathBuf> {
+    let codex_sessions = worktree_path.join(".codex/sessions");
+    if !codex_sessions.exists() {
+        return None;
+    }
+
+    let session_id_str = session_id.to_string();
+
+    for entry in walkdir::WalkDir::new(&codex_sessions)
+        .max_depth(4) // year/month/day/file
+        .into_iter()
+        .filter_map(Result::ok)
+    {
+        if let Some(filename) = entry.path().file_name().and_then(|n| n.to_str()) {
+            if filename.ends_with(&format!("{session_id_str}.jsonl")) {
+                return Some(entry.path().to_path_buf());
+            }
+        }
+    }
+    None
+}
+
+/// Validate Codex history path is safe to serve
+///
+/// Ensures the path:
+/// - Starts with `<worktree>/.codex/sessions`
+/// - Contains the session ID in the filename
+///
+/// # Arguments
+/// * `path` - Path to validate
+/// * `worktree_path` - Path to the git worktree
+/// * `session_id` - UUID of the session
+///
+/// # Returns
+/// True if the path is valid and safe to serve
+#[must_use]
+pub fn validate_codex_history_path(path: &Path, worktree_path: &Path, session_id: &Uuid) -> bool {
+    let codex_sessions = worktree_path.join(".codex/sessions");
+    path.starts_with(&codex_sessions)
+        && path
+            .file_name()
+            .and_then(|n| n.to_str())
+            .map_or(false, |n| n.contains(&session_id.to_string()))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1387,5 +1457,67 @@ mod tests {
             created_at: Utc::now(),
             updated_at: Utc::now(),
         }
+    }
+
+    // ========== Codex history file tests ==========
+
+    #[test]
+    fn test_validate_codex_history_path_valid() {
+        let worktree = PathBuf::from("/workspace");
+        let session_id = Uuid::parse_str("12345678-1234-1234-1234-123456789abc").unwrap();
+        let path = PathBuf::from(
+            "/workspace/.codex/sessions/2025/01/15/test-20250115-12345678-1234-1234-1234-123456789abc.jsonl",
+        );
+
+        assert!(super::validate_codex_history_path(
+            &path,
+            &worktree,
+            &session_id
+        ));
+    }
+
+    #[test]
+    fn test_validate_codex_history_path_outside_codex_sessions() {
+        let worktree = PathBuf::from("/workspace");
+        let session_id = Uuid::parse_str("12345678-1234-1234-1234-123456789abc").unwrap();
+        // Path outside .codex/sessions
+        let path =
+            PathBuf::from("/workspace/.claude/projects/12345678-1234-1234-1234-123456789abc.jsonl");
+
+        assert!(!super::validate_codex_history_path(
+            &path,
+            &worktree,
+            &session_id
+        ));
+    }
+
+    #[test]
+    fn test_validate_codex_history_path_wrong_session_id() {
+        let worktree = PathBuf::from("/workspace");
+        let session_id = Uuid::parse_str("12345678-1234-1234-1234-123456789abc").unwrap();
+        // Different session ID in filename
+        let path = PathBuf::from(
+            "/workspace/.codex/sessions/2025/01/15/test-20250115-aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee.jsonl",
+        );
+
+        assert!(!super::validate_codex_history_path(
+            &path,
+            &worktree,
+            &session_id
+        ));
+    }
+
+    #[test]
+    fn test_validate_codex_history_path_path_traversal() {
+        let worktree = PathBuf::from("/workspace");
+        let session_id = Uuid::parse_str("12345678-1234-1234-1234-123456789abc").unwrap();
+        // Attempted path traversal
+        let path = PathBuf::from("/other/location/12345678-1234-1234-1234-123456789abc.jsonl");
+
+        assert!(!super::validate_codex_history_path(
+            &path,
+            &worktree,
+            &session_id
+        ));
     }
 }

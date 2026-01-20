@@ -20,6 +20,7 @@ type RepositoryEntry = {
   repo_path: string;
   mount_name: string;
   is_primary: boolean;
+  base_branch: string;
 };
 
 export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
@@ -34,7 +35,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
   // Multi-repo state
   const [multiRepoEnabled, setMultiRepoEnabled] = useState(false);
   const [repositories, setRepositories] = useState<RepositoryEntry[]>([
-    { id: '1', repo_path: '', mount_name: '', is_primary: true }
+    { id: '1', repo_path: '', mount_name: '', is_primary: true, base_branch: '' }
   ]);
 
   const [formData, setFormData] = useState({
@@ -120,7 +121,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
     if (multiRepoEnabled) {
       // When enabled: Ensure at least 2 repos (add empty second repo if needed)
       setRepositories(prev => prev.length === 1
-        ? [...prev, { id: String(Date.now()), repo_path: '', mount_name: '', is_primary: false }]
+        ? [...prev, { id: String(Date.now()), repo_path: '', mount_name: '', is_primary: false, base_branch: '' }]
         : prev
       );
     } else {
@@ -185,6 +186,12 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
     ));
   };
 
+  const handleBaseBranchChange = (id: string, newBaseBranch: string) => {
+    setRepositories(repos => repos.map(repo =>
+      repo.id === id ? { ...repo, base_branch: newBaseBranch } : repo
+    ));
+  };
+
   const handleAddRepository = () => {
     if (repositories.length >= 5) {
       toast.error("Maximum 5 repositories per session");
@@ -196,7 +203,8 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
       id: newId,
       repo_path: '',
       mount_name: '',
-      is_primary: false
+      is_primary: false,
+      base_branch: ''
     }]);
   };
 
@@ -307,11 +315,15 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
         return;
       }
 
-      // Build CreateRepositoryInput array (only if multi-repo enabled)
-      const repoInputs: CreateRepositoryInput[] | undefined = multiRepoEnabled
+      // Build CreateRepositoryInput array
+      // Use repositories array if multi-repo enabled, or if base_branch is specified (for Sprites/K8s)
+      const firstRepo = repositories[0]!;
+      const needsRepositoriesArray = multiRepoEnabled || firstRepo.base_branch;
+      const repoInputs: CreateRepositoryInput[] | undefined = needsRepositoriesArray
         ? repositories.map(repo => ({
             repo_path: repo.repo_path,
-            is_primary: repo.is_primary
+            is_primary: repo.is_primary,
+            ...(repo.base_branch && { base_branch: repo.base_branch })
           }))
         : undefined;
 
@@ -513,6 +525,24 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                     onChange={(path) => { handleRepoPathChange(repo.id, path); }}
                     required
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor={`base-branch-${repo.id}`} className="text-sm">
+                    Base Branch <span className="text-xs text-muted-foreground">(optional, for Sprites/K8s)</span>
+                  </Label>
+                  <input
+                    type="text"
+                    id={`base-branch-${repo.id}`}
+                    value={repo.base_branch}
+                    onChange={(e) => { handleBaseBranchChange(repo.id, e.target.value); }}
+                    placeholder="main (default)"
+                    className="w-full px-3 py-2 border-2 rounded font-mono text-sm"
+                    maxLength={128}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Branch to clone from for clone-based backends (Sprites, Kubernetes). Leave empty for default branch.
+                  </p>
                 </div>
 
                 {multiRepoEnabled && (

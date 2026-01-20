@@ -64,6 +64,7 @@ mime_guess = "2"
 dashmap = "6"
 arboard = "3.4"  # Cross-platform clipboard access
 users = "0.11"  # Safe Unix user/group info (for getuid)
+walkdir = "2"  # Recursive directory traversal (for Codex history file search)
 
 # HTTP Proxy with TLS interception
 hudsucker = { version = "0.24", default-features = false, features = ["rcgen-ca", "rustls-client", "http2"] }
@@ -227,6 +228,10 @@ strip = true
 # Faster test compilation
 incremental = true
 debug = 1
+# Light optimization for faster test execution (tests run faster)
+opt-level = 1
+# Split debug info on macOS for faster linking
+split-debuginfo = "unpacked"
 
 [profile.bench]
 # Inherit from release
