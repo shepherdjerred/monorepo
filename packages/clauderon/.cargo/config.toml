@@ -21,13 +21,12 @@ linker = "clang"
 rustflags = ["-C", "link-arg=-fuse-ld=mold"]
 
 # On macOS, use lld for faster linking (~2x faster than ld64)
-# Install: brew install llvm (lld is included)
-# Note: Requires LLVM's lld in PATH or use full path
+# Install: brew install lld
 [target.x86_64-apple-darwin]
-rustflags = ["-C", "link-arg=-fuse-ld=lld"]
+rustflags = ["-C", "link-arg=-fuse-ld=/opt/homebrew/bin/ld64.lld"]
 
 [target.aarch64-apple-darwin]
-rustflags = ["-C", "link-arg=-fuse-ld=lld"]
+rustflags = ["-C", "link-arg=-fuse-ld=/opt/homebrew/bin/ld64.lld"]
 
 [net]
 # Retry downloads on transient failures
