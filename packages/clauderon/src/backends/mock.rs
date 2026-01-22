@@ -51,6 +51,11 @@ impl MockGitBackend {
         self.worktrees.read().await.iter().cloned().collect()
     }
 
+    /// Register a worktree as existing (for testing without async create)
+    pub async fn register_worktree(&self, path: impl Into<PathBuf>) {
+        self.worktrees.write().await.insert(path.into());
+    }
+
     /// Check if operations are configured to fail
     fn should_fail(&self) -> bool {
         self.should_fail.load(Ordering::SeqCst)
@@ -139,49 +144,63 @@ pub struct MockExecutionBackend {
 
     /// Name prefix to use (e.g., "zellij" or "docker")
     name_prefix: String,
+
+    /// Whether exists() should return true (for health check testing)
+    exists_result: AtomicBool,
+
+    /// Simulated health state for check_health()
+    health_state: RwLock<super::traits::BackendResourceHealth>,
 }
 
 impl MockExecutionBackend {
-    /// Create a new mock execution backend
+    /// Create a new mock execution backend with default prefix
     #[must_use]
-    pub fn new(name_prefix: impl Into<String>) -> Self {
+    pub fn new() -> Self {
+        Self::with_prefix("mock")
+    }
+
+    /// Create a new mock execution backend with a specific name prefix
+    #[must_use]
+    pub fn with_prefix(name_prefix: impl Into<String>) -> Self {
         Self {
             sessions: RwLock::new(HashSet::new()),
             should_fail: AtomicBool::new(false),
             error_message: RwLock::new("Mock failure".to_string()),
             name_prefix: name_prefix.into(),
+            exists_result: AtomicBool::new(true),
+            health_state: RwLock::new(super::traits::BackendResourceHealth::Running),
         }
     }
 
     /// Create a mock Zellij backend
     #[must_use]
     pub fn zellij() -> Self {
-        Self::new("zellij")
+        Self::with_prefix("zellij")
     }
 
     /// Create a mock Docker backend
     #[must_use]
     pub fn docker() -> Self {
-        Self::new("docker")
+        Self::with_prefix("docker")
     }
 
     /// Create a mock Kubernetes backend
     #[must_use]
     pub fn kubernetes() -> Self {
-        Self::new("kubernetes")
+        Self::with_prefix("kubernetes")
     }
 
     /// Create a mock Sprites backend
     #[must_use]
     pub fn sprites() -> Self {
-        Self::new("sprites")
+        Self::with_prefix("sprites")
     }
 
     /// Create a mock Apple Container backend
     #[cfg(target_os = "macos")]
     #[must_use]
     pub fn apple_container() -> Self {
-        Self::new("apple_container")
+        Self::with_prefix("apple_container")
     }
 
     /// Configure the mock to fail all operations
@@ -208,11 +227,21 @@ impl MockExecutionBackend {
     fn should_fail(&self) -> bool {
         self.should_fail.load(Ordering::SeqCst)
     }
+
+    /// Set whether exists() should return true (for testing)
+    pub fn set_exists(&mut self, exists: bool) {
+        self.exists_result.store(exists, Ordering::SeqCst);
+    }
+
+    /// Set the health state to return from check_health()
+    pub async fn set_health_state(&self, state: super::traits::BackendResourceHealth) {
+        *self.health_state.write().await = state;
+    }
 }
 
 impl Default for MockExecutionBackend {
     fn default() -> Self {
-        Self::new("mock")
+        Self::new()
     }
 }
 
@@ -273,6 +302,43 @@ impl ExecutionBackend for MockExecutionBackend {
         }
 
         Ok("Mock output".to_string())
+    }
+
+    fn capabilities(&self) -> super::traits::BackendCapabilities {
+        super::traits::BackendCapabilities {
+            can_recreate: true,
+            can_update_image: true,
+            preserves_data_on_recreate: true,
+            can_start: true,
+            can_wake: false,
+            data_preservation_description: "Mock backend - data is preserved.",
+        }
+    }
+
+    async fn check_health(
+        &self,
+        _id: &str,
+    ) -> anyhow::Result<super::traits::BackendResourceHealth> {
+        if self.should_fail() {
+            let msg = self.error_message.read().await.clone();
+            anyhow::bail!("{msg}");
+        }
+
+        // If the session doesn't exist, return NotFound
+        if !self.exists_result.load(Ordering::SeqCst) {
+            return Ok(super::traits::BackendResourceHealth::NotFound);
+        }
+
+        // Return the configured health state
+        Ok(self.health_state.read().await.clone())
+    }
+
+    async fn start(&self, _id: &str) -> anyhow::Result<()> {
+        if self.should_fail() {
+            let msg = self.error_message.read().await.clone();
+            anyhow::bail!("{msg}");
+        }
+        Ok(())
     }
 }
 
@@ -376,7 +442,7 @@ mod tests {
     #[tokio::test]
     async fn test_mock_execution_should_fail() {
         use crate::backends::CreateOptions;
-        let backend = MockExecutionBackend::new("test");
+        let backend = MockExecutionBackend::with_prefix("test");
         backend.set_should_fail(true);
         backend.set_error_message("Docker error").await;
 

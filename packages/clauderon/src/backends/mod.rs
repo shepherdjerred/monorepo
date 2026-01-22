@@ -25,7 +25,9 @@ pub use kubernetes_config::{KubernetesConfig, KubernetesProxyConfig, ProxyMode};
 pub use mock::{MockExecutionBackend, MockGitBackend};
 pub use sprites::SpritesBackend;
 pub use sprites_config::SpritesConfig;
-pub use traits::{CreateOptions, ExecutionBackend, GitOperations};
+pub use traits::{
+    BackendCapabilities, BackendResourceHealth, CreateOptions, ExecutionBackend, GitOperations,
+};
 pub use zellij::ZellijBackend;
 
 #[cfg(target_os = "macos")]

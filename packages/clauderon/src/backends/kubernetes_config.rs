@@ -150,6 +150,17 @@ impl KubernetesConfig {
     pub fn load_or_default() -> Self {
         Self::load().unwrap_or_default()
     }
+
+    /// Check if Kubernetes is configured for connected mode (proxy enabled)
+    ///
+    /// Connected mode means the proxy is enabled (ClusterIp or HostGateway),
+    /// allowing zero-trust credential injection via the daemon proxy.
+    ///
+    /// Returns `true` if `proxy_mode` is not `Disabled`.
+    #[must_use]
+    pub fn is_connected_mode(&self) -> bool {
+        self.proxy_mode != ProxyMode::Disabled
+    }
 }
 
 /// Proxy configuration for Kubernetes pods
@@ -187,5 +198,26 @@ mod tests {
         let config = KubernetesConfig::load_or_default();
         // Should return default since config file likely doesn't exist
         assert!(!config.namespace.is_empty());
+    }
+
+    #[test]
+    fn test_is_connected_mode_disabled() {
+        let mut config = KubernetesConfig::default();
+        config.proxy_mode = ProxyMode::Disabled;
+        assert!(!config.is_connected_mode());
+    }
+
+    #[test]
+    fn test_is_connected_mode_cluster_ip() {
+        let mut config = KubernetesConfig::default();
+        config.proxy_mode = ProxyMode::ClusterIp;
+        assert!(config.is_connected_mode());
+    }
+
+    #[test]
+    fn test_is_connected_mode_host_gateway() {
+        let mut config = KubernetesConfig::default();
+        config.proxy_mode = ProxyMode::HostGateway;
+        assert!(config.is_connected_mode());
     }
 }

@@ -224,6 +224,14 @@ BACKENDS:
         #[arg(long, default_value = "false")]
         dangerous_skip_checks: bool,
 
+        /// Copy real credentials to remote backends (dangerous)
+        ///
+        /// For remote backends (Sprites, Kubernetes): injects real API tokens.
+        /// WARNING: This exposes your tokens to the remote environment.
+        /// Only use when daemon_address is not configured.
+        #[arg(long, default_value = "false")]
+        dangerous_copy_creds: bool,
+
         /// Non-interactive print mode (outputs response and exits)
         #[arg(long, default_value = "false")]
         print: bool,
@@ -536,6 +544,7 @@ async fn main() -> anyhow::Result<()> {
             backend,
             agent,
             dangerous_skip_checks,
+            dangerous_copy_creds,
             print,
             access_mode,
             no_plan_mode,
@@ -580,6 +589,7 @@ async fn main() -> anyhow::Result<()> {
                     agent: agent_type,
                     model: None, // CLI doesn't support model selection yet
                     dangerous_skip_checks,
+                    dangerous_copy_creds,
                     print_mode: print,
                     plan_mode: !no_plan_mode,
                     access_mode,

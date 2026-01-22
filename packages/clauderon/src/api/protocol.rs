@@ -2,7 +2,8 @@ use serde::{Deserialize, Serialize};
 use typeshare::typeshare;
 
 use crate::core::session::{
-    AccessMode, AgentType, BackendType, Session, SessionModel, SessionStatus,
+    AccessMode, AgentType, AvailableAction, BackendType, HealthCheckResult, ResourceState, Session,
+    SessionHealthReport, SessionModel, SessionStatus,
 };
 
 use super::types::ReconcileReportDto;
@@ -56,6 +57,24 @@ pub enum Request {
 
     /// Get current feature flags
     GetFeatureFlags,
+
+    /// Get health status of all sessions
+    GetHealth,
+
+    /// Get health status of a single session
+    GetSessionHealth { id: String },
+
+    /// Start a stopped session (container/pod)
+    StartSession { id: String },
+
+    /// Wake a hibernated session (sprites)
+    WakeSession { id: String },
+
+    /// Recreate a session (delete and recreate backend)
+    RecreateSession { id: String },
+
+    /// Cleanup a session (remove from database, worktree already missing)
+    CleanupSession { id: String },
 }
 
 /// Recent repository entry with timestamp
@@ -165,6 +184,13 @@ pub struct CreateSessionRequest {
 
     /// Skip safety checks
     pub dangerous_skip_checks: bool,
+
+    /// For remote backends: copy real credentials into the container.
+    ///
+    /// WARNING: This is dangerous - it exposes your API tokens to the remote environment.
+    /// Only use when the daemon is not reachable from the remote backend.
+    #[serde(default)]
+    pub dangerous_copy_creds: bool,
 
     /// Run in print mode (non-interactive, outputs response and exits)
     #[serde(default)]
@@ -333,6 +359,27 @@ pub enum Response {
 
     /// Generic success response
     Ok,
+
+    /// Health check result for all sessions
+    HealthCheckResult(HealthCheckResult),
+
+    /// Health report for a single session
+    SessionHealth(SessionHealthReport),
+
+    /// Session started successfully
+    Started,
+
+    /// Session woken successfully
+    Woken,
+
+    /// Session recreated successfully
+    Recreated { new_backend_id: Option<String> },
+
+    /// Session cleaned up successfully
+    CleanedUp,
+
+    /// Action blocked error (e.g., recreate blocked for sprites with auto_destroy)
+    ActionBlocked { reason: String },
 
     /// Error response
     Error { code: String, message: String },

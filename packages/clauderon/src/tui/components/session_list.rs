@@ -8,6 +8,7 @@ use ratatui::{
 use unicode_width::UnicodeWidthStr;
 
 use super::SPINNER_FRAMES;
+use crate::core::session::ResourceState;
 use crate::core::{CheckStatus, ClaudeWorkingStatus, Session, SessionStatus, WorkflowStage};
 use crate::tui::app::App;
 
@@ -22,11 +23,13 @@ struct ColumnWidths {
     status: usize,
     stage: usize,
     backend: usize,
+    health: usize,
     branch_pr: usize,
     prefix_width: usize,
     claude_indicator: usize,
     ci_indicator: usize,
     conflict_indicator: usize,
+    copycreds_indicator: usize,
 }
 
 impl ColumnWidths {
@@ -36,6 +39,7 @@ impl ColumnWidths {
     const STATUS_RANGE: (usize, usize) = (8, 15);
     const STAGE_RANGE: (usize, usize) = (6, 8);
     const BACKEND_RANGE: (usize, usize) = (10, 15);
+    const HEALTH_RANGE: (usize, usize) = (8, 18); // "OK" to "Deleted Externally"
     const BRANCH_PR_RANGE: (usize, usize) = (10, 25);
 
     /// Fixed widths
@@ -43,6 +47,7 @@ impl ColumnWidths {
     const CLAUDE_WIDTH: usize = 2;
     const CI_WIDTH: usize = 2;
     const CONFLICT_WIDTH: usize = 2;
+    const COPYCREDS_WIDTH: usize = 2;
 
     /// Calculate optimal column widths from session data
     fn calculate(sessions: &[Session], available_width: u16) -> Self {
@@ -112,17 +117,23 @@ impl ColumnWidths {
             max_branch = max_branch.max(pr_text.width()).min(Self::BRANCH_PR_RANGE.1);
         }
 
+        // Health column uses a fixed minimum since we don't have health data during calculation
+        // Longest text is "Worktree Missing" (16 chars)
+        let health_width = Self::HEALTH_RANGE.0;
+
         let mut widths = Self {
             name: max_name,
             repository: max_repo,
             status: max_status,
             stage: max_stage,
             backend: max_backend,
+            health: health_width,
             branch_pr: max_branch,
             prefix_width: Self::PREFIX_WIDTH,
             claude_indicator: Self::CLAUDE_WIDTH,
             ci_indicator: Self::CI_WIDTH,
             conflict_indicator: Self::CONFLICT_WIDTH,
+            copycreds_indicator: Self::COPYCREDS_WIDTH,
         };
 
         // Check if total fits, shrink if needed
@@ -135,8 +146,8 @@ impl ColumnWidths {
 
     /// Get total required width
     fn total_width(&self) -> usize {
-        // 5 gaps between the 6 main columns (name, repo, status, stage, backend, branch)
-        let padding_width = 5 * COLUMN_PADDING;
+        // 6 gaps between the 7 main columns (name, repo, status, stage, backend, health, branch)
+        let padding_width = 6 * COLUMN_PADDING;
 
         self.prefix_width
             + self.name
@@ -144,10 +155,12 @@ impl ColumnWidths {
             + self.status
             + self.stage
             + self.backend
+            + self.health
             + self.branch_pr
             + self.claude_indicator
             + self.ci_indicator
             + self.conflict_indicator
+            + self.copycreds_indicator
             + padding_width
     }
 
@@ -158,11 +171,17 @@ impl ColumnWidths {
             + self.claude_indicator
             + self.ci_indicator
             + self.conflict_indicator
+            + self.copycreds_indicator
             + padding_width;
         let available_for_columns = (available_width as usize).saturating_sub(fixed_width);
 
-        let total_current =
-            self.name + self.repository + self.status + self.stage + self.backend + self.branch_pr;
+        let total_current = self.name
+            + self.repository
+            + self.status
+            + self.stage
+            + self.backend
+            + self.health
+            + self.branch_pr;
 
         if total_current <= available_for_columns {
             return; // Already fits
@@ -218,18 +237,32 @@ impl ColumnWidths {
             clippy::cast_sign_loss,
             clippy::cast_precision_loss
         )]
+        let health_shrunk = (self.health as f64 * shrink_ratio).max(0.0).round() as usize;
+        self.health = health_shrunk.max(Self::HEALTH_RANGE.0);
+
+        #[allow(
+            clippy::cast_possible_truncation,
+            clippy::cast_sign_loss,
+            clippy::cast_precision_loss
+        )]
         let branch_pr_shrunk = (self.branch_pr as f64 * shrink_ratio).max(0.0).round() as usize;
         self.branch_pr = branch_pr_shrunk.max(Self::BRANCH_PR_RANGE.0);
 
         // If still doesn't fit after respecting minimums, force to minimums
-        let new_total =
-            self.name + self.repository + self.status + self.stage + self.backend + self.branch_pr;
+        let new_total = self.name
+            + self.repository
+            + self.status
+            + self.stage
+            + self.backend
+            + self.health
+            + self.branch_pr;
         if new_total > available_for_columns {
             self.name = Self::NAME_RANGE.0;
             self.repository = Self::REPO_RANGE.0;
             self.status = Self::STATUS_RANGE.0;
             self.stage = Self::STAGE_RANGE.0;
             self.backend = Self::BACKEND_RANGE.0;
+            self.health = Self::HEALTH_RANGE.0;
             self.branch_pr = Self::BRANCH_PR_RANGE.0;
         }
     }
@@ -281,6 +314,22 @@ fn pad_to_width(text: &str, width: usize) -> String {
         text.to_string()
     } else {
         format!("{}{}", text, " ".repeat(width - text_width))
+    }
+}
+
+/// Get health text and color from ResourceState
+fn health_display(state: &ResourceState) -> (&'static str, Color) {
+    match state {
+        ResourceState::Healthy => ("OK", Color::Green),
+        ResourceState::Stopped => ("Stopped", Color::Yellow),
+        ResourceState::Hibernated => ("Hibernated", Color::Cyan),
+        ResourceState::Pending => ("Pending", Color::Yellow),
+        ResourceState::Missing => ("Missing", Color::Red),
+        ResourceState::Error { .. } => ("Error", Color::Red),
+        ResourceState::CrashLoop => ("Crash Loop", Color::Red),
+        ResourceState::DeletedExternally => ("Deleted Ext.", Color::Red),
+        ResourceState::DataLost { .. } => ("Data Lost", Color::Magenta),
+        ResourceState::WorktreeMissing => ("No Worktree", Color::Red),
     }
 }
 
@@ -357,6 +406,11 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         ),
         Span::raw("  "), // Column padding
         Span::styled(
+            pad_to_width("Health", widths.health),
+            Style::default().fg(Color::DarkGray),
+        ),
+        Span::raw("  "), // Column padding
+        Span::styled(
             pad_to_width("Branch/PR", widths.branch_pr),
             Style::default().fg(Color::DarkGray),
         ),
@@ -366,6 +420,8 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         Span::styled("CI", Style::default().fg(Color::DarkGray)),
         Span::raw(" "),
         Span::styled("⚠", Style::default().fg(Color::DarkGray)),
+        Span::raw(" "),
+        Span::styled("🔓", Style::default().fg(Color::DarkGray)), // Copy-creds indicator header
     ]);
     frame.render_widget(Paragraph::new(header), header_area);
 
@@ -429,6 +485,13 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
                 Span::styled("⚠", Style::default().fg(Color::Red))
             } else {
                 Span::raw(" ")
+            };
+
+            // Copy-creds mode indicator (degraded status tracking)
+            let copycreds_indicator = if session.dangerous_copy_creds {
+                Span::styled("🔓", Style::default().fg(Color::Yellow))
+            } else {
+                Span::raw("  ")
             };
 
             let backend_text = format!("{:?}", session.backend);
@@ -515,6 +578,14 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
             let backend_truncated = truncate_with_ellipsis(&backend_text, widths.backend);
             let backend_padded = pad_to_width(&backend_truncated, widths.backend);
 
+            // Health column - get from cached health data
+            let (health_text, health_color) = app
+                .get_session_health(session.id)
+                .map(|report| health_display(&report.state))
+                .unwrap_or(("--", Color::DarkGray));
+            let health_truncated = truncate_with_ellipsis(health_text, widths.health);
+            let health_padded = pad_to_width(&health_truncated, widths.health);
+
             let pr_truncated = truncate_with_ellipsis(&pr_text, widths.branch_pr);
             let pr_padded = pad_to_width(&pr_truncated, widths.branch_pr);
 
@@ -529,6 +600,8 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
                 Span::raw("  "), // Column padding
                 Span::raw(backend_padded),
                 Span::raw("  "), // Column padding
+                Span::styled(health_padded, Style::default().fg(health_color)),
+                Span::raw("  "), // Column padding
                 Span::raw(pr_padded),
                 Span::raw("  "), // Column padding
                 claude_indicator,
@@ -536,6 +609,8 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
                 check_indicator,
                 Span::raw(" "),
                 conflict_indicator,
+                Span::raw(" "),
+                copycreds_indicator,
             ]);
 
             let line = Line::from(spans);

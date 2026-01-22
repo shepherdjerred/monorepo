@@ -40,6 +40,7 @@ pub struct SessionRepository {
 /// Represents a single AI coding session
 #[typeshare]
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[allow(clippy::struct_excessive_bools)]
 pub struct Session {
     /// Unique identifier
     #[typeshare(serialized_as = "String")]
@@ -95,6 +96,11 @@ pub struct Session {
 
     /// Whether to skip safety checks
     pub dangerous_skip_checks: bool,
+
+    /// Whether this session was created with --dangerous-copy-creds
+    /// Sessions with copy-creds have no hook-based status tracking (degraded mode)
+    #[serde(default)]
+    pub dangerous_copy_creds: bool,
 
     /// URL of the associated pull request
     pub pr_url: Option<String>,
@@ -184,6 +190,8 @@ pub struct SessionConfig {
     pub model: Option<SessionModel>,
     /// Whether to skip safety checks
     pub dangerous_skip_checks: bool,
+    /// Whether using copy-creds mode (degraded status tracking)
+    pub dangerous_copy_creds: bool,
     /// Access mode for proxy filtering
     pub access_mode: AccessMode,
 }
@@ -210,6 +218,7 @@ impl Session {
             backend_id: None,
             initial_prompt: config.initial_prompt,
             dangerous_skip_checks: config.dangerous_skip_checks,
+            dangerous_copy_creds: config.dangerous_copy_creds,
             pr_url: None,
             pr_check_status: None,
             pr_review_decision: None,
@@ -835,6 +844,311 @@ impl std::str::FromStr for AccessMode {
     }
 }
 
+// ============================================================================
+// Health System Types
+// ============================================================================
+
+/// State of a session's backend resource
+///
+/// This enum represents the actual state of the underlying resource (container,
+/// pod, or sprite) as observed during a health check.
+#[typeshare]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum ResourceState {
+    /// Backend is running and healthy
+    Healthy,
+
+    /// Backend is stopped/exited (can be started)
+    Stopped,
+
+    /// Sprites: sprite is hibernated (can be woken)
+    Hibernated,
+
+    /// Kubernetes: pod is waiting for resources (Pending state)
+    Pending,
+
+    /// Backend resource is gone but can be recreated (data preserved)
+    Missing,
+
+    /// Backend is in an error state
+    Error { message: String },
+
+    /// Kubernetes: pod is in CrashLoopBackOff
+    CrashLoop,
+
+    /// Resource was deleted externally (outside clauderon)
+    DeletedExternally,
+
+    /// Data has been lost and cannot be recovered
+    /// (e.g., PVC deleted, sprite with auto_destroy deleted)
+    DataLost { reason: String },
+
+    /// Git worktree was deleted
+    WorktreeMissing,
+}
+
+impl ResourceState {
+    /// Returns true if this state represents a healthy/running backend
+    #[must_use]
+    pub const fn is_healthy(&self) -> bool {
+        matches!(self, Self::Healthy)
+    }
+
+    /// Returns true if the session needs user attention
+    #[must_use]
+    pub const fn needs_attention(&self) -> bool {
+        !matches!(self, Self::Healthy | Self::Pending)
+    }
+
+    /// Get a human-readable label for TUI display
+    #[must_use]
+    pub fn display_label(&self) -> &'static str {
+        match self {
+            Self::Healthy => "OK",
+            Self::Stopped => "Stopped",
+            Self::Hibernated => "Hibernated",
+            Self::Pending => "Pending",
+            Self::Missing => "Missing",
+            Self::Error { .. } => "Error",
+            Self::CrashLoop => "Crash Loop",
+            Self::DeletedExternally => "Deleted Externally",
+            Self::DataLost { .. } => "Data Lost",
+            Self::WorktreeMissing => "Worktree Missing",
+        }
+    }
+}
+
+impl std::fmt::Display for ResourceState {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Healthy => write!(f, "Healthy"),
+            Self::Stopped => write!(f, "Stopped"),
+            Self::Hibernated => write!(f, "Hibernated"),
+            Self::Pending => write!(f, "Pending"),
+            Self::Missing => write!(f, "Missing"),
+            Self::Error { message } => write!(f, "Error: {message}"),
+            Self::CrashLoop => write!(f, "CrashLoopBackOff"),
+            Self::DeletedExternally => write!(f, "Deleted Externally"),
+            Self::DataLost { reason } => write!(f, "Data Lost: {reason}"),
+            Self::WorktreeMissing => write!(f, "Worktree Missing"),
+        }
+    }
+}
+
+/// Actions that can be performed on a session based on its current state
+#[typeshare]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum AvailableAction {
+    /// Start a stopped container (Docker: docker start)
+    Start,
+
+    /// Wake a hibernated sprite
+    Wake,
+
+    /// Delete and recreate the backend resource (preserves data)
+    Recreate,
+
+    /// Recreate with a fresh git clone (data will be lost)
+    RecreateFresh,
+
+    /// Pull new Docker image and recreate container
+    UpdateImage,
+
+    /// Remove the session from clauderon (cleanup orphaned session)
+    Cleanup,
+}
+
+impl AvailableAction {
+    /// Get a human-readable label for the action
+    #[must_use]
+    pub const fn label(&self) -> &'static str {
+        match self {
+            Self::Start => "Start",
+            Self::Wake => "Wake",
+            Self::Recreate => "Recreate",
+            Self::RecreateFresh => "Recreate Fresh",
+            Self::UpdateImage => "Update Image",
+            Self::Cleanup => "Clean Up",
+        }
+    }
+
+    /// Get a description of what the action does
+    #[must_use]
+    pub const fn description(&self) -> &'static str {
+        match self {
+            Self::Start => "Start the stopped container",
+            Self::Wake => "Wake the hibernated sprite",
+            Self::Recreate => "Delete and recreate the backend (data preserved)",
+            Self::RecreateFresh => "Recreate with fresh git clone (uncommitted changes lost)",
+            Self::UpdateImage => "Pull the latest Docker image and recreate",
+            Self::Cleanup => "Remove this session from clauderon",
+        }
+    }
+
+    /// Returns true if this action could result in data loss
+    #[must_use]
+    pub const fn may_lose_data(&self) -> bool {
+        matches!(self, Self::RecreateFresh | Self::Cleanup)
+    }
+}
+
+impl std::fmt::Display for AvailableAction {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.label())
+    }
+}
+
+/// Detailed health report for a single session
+#[typeshare]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SessionHealthReport {
+    /// Session ID
+    #[typeshare(serialized_as = "String")]
+    pub session_id: Uuid,
+
+    /// Session name
+    pub session_name: String,
+
+    /// Backend type (Docker, Kubernetes, Zellij, Sprites)
+    pub backend_type: BackendType,
+
+    /// Current resource state
+    pub state: ResourceState,
+
+    /// Actions available for this session based on current state
+    pub available_actions: Vec<AvailableAction>,
+
+    /// Recommended action (if any)
+    pub recommended_action: Option<AvailableAction>,
+
+    /// Human-readable summary of the current state
+    pub description: String,
+
+    /// Technical details (for expandable section in UI)
+    pub details: String,
+
+    /// Is user work preserved if we take action?
+    pub data_safe: bool,
+}
+
+impl SessionHealthReport {
+    /// Create a healthy session report
+    #[must_use]
+    pub fn healthy(session_id: Uuid, session_name: String, backend_type: BackendType) -> Self {
+        Self {
+            session_id,
+            session_name,
+            backend_type,
+            state: ResourceState::Healthy,
+            available_actions: vec![AvailableAction::Recreate],
+            recommended_action: None,
+            description: "Session is running normally.".to_string(),
+            details: "The backend resource is running and the worktree exists.".to_string(),
+            data_safe: true,
+        }
+    }
+
+    /// Returns true if this session needs user attention
+    #[must_use]
+    pub fn needs_attention(&self) -> bool {
+        self.state.needs_attention()
+    }
+
+    /// Returns true if recreation is blocked for this session
+    #[must_use]
+    pub fn is_blocked(&self) -> bool {
+        self.available_actions.is_empty()
+    }
+}
+
+/// Result of checking health of all sessions
+#[typeshare]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct HealthCheckResult {
+    /// Health reports for all sessions
+    pub sessions: Vec<SessionHealthReport>,
+
+    /// Count of healthy sessions
+    pub healthy_count: usize,
+
+    /// Count of sessions needing attention
+    pub needs_attention_count: usize,
+
+    /// Count of sessions that are blocked (cannot be recreated)
+    pub blocked_count: usize,
+}
+
+impl HealthCheckResult {
+    /// Create a new health check result from a list of reports
+    #[must_use]
+    pub fn new(sessions: Vec<SessionHealthReport>) -> Self {
+        let healthy_count = sessions.iter().filter(|r| r.state.is_healthy()).count();
+        let needs_attention_count = sessions.iter().filter(|r| r.needs_attention()).count();
+        let blocked_count = sessions.iter().filter(|r| r.is_blocked()).count();
+
+        Self {
+            sessions,
+            healthy_count,
+            needs_attention_count,
+            blocked_count,
+        }
+    }
+
+    /// Get only the sessions that need attention
+    #[must_use]
+    pub fn sessions_needing_attention(&self) -> Vec<&SessionHealthReport> {
+        self.sessions
+            .iter()
+            .filter(|r| r.needs_attention())
+            .collect()
+    }
+
+    /// Returns true if there are any sessions needing attention
+    #[must_use]
+    pub fn has_issues(&self) -> bool {
+        self.needs_attention_count > 0
+    }
+}
+
+/// Result of a recreate operation
+#[typeshare]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RecreateResult {
+    /// Session ID that was recreated
+    #[typeshare(serialized_as = "String")]
+    pub session_id: Uuid,
+
+    /// New backend ID after recreation
+    pub new_backend_id: String,
+
+    /// Whether the operation was successful
+    pub success: bool,
+
+    /// Human-readable message about the result
+    pub message: String,
+}
+
+/// Error returned when a recreate operation is blocked
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RecreateBlockedError {
+    /// Session ID
+    pub session_id: Uuid,
+
+    /// Reason the recreate is blocked
+    pub reason: String,
+
+    /// Suggested alternative actions
+    pub suggestions: Vec<String>,
+}
+
+impl std::fmt::Display for RecreateBlockedError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Cannot recreate session: {}", self.reason)
+    }
+}
+
+impl std::error::Error for RecreateBlockedError {}
+
 /// Get the path to the Claude Code session history file
 ///
 /// Claude Code stores session history at:
@@ -1072,6 +1386,7 @@ mod tests {
             backend_id: None,
             initial_prompt: "test".to_string(),
             dangerous_skip_checks: false,
+            dangerous_copy_creds: false,
             pr_url: None,
             pr_check_status: None,
             pr_review_decision: None,
@@ -1117,6 +1432,7 @@ mod tests {
             backend_id: None,
             initial_prompt: "test".to_string(),
             dangerous_skip_checks: false,
+            dangerous_copy_creds: false,
             pr_url: None,
             pr_check_status: None,
             pr_review_decision: None,
@@ -1163,6 +1479,7 @@ mod tests {
             backend_id: None,
             initial_prompt: "test".to_string(),
             dangerous_skip_checks: false,
+            dangerous_copy_creds: false,
             pr_url: None,
             pr_check_status: None,
             pr_review_decision: None,
@@ -1205,6 +1522,7 @@ mod tests {
             backend_id: None,
             initial_prompt: "test".to_string(),
             dangerous_skip_checks: false,
+            dangerous_copy_creds: false,
             pr_url: None,
             pr_check_status: None,
             pr_review_decision: None,
@@ -1455,6 +1773,7 @@ mod tests {
             backend_id: None,
             initial_prompt: "test".to_string(),
             dangerous_skip_checks: false,
+            dangerous_copy_creds: false,
             pr_url: None,
             pr_check_status: None,
             pr_review_decision: None,

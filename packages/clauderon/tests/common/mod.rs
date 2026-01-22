@@ -66,6 +66,13 @@ pub fn init_git_repo(path: &Path) {
         .output()
         .expect("Failed to configure git user.name");
 
+    // Disable commit signing for tests
+    Command::new("git")
+        .args(["config", "commit.gpgsign", "false"])
+        .current_dir(path)
+        .output()
+        .expect("Failed to disable commit signing");
+
     // Create initial file
     std::fs::write(path.join("README.md"), "# Test Repository\n")
         .expect("Failed to write README.md");
@@ -186,6 +193,46 @@ macro_rules! skip_if_no_credentials {
     () => {
         if !common::any_credentials_available() {
             eprintln!("Skipping test: No API credentials available");
+            return;
+        }
+    };
+}
+
+/// Check if Sprites API is accessible (via SPRITES_TOKEN env var)
+#[must_use]
+pub fn sprites_available() -> bool {
+    std::env::var("SPRITES_TOKEN")
+        .map(|t| !t.is_empty())
+        .unwrap_or(false)
+}
+
+/// Check if sprite CLI is installed (required for PTY attachment)
+#[must_use]
+pub fn sprite_cli_available() -> bool {
+    Command::new("sprite")
+        .arg("--version")
+        .output()
+        .map(|o| o.status.success())
+        .unwrap_or(false)
+}
+
+/// Skip the test if Sprites is not available
+#[macro_export]
+macro_rules! skip_if_no_sprites {
+    () => {
+        if !common::sprites_available() {
+            eprintln!("Skipping test: SPRITES_TOKEN not set");
+            return;
+        }
+    };
+}
+
+/// Skip the test if sprite CLI is not installed
+#[macro_export]
+macro_rules! skip_if_no_sprite_cli {
+    () => {
+        if !common::sprite_cli_available() {
+            eprintln!("Skipping test: sprite CLI not installed");
             return;
         }
     };

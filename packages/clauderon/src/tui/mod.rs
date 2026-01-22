@@ -52,6 +52,7 @@ pub async fn run() -> anyhow::Result<()> {
     let _ = app.connect().await; // Connection errors are displayed in the UI
     if app.is_connected() {
         let _ = app.refresh_sessions().await;
+        let _ = app.refresh_health().await;
     }
 
     // Main loop
@@ -80,10 +81,10 @@ async fn run_main_loop(
     // Tick interval for animations
     let mut tick_interval = tokio::time::interval(Duration::from_millis(80));
 
-    // Background reconcile interval (30 seconds)
-    let mut reconcile_interval = tokio::time::interval(Duration::from_secs(30));
-    // Skip the first tick (fires immediately)
-    reconcile_interval.tick().await;
+    // NOTE: Background auto-reconcile has been disabled.
+    // The new unified recreate system uses explicit user-triggered recreate instead.
+    // See Phase 2 of the unified recreate system plan.
+    // TODO: Add startup health check modal when TUI modals are implemented (Phase 5)
 
     // Set initial terminal size
     let size = terminal.size()?;
@@ -176,12 +177,28 @@ async fn run_main_loop(
                             }
                         }
                         Some(BackendType::Kubernetes) => {
-                            // TODO: Implement Kubernetes PTY attach
-                            app.status_message = Some("Kubernetes attach not yet implemented".to_string());
+                            // Use PTY-based attachment for Kubernetes
+                            match app.attach_selected_session().await {
+                                Ok(()) => {
+                                    app.status_message = Some("Attached - Press Ctrl+Q to detach, Ctrl+Left/Right to switch sessions".to_string());
+                                }
+                                Err(e) => {
+                                    app.status_message = Some(format!("Attach failed: {e}"));
+                                }
+                            }
+                            continue;
                         }
                         Some(BackendType::Sprites) => {
-                            // TODO: Implement Sprites PTY attach
-                            app.status_message = Some("Sprites attach not yet implemented".to_string());
+                            // Use PTY-based attachment for Sprites
+                            match app.attach_selected_session().await {
+                                Ok(()) => {
+                                    app.status_message = Some("Attached - Press Ctrl+Q to detach, Ctrl+Left/Right to switch sessions".to_string());
+                                }
+                                Err(e) => {
+                                    app.status_message = Some(format!("Attach failed: {e}"));
+                                }
+                            }
+                            continue;
                         }
                         #[cfg(target_os = "macos")]
                         Some(BackendType::AppleContainer) => {
@@ -307,22 +324,8 @@ async fn run_main_loop(
                 app.tick();
             }
 
-            // Handle background reconcile (silent - no status message unless errors)
-            _ = reconcile_interval.tick() => {
-                if app.is_connected() && app.mode == AppMode::SessionList {
-                    // Only run background reconcile when in session list mode
-                    // and not during other operations
-                    if app.create_task.is_none() && app.delete_task.is_none() {
-                        if let Err(e) = app.reconcile().await {
-                            tracing::warn!(error = %e, "Background reconcile failed");
-                        } else {
-                            // Clear the status message from reconcile (it's silent background)
-                            // unless there were recreation results
-                            app.status_message = None;
-                        }
-                    }
-                }
-            }
+            // NOTE: Background auto-reconcile has been removed.
+            // Users now explicitly trigger recreate via the health check system.
         }
 
         // Poll for PTY events when attached (non-blocking)
@@ -383,6 +386,7 @@ async fn run_main_loop(
                     app.status_message = Some(format!("Created session {session_name}"));
                     app.close_create_dialog();
                     let _ = app.refresh_sessions().await;
+                    let _ = app.refresh_health().await;
                 }
                 CreateProgress::Error { message } => {
                     app.loading_message = None;
@@ -415,6 +419,7 @@ async fn run_main_loop(
                     app.delete_task.take();
                     app.status_message = Some(format!("Deleted session {session_id}"));
                     let _ = app.refresh_sessions().await;
+                    let _ = app.refresh_health().await;
                 }
                 app::DeleteProgress::Error {
                     session_id: _,

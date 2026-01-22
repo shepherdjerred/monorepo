@@ -1921,6 +1921,75 @@ impl ExecutionBackend for KubernetesBackend {
         let logs = pods.logs(id, &log_params).await?;
         Ok(logs)
     }
+
+    fn is_remote(&self) -> bool {
+        true
+    }
+
+    /// Get Kubernetes backend capabilities
+    ///
+    /// Kubernetes preserves data because workspace PVCs are not deleted on pod recreation.
+    fn capabilities(&self) -> super::traits::BackendCapabilities {
+        super::traits::BackendCapabilities {
+            can_recreate: true,
+            can_update_image: true,
+            preserves_data_on_recreate: true,
+            can_start: false, // Kubernetes pods can't be "started" - they restart automatically
+            can_wake: false,
+            data_preservation_description: "Your code is safe (stored in persistent volume). Only pod-local files will be lost.",
+        }
+    }
+
+    /// Check the health of a Kubernetes pod
+    ///
+    /// Uses the Kubernetes API to get detailed pod state.
+    async fn check_health(&self, id: &str) -> anyhow::Result<super::traits::BackendResourceHealth> {
+        use super::traits::BackendResourceHealth;
+
+        let pods: Api<Pod> = Api::namespaced(self.client.clone(), &self.config.namespace);
+
+        match pods.get(id).await {
+            Ok(pod) => {
+                let status = pod.status.as_ref();
+                let phase = status.and_then(|s| s.phase.as_ref());
+
+                // Check for CrashLoopBackOff in container statuses
+                if let Some(container_statuses) = status.and_then(|s| s.container_statuses.as_ref())
+                {
+                    for cs in container_statuses {
+                        if let Some(waiting) = cs.state.as_ref().and_then(|s| s.waiting.as_ref()) {
+                            if waiting.reason.as_deref() == Some("CrashLoopBackOff") {
+                                return Ok(BackendResourceHealth::CrashLoop);
+                            }
+                        }
+                    }
+                }
+
+                match phase.map(String::as_str) {
+                    Some("Running") => Ok(BackendResourceHealth::Running),
+                    Some("Pending") => Ok(BackendResourceHealth::Pending),
+                    Some("Succeeded") => Ok(BackendResourceHealth::Stopped),
+                    Some("Failed") => {
+                        let reason = status
+                            .and_then(|s| s.message.clone())
+                            .unwrap_or_else(|| "Pod failed".to_string());
+                        Ok(BackendResourceHealth::Error { message: reason })
+                    }
+                    Some("Unknown") | None => {
+                        let reason = status
+                            .and_then(|s| s.message.clone())
+                            .unwrap_or_else(|| "Pod in unknown state".to_string());
+                        Ok(BackendResourceHealth::Error { message: reason })
+                    }
+                    Some(other) => Ok(BackendResourceHealth::Error {
+                        message: format!("Unknown pod phase: {other}"),
+                    }),
+                }
+            }
+            Err(kube::Error::Api(e)) if e.code == 404 => Ok(BackendResourceHealth::NotFound),
+            Err(e) => Err(e.into()),
+        }
+    }
 }
 
 #[cfg(test)]

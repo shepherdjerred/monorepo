@@ -69,10 +69,10 @@ type CodexFunctionCallOutputPayload = {
  */
 type CodexReasoningPayload = {
   type: "reasoning";
-  summary?: Array<{
+  summary?: {
     type: "summary_text";
     text: string;
-  }>;
+  }[];
 };
 
 /**
@@ -100,7 +100,7 @@ export function isCodexFormat(firstLine: string): boolean {
       "event_msg",
       "turn_context",
     ];
-    return codexTypes.includes(entry.type as CodexEntryType);
+    return codexTypes.includes(entry.type);
   } catch {
     return false;
   }

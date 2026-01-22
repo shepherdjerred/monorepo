@@ -257,7 +257,7 @@ export function Console({ sessionId, sessionName, onClose, onSwitchToChat }: Con
           tags: {
             error_type: 'terminal_decode',
             decode_stage: err.stage,
-            session_id: err.context.sessionId || 'unknown',
+            session_id: err.context.sessionId ?? 'unknown',
           },
           contexts: {
             decode: {

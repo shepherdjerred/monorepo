@@ -10,6 +10,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use tokio::sync::RwLock;
 use uuid::Uuid;
 
+use crate::core::session::{HealthCheckResult, ResourceState, SessionHealthReport};
 use crate::core::{AgentType, BackendType, Session, SessionConfig, SessionStatus};
 
 use super::protocol::CreateSessionRequest;
@@ -92,6 +93,7 @@ impl MockApiClient {
             agent: AgentType::ClaudeCode,
             model: None, // Mock uses default model
             dangerous_skip_checks: false,
+            dangerous_copy_creds: false,
             access_mode: crate::core::AccessMode::default(),
         };
 
@@ -176,6 +178,7 @@ impl ApiClient for MockApiClient {
             agent: request.agent,
             model: request.model.clone(),
             dangerous_skip_checks: request.dangerous_skip_checks,
+            dangerous_copy_creds: request.dangerous_copy_creds,
             access_mode: request.access_mode,
         };
 
@@ -383,6 +386,38 @@ impl ApiClient for MockApiClient {
 
         Ok(crate::feature_flags::FeatureFlags::default())
     }
+
+    async fn get_health(&mut self) -> anyhow::Result<HealthCheckResult> {
+        if self.should_fail() {
+            let msg = self.error_message.read().await.clone();
+            anyhow::bail!("{msg}");
+        }
+
+        // Return mock health status - all sessions healthy
+        let sessions = self.sessions.read().await;
+        let healthy_count = sessions.len();
+        let reports: Vec<SessionHealthReport> = sessions
+            .values()
+            .map(|session| SessionHealthReport {
+                session_id: session.id,
+                session_name: session.name.clone(),
+                backend_type: session.backend,
+                state: ResourceState::Healthy,
+                available_actions: vec![],
+                recommended_action: None,
+                description: "Session is healthy".to_string(),
+                details: String::new(),
+                data_safe: true,
+            })
+            .collect();
+
+        Ok(HealthCheckResult {
+            sessions: reports,
+            healthy_count,
+            needs_attention_count: 0,
+            blocked_count: 0,
+        })
+    }
 }
 
 #[cfg(test)]
@@ -408,6 +443,7 @@ mod tests {
             agent: AgentType::ClaudeCode,
             model: None, // Test uses default model
             dangerous_skip_checks: false,
+            dangerous_copy_creds: false,
             print_mode: false,
             plan_mode: true,
             access_mode: crate::core::AccessMode::default(),

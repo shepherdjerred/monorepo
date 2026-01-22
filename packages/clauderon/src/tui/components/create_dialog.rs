@@ -7,11 +7,23 @@ use ratatui::{
 };
 
 use super::SPINNER_FRAMES;
+use crate::backends::{KubernetesConfig, SpritesConfig};
 use crate::core::{
     AccessMode, AgentType, BackendType,
     session::{ClaudeModel, CodexModel, GeminiModel, SessionModel},
 };
 use crate::tui::app::{App, CreateDialogFocus};
+
+/// Check if a backend is available (configured) for use
+fn is_backend_available(backend: BackendType) -> bool {
+    match backend {
+        BackendType::Sprites => SpritesConfig::load_or_default().is_connected_mode(),
+        BackendType::Kubernetes => KubernetesConfig::load_or_default().is_connected_mode(),
+        BackendType::Zellij | BackendType::Docker => true,
+        #[cfg(target_os = "macos")]
+        BackendType::AppleContainer => true,
+    }
+}
 
 /// Render the create session dialog
 pub fn render(frame: &mut Frame, app: &App, area: Rect) {
@@ -129,30 +141,49 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         inner[base_branch_idx],
     );
 
-    // Backend selection
-    // Conditionally build backend options based on feature flags
-    let backend_options: Vec<(&str, bool)> = {
-        let mut options = vec![
-            ("Zellij", dialog.backend == BackendType::Zellij),
-            ("Docker", dialog.backend == BackendType::Docker),
-        ];
+    // Backend selection - show unavailable backends grayed out
+    let k8s_available = is_backend_available(BackendType::Kubernetes);
+    let sprites_available = is_backend_available(BackendType::Sprites);
 
-        if dialog.feature_flags.enable_kubernetes_backend {
-            options.push(("Kubernetes", dialog.backend == BackendType::Kubernetes));
-        }
-
-        options.push(("Sprites", dialog.backend == BackendType::Sprites));
-
-        #[cfg(target_os = "macos")]
-        options.push((
-            "Apple Container",
-            dialog.backend == BackendType::AppleContainer,
-        ));
-
-        options
+    let k8s_label = if k8s_available {
+        "Kubernetes"
+    } else {
+        "Kubernetes (not configured)"
+    };
+    let sprites_label = if sprites_available {
+        "Sprites"
+    } else {
+        "Sprites (not configured)"
     };
 
-    render_radio_field(
+    // Conditionally build backend options based on feature flags
+    let mut backend_options: Vec<(&str, bool, bool)> = vec![
+        ("Zellij", dialog.backend == BackendType::Zellij, true),
+        ("Docker", dialog.backend == BackendType::Docker, true),
+    ];
+
+    if dialog.feature_flags.enable_kubernetes_backend {
+        backend_options.push((
+            k8s_label,
+            dialog.backend == BackendType::Kubernetes,
+            k8s_available,
+        ));
+    }
+
+    backend_options.push((
+        sprites_label,
+        dialog.backend == BackendType::Sprites,
+        sprites_available,
+    ));
+
+    #[cfg(target_os = "macos")]
+    backend_options.push((
+        "Apple Container",
+        dialog.backend == BackendType::AppleContainer,
+        true,
+    ));
+
+    render_backend_field(
         frame,
         "Backend",
         &backend_options,
@@ -568,6 +599,60 @@ fn render_radio_field(
                 Span::styled(indicator, style),
                 Span::raw(" "),
                 Span::raw(*name),
+            ];
+            if i < options.len() - 1 {
+                result.push(Span::raw("   "));
+            }
+            result
+        })
+        .collect();
+
+    let line = Line::from(
+        vec![Span::styled(
+            format!("{label}: "),
+            Style::default().add_modifier(Modifier::BOLD),
+        )]
+        .into_iter()
+        .chain(spans)
+        .collect::<Vec<_>>(),
+    );
+
+    let paragraph = Paragraph::new(line);
+    frame.render_widget(paragraph, area);
+}
+
+/// Render backend selection field with availability status
+/// Options format: (label, selected, available)
+fn render_backend_field(
+    frame: &mut Frame,
+    label: &str,
+    options: &[(&str, bool, bool)],
+    focused: bool,
+    area: Rect,
+) {
+    let base_style = if focused {
+        Style::default().fg(Color::Yellow)
+    } else {
+        Style::default()
+    };
+
+    let spans: Vec<Span> = options
+        .iter()
+        .enumerate()
+        .flat_map(|(i, (name, selected, available))| {
+            let indicator = if *selected { "(•)" } else { "( )" };
+
+            // Use gray color for unavailable backends
+            let option_style = if *available {
+                base_style
+            } else {
+                Style::default().fg(Color::DarkGray)
+            };
+
+            let mut result = vec![
+                Span::styled(indicator, option_style),
+                Span::raw(" "),
+                Span::styled(*name, option_style),
             ];
             if i < options.len() - 1 {
                 result.push(Span::raw("   "));
