@@ -13,7 +13,7 @@ type MessageBubbleProps = {
 
 export function MessageBubble({ message }: MessageBubbleProps) {
   // Don't render if there's no displayable content
-  const hasContent = message.content?.trim();
+  const hasContent = message.content.trim();
   const hasToolUses = message.toolUses && message.toolUses.length > 0;
   const hasCodeBlocks = message.codeBlocks && message.codeBlocks.length > 0;
 

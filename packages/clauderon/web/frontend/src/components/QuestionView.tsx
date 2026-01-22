@@ -56,7 +56,7 @@ export function QuestionView({ message }: QuestionViewProps) {
 
             {/* Options */}
             <div className="space-y-2 pl-4">
-              {q.options?.map((option, optIdx) => (
+              {q.options.map((option, optIdx) => (
                 <div
                   key={optIdx}
                   className="border-2 border-border p-3 bg-background hover:border-accent/50 transition-colors"

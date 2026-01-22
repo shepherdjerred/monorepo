@@ -237,3 +237,49 @@ macro_rules! skip_if_no_sprite_cli {
         }
     };
 }
+
+/// Initialize a git repository with a specified remote URL
+///
+/// This is useful for Sprites tests where a remote URL must be configured.
+///
+/// # Panics
+///
+/// Panics if any git command fails.
+pub fn init_git_repo_with_remote(path: &Path, remote_url: &str) {
+    init_git_repo(path);
+    let output = Command::new("git")
+        .args(["remote", "add", "origin", remote_url])
+        .current_dir(path)
+        .output()
+        .expect("Failed to add git remote");
+    assert!(
+        output.status.success(),
+        "git remote add failed: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+}
+
+/// Initialize a git repository with a remote and create a specific branch
+///
+/// Creates an initial commit, adds the remote, and optionally creates a new branch.
+///
+/// # Panics
+///
+/// Panics if any git command fails.
+pub fn init_git_repo_with_branch(path: &Path, remote_url: &str, branch_name: &str) {
+    init_git_repo_with_remote(path, remote_url);
+
+    // Create and checkout new branch if not main/master
+    if branch_name != "main" && branch_name != "master" {
+        let output = Command::new("git")
+            .args(["checkout", "-b", branch_name])
+            .current_dir(path)
+            .output()
+            .expect("Failed to create branch");
+        assert!(
+            output.status.success(),
+            "git checkout -b failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+}

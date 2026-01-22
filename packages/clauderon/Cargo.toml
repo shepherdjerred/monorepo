@@ -129,8 +129,6 @@ pedantic = { level = "warn", priority = -1 }
 nursery = { level = "warn", priority = -1 }
 # Allow noisy lints that don't meaningfully improve code quality
 module_name_repetitions = "allow"
-missing_errors_doc = "allow"
-missing_panics_doc = "allow"
 doc_markdown = "allow"
 similar_names = "allow"
 missing_const_for_fn = "allow"
@@ -165,25 +163,13 @@ unreadable_literal = "allow"
 doc_lazy_continuation = "allow"
 # Unused self
 unused_self = "allow"
-# IP addresses
-hardcoded_ip_addresses = "allow"
-# Debug formatting
-debug_format = "allow"
 # Let if seq - complex refactoring
 useless_let_if_seq = "allow"
-# IP address literals
-ip_literal_addrs = "allow"
 # Test-related lints
 used_underscore_binding = "allow"
 used_underscore_items = "allow"
 no_effect_underscore_binding = "allow"
 ignore_without_reason = "allow"
-# Deprecated methods - will fix later
-deprecated = "allow"
-# Dead code in tests
-dead_code = "allow"
-# Unreachable patterns from refactoring
-unreachable_patterns = "allow"
 # Significant drop tightening - optimization, not correctness
 significant_drop_tightening = "allow"
 # Unnecessary wraps - API consistency
@@ -192,10 +178,6 @@ unnecessary_wraps = "allow"
 wildcard_in_or_patterns = "allow"
 # Manual let...else - style choice
 manual_let_else = "allow"
-# Cast possible truncation - common in UI code with known bounds
-cast_possible_truncation = "allow"
-# Cast sign loss - common in conversions with known bounds
-cast_sign_loss = "allow"
 
 # =============================================================================
 # Build Profiles - Optimized for compile time
