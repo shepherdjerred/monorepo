@@ -9,7 +9,10 @@
     "windows": "npx @react-native-community/cli run-windows",
     "start": "react-native start",
     "test": "jest",
-    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write \"src/**/*.{ts,tsx,json}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,json}\"",
     "typecheck": "tsc --noEmit",
     "test:windows": "jest --config jest.config.windows.js"
   },
@@ -35,6 +38,7 @@
     "@babel/core": "^7.28.5",
     "@babel/preset-env": "^7.28.5",
     "@babel/runtime": "^7.28.4",
+    "@eslint/js": "^9.39.2",
     "@react-native-community/cli": "^18.0.0",
     "@react-native-community/cli-platform-android": "^18.0.0",
     "@react-native-community/cli-platform-ios": "^18.0.0",
@@ -42,17 +46,22 @@
     "@react-native/eslint-config": "0.83.1",
     "@react-native/metro-config": "0.83.1",
     "@react-native/typescript-config": "0.83.1",
+    "@rnx-kit/jest-preset": "^0.1.17",
     "@types/react": "~19.2.7",
     "@types/react-test-renderer": "^19.1.0",
     "babel-jest": "^30.2.0",
     "eslint": "^9.39.2",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-native": "^5.0.0",
     "jest": "^30.2.0",
+    "jiti": "^2.6.1",
     "prettier": "^3.7.4",
     "react-native-macos": "^0.81.0",
     "react-native-windows": "^0.81.2",
     "react-test-renderer": "19.2.3",
     "typescript": "^5.9.3",
-    "@rnx-kit/jest-preset": "^0.1.17"
+    "typescript-eslint": "^8.53.1"
   },
   "engines": {
     "node": ">=20.19.4"

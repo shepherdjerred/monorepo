@@ -36,7 +36,7 @@ function getStatusLabel(status: string): string {
 function shouldSpanWide(session: Session): boolean {
   return (
     session.status === SessionStatus.Running ||
-    (session.pr_url !== null && session.pr_url !== undefined && session.pr_check_status !== null && session.pr_check_status !== undefined) ||
+    (session.pr_url != null && session.pr_check_status != null) ||
     session.claude_status === ClaudeWorkingStatus.Working ||
     session.claude_status === ClaudeWorkingStatus.WaitingApproval ||
     session.claude_status === ClaudeWorkingStatus.WaitingInput ||
@@ -191,7 +191,7 @@ export function SessionCard({ session, onAttach, onEdit, onArchive, onUnarchive,
 
           <div className="flex-1 min-w-0">
             <h3 className="font-bold text-xl leading-tight tracking-tight mb-1 truncate">
-              {session.title || session.name}
+              {session.title ?? session.name}
             </h3>
 
             <div className="flex gap-2 flex-wrap">
@@ -208,9 +208,9 @@ export function SessionCard({ session, onAttach, onEdit, onArchive, onUnarchive,
                   </TooltipTrigger>
                   <TooltipContent>
                     <div className="text-xs max-w-xs">
-                      <p className="font-semibold mb-1">{AGENT_CAPABILITIES[session.agent]?.displayName || session.agent} Capabilities</p>
+                      <p className="font-semibold mb-1">{AGENT_CAPABILITIES[session.agent].displayName} Capabilities</p>
                       <ul className="space-y-1">
-                        {AGENT_CAPABILITIES[session.agent]?.features.map((feature, idx) => (
+                        {AGENT_CAPABILITIES[session.agent].features.map((feature, idx) => (
                           <li key={idx} className="flex items-start gap-1.5">
                             <span className="flex-shrink-0">{feature.supported ? '✓' : '⚠'}</span>
                             <span className={feature.supported ? "" : "text-yellow-600"}>
@@ -218,7 +218,7 @@ export function SessionCard({ session, onAttach, onEdit, onArchive, onUnarchive,
                               {feature.note && <span className="text-muted-foreground block text-xs mt-0.5">{feature.note}</span>}
                             </span>
                           </li>
-                        )) || <li>No capability information available</li>}
+                        ))}
                       </ul>
                     </div>
                   </TooltipContent>
@@ -347,7 +347,7 @@ export function SessionCard({ session, onAttach, onEdit, onArchive, onUnarchive,
                       // Group files by status
                       const grouped = session.worktree_changed_files.reduce<Record<string, string[]>>((acc, file) => {
                         const statusKey = getStatusLabel(file.status);
-                        if (!acc[statusKey]) acc[statusKey] = [];
+                        acc[statusKey] ??= [];
                         acc[statusKey].push(file.path);
                         return acc;
                       }, {});
@@ -407,7 +407,7 @@ export function SessionCard({ session, onAttach, onEdit, onArchive, onUnarchive,
           <span className="w-1 h-1 rounded-full bg-muted-foreground/50" />
           {session.pr_url && getRepoUrlFromPrUrl(session.pr_url) ? (
             <a
-              href={`${getRepoUrlFromPrUrl(session.pr_url)}/tree/${session.branch_name}`}
+              href={`${String(getRepoUrlFromPrUrl(session.pr_url))}/tree/${session.branch_name}`}
               target="_blank"
               rel="noopener noreferrer"
               className="text-primary hover:text-primary/80 transition-colors duration-200 truncate"
@@ -453,7 +453,7 @@ export function SessionCard({ session, onAttach, onEdit, onArchive, onUnarchive,
             <TooltipContent>Edit title/description</TooltipContent>
           </Tooltip>
 
-          {session.backend === "Docker" && (
+          {(session.backend as string) === "Docker" && (
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button

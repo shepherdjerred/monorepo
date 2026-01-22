@@ -17,15 +17,15 @@ export function EditSessionDialog({ session, onClose }: EditSessionDialogProps) 
   const [error, setError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
-    title: session.title || session.name,
-    description: session.description || "",
+    title: session.title ?? session.name,
+    description: session.description ?? "",
   });
 
   // Sync form data when session prop changes (e.g., after regeneration via WebSocket)
   useEffect(() => {
     setFormData({
-      title: session.title || session.name,
-      description: session.description || "",
+      title: session.title ?? session.name,
+      description: session.description ?? "",
     });
   }, [session.title, session.description, session.name]);
 
@@ -63,7 +63,7 @@ export function EditSessionDialog({ session, onClose }: EditSessionDialogProps) 
       .then(() => {
         toast.success("Session metadata regenerated");
       })
-      .catch((err) => {
+      .catch((err: unknown) => {
         const errorMsg = err instanceof Error ? err.message : String(err);
         toast.error(`Failed to regenerate metadata: ${errorMsg}`);
       });

@@ -58,13 +58,13 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
   useEffect(() => {
     setFormData(prev => ({
       ...prev,
-      dangerous_skip_checks: prev.backend === "Docker" || prev.backend === "Kubernetes" || prev.backend === "Sprites"
+      dangerous_skip_checks: (prev.backend as string) === "Docker" || (prev.backend as string) === "Kubernetes" || (prev.backend as string) === "Sprites"
     }));
   }, [formData.backend]);
 
   // Fetch storage classes when Kubernetes backend is selected
   useEffect(() => {
-    if (formData.backend === "Kubernetes") {
+    if ((formData.backend as string) === "Kubernetes") {
       setLoadingStorageClasses(true);
       client.getStorageClasses()
         .then((classes) => {
@@ -75,7 +75,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
             setFormData(prev => ({ ...prev, storage_class: defaultClass.name }));
           }
         })
-        .catch((err) => {
+        .catch((err: unknown) => {
           console.error('Failed to fetch storage classes:', err);
           toast.warning('Could not load storage classes from cluster');
           setStorageClasses([]);
@@ -88,7 +88,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
       setStorageClasses([]);
       setFormData(prev => ({ ...prev, storage_class: "" }));
     }
-  }, [formData.backend, client]);
+  }, [formData.backend, formData.storage_class, client]);
 
   // Reset model when agent changes
   useEffect(() => {
@@ -100,18 +100,18 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
     const fetchFlags = async () => {
       try {
         const response = await fetch('/api/feature-flags');
-        const data = await response.json();
+        const data: { flags: FeatureFlags } = await response.json() as { flags: FeatureFlags };
         setFeatureFlags(data.flags);
       } catch (error) {
         console.error('Failed to fetch feature flags:', error);
       }
     };
-    fetchFlags();
+    void fetchFlags();
   }, []);
 
   // Reset backend if Kubernetes is disabled
   useEffect(() => {
-    if (formData.backend === "Kubernetes" && featureFlags && !featureFlags.enable_kubernetes_backend) {
+    if ((formData.backend as string) === "Kubernetes" && featureFlags && !featureFlags.enable_kubernetes_backend) {
       setFormData(prev => ({ ...prev, backend: "Docker" as BackendType }));
     }
   }, [featureFlags, formData.backend]);
@@ -126,7 +126,12 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
       );
     } else {
       // When disabled: Keep only first repo, discard others immediately
-      setRepositories(prev => prev.length > 1 ? [prev[0]!] : prev);
+      setRepositories(prev => {
+        if (prev.length > 1 && prev[0]) {
+          return [prev[0]];
+        }
+        return prev;
+      });
     }
   }, [multiRepoEnabled]);
 
@@ -219,8 +224,8 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
     const newRepos = repositories.filter(r => r.id !== id);
 
     // If removing primary, set the first remaining repo as primary
-    if (repoToRemove?.is_primary && newRepos.length > 0) {
-      newRepos[0]!.is_primary = true;
+    if (repoToRemove?.is_primary && newRepos.length > 0 && newRepos[0]) {
+      newRepos[0].is_primary = true;
     }
 
     setRepositories(newRepos);
@@ -233,7 +238,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
 
     // Single mode: Only first repo needs path
     if (!multiRepoEnabled) {
-      if (!repositories[0]!.repo_path.trim()) {
+      if (!repositories[0]?.repo_path.trim()) {
         return "Repository path is required";
       }
       return null;
@@ -284,7 +289,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
     }
 
     // Check backend compatibility
-    if (formData.backend !== "Docker") {
+    if ((formData.backend as string) !== "Docker") {
       return "Multi-repository mode is only supported with Docker backend";
     }
 
@@ -297,7 +302,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
     setError(null);
 
     // Validate storage class for Kubernetes backend
-    if (formData.backend === "Kubernetes" && storageClasses.length > 0) {
+    if ((formData.backend as string) === "Kubernetes" && storageClasses.length > 0) {
       const hasDefault = storageClasses.some(sc => sc.is_default);
       if (!hasDefault && !formData.storage_class) {
         setError("No default storage class available. Please select a storage class.");
@@ -317,7 +322,10 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
 
       // Build CreateRepositoryInput array
       // Use repositories array if multi-repo enabled, or if base_branch is specified (for Sprites/K8s)
-      const firstRepo = repositories[0]!;
+      const firstRepo = repositories[0];
+      if (!firstRepo) {
+        throw new Error("No repository specified");
+      }
       const needsRepositoriesArray = multiRepoEnabled || firstRepo.base_branch;
       const repoInputs: CreateRepositoryInput[] | undefined = needsRepositoriesArray
         ? repositories.map(repo => ({
@@ -328,7 +336,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
         : undefined;
 
       const request: CreateSessionRequest = {
-        repo_path: repositories[0]!.repo_path, // Legacy field for backward compat
+        repo_path: firstRepo.repo_path, // Legacy field for backward compat
         ...(repoInputs && { repositories: repoInputs }), // New multi-repo field
         initial_prompt: formData.initial_prompt,
         backend: formData.backend,
@@ -351,7 +359,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
 
       // Upload images if any were selected
       if (selectedFiles.length > 0 && result) {
-        toast.info(`Uploading ${selectedFiles.length} image(s)...`);
+        toast.info(`Uploading ${String(selectedFiles.length)} image(s)...`);
         for (const file of selectedFiles) {
           try {
             await client.uploadImage(result, file);
@@ -447,7 +455,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
             <p className="text-sm text-muted-foreground pl-6">
               Mount multiple git repositories in the same session. Only supported with Docker backend.
             </p>
-            {multiRepoEnabled && formData.backend !== "Docker" && (
+            {multiRepoEnabled && (formData.backend as string) !== "Docker" && (
               <div className="p-3 border-2 text-sm font-mono ml-6" style={{
                 backgroundColor: 'hsl(45, 75%, 95%)',
                 borderColor: 'hsl(45, 75%, 50%)',
@@ -463,7 +471,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <Label className="font-semibold">
-                {multiRepoEnabled ? `Repositories (${repositories.length}/5)` : 'Repository'}
+                {multiRepoEnabled ? `Repositories (${String(repositories.length)}/5)` : 'Repository'}
               </Label>
               {multiRepoEnabled && (
                 <Button
@@ -569,7 +577,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
               </div>
             ))}
 
-            {repositories.length > 1 && formData.backend !== "Docker" && (
+            {repositories.length > 1 && (formData.backend as string) !== "Docker" && (
               <div className="p-3 border-2 text-sm font-mono" style={{
                 backgroundColor: 'hsl(45, 75%, 95%)',
                 borderColor: 'hsl(45, 75%, 50%)',
@@ -590,7 +598,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                 { setFormData({ ...formData, initial_prompt: e.target.value }); }
               }
               className="flex w-full rounded-md border-2 border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm min-h-[100px]"
-              placeholder={formData.agent === "Codex" ? "What should Codex do?" : "What should Claude Code do?"}
+              placeholder={(formData.agent as string) === "Codex" ? "What should Codex do?" : "What should Claude Code do?"}
               required
             />
           </div>
@@ -657,7 +665,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                 id="model"
                 value={formData.model ? JSON.stringify(formData.model) : ""}
                 onChange={(e) => {
-                  const value = e.target.value ? JSON.parse(e.target.value) : undefined;
+                  const value: SessionModel | undefined = e.target.value ? JSON.parse(e.target.value) as SessionModel : undefined;
                   setFormData({ ...formData, model: value });
                 }}
                 className="cursor-pointer flex h-10 w-full rounded-md border-2 border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
@@ -691,7 +699,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
           </div>
 
           {/* Agent Capabilities Info */}
-          {formData.agent && AGENT_CAPABILITIES[formData.agent] && (
+          {formData.agent in AGENT_CAPABILITIES && (
             <div className="mt-2 p-3 border-2 text-sm" style={{
               backgroundColor: 'hsl(220, 15%, 98%)',
               borderColor: 'hsl(220, 85%, 65%)',
@@ -722,7 +730,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
             </div>
           )}
 
-          {formData.backend === "Kubernetes" && (
+          {(formData.backend as string) === "Kubernetes" && (
             <div className="mt-2 p-3 border-2 text-sm font-mono" style={{
               backgroundColor: 'hsl(220, 15%, 90%)',
               borderColor: 'hsl(220, 85%, 65%)',
@@ -829,7 +837,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
               </div>
 
               {/* Storage Class (Kubernetes only) */}
-              {formData.backend === "Kubernetes" && (
+              {(formData.backend as string) === "Kubernetes" && (
                 <div className="space-y-2">
                   <Label htmlFor="storage_class">Storage Class (Kubernetes)</Label>
                   {loadingStorageClasses ? (

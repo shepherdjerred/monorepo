@@ -7,7 +7,7 @@ type ProviderIconProps = {
 }
 
 export function ProviderIcon({ agent, className = "w-4 h-4" }: ProviderIconProps) {
-  switch (agent) {
+  switch (agent as string) {
     case "ClaudeCode":
       return <Brain className={className} />;
     case "Codex":

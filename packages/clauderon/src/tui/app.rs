@@ -99,6 +99,8 @@ pub enum AppMode {
     ReconcileError,
     /// Signal menu dialog
     SignalMenu,
+    /// Startup health modal showing sessions that need attention
+    StartupHealthModal,
 }
 
 /// Copy mode state for text selection and navigation
@@ -926,6 +928,12 @@ pub struct App {
 
     /// Cached health reports for all sessions
     pub session_health: HashMap<Uuid, SessionHealthReport>,
+
+    /// Startup health check result (shown in modal on first load)
+    pub startup_health_result: Option<HealthCheckResult>,
+
+    /// Whether the startup health modal has been shown/dismissed
+    pub startup_health_shown: bool,
 }
 
 impl App {
@@ -961,6 +969,8 @@ impl App {
             signal_menu: None,
             last_signal_result: None,
             session_health: HashMap::new(),
+            startup_health_result: None,
+            startup_health_shown: false,
         }
     }
 
@@ -1027,11 +1037,34 @@ impl App {
         if let Some(client) = &mut self.client {
             let health_result = client.get_health().await?;
             self.session_health.clear();
-            for report in health_result.sessions {
-                self.session_health.insert(report.session_id, report);
+            for report in &health_result.sessions {
+                self.session_health
+                    .insert(report.session_id, report.clone());
             }
+
+            // On startup, show the health modal if there are issues
+            if !self.startup_health_shown && health_result.has_issues() {
+                self.startup_health_result = Some(health_result);
+                self.mode = AppMode::StartupHealthModal;
+            }
+            self.startup_health_shown = true;
         }
         Ok(())
+    }
+
+    /// Dismiss the startup health modal
+    pub fn dismiss_startup_health_modal(&mut self) {
+        self.startup_health_result = None;
+        self.mode = AppMode::SessionList;
+    }
+
+    /// Get sessions needing attention from the startup health result
+    #[must_use]
+    pub fn sessions_needing_attention(&self) -> Vec<&SessionHealthReport> {
+        self.startup_health_result
+            .as_ref()
+            .map(|r| r.sessions_needing_attention())
+            .unwrap_or_default()
     }
 
     /// Get health report for a session

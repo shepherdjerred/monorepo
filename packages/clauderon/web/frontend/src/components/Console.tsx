@@ -12,6 +12,56 @@ type ConsoleProps = {
   onSwitchToChat?: () => void;
 }
 
+// Terminal color themes
+const terminalThemes = {
+  light: {
+    background: "#ffffff",
+    foreground: "#1a1a1a",
+    cursor: "#1a1a1a",
+    cursorAccent: "#ffffff",
+    selectionBackground: "rgba(33, 66, 131, 0.3)",
+    black: "#000000",
+    red: "#cd3131",
+    green: "#00bc00",
+    yellow: "#949800",
+    blue: "#0451a5",
+    magenta: "#bc05bc",
+    cyan: "#0598bc",
+    white: "#555555",
+    brightBlack: "#666666",
+    brightRed: "#cd3131",
+    brightGreen: "#14ce14",
+    brightYellow: "#b5ba00",
+    brightBlue: "#0451a5",
+    brightMagenta: "#bc05bc",
+    brightCyan: "#0598bc",
+    brightWhite: "#a5a5a5",
+  },
+  dark: {
+    background: "#0a0e14",
+    foreground: "#e6e1dc",
+    cursor: "#00ff00",
+    cursorAccent: "#000000",
+    selectionBackground: "rgba(72, 118, 255, 0.3)",
+    black: "#000000",
+    red: "#ff3333",
+    green: "#00ff00",
+    yellow: "#ffff00",
+    blue: "#0066ff",
+    magenta: "#cc00ff",
+    cyan: "#00ffff",
+    white: "#cccccc",
+    brightBlack: "#666666",
+    brightRed: "#ff6666",
+    brightGreen: "#66ff66",
+    brightYellow: "#ffff66",
+    brightBlue: "#6666ff",
+    brightMagenta: "#ff66ff",
+    brightCyan: "#66ffff",
+    brightWhite: "#ffffff",
+  },
+};
+
 /**
  * Convert technical error to user-friendly message
  */
@@ -78,56 +128,6 @@ export function Console({ sessionId, sessionName, onClose, onSwitchToChat }: Con
   // Get current theme from document
   const getCurrentTheme = (): 'light' | 'dark' => {
     return document.documentElement.classList.contains('dark') ? 'dark' : 'light';
-  };
-
-  // Terminal color themes
-  const terminalThemes = {
-    light: {
-      background: "#ffffff",
-      foreground: "#1a1a1a",
-      cursor: "#1a1a1a",
-      cursorAccent: "#ffffff",
-      selectionBackground: "rgba(33, 66, 131, 0.3)",
-      black: "#000000",
-      red: "#cd3131",
-      green: "#00bc00",
-      yellow: "#949800",
-      blue: "#0451a5",
-      magenta: "#bc05bc",
-      cyan: "#0598bc",
-      white: "#555555",
-      brightBlack: "#666666",
-      brightRed: "#cd3131",
-      brightGreen: "#14ce14",
-      brightYellow: "#b5ba00",
-      brightBlue: "#0451a5",
-      brightMagenta: "#bc05bc",
-      brightCyan: "#0598bc",
-      brightWhite: "#a5a5a5",
-    },
-    dark: {
-      background: "#0a0e14",
-      foreground: "#e6e1dc",
-      cursor: "#00ff00",
-      cursorAccent: "#000000",
-      selectionBackground: "rgba(72, 118, 255, 0.3)",
-      black: "#000000",
-      red: "#ff3333",
-      green: "#00ff00",
-      yellow: "#ffff00",
-      blue: "#0066ff",
-      magenta: "#cc00ff",
-      cyan: "#00ffff",
-      white: "#cccccc",
-      brightBlack: "#666666",
-      brightRed: "#ff6666",
-      brightGreen: "#66ff66",
-      brightYellow: "#ffff66",
-      brightBlue: "#6666ff",
-      brightMagenta: "#ff66ff",
-      brightCyan: "#66ffff",
-      brightWhite: "#ffffff",
-    },
   };
 
   // Initialize terminal

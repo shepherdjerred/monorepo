@@ -32,7 +32,7 @@ type CodexEntry = {
  * Content block within a Codex message
  */
 type CodexContentBlock = {
-  type: "input_text" | "output_text" | "refusal" | string;
+  type: string;
   text?: string;
 };
 
@@ -219,7 +219,6 @@ export function parseCodexHistoryLines(lines: string[]): Message[] {
       const reasoningPayload = payload as CodexReasoningPayload;
       if (reasoningPayload.summary && reasoningPayload.summary.length > 0) {
         const text = reasoningPayload.summary
-          .filter((s) => s.type === "summary_text")
           .map((s) => s.text)
           .join("\n");
 
