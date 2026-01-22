@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   X,
   CheckCircle2,
@@ -32,7 +32,7 @@ export function StatusDialog({ onClose }: StatusDialogProps) {
   const [savingCredential, setSavingCredential] = useState<string | null>(null);
   const [saveErrors, setSaveErrors] = useState<Map<string, string>>(new Map());
 
-  const fetchStatus = async () => {
+  const fetchStatus = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -43,11 +43,11 @@ export function StatusDialog({ onClose }: StatusDialogProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [client]);
 
   useEffect(() => {
     void fetchStatus();
-  }, [client]);
+  }, [fetchStatus]);
 
   const handleCredentialChange = (serviceId: string, value: string) => {
     const newInputs = new Map(credentialInputs);
@@ -364,7 +364,7 @@ export function StatusDialog({ onClose }: StatusDialogProps) {
                       <div className="mb-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-md">
                         <div className="text-sm">
                           <span className="font-semibold">Organization:</span>{" "}
-                          {status.claude_usage.organization_name || status.claude_usage.organization_id}
+                          {status.claude_usage.organization_name ?? status.claude_usage.organization_id}
                         </div>
                         <div className="text-xs text-muted-foreground mt-1">
                           Last updated: {new Date(status.claude_usage.fetched_at).toLocaleString()}

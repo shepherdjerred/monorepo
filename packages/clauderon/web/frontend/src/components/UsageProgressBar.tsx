@@ -33,9 +33,9 @@ export function UsageProgressBar({
     if (diffMs < 0) {
       return "Should have reset already";
     } else if (diffHours < 1) {
-      return `Resets in ${diffMinutes} min`;
+      return `Resets in ${String(diffMinutes)} min`;
     } else if (diffHours < 24) {
-      return `Resets in ${diffHours} hr ${diffMinutes % 60} min`;
+      return `Resets in ${String(diffHours)} hr ${String(diffMinutes % 60)} min`;
     } else {
       return `Resets ${date.toLocaleString()}`;
     }
@@ -68,7 +68,7 @@ export function UsageProgressBar({
         <div
           className="h-full transition-all duration-300"
           style={{
-            width: `${percentage}%`,
+            width: `${String(percentage)}%`,
             backgroundColor: barColor,
             boxShadow: "inset 0 2px 4px rgba(0,0,0,0.1)",
           }}

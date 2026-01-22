@@ -46,7 +46,7 @@ export function PlanView({ message }: PlanViewProps) {
             ),
             // Style checkboxes
             li: ({ children, ...props }) => {
-              const childText = children?.toString() ?? "";
+              const childText = typeof children === 'string' ? children : (Array.isArray(children) ? children.join('') : '');
               if (childText.includes("[ ]") || childText.includes("[x]")) {
                 const isChecked = childText.includes("[x]");
                 return (
@@ -81,7 +81,7 @@ export function isPlan(message: Message): boolean {
   }
 
   // Check for plan-like content
-  const content = (message.content ?? "").toLowerCase();
+  const content = message.content.toLowerCase();
   return (
     content.includes("## implementation plan") ||
     content.includes("# implementation plan") ||

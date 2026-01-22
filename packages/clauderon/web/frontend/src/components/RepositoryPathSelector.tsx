@@ -38,7 +38,7 @@ export function RepositoryPathSelector({ value, onChange, required }: Repository
   // Extract repository name from full path
   const extractRepoName = (fullPath: string): string => {
     const parts = fullPath.split('/');
-    return parts[parts.length - 1] || fullPath;
+    return parts[parts.length - 1] ?? fullPath;
   };
 
   // Format display with subdirectory

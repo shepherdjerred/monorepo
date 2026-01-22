@@ -122,19 +122,17 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       case "SessionUpdated": {
         // Event payload contains the full session object
         const session = event.payload as Session;
-        if (session) {
-          setSessions((prev) => {
-            const newSessions = new Map(prev);
-            newSessions.set(session.id, session);
-            return newSessions;
-          });
-        }
+        setSessions((prev) => {
+          const newSessions = new Map(prev);
+          newSessions.set(session.id, session);
+          return newSessions;
+        });
         break;
       }
       case "SessionDeleted": {
         // Event payload contains { id: string }
         const payload = event.payload as { id: string };
-        if (payload?.id) {
+        if (payload.id) {
           setSessions((prev) => {
             const newSessions = new Map(prev);
             newSessions.delete(payload.id);

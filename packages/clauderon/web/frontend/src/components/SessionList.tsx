@@ -96,9 +96,9 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
   const getTimeSinceRefresh = (): string => {
     const seconds = Math.floor((Date.now() - lastRefreshTime.getTime()) / 1000);
     if (seconds < 5) return "just now";
-    if (seconds < 60) return `${seconds}s ago`;
+    if (seconds < 60) return `${String(seconds)}s ago`;
     const minutes = Math.floor(seconds / 60);
-    return `${minutes}m ago`;
+    return `${String(minutes)}m ago`;
   };
 
   const handleEdit = (session: Session) => {
@@ -127,25 +127,25 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
     if (confirmDialog.type === "archive") {
       void archiveSession(confirmDialog.session.id).then(() => {
         toast.success(`Session "${confirmDialog.session.name}" archived`);
-      }).catch((err) => {
+      }).catch((err: unknown) => {
         toast.error(`Failed to archive: ${err instanceof Error ? err.message : String(err)}`);
       });
     } else if (confirmDialog.type === "unarchive") {
       void unarchiveSession(confirmDialog.session.id).then(() => {
         toast.success(`Session "${confirmDialog.session.name}" restored from archive`);
-      }).catch((err) => {
+      }).catch((err: unknown) => {
         toast.error(`Failed to unarchive: ${err instanceof Error ? err.message : String(err)}`);
       });
     } else if (confirmDialog.type === "refresh") {
       void refreshSession(confirmDialog.session.id).then(() => {
         toast.success(`Session "${confirmDialog.session.name}" is being refreshed`);
-      }).catch((err) => {
+      }).catch((err: unknown) => {
         toast.error(`Failed to refresh: ${err instanceof Error ? err.message : String(err)}`);
       });
     } else {
       void deleteSession(confirmDialog.session.id).then(() => {
         toast.info(`Deleting session "${confirmDialog.session.name}"...`);
-      }).catch((err) => {
+      }).catch((err: unknown) => {
         toast.error(`Failed to delete: ${err instanceof Error ? err.message : String(err)}`);
       });
     }
