@@ -66,6 +66,13 @@ pub fn create_router(auth_state: &Option<AuthState>, dev_mode: bool) -> Router<A
         )
         .route("/api/sessions/{id}/history", get(get_session_history))
         .route("/api/sessions/{id}/upload", post(upload_file))
+        // Health and recreate endpoints
+        .route("/api/health", get(get_health))
+        .route("/api/sessions/{id}/health", get(get_session_health))
+        .route("/api/sessions/{id}/start", post(start_session))
+        .route("/api/sessions/{id}/wake", post(wake_session))
+        .route("/api/sessions/{id}/recreate", post(recreate_session))
+        .route("/api/sessions/{id}/cleanup", post(cleanup_session))
         .route("/api/recent-repos", get(get_recent_repos))
         .route("/api/browse-directory", post(browse_directory))
         .route("/api/status", get(get_system_status))
@@ -277,6 +284,7 @@ async fn create_session(
             request.agent,
             request.model,
             request.dangerous_skip_checks,
+            request.dangerous_copy_creds,
             request.print_mode,
             request.plan_mode,
             request.access_mode,
@@ -359,6 +367,129 @@ async fn refresh_session(
     if let Some(session) = state.session_manager.get_session(&id).await {
         broadcast_event(&state.event_broadcaster, Event::SessionUpdated(session)).await;
     }
+
+    Ok(StatusCode::NO_CONTENT)
+}
+
+/// Get health status of all sessions
+async fn get_health(
+    State(state): State<AppState>,
+) -> Json<crate::core::session::HealthCheckResult> {
+    let result = state.session_manager.check_all_sessions_health().await;
+    Json(result)
+}
+
+/// Get health status of a single session
+async fn get_session_health(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+) -> Result<Json<crate::core::session::SessionHealthReport>, AppError> {
+    validate_session_id(&id)?;
+
+    let session_id = Uuid::parse_str(&id)
+        .map_err(|e| AppError::BadRequest(format!("Invalid session ID: {e}")))?;
+
+    let report = state
+        .session_manager
+        .check_session_health(session_id)
+        .await?;
+
+    Ok(Json(report))
+}
+
+/// Start a stopped session (container/pod)
+async fn start_session(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+) -> Result<StatusCode, AppError> {
+    validate_session_id(&id)?;
+
+    let session_id = Uuid::parse_str(&id)
+        .map_err(|e| AppError::BadRequest(format!("Invalid session ID: {e}")))?;
+
+    state.session_manager.start_session(session_id).await?;
+
+    // Broadcast session updated event
+    if let Some(session) = state.session_manager.get_session(&id).await {
+        broadcast_event(&state.event_broadcaster, Event::SessionUpdated(session)).await;
+    }
+
+    Ok(StatusCode::NO_CONTENT)
+}
+
+/// Wake a hibernated session (sprites)
+async fn wake_session(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+) -> Result<StatusCode, AppError> {
+    validate_session_id(&id)?;
+
+    let session_id = Uuid::parse_str(&id)
+        .map_err(|e| AppError::BadRequest(format!("Invalid session ID: {e}")))?;
+
+    state.session_manager.wake_session(session_id).await?;
+
+    // Broadcast session updated event
+    if let Some(session) = state.session_manager.get_session(&id).await {
+        broadcast_event(&state.event_broadcaster, Event::SessionUpdated(session)).await;
+    }
+
+    Ok(StatusCode::NO_CONTENT)
+}
+
+/// Recreate a session (delete and recreate backend)
+///
+/// Returns the result of the recreation, or an error if blocked.
+async fn recreate_session(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+) -> Result<Json<serde_json::Value>, AppError> {
+    validate_session_id(&id)?;
+
+    let session_id = Uuid::parse_str(&id)
+        .map_err(|e| AppError::BadRequest(format!("Invalid session ID: {e}")))?;
+
+    match state.session_manager.recreate_session(session_id).await {
+        Ok(result) => {
+            // Broadcast session updated event
+            if let Some(session) = state.session_manager.get_session(&id).await {
+                broadcast_event(&state.event_broadcaster, Event::SessionUpdated(session)).await;
+            }
+
+            Ok(Json(json!({
+                "session_id": result.session_id.to_string(),
+                "new_backend_id": result.new_backend_id,
+                "message": result.message
+            })))
+        }
+        Err(crate::core::manager::RecreateError::Blocked(blocked)) => {
+            // Return 409 Conflict for blocked recreates
+            Err(AppError::ActionBlocked {
+                reason: blocked.reason,
+            })
+        }
+        Err(crate::core::manager::RecreateError::Other(e)) => Err(AppError::SessionManager(e)),
+    }
+}
+
+/// Cleanup a session (remove from database when worktree is already missing)
+async fn cleanup_session(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+) -> Result<StatusCode, AppError> {
+    validate_session_id(&id)?;
+
+    let session_id = Uuid::parse_str(&id)
+        .map_err(|e| AppError::BadRequest(format!("Invalid session ID: {e}")))?;
+
+    state.session_manager.cleanup_session(session_id).await?;
+
+    // Broadcast session deleted event
+    broadcast_event(
+        &state.event_broadcaster,
+        Event::SessionDeleted { id: id.clone() },
+    )
+    .await;
 
     Ok(StatusCode::NO_CONTENT)
 }
@@ -889,6 +1020,10 @@ pub enum AppError {
     NotFound(String),
     NotImplemented(String),
     BadRequest(String),
+    /// Action was blocked (e.g., recreate blocked for safety reasons)
+    ActionBlocked {
+        reason: String,
+    },
 }
 
 impl From<anyhow::Error> for AppError {
@@ -899,22 +1034,31 @@ impl From<anyhow::Error> for AppError {
 
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
-        let (status, error_message) = match self {
+        let (status, error_message, is_blocked) = match self {
             Self::SessionManager(err) => {
                 tracing::error!("Session manager error: {err}");
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
                     format!("Internal error: {err}"),
+                    false,
                 )
             }
-            Self::NotFound(msg) => (StatusCode::NOT_FOUND, msg),
-            Self::NotImplemented(msg) => (StatusCode::NOT_IMPLEMENTED, msg),
-            Self::BadRequest(msg) => (StatusCode::BAD_REQUEST, msg),
+            Self::NotFound(msg) => (StatusCode::NOT_FOUND, msg, false),
+            Self::NotImplemented(msg) => (StatusCode::NOT_IMPLEMENTED, msg, false),
+            Self::BadRequest(msg) => (StatusCode::BAD_REQUEST, msg, false),
+            Self::ActionBlocked { reason } => (StatusCode::CONFLICT, reason, true),
         };
 
-        let body = Json(json!({
-            "error": error_message,
-        }));
+        let body = if is_blocked {
+            Json(json!({
+                "error": error_message,
+                "blocked": true,
+            }))
+        } else {
+            Json(json!({
+                "error": error_message,
+            }))
+        };
 
         (status, body).into_response()
     }

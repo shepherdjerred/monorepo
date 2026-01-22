@@ -130,6 +130,18 @@ impl SpritesConfig {
             .ok_or_else(|| anyhow::anyhow!("Failed to determine home directory"))?;
         Ok(home.join(".clauderon").join("sprites-config.toml"))
     }
+
+    /// Check if Sprites is available for use in the UI.
+    ///
+    /// Sprites is a cloud service and is always available for selection.
+    /// Actual credential connectivity (proxy vs dangerous_copy_creds) is
+    /// checked during session creation.
+    #[must_use]
+    pub fn is_connected_mode(&self) -> bool {
+        // Sprites is always available to show in the picker
+        // The create flow handles credential configuration
+        true
+    }
 }
 
 #[cfg(test)]

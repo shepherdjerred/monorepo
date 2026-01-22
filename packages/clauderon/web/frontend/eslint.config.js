@@ -21,6 +21,7 @@ export default tseslint.config(
           allowDefaultProject: [
             "src/components/ThemeToggle.test.tsx",
             "src/lib/claudeParser.test.ts",
+            "src/lib/codexHistoryParser.test.ts",
           ],
         },
         tsconfigRootDir: import.meta.dirname,

@@ -24,6 +24,7 @@ fn create_test_session(name: &str) -> Session {
         backend: BackendType::Zellij,
         agent: AgentType::ClaudeCode,
         dangerous_skip_checks: false,
+        dangerous_copy_creds: false,
         access_mode: AccessMode::default(),
         model: None,
     })

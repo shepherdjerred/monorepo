@@ -839,7 +839,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                       <select
                         id="storage_class"
                         value={formData.storage_class}
-                        onChange={(e) => setFormData({ ...formData, storage_class: e.target.value })}
+                        onChange={(e) => { setFormData({ ...formData, storage_class: e.target.value }); }}
                         className="w-full px-3 py-2 border-2 rounded font-mono text-sm"
                       >
                         <option value="">Use default from config</option>

@@ -1,12 +1,12 @@
 import { AgentType } from '@clauderon/shared';
 
-export interface AgentFeature {
+export type AgentFeature = {
   name: string;
   supported: boolean;
   note?: string;
 }
 
-export interface AgentCapabilities {
+export type AgentCapabilities = {
   displayName: string;
   features: AgentFeature[];
 }

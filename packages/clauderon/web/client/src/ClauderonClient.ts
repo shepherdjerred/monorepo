@@ -17,6 +17,9 @@ import type {
   BrowseDirectoryRequest,
   BrowseDirectoryResponse,
   UploadResponse,
+  HealthCheckResult,
+  SessionHealthReport,
+  RecreateResult,
 } from "@clauderon/shared";
 import { ApiError, NetworkError, SessionNotFoundError } from "./errors.js";
 
@@ -130,6 +133,59 @@ export class ClauderonClient {
    */
   async refreshSession(id: string): Promise<void> {
     await this.request("POST", `/api/sessions/${encodeURIComponent(id)}/refresh`);
+  }
+
+  /**
+   * Get health status of all sessions
+   */
+  async getHealth(): Promise<HealthCheckResult> {
+    const response = await this.request<HealthCheckResult>("GET", "/api/health");
+    return response;
+  }
+
+  /**
+   * Get health status of a single session
+   */
+  async getSessionHealth(id: string): Promise<SessionHealthReport> {
+    const response = await this.request<SessionHealthReport>(
+      "GET",
+      `/api/sessions/${encodeURIComponent(id)}/health`
+    );
+    return response;
+  }
+
+  /**
+   * Start a stopped session (container/pod)
+   */
+  async startSession(id: string): Promise<void> {
+    await this.request("POST", `/api/sessions/${encodeURIComponent(id)}/start`);
+  }
+
+  /**
+   * Wake a hibernated session (sprites)
+   */
+  async wakeSession(id: string): Promise<void> {
+    await this.request("POST", `/api/sessions/${encodeURIComponent(id)}/wake`);
+  }
+
+  /**
+   * Recreate a session (delete and recreate backend)
+   *
+   * @throws ApiError with status 409 if recreate is blocked for safety reasons
+   */
+  async recreateSession(id: string): Promise<RecreateResult> {
+    const response = await this.request<RecreateResult>(
+      "POST",
+      `/api/sessions/${encodeURIComponent(id)}/recreate`
+    );
+    return response;
+  }
+
+  /**
+   * Cleanup a session (remove from database when worktree is missing)
+   */
+  async cleanupSession(id: string): Promise<void> {
+    await this.request("POST", `/api/sessions/${encodeURIComponent(id)}/cleanup`);
   }
 
   /**

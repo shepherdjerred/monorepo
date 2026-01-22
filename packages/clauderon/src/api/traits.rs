@@ -3,6 +3,7 @@
 use async_trait::async_trait;
 
 use crate::core::Session;
+use crate::core::session::HealthCheckResult;
 
 use super::protocol::CreateSessionRequest;
 use super::types::ReconcileReportDto;
@@ -50,4 +51,7 @@ pub trait ApiClient: Send + Sync {
 
     /// Get current feature flags from the daemon.
     async fn get_feature_flags(&mut self) -> anyhow::Result<crate::feature_flags::FeatureFlags>;
+
+    /// Get health status of all sessions.
+    async fn get_health(&mut self) -> anyhow::Result<HealthCheckResult>;
 }

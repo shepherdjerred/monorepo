@@ -265,6 +265,34 @@ impl ExecutionBackend for ZellijBackend {
 
         Ok(String::from_utf8_lossy(&output.stdout).to_string())
     }
+
+    /// Get Zellij backend capabilities
+    ///
+    /// Zellij preserves data because sessions run directly on the host filesystem.
+    fn capabilities(&self) -> super::traits::BackendCapabilities {
+        super::traits::BackendCapabilities {
+            can_recreate: true,
+            can_update_image: false, // No container image for Zellij
+            preserves_data_on_recreate: true,
+            can_start: false, // Zellij sessions can't be "started" in the same way
+            can_wake: false,
+            data_preservation_description: "Your code is safe (stored in local git worktree). Only terminal state (scrollback, running processes) will be lost.",
+        }
+    }
+
+    /// Check the health of a Zellij session
+    ///
+    /// Zellij sessions are either running or not found - there's no intermediate state.
+    async fn check_health(
+        &self,
+        name: &str,
+    ) -> anyhow::Result<super::traits::BackendResourceHealth> {
+        if self.exists(name).await? {
+            Ok(super::traits::BackendResourceHealth::Running)
+        } else {
+            Ok(super::traits::BackendResourceHealth::NotFound)
+        }
+    }
 }
 
 // Legacy method names for backward compatibility during migration
@@ -289,6 +317,7 @@ impl ZellijBackend {
                 session_proxy_port: None,
                 images: vec![],
                 dangerous_skip_checks: false,
+                dangerous_copy_creds: false, // Zellij is local, no copy-creds needed
                 session_id: None,
                 initial_workdir: std::path::PathBuf::new(),
                 http_port: None,

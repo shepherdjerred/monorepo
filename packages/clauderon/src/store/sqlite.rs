@@ -142,6 +142,10 @@ impl SqliteStore {
             Self::migrate_to_v16(pool).await?;
         }
 
+        if current_version < 17 {
+            Self::migrate_to_v17(pool).await?;
+        }
+
         Ok(())
     }
 
@@ -987,6 +991,38 @@ impl SqliteStore {
         tracing::info!("Migration v16 complete");
         Ok(())
     }
+
+    /// Migration v17: Add dangerous_copy_creds column for tracking copy-creds mode sessions
+    async fn migrate_to_v17(pool: &SqlitePool) -> anyhow::Result<()> {
+        tracing::info!("Applying migration v17: Add dangerous_copy_creds column");
+
+        // Check if column exists (for idempotency)
+        let column_exists: bool = sqlx::query_scalar(
+            "SELECT COUNT(*) > 0 FROM pragma_table_info('sessions') WHERE name = 'dangerous_copy_creds'",
+        )
+        .fetch_one(pool)
+        .await?;
+
+        if !column_exists {
+            sqlx::query(
+                "ALTER TABLE sessions ADD COLUMN dangerous_copy_creds INTEGER NOT NULL DEFAULT 0",
+            )
+            .execute(pool)
+            .await?;
+            tracing::debug!("Added dangerous_copy_creds column to sessions table");
+        }
+
+        // Record migration
+        let now = Utc::now();
+        sqlx::query("INSERT OR REPLACE INTO schema_version (version, applied_at) VALUES (?, ?)")
+            .bind(17)
+            .bind(now.to_rfc3339())
+            .execute(pool)
+            .await?;
+
+        tracing::info!("Migration v17 complete");
+        Ok(())
+    }
 }
 
 #[async_trait]
@@ -1115,12 +1151,12 @@ impl Store for SqliteStore {
             r"
             INSERT OR REPLACE INTO sessions (
                 id, name, title, description, status, backend, agent, model, repo_path, worktree_path,
-                subdirectory, branch_name, backend_id, initial_prompt, dangerous_skip_checks,
+                subdirectory, branch_name, backend_id, initial_prompt, dangerous_skip_checks, dangerous_copy_creds,
                 pr_url, pr_check_status, pr_review_decision, claude_status, claude_status_updated_at,
                 merge_conflict, worktree_dirty, worktree_changed_files, access_mode, proxy_port, history_file_path,
                 reconcile_attempts, last_reconcile_error, last_reconcile_at, error_message,
                 created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ",
         )
         .bind(session.id.to_string())
@@ -1144,6 +1180,7 @@ impl Store for SqliteStore {
         .bind(&session.backend_id)
         .bind(&session.initial_prompt)
         .bind(session.dangerous_skip_checks)
+        .bind(session.dangerous_copy_creds)
         .bind(&session.pr_url)
         .bind(
             session
@@ -1423,6 +1460,7 @@ const fn event_type_name(event_type: &crate::core::events::EventType) -> &'stati
 
 /// Row type for sessions table
 #[derive(sqlx::FromRow)]
+#[allow(clippy::struct_excessive_bools)]
 struct SessionRow {
     id: String,
     name: String,
@@ -1439,6 +1477,7 @@ struct SessionRow {
     backend_id: Option<String>,
     initial_prompt: String,
     dangerous_skip_checks: bool,
+    dangerous_copy_creds: bool,
     pr_url: Option<String>,
     pr_check_status: Option<String>,
     pr_review_decision: Option<String>,
@@ -1614,6 +1653,7 @@ impl TryFrom<SessionRow> for Session {
             backend_id: row.backend_id,
             initial_prompt: row.initial_prompt,
             dangerous_skip_checks: row.dangerous_skip_checks,
+            dangerous_copy_creds: row.dangerous_copy_creds,
             pr_url: row.pr_url,
             pr_check_status,
             pr_review_decision,

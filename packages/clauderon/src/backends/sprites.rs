@@ -41,7 +41,6 @@ impl SpritesBackend {
     }
 
     /// Create a Sprites backend with custom configuration (for testing).
-    #[cfg(test)]
     #[must_use]
     pub fn with_config(config: SpritesConfig) -> Self {
         Self { config }
@@ -877,6 +876,10 @@ impl ExecutionBackend for SpritesBackend {
         }
 
         Ok(result.stdout)
+    }
+
+    fn is_remote(&self) -> bool {
+        true
     }
 }
 

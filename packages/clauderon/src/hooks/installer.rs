@@ -244,3 +244,191 @@ pub async fn install_hooks_in_container(container_name: &str) -> Result<()> {
 
     Ok(())
 }
+
+/// Generate the send_status.sh script for a remote backend
+///
+/// Unlike Docker which uses `host.docker.internal`, remote backends
+/// use the configured `daemon_address` to reach the daemon.
+fn generate_remote_send_status_script(daemon_address: &str, http_port: u16) -> String {
+    format!(
+        r#"#!/usr/bin/env bash
+# Send hook event to clauderon daemon via HTTP
+# Usage: send_status.sh <event_type>
+#
+# This script is configured for remote backends (Sprites, Kubernetes)
+# using the daemon address: {daemon_address}
+#
+# Required env var (set by clauderon):
+#   CLAUDERON_SESSION_ID - UUID of the session
+
+set -euo pipefail
+
+EVENT_TYPE="$1"
+
+# Check if session ID is set
+if [ -z "${{CLAUDERON_SESSION_ID:-}}" ]; then
+    # Not running in a clauderon-managed environment, exit silently
+    exit 0
+fi
+
+# Build hook message
+MESSAGE=$(cat <<EOF
+{{
+  "session_id": "$CLAUDERON_SESSION_ID",
+  "event": {{"type": "$EVENT_TYPE"}},
+  "timestamp": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+}}
+EOF
+)
+
+# Send via HTTP to daemon (using configured daemon address)
+curl -s -X POST \
+    -H "Content-Type: application/json" \
+    -d "$MESSAGE" \
+    "http://{daemon_address}:{http_port}/api/hooks" \
+    --connect-timeout 2 \
+    --max-time 5 \
+    >/dev/null 2>&1 || true
+
+exit 0
+"#,
+        daemon_address = daemon_address,
+        http_port = http_port
+    )
+}
+
+/// Generate the settings.json for sprites (uses /home/sprite/workspace)
+fn generate_sprites_settings_json() -> &'static str {
+    r#"{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c '/home/sprite/workspace/.clauderon/hooks/send_status.sh UserPromptSubmit'"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c '/home/sprite/workspace/.clauderon/hooks/send_status.sh PreToolUse'"
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c '/home/sprite/workspace/.clauderon/hooks/send_status.sh PermissionRequest'"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c '/home/sprite/workspace/.clauderon/hooks/send_status.sh Stop'"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c '/home/sprite/workspace/.clauderon/hooks/send_status.sh IdlePrompt'"
+          }
+        ]
+      }
+    ]
+  }
+}"#
+}
+
+/// Hook installation result for sprites
+pub struct SpritesHookInstallResult {
+    /// Commands to execute in the sprite to install hooks
+    pub commands: Vec<Vec<String>>,
+}
+
+/// Generate hook installation commands for a sprite
+///
+/// Returns commands that should be executed in the sprite using `sprite_exec`.
+/// Call this when `daemon_address` is configured (connected mode).
+///
+/// For disconnected mode (`--dangerous-copy-creds`), hooks are not installed
+/// and status tracking is limited.
+#[must_use]
+pub fn generate_sprites_hook_commands(
+    daemon_address: &str,
+    http_port: u16,
+    session_id: &str,
+) -> SpritesHookInstallResult {
+    let send_status_script = generate_remote_send_status_script(daemon_address, http_port);
+    let settings_json = generate_sprites_settings_json();
+
+    let commands = vec![
+        // Create hooks directory
+        vec![
+            "mkdir".to_string(),
+            "-p".to_string(),
+            "/home/sprite/workspace/.clauderon/hooks".to_string(),
+        ],
+        // Write send_status.sh
+        vec![
+            "sh".to_string(),
+            "-c".to_string(),
+            format!(
+                "cat > /home/sprite/workspace/.clauderon/hooks/send_status.sh << 'OUTER_EOF'\n{}\nOUTER_EOF",
+                send_status_script
+            ),
+        ],
+        // Make executable
+        vec![
+            "chmod".to_string(),
+            "+x".to_string(),
+            "/home/sprite/workspace/.clauderon/hooks/send_status.sh".to_string(),
+        ],
+        // Create .claude directory
+        vec![
+            "mkdir".to_string(),
+            "-p".to_string(),
+            "/home/sprite/workspace/.claude".to_string(),
+        ],
+        // Write settings.json
+        vec![
+            "sh".to_string(),
+            "-c".to_string(),
+            format!(
+                "cat > /home/sprite/workspace/.claude/settings.json << 'EOF'\n{}\nEOF",
+                settings_json
+            ),
+        ],
+        // Set session ID environment variable in bashrc
+        vec![
+            "sh".to_string(),
+            "-c".to_string(),
+            format!(
+                "echo 'export CLAUDERON_SESSION_ID=\"{}\"' >> ~/.bashrc",
+                session_id
+            ),
+        ],
+    ];
+
+    SpritesHookInstallResult { commands }
+}
