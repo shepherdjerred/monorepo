@@ -15,9 +15,10 @@ import { useTheme } from "../contexts/ThemeContext";
 
 // Use JS-based stack navigator on macOS (react-native-screens doesn't support macOS)
 // Use native stack navigator on other platforms for better performance
-const Stack = Platform.OS === "macos"
-  ? createStackNavigator<RootStackParamList>()
-  : createNativeStackNavigator<RootStackParamList>();
+const Stack =
+  Platform.OS === "macos"
+    ? createStackNavigator<RootStackParamList>()
+    : createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 function MainTabs() {
@@ -99,16 +100,8 @@ export function AppNavigator() {
           },
         }}
       >
-        <Stack.Screen
-          name="Main"
-          component={MainTabs}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="Chat"
-          component={ChatScreen}
-          options={{ title: "Chat" }}
-        />
+        <Stack.Screen name="Main" component={MainTabs} options={{ headerShown: false }} />
+        <Stack.Screen name="Chat" component={ChatScreen} options={{ title: "Chat" }} />
         <Stack.Screen
           name="CreateSession"
           component={CreateSessionScreen}
@@ -119,11 +112,7 @@ export function AppNavigator() {
           component={EditSessionScreen}
           options={{ title: "Edit Session" }}
         />
-        <Stack.Screen
-          name="Status"
-          component={StatusScreen}
-          options={{ title: "System Status" }}
-        />
+        <Stack.Screen name="Status" component={StatusScreen} options={{ title: "System Status" }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

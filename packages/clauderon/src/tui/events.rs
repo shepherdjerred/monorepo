@@ -172,7 +172,8 @@ pub async fn handle_paste_event(app: &mut App, text: &str) -> anyhow::Result<()>
         | AppMode::Locked
         | AppMode::Scroll
         | AppMode::ReconcileError
-        | AppMode::SignalMenu => {
+        | AppMode::SignalMenu
+        | AppMode::StartupHealthModal => {
             // Ignore paste events in these modes
         }
     }
@@ -210,6 +211,9 @@ pub async fn handle_key_event(app: &mut App, key: KeyEvent) -> anyhow::Result<()
         AppMode::Scroll => handle_scroll_mode_key(app, key),
         AppMode::ReconcileError => handle_reconcile_error_key(app, key).await?,
         AppMode::SignalMenu => handle_signal_menu_key(app, key).await?,
+        AppMode::StartupHealthModal => handle_startup_health_modal_key(app, key),
+        AppMode::RecreateConfirm => handle_recreate_confirm_key(app, key).await?,
+        AppMode::RecreateBlocked => handle_recreate_blocked_key(app, key),
     }
     Ok(())
 }
@@ -842,6 +846,145 @@ async fn handle_reconcile_error_key(app: &mut App, key: KeyEvent) -> anyhow::Res
         _ => {}
     }
     Ok(())
+}
+
+/// Handle key events in the startup health modal.
+///
+/// Keys:
+/// - Enter: Dismiss modal and view sessions
+/// - Esc/q: Dismiss modal
+fn handle_startup_health_modal_key(app: &mut App, key: KeyEvent) {
+    match key.code {
+        KeyCode::Esc | KeyCode::Char('q') | KeyCode::Enter => {
+            app.dismiss_startup_health_modal();
+        }
+        _ => {}
+    }
+}
+
+/// Handle key events in recreate confirmation dialog
+async fn handle_recreate_confirm_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
+    use crate::core::session::AvailableAction;
+
+    match key.code {
+        KeyCode::Esc => {
+            app.close_recreate_dialog();
+        }
+        KeyCode::Char('d') | KeyCode::Char('D') => {
+            app.recreate_details_expanded = !app.recreate_details_expanded;
+        }
+        KeyCode::Char('s') | KeyCode::Char('S') => {
+            // Start action
+            if let Some(health) = app.recreate_session_health().cloned() {
+                if health.available_actions.contains(&AvailableAction::Start) {
+                    if let Some(id) = app.recreate_confirm_session_id {
+                        if let Err(e) = app.start_session(id).await {
+                            app.status_message = Some(format!("Start failed: {e}"));
+                        } else {
+                            app.status_message = Some("Session started".to_string());
+                        }
+                        app.close_recreate_dialog();
+                    }
+                }
+            }
+        }
+        KeyCode::Char('w') | KeyCode::Char('W') => {
+            // Wake action
+            if let Some(health) = app.recreate_session_health().cloned() {
+                if health.available_actions.contains(&AvailableAction::Wake) {
+                    if let Some(id) = app.recreate_confirm_session_id {
+                        if let Err(e) = app.wake_session(id).await {
+                            app.status_message = Some(format!("Wake failed: {e}"));
+                        } else {
+                            app.status_message = Some("Session woken".to_string());
+                        }
+                        app.close_recreate_dialog();
+                    }
+                }
+            }
+        }
+        KeyCode::Char('r') | KeyCode::Char('R') => {
+            // Recreate action
+            if let Some(health) = app.recreate_session_health().cloned() {
+                if health
+                    .available_actions
+                    .contains(&AvailableAction::Recreate)
+                {
+                    if let Some(id) = app.recreate_confirm_session_id {
+                        if let Err(e) = app.recreate_session(id).await {
+                            app.status_message = Some(format!("Recreate failed: {e}"));
+                        } else {
+                            app.status_message = Some("Session recreating...".to_string());
+                        }
+                        app.close_recreate_dialog();
+                    }
+                }
+            }
+        }
+        KeyCode::Char('f') | KeyCode::Char('F') => {
+            // Recreate Fresh action
+            if let Some(health) = app.recreate_session_health().cloned() {
+                if health
+                    .available_actions
+                    .contains(&AvailableAction::RecreateFresh)
+                {
+                    if let Some(id) = app.recreate_confirm_session_id {
+                        if let Err(e) = app.recreate_session_fresh(id).await {
+                            app.status_message = Some(format!("Recreate fresh failed: {e}"));
+                        } else {
+                            app.status_message = Some("Session recreating fresh...".to_string());
+                        }
+                        app.close_recreate_dialog();
+                    }
+                }
+            }
+        }
+        KeyCode::Char('u') | KeyCode::Char('U') => {
+            // Update Image action
+            if let Some(health) = app.recreate_session_health().cloned() {
+                if health
+                    .available_actions
+                    .contains(&AvailableAction::UpdateImage)
+                {
+                    if let Some(id) = app.recreate_confirm_session_id {
+                        if let Err(e) = app.update_session_image(id).await {
+                            app.status_message = Some(format!("Update image failed: {e}"));
+                        } else {
+                            app.status_message = Some("Updating image...".to_string());
+                        }
+                        app.close_recreate_dialog();
+                    }
+                }
+            }
+        }
+        KeyCode::Char('c') | KeyCode::Char('C') => {
+            // Cleanup action
+            if let Some(health) = app.recreate_session_health().cloned() {
+                if health.available_actions.contains(&AvailableAction::Cleanup) {
+                    if let Some(id) = app.recreate_confirm_session_id {
+                        if let Err(e) = app.cleanup_session(id).await {
+                            app.status_message = Some(format!("Cleanup failed: {e}"));
+                        } else {
+                            app.status_message = Some("Session cleaned up".to_string());
+                        }
+                        app.close_recreate_dialog();
+                    }
+                }
+            }
+        }
+        _ => {}
+    }
+    Ok(())
+}
+
+/// Handle key events in recreate blocked dialog
+fn handle_recreate_blocked_key(app: &mut App, key: KeyEvent) {
+    match key.code {
+        KeyCode::Esc | KeyCode::Enter => {
+            app.close_recreate_dialog();
+        }
+        _ => {}
+    }
 }
 
 /// Handle key events when attached to a session via PTY.

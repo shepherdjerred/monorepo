@@ -190,8 +190,9 @@ export function ChatInterface({
             multiple
             className="hidden"
             onChange={(e) => {
-              if (e.target.files) {
-                setAttachedImages(prev => [...prev, ...Array.from(e.target.files)]);
+              const files = e.target.files;
+              if (files) {
+                setAttachedImages(prev => [...prev, ...Array.from(files)]);
               }
             }}
           />

@@ -24,7 +24,7 @@ type FilterStatus = "all" | "running" | "idle" | "completed" | "archived";
 const TAB_TRIGGER_CLASS = "cursor-pointer transition-all duration-200 hover:bg-primary/20 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-2 data-[state=active]:border-primary data-[state=active]:shadow-[4px_4px_0_hsl(220,85%,25%)] data-[state=active]:font-bold";
 
 export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
-  const { sessions, isLoading, error, refreshSessions, archiveSession, unarchiveSession, refreshSession, deleteSession } =
+  const { sessions, isLoading, error, refreshSessions, archiveSession, unarchiveSession, refreshSession, deleteSession, getSessionHealth, refreshHealth } =
     useSessionContext();
 
   // Initialize filter from URL parameter
@@ -75,13 +75,13 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
   // Auto-refresh every 2 seconds (silent - no loading indicators)
   useEffect(() => {
     const interval = setInterval(() => {
-      void refreshSessions(false).then(() => {
+      void Promise.all([refreshSessions(false), refreshHealth()]).then(() => {
         setLastRefreshTime(new Date());
       });
     }, 2000);
 
     return () => { clearInterval(interval); };
-  }, [refreshSessions]);
+  }, [refreshSessions, refreshHealth]);
 
   // Update time display every second
   useEffect(() => {
@@ -291,18 +291,22 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
               gridAutoFlow: 'dense'
             }}
           >
-            {filteredSessions.map((session) => (
-              <SessionCard
-                key={session.id}
-                session={session}
-                onAttach={onAttach}
-                onEdit={handleEdit}
-                onArchive={handleArchive}
-                onUnarchive={handleUnarchive}
-                onRefresh={handleRefresh}
-                onDelete={handleDelete}
-              />
-            ))}
+            {filteredSessions.map((session) => {
+              const healthReport = getSessionHealth(session.id);
+              return (
+                <SessionCard
+                  key={session.id}
+                  session={session}
+                  {...(healthReport !== undefined ? { healthReport } : {})}
+                  onAttach={onAttach}
+                  onEdit={handleEdit}
+                  onArchive={handleArchive}
+                  onUnarchive={handleUnarchive}
+                  onRefresh={handleRefresh}
+                  onDelete={handleDelete}
+                />
+              );
+            })}
           </div>
         )}
       </main>

@@ -37,6 +37,8 @@
     "android",
     "ios",
     "macos",
-    "windows"
+    "windows",
+    "**/*.test.ts",
+    "**/*.test.tsx"
   ]
 }

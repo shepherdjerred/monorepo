@@ -1,4 +1,4 @@
-import type { Session } from "@clauderon/client";
+import type { Session, SessionHealthReport, ResourceState } from "@clauderon/client";
 import { SessionStatus, CheckStatus, ClaudeWorkingStatus, WorkflowStage, ReviewDecision } from "@clauderon/shared";
 import { formatRelativeTime, cn, getRepoUrlFromPrUrl } from "../lib/utils";
 import { Archive, ArchiveRestore, Trash2, Terminal, CheckCircle2, XCircle, Clock, Loader2, User, Circle, AlertTriangle, Edit, RefreshCw } from "lucide-react";
@@ -11,6 +11,7 @@ import { ProviderIcon } from "./ProviderIcon";
 
 type SessionCardProps = {
   session: Session;
+  healthReport?: SessionHealthReport;
   onAttach: (session: Session) => void;
   onEdit: (session: Session) => void;
   onArchive: (session: Session) => void;
@@ -159,7 +160,79 @@ function WorkflowProgress({ session }: { session: Session }) {
   );
 }
 
-export function SessionCard({ session, onAttach, onEdit, onArchive, onUnarchive, onRefresh, onDelete }: SessionCardProps) {
+// Helper function to get health display info from ResourceState
+function getHealthDisplay(state: ResourceState): { label: string; className: string; tooltip: string } {
+  switch (state.type) {
+    case "Healthy":
+      return {
+        label: "OK",
+        className: "bg-green-500/20 text-green-700 border-green-500/50",
+        tooltip: "Backend is running and healthy"
+      };
+    case "Stopped":
+      return {
+        label: "Stopped",
+        className: "bg-yellow-500/20 text-yellow-700 border-yellow-500/50",
+        tooltip: "Container stopped - can be started or recreated"
+      };
+    case "Hibernated":
+      return {
+        label: "Hibernated",
+        className: "bg-blue-500/20 text-blue-700 border-blue-500/50",
+        tooltip: "Sprite is hibernated - can be woken"
+      };
+    case "Pending":
+      return {
+        label: "Pending",
+        className: "bg-yellow-500/20 text-yellow-700 border-yellow-500/50",
+        tooltip: "Pod is pending - waiting for resources"
+      };
+    case "Missing":
+      return {
+        label: "Missing",
+        className: "bg-orange-500/20 text-orange-700 border-orange-500/50",
+        tooltip: "Backend resource missing - can be recreated"
+      };
+    case "Error":
+      return {
+        label: "Error",
+        className: "bg-red-500/20 text-red-700 border-red-500/50",
+        tooltip: `Backend error: ${state.message}`
+      };
+    case "CrashLoop":
+      return {
+        label: "Crash Loop",
+        className: "bg-red-500/20 text-red-700 border-red-500/50",
+        tooltip: "Pod is in CrashLoopBackOff"
+      };
+    case "DeletedExternally":
+      return {
+        label: "Deleted",
+        className: "bg-red-500/20 text-red-700 border-red-500/50",
+        tooltip: "Backend was deleted outside of clauderon"
+      };
+    case "DataLost":
+      return {
+        label: "Data Lost",
+        className: "bg-red-500/20 text-red-700 border-red-500/50",
+        tooltip: `Data lost: ${state.reason}`
+      };
+    case "WorktreeMissing":
+      return {
+        label: "Worktree Missing",
+        className: "bg-red-500/20 text-red-700 border-red-500/50",
+        tooltip: "Git worktree was deleted"
+      };
+    default:
+      return {
+        label: "Unknown",
+        className: "bg-gray-500/20 text-gray-700 border-gray-500/50",
+        tooltip: "Unknown health state"
+      };
+  }
+}
+
+export function SessionCard({ session, healthReport, onAttach, onEdit, onArchive, onUnarchive, onRefresh, onDelete }: SessionCardProps) {
   const statusColors: Record<SessionStatus, string> = {
     [SessionStatus.Creating]: "bg-status-creating",
     [SessionStatus.Deleting]: "bg-status-creating",
@@ -227,6 +300,32 @@ export function SessionCard({ session, onAttach, onEdit, onArchive, onUnarchive,
               <Badge variant="secondary" className="font-mono text-xs">
                 {session.access_mode}
               </Badge>
+              {healthReport && healthReport.state.type !== "Healthy" && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          "border font-mono text-xs cursor-help",
+                          getHealthDisplay(healthReport.state).className
+                        )}
+                      >
+                        {getHealthDisplay(healthReport.state).label}
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <div className="max-w-xs text-xs">
+                        <p className="font-semibold mb-1">Health Status</p>
+                        <p>{getHealthDisplay(healthReport.state).tooltip}</p>
+                        {healthReport.description && (
+                          <p className="mt-1 text-muted-foreground">{healthReport.description}</p>
+                        )}
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
             </div>
           </div>
         </div>

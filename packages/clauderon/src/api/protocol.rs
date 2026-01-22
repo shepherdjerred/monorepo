@@ -157,6 +157,7 @@ pub struct CreateRepositoryInput {
 /// Request to create a new session
 #[typeshare]
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[allow(clippy::struct_excessive_bools)] // Independent configuration flags
 pub struct CreateSessionRequest {
     /// Path to the repository (LEGACY: used when repositories is None)
     pub repo_path: String,
@@ -265,6 +266,10 @@ fn default_plan_mode() -> bool {
 
 impl CreateSessionRequest {
     /// Validate that the model is compatible with the selected agent
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the model is not compatible with the selected agent.
     pub fn validate(&self) -> anyhow::Result<()> {
         if let Some(model) = &self.model {
             if !model.is_compatible_with(self.agent) {

@@ -7,7 +7,7 @@ import type { EventsClient } from "../api/EventsClient";
  */
 export function useSessionEvents(
   client: EventsClient | null,
-  onEvent: (event: SessionEvent) => void
+  onEvent: (event: SessionEvent) => void,
 ) {
   useEffect(() => {
     if (!client) {

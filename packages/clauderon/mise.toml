@@ -88,6 +88,30 @@ description = "Typecheck documentation"
 run = "cd docs && bun run typecheck"
 
 # =============================================================================
+# Mobile Tasks
+# =============================================================================
+
+[tasks.lint-mobile]
+description = "Lint mobile package"
+run = "cd mobile && bun run lint"
+
+[tasks.typecheck-mobile]
+description = "Typecheck mobile package"
+run = "cd mobile && bun run typecheck"
+
+[tasks.test-mobile]
+description = "Run mobile tests"
+run = "cd mobile && bun run test"
+
+[tasks.format-mobile]
+description = "Format mobile package"
+run = "cd mobile && bun run format"
+
+[tasks.format-check-mobile]
+description = "Check mobile formatting"
+run = "cd mobile && bun run format:check"
+
+# =============================================================================
 # Rust Build Tasks
 # =============================================================================
 
@@ -187,6 +211,10 @@ cargo clippy -- -D warnings
 cd web && bun run lint
 cd docs && bun run typecheck
 cd web && bun run typecheck
+cd mobile && bun run lint
+cd mobile && bun run typecheck
+cd mobile && bun run format:check
+cd mobile && bun run test
 cargo test
 cargo build --release
 """

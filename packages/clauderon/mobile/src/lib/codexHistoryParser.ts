@@ -24,11 +24,7 @@ function generateUUID(): string {
 /**
  * Codex JSONL entry types
  */
-type CodexEntryType =
-  | "session_meta"
-  | "response_item"
-  | "event_msg"
-  | "turn_context";
+type CodexEntryType = "session_meta" | "response_item" | "event_msg" | "turn_context";
 
 /**
  * Raw JSONL entry from Codex's history file
@@ -43,7 +39,7 @@ type CodexEntry = {
  * Content block within a Codex message
  */
 type CodexContentBlock = {
-  type: "input_text" | "output_text" | "refusal" | string;
+  type: string;
   text?: string;
 };
 
@@ -80,10 +76,10 @@ type CodexFunctionCallOutputPayload = {
  */
 type CodexReasoningPayload = {
   type: "reasoning";
-  summary?: Array<{
-    type: "summary_text";
+  summary?: {
+    type: string;
     text: string;
-  }>;
+  }[];
 };
 
 /**
@@ -111,7 +107,7 @@ export function isCodexFormat(firstLine: string): boolean {
       "event_msg",
       "turn_context",
     ];
-    return codexTypes.includes(entry.type as CodexEntryType);
+    return codexTypes.includes(entry.type);
   } catch {
     return false;
   }
@@ -155,8 +151,7 @@ export function parseCodexHistoryLines(lines: string[]): Message[] {
       const text = messagePayload.content
         .filter(
           (c): c is CodexContentBlock & { text: string } =>
-            (c.type === "input_text" || c.type === "output_text") &&
-            typeof c.text === "string"
+            (c.type === "input_text" || c.type === "output_text") && typeof c.text === "string",
         )
         .map((c) => c.text)
         .join("");
@@ -189,10 +184,7 @@ export function parseCodexHistoryLines(lines: string[]): Message[] {
 
       let parsedInput: Record<string, unknown> | undefined;
       try {
-        parsedInput = JSON.parse(fnPayload.arguments) as Record<
-          string,
-          unknown
-        >;
+        parsedInput = JSON.parse(fnPayload.arguments) as Record<string, unknown>;
       } catch {
         // If arguments aren't valid JSON, use as string
         parsedInput = { raw: fnPayload.arguments };

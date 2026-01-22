@@ -14,6 +14,7 @@ use super::container_config::{ImageConfig, ResourceLimits};
 /// data is preserved during recreation. This helps the UI determine what
 /// actions to offer and what warnings to show.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[allow(clippy::struct_excessive_bools)] // Independent capability flags
 pub struct BackendCapabilities {
     /// Whether this backend supports proactive recreation when healthy
     pub can_recreate: bool,

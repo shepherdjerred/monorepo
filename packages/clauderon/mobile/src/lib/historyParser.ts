@@ -154,9 +154,7 @@ export function parseHistoryLines(lines: string[]): Message[] {
           const toolUse = toolUseMap.get(block.tool_use_id);
           if (toolUse) {
             toolUse.result =
-              typeof block.content === "string"
-                ? block.content
-                : JSON.stringify(block.content);
+              typeof block.content === "string" ? block.content : JSON.stringify(block.content);
           }
         }
       }
@@ -164,9 +162,7 @@ export function parseHistoryLines(lines: string[]): Message[] {
   }
 
   // Return only the parsed messages (filter out nulls)
-  return parsedEntries
-    .map(({ message }) => message)
-    .filter((m): m is Message => m !== null);
+  return parsedEntries.map(({ message }) => message).filter((m): m is Message => m !== null);
 }
 
 /**

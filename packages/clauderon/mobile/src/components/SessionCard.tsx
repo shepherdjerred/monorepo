@@ -1,7 +1,14 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from "react-native";
 import type { Session } from "../types/generated";
-import { BackendType, CheckStatus, ClaudeWorkingStatus, SessionStatus, WorkflowStage, ReviewDecision } from "../types/generated";
+import {
+  BackendType,
+  CheckStatus,
+  ClaudeWorkingStatus,
+  SessionStatus,
+  WorkflowStage,
+  ReviewDecision,
+} from "../types/generated";
 import { useTheme } from "../contexts/ThemeContext";
 import { typography } from "../styles/typography";
 import { formatRelativeTime } from "../lib/utils";
@@ -49,10 +56,7 @@ function getWorkflowStage(session: Session): WorkflowStage {
   }
 
   // Waiting for review
-  if (
-    session.pr_review_decision === ReviewDecision.ReviewRequired ||
-    !session.pr_review_decision
-  ) {
+  if (session.pr_review_decision === ReviewDecision.ReviewRequired || !session.pr_review_decision) {
     return WorkflowStage.Review;
   }
 
@@ -107,24 +111,33 @@ export function SessionCard({
   const themedStyles = getThemedStyles(colors);
 
   return (
-    <TouchableOpacity
-      style={themedStyles.card}
-      onPress={onPress}
-      activeOpacity={0.7}
-    >
+    <TouchableOpacity style={themedStyles.card} onPress={onPress} activeOpacity={0.7}>
       <View style={styles.header}>
         <Text style={[styles.name, { color: colors.textDark }]} numberOfLines={1}>
           {session.name}
         </Text>
         <View style={styles.badgesContainer}>
           {session.pr_url && (
-            <View style={[styles.stageBadge, { backgroundColor: getStageColor(getWorkflowStage(session)), borderColor: colors.border }]}>
+            <View
+              style={[
+                styles.stageBadge,
+                {
+                  backgroundColor: getStageColor(getWorkflowStage(session)),
+                  borderColor: colors.border,
+                },
+              ]}
+            >
               <Text style={[styles.badgeText, { color: colors.textWhite }]}>
                 {getStageLabel(getWorkflowStage(session))}
               </Text>
             </View>
           )}
-          <View style={[styles.statusBadge, { backgroundColor: statusColor, borderColor: colors.border }]}>
+          <View
+            style={[
+              styles.statusBadge,
+              { backgroundColor: statusColor, borderColor: colors.border },
+            ]}
+          >
             <Text style={[styles.statusText, { color: colors.textWhite }]}>{session.status}</Text>
           </View>
         </View>
@@ -147,7 +160,9 @@ export function SessionCard({
                 <Text style={getCheckStatusStyle(session.pr_check_status)}>
                   {getCheckStatusSymbol(session.pr_check_status)}
                 </Text>
-                <Text style={[styles.statusValue, getCheckStatusTextStyle(session.pr_check_status)]}>
+                <Text
+                  style={[styles.statusValue, getCheckStatusTextStyle(session.pr_check_status)]}
+                >
                   {session.pr_check_status}
                 </Text>
               </View>
@@ -168,14 +183,18 @@ export function SessionCard({
         {/* Merge Conflict Warning */}
         {session.merge_conflict && (
           <View style={styles.statusRow}>
-            <Text style={[styles.conflictWarning, { color: colors.error }]}>⚠ Merge conflict with main</Text>
+            <Text style={[styles.conflictWarning, { color: colors.error }]}>
+              ⚠ Merge conflict with main
+            </Text>
           </View>
         )}
 
         {/* Dirty Worktree Warning */}
         {session.worktree_dirty && (
           <View style={styles.statusRow}>
-            <Text style={[styles.dirtyWarning, { color: colors.warning }]}>● Uncommitted changes</Text>
+            <Text style={[styles.dirtyWarning, { color: colors.warning }]}>
+              ● Uncommitted changes
+            </Text>
           </View>
         )}
 
@@ -185,7 +204,10 @@ export function SessionCard({
             <Text style={[styles.reconcileErrorTitle, { color: colors.error }]}>
               Reconcile error (attempt {session.reconcile_attempts})
             </Text>
-            <Text style={[styles.reconcileErrorMessage, { color: colors.textLight }]} numberOfLines={2}>
+            <Text
+              style={[styles.reconcileErrorMessage, { color: colors.textLight }]}
+              numberOfLines={2}
+            >
               {session.last_reconcile_error}
             </Text>
           </View>
@@ -201,7 +223,7 @@ export function SessionCard({
         <View style={[styles.actionRow, { borderTopColor: colors.borderLight }]}>
           {onRefresh && session.backend === BackendType.Docker && (
             <TouchableOpacity
-              style={[themedStyles.actionButton]}
+              style={themedStyles.actionButton}
               onPress={(e) => {
                 e.stopPropagation();
                 onRefresh();
@@ -212,7 +234,7 @@ export function SessionCard({
           )}
           {onEdit && (
             <TouchableOpacity
-              style={[themedStyles.actionButton]}
+              style={themedStyles.actionButton}
               onPress={(e) => {
                 e.stopPropagation();
                 onEdit();
@@ -223,7 +245,7 @@ export function SessionCard({
           )}
           {onArchive && session.status !== SessionStatus.Archived && (
             <TouchableOpacity
-              style={[themedStyles.actionButton]}
+              style={themedStyles.actionButton}
               onPress={(e) => {
                 e.stopPropagation();
                 onArchive();
@@ -234,7 +256,7 @@ export function SessionCard({
           )}
           {onUnarchive && session.status === SessionStatus.Archived && (
             <TouchableOpacity
-              style={[themedStyles.actionButton]}
+              style={themedStyles.actionButton}
               onPress={(e) => {
                 e.stopPropagation();
                 onUnarchive();
@@ -251,9 +273,7 @@ export function SessionCard({
                 onDelete();
               }}
             >
-              <Text style={[styles.actionButtonText, { color: colors.textWhite }]}>
-                Delete
-              </Text>
+              <Text style={[styles.actionButtonText, { color: colors.textWhite }]}>Delete</Text>
             </TouchableOpacity>
           )}
         </View>

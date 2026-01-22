@@ -26,6 +26,12 @@ export default {
 
     return commands;
   },
+  // Clauderon mobile (React Native) - nested package needs separate pattern
+  "packages/clauderon/mobile/src/**/*.{ts,tsx}": (filenames) => {
+    const mobileDir = "packages/clauderon/mobile";
+    const relativeFiles = filenames.map(f => path.relative(mobileDir, f)).join(" ");
+    return [`cd ${mobileDir} && bunx eslint --fix ${relativeFiles}`];
+  },
   "packages/clauderon/**/*.rs": (filenames) => {
     // Only run fmt check - clippy and test are too heavy for pre-commit
     // and should be run in CI instead

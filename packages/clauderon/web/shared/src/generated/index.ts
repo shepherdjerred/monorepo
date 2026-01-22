@@ -3,7 +3,7 @@
 */
 
 /** User account */
-export interface AuthUser {
+export type AuthUser = {
 	id: string;
 	username: string;
 	display_name?: string;
@@ -11,7 +11,7 @@ export interface AuthUser {
 }
 
 /** Authentication status response */
-export interface AuthStatus {
+export type AuthStatus = {
 	/** Whether authentication is required for this instance */
 	requires_auth: boolean;
 	/** Whether any users exist in the database */
@@ -21,7 +21,7 @@ export interface AuthStatus {
 }
 
 /** Blocker details for a session */
-export interface BlockerDetails {
+export type BlockerDetails = {
 	/** Whether CI checks are failing */
 	ci_failing: boolean;
 	/** Whether the branch has merge conflicts */
@@ -31,13 +31,13 @@ export interface BlockerDetails {
 }
 
 /** Request to browse a directory on the daemon's filesystem */
-export interface BrowseDirectoryRequest {
+export type BrowseDirectoryRequest = {
 	/** Path to the directory to browse */
 	path: string;
 }
 
 /** A single directory entry */
-export interface DirectoryEntryDto {
+export type DirectoryEntryDto = {
 	/** Directory name */
 	name: string;
 	/** Absolute path to the directory */
@@ -47,7 +47,7 @@ export interface DirectoryEntryDto {
 }
 
 /** Response from browsing a directory */
-export interface BrowseDirectoryResponse {
+export type BrowseDirectoryResponse = {
 	/** Current directory path (normalized absolute path) */
 	current_path: string;
 	/** Parent directory path (None if at filesystem root) */
@@ -59,7 +59,7 @@ export interface BrowseDirectoryResponse {
 }
 
 /** Represents a file with uncommitted changes in a git worktree */
-export interface ChangedFile {
+export type ChangedFile = {
 	/**
 	 * Git status code (e.g., "M", "A", "D", "??", "MM")
 	 * First character is index status, second is working tree status
@@ -70,7 +70,7 @@ export interface ChangedFile {
 }
 
 /** Claude Code usage data for a specific time window */
-export interface UsageWindow {
+export type UsageWindow = {
 	/** Current usage (e.g., number of requests or tokens) */
 	current: number;
 	/** Maximum allowed usage for this window */
@@ -82,7 +82,7 @@ export interface UsageWindow {
 }
 
 /** Error details for usage tracking failures */
-export interface UsageError {
+export type UsageError = {
 	/** Error category (invalid_token, api_error, missing_org_id, etc) */
 	error_type: string;
 	/** Human-readable error message */
@@ -94,7 +94,7 @@ export interface UsageError {
 }
 
 /** Claude Code usage tracking data */
-export interface ClaudeUsage {
+export type ClaudeUsage = {
 	/** Organization ID */
 	organization_id: string;
 	/** Organization name (if available) */
@@ -112,7 +112,7 @@ export interface ClaudeUsage {
 }
 
 /** Input for a single repository in a multi-repo session */
-export interface CreateRepositoryInput {
+export type CreateRepositoryInput = {
 	/** Path to the repository (can include subdirectory, e.g., "/path/to/monorepo/packages/foo") */
 	repo_path: string;
 	/**
@@ -176,7 +176,7 @@ export enum AccessMode {
 }
 
 /** Request to create a new session */
-export interface CreateSessionRequest {
+export type CreateSessionRequest = {
 	/** Path to the repository (LEGACY: used when repositories is None) */
 	repo_path: string;
 	/**
@@ -267,7 +267,7 @@ export interface CreateSessionRequest {
 }
 
 /** Credential availability status */
-export interface CredentialStatus {
+export type CredentialStatus = {
 	/** Human-readable credential name (e.g., "GitHub", "Anthropic") */
 	name: string;
 	/** Service identifier for updates (e.g., "github", "anthropic") */
@@ -286,7 +286,7 @@ export interface CredentialStatus {
  * Feature flags configuration for the daemon.
  * Flags are loaded at startup and require daemon restart to change.
  */
-export interface FeatureFlags {
+export type FeatureFlags = {
 	/** Enable experimental WebAuthn passwordless authentication */
 	enable_webauthn_auth: boolean;
 	/** Enable AI-powered session metadata generation */
@@ -302,7 +302,7 @@ export interface FeatureFlags {
 }
 
 /** Feature flags response for the frontend */
-export interface FeatureFlagsResponse {
+export type FeatureFlagsResponse = {
 	/** Current feature flag values */
 	flags: FeatureFlags;
 	/** Whether flags require daemon restart to change */
@@ -310,30 +310,30 @@ export interface FeatureFlagsResponse {
 }
 
 /** Request to finish passkey authentication */
-export interface LoginFinishRequest {
+export type LoginFinishRequest = {
 	username: string;
 	challenge_id: string;
 	credential: any;
 }
 
 /** Response from login finish */
-export interface LoginFinishResponse {
+export type LoginFinishResponse = {
 	user: AuthUser;
 }
 
 /** Request to start passkey authentication */
-export interface LoginStartRequest {
+export type LoginStartRequest = {
 	username: string;
 }
 
 /** Response from login start */
-export interface LoginStartResponse {
+export type LoginStartResponse = {
 	challenge_id: string;
 	options: any;
 }
 
 /** Progress step during session creation */
-export interface ProgressStep {
+export type ProgressStep = {
 	/** Current step number (1-indexed) */
 	step: number;
 	/** Total number of steps */
@@ -343,7 +343,7 @@ export interface ProgressStep {
 }
 
 /** Proxy status information */
-export interface ProxyStatus {
+export type ProxyStatus = {
 	/** Proxy name (e.g., "HTTP Auth Proxy", "Kubernetes Proxy") */
 	name: string;
 	/** Port number the proxy is running on */
@@ -355,7 +355,7 @@ export interface ProxyStatus {
 }
 
 /** Recent repository entry with timestamp */
-export interface RecentRepoDto {
+export type RecentRepoDto = {
 	/** Path to the repository (git root) */
 	repo_path: string;
 	/** Subdirectory path relative to git root (empty string if at root) */
@@ -365,7 +365,7 @@ export interface RecentRepoDto {
 }
 
 /** Serializable reconcile report for API responses */
-export interface ReconcileReportDto {
+export type ReconcileReportDto = {
 	/** Sessions with missing git worktrees */
 	missing_worktrees: string[];
 	/** Sessions with missing backend resources */
@@ -381,7 +381,7 @@ export interface ReconcileReportDto {
 }
 
 /** Request to finish passkey registration */
-export interface RegistrationFinishRequest {
+export type RegistrationFinishRequest = {
 	username: string;
 	challenge_id: string;
 	credential: any;
@@ -389,18 +389,18 @@ export interface RegistrationFinishRequest {
 }
 
 /** Response from registration finish */
-export interface RegistrationFinishResponse {
+export type RegistrationFinishResponse = {
 	user: AuthUser;
 }
 
 /** Request to start passkey registration */
-export interface RegistrationStartRequest {
+export type RegistrationStartRequest = {
 	username: string;
 	display_name?: string;
 }
 
 /** Response from registration start */
-export interface RegistrationStartResponse {
+export type RegistrationStartResponse = {
 	challenge_id: string;
 	options: any;
 }
@@ -424,7 +424,7 @@ export enum SessionStatus {
 }
 
 /** Represents a repository mounted in a session */
-export interface SessionRepository {
+export type SessionRepository = {
 	/** Path to the repository root (git root) */
 	repo_path: string;
 	/** Subdirectory path relative to git root (empty if at root) */
@@ -483,7 +483,7 @@ export enum ClaudeWorkingStatus {
 }
 
 /** Represents a single AI coding session */
-export interface Session {
+export type Session = {
 	/** Unique identifier */
 	id: string;
 	/** Human-friendly name (user-provided + random suffix) */
@@ -566,7 +566,7 @@ export interface Session {
 }
 
 /** System status response including credentials and proxies */
-export interface SystemStatus {
+export type SystemStatus = {
 	/** List of credential statuses */
 	credentials: CredentialStatus[];
 	/** List of proxy statuses */
@@ -578,7 +578,7 @@ export interface SystemStatus {
 }
 
 /** Request to update a credential */
-export interface UpdateCredentialRequest {
+export type UpdateCredentialRequest = {
 	/** Service identifier (e.g., "github", "anthropic") */
 	service_id: string;
 	/** The credential token/key value */
@@ -586,7 +586,7 @@ export interface UpdateCredentialRequest {
 }
 
 /** Response from uploading an image file */
-export interface UploadResponse {
+export type UploadResponse = {
 	/** Absolute path to the uploaded file */
 	path: string;
 	/** Size of the uploaded file in bytes */
@@ -594,7 +594,7 @@ export interface UploadResponse {
 }
 
 /** User's passkey credential */
-export interface UserPasskey {
+export type UserPasskey = {
 	id: string;
 	user_id: string;
 	device_name?: string;
@@ -833,7 +833,7 @@ export enum AvailableAction {
 }
 
 /** Health report for a single session */
-export interface SessionHealthReport {
+export type SessionHealthReport = {
 	/** Session ID */
 	session_id: string;
 	/** Session name */
@@ -855,7 +855,7 @@ export interface SessionHealthReport {
 }
 
 /** Result of checking health for all sessions */
-export interface HealthCheckResult {
+export type HealthCheckResult = {
 	/** Health reports for all sessions */
 	sessions: SessionHealthReport[];
 	/** Count of healthy sessions */
@@ -867,7 +867,7 @@ export interface HealthCheckResult {
 }
 
 /** Result of a recreate operation */
-export interface RecreateResult {
+export type RecreateResult = {
 	/** Session ID that was recreated */
 	session_id: string;
 	/** New backend ID after recreation */

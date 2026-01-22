@@ -101,6 +101,10 @@ pub enum AppMode {
     SignalMenu,
     /// Startup health modal showing sessions that need attention
     StartupHealthModal,
+    /// Recreate confirmation dialog
+    RecreateConfirm,
+    /// Recreate blocked dialog (cannot safely recreate)
+    RecreateBlocked,
 }
 
 /// Copy mode state for text selection and navigation
@@ -934,6 +938,12 @@ pub struct App {
 
     /// Whether the startup health modal has been shown/dismissed
     pub startup_health_shown: bool,
+
+    /// Session ID for recreate confirmation dialog
+    pub recreate_confirm_session_id: Option<Uuid>,
+
+    /// Whether the details section is expanded in recreate confirm dialog
+    pub recreate_details_expanded: bool,
 }
 
 impl App {
@@ -971,6 +981,8 @@ impl App {
             session_health: HashMap::new(),
             startup_health_result: None,
             startup_health_shown: false,
+            recreate_confirm_session_id: None,
+            recreate_details_expanded: false,
         }
     }
 
@@ -1056,6 +1068,88 @@ impl App {
     pub fn dismiss_startup_health_modal(&mut self) {
         self.startup_health_result = None;
         self.mode = AppMode::SessionList;
+    }
+
+    /// Open the recreate confirmation dialog for the selected session
+    pub fn open_recreate_dialog(&mut self) {
+        if let Some(session) = self.selected_session() {
+            let session_id = session.id;
+            if let Some(health) = self.session_health.get(&session_id) {
+                self.recreate_confirm_session_id = Some(session_id);
+                self.recreate_details_expanded = false;
+
+                // If no actions are available (blocked), show blocked dialog
+                if health.available_actions.is_empty() {
+                    self.mode = AppMode::RecreateBlocked;
+                } else {
+                    self.mode = AppMode::RecreateConfirm;
+                }
+            } else {
+                self.status_message =
+                    Some("Health info not available - try refreshing".to_string());
+            }
+        }
+    }
+
+    /// Close the recreate dialog and return to session list
+    pub fn close_recreate_dialog(&mut self) {
+        self.recreate_confirm_session_id = None;
+        self.recreate_details_expanded = false;
+        self.mode = AppMode::SessionList;
+    }
+
+    /// Start a stopped session
+    pub async fn start_session(&mut self, id: Uuid) -> anyhow::Result<()> {
+        if let Some(client) = &self.client {
+            client.start_session(id).await?;
+            self.refresh_sessions().await?;
+        }
+        Ok(())
+    }
+
+    /// Wake a hibernated session
+    pub async fn wake_session(&mut self, id: Uuid) -> anyhow::Result<()> {
+        if let Some(client) = &self.client {
+            client.wake_session(id).await?;
+            self.refresh_sessions().await?;
+        }
+        Ok(())
+    }
+
+    /// Recreate a session (preserves data)
+    pub async fn recreate_session(&mut self, id: Uuid) -> anyhow::Result<()> {
+        if let Some(client) = &self.client {
+            client.recreate_session(id).await?;
+            self.refresh_sessions().await?;
+        }
+        Ok(())
+    }
+
+    /// Recreate a session fresh (data lost)
+    pub async fn recreate_session_fresh(&mut self, id: Uuid) -> anyhow::Result<()> {
+        if let Some(client) = &self.client {
+            client.recreate_session_fresh(id).await?;
+            self.refresh_sessions().await?;
+        }
+        Ok(())
+    }
+
+    /// Update session image and recreate
+    pub async fn update_session_image(&mut self, id: Uuid) -> anyhow::Result<()> {
+        if let Some(client) = &self.client {
+            client.update_session_image(id).await?;
+            self.refresh_sessions().await?;
+        }
+        Ok(())
+    }
+
+    /// Cleanup a session (remove from clauderon, worktree missing)
+    pub async fn cleanup_session(&mut self, id: Uuid) -> anyhow::Result<()> {
+        if let Some(client) = &self.client {
+            client.cleanup_session(id).await?;
+            self.refresh_sessions().await?;
+        }
+        Ok(())
     }
 
     /// Get sessions needing attention from the startup health result
@@ -1526,6 +1620,18 @@ impl App {
     pub fn reconcile_error_session(&self) -> Option<&Session> {
         self.reconcile_error_session_id
             .and_then(|id| self.sessions.iter().find(|s| s.id == id))
+    }
+
+    /// Get the session for recreate confirm/blocked dialog
+    pub fn recreate_session(&self) -> Option<&Session> {
+        self.recreate_confirm_session_id
+            .and_then(|id| self.sessions.iter().find(|s| s.id == id))
+    }
+
+    /// Get the health report for recreate confirm/blocked dialog
+    pub fn recreate_session_health(&self) -> Option<&SessionHealthReport> {
+        self.recreate_confirm_session_id
+            .and_then(|id| self.session_health.get(&id))
     }
 
     /// Request quit

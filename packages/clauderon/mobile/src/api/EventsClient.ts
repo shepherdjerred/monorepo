@@ -1,6 +1,6 @@
 import { AppState } from "react-native";
 import type { AppStateStatus } from "react-native";
-import type { Session, Event as WsEvent } from "../types/generated";
+import type { Event as WsEvent } from "../types/generated";
 import { WebSocketError } from "./errors";
 
 /**
@@ -50,9 +50,7 @@ export class EventsClient {
   private readonly reconnectDelay: number;
   private reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
   private intentionallyClosed = false;
-  private appStateSubscription: ReturnType<
-    typeof AppState.addEventListener
-  > | null = null;
+  private appStateSubscription: ReturnType<typeof AppState.addEventListener> | null = null;
 
   private listeners: {
     connected: (() => void)[];
@@ -72,10 +70,7 @@ export class EventsClient {
     this.reconnectDelay = config.reconnectDelay ?? 1000;
 
     // Listen for app state changes to reconnect when app comes to foreground
-    this.appStateSubscription = AppState.addEventListener(
-      "change",
-      this.handleAppStateChange
-    );
+    this.appStateSubscription = AppState.addEventListener("change", this.handleAppStateChange);
   }
 
   /**
@@ -111,7 +106,7 @@ export class EventsClient {
       this.ws.onmessage = (event) => {
         try {
           const data = JSON.parse(
-            typeof event.data === "string" ? event.data : ""
+            typeof event.data === "string" ? event.data : "",
           ) as EventsMessage;
 
           // Handle connection acknowledgment
@@ -127,8 +122,8 @@ export class EventsClient {
           this.emit(
             "error",
             new WebSocketError(
-              `Failed to parse message: ${error instanceof Error ? error.message : String(error)}`
-            )
+              `Failed to parse message: ${error instanceof Error ? error.message : String(error)}`,
+            ),
           );
         }
       };
@@ -137,8 +132,8 @@ export class EventsClient {
         "error",
         new WebSocketError(
           `Failed to connect: ${error instanceof Error ? error.message : String(error)}`,
-          error
-        )
+          error,
+        ),
       );
     }
   }
@@ -177,9 +172,7 @@ export class EventsClient {
   onConnected(callback: () => void): () => void {
     this.listeners.connected.push(callback);
     return () => {
-      this.listeners.connected = this.listeners.connected.filter(
-        (cb) => cb !== callback
-      );
+      this.listeners.connected = this.listeners.connected.filter((cb) => cb !== callback);
     };
   }
 
@@ -189,9 +182,7 @@ export class EventsClient {
   onDisconnected(callback: () => void): () => void {
     this.listeners.disconnected.push(callback);
     return () => {
-      this.listeners.disconnected = this.listeners.disconnected.filter(
-        (cb) => cb !== callback
-      );
+      this.listeners.disconnected = this.listeners.disconnected.filter((cb) => cb !== callback);
     };
   }
 
@@ -201,9 +192,7 @@ export class EventsClient {
   onEvent(callback: (event: SessionEvent) => void): () => void {
     this.listeners.event.push(callback);
     return () => {
-      this.listeners.event = this.listeners.event.filter(
-        (cb) => cb !== callback
-      );
+      this.listeners.event = this.listeners.event.filter((cb) => cb !== callback);
     };
   }
 
@@ -213,9 +202,7 @@ export class EventsClient {
   onError(callback: (error: Error) => void): () => void {
     this.listeners.error.push(callback);
     return () => {
-      this.listeners.error = this.listeners.error.filter(
-        (cb) => cb !== callback
-      );
+      this.listeners.error = this.listeners.error.filter((cb) => cb !== callback);
     };
   }
 
@@ -247,20 +234,12 @@ export class EventsClient {
   private emit(event: "connected" | "disconnected"): void;
   private emit(event: "event", sessionEvent: SessionEvent): void;
   private emit(event: "error", error: Error): void;
-  private emit(
-    event: keyof typeof this.listeners,
-    arg?: SessionEvent | Error
-  ): void {
+  private emit(event: keyof typeof this.listeners, arg?: SessionEvent | Error): void {
     if (event === "connected" || event === "disconnected") {
       for (const listener of this.listeners[event]) {
         listener();
       }
-    } else if (
-      event === "event" &&
-      arg &&
-      "type" in arg &&
-      !(arg instanceof Error)
-    ) {
+    } else if (event === "event" && arg && "type" in arg && !(arg instanceof Error)) {
       for (const listener of this.listeners.event) {
         listener(arg);
       }
