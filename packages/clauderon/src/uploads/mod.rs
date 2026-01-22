@@ -32,6 +32,10 @@ pub fn upload_dir_for_session(session_id: Uuid) -> PathBuf {
 /// - File size <= 10MB
 /// - Extension is in allowed list
 /// - MIME type is image/* (if provided)
+///
+/// # Errors
+///
+/// Returns an error if the file exceeds the size limit, has a disallowed extension, or has an invalid MIME type.
 pub fn validate_image_file(file_name: &str, content_type: Option<&str>, size: usize) -> Result<()> {
     // Check size
     if size > MAX_FILE_SIZE {
@@ -78,6 +82,10 @@ pub fn validate_image_file(file_name: &str, content_type: Option<&str>, size: us
 /// Clean up uploaded files for a session
 ///
 /// Removes the entire upload directory: `~/.clauderon/uploads/{session-id}/`
+///
+/// # Errors
+///
+/// Returns an error if the directory removal fails.
 pub fn cleanup_session_uploads(session_id: Uuid) -> Result<()> {
     let upload_dir = upload_dir_for_session(session_id);
 

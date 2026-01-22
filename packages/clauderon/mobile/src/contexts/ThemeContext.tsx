@@ -1,11 +1,4 @@
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  useCallback,
-  useMemo,
-} from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
 import { useColorScheme } from "react-native";
 import { storage } from "../lib/storage";
 import { colors as lightColors } from "../styles/colors";
@@ -66,7 +59,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       colors,
       setMode,
     }),
-    [mode, isDark, colors, setMode]
+    [mode, isDark, colors, setMode],
   );
 
   // Don't render until theme is loaded to prevent flash
@@ -74,9 +67,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     return null;
   }
 
-  return (
-    <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
-  );
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
 
 export function useTheme(): ThemeContextValue {

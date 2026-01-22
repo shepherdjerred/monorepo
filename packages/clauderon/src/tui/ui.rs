@@ -7,7 +7,10 @@ use ratatui::{
 };
 
 use super::app::{App, AppMode};
-use super::components::{create_dialog, reconcile_error_dialog, session_list, status_bar};
+use super::components::{
+    create_dialog, health_modal, reconcile_error_dialog, recreate_blocked_dialog,
+    recreate_confirm_dialog, session_list, status_bar,
+};
 use crate::core::BackendType;
 
 /// Render the entire UI
@@ -75,6 +78,15 @@ pub fn render(frame: &mut Frame, app: &App) {
             let dialog_area = centered_rect(60, 70, frame.area());
             frame.render_widget(Clear, dialog_area);
             render_signal_menu(frame, app, dialog_area);
+        }
+        AppMode::StartupHealthModal => {
+            health_modal::render(frame, app, frame.area());
+        }
+        AppMode::RecreateConfirm => {
+            recreate_confirm_dialog::render(frame, app, frame.area());
+        }
+        AppMode::RecreateBlocked => {
+            recreate_blocked_dialog::render(frame, app, frame.area());
         }
         AppMode::SessionList
         | AppMode::Attached

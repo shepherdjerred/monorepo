@@ -7,6 +7,10 @@ impl DockerConfig {
     ///
     /// Returns an error if the file exists but cannot be parsed.
     /// Returns `Ok(None)` if the file doesn't exist.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the file exists but cannot be read or parsed, or if validation fails.
     pub fn load() -> anyhow::Result<Option<Self>> {
         let config_path = Self::config_path()?;
 
@@ -76,6 +80,10 @@ impl DockerConfig {
     /// Get the path to the Docker configuration file.
     ///
     /// Returns `~/.clauderon/docker-config.toml`
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the home directory cannot be determined.
     pub fn config_path() -> anyhow::Result<PathBuf> {
         let home = dirs::home_dir()
             .ok_or_else(|| anyhow::anyhow!("Failed to determine home directory"))?;
@@ -85,6 +93,10 @@ impl DockerConfig {
     /// Validate the configuration.
     ///
     /// Checks that all values are valid and safe to use.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the image name is invalid, resource limits are malformed, or extra flags contain dangerous characters.
     pub fn validate(&self) -> anyhow::Result<()> {
         // Validate image configuration
         self.image.validate()?;
@@ -111,6 +123,10 @@ impl DockerConfig {
     ///
     /// Writes a commented example configuration to the specified path.
     /// Typically used to generate `~/.clauderon/docker-config.toml.example`.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the file cannot be written.
     pub fn create_example(path: &std::path::Path) -> anyhow::Result<()> {
         let example = include_str!("../../docs/docker-config.toml.example");
         std::fs::write(path, example).map_err(|e| {

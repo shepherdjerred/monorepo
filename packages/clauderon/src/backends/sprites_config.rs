@@ -59,6 +59,10 @@ impl SpritesConfig {
     ///
     /// Returns an error if the file exists but cannot be parsed.
     /// Returns `Ok(None)` if the file doesn't exist.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the file exists but cannot be read or parsed.
     pub fn load() -> anyhow::Result<Option<Self>> {
         let config_path = Self::config_path()?;
 
@@ -125,6 +129,10 @@ impl SpritesConfig {
     /// Get the path to the Sprites configuration file.
     ///
     /// Returns `~/.clauderon/sprites-config.toml`
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the home directory cannot be determined.
     pub fn config_path() -> anyhow::Result<PathBuf> {
         let home = dirs::home_dir()
             .ok_or_else(|| anyhow::anyhow!("Failed to determine home directory"))?;

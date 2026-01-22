@@ -1728,6 +1728,10 @@ impl ExecutionBackend for DockerBackend {
 // Legacy method names for backward compatibility during migration
 impl DockerBackend {
     /// Create a new Docker container (legacy name)
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the container creation fails.
     #[deprecated(note = "Use ExecutionBackend::create instead")]
     pub async fn create_container(
         &self,
@@ -1762,12 +1766,20 @@ impl DockerBackend {
     }
 
     /// Check if a Docker container exists (legacy name)
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the Docker command fails.
     #[deprecated(note = "Use ExecutionBackend::exists instead")]
     pub async fn container_exists(&self, name: &str) -> anyhow::Result<bool> {
         self.exists(name).await
     }
 
     /// Delete a Docker container (legacy name)
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the Docker command fails.
     #[deprecated(note = "Use ExecutionBackend::delete instead")]
     pub async fn delete_container(&self, name: &str) -> anyhow::Result<()> {
         self.delete(name).await

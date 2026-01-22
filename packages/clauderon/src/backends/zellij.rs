@@ -298,6 +298,10 @@ impl ExecutionBackend for ZellijBackend {
 // Legacy method names for backward compatibility during migration
 impl ZellijBackend {
     /// Create a new Zellij session (legacy name)
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the session creation fails.
     #[deprecated(note = "Use ExecutionBackend::create instead")]
     pub async fn create_session(
         &self,
@@ -332,12 +336,20 @@ impl ZellijBackend {
     }
 
     /// Check if a Zellij session exists (legacy name)
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the Zellij command fails.
     #[deprecated(note = "Use ExecutionBackend::exists instead")]
     pub async fn session_exists(&self, name: &str) -> anyhow::Result<bool> {
         self.exists(name).await
     }
 
     /// Delete a Zellij session (legacy name)
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the Zellij command fails.
     #[deprecated(note = "Use ExecutionBackend::delete instead")]
     pub async fn delete_session(&self, name: &str) -> anyhow::Result<()> {
         self.delete(name).await
