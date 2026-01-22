@@ -1643,6 +1643,86 @@ impl ExecutionBackend for DockerBackend {
 
         Ok(String::from_utf8_lossy(&output.stdout).to_string())
     }
+
+    /// Get Docker backend capabilities
+    ///
+    /// Docker with bind mounts preserves data because the code is on the host filesystem.
+    /// Docker supports starting stopped containers and updating images.
+    fn capabilities(&self) -> super::traits::BackendCapabilities {
+        super::traits::BackendCapabilities {
+            can_recreate: true,
+            can_update_image: true,
+            preserves_data_on_recreate: true,
+            can_start: true,
+            can_wake: false,
+            data_preservation_description: "Your code is safe (mounted from your computer). Only container-local files will be lost.",
+        }
+    }
+
+    /// Check the health of a Docker container
+    ///
+    /// Uses `docker inspect` to get detailed container state.
+    #[instrument(skip(self), fields(name = %name))]
+    async fn check_health(
+        &self,
+        name: &str,
+    ) -> anyhow::Result<super::traits::BackendResourceHealth> {
+        // Use docker inspect to get container state
+        let output = Command::new("docker")
+            .args(["inspect", "--format", "{{.State.Status}}", name])
+            .output()
+            .await?;
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            // Container not found
+            if stderr.contains("No such") || stderr.contains("not found") {
+                return Ok(super::traits::BackendResourceHealth::NotFound);
+            }
+            anyhow::bail!("Failed to inspect Docker container: {stderr}");
+        }
+
+        let status = String::from_utf8_lossy(&output.stdout)
+            .trim()
+            .to_lowercase();
+
+        match status.as_str() {
+            "running" => Ok(super::traits::BackendResourceHealth::Running),
+            "exited" | "stopped" => Ok(super::traits::BackendResourceHealth::Stopped),
+            "dead" => Ok(super::traits::BackendResourceHealth::Error {
+                message: "Container is in dead state".to_string(),
+            }),
+            "paused" => Ok(super::traits::BackendResourceHealth::Stopped),
+            "restarting" => Ok(super::traits::BackendResourceHealth::Pending),
+            "created" => Ok(super::traits::BackendResourceHealth::Stopped),
+            other => Ok(super::traits::BackendResourceHealth::Error {
+                message: format!("Unknown container state: {other}"),
+            }),
+        }
+    }
+
+    /// Start a stopped Docker container
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the container cannot be started.
+    #[instrument(skip(self), fields(name = %name))]
+    async fn start(&self, name: &str) -> anyhow::Result<()> {
+        tracing::info!(container = %name, "Starting stopped Docker container");
+
+        let output = Command::new("docker")
+            .args(["start", name])
+            .output()
+            .await?;
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            anyhow::bail!("Failed to start Docker container: {stderr}");
+        }
+
+        tracing::info!(container = %name, "Successfully started Docker container");
+        Ok(())
+    }
 }
 
 // Legacy method names for backward compatibility during migration
@@ -1667,6 +1747,7 @@ impl DockerBackend {
                 session_proxy_port: None,
                 images: vec![],
                 dangerous_skip_checks: false,
+                dangerous_copy_creds: false, // Docker is local, no copy-creds needed
                 session_id: None,
                 initial_workdir: std::path::PathBuf::new(),
                 http_port: None,

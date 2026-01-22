@@ -142,7 +142,7 @@ export function EditSessionDialog({ session, onClose }: EditSessionDialogProps) 
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => { void handleRegenerate(); }}
+                  onClick={() => { handleRegenerate(); }}
                   disabled={isSubmitting}
                   className="flex items-center gap-2"
                 >

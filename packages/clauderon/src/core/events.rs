@@ -129,6 +129,7 @@ pub fn replay_events(events: &[Event]) -> Option<Session> {
         agent: super::session::AgentType::ClaudeCode,
         model: None, // Legacy sessions don't have model
         dangerous_skip_checks: false,
+        dangerous_copy_creds: false,
         access_mode: AccessMode::default(),
     });
 

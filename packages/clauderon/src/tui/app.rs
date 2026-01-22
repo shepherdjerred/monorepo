@@ -8,7 +8,8 @@ use uuid::Uuid;
 
 use crate::api::console_protocol::SignalType;
 use crate::api::{ApiClient, Client};
-use crate::core::session::SessionModel;
+use crate::backends::{KubernetesConfig, SpritesConfig};
+use crate::core::session::{HealthCheckResult, SessionHealthReport, SessionModel};
 use crate::core::{AccessMode, AgentType, BackendType, Session, SessionStatus};
 use crate::tui::attached::PtySession;
 
@@ -517,18 +518,28 @@ impl CreateDialogState {
         *self = Self::new();
     }
 
-    /// Cycle through backends: Zellij → Docker → Kubernetes → Sprites → [AppleContainer] → Zellij, auto-adjusting skip_checks
-    pub fn toggle_backend(&mut self) {
-        self.backend = match self.backend {
+    /// Check if a backend is available for use.
+    ///
+    /// Remote backends (Sprites, Kubernetes) require configuration to be usable:
+    /// - Sprites: requires `daemon_address` in sprites-config.toml
+    /// - Kubernetes: requires `proxy_mode` != Disabled in k8s-config.toml
+    ///
+    /// Local backends (Zellij, Docker, AppleContainer) are always available.
+    fn is_backend_available(backend: BackendType) -> bool {
+        match backend {
+            BackendType::Sprites => SpritesConfig::load_or_default().is_connected_mode(),
+            BackendType::Kubernetes => KubernetesConfig::load_or_default().is_connected_mode(),
+            BackendType::Zellij | BackendType::Docker => true,
+            #[cfg(target_os = "macos")]
+            BackendType::AppleContainer => true,
+        }
+    }
+
+    /// Get the next backend in the cycle order.
+    fn next_backend(backend: BackendType) -> BackendType {
+        match backend {
             BackendType::Zellij => BackendType::Docker,
-            BackendType::Docker => {
-                // Skip Kubernetes if feature flag is disabled
-                if self.feature_flags.enable_kubernetes_backend {
-                    BackendType::Kubernetes
-                } else {
-                    BackendType::Sprites
-                }
-            }
+            BackendType::Docker => BackendType::Kubernetes,
             BackendType::Kubernetes => BackendType::Sprites,
             #[cfg(target_os = "macos")]
             BackendType::Sprites => BackendType::AppleContainer,
@@ -536,9 +547,26 @@ impl CreateDialogState {
             BackendType::AppleContainer => BackendType::Zellij,
             #[cfg(not(target_os = "macos"))]
             BackendType::Sprites => BackendType::Zellij,
-        };
+        }
+    }
 
-        // Auto-toggle skip_checks based on backend:
+    /// Get the previous backend in the cycle order.
+    fn prev_backend(backend: BackendType) -> BackendType {
+        match backend {
+            #[cfg(target_os = "macos")]
+            BackendType::Zellij => BackendType::AppleContainer,
+            #[cfg(target_os = "macos")]
+            BackendType::AppleContainer => BackendType::Sprites,
+            #[cfg(not(target_os = "macos"))]
+            BackendType::Zellij => BackendType::Sprites,
+            BackendType::Sprites => BackendType::Kubernetes,
+            BackendType::Kubernetes => BackendType::Docker,
+            BackendType::Docker => BackendType::Zellij,
+        }
+    }
+
+    /// Update skip_checks based on the selected backend.
+    fn update_skip_checks_for_backend(&mut self) {
         // Docker, Kubernetes, Sprites, and AppleContainer benefit from skipping checks (isolated environments)
         // Zellij runs locally so checks are more important
         #[cfg(target_os = "macos")]
@@ -560,42 +588,62 @@ impl CreateDialogState {
         }
     }
 
-    /// Cycle through backends in reverse: Zellij → [AppleContainer] → Sprites → Kubernetes → Docker → Zellij
-    pub fn toggle_backend_reverse(&mut self) {
-        self.backend = match self.backend {
-            #[cfg(target_os = "macos")]
-            BackendType::Zellij => BackendType::AppleContainer,
-            #[cfg(target_os = "macos")]
-            BackendType::AppleContainer => BackendType::Sprites,
-            #[cfg(not(target_os = "macos"))]
-            BackendType::Zellij => BackendType::Sprites,
-            BackendType::Sprites => {
-                // Skip Kubernetes if feature flag is disabled
-                if self.feature_flags.enable_kubernetes_backend {
-                    BackendType::Kubernetes
-                } else {
-                    BackendType::Docker
-                }
-            }
-            BackendType::Kubernetes => BackendType::Docker,
-            BackendType::Docker => BackendType::Zellij,
-        };
+    /// Cycle through backends: Zellij → Docker → Kubernetes → Sprites → [AppleContainer] → Zellij, auto-adjusting skip_checks
+    /// Skips backends that are not configured/available.
+    pub fn toggle_backend(&mut self) {
+        let starting_backend = self.backend;
+        let mut next = Self::next_backend(self.backend);
 
-        // Auto-toggle skip_checks based on backend (same logic as forward toggle)
+        // Loop to find the next available backend
+        // Maximum iterations = number of backends to prevent infinite loop
         #[cfg(target_os = "macos")]
-        let is_container_backend = matches!(
-            self.backend,
-            BackendType::Docker
-                | BackendType::Kubernetes
-                | BackendType::Sprites
-                | BackendType::AppleContainer
-        );
+        const MAX_BACKENDS: usize = 5;
         #[cfg(not(target_os = "macos"))]
-        let is_container_backend = matches!(
-            self.backend,
-            BackendType::Docker | BackendType::Kubernetes | BackendType::Sprites
-        );
-        self.skip_checks = is_container_backend;
+        const MAX_BACKENDS: usize = 4;
+
+        for _ in 0..MAX_BACKENDS {
+            if Self::is_backend_available(next) {
+                self.backend = next;
+                self.update_skip_checks_for_backend();
+                return;
+            }
+            next = Self::next_backend(next);
+            // If we've cycled back to the start, stay on current
+            if next == starting_backend {
+                break;
+            }
+        }
+
+        // No available backend found, stay on current (shouldn't happen in practice
+        // since Zellij and Docker are always available)
+    }
+
+    /// Cycle through backends in reverse: Zellij → [AppleContainer] → Sprites → Kubernetes → Docker → Zellij
+    /// Skips backends that are not configured/available.
+    pub fn toggle_backend_reverse(&mut self) {
+        let starting_backend = self.backend;
+        let mut prev = Self::prev_backend(self.backend);
+
+        // Loop to find the previous available backend
+        #[cfg(target_os = "macos")]
+        const MAX_BACKENDS: usize = 5;
+        #[cfg(not(target_os = "macos"))]
+        const MAX_BACKENDS: usize = 4;
+
+        for _ in 0..MAX_BACKENDS {
+            if Self::is_backend_available(prev) {
+                self.backend = prev;
+                self.update_skip_checks_for_backend();
+                return;
+            }
+            prev = Self::prev_backend(prev);
+            // If we've cycled back to the start, stay on current
+            if prev == starting_backend {
+                break;
+            }
+        }
+
+        // No available backend found, stay on current
     }
 
     /// Toggle between ReadOnly and ReadWrite access modes
@@ -875,6 +923,9 @@ pub struct App {
 
     /// Last signal send result for status display
     pub last_signal_result: Option<SignalResult>,
+
+    /// Cached health reports for all sessions
+    pub session_health: HashMap<Uuid, SessionHealthReport>,
 }
 
 impl App {
@@ -909,6 +960,7 @@ impl App {
             reconcile_error_session_id: None,
             signal_menu: None,
             last_signal_result: None,
+            session_health: HashMap::new(),
         }
     }
 
@@ -964,6 +1016,28 @@ impl App {
             }
         }
         Ok(())
+    }
+
+    /// Refresh health data for all sessions
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if fetching health data fails.
+    pub async fn refresh_health(&mut self) -> anyhow::Result<()> {
+        if let Some(client) = &mut self.client {
+            let health_result = client.get_health().await?;
+            self.session_health.clear();
+            for report in health_result.sessions {
+                self.session_health.insert(report.session_id, report);
+            }
+        }
+        Ok(())
+    }
+
+    /// Get health report for a session
+    #[must_use]
+    pub fn get_session_health(&self, session_id: uuid::Uuid) -> Option<&SessionHealthReport> {
+        self.session_health.get(&session_id)
     }
 
     /// Get the currently selected session
@@ -1279,7 +1353,8 @@ impl App {
             agent: self.create_dialog.agent,
             model: self.create_dialog.model.clone(), // Use selected model from dialog
             dangerous_skip_checks: self.create_dialog.skip_checks,
-            print_mode: false, // TUI always uses interactive mode
+            dangerous_copy_creds: false, // TUI defaults to proxy mode
+            print_mode: false,           // TUI always uses interactive mode
             plan_mode: self.create_dialog.plan_mode,
             access_mode: self.create_dialog.access_mode,
             images: self.create_dialog.images.clone(),
@@ -1436,6 +1511,11 @@ impl App {
     ///
     /// Creates a new PTY session if one doesn't exist, or reattaches to an existing one.
     ///
+    /// Supported backends:
+    /// - Docker: Uses console socket via daemon
+    /// - Sprites: Uses console socket via daemon
+    /// - Kubernetes: Uses console socket via daemon
+    ///
     /// # Errors
     ///
     /// Returns an error if the session cannot be attached.
@@ -1444,10 +1524,15 @@ impl App {
             .selected_session()
             .ok_or_else(|| anyhow::anyhow!("No session selected"))?;
 
-        // Only Docker sessions support PTY attachment for now
-        if session.backend != crate::core::BackendType::Docker {
+        // Docker, Sprites, and Kubernetes sessions support PTY attachment
+        if !matches!(
+            session.backend,
+            crate::core::BackendType::Docker
+                | crate::core::BackendType::Sprites
+                | crate::core::BackendType::Kubernetes
+        ) {
             return Err(anyhow::anyhow!(
-                "PTY attachment only supported for Docker sessions"
+                "PTY attachment only supported for Docker, Sprites, and Kubernetes sessions"
             ));
         }
 
@@ -1654,37 +1739,39 @@ impl App {
         self.attached_session_id.is_some() && matches!(self.mode, AppMode::Attached)
     }
 
-    /// Switch to the next Docker session while attached.
+    /// Switch to the next attachable session while attached.
     /// Returns true if switched, false if no next session.
     pub async fn switch_to_next_session(&mut self) -> anyhow::Result<bool> {
         use crate::core::{BackendType, SessionStatus};
 
-        // Get list of Docker sessions (only those support PTY)
-        let docker_sessions: Vec<_> = self
+        // Get list of attachable sessions (Docker, Sprites, and Kubernetes support PTY)
+        let attachable_sessions: Vec<_> = self
             .sessions
             .iter()
             .filter(|s| {
-                s.backend == BackendType::Docker
-                    && s.backend_id.is_some()
+                matches!(
+                    s.backend,
+                    BackendType::Docker | BackendType::Sprites | BackendType::Kubernetes
+                ) && s.backend_id.is_some()
                     && s.status != SessionStatus::Archived
             })
             .collect();
 
-        if docker_sessions.len() <= 1 {
+        if attachable_sessions.len() <= 1 {
             return Ok(false);
         }
 
         // Find current session's index
-        let current_idx = docker_sessions
+        let current_idx = attachable_sessions
             .iter()
             .position(|s| Some(s.id) == self.attached_session_id);
 
         let next_idx = match current_idx {
-            Some(idx) => (idx + 1) % docker_sessions.len(),
+            Some(idx) => (idx + 1) % attachable_sessions.len(),
             None => 0,
         };
 
-        let next_session = docker_sessions[next_idx];
+        let next_session = attachable_sessions[next_idx];
         let session_id = next_session.id;
         let container_id = next_session.backend_id.clone().unwrap();
 
@@ -1706,38 +1793,40 @@ impl App {
         Ok(true)
     }
 
-    /// Switch to the previous Docker session while attached.
+    /// Switch to the previous attachable session while attached.
     /// Returns true if switched, false if no previous session.
     pub async fn switch_to_previous_session(&mut self) -> anyhow::Result<bool> {
         use crate::core::{BackendType, SessionStatus};
 
-        // Get list of Docker sessions (only those support PTY)
-        let docker_sessions: Vec<_> = self
+        // Get list of attachable sessions (Docker, Sprites, and Kubernetes support PTY)
+        let attachable_sessions: Vec<_> = self
             .sessions
             .iter()
             .filter(|s| {
-                s.backend == BackendType::Docker
-                    && s.backend_id.is_some()
+                matches!(
+                    s.backend,
+                    BackendType::Docker | BackendType::Sprites | BackendType::Kubernetes
+                ) && s.backend_id.is_some()
                     && s.status != SessionStatus::Archived
             })
             .collect();
 
-        if docker_sessions.len() <= 1 {
+        if attachable_sessions.len() <= 1 {
             return Ok(false);
         }
 
         // Find current session's index
-        let current_idx = docker_sessions
+        let current_idx = attachable_sessions
             .iter()
             .position(|s| Some(s.id) == self.attached_session_id);
 
         let prev_idx = match current_idx {
-            Some(0) => docker_sessions.len() - 1,
+            Some(0) => attachable_sessions.len() - 1,
             Some(idx) => idx - 1,
             None => 0,
         };
 
-        let prev_session = docker_sessions[prev_idx];
+        let prev_session = attachable_sessions[prev_idx];
         let session_id = prev_session.id;
         let container_id = prev_session.backend_id.clone().unwrap();
 

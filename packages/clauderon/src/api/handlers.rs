@@ -49,6 +49,7 @@ pub async fn handle_request(
                         req.agent,
                         req.model.clone(),
                         req.dangerous_skip_checks,
+                        req.dangerous_copy_creds,
                         req.print_mode,
                         req.plan_mode,
                         req.access_mode,
@@ -94,6 +95,7 @@ pub async fn handle_request(
                         req.agent,
                         req.model.clone(),
                         req.dangerous_skip_checks,
+                        req.dangerous_copy_creds,
                         req.print_mode,
                         req.plan_mode,
                         req.access_mode,
@@ -294,6 +296,141 @@ pub async fn handle_request(
         Request::GetFeatureFlags => Response::FeatureFlags {
             flags: (*manager.feature_flags()).clone(),
         },
+
+        Request::GetHealth => {
+            let result = manager.check_all_sessions_health().await;
+            Response::HealthCheckResult(result)
+        }
+
+        Request::GetSessionHealth { id } => {
+            let session_id = match uuid::Uuid::parse_str(&id) {
+                Ok(id) => id,
+                Err(e) => {
+                    return Response::Error {
+                        code: "INVALID_ID".to_string(),
+                        message: format!("Invalid session ID: {e}"),
+                    };
+                }
+            };
+            match manager.check_session_health(session_id).await {
+                Ok(report) => Response::SessionHealth(report),
+                Err(e) => {
+                    tracing::error!(id = %id, error = %e, "Failed to check session health");
+                    Response::Error {
+                        code: "HEALTH_ERROR".to_string(),
+                        message: e.to_string(),
+                    }
+                }
+            }
+        }
+
+        Request::StartSession { id } => {
+            let session_id = match uuid::Uuid::parse_str(&id) {
+                Ok(id) => id,
+                Err(e) => {
+                    return Response::Error {
+                        code: "INVALID_ID".to_string(),
+                        message: format!("Invalid session ID: {e}"),
+                    };
+                }
+            };
+            match manager.start_session(session_id).await {
+                Ok(_result) => {
+                    tracing::info!(id = %id, "Session started");
+                    Response::Started
+                }
+                Err(e) => {
+                    tracing::error!(id = %id, error = %e, "Failed to start session");
+                    Response::Error {
+                        code: "START_ERROR".to_string(),
+                        message: e.to_string(),
+                    }
+                }
+            }
+        }
+
+        Request::WakeSession { id } => {
+            let session_id = match uuid::Uuid::parse_str(&id) {
+                Ok(id) => id,
+                Err(e) => {
+                    return Response::Error {
+                        code: "INVALID_ID".to_string(),
+                        message: format!("Invalid session ID: {e}"),
+                    };
+                }
+            };
+            match manager.wake_session(session_id).await {
+                Ok(_result) => {
+                    tracing::info!(id = %id, "Session woken");
+                    Response::Woken
+                }
+                Err(e) => {
+                    tracing::error!(id = %id, error = %e, "Failed to wake session");
+                    Response::Error {
+                        code: "WAKE_ERROR".to_string(),
+                        message: e.to_string(),
+                    }
+                }
+            }
+        }
+
+        Request::RecreateSession { id } => {
+            let session_id = match uuid::Uuid::parse_str(&id) {
+                Ok(id) => id,
+                Err(e) => {
+                    return Response::Error {
+                        code: "INVALID_ID".to_string(),
+                        message: format!("Invalid session ID: {e}"),
+                    };
+                }
+            };
+            match manager.recreate_session(session_id).await {
+                Ok(result) => {
+                    tracing::info!(id = %id, "Session recreated");
+                    Response::Recreated {
+                        new_backend_id: Some(result.new_backend_id),
+                    }
+                }
+                Err(crate::core::manager::RecreateError::Blocked(blocked)) => {
+                    tracing::warn!(id = %id, reason = %blocked.reason, "Recreate blocked");
+                    Response::ActionBlocked {
+                        reason: blocked.reason,
+                    }
+                }
+                Err(crate::core::manager::RecreateError::Other(e)) => {
+                    tracing::error!(id = %id, error = %e, "Failed to recreate session");
+                    Response::Error {
+                        code: "RECREATE_ERROR".to_string(),
+                        message: e.to_string(),
+                    }
+                }
+            }
+        }
+
+        Request::CleanupSession { id } => {
+            let session_id = match uuid::Uuid::parse_str(&id) {
+                Ok(id) => id,
+                Err(e) => {
+                    return Response::Error {
+                        code: "INVALID_ID".to_string(),
+                        message: format!("Invalid session ID: {e}"),
+                    };
+                }
+            };
+            match manager.cleanup_session(session_id).await {
+                Ok(()) => {
+                    tracing::info!(id = %id, "Session cleaned up");
+                    Response::CleanedUp
+                }
+                Err(e) => {
+                    tracing::error!(id = %id, error = %e, "Failed to cleanup session");
+                    Response::Error {
+                        code: "CLEANUP_ERROR".to_string(),
+                        message: e.to_string(),
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -346,6 +483,7 @@ pub async fn handle_create_session_with_progress(
             req.agent,
             req.model.clone(),
             req.dangerous_skip_checks,
+            req.dangerous_copy_creds,
             req.print_mode,
             req.plan_mode,
             req.access_mode,

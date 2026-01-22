@@ -26,6 +26,7 @@ fn create_test_session(name: &str, worktree_path: &std::path::Path) -> Session {
         backend: BackendType::Docker,
         agent: AgentType::ClaudeCode,
         dangerous_skip_checks: true,
+        dangerous_copy_creds: false,
         access_mode: AccessMode::default(),
         repositories: None,
         model: None,

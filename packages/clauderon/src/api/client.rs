@@ -390,6 +390,23 @@ impl Client {
             _ => anyhow::bail!("Unexpected response"),
         }
     }
+
+    /// Get health status of all sessions.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the request fails.
+    pub async fn get_health(&mut self) -> anyhow::Result<crate::core::session::HealthCheckResult> {
+        let response = self.send_request(Request::GetHealth).await?;
+
+        match response {
+            Response::HealthCheckResult(result) => Ok(result),
+            Response::Error { code, message } => {
+                anyhow::bail!("[{code}] {message}")
+            }
+            _ => anyhow::bail!("Unexpected response"),
+        }
+    }
 }
 
 #[async_trait]
@@ -439,5 +456,9 @@ impl ApiClient for Client {
 
     async fn get_feature_flags(&mut self) -> anyhow::Result<crate::feature_flags::FeatureFlags> {
         Self::get_feature_flags(self).await
+    }
+
+    async fn get_health(&mut self) -> anyhow::Result<crate::core::session::HealthCheckResult> {
+        Self::get_health(self).await
     }
 }

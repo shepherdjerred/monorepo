@@ -199,6 +199,13 @@ export interface CreateSessionRequest {
 	model?: SessionModel;
 	/** Skip safety checks */
 	dangerous_skip_checks: boolean;
+	/**
+	 * For remote backends: copy real credentials into the container.
+	 * 
+	 * WARNING: This is dangerous - it exposes your API tokens to the remote environment.
+	 * Only use when the daemon is not reachable from the remote backend.
+	 */
+	dangerous_copy_creds?: boolean;
 	/** Run in print mode (non-interactive, outputs response and exits) */
 	print_mode?: boolean;
 	/** Start in plan mode */
@@ -515,6 +522,11 @@ export interface Session {
 	initial_prompt: string;
 	/** Whether to skip safety checks */
 	dangerous_skip_checks: boolean;
+	/**
+	 * Whether this session was created with --dangerous-copy-creds
+	 * Sessions with copy-creds have no hook-based status tracking (degraded mode)
+	 */
+	dangerous_copy_creds?: boolean;
 	/** URL of the associated pull request */
 	pr_url?: string;
 	/** Status of PR checks */
@@ -780,6 +792,91 @@ export type Request =
 }}
 	/** Get current feature flags */
 	| { type: "GetFeatureFlags", payload?: undefined };
+
+/** Current state of backend resources */
+export type ResourceState =
+	/** Backend is running and healthy */
+	| { type: "Healthy" }
+	/** Backend is stopped/exited (can be started) */
+	| { type: "Stopped" }
+	/** Sprites: backend is hibernated (can be woken) */
+	| { type: "Hibernated" }
+	/** Kubernetes: pod is pending (waiting for resources) */
+	| { type: "Pending" }
+	/** Backend resource is missing but can be recreated */
+	| { type: "Missing" }
+	/** Backend is in an error state */
+	| { type: "Error", message: string }
+	/** Kubernetes: pod is in CrashLoopBackOff */
+	| { type: "CrashLoop" }
+	/** Backend was deleted outside of clauderon */
+	| { type: "DeletedExternally" }
+	/** Data has been lost (PVC deleted, sprite destroyed, etc.) */
+	| { type: "DataLost", reason: string }
+	/** Git worktree was deleted */
+	| { type: "WorktreeMissing" };
+
+/** Actions available for a session based on its health state */
+export enum AvailableAction {
+	/** Start a stopped container (Docker: docker start) */
+	Start = "Start",
+	/** Wake a hibernated sprite */
+	Wake = "Wake",
+	/** Recreate the backend resource (preserves data) */
+	Recreate = "Recreate",
+	/** Recreate with fresh clone (data lost) */
+	RecreateFresh = "RecreateFresh",
+	/** Pull new image and recreate container */
+	UpdateImage = "UpdateImage",
+	/** Remove session from clauderon (worktree missing) */
+	Cleanup = "Cleanup",
+}
+
+/** Health report for a single session */
+export interface SessionHealthReport {
+	/** Session ID */
+	session_id: string;
+	/** Session name */
+	session_name: string;
+	/** Backend type */
+	backend_type: BackendType;
+	/** Current state of the backend resource */
+	state: ResourceState;
+	/** Actions available for this session */
+	available_actions: AvailableAction[];
+	/** Recommended action to fix the issue */
+	recommended_action?: AvailableAction;
+	/** Human-readable description of the current state */
+	description: string;
+	/** Technical details (expandable in UI) */
+	details: string;
+	/** Whether user data is safe during the available actions */
+	data_safe: boolean;
+}
+
+/** Result of checking health for all sessions */
+export interface HealthCheckResult {
+	/** Health reports for all sessions */
+	sessions: SessionHealthReport[];
+	/** Count of healthy sessions */
+	healthy_count: number;
+	/** Count of sessions needing attention */
+	needs_attention_count: number;
+	/** Count of sessions with blocked actions */
+	blocked_count: number;
+}
+
+/** Result of a recreate operation */
+export interface RecreateResult {
+	/** Session ID that was recreated */
+	session_id: string;
+	/** New backend ID after recreation */
+	new_backend_id: string;
+	/** Whether the operation succeeded */
+	success: boolean;
+	/** Human-readable message */
+	message: string;
+}
 
 /** Response types for the API */
 export type Response = 

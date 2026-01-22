@@ -7,6 +7,8 @@
     "allowImportingTsExtensions": false,
     "declaration": true,
     "declarationMap": true,
+    "incremental": true,
+    "tsBuildInfoFile": "./dist/.tsbuildinfo",
     "lib": ["ES2022", "DOM"],
     "types": ["bun"]
   },

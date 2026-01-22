@@ -115,6 +115,7 @@ async fn test_recent_repo_tracked_on_session_create() {
             AgentType::ClaudeCode,
             None,                  // model
             true,                  // dangerous_skip_checks
+            false,                 // dangerous_copy_creds
             false,                 // print_mode
             false,                 // plan_mode
             AccessMode::default(), // access_mode
@@ -165,6 +166,7 @@ async fn test_path_canonicalization_prevents_duplicates() {
             AgentType::ClaudeCode,
             None,
             true,
+            false, // dangerous_copy_creds
             false,
             false,
             AccessMode::default(),
@@ -189,6 +191,7 @@ async fn test_path_canonicalization_prevents_duplicates() {
             AgentType::ClaudeCode,
             None,
             true,
+            false, // dangerous_copy_creds
             false,
             false,
             AccessMode::default(),
@@ -230,6 +233,7 @@ async fn test_limit_enforcement_removes_oldest() {
                 AgentType::ClaudeCode,
                 None,
                 true,
+                false, // dangerous_copy_creds
                 false,
                 false,
                 AccessMode::default(),
@@ -284,6 +288,7 @@ async fn test_upsert_behavior_updates_timestamp() {
             AgentType::ClaudeCode,
             None,
             true,
+            false, // dangerous_copy_creds
             false,
             false,
             AccessMode::default(),
@@ -317,6 +322,7 @@ async fn test_upsert_behavior_updates_timestamp() {
             AgentType::ClaudeCode,
             None,
             true,
+            false, // dangerous_copy_creds
             false,
             false,
             AccessMode::default(),
@@ -363,6 +369,7 @@ async fn test_recent_repos_ordered_by_most_recent() {
                 AgentType::ClaudeCode,
                 None,
                 true,
+                false, // dangerous_copy_creds
                 false,
                 false,
                 AccessMode::default(),
@@ -411,6 +418,7 @@ async fn test_nonexistent_repo_handles_gracefully() {
             AgentType::ClaudeCode,
             None,
             true,
+            false, // dangerous_copy_creds
             false,
             false,
             AccessMode::default(),
@@ -474,6 +482,7 @@ async fn test_subdirectories_tracked_separately() {
             AgentType::ClaudeCode,
             None,
             true,
+            false, // dangerous_copy_creds
             false,
             false,
             AccessMode::default(),
@@ -500,6 +509,7 @@ async fn test_subdirectories_tracked_separately() {
             AgentType::ClaudeCode,
             None,
             true,
+            false, // dangerous_copy_creds
             false,
             false,
             AccessMode::default(),
@@ -565,6 +575,7 @@ async fn test_same_subdir_updates_timestamp() {
             AgentType::ClaudeCode,
             None,
             true,
+            false, // dangerous_copy_creds
             false,
             false,
             AccessMode::default(),
@@ -598,6 +609,7 @@ async fn test_same_subdir_updates_timestamp() {
             AgentType::ClaudeCode,
             None, // model
             true,
+            false, // dangerous_copy_creds
             false,
             false,
             AccessMode::default(),
@@ -653,6 +665,7 @@ async fn test_subdirectories_respect_limit() {
                 AgentType::ClaudeCode,
                 None,
                 true,
+                false, // dangerous_copy_creds
                 false,
                 false,
                 AccessMode::default(),

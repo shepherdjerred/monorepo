@@ -1106,4 +1106,94 @@ impl ExecutionBackend for AppleContainerBackend {
             This is a platform limitation as the container CLI lacks a logs command."
         )
     }
+
+    /// Get Apple Container backend capabilities
+    ///
+    /// Apple Containers with bind mounts preserve data because the code is on the host filesystem.
+    fn capabilities(&self) -> super::traits::BackendCapabilities {
+        super::traits::BackendCapabilities {
+            can_recreate: true,
+            can_update_image: true,
+            preserves_data_on_recreate: true,
+            can_start: true,
+            can_wake: false,
+            data_preservation_description: "Your code is safe (mounted from your computer). Only container-local files will be lost.",
+        }
+    }
+
+    /// Check the health of an Apple Container
+    ///
+    /// Uses `container list` to check container state.
+    #[instrument(skip(self), fields(name = %name))]
+    async fn check_health(
+        &self,
+        name: &str,
+    ) -> anyhow::Result<super::traits::BackendResourceHealth> {
+        use super::traits::BackendResourceHealth;
+        use tokio::process::Command;
+
+        // Use `container list` to get container state
+        let output = Command::new("container")
+            .args(["list", "--format", "json"])
+            .output()
+            .await?;
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            anyhow::bail!("Failed to list containers: {stderr}");
+        }
+
+        let stdout = String::from_utf8_lossy(&output.stdout);
+
+        // Parse JSON output to find our container
+        // The format is a JSON array of container objects
+        if let Ok(containers) = serde_json::from_str::<Vec<serde_json::Value>>(&stdout) {
+            for container in containers {
+                if container.get("name").and_then(|v| v.as_str()) == Some(name) {
+                    let state = container
+                        .get("state")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("unknown");
+
+                    return match state {
+                        "running" => Ok(BackendResourceHealth::Running),
+                        "stopped" | "exited" => Ok(BackendResourceHealth::Stopped),
+                        "created" => Ok(BackendResourceHealth::Stopped),
+                        "paused" => Ok(BackendResourceHealth::Stopped),
+                        other => Ok(BackendResourceHealth::Error {
+                            message: format!("Unknown container state: {other}"),
+                        }),
+                    };
+                }
+            }
+        }
+
+        // Container not found
+        Ok(BackendResourceHealth::NotFound)
+    }
+
+    /// Start a stopped Apple Container
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the container cannot be started.
+    #[instrument(skip(self), fields(name = %name))]
+    async fn start(&self, name: &str) -> anyhow::Result<()> {
+        use tokio::process::Command;
+
+        tracing::info!(container = %name, "Starting stopped Apple Container");
+
+        let output = Command::new("container")
+            .args(["start", name])
+            .output()
+            .await?;
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            anyhow::bail!("Failed to start Apple Container: {stderr}");
+        }
+
+        tracing::info!(container = %name, "Successfully started Apple Container");
+        Ok(())
+    }
 }

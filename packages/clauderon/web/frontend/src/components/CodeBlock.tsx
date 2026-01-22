@@ -38,7 +38,7 @@ export function CodeBlock({ code, language, filePath }: CodeBlockProps) {
           setHtml(highlighted);
           setIsLoading(false);
         }
-      } catch (error) {
+      } catch (_error) {
         // Fallback to plain text if language is not supported
         if (!cancelled) {
           setHtml(`<pre><code>${escapeHtml(code)}</code></pre>`);

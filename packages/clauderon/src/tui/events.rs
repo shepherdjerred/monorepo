@@ -399,7 +399,8 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                         agent: app.create_dialog.agent,
                         model: app.create_dialog.model.clone(), // Use selected model from dialog
                         dangerous_skip_checks: app.create_dialog.skip_checks,
-                        print_mode: false, // TUI always uses interactive mode
+                        dangerous_copy_creds: false, // TUI defaults to proxy mode
+                        print_mode: false,           // TUI always uses interactive mode
                         plan_mode: app.create_dialog.plan_mode,
                         access_mode: app.create_dialog.access_mode,
                         images: app.create_dialog.images.clone(),
