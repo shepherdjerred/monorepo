@@ -1,12 +1,5 @@
 import React from "react";
-import {
-  View,
-  Text,
-  Modal,
-  TouchableOpacity,
-  StyleSheet,
-  Platform,
-} from "react-native";
+import { View, Text, Modal, TouchableOpacity, StyleSheet, Platform } from "react-native";
 import { useTheme } from "../contexts/ThemeContext";
 import { typography } from "../styles/typography";
 
@@ -34,18 +27,12 @@ export function ConfirmDialog({
   loading = false,
 }: ConfirmDialogProps) {
   const { colors } = useTheme();
-  const confirmButtonColor =
-    variant === "destructive" ? colors.error : colors.primary;
+  const confirmButtonColor = variant === "destructive" ? colors.error : colors.primary;
 
   const themedStyles = getThemedStyles(colors);
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={onCancel}
-    >
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
       <View style={styles.overlay}>
         <View style={themedStyles.dialog}>
           <Text style={[styles.title, { color: colors.textDark }]}>{title}</Text>

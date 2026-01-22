@@ -36,7 +36,7 @@ export function PlanView({ message }: PlanViewProps) {
  */
 export function isPlan(message: Message): boolean {
   // Check for ExitPlanMode tool use
-  if (message.toolUses?.some(tool => tool.name === "ExitPlanMode")) {
+  if (message.toolUses?.some((tool) => tool.name === "ExitPlanMode")) {
     return true;
   }
 

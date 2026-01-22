@@ -1,4 +1,3 @@
-import { describe, expect, test } from "bun:test";
 import { parseHistoryEntry, parseHistoryLines } from "./historyParser";
 
 describe("parseHistoryEntry", () => {
@@ -441,7 +440,7 @@ describe("parseHistoryLines", () => {
     const messages = parseHistoryLines(lines);
     const assistantMessage = messages.find((m) => m.role === "assistant");
     expect(assistantMessage?.toolUses?.[0]?.result).toBe(
-      JSON.stringify({ matches: ["line1", "line2"] })
+      JSON.stringify({ matches: ["line1", "line2"] }),
     );
   });
 

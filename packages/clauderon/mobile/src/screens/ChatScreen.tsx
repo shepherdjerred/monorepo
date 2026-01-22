@@ -17,6 +17,7 @@ import { launchImageLibrary, launchCamera } from "../lib/imagePicker";
 import type { RootStackScreenProps } from "../types/navigation";
 import { useConsole } from "../hooks/useConsole";
 import { useSessionHistory } from "../hooks/useSessionHistory";
+import type { Message } from "../lib/claudeParser";
 import { MessageBubble } from "../components/MessageBubble";
 import { ConnectionStatus } from "../components/ConnectionStatus";
 import { colors } from "../styles/colors";
@@ -33,9 +34,7 @@ export function ChatScreen({ route, navigation }: ChatScreenProps) {
   const apiClient = useClauderonClient();
   const [input, setInput] = useState("");
   const [wsError, setWsError] = useState<string | null>(null);
-  const [attachedImages, setAttachedImages] = useState<
-    Array<{ uri: string; name: string }>
-  >([]);
+  const [attachedImages, setAttachedImages] = useState<{ uri: string; name: string }[]>([]);
   const flatListRef = useRef<FlatList>(null);
 
   useEffect(() => {
@@ -70,10 +69,12 @@ export function ChatScreen({ route, navigation }: ChatScreenProps) {
     }
 
     if (result.assets) {
-      const newImages = result.assets.map((asset) => ({
-        uri: asset.uri!,
-        name: asset.fileName || "image.jpg",
-      }));
+      const newImages = result.assets
+        .filter((asset): asset is typeof asset & { uri: string } => asset.uri !== undefined)
+        .map((asset) => ({
+          uri: asset.uri,
+          name: asset.fileName ?? "image.jpg",
+        }));
       setAttachedImages((prev) => [...prev, ...newImages]);
     }
   };
@@ -90,13 +91,14 @@ export function ChatScreen({ route, navigation }: ChatScreenProps) {
       return;
     }
 
-    if (result.assets && result.assets[0]) {
-      const asset = result.assets[0];
+    const asset = result.assets?.[0];
+    const uri = asset?.uri;
+    if (uri) {
       setAttachedImages((prev) => [
         ...prev,
         {
-          uri: asset.uri!,
-          name: asset.fileName || "photo.jpg",
+          uri,
+          name: asset.fileName ?? "photo.jpg",
         },
       ]);
     }
@@ -108,7 +110,7 @@ export function ChatScreen({ route, navigation }: ChatScreenProps) {
     }
 
     // Upload images first if any
-    if (attachedImages.length > 0) {
+    if (attachedImages.length > 0 && apiClient) {
       for (const image of attachedImages) {
         try {
           await apiClient.uploadImage(sessionId, image.uri, image.name);
@@ -136,10 +138,7 @@ export function ChatScreen({ route, navigation }: ChatScreenProps) {
       };
 
   return (
-    <ContainerView
-      style={commonStyles.container}
-      {...keyboardProps}
-    >
+    <ContainerView style={commonStyles.container} {...keyboardProps}>
       {/* Header with connection status */}
       <View style={styles.header}>
         <ConnectionStatus isConnected={isConnected} label="Console" />
@@ -154,15 +153,13 @@ export function ChatScreen({ route, navigation }: ChatScreenProps) {
       )}
 
       {/* Messages */}
-      <FlatList
+      <FlatList<Message>
         ref={flatListRef}
         data={messages}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <MessageBubble message={item} />}
+        keyExtractor={(item: Message) => item.id}
+        renderItem={({ item }: { item: Message }) => <MessageBubble message={item} />}
         contentContainerStyle={styles.messagesContent}
-        onContentSizeChange={() =>
-          flatListRef.current?.scrollToEnd({ animated: true })
-        }
+        onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
         ListEmptyComponent={
           isLoading ? (
             <View style={commonStyles.emptyState}>
@@ -196,11 +193,9 @@ export function ChatScreen({ route, navigation }: ChatScreenProps) {
               <Image source={{ uri: img.uri }} style={styles.imagePreview} />
               <TouchableOpacity
                 style={styles.removeImageButton}
-                onPress={() =>
-                  setAttachedImages((imgs) =>
-                    imgs.filter((_, i) => i !== index)
-                  )
-                }
+                onPress={() => {
+                  setAttachedImages((imgs) => imgs.filter((_, i) => i !== index));
+                }}
               >
                 <Text style={styles.removeImageText}>✕</Text>
               </TouchableOpacity>

@@ -30,6 +30,10 @@ pub struct DaemonInfo {
 
 impl DaemonInfo {
     /// Create DaemonInfo for the current process
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the executable path, metadata, or system time cannot be accessed.
     pub fn current() -> anyhow::Result<Self> {
         let exe_path = std::env::current_exe()?;
         let metadata = fs::metadata(&exe_path)?;
@@ -47,6 +51,10 @@ impl DaemonInfo {
     }
 
     /// Write daemon info to file
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the file cannot be written or the directory cannot be created.
     pub fn write(&self) -> anyhow::Result<()> {
         let path = daemon_info_path();
 
@@ -61,6 +69,10 @@ impl DaemonInfo {
     }
 
     /// Read daemon info from file
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the file exists but cannot be read or parsed.
     pub fn read() -> anyhow::Result<Option<Self>> {
         let path = daemon_info_path();
         if !path.exists() {
@@ -72,6 +84,10 @@ impl DaemonInfo {
     }
 
     /// Remove the daemon info file
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the file exists but cannot be removed.
     pub fn remove() -> anyhow::Result<()> {
         let path = daemon_info_path();
         if path.exists() {
@@ -82,6 +98,10 @@ impl DaemonInfo {
 }
 
 /// Get the current binary's modification time
+///
+/// # Errors
+///
+/// Returns an error if the executable path, metadata, or modification time cannot be accessed.
 pub fn current_binary_mtime() -> anyhow::Result<u64> {
     let exe_path = std::env::current_exe()?;
     let metadata = fs::metadata(&exe_path)?;
@@ -90,6 +110,10 @@ pub fn current_binary_mtime() -> anyhow::Result<u64> {
 }
 
 /// Check if the current binary is newer than when the daemon was started
+///
+/// # Errors
+///
+/// Returns an error if the daemon info or binary modification time cannot be read.
 pub fn is_binary_newer_than_daemon() -> anyhow::Result<bool> {
     let daemon_info = DaemonInfo::read()?;
     let Some(info) = daemon_info else {
@@ -101,6 +125,10 @@ pub fn is_binary_newer_than_daemon() -> anyhow::Result<bool> {
 }
 
 /// Kill the daemon process if running
+///
+/// # Errors
+///
+/// Returns an error if the daemon info cannot be read or the process cannot be killed.
 pub fn kill_daemon() -> anyhow::Result<()> {
     let daemon_info = DaemonInfo::read()?;
     let Some(info) = daemon_info else {

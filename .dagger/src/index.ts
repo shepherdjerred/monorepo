@@ -450,6 +450,10 @@ export class Monorepo {
     await container.sync();
     outputs.push("✓ Build");
 
+    // Clauderon Mobile validation (React Native)
+    outputs.push("\n--- Clauderon Mobile Validation ---");
+    outputs.push(await this.mobileCi(source));
+
     // Birmel CI
     outputs.push("\n--- Birmel Validation ---");
     outputs.push(await checkBirmel(source));
@@ -712,6 +716,45 @@ export class Monorepo {
     }
 
     return outputs.join("\n\n");
+  }
+
+  /**
+   * Run Clauderon Mobile CI: lint, typecheck, format check, test
+   * @param source The full workspace source directory
+   */
+  @func()
+  async mobileCi(source: Directory): Promise<string> {
+    const outputs: string[] = [];
+
+    let container = dag
+      .container()
+      .from(`oven/bun:${BUN_VERSION}-debian`)
+      .withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-cache"))
+      .withWorkdir("/workspace")
+      .withDirectory("/workspace", source.directory("packages/clauderon/mobile"))
+      .withExec(["bun", "install", "--frozen-lockfile"]);
+
+    // Typecheck
+    container = container.withExec(["bun", "run", "typecheck"]);
+    await container.sync();
+    outputs.push("✓ Mobile typecheck passed");
+
+    // Lint
+    container = container.withExec(["bun", "run", "lint"]);
+    await container.sync();
+    outputs.push("✓ Mobile lint passed");
+
+    // Format check
+    container = container.withExec(["bun", "run", "format:check"]);
+    await container.sync();
+    outputs.push("✓ Mobile format check passed");
+
+    // Tests
+    container = container.withExec(["bun", "run", "test"]);
+    await container.sync();
+    outputs.push("✓ Mobile tests passed");
+
+    return outputs.join("\n");
   }
 
   /**

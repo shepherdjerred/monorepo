@@ -283,3 +283,77 @@ pub fn init_git_repo_with_branch(path: &Path, remote_url: &str, branch_name: &st
         );
     }
 }
+
+/// Force destroy a sprite using the CLI
+///
+/// Uses `sprite -s <name> destroy --force` for reliable cleanup.
+/// This should be used instead of the backend's delete method for test cleanup.
+pub fn force_destroy_sprite(name: &str) {
+    if name.is_empty() {
+        return;
+    }
+    let output = Command::new("sprite")
+        .args(["-s", name, "destroy", "--force"])
+        .output();
+    match output {
+        Ok(o) => {
+            if !o.status.success() {
+                eprintln!(
+                    "Warning: sprite destroy failed for {}: {}",
+                    name,
+                    String::from_utf8_lossy(&o.stderr)
+                );
+            } else {
+                println!("Cleaned up sprite: {name}");
+            }
+        }
+        Err(e) => {
+            eprintln!("Warning: Failed to run sprite destroy for {name}: {e}");
+        }
+    }
+}
+
+/// RAII guard for sprite cleanup
+///
+/// Ensures the sprite is destroyed even if the test panics.
+/// Usage:
+/// ```ignore
+/// let guard = SpriteCleanupGuard::new("sprite-name".to_string());
+/// // ... test code ...
+/// guard.disarm(); // Optional: prevent cleanup if test wants to keep sprite
+/// ```
+pub struct SpriteCleanupGuard {
+    name: Option<String>,
+}
+
+impl SpriteCleanupGuard {
+    /// Create a new cleanup guard for the given sprite name
+    #[must_use]
+    pub fn new(name: String) -> Self {
+        Self { name: Some(name) }
+    }
+
+    /// Set the sprite name after creation (useful when name is returned by API)
+    pub fn set_name(&mut self, name: String) {
+        self.name = Some(name);
+    }
+
+    /// Disarm the guard to prevent cleanup on drop
+    pub fn disarm(&mut self) {
+        self.name = None;
+    }
+
+    /// Get the sprite name
+    #[must_use]
+    pub fn name(&self) -> Option<&str> {
+        self.name.as_deref()
+    }
+}
+
+impl Drop for SpriteCleanupGuard {
+    fn drop(&mut self) {
+        if let Some(name) = &self.name {
+            force_destroy_sprite(name);
+        }
+    }
+}

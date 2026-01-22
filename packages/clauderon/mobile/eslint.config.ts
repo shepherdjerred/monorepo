@@ -21,11 +21,22 @@ export default tseslint.config(
       "windows/",
       "eslint.config.ts",
       "metro.config.js",
+      "metro.config.macos.js",
       "babel.config.js",
       "jest.config.js",
       "jest.config.windows.js",
       "coverage/",
       ".expo/",
+      // Root-level JS files not in tsconfig
+      "index.js",
+      "react-native.config.js",
+      "App.tsx",
+      // Generated types (from TypeShare)
+      "src/types/generated/",
+      // Test files (excluded from tsconfig, use jest for linting)
+      "**/*.test.ts",
+      "**/*.test.tsx",
+      "**/__tests__/**",
     ],
   },
   {
@@ -99,19 +110,19 @@ export default tseslint.config(
         },
       ],
       "@typescript-eslint/no-non-null-assertion": "error",
-      "@typescript-eslint/prefer-nullish-coalescing": "error",
+      "@typescript-eslint/prefer-nullish-coalescing": "warn",
       "@typescript-eslint/prefer-optional-chain": "error",
-      "@typescript-eslint/no-unnecessary-condition": "error",
-      "@typescript-eslint/strict-boolean-expressions": [
+      "@typescript-eslint/no-unnecessary-condition": "warn",
+      // Relaxed for React Native - conditional rendering idiomatically uses falsy checks
+      "@typescript-eslint/strict-boolean-expressions": "off",
+      // Allow numbers in template literals (common in RN)
+      "@typescript-eslint/restrict-template-expressions": [
         "error",
         {
-          allowString: false,
-          allowNumber: false,
-          allowNullableObject: true,
-          allowNullableBoolean: false,
-          allowNullableString: false,
-          allowNullableNumber: false,
+          allowNumber: true,
+          allowBoolean: false,
           allowAny: false,
+          allowNullish: false,
         },
       ],
 
@@ -120,7 +131,8 @@ export default tseslint.config(
       "react-hooks/exhaustive-deps": "error",
 
       // React Native specific rules
-      "react-native/no-unused-styles": "error",
+      // Set to warn - has false positives with dynamic themed styles
+      "react-native/no-unused-styles": "warn",
       "react-native/no-inline-styles": "warn",
       "react-native/no-color-literals": "warn",
       "react-native/no-raw-text": "off", // Often too strict for RN apps

@@ -29,6 +29,10 @@ pub struct CleanupResult {
 /// # Returns
 ///
 /// A `CleanupResult` with counts and any failures, or an error if the directory couldn't be read.
+///
+/// # Errors
+///
+/// Returns an error if the logs directory cannot be read.
 pub fn cleanup_old_logs(
     logs_dir: &Path,
     max_age_days: Option<u64>,

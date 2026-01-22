@@ -418,6 +418,36 @@ impl ApiClient for MockApiClient {
             blocked_count: 0,
         })
     }
+
+    async fn start_session(&self, _id: uuid::Uuid) -> anyhow::Result<()> {
+        // Mock implementation - no-op
+        Ok(())
+    }
+
+    async fn wake_session(&self, _id: uuid::Uuid) -> anyhow::Result<()> {
+        // Mock implementation - no-op
+        Ok(())
+    }
+
+    async fn recreate_session(&self, _id: uuid::Uuid) -> anyhow::Result<()> {
+        // Mock implementation - no-op
+        Ok(())
+    }
+
+    async fn recreate_session_fresh(&self, _id: uuid::Uuid) -> anyhow::Result<()> {
+        // Mock implementation - no-op
+        Ok(())
+    }
+
+    async fn update_session_image(&self, _id: uuid::Uuid) -> anyhow::Result<()> {
+        // Mock implementation - no-op
+        Ok(())
+    }
+
+    async fn cleanup_session(&self, _id: uuid::Uuid) -> anyhow::Result<()> {
+        // Mock implementation - no-op
+        Ok(())
+    }
 }
 
 #[cfg(test)]

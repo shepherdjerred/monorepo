@@ -1,5 +1,5 @@
 import { Platform } from "react-native";
-import type { Asset } from "react-native-image-picker";
+import type { Asset, PhotoQuality } from "react-native-image-picker";
 
 /**
  * Cross-platform image picker abstraction
@@ -8,25 +8,23 @@ import type { Asset } from "react-native-image-picker";
  * This abstraction provides graceful fallback for unsupported platforms.
  */
 
-export interface ImagePickerResult {
+export type ImagePickerResult = {
   assets?: Asset[];
   didCancel?: boolean;
   errorMessage?: string;
-}
+};
 
-export interface ImagePickerOptions {
+export type ImagePickerOptions = {
   mediaType?: "photo" | "video" | "mixed";
   selectionLimit?: number;
-  quality?: number;
+  quality?: PhotoQuality;
   saveToPhotos?: boolean;
-}
+};
 
 /**
  * Launch the image library picker
  */
-export async function launchImageLibrary(
-  options?: ImagePickerOptions
-): Promise<ImagePickerResult> {
+export async function launchImageLibrary(options?: ImagePickerOptions): Promise<ImagePickerResult> {
   // Windows doesn't support react-native-image-picker yet
   if (Platform.OS === "windows") {
     return {
@@ -36,19 +34,15 @@ export async function launchImageLibrary(
   }
 
   // For iOS, Android, and macOS, use the native image picker
-  const { launchImageLibrary: nativeLaunch } = await import(
-    "react-native-image-picker"
-  );
+  const { launchImageLibrary: nativeLaunch } = await import("react-native-image-picker");
 
-  return await nativeLaunch(options ?? {});
+  return await nativeLaunch({ mediaType: "photo", ...options });
 }
 
 /**
  * Launch the camera
  */
-export async function launchCamera(
-  options?: ImagePickerOptions
-): Promise<ImagePickerResult> {
+export async function launchCamera(options?: ImagePickerOptions): Promise<ImagePickerResult> {
   // Windows doesn't support react-native-image-picker yet
   if (Platform.OS === "windows") {
     return {
@@ -60,15 +54,12 @@ export async function launchCamera(
   // macOS doesn't typically have cameras (or at least camera access is different)
   if (Platform.OS === "macos") {
     return {
-      errorMessage:
-        "Camera is not supported on macOS. Please use the image library instead.",
+      errorMessage: "Camera is not supported on macOS. Please use the image library instead.",
     };
   }
 
   // For iOS and Android, use the native camera
-  const { launchCamera: nativeLaunch } = await import(
-    "react-native-image-picker"
-  );
+  const { launchCamera: nativeLaunch } = await import("react-native-image-picker");
 
-  return await nativeLaunch(options ?? {});
+  return await nativeLaunch({ mediaType: "photo", ...options });
 }

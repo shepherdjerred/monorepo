@@ -10,11 +10,7 @@ type UsageProgressBarProps = {
   subtitle?: string;
 };
 
-export function UsageProgressBar({
-  window,
-  title,
-  subtitle,
-}: UsageProgressBarProps) {
+export function UsageProgressBar({ window, title, subtitle }: UsageProgressBarProps) {
   const { colors } = useTheme();
   const percentage = Math.min(window.utilization * 100, 100);
 
@@ -37,17 +33,21 @@ export function UsageProgressBar({
 
       {subtitle && <Text style={[styles.subtitle, { color: colors.textLight }]}>{subtitle}</Text>}
 
-      <View style={[styles.progressContainer, { backgroundColor: colors.borderLight, borderColor: colors.border }]}>
+      <View
+        style={[
+          styles.progressContainer,
+          { backgroundColor: colors.borderLight, borderColor: colors.border },
+        ]}
+      >
         <View
-          style={[
-            styles.progressBar,
-            { width: `${percentage}%`, backgroundColor: barColor },
-          ]}
+          style={[styles.progressBar, { width: `${percentage}%`, backgroundColor: barColor }]}
         />
       </View>
 
       <View style={styles.footer}>
-        <Text style={[styles.percentage, { color: colors.textDark }]}>{percentage.toFixed(1)}%</Text>
+        <Text style={[styles.percentage, { color: colors.textDark }]}>
+          {percentage.toFixed(1)}%
+        </Text>
         {window.resets_at && (
           <Text style={[styles.resetTime, { color: colors.textLight }]}>
             Resets: {new Date(window.resets_at).toLocaleString()}

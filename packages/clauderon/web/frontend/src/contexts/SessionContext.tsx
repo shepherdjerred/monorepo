@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
-import type { Session, CreateSessionRequest, AccessMode } from "@clauderon/client";
+import type { Session, CreateSessionRequest, AccessMode, SessionHealthReport } from "@clauderon/client";
 import { useClauderonClient } from "../hooks/useClauderonClient";
 import { useSessionEvents } from "../hooks/useSessionEvents";
 import type { ClauderonClient } from "@clauderon/client";
@@ -18,6 +18,10 @@ type SessionContextValue = {
   updateSession: (id: string, title?: string, description?: string) => Promise<void>;
   regenerateMetadata: (id: string) => Promise<void>;
   client: ClauderonClient;
+  // Health state
+  healthReports: Map<string, SessionHealthReport>;
+  refreshHealth: () => Promise<void>;
+  getSessionHealth: (sessionId: string) => SessionHealthReport | undefined;
 }
 
 const SessionContext = createContext<SessionContextValue | undefined>(undefined);
@@ -27,6 +31,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [sessions, setSessions] = useState<Map<string, Session>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [healthReports, setHealthReports] = useState<Map<string, SessionHealthReport>>(new Map());
 
   const refreshSessions = useCallback(async (showLoading = true) => {
     try {
@@ -45,6 +50,25 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       }
     }
   }, [client]);
+
+  const refreshHealth = useCallback(async () => {
+    try {
+      const health = await client.getHealth();
+      const newHealthReports = new Map(
+        health.sessions.map((report) => [report.session_id, report])
+      );
+      setHealthReports(newHealthReports);
+    } catch (err) {
+      console.error("Failed to fetch health data:", err);
+    }
+  }, [client]);
+
+  const getSessionHealth = useCallback(
+    (sessionId: string): SessionHealthReport | undefined => {
+      return healthReports.get(sessionId);
+    },
+    [healthReports]
+  );
 
   const createSession = useCallback(
     async (request: CreateSessionRequest) => {
@@ -149,7 +173,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   // Initial load
   useEffect(() => {
     void refreshSessions();
-  }, [refreshSessions]);
+    void refreshHealth();
+  }, [refreshSessions, refreshHealth]);
 
   return (
     <SessionContext.Provider
@@ -167,6 +192,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         updateSession,
         regenerateMetadata,
         client,
+        healthReports,
+        refreshHealth,
+        getSessionHealth,
       }}
     >
       {children}

@@ -54,4 +54,22 @@ pub trait ApiClient: Send + Sync {
 
     /// Get health status of all sessions.
     async fn get_health(&mut self) -> anyhow::Result<HealthCheckResult>;
+
+    /// Start a stopped session.
+    async fn start_session(&self, id: uuid::Uuid) -> anyhow::Result<()>;
+
+    /// Wake a hibernated session.
+    async fn wake_session(&self, id: uuid::Uuid) -> anyhow::Result<()>;
+
+    /// Recreate a session (preserves data).
+    async fn recreate_session(&self, id: uuid::Uuid) -> anyhow::Result<()>;
+
+    /// Recreate a session fresh (data lost).
+    async fn recreate_session_fresh(&self, id: uuid::Uuid) -> anyhow::Result<()>;
+
+    /// Update session image and recreate.
+    async fn update_session_image(&self, id: uuid::Uuid) -> anyhow::Result<()>;
+
+    /// Cleanup a session (remove from clauderon).
+    async fn cleanup_session(&self, id: uuid::Uuid) -> anyhow::Result<()>;
 }

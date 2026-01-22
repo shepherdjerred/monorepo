@@ -11,6 +11,10 @@ use crate::core::SessionManager;
 use crate::utils::paths;
 
 /// Run the console Unix socket server for local TUI streaming.
+///
+/// # Errors
+///
+/// Returns an error if the socket cannot be created, bound, or if there are file system errors.
 pub async fn run_console_socket_server(
     manager: Arc<SessionManager>,
     console_state: Arc<ConsoleState>,

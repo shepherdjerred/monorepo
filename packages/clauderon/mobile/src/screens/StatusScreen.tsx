@@ -52,14 +52,16 @@ export function StatusScreen(_props: StatusScreenProps) {
       await client.updateCredential(serviceId, value);
       await loadStatus(); // Refresh to show updated status
     },
-    [client, loadStatus]
+    [client, loadStatus],
   );
 
   if (isLoading) {
     return (
       <View style={[styles.centered, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={[styles.loadingText, { color: colors.textLight }]}>Loading system status...</Text>
+        <Text style={[styles.loadingText, { color: colors.textLight }]}>
+          Loading system status...
+        </Text>
       </View>
     );
   }
@@ -79,7 +81,7 @@ export function StatusScreen(_props: StatusScreenProps) {
       refreshControl={
         <RefreshControl
           refreshing={isLoading}
-          onRefresh={loadStatus}
+          onRefresh={() => void loadStatus()}
           colors={[colors.primary]}
           tintColor={colors.primary}
         />
@@ -87,7 +89,14 @@ export function StatusScreen(_props: StatusScreenProps) {
     >
       {/* Credentials Section */}
       <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: colors.textDark, borderBottomColor: colors.border }]}>Credentials</Text>
+        <Text
+          style={[
+            styles.sectionTitle,
+            { color: colors.textDark, borderBottomColor: colors.border },
+          ]}
+        >
+          Credentials
+        </Text>
         {status?.credentials.map((credential) => (
           <CredentialRow
             key={credential.service_id}
@@ -100,7 +109,14 @@ export function StatusScreen(_props: StatusScreenProps) {
       {/* Usage Section */}
       {status?.claude_usage && (
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.textDark, borderBottomColor: colors.border }]}>Claude Code Usage</Text>
+          <Text
+            style={[
+              styles.sectionTitle,
+              { color: colors.textDark, borderBottomColor: colors.border },
+            ]}
+          >
+            Claude Code Usage
+          </Text>
           {status.claude_usage.organization_name && (
             <Text style={[styles.orgName, { color: colors.textLight }]}>
               {status.claude_usage.organization_name}
@@ -123,14 +139,8 @@ export function StatusScreen(_props: StatusScreenProps) {
             </View>
           ) : (
             <>
-              <UsageProgressBar
-                window={status.claude_usage.five_hour}
-                title="5-Hour Window"
-              />
-              <UsageProgressBar
-                window={status.claude_usage.seven_day}
-                title="7-Day Window"
-              />
+              <UsageProgressBar window={status.claude_usage.five_hour} title="5-Hour Window" />
+              <UsageProgressBar window={status.claude_usage.seven_day} title="7-Day Window" />
               {status.claude_usage.seven_day_sonnet && (
                 <UsageProgressBar
                   window={status.claude_usage.seven_day_sonnet}
@@ -148,12 +158,22 @@ export function StatusScreen(_props: StatusScreenProps) {
 
       {/* Proxies Section */}
       <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: colors.textDark, borderBottomColor: colors.border }]}>Proxies</Text>
+        <Text
+          style={[
+            styles.sectionTitle,
+            { color: colors.textDark, borderBottomColor: colors.border },
+          ]}
+        >
+          Proxies
+        </Text>
         {status?.proxies.length === 0 ? (
           <Text style={[styles.emptyText, { color: colors.textLight }]}>No active proxies</Text>
         ) : (
           status?.proxies.map((proxy) => (
-            <View key={`${proxy.name}-${proxy.port}`} style={[styles.proxyRow, { borderBottomColor: colors.borderLight }]}>
+            <View
+              key={`${proxy.name}-${proxy.port}`}
+              style={[styles.proxyRow, { borderBottomColor: colors.borderLight }]}
+            >
               <View style={styles.proxyInfo}>
                 <Text style={[styles.proxyName, { color: colors.textDark }]}>{proxy.name}</Text>
                 <Text style={[styles.proxyMeta, { color: colors.textLight }]}>
@@ -167,7 +187,12 @@ export function StatusScreen(_props: StatusScreenProps) {
                   { backgroundColor: proxy.active ? colors.success : colors.surface },
                 ]}
               >
-                <Text style={[styles.proxyStatusText, { color: proxy.active ? colors.textWhite : colors.textDark }]}>
+                <Text
+                  style={[
+                    styles.proxyStatusText,
+                    { color: proxy.active ? colors.textWhite : colors.textDark },
+                  ]}
+                >
                   {proxy.active ? "Active" : "Inactive"}
                 </Text>
               </View>

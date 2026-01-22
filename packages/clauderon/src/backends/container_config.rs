@@ -96,6 +96,10 @@ impl ResourceLimits {
     ///
     /// Checks that CPU and memory values follow expected patterns.
     /// Does not validate against system constraints.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if CPU or memory limits have invalid format.
     pub fn validate(&self) -> anyhow::Result<()> {
         if let Some(cpu) = &self.cpu {
             validate_cpu_limit(cpu)?;
@@ -260,6 +264,10 @@ impl ImageConfig {
     /// - Valid characters (alphanumeric, dots, hyphens, underscores, slashes, colons)
     /// - Reasonable length (max 256 characters)
     /// - No shell metacharacters or path traversal attempts
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the image name is invalid or contains unsafe characters.
     pub fn validate(&self) -> anyhow::Result<()> {
         validate_image_name(&self.image)
     }

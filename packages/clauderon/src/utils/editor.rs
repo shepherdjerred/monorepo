@@ -50,6 +50,10 @@ fn which(command: &str) -> bool {
 /// Create a temporary file with the given content
 ///
 /// Returns the path to the temp file
+///
+/// # Errors
+///
+/// Returns an error if the system time cannot be accessed or the file cannot be written.
 pub fn create_temp_file(content: &str) -> Result<PathBuf> {
     // Use system temp directory
     let temp_dir = std::env::temp_dir();
@@ -77,6 +81,10 @@ pub fn create_temp_file(content: &str) -> Result<PathBuf> {
 }
 
 /// Read the content from a file
+///
+/// # Errors
+///
+/// Returns an error if the file cannot be read.
 pub fn read_file_content(path: &PathBuf) -> Result<String> {
     std::fs::read_to_string(path)
         .with_context(|| format!("Failed to read file: {display}", display = path.display()))

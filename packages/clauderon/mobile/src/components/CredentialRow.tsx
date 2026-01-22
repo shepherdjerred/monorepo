@@ -36,7 +36,7 @@ export function CredentialRow({ credential, onSave }: CredentialRowProps) {
     } catch (error) {
       Alert.alert(
         "Error",
-        `Failed to save credential: ${error instanceof Error ? error.message : "Unknown error"}`
+        `Failed to save credential: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     } finally {
       setIsSaving(false);
@@ -65,7 +65,12 @@ export function CredentialRow({ credential, onSave }: CredentialRowProps) {
           <Text style={[styles.name, { color: colors.textDark }]}>{credential.name}</Text>
         </View>
         {credential.readonly && (
-          <View style={[styles.readonlyBadge, { backgroundColor: colors.textLight, borderColor: colors.border }]}>
+          <View
+            style={[
+              styles.readonlyBadge,
+              { backgroundColor: colors.textLight, borderColor: colors.border },
+            ]}
+          >
             <Text style={[styles.readonlyText, { color: colors.textWhite }]}>Readonly</Text>
           </View>
         )}
@@ -78,7 +83,9 @@ export function CredentialRow({ credential, onSave }: CredentialRowProps) {
           </Text>
           <TouchableOpacity
             style={[styles.showButton, { borderColor: colors.border }]}
-            onPress={() => setShowValue(!showValue)}
+            onPress={() => {
+              setShowValue(!showValue);
+            }}
           >
             <Text style={[styles.showButtonText, { color: colors.textDark }]}>
               {showValue ? "Hide" : "Show"}
@@ -88,7 +95,9 @@ export function CredentialRow({ credential, onSave }: CredentialRowProps) {
       )}
 
       {credential.source && (
-        <Text style={[styles.source, { color: colors.textLight }]}>Source: {credential.source}</Text>
+        <Text style={[styles.source, { color: colors.textLight }]}>
+          Source: {credential.source}
+        </Text>
       )}
 
       {!credential.readonly && (
@@ -107,7 +116,7 @@ export function CredentialRow({ credential, onSave }: CredentialRowProps) {
               />
               <View style={styles.editActions}>
                 <TouchableOpacity
-                  style={[themedStyles.cancelButton]}
+                  style={themedStyles.cancelButton}
                   onPress={handleCancel}
                   disabled={isSaving}
                 >
@@ -118,7 +127,7 @@ export function CredentialRow({ credential, onSave }: CredentialRowProps) {
                     themedStyles.saveButton,
                     (!value.trim() || isSaving) && styles.buttonDisabled,
                   ]}
-                  onPress={handleSave}
+                  onPress={() => void handleSave()}
                   disabled={!value.trim() || isSaving}
                 >
                   {isSaving ? (
@@ -131,8 +140,10 @@ export function CredentialRow({ credential, onSave }: CredentialRowProps) {
             </View>
           ) : (
             <TouchableOpacity
-              style={[themedStyles.editButton]}
-              onPress={() => setIsEditing(true)}
+              style={themedStyles.editButton}
+              onPress={() => {
+                setIsEditing(true);
+              }}
             >
               <Text style={[styles.editButtonText, { color: colors.textDark }]}>
                 {credential.available ? "Update" : "Add"}
@@ -146,7 +157,12 @@ export function CredentialRow({ credential, onSave }: CredentialRowProps) {
 }
 
 // Dynamic styles based on theme colors
-function getThemedStyles(colors: { surface: string; border: string; background: string; primary: string }) {
+function getThemedStyles(colors: {
+  surface: string;
+  border: string;
+  background: string;
+  primary: string;
+}) {
   return StyleSheet.create({
     container: {
       backgroundColor: colors.surface,

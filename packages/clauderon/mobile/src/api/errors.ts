@@ -12,7 +12,10 @@ export class ClauderonError extends Error {
  * Error thrown when a network request fails
  */
 export class NetworkError extends ClauderonError {
-  constructor(message: string, public override readonly cause?: unknown) {
+  constructor(
+    message: string,
+    public override readonly cause?: unknown,
+  ) {
     super(message);
     this.name = "NetworkError";
   }
@@ -25,7 +28,7 @@ export class ApiError extends ClauderonError {
   constructor(
     message: string,
     public readonly code?: string,
-    public readonly statusCode?: number
+    public readonly statusCode?: number,
   ) {
     super(message);
     this.name = "ApiError";
@@ -46,7 +49,10 @@ export class SessionNotFoundError extends ApiError {
  * Error thrown when a WebSocket connection fails
  */
 export class WebSocketError extends ClauderonError {
-  constructor(message: string, public override readonly cause?: unknown) {
+  constructor(
+    message: string,
+    public override readonly cause?: unknown,
+  ) {
     super(message);
     this.name = "WebSocketError";
   }
@@ -59,13 +65,13 @@ export class WebSocketError extends ClauderonError {
 export class DecodeError extends WebSocketError {
   constructor(
     message: string,
-    public readonly stage: 'validation' | 'base64' | 'utf8',
+    public readonly stage: "validation" | "base64" | "utf8",
     public readonly context: {
       sessionId: string | null;
       dataLength: number;
       dataSample: string;
     },
-    cause?: unknown
+    cause?: unknown,
   ) {
     super(message, cause);
     this.name = "DecodeError";

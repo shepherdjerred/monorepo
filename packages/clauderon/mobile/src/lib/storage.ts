@@ -22,7 +22,7 @@ export const storage = {
     }
   },
 
-  async set<T>(key: string, value: T): Promise<void> {
+  async set(key: string, value: unknown): Promise<void> {
     try {
       await AsyncStorage.setItem(key, JSON.stringify(value));
     } catch (error) {
