@@ -421,6 +421,7 @@ impl ConsoleManager {
         Self::default()
     }
 
+    #[allow(clippy::missing_errors_doc)]
     pub async fn ensure_session(
         &self,
         session_id: Uuid,
@@ -492,6 +493,7 @@ impl ConsoleSessionHandle {
         self.session.snapshot_and_subscribe().await
     }
 
+    #[allow(clippy::missing_errors_doc)]
     pub async fn send_input(&self, data: Vec<u8>) -> anyhow::Result<()> {
         self.session.send_input(data).await
     }
@@ -500,6 +502,7 @@ impl ConsoleSessionHandle {
         self.session.resize(rows, cols).await;
     }
 
+    #[allow(clippy::missing_errors_doc)]
     #[tracing::instrument(skip(self), fields(signal = ?signal))]
     pub async fn send_signal(&self, signal: SignalType) -> anyhow::Result<()> {
         self.session.send_signal(signal).await

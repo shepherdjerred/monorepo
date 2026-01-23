@@ -407,6 +407,120 @@ impl Client {
             _ => anyhow::bail!("Unexpected response"),
         }
     }
+
+    /// Start a stopped session.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the request fails or the server returns an error response.
+    pub async fn start_session(&mut self, id: uuid::Uuid) -> anyhow::Result<()> {
+        let response = self
+            .send_request(Request::StartSession { id: id.to_string() })
+            .await?;
+
+        match response {
+            Response::Ok => Ok(()),
+            Response::Error { code, message } => {
+                anyhow::bail!("[{code}] {message}")
+            }
+            _ => anyhow::bail!("Unexpected response"),
+        }
+    }
+
+    /// Wake a hibernated session.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the request fails or the server returns an error response.
+    pub async fn wake_session(&mut self, id: uuid::Uuid) -> anyhow::Result<()> {
+        let response = self
+            .send_request(Request::WakeSession { id: id.to_string() })
+            .await?;
+
+        match response {
+            Response::Ok => Ok(()),
+            Response::Error { code, message } => {
+                anyhow::bail!("[{code}] {message}")
+            }
+            _ => anyhow::bail!("Unexpected response"),
+        }
+    }
+
+    /// Recreate a session (preserves data).
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the request fails or the server returns an error response.
+    pub async fn recreate_session(&mut self, id: uuid::Uuid) -> anyhow::Result<()> {
+        let response = self
+            .send_request(Request::RecreateSession { id: id.to_string() })
+            .await?;
+
+        match response {
+            Response::Ok => Ok(()),
+            Response::Error { code, message } => {
+                anyhow::bail!("[{code}] {message}")
+            }
+            _ => anyhow::bail!("Unexpected response"),
+        }
+    }
+
+    /// Recreate a session fresh (data lost).
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the request fails or the server returns an error response.
+    pub async fn recreate_session_fresh(&mut self, id: uuid::Uuid) -> anyhow::Result<()> {
+        let response = self
+            .send_request(Request::RecreateSessionFresh { id: id.to_string() })
+            .await?;
+
+        match response {
+            Response::Ok => Ok(()),
+            Response::Error { code, message } => {
+                anyhow::bail!("[{code}] {message}")
+            }
+            _ => anyhow::bail!("Unexpected response"),
+        }
+    }
+
+    /// Update session image and recreate (same as refresh).
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the request fails or the server returns an error response.
+    pub async fn update_session_image(&mut self, id: uuid::Uuid) -> anyhow::Result<()> {
+        let response = self
+            .send_request(Request::RefreshSession { id: id.to_string() })
+            .await?;
+
+        match response {
+            Response::Ok => Ok(()),
+            Response::Error { code, message } => {
+                anyhow::bail!("[{code}] {message}")
+            }
+            _ => anyhow::bail!("Unexpected response"),
+        }
+    }
+
+    /// Cleanup a session (remove from clauderon).
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the request fails or the server returns an error response.
+    pub async fn cleanup_session(&mut self, id: uuid::Uuid) -> anyhow::Result<()> {
+        let response = self
+            .send_request(Request::CleanupSession { id: id.to_string() })
+            .await?;
+
+        match response {
+            Response::Ok => Ok(()),
+            Response::Error { code, message } => {
+                anyhow::bail!("[{code}] {message}")
+            }
+            _ => anyhow::bail!("Unexpected response"),
+        }
+    }
 }
 
 #[async_trait]
@@ -460,5 +574,47 @@ impl ApiClient for Client {
 
     async fn get_health(&mut self) -> anyhow::Result<crate::core::session::HealthCheckResult> {
         Self::get_health(self).await
+    }
+
+    async fn start_session(&mut self, id: uuid::Uuid) -> anyhow::Result<()> {
+        #[allow(clippy::needless_borrow)]
+        {
+            Self::start_session(self, id).await
+        }
+    }
+
+    async fn wake_session(&mut self, id: uuid::Uuid) -> anyhow::Result<()> {
+        #[allow(clippy::needless_borrow)]
+        {
+            Self::wake_session(self, id).await
+        }
+    }
+
+    async fn recreate_session(&mut self, id: uuid::Uuid) -> anyhow::Result<()> {
+        #[allow(clippy::needless_borrow)]
+        {
+            Self::recreate_session(self, id).await
+        }
+    }
+
+    async fn recreate_session_fresh(&mut self, id: uuid::Uuid) -> anyhow::Result<()> {
+        #[allow(clippy::needless_borrow)]
+        {
+            Self::recreate_session_fresh(self, id).await
+        }
+    }
+
+    async fn update_session_image(&mut self, id: uuid::Uuid) -> anyhow::Result<()> {
+        #[allow(clippy::needless_borrow)]
+        {
+            Self::update_session_image(self, id).await
+        }
+    }
+
+    async fn cleanup_session(&mut self, id: uuid::Uuid) -> anyhow::Result<()> {
+        #[allow(clippy::needless_borrow)]
+        {
+            Self::cleanup_session(self, id).await
+        }
     }
 }

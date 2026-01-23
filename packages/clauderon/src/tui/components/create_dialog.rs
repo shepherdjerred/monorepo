@@ -53,6 +53,8 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
     let prompt_height = prompt_lines.max(5); // Min 5 lines, no max
 
     // Calculate images height (0 if no images, or limited height if images present)
+    // Safe cast: limited to 3 images max, well within u16 range
+    #[allow(clippy::cast_possible_truncation)]
     let images_height = if dialog.images.is_empty() {
         0
     } else {
@@ -60,6 +62,8 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
     };
 
     // Inner area (with padding)
+    // Safe cast: terminal UI dimensions are always within u16 range
+    #[allow(clippy::cast_possible_truncation)]
     let inner = Layout::default()
         .direction(Direction::Vertical)
         .margin(1)

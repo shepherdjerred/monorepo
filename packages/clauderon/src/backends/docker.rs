@@ -365,9 +365,10 @@ impl DockerBackend {
         gid: u32,
     ) -> anyhow::Result<()> {
         // Build the clone script
-        let base_branch_clone = base_branch
-            .map(|b| format!("git clone --branch {b} --single-branch ${{GIT_REMOTE_URL}} ."))
-            .unwrap_or_else(|| "git clone ${GIT_REMOTE_URL} .".to_string());
+        let base_branch_clone = base_branch.map_or_else(
+            || "git clone ${GIT_REMOTE_URL} .".to_string(),
+            |b| format!("git clone --branch {b} --single-branch ${{GIT_REMOTE_URL}} ."),
+        );
 
         let script = format!(
             r#"
@@ -1480,7 +1481,7 @@ impl ExecutionBackend for DockerBackend {
                 .repositories
                 .iter()
                 .find(|r| r.is_primary)
-                .or(options.repositories.first())
+                .or_else(|| options.repositories.first())
                 .ok_or_else(|| anyhow::anyhow!("volume_mode requires at least one repository"))?;
 
             // Get git remote URL from the repo_path
@@ -1688,13 +1689,13 @@ impl ExecutionBackend for DockerBackend {
 
         match status.as_str() {
             "running" => Ok(super::traits::BackendResourceHealth::Running),
-            "exited" | "stopped" => Ok(super::traits::BackendResourceHealth::Stopped),
+            "exited" | "stopped" | "paused" | "created" => {
+                Ok(super::traits::BackendResourceHealth::Stopped)
+            }
             "dead" => Ok(super::traits::BackendResourceHealth::Error {
                 message: "Container is in dead state".to_string(),
             }),
-            "paused" => Ok(super::traits::BackendResourceHealth::Stopped),
             "restarting" => Ok(super::traits::BackendResourceHealth::Pending),
-            "created" => Ok(super::traits::BackendResourceHealth::Stopped),
             other => Ok(super::traits::BackendResourceHealth::Error {
                 message: format!("Unknown container state: {other}"),
             }),

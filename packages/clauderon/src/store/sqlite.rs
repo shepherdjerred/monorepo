@@ -1666,8 +1666,12 @@ impl TryFrom<SessionRow> for Session {
                 .as_ref()
                 .and_then(|json| serde_json::from_str(json).ok()),
             access_mode: row.access_mode.parse().unwrap_or_default(),
+            // Safe cast: port numbers are always within u16 range (0-65535)
+            #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
             proxy_port: row.proxy_port.map(|p| p as u16),
             history_file_path: row.history_file_path.map(PathBuf::from),
+            // Safe cast: reconcile attempts are bounded by application logic
+            #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
             reconcile_attempts: row.reconcile_attempts as u32,
             last_reconcile_error: row.last_reconcile_error,
             last_reconcile_at,
