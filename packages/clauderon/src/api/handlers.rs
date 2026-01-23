@@ -431,6 +431,33 @@ pub async fn handle_request(
                 }
             }
         }
+
+        Request::RecreateSessionFresh { id } => {
+            let session_id = match uuid::Uuid::parse_str(&id) {
+                Ok(id) => id,
+                Err(e) => {
+                    return Response::Error {
+                        code: "INVALID_ID".to_string(),
+                        message: format!("Invalid session ID: {e}"),
+                    };
+                }
+            };
+            match manager.recreate_session_fresh(session_id).await {
+                Ok(result) => {
+                    tracing::info!(id = %id, "Session recreated fresh");
+                    Response::Recreated {
+                        new_backend_id: Some(result.new_backend_id),
+                    }
+                }
+                Err(e) => {
+                    tracing::error!(id = %id, error = %e, "Failed to recreate session fresh");
+                    Response::Error {
+                        code: "RECREATE_FRESH_ERROR".to_string(),
+                        message: e.to_string(),
+                    }
+                }
+            }
+        }
     }
 }
 

@@ -24,6 +24,8 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
     let dialog_width = 60.min(area.width.saturating_sub(4));
     let session_count = sessions.len();
     // 4 lines for header/title + 2 for buttons + session count (capped at 8)
+    // Safe cast: capped at 8, well within u16 range
+    #[allow(clippy::cast_possible_truncation)]
     let dialog_height = (6 + session_count.min(8) as u16).min(area.height.saturating_sub(4));
 
     let dialog_area = centered_rect(dialog_width, dialog_height, area);

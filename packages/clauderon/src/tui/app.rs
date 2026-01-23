@@ -850,6 +850,7 @@ impl Default for CreateDialogState {
 }
 
 /// Main application state
+#[allow(clippy::struct_excessive_bools)]
 pub struct App {
     /// Current mode/view
     pub mode: AppMode,
@@ -1100,55 +1101,55 @@ impl App {
 
     /// Start a stopped session
     pub async fn start_session(&mut self, id: Uuid) -> anyhow::Result<()> {
-        if let Some(client) = &self.client {
+        if let Some(client) = &mut self.client {
             client.start_session(id).await?;
-            self.refresh_sessions().await?;
         }
+        self.refresh_sessions().await?;
         Ok(())
     }
 
     /// Wake a hibernated session
     pub async fn wake_session(&mut self, id: Uuid) -> anyhow::Result<()> {
-        if let Some(client) = &self.client {
+        if let Some(client) = &mut self.client {
             client.wake_session(id).await?;
-            self.refresh_sessions().await?;
         }
+        self.refresh_sessions().await?;
         Ok(())
     }
 
     /// Recreate a session (preserves data)
     pub async fn recreate_session(&mut self, id: Uuid) -> anyhow::Result<()> {
-        if let Some(client) = &self.client {
+        if let Some(client) = &mut self.client {
             client.recreate_session(id).await?;
-            self.refresh_sessions().await?;
         }
+        self.refresh_sessions().await?;
         Ok(())
     }
 
     /// Recreate a session fresh (data lost)
     pub async fn recreate_session_fresh(&mut self, id: Uuid) -> anyhow::Result<()> {
-        if let Some(client) = &self.client {
+        if let Some(client) = &mut self.client {
             client.recreate_session_fresh(id).await?;
-            self.refresh_sessions().await?;
         }
+        self.refresh_sessions().await?;
         Ok(())
     }
 
     /// Update session image and recreate
     pub async fn update_session_image(&mut self, id: Uuid) -> anyhow::Result<()> {
-        if let Some(client) = &self.client {
+        if let Some(client) = &mut self.client {
             client.update_session_image(id).await?;
-            self.refresh_sessions().await?;
         }
+        self.refresh_sessions().await?;
         Ok(())
     }
 
     /// Cleanup a session (remove from clauderon, worktree missing)
     pub async fn cleanup_session(&mut self, id: Uuid) -> anyhow::Result<()> {
-        if let Some(client) = &self.client {
+        if let Some(client) = &mut self.client {
             client.cleanup_session(id).await?;
-            self.refresh_sessions().await?;
         }
+        self.refresh_sessions().await?;
         Ok(())
     }
 
@@ -1623,13 +1624,15 @@ impl App {
     }
 
     /// Get the session for recreate confirm/blocked dialog
-    pub fn recreate_session(&self) -> Option<&Session> {
+    #[must_use]
+    pub fn get_recreate_session(&self) -> Option<&Session> {
         self.recreate_confirm_session_id
             .and_then(|id| self.sessions.iter().find(|s| s.id == id))
     }
 
     /// Get the health report for recreate confirm/blocked dialog
-    pub fn recreate_session_health(&self) -> Option<&SessionHealthReport> {
+    #[must_use]
+    pub fn get_recreate_session_health(&self) -> Option<&SessionHealthReport> {
         self.recreate_confirm_session_id
             .and_then(|id| self.session_health.get(&id))
     }

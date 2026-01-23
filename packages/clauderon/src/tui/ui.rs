@@ -54,6 +54,8 @@ pub fn render(frame: &mut Frame, app: &App) {
             // - Buttons: 1
             // - Outer margins: 2
             // - Outer border: 2
+            // Safe cast: terminal UI dimensions are always within u16 range
+            #[allow(clippy::cast_possible_truncation)]
             let required_height =
                 (prompt_height + 2 + images_height + 3 + 2 + 2 + 2 + 2 + 2 + 1 + 1 + 2 + 2) as u16;
 

@@ -453,6 +453,8 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
             let claude_indicator = match session.claude_status {
                 ClaudeWorkingStatus::Working => {
                     // Animate based on spinner tick
+                    // Safe cast: SPINNER_FRAMES.len() is small, modulo result fits in usize
+                    #[allow(clippy::cast_possible_truncation)]
                     let spinner_idx = (app.spinner_tick % SPINNER_FRAMES.len() as u64) as usize;
                     let spinner = SPINNER_FRAMES[spinner_idx];
                     Span::styled(spinner, Style::default().fg(Color::Green))
@@ -521,6 +523,8 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
 
             // Add deletion indicator if deleting
             if is_deleting {
+                // Safe cast: SPINNER_FRAMES.len() is small, modulo result fits in usize
+                #[allow(clippy::cast_possible_truncation)]
                 let spinner_idx = (app.spinner_tick % SPINNER_FRAMES.len() as u64) as usize;
                 let spinner = SPINNER_FRAMES[spinner_idx];
                 spans.push(Span::styled(
@@ -581,8 +585,9 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
             // Health column - get from cached health data
             let (health_text, health_color) = app
                 .get_session_health(session.id)
-                .map(|report| health_display(&report.state))
-                .unwrap_or(("--", Color::DarkGray));
+                .map_or(("--", Color::DarkGray), |report| {
+                    health_display(&report.state)
+                });
             let health_truncated = truncate_with_ellipsis(health_text, widths.health);
             let health_padded = pad_to_width(&health_truncated, widths.health);
 

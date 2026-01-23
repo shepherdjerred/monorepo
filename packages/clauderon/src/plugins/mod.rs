@@ -54,6 +54,9 @@ impl PluginDiscovery {
     ///
     /// Returns an empty manifest if the plugin directory doesn't exist (graceful degradation).
     /// Logs warnings for individual plugins that fail to parse but continues processing others.
+    ///
+    /// # Errors
+    /// Returns an error if filesystem operations fail during plugin discovery
     #[instrument(skip(self), fields(host_claude_dir = %self.host_claude_dir.display()))]
     pub fn discover_plugins(&self) -> anyhow::Result<PluginManifest> {
         info!("Starting plugin discovery");
