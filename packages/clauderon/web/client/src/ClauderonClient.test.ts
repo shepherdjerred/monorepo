@@ -252,4 +252,182 @@ describe("ClauderonClient", () => {
       }
     });
   });
+
+  describe("getHealth", () => {
+    test("returns health check result for all sessions", async () => {
+      const mockHealth = {
+        sessions: [
+          {
+            session_id: "session1",
+            session_name: "Test Session",
+            backend_type: "Docker",
+            state: { type: "Healthy" },
+            available_actions: ["Recreate", "UpdateImage"],
+            recommended_action: null,
+            description: "Container is running",
+            details: "Docker container abc123 is healthy",
+            data_safe: true,
+          },
+        ],
+        healthy_count: 1,
+        needs_attention_count: 0,
+        blocked_count: 0,
+      };
+
+      const mockFetch = createMockFetch(
+        new Map([["GET http://localhost:3030/api/health", { status: 200, body: mockHealth }]])
+      );
+
+      const client = new ClauderonClient({ baseUrl: "http://localhost:3030", fetch: mockFetch });
+      const result = await client.getHealth();
+
+      expect(result.sessions).toHaveLength(1);
+      expect(result.healthy_count).toBe(1);
+      expect(result.sessions[0]?.session_id).toBe("session1");
+    });
+  });
+
+  describe("getSessionHealth", () => {
+    test("returns health report for single session", async () => {
+      const mockReport = {
+        session_id: "session1",
+        session_name: "Test Session",
+        backend_type: "Docker",
+        state: { type: "Missing" },
+        available_actions: ["Recreate"],
+        recommended_action: "Recreate",
+        description: "Container not found",
+        details: "Docker container was deleted externally",
+        data_safe: true,
+      };
+
+      const mockFetch = createMockFetch(
+        new Map([["GET http://localhost:3030/api/sessions/session1/health", { status: 200, body: mockReport }]])
+      );
+
+      const client = new ClauderonClient({ baseUrl: "http://localhost:3030", fetch: mockFetch });
+      const result = await client.getSessionHealth("session1");
+
+      expect(result.session_id).toBe("session1");
+      expect(result.state.type).toBe("Missing");
+      expect(result.available_actions).toContain("Recreate");
+    });
+  });
+
+  describe("startSession", () => {
+    test("starts a stopped session successfully", async () => {
+      const mockFetch = createMockFetch(
+        new Map([["POST http://localhost:3030/api/sessions/session1/start", { status: 204 }]])
+      );
+
+      const client = new ClauderonClient({ baseUrl: "http://localhost:3030", fetch: mockFetch });
+      await expect(client.startSession("session1")).resolves.toBeUndefined();
+    });
+
+    test("throws ApiError when session cannot be started", async () => {
+      const mockFetch = createMockFetch(
+        new Map([
+          [
+            "POST http://localhost:3030/api/sessions/session1/start",
+            { status: 400, body: { error: "Session is not in stopped state" } },
+          ],
+        ])
+      );
+
+      const client = new ClauderonClient({ baseUrl: "http://localhost:3030", fetch: mockFetch });
+      await expect(client.startSession("session1")).rejects.toThrow(ApiError);
+    });
+  });
+
+  describe("wakeSession", () => {
+    test("wakes a hibernated session successfully", async () => {
+      const mockFetch = createMockFetch(
+        new Map([["POST http://localhost:3030/api/sessions/session1/wake", { status: 204 }]])
+      );
+
+      const client = new ClauderonClient({ baseUrl: "http://localhost:3030", fetch: mockFetch });
+      await expect(client.wakeSession("session1")).resolves.toBeUndefined();
+    });
+
+    test("throws ApiError when session cannot be woken", async () => {
+      const mockFetch = createMockFetch(
+        new Map([
+          [
+            "POST http://localhost:3030/api/sessions/session1/wake",
+            { status: 400, body: { error: "Session is not hibernated" } },
+          ],
+        ])
+      );
+
+      const client = new ClauderonClient({ baseUrl: "http://localhost:3030", fetch: mockFetch });
+      await expect(client.wakeSession("session1")).rejects.toThrow(ApiError);
+    });
+  });
+
+  describe("recreateSession", () => {
+    test("recreates session and returns result", async () => {
+      const mockResult = {
+        session_id: "session1",
+        new_backend_id: "container-xyz",
+        success: true,
+        message: "Session recreated successfully",
+      };
+
+      const mockFetch = createMockFetch(
+        new Map([["POST http://localhost:3030/api/sessions/session1/recreate", { status: 200, body: mockResult }]])
+      );
+
+      const client = new ClauderonClient({ baseUrl: "http://localhost:3030", fetch: mockFetch });
+      const result = await client.recreateSession("session1");
+
+      expect(result.success).toBe(true);
+      expect(result.new_backend_id).toBe("container-xyz");
+    });
+
+    test("throws ApiError with 409 when recreate is blocked", async () => {
+      const mockFetch = createMockFetch(
+        new Map([
+          [
+            "POST http://localhost:3030/api/sessions/session1/recreate",
+            { status: 409, body: { error: "Cannot recreate: data would be lost" } },
+          ],
+        ])
+      );
+
+      const client = new ClauderonClient({ baseUrl: "http://localhost:3030", fetch: mockFetch });
+
+      try {
+        await client.recreateSession("session1");
+        expect(true).toBe(false); // Should not reach here
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApiError);
+        expect((error as ApiError).statusCode).toBe(409);
+      }
+    });
+  });
+
+  describe("cleanupSession", () => {
+    test("cleans up session successfully", async () => {
+      const mockFetch = createMockFetch(
+        new Map([["POST http://localhost:3030/api/sessions/session1/cleanup", { status: 204 }]])
+      );
+
+      const client = new ClauderonClient({ baseUrl: "http://localhost:3030", fetch: mockFetch });
+      await expect(client.cleanupSession("session1")).resolves.toBeUndefined();
+    });
+
+    test("throws ApiError when cleanup fails", async () => {
+      const mockFetch = createMockFetch(
+        new Map([
+          [
+            "POST http://localhost:3030/api/sessions/session1/cleanup",
+            { status: 400, body: { error: "Session still has active resources" } },
+          ],
+        ])
+      );
+
+      const client = new ClauderonClient({ baseUrl: "http://localhost:3030", fetch: mockFetch });
+      await expect(client.cleanupSession("session1")).rejects.toThrow(ApiError);
+    });
+  });
 });

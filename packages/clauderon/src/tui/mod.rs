@@ -1,3 +1,6 @@
+// Allow missing documentation for TUI implementation details
+#![allow(clippy::missing_errors_doc, clippy::missing_panics_doc)]
+
 pub mod app;
 pub mod attached;
 pub mod components;

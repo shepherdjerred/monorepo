@@ -25,6 +25,9 @@ pub struct AuthMiddlewareState {
 /// Validates the `clauderon_session` cookie and inserts the user ID into request extensions
 ///
 /// Returns 401 if the session is invalid or missing
+///
+/// # Errors
+/// Returns a 401 status code if the session cookie is missing, invalid, or expired
 pub async fn auth_middleware(
     State(state): State<AuthMiddlewareState>,
     jar: CookieJar,

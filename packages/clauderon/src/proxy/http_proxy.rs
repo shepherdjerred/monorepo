@@ -439,6 +439,8 @@ impl HttpHandler for AuthInjector {
             let mut should_rewrite_refresh = false;
 
             if let Some(pending) = pending {
+                // Safe cast: duration in milliseconds unlikely to exceed u64::MAX
+                #[allow(clippy::cast_possible_truncation)]
                 let duration_ms = pending.start_time.elapsed().as_millis() as u64;
                 should_rewrite_refresh = pending.auth_refresh;
 
@@ -503,6 +505,8 @@ impl HttpHandler for AuthInjector {
             let error_type = classify_client_error(&err);
 
             if let Some(pending) = pending {
+                // Safe cast: duration in milliseconds unlikely to exceed u64::MAX
+                #[allow(clippy::cast_possible_truncation)]
                 let duration_ms = pending.start_time.elapsed().as_millis() as u64;
 
                 // Log full error details for debugging (not sent to client)
@@ -746,6 +750,8 @@ impl HttpHandler for FilteringHandler {
             let mut should_rewrite_refresh = false;
 
             if let Some(pending) = pending {
+                // Safe cast: duration in milliseconds unlikely to exceed u64::MAX
+                #[allow(clippy::cast_possible_truncation)]
                 let duration_ms = pending.start_time.elapsed().as_millis() as u64;
                 should_rewrite_refresh = pending.auth_refresh;
 
@@ -814,6 +820,8 @@ impl HttpHandler for FilteringHandler {
             let error_type = classify_client_error(&err);
 
             if let Some(pending) = pending {
+                // Safe cast: duration in milliseconds unlikely to exceed u64::MAX
+                #[allow(clippy::cast_possible_truncation)]
                 let duration_ms = pending.start_time.elapsed().as_millis() as u64;
 
                 // Log full error details for debugging (not sent to client)

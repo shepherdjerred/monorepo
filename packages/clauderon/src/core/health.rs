@@ -368,6 +368,7 @@ impl HealthService {
     /// Check if a recreate action is blocked for a session
     ///
     /// Returns `Some(reason)` if blocked, `None` if allowed.
+    #[must_use]
     pub fn is_recreate_blocked(&self, session: &Session) -> Option<String> {
         let backend = self.get_backend(session.backend);
         let capabilities = backend.capabilities();

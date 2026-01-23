@@ -49,9 +49,10 @@ async fn test_sprites_lifecycle() {
     common::init_git_repo_with_remote(workdir, "https://github.com/octocat/Hello-World.git");
 
     let sprite_name = format!("test-{}", &Uuid::new_v4().to_string()[..8]);
+    let full_sprite_name = format!("clauderon-{sprite_name}");
 
-    // Setup cleanup guard - will force destroy sprite even if test panics
-    let mut cleanup = common::SpriteCleanupGuard::new(String::new());
+    // Setup cleanup guard BEFORE create - will force destroy sprite even if create fails partway
+    let _cleanup = common::SpriteCleanupGuard::new(full_sprite_name);
 
     // Create sprite (using ExecutionBackend trait method)
     let returned_name = sprites
@@ -63,9 +64,6 @@ async fn test_sprites_lifecycle() {
         )
         .await
         .expect("Sprite creation failed");
-
-    // Set the actual name for cleanup
-    cleanup.set_name(returned_name.clone());
 
     // Verify sprite was created with clauderon- prefix
     assert!(
@@ -1247,48 +1245,50 @@ async fn test_sprites_auto_destroy_true_destroys() {
 
     let sprite_name = format!("destroy-{}", &Uuid::new_v4().to_string()[..8]);
 
-    let result = sprites
+    // Setup cleanup guard as fallback
+    let mut cleanup = common::SpriteCleanupGuard::new(String::new());
+
+    let returned_name = sprites
         .create(
             &sprite_name,
             temp_dir.path(),
             "echo 'Destruction test'",
             CreateOptions::default(),
         )
-        .await;
+        .await
+        .expect("Sprite creation failed");
 
-    match result {
-        Ok(returned_name) => {
-            // Verify it exists
-            let exists_before = sprites
-                .exists(&returned_name)
-                .await
-                .expect("Failed to check existence");
-            assert!(exists_before, "Sprite should exist before deletion");
+    cleanup.set_name(returned_name.clone());
 
-            // Delete it
-            sprites
-                .delete(&returned_name)
-                .await
-                .expect("Failed to delete sprite");
+    // Verify it exists
+    let exists_before = sprites
+        .exists(&returned_name)
+        .await
+        .expect("Failed to check existence");
+    assert!(exists_before, "Sprite should exist before deletion");
 
-            // Wait for deletion to complete
-            tokio::time::sleep(Duration::from_secs(5)).await;
+    // Delete it via backend
+    sprites
+        .delete(&returned_name)
+        .await
+        .expect("Failed to delete sprite");
 
-            // Verify it's gone
-            let exists_after = sprites
-                .exists(&returned_name)
-                .await
-                .expect("Failed to check existence after delete");
-            assert!(
-                !exists_after,
-                "Sprite should NOT exist after delete() with auto_destroy=true"
-            );
-            println!("Verified sprite destroyed with auto_destroy=true");
-        }
-        Err(e) => {
-            panic!("Sprite creation failed: {e}");
-        }
-    }
+    // Wait for deletion to complete
+    tokio::time::sleep(Duration::from_secs(5)).await;
+
+    // Verify it's gone
+    let exists_after = sprites
+        .exists(&returned_name)
+        .await
+        .expect("Failed to check existence after delete");
+    assert!(
+        !exists_after,
+        "Sprite should NOT exist after delete() with auto_destroy=true"
+    );
+    println!("Verified sprite destroyed with auto_destroy=true");
+
+    // Disarm cleanup guard since we already deleted
+    cleanup.disarm();
 }
 
 // =============================================================================
@@ -1314,46 +1314,43 @@ async fn test_sprites_get_output_returns_log_content() {
 
     let sprite_name = format!("output-test-{}", &Uuid::new_v4().to_string()[..8]);
 
-    let result = sprites
+    // Setup cleanup guard
+    let mut cleanup = common::SpriteCleanupGuard::new(String::new());
+
+    let returned_name = sprites
         .create(
             &sprite_name,
             temp_dir.path(),
             "Hello, this is a test prompt for output verification",
             CreateOptions::default(),
         )
-        .await;
+        .await
+        .expect("Sprite creation failed");
 
-    match result {
-        Ok(returned_name) => {
-            // Wait for some output to accumulate
-            tokio::time::sleep(Duration::from_secs(15)).await;
+    cleanup.set_name(returned_name.clone());
 
-            // Get 5 lines
-            let output_5 = sprites.get_output(&returned_name, 5).await;
-            // Get 20 lines
-            let output_20 = sprites.get_output(&returned_name, 20).await;
+    // Wait for some output to accumulate
+    tokio::time::sleep(Duration::from_secs(15)).await;
 
-            let out5 = output_5.expect("get_output(5) should succeed");
-            let out20 = output_20.expect("get_output(20) should succeed");
+    // Get 5 lines
+    let output_5 = sprites.get_output(&returned_name, 5).await;
+    // Get 20 lines
+    let output_20 = sprites.get_output(&returned_name, 20).await;
 
-            // 20 lines should be >= 5 lines in length
-            assert!(
-                out20.len() >= out5.len(),
-                "20 lines output should be >= 5 lines output"
-            );
-            println!(
-                "5 lines: {} bytes, 20 lines: {} bytes",
-                out5.len(),
-                out20.len()
-            );
+    let out5 = output_5.expect("get_output(5) should succeed");
+    let out20 = output_20.expect("get_output(20) should succeed");
 
-            // Cleanup
-            let _ = sprites.delete(&returned_name).await;
-        }
-        Err(e) => {
-            panic!("Sprite creation failed: {e}");
-        }
-    }
+    // 20 lines should be >= 5 lines in length
+    assert!(
+        out20.len() >= out5.len(),
+        "20 lines output should be >= 5 lines output"
+    );
+    println!(
+        "5 lines: {} bytes, 20 lines: {} bytes",
+        out5.len(),
+        out20.len()
+    );
+    // Cleanup handled by guard
 }
 
 /// Test get_output gracefully handles missing log file
@@ -1394,10 +1391,7 @@ async fn test_sprites_get_output_empty_when_no_log() {
 #[tokio::test]
 #[ignore] // Requires SPRITES_TOKEN - run with --include-ignored
 async fn test_sprites_parallel_creation() {
-    if !common::sprites_available() {
-        eprintln!("Skipping test: SPRITES_TOKEN not set");
-        return;
-    }
+    skip_if_no_sprites!();
 
     let sprites = std::sync::Arc::new(test_sprites_backend());
 
@@ -1423,6 +1417,11 @@ async fn test_sprites_parallel_creation() {
     let name1 = format!("parallel-1-{}", &Uuid::new_v4().to_string()[..8]);
     let name2 = format!("parallel-2-{}", &Uuid::new_v4().to_string()[..8]);
     let name3 = format!("parallel-3-{}", &Uuid::new_v4().to_string()[..8]);
+
+    // Setup cleanup guards for all three sprites
+    let mut cleanup1 = common::SpriteCleanupGuard::new(String::new());
+    let mut cleanup2 = common::SpriteCleanupGuard::new(String::new());
+    let mut cleanup3 = common::SpriteCleanupGuard::new(String::new());
 
     let sprites1 = sprites.clone();
     let sprites2 = sprites.clone();
@@ -1456,23 +1455,22 @@ async fn test_sprites_parallel_creation() {
     );
 
     // All three sprites must succeed
-    let name1 = result1.expect("Sprite 1 creation failed");
-    let name2 = result2.expect("Sprite 2 creation failed");
-    let name3 = result3.expect("Sprite 3 creation failed");
-    let created_names = vec![name1, name2, name3];
+    let returned_name1 = result1.expect("Sprite 1 creation failed");
+    let returned_name2 = result2.expect("Sprite 2 creation failed");
+    let returned_name3 = result3.expect("Sprite 3 creation failed");
+
+    cleanup1.set_name(returned_name1.clone());
+    cleanup2.set_name(returned_name2.clone());
+    cleanup3.set_name(returned_name3.clone());
 
     // Verify all created sprites exist
-    for name in &created_names {
+    for name in [&returned_name1, &returned_name2, &returned_name3] {
         let exists = sprites.exists(name).await.unwrap_or(false);
         assert!(exists, "Sprite {name} should exist after parallel creation");
     }
 
     println!("Successfully created 3 sprites in parallel");
-
-    // Cleanup all
-    for name in created_names {
-        let _ = sprites.delete(&name).await;
-    }
+    // Cleanup handled by guards on drop
 }
 
 // =============================================================================
@@ -1483,10 +1481,7 @@ async fn test_sprites_parallel_creation() {
 #[tokio::test]
 #[ignore] // Requires SPRITES_TOKEN - run with --include-ignored
 async fn test_sprites_special_characters_in_prompt() {
-    if !common::sprites_available() {
-        eprintln!("Skipping test: SPRITES_TOKEN not set");
-        return;
-    }
+    skip_if_no_sprites!();
 
     let sprites = test_sprites_backend();
     let temp_dir = tempfile::TempDir::new().expect("Failed to create temp dir");
@@ -1497,6 +1492,9 @@ async fn test_sprites_special_characters_in_prompt() {
     );
 
     let sprite_name = format!("special-chars-{}", &Uuid::new_v4().to_string()[..8]);
+
+    // Setup cleanup guard
+    let mut cleanup = common::SpriteCleanupGuard::new(String::new());
 
     // Prompt with special characters that need escaping
     let special_prompt = r#"Test with "quotes", $VARIABLES, pipes | and 'single quotes'"#;
@@ -1512,11 +1510,10 @@ async fn test_sprites_special_characters_in_prompt() {
 
     match result {
         Ok(returned_name) => {
+            cleanup.set_name(returned_name);
             // If we got here, the prompt was properly escaped
             println!("Successfully created sprite with special characters in prompt");
-
-            // Cleanup
-            let _ = sprites.delete(&returned_name).await;
+            // Cleanup handled by guard on drop
         }
         Err(e) => {
             // Creation might fail for other reasons, but shouldn't be due to shell injection
@@ -1536,10 +1533,7 @@ async fn test_sprites_special_characters_in_prompt() {
 #[tokio::test]
 #[ignore] // Requires SPRITES_TOKEN - run with --include-ignored
 async fn test_sprites_empty_initial_prompt() {
-    if !common::sprites_available() {
-        eprintln!("Skipping test: SPRITES_TOKEN not set");
-        return;
-    }
+    skip_if_no_sprites!();
 
     let sprites = test_sprites_backend();
     let temp_dir = tempfile::TempDir::new().expect("Failed to create temp dir");
@@ -1551,6 +1545,9 @@ async fn test_sprites_empty_initial_prompt() {
 
     let sprite_name = format!("empty-prompt-{}", &Uuid::new_v4().to_string()[..8]);
 
+    // Setup cleanup guard
+    let mut cleanup = common::SpriteCleanupGuard::new(String::new());
+
     // Empty prompt
     let result = sprites
         .create(&sprite_name, temp_dir.path(), "", CreateOptions::default())
@@ -1558,6 +1555,8 @@ async fn test_sprites_empty_initial_prompt() {
 
     match result {
         Ok(returned_name) => {
+            cleanup.set_name(returned_name.clone());
+
             // Empty prompt should still create a sprite
             println!("Successfully created sprite with empty prompt");
 
@@ -1567,9 +1566,7 @@ async fn test_sprites_empty_initial_prompt() {
                 .await
                 .expect("Failed to check existence");
             assert!(exists, "Sprite should exist even with empty prompt");
-
-            // Cleanup
-            let _ = sprites.delete(&returned_name).await;
+            // Cleanup handled by guard on drop
         }
         Err(e) => {
             // Some backends might reject empty prompts, which is acceptable

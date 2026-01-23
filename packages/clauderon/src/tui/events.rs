@@ -173,7 +173,9 @@ pub async fn handle_paste_event(app: &mut App, text: &str) -> anyhow::Result<()>
         | AppMode::Scroll
         | AppMode::ReconcileError
         | AppMode::SignalMenu
-        | AppMode::StartupHealthModal => {
+        | AppMode::StartupHealthModal
+        | AppMode::RecreateConfirm
+        | AppMode::RecreateBlocked => {
             // Ignore paste events in these modes
         }
     }
@@ -240,9 +242,8 @@ async fn handle_session_list_key(app: &mut App, key: KeyEvent) -> anyhow::Result
             }
         }
         KeyCode::Char('r') => {
-            if let Err(e) = app.reconcile().await {
-                app.status_message = Some(format!("Reconcile failed: {e}"));
-            }
+            // Open recreate dialog for selected session
+            app.open_recreate_dialog();
         }
         KeyCode::Char('R') => {
             if let Err(e) = app.refresh_sessions().await {
@@ -870,12 +871,12 @@ async fn handle_recreate_confirm_key(app: &mut App, key: KeyEvent) -> anyhow::Re
         KeyCode::Esc => {
             app.close_recreate_dialog();
         }
-        KeyCode::Char('d') | KeyCode::Char('D') => {
+        KeyCode::Char('d' | 'D') => {
             app.recreate_details_expanded = !app.recreate_details_expanded;
         }
-        KeyCode::Char('s') | KeyCode::Char('S') => {
+        KeyCode::Char('s' | 'S') => {
             // Start action
-            if let Some(health) = app.recreate_session_health().cloned() {
+            if let Some(health) = app.get_recreate_session_health().cloned() {
                 if health.available_actions.contains(&AvailableAction::Start) {
                     if let Some(id) = app.recreate_confirm_session_id {
                         if let Err(e) = app.start_session(id).await {
@@ -888,9 +889,9 @@ async fn handle_recreate_confirm_key(app: &mut App, key: KeyEvent) -> anyhow::Re
                 }
             }
         }
-        KeyCode::Char('w') | KeyCode::Char('W') => {
+        KeyCode::Char('w' | 'W') => {
             // Wake action
-            if let Some(health) = app.recreate_session_health().cloned() {
+            if let Some(health) = app.get_recreate_session_health().cloned() {
                 if health.available_actions.contains(&AvailableAction::Wake) {
                     if let Some(id) = app.recreate_confirm_session_id {
                         if let Err(e) = app.wake_session(id).await {
@@ -903,9 +904,9 @@ async fn handle_recreate_confirm_key(app: &mut App, key: KeyEvent) -> anyhow::Re
                 }
             }
         }
-        KeyCode::Char('r') | KeyCode::Char('R') => {
+        KeyCode::Char('r' | 'R') => {
             // Recreate action
-            if let Some(health) = app.recreate_session_health().cloned() {
+            if let Some(health) = app.get_recreate_session_health().cloned() {
                 if health
                     .available_actions
                     .contains(&AvailableAction::Recreate)
@@ -921,9 +922,9 @@ async fn handle_recreate_confirm_key(app: &mut App, key: KeyEvent) -> anyhow::Re
                 }
             }
         }
-        KeyCode::Char('f') | KeyCode::Char('F') => {
+        KeyCode::Char('f' | 'F') => {
             // Recreate Fresh action
-            if let Some(health) = app.recreate_session_health().cloned() {
+            if let Some(health) = app.get_recreate_session_health().cloned() {
                 if health
                     .available_actions
                     .contains(&AvailableAction::RecreateFresh)
@@ -939,9 +940,9 @@ async fn handle_recreate_confirm_key(app: &mut App, key: KeyEvent) -> anyhow::Re
                 }
             }
         }
-        KeyCode::Char('u') | KeyCode::Char('U') => {
+        KeyCode::Char('u' | 'U') => {
             // Update Image action
-            if let Some(health) = app.recreate_session_health().cloned() {
+            if let Some(health) = app.get_recreate_session_health().cloned() {
                 if health
                     .available_actions
                     .contains(&AvailableAction::UpdateImage)
@@ -957,9 +958,9 @@ async fn handle_recreate_confirm_key(app: &mut App, key: KeyEvent) -> anyhow::Re
                 }
             }
         }
-        KeyCode::Char('c') | KeyCode::Char('C') => {
+        KeyCode::Char('c' | 'C') => {
             // Cleanup action
-            if let Some(health) = app.recreate_session_health().cloned() {
+            if let Some(health) = app.get_recreate_session_health().cloned() {
                 if health.available_actions.contains(&AvailableAction::Cleanup) {
                     if let Some(id) = app.recreate_confirm_session_id {
                         if let Err(e) = app.cleanup_session(id).await {

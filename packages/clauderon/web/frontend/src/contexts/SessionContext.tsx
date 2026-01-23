@@ -22,6 +22,11 @@ type SessionContextValue = {
   healthReports: Map<string, SessionHealthReport>;
   refreshHealth: () => Promise<void>;
   getSessionHealth: (sessionId: string) => SessionHealthReport | undefined;
+  // Health actions
+  startSession: (id: string) => Promise<void>;
+  wakeSession: (id: string) => Promise<void>;
+  recreateSession: (id: string) => Promise<void>;
+  cleanupSession: (id: string) => Promise<void>;
 }
 
 const SessionContext = createContext<SessionContextValue | undefined>(undefined);
@@ -139,6 +144,38 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     [client, refreshSessions]
   );
 
+  const startSession = useCallback(
+    async (id: string) => {
+      await client.startSession(id);
+      await Promise.all([refreshSessions(), refreshHealth()]);
+    },
+    [client, refreshSessions, refreshHealth]
+  );
+
+  const wakeSession = useCallback(
+    async (id: string) => {
+      await client.wakeSession(id);
+      await Promise.all([refreshSessions(), refreshHealth()]);
+    },
+    [client, refreshSessions, refreshHealth]
+  );
+
+  const recreateSession = useCallback(
+    async (id: string) => {
+      await client.recreateSession(id);
+      await Promise.all([refreshSessions(), refreshHealth()]);
+    },
+    [client, refreshSessions, refreshHealth]
+  );
+
+  const cleanupSession = useCallback(
+    async (id: string) => {
+      await client.cleanupSession(id);
+      await Promise.all([refreshSessions(), refreshHealth()]);
+    },
+    [client, refreshSessions, refreshHealth]
+  );
+
   // Handle real-time events
   const handleEvent = useCallback((event: { type: string; payload?: Session | { id: string } }) => {
     switch (event.type) {
@@ -195,6 +232,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         healthReports,
         refreshHealth,
         getSessionHealth,
+        startSession,
+        wakeSession,
+        recreateSession,
+        cleanupSession,
       }}
     >
       {children}

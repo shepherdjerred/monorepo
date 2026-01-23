@@ -1216,7 +1216,7 @@ pub fn find_codex_history_file(worktree_path: &Path, _session_id: &Uuid) -> Opti
     {
         let path = entry.path();
         if let Some(filename) = path.file_name().and_then(|n| n.to_str()) {
-            if filename.ends_with(".jsonl") {
+            if filename.to_lowercase().ends_with(".jsonl") {
                 if let Ok(metadata) = path.metadata() {
                     if let Ok(modified) = metadata.modified() {
                         match &most_recent {
@@ -1258,7 +1258,7 @@ pub fn validate_codex_history_path(path: &Path, worktree_path: &Path, _session_i
         && path
             .file_name()
             .and_then(|n| n.to_str())
-            .map_or(false, |n| n.ends_with(".jsonl"))
+            .is_some_and(|n| n.to_lowercase().ends_with(".jsonl"))
 }
 
 #[cfg(test)]

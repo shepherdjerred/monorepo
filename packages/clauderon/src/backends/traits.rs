@@ -139,6 +139,7 @@ pub trait GitOperations: Send + Sync {
 
 /// Options for creating an execution backend session.
 #[derive(Debug, Clone, Default)]
+#[allow(clippy::struct_excessive_bools)]
 pub struct CreateOptions {
     /// Agent to run (Claude Code, Codex, or Gemini).
     pub agent: AgentType,

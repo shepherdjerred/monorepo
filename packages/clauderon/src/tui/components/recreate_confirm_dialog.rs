@@ -11,10 +11,10 @@ use crate::tui::app::App;
 
 /// Render the recreate confirmation dialog
 pub fn render(frame: &mut Frame, app: &App, area: Rect) {
-    let Some(session) = app.recreate_session() else {
+    let Some(session) = app.get_recreate_session() else {
         return;
     };
-    let Some(health) = app.recreate_session_health() else {
+    let Some(health) = app.get_recreate_session_health() else {
         return;
     };
 

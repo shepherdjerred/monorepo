@@ -1157,9 +1157,9 @@ impl ExecutionBackend for AppleContainerBackend {
 
                     return match state {
                         "running" => Ok(BackendResourceHealth::Running),
-                        "stopped" | "exited" => Ok(BackendResourceHealth::Stopped),
-                        "created" => Ok(BackendResourceHealth::Stopped),
-                        "paused" => Ok(BackendResourceHealth::Stopped),
+                        "stopped" | "exited" | "created" | "paused" => {
+                            Ok(BackendResourceHealth::Stopped)
+                        }
                         other => Ok(BackendResourceHealth::Error {
                             message: format!("Unknown container state: {other}"),
                         }),

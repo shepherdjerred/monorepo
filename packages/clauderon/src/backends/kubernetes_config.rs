@@ -202,22 +202,28 @@ mod tests {
 
     #[test]
     fn test_is_connected_mode_disabled() {
-        let mut config = KubernetesConfig::default();
-        config.proxy_mode = ProxyMode::Disabled;
+        let config = KubernetesConfig {
+            proxy_mode: ProxyMode::Disabled,
+            ..KubernetesConfig::default()
+        };
         assert!(!config.is_connected_mode());
     }
 
     #[test]
     fn test_is_connected_mode_cluster_ip() {
-        let mut config = KubernetesConfig::default();
-        config.proxy_mode = ProxyMode::ClusterIp;
+        let config = KubernetesConfig {
+            proxy_mode: ProxyMode::ClusterIp,
+            ..KubernetesConfig::default()
+        };
         assert!(config.is_connected_mode());
     }
 
     #[test]
     fn test_is_connected_mode_host_gateway() {
-        let mut config = KubernetesConfig::default();
-        config.proxy_mode = ProxyMode::HostGateway;
+        let config = KubernetesConfig {
+            proxy_mode: ProxyMode::HostGateway,
+            ..KubernetesConfig::default()
+        };
         assert!(config.is_connected_mode());
     }
 }

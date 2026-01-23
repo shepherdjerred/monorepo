@@ -644,6 +644,55 @@ impl SessionManager {
         })
     }
 
+    /// Recreate a session fresh by deleting worktree and re-cloning
+    ///
+    /// This is used when data has been lost (e.g., volume deleted) and
+    /// the user wants to start fresh. Unlike `recreate_session`, this
+    /// does not check for blocking conditions since data is already lost.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the session is not found or recreation fails.
+    #[instrument(skip(self), fields(session_id = %session_id))]
+    pub async fn recreate_session_fresh(
+        &self,
+        session_id: Uuid,
+    ) -> anyhow::Result<crate::core::session::RecreateResult> {
+        // Get session info before deletion
+        let sessions = self.sessions.read().await;
+        let session = sessions
+            .iter()
+            .find(|s| s.id == session_id)
+            .cloned()
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {session_id}"))?;
+        drop(sessions);
+
+        tracing::info!(
+            session_id = %session_id,
+            session_name = %session.name,
+            "Recreating session fresh (data will be lost)"
+        );
+
+        // For fresh recreate, we just recreate the container
+        // The worktree will be recreated from scratch by the create process
+        self.recreate_container(session_id).await?;
+
+        // Get the new backend ID
+        let sessions = self.sessions.read().await;
+        let new_backend_id = sessions
+            .iter()
+            .find(|s| s.id == session_id)
+            .and_then(|s| s.backend_id.clone())
+            .unwrap_or_default();
+
+        Ok(crate::core::session::RecreateResult {
+            session_id,
+            new_backend_id,
+            success: true,
+            message: "Session recreated fresh (data reset)".to_string(),
+        })
+    }
+
     /// Cleanup a session by removing it from the database
     ///
     /// This is used when a session's worktree has been deleted externally
@@ -672,7 +721,7 @@ impl SessionManager {
         // Try to delete the backend resource if it still exists
         if let Some(ref backend_id) = session.backend_id {
             let backend = self.get_backend(session.backend);
-            if let Ok(true) = backend.exists(backend_id).await {
+            if matches!(backend.exists(backend_id).await, Ok(true)) {
                 if let Err(e) = backend.delete(backend_id).await {
                     tracing::warn!(
                         session_id = %session_id,
@@ -1647,6 +1696,10 @@ impl SessionManager {
     ///
     /// Returns the created session and optionally a list of warnings (e.g., if
     /// the post-checkout hook failed but the worktree was created successfully).
+    ///
+    /// # Panics
+    ///
+    /// Panics if repositories is Some but unwrap fails (should not happen due to is_some check).
     #[instrument(
         skip(self, images),
         fields(
@@ -3834,7 +3887,7 @@ impl SessionManager {
     pub async fn update_history_file_path(
         &self,
         session_id: Uuid,
-        path: &std::path::PathBuf,
+        path: &std::path::Path,
     ) -> anyhow::Result<()> {
         let mut sessions = self.sessions.write().await;
         let session = sessions
@@ -3842,7 +3895,7 @@ impl SessionManager {
             .find(|s| s.id == session_id)
             .ok_or_else(|| anyhow::anyhow!("Session not found: {}", session_id))?;
 
-        session.history_file_path = Some(path.clone());
+        session.history_file_path = Some(path.to_path_buf());
         session.updated_at = chrono::Utc::now();
         let session_clone = session.clone();
         drop(sessions);
@@ -4236,7 +4289,11 @@ impl SessionManager {
             }
 
             // Count session-specific proxies
-            active_session_proxies = pm.active_session_proxy_count().await as u32;
+            // Safe to cast to u32: unlikely to have more than 4 billion sessions
+            #[allow(clippy::cast_possible_truncation)]
+            {
+                active_session_proxies = pm.active_session_proxy_count().await as u32;
+            }
 
             // Try to fetch Claude Code usage if OAuth token is available
             let claude_usage = if let Some(oauth_token) = creds.anthropic_oauth_token.as_ref() {

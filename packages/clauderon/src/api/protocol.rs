@@ -75,6 +75,9 @@ pub enum Request {
 
     /// Cleanup a session (remove from database, worktree already missing)
     CleanupSession { id: String },
+
+    /// Recreate a session fresh (delete worktree and re-clone, data lost)
+    RecreateSessionFresh { id: String },
 }
 
 /// Recent repository entry with timestamp

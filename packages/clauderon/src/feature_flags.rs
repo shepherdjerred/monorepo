@@ -51,6 +51,9 @@ impl FeatureFlags {
     /// - enable_auto_reconcile: Automatic session reconciliation on startup
     /// - enable_proxy_port_reuse: Session proxy port reuse behavior
     /// - enable_usage_tracking: Claude usage tracking via API
+    ///
+    /// # Errors
+    /// Returns an error if the TOML config file exists but cannot be parsed
     pub fn load(cli_overrides: Option<CliFeatureFlags>) -> anyhow::Result<Self> {
         // 1. Start with defaults
         let mut flags = Self::default();
