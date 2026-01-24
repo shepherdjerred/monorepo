@@ -6,3 +6,4 @@ windows/
 coverage/
 .expo/
 *.lock
+src/types/generated/
