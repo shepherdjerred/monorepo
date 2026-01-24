@@ -417,6 +417,8 @@ impl SpritesBackend {
                 }
 
                 // Checkout the branch with upstream tracking
+                // Use -B (capital B) to create or reset the branch if it already exists
+                // This handles the case where the default branch was auto-created during clone
                 let tracking_ref = format!("origin/{}", repo.branch_name);
                 let checkout_result = self
                     .sprite_run(
@@ -426,7 +428,7 @@ impl SpritesBackend {
                             "-C",
                             &target_path,
                             "checkout",
-                            "-b",
+                            "-B",
                             &repo.branch_name,
                             &tracking_ref,
                         ],
@@ -483,7 +485,8 @@ impl SpritesBackend {
         tracing::info!(sprite_name = %sprite_name, "Installing Claude Code");
 
         // Install Claude Code using the official installation script
-        let install_script = "curl -fsSL https://claude.ai/install.sh | sh";
+        // Use bash instead of sh to handle any bash-specific syntax in the installer
+        let install_script = "curl -fsSL https://claude.ai/install.sh | bash";
 
         let result = self.sprite_shell_run(sprite_name, install_script).await?;
 
@@ -525,7 +528,11 @@ impl SpritesBackend {
         tracing::info!(sprite_name = %sprite_name, "Installing abduco");
 
         // Build abduco from source (not in Ubuntu 24.04 repos)
-        let install_cmd = "apt-get update && apt-get install -y build-essential curl && curl -sL https://github.com/martanne/abduco/releases/download/v0.6/abduco-0.6.tar.gz | tar xz -C /tmp && cd /tmp/abduco-0.6 && ./configure && make && make install && rm -rf /tmp/abduco-0.6";
+        // - Use sudo for apt-get and make install (sprites run as non-root)
+        // - Use curl -fsSL to fail on HTTP errors instead of silently
+        // - Download to file first for better error handling
+        // - abduco uses a simple Makefile (no configure script)
+        let install_cmd = "set -e && sudo apt-get update && sudo apt-get install -y build-essential curl && curl -fsSL https://github.com/martanne/abduco/releases/download/v0.6/abduco-0.6.tar.gz -o /tmp/abduco.tar.gz && tar xzf /tmp/abduco.tar.gz -C /tmp && cd /tmp/abduco-0.6 && make && sudo make PREFIX=/usr install && rm -rf /tmp/abduco-0.6 /tmp/abduco.tar.gz";
 
         let result = self.sprite_shell_run(sprite_name, install_cmd).await?;
 
@@ -814,7 +821,7 @@ impl ExecutionBackend for SpritesBackend {
         }
 
         let output = Command::new("sprite")
-            .args(["-s", id, "destroy"])
+            .args(["-s", id, "destroy", "--force"])
             .output()
             .await
             .map_err(|e| {
@@ -826,12 +833,17 @@ impl ExecutionBackend for SpritesBackend {
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
+            let error_msg = if stderr.trim().is_empty() {
+                format!("command exited with status {}", output.status)
+            } else {
+                stderr.to_string()
+            };
             tracing::warn!(
                 sprite_name = %id,
-                stderr = %stderr,
+                error = %error_msg,
                 "Failed to destroy sprite"
             );
-            anyhow::bail!("Failed to destroy sprite '{}': {}", id, stderr);
+            anyhow::bail!("Failed to destroy sprite '{}': {}", id, error_msg);
         }
 
         tracing::info!(sprite_name = %id, "Sprite destroyed successfully");
