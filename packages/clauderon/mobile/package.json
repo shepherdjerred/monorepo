@@ -8,7 +8,7 @@
     "macos": "react-native run-macos",
     "windows": "npx @react-native-community/cli run-windows",
     "start": "react-native start",
-    "test": "jest",
+    "test": "bun test",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx,json}\"",
