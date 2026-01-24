@@ -112,8 +112,15 @@ function installWorkspaceDeps(source: Directory): Container {
  * Get a Rust container with caching enabled for clauderon builds
  * @param source The full workspace source directory
  * @param frontendDist Optional pre-built frontend dist directory (from Bun container)
+ * @param s3AccessKeyId Optional S3 access key for sccache
+ * @param s3SecretAccessKey Optional S3 secret key for sccache
  */
-function getRustContainer(source: Directory, frontendDist?: Directory): Container {
+function getRustContainer(
+  source: Directory,
+  frontendDist?: Directory,
+  s3AccessKeyId?: Secret,
+  s3SecretAccessKey?: Secret
+): Container {
   let container = dag
     .container()
     .from(`rust:${RUST_VERSION}-bookworm`)
@@ -132,11 +139,19 @@ function getRustContainer(source: Directory, frontendDist?: Directory): Containe
   // Install sccache for compilation caching
   container = withSccache(container);
 
-  // Configure sccache
+  // Configure sccache with S3 backend (shared cache across all builds)
   container = container
-    .withMountedCache("/sccache", dag.cacheVolume("sccache-cache"))
     .withEnvVariable("RUSTC_WRAPPER", "sccache")
-    .withEnvVariable("SCCACHE_DIR", "/sccache");
+    .withEnvVariable("SCCACHE_BUCKET", "sccache")
+    .withEnvVariable("SCCACHE_ENDPOINT", "https://seaweedfs.sjer.red")
+    .withEnvVariable("SCCACHE_REGION", "us-east-1");
+
+  // Add S3 credentials for sccache if provided
+  if (s3AccessKeyId && s3SecretAccessKey) {
+    container = container
+      .withSecretVariable("AWS_ACCESS_KEY_ID", s3AccessKeyId)
+      .withSecretVariable("AWS_SECRET_ACCESS_KEY", s3SecretAccessKey);
+  }
 
   // Mount the pre-built frontend dist if provided
   if (frontendDist) {
@@ -171,8 +186,15 @@ function withSccache(container: Container): Container {
 
 /**
  * Get a Rust container with cross-compilation toolchains for clauderon builds
+ * @param source The full workspace source directory
+ * @param s3AccessKeyId Optional S3 access key for sccache
+ * @param s3SecretAccessKey Optional S3 secret key for sccache
  */
-function getCrossCompileContainer(source: Directory): Container {
+function getCrossCompileContainer(
+  source: Directory,
+  s3AccessKeyId?: Secret,
+  s3SecretAccessKey?: Secret
+): Container {
   let container = dag
     .container()
     .from(`rust:${RUST_VERSION}-bookworm`)
@@ -205,11 +227,19 @@ function getCrossCompileContainer(source: Directory): Container {
   // Install sccache for compilation caching
   container = withSccache(container);
 
-  // Configure sccache with separate cache for cross builds to avoid conflicts
+  // Configure sccache with S3 backend (shared cache across all builds)
   container = container
-    .withMountedCache("/sccache-cross", dag.cacheVolume("sccache-cache-cross"))
     .withEnvVariable("RUSTC_WRAPPER", "sccache")
-    .withEnvVariable("SCCACHE_DIR", "/sccache-cross");
+    .withEnvVariable("SCCACHE_BUCKET", "sccache")
+    .withEnvVariable("SCCACHE_ENDPOINT", "https://seaweedfs.sjer.red")
+    .withEnvVariable("SCCACHE_REGION", "us-east-1");
+
+  // Add S3 credentials for sccache if provided
+  if (s3AccessKeyId && s3SecretAccessKey) {
+    container = container
+      .withSecretVariable("AWS_ACCESS_KEY_ID", s3AccessKeyId)
+      .withSecretVariable("AWS_SECRET_ACCESS_KEY", s3SecretAccessKey);
+  }
 
   return container;
 }
@@ -401,7 +431,7 @@ export class Monorepo {
 
     // Step 1: Generate TypeScript types from Rust using typeshare
     // This must happen BEFORE building web packages since they import these types
-    let rustContainer = getRustContainer(source);
+    let rustContainer = getRustContainer(source, undefined, s3AccessKeyId, s3SecretAccessKey);
     // Install typeshare-cli and run it to generate types
     rustContainer = rustContainer
       .withExec(["cargo", "install", "typeshare-cli", "--locked"])
@@ -442,7 +472,7 @@ export class Monorepo {
 
     // Clauderon Rust validation (fmt, clippy, test, build)
     outputs.push("\n--- Clauderon Rust Validation ---");
-    outputs.push(await this.clauderonCi(source, frontendDist));
+    outputs.push(await this.clauderonCi(source, frontendDist, s3AccessKeyId, s3SecretAccessKey));
 
     // Now build remaining packages (web packages already built, will be skipped or fast)
     // Note: Skip tests here - bun-decompile tests fail in CI (requires `bun build --compile`)
@@ -578,7 +608,7 @@ export class Monorepo {
         // Extract clauderon version from release output or Cargo.toml
         // For now, build and upload with the current version
         try {
-          const binaries = await this.multiplexerBuild(source);
+          const binaries = await this.multiplexerBuild(source, s3AccessKeyId, s3SecretAccessKey);
 
           // Get binary contents for upload
           const linuxTargets = CLAUDERON_TARGETS.filter(t => t.os === "linux");
@@ -768,12 +798,19 @@ export class Monorepo {
    * Run Clauderon CI: fmt check, clippy, test, build
    * @param source The full workspace source directory
    * @param frontendDist Optional pre-built frontend dist directory (required for cargo build)
+   * @param s3AccessKeyId Optional S3 access key for sccache
+   * @param s3SecretAccessKey Optional S3 secret key for sccache
    */
   @func()
-  async clauderonCi(source: Directory, frontendDist?: Directory): Promise<string> {
+  async clauderonCi(
+    source: Directory,
+    frontendDist?: Directory,
+    s3AccessKeyId?: Secret,
+    s3SecretAccessKey?: Secret
+  ): Promise<string> {
     const outputs: string[] = [];
 
-    let container = getRustContainer(source, frontendDist);
+    let container = getRustContainer(source, frontendDist, s3AccessKeyId, s3SecretAccessKey);
 
     // Mount the built frontend if provided (required for Rust build - it embeds static files)
     if (frontendDist) {
@@ -813,10 +850,17 @@ export class Monorepo {
   /**
    * Build clauderon binaries for Linux (x86_64 and ARM64)
    * Returns the built binaries as files
+   * @param source The full workspace source directory
+   * @param s3AccessKeyId Optional S3 access key for sccache
+   * @param s3SecretAccessKey Optional S3 secret key for sccache
    */
   @func()
-  async multiplexerBuild(source: Directory): Promise<Directory> {
-    const container = getCrossCompileContainer(source);
+  async multiplexerBuild(
+    source: Directory,
+    s3AccessKeyId?: Secret,
+    s3SecretAccessKey?: Secret
+  ): Promise<Directory> {
+    const container = getCrossCompileContainer(source, s3AccessKeyId, s3SecretAccessKey);
 
     // Build for Linux targets only (cross-compiling to macOS requires different tooling)
     const linuxTargets = CLAUDERON_TARGETS.filter(t => t.os === "linux");
@@ -855,22 +899,29 @@ export class Monorepo {
 
   /**
    * Full Multiplexer release: CI + build binaries + upload to GitHub release
+   * @param source The full workspace source directory
+   * @param version The version to release
+   * @param githubToken GitHub token for uploading release assets
+   * @param s3AccessKeyId Optional S3 access key for sccache
+   * @param s3SecretAccessKey Optional S3 secret key for sccache
    */
   @func()
   async multiplexerRelease(
     source: Directory,
     version: string,
     githubToken: Secret,
+    s3AccessKeyId?: Secret,
+    s3SecretAccessKey?: Secret,
   ): Promise<string> {
     const outputs: string[] = [];
 
     // Run CI first
     outputs.push("--- Clauderon CI ---");
-    outputs.push(await this.clauderonCi(source));
+    outputs.push(await this.clauderonCi(source, undefined, s3AccessKeyId, s3SecretAccessKey));
 
     // Build binaries for Linux
     outputs.push("\n--- Building Binaries ---");
-    const binaries = await this.multiplexerBuild(source);
+    const binaries = await this.multiplexerBuild(source, s3AccessKeyId, s3SecretAccessKey);
 
     // Get binary contents for upload
     const linuxTargets = CLAUDERON_TARGETS.filter(t => t.os === "linux");
