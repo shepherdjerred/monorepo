@@ -737,6 +737,8 @@ export class Monorepo {
         "/workspace/src/types/generated",
         source.directory("packages/clauderon/web/shared/src/generated")
       )
+      // Copy the base tsconfig that mobile extends
+      .withFile("/tsconfig.base.json", source.file("tsconfig.base.json"))
       .withExec(["bun", "install", "--frozen-lockfile"]);
 
     // Typecheck
