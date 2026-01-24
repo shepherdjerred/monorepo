@@ -197,7 +197,7 @@ function getHealthDisplay(state: ResourceState): { label: string; className: str
       return {
         label: "Error",
         className: "bg-red-500/20 text-red-700 border-red-500/50",
-        tooltip: `Backend error: ${state.message}`
+        tooltip: `Backend error: ${state.content.message}`
       };
     case "CrashLoop":
       return {
@@ -215,7 +215,7 @@ function getHealthDisplay(state: ResourceState): { label: string; className: str
       return {
         label: "Data Lost",
         className: "bg-red-500/20 text-red-700 border-red-500/50",
-        tooltip: `Data lost: ${state.reason}`
+        tooltip: `Data lost: ${state.content.reason}`
       };
     case "WorktreeMissing":
       return {
