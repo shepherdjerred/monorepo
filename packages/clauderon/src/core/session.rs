@@ -854,6 +854,7 @@ impl std::str::FromStr for AccessMode {
 /// pod, or sprite) as observed during a health check.
 #[typeshare]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "type", content = "content")]
 pub enum ResourceState {
     /// Backend is running and healthy
     Healthy,
@@ -1069,22 +1070,23 @@ pub struct HealthCheckResult {
     pub sessions: Vec<SessionHealthReport>,
 
     /// Count of healthy sessions
-    pub healthy_count: usize,
+    pub healthy_count: u32,
 
     /// Count of sessions needing attention
-    pub needs_attention_count: usize,
+    pub needs_attention_count: u32,
 
     /// Count of sessions that are blocked (cannot be recreated)
-    pub blocked_count: usize,
+    pub blocked_count: u32,
 }
 
 impl HealthCheckResult {
     /// Create a new health check result from a list of reports
     #[must_use]
+    #[expect(clippy::cast_possible_truncation)]
     pub fn new(sessions: Vec<SessionHealthReport>) -> Self {
-        let healthy_count = sessions.iter().filter(|r| r.state.is_healthy()).count();
-        let needs_attention_count = sessions.iter().filter(|r| r.needs_attention()).count();
-        let blocked_count = sessions.iter().filter(|r| r.is_blocked()).count();
+        let healthy_count = sessions.iter().filter(|r| r.state.is_healthy()).count() as u32;
+        let needs_attention_count = sessions.iter().filter(|r| r.needs_attention()).count() as u32;
+        let blocked_count = sessions.iter().filter(|r| r.is_blocked()).count() as u32;
 
         Self {
             sessions,

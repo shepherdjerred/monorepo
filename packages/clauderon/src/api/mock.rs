@@ -395,7 +395,8 @@ impl ApiClient for MockApiClient {
 
         // Return mock health status - all sessions healthy
         let sessions = self.sessions.read().await;
-        let healthy_count = sessions.len();
+        #[expect(clippy::cast_possible_truncation)]
+        let healthy_count = sessions.len() as u32;
         let reports: Vec<SessionHealthReport> = sessions
             .values()
             .map(|session| SessionHealthReport {

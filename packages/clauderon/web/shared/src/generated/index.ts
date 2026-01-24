@@ -3,7 +3,7 @@
 */
 
 /** User account */
-export type AuthUser = {
+export interface AuthUser {
 	id: string;
 	username: string;
 	display_name?: string;
@@ -11,7 +11,7 @@ export type AuthUser = {
 }
 
 /** Authentication status response */
-export type AuthStatus = {
+export interface AuthStatus {
 	/** Whether authentication is required for this instance */
 	requires_auth: boolean;
 	/** Whether any users exist in the database */
@@ -21,7 +21,7 @@ export type AuthStatus = {
 }
 
 /** Blocker details for a session */
-export type BlockerDetails = {
+export interface BlockerDetails {
 	/** Whether CI checks are failing */
 	ci_failing: boolean;
 	/** Whether the branch has merge conflicts */
@@ -31,13 +31,13 @@ export type BlockerDetails = {
 }
 
 /** Request to browse a directory on the daemon's filesystem */
-export type BrowseDirectoryRequest = {
+export interface BrowseDirectoryRequest {
 	/** Path to the directory to browse */
 	path: string;
 }
 
 /** A single directory entry */
-export type DirectoryEntryDto = {
+export interface DirectoryEntryDto {
 	/** Directory name */
 	name: string;
 	/** Absolute path to the directory */
@@ -47,7 +47,7 @@ export type DirectoryEntryDto = {
 }
 
 /** Response from browsing a directory */
-export type BrowseDirectoryResponse = {
+export interface BrowseDirectoryResponse {
 	/** Current directory path (normalized absolute path) */
 	current_path: string;
 	/** Parent directory path (None if at filesystem root) */
@@ -59,7 +59,7 @@ export type BrowseDirectoryResponse = {
 }
 
 /** Represents a file with uncommitted changes in a git worktree */
-export type ChangedFile = {
+export interface ChangedFile {
 	/**
 	 * Git status code (e.g., "M", "A", "D", "??", "MM")
 	 * First character is index status, second is working tree status
@@ -70,7 +70,7 @@ export type ChangedFile = {
 }
 
 /** Claude Code usage data for a specific time window */
-export type UsageWindow = {
+export interface UsageWindow {
 	/** Current usage (e.g., number of requests or tokens) */
 	current: number;
 	/** Maximum allowed usage for this window */
@@ -82,7 +82,7 @@ export type UsageWindow = {
 }
 
 /** Error details for usage tracking failures */
-export type UsageError = {
+export interface UsageError {
 	/** Error category (invalid_token, api_error, missing_org_id, etc) */
 	error_type: string;
 	/** Human-readable error message */
@@ -94,7 +94,7 @@ export type UsageError = {
 }
 
 /** Claude Code usage tracking data */
-export type ClaudeUsage = {
+export interface ClaudeUsage {
 	/** Organization ID */
 	organization_id: string;
 	/** Organization name (if available) */
@@ -112,7 +112,7 @@ export type ClaudeUsage = {
 }
 
 /** Input for a single repository in a multi-repo session */
-export type CreateRepositoryInput = {
+export interface CreateRepositoryInput {
 	/** Path to the repository (can include subdirectory, e.g., "/path/to/monorepo/packages/foo") */
 	repo_path: string;
 	/**
@@ -176,7 +176,7 @@ export enum AccessMode {
 }
 
 /** Request to create a new session */
-export type CreateSessionRequest = {
+export interface CreateSessionRequest {
 	/** Path to the repository (LEGACY: used when repositories is None) */
 	repo_path: string;
 	/**
@@ -267,7 +267,7 @@ export type CreateSessionRequest = {
 }
 
 /** Credential availability status */
-export type CredentialStatus = {
+export interface CredentialStatus {
 	/** Human-readable credential name (e.g., "GitHub", "Anthropic") */
 	name: string;
 	/** Service identifier for updates (e.g., "github", "anthropic") */
@@ -286,7 +286,7 @@ export type CredentialStatus = {
  * Feature flags configuration for the daemon.
  * Flags are loaded at startup and require daemon restart to change.
  */
-export type FeatureFlags = {
+export interface FeatureFlags {
 	/** Enable experimental WebAuthn passwordless authentication */
 	enable_webauthn_auth: boolean;
 	/** Enable AI-powered session metadata generation */
@@ -302,38 +302,123 @@ export type FeatureFlags = {
 }
 
 /** Feature flags response for the frontend */
-export type FeatureFlagsResponse = {
+export interface FeatureFlagsResponse {
 	/** Current feature flag values */
 	flags: FeatureFlags;
 	/** Whether flags require daemon restart to change */
 	requires_restart: boolean;
 }
 
+/**
+ * State of a session's backend resource
+ * 
+ * This enum represents the actual state of the underlying resource (container,
+ * pod, or sprite) as observed during a health check.
+ */
+export type ResourceState = 
+	/** Backend is running and healthy */
+	| { type: "Healthy", content?: undefined }
+	/** Backend is stopped/exited (can be started) */
+	| { type: "Stopped", content?: undefined }
+	/** Sprites: sprite is hibernated (can be woken) */
+	| { type: "Hibernated", content?: undefined }
+	/** Kubernetes: pod is waiting for resources (Pending state) */
+	| { type: "Pending", content?: undefined }
+	/** Backend resource is gone but can be recreated (data preserved) */
+	| { type: "Missing", content?: undefined }
+	/** Backend is in an error state */
+	| { type: "Error", content: {
+	message: string;
+}}
+	/** Kubernetes: pod is in CrashLoopBackOff */
+	| { type: "CrashLoop", content?: undefined }
+	/** Resource was deleted externally (outside clauderon) */
+	| { type: "DeletedExternally", content?: undefined }
+	/**
+	 * Data has been lost and cannot be recovered
+	 * (e.g., PVC deleted, sprite with auto_destroy deleted)
+	 */
+	| { type: "DataLost", content: {
+	reason: string;
+}}
+	/** Git worktree was deleted */
+	| { type: "WorktreeMissing", content?: undefined };
+
+/** Actions that can be performed on a session based on its current state */
+export enum AvailableAction {
+	/** Start a stopped container (Docker: docker start) */
+	Start = "Start",
+	/** Wake a hibernated sprite */
+	Wake = "Wake",
+	/** Delete and recreate the backend resource (preserves data) */
+	Recreate = "Recreate",
+	/** Recreate with a fresh git clone (data will be lost) */
+	RecreateFresh = "RecreateFresh",
+	/** Pull new Docker image and recreate container */
+	UpdateImage = "UpdateImage",
+	/** Remove the session from clauderon (cleanup orphaned session) */
+	Cleanup = "Cleanup",
+}
+
+/** Detailed health report for a single session */
+export interface SessionHealthReport {
+	/** Session ID */
+	session_id: string;
+	/** Session name */
+	session_name: string;
+	/** Backend type (Docker, Kubernetes, Zellij, Sprites) */
+	backend_type: BackendType;
+	/** Current resource state */
+	state: ResourceState;
+	/** Actions available for this session based on current state */
+	available_actions: AvailableAction[];
+	/** Recommended action (if any) */
+	recommended_action?: AvailableAction;
+	/** Human-readable summary of the current state */
+	description: string;
+	/** Technical details (for expandable section in UI) */
+	details: string;
+	/** Is user work preserved if we take action? */
+	data_safe: boolean;
+}
+
+/** Result of checking health of all sessions */
+export interface HealthCheckResult {
+	/** Health reports for all sessions */
+	sessions: SessionHealthReport[];
+	/** Count of healthy sessions */
+	healthy_count: number;
+	/** Count of sessions needing attention */
+	needs_attention_count: number;
+	/** Count of sessions that are blocked (cannot be recreated) */
+	blocked_count: number;
+}
+
 /** Request to finish passkey authentication */
-export type LoginFinishRequest = {
+export interface LoginFinishRequest {
 	username: string;
 	challenge_id: string;
 	credential: any;
 }
 
 /** Response from login finish */
-export type LoginFinishResponse = {
+export interface LoginFinishResponse {
 	user: AuthUser;
 }
 
 /** Request to start passkey authentication */
-export type LoginStartRequest = {
+export interface LoginStartRequest {
 	username: string;
 }
 
 /** Response from login start */
-export type LoginStartResponse = {
+export interface LoginStartResponse {
 	challenge_id: string;
 	options: any;
 }
 
 /** Progress step during session creation */
-export type ProgressStep = {
+export interface ProgressStep {
 	/** Current step number (1-indexed) */
 	step: number;
 	/** Total number of steps */
@@ -343,7 +428,7 @@ export type ProgressStep = {
 }
 
 /** Proxy status information */
-export type ProxyStatus = {
+export interface ProxyStatus {
 	/** Proxy name (e.g., "HTTP Auth Proxy", "Kubernetes Proxy") */
 	name: string;
 	/** Port number the proxy is running on */
@@ -355,7 +440,7 @@ export type ProxyStatus = {
 }
 
 /** Recent repository entry with timestamp */
-export type RecentRepoDto = {
+export interface RecentRepoDto {
 	/** Path to the repository (git root) */
 	repo_path: string;
 	/** Subdirectory path relative to git root (empty string if at root) */
@@ -365,7 +450,7 @@ export type RecentRepoDto = {
 }
 
 /** Serializable reconcile report for API responses */
-export type ReconcileReportDto = {
+export interface ReconcileReportDto {
 	/** Sessions with missing git worktrees */
 	missing_worktrees: string[];
 	/** Sessions with missing backend resources */
@@ -380,8 +465,20 @@ export type ReconcileReportDto = {
 	gave_up: string[];
 }
 
+/** Result of a recreate operation */
+export interface RecreateResult {
+	/** Session ID that was recreated */
+	session_id: string;
+	/** New backend ID after recreation */
+	new_backend_id: string;
+	/** Whether the operation was successful */
+	success: boolean;
+	/** Human-readable message about the result */
+	message: string;
+}
+
 /** Request to finish passkey registration */
-export type RegistrationFinishRequest = {
+export interface RegistrationFinishRequest {
 	username: string;
 	challenge_id: string;
 	credential: any;
@@ -389,18 +486,18 @@ export type RegistrationFinishRequest = {
 }
 
 /** Response from registration finish */
-export type RegistrationFinishResponse = {
+export interface RegistrationFinishResponse {
 	user: AuthUser;
 }
 
 /** Request to start passkey registration */
-export type RegistrationStartRequest = {
+export interface RegistrationStartRequest {
 	username: string;
 	display_name?: string;
 }
 
 /** Response from registration start */
-export type RegistrationStartResponse = {
+export interface RegistrationStartResponse {
 	challenge_id: string;
 	options: any;
 }
@@ -424,7 +521,7 @@ export enum SessionStatus {
 }
 
 /** Represents a repository mounted in a session */
-export type SessionRepository = {
+export interface SessionRepository {
 	/** Path to the repository root (git root) */
 	repo_path: string;
 	/** Subdirectory path relative to git root (empty if at root) */
@@ -483,7 +580,7 @@ export enum ClaudeWorkingStatus {
 }
 
 /** Represents a single AI coding session */
-export type Session = {
+export interface Session {
 	/** Unique identifier */
 	id: string;
 	/** Human-friendly name (user-provided + random suffix) */
@@ -566,7 +663,7 @@ export type Session = {
 }
 
 /** System status response including credentials and proxies */
-export type SystemStatus = {
+export interface SystemStatus {
 	/** List of credential statuses */
 	credentials: CredentialStatus[];
 	/** List of proxy statuses */
@@ -578,7 +675,7 @@ export type SystemStatus = {
 }
 
 /** Request to update a credential */
-export type UpdateCredentialRequest = {
+export interface UpdateCredentialRequest {
 	/** Service identifier (e.g., "github", "anthropic") */
 	service_id: string;
 	/** The credential token/key value */
@@ -586,7 +683,7 @@ export type UpdateCredentialRequest = {
 }
 
 /** Response from uploading an image file */
-export type UploadResponse = {
+export interface UploadResponse {
 	/** Absolute path to the uploaded file */
 	path: string;
 	/** Size of the uploaded file in bytes */
@@ -594,7 +691,7 @@ export type UploadResponse = {
 }
 
 /** User's passkey credential */
-export type UserPasskey = {
+export interface UserPasskey {
 	id: string;
 	user_id: string;
 	device_name?: string;
@@ -791,92 +888,33 @@ export type Request =
 	id: string;
 }}
 	/** Get current feature flags */
-	| { type: "GetFeatureFlags", payload?: undefined };
-
-/** Current state of backend resources */
-export type ResourceState =
-	/** Backend is running and healthy */
-	| { type: "Healthy" }
-	/** Backend is stopped/exited (can be started) */
-	| { type: "Stopped" }
-	/** Sprites: backend is hibernated (can be woken) */
-	| { type: "Hibernated" }
-	/** Kubernetes: pod is pending (waiting for resources) */
-	| { type: "Pending" }
-	/** Backend resource is missing but can be recreated */
-	| { type: "Missing" }
-	/** Backend is in an error state */
-	| { type: "Error", message: string }
-	/** Kubernetes: pod is in CrashLoopBackOff */
-	| { type: "CrashLoop" }
-	/** Backend was deleted outside of clauderon */
-	| { type: "DeletedExternally" }
-	/** Data has been lost (PVC deleted, sprite destroyed, etc.) */
-	| { type: "DataLost", reason: string }
-	/** Git worktree was deleted */
-	| { type: "WorktreeMissing" };
-
-/** Actions available for a session based on its health state */
-export enum AvailableAction {
-	/** Start a stopped container (Docker: docker start) */
-	Start = "Start",
-	/** Wake a hibernated sprite */
-	Wake = "Wake",
-	/** Recreate the backend resource (preserves data) */
-	Recreate = "Recreate",
-	/** Recreate with fresh clone (data lost) */
-	RecreateFresh = "RecreateFresh",
-	/** Pull new image and recreate container */
-	UpdateImage = "UpdateImage",
-	/** Remove session from clauderon (worktree missing) */
-	Cleanup = "Cleanup",
-}
-
-/** Health report for a single session */
-export type SessionHealthReport = {
-	/** Session ID */
-	session_id: string;
-	/** Session name */
-	session_name: string;
-	/** Backend type */
-	backend_type: BackendType;
-	/** Current state of the backend resource */
-	state: ResourceState;
-	/** Actions available for this session */
-	available_actions: AvailableAction[];
-	/** Recommended action to fix the issue */
-	recommended_action?: AvailableAction;
-	/** Human-readable description of the current state */
-	description: string;
-	/** Technical details (expandable in UI) */
-	details: string;
-	/** Whether user data is safe during the available actions */
-	data_safe: boolean;
-}
-
-/** Result of checking health for all sessions */
-export type HealthCheckResult = {
-	/** Health reports for all sessions */
-	sessions: SessionHealthReport[];
-	/** Count of healthy sessions */
-	healthy_count: number;
-	/** Count of sessions needing attention */
-	needs_attention_count: number;
-	/** Count of sessions with blocked actions */
-	blocked_count: number;
-}
-
-/** Result of a recreate operation */
-export type RecreateResult = {
-	/** Session ID that was recreated */
-	session_id: string;
-	/** New backend ID after recreation */
-	new_backend_id: string;
-	/** Whether the operation succeeded */
-	success: boolean;
-	/** Human-readable message */
-	message: string;
-}
+	| { type: "GetFeatureFlags", payload?: undefined }
+	/** Get health status of all sessions */
+	| { type: "GetHealth", payload?: undefined }
+	/** Get health status of a single session */
+	| { type: "GetSessionHealth", payload: {
+	id: string;
+}}
+	/** Start a stopped session (container/pod) */
+	| { type: "StartSession", payload: {
+	id: string;
+}}
+	/** Wake a hibernated session (sprites) */
+	| { type: "WakeSession", payload: {
+	id: string;
+}}
+	/** Recreate a session (delete and recreate backend) */
+	| { type: "RecreateSession", payload: {
+	id: string;
+}}
+	/** Cleanup a session (remove from database, worktree already missing) */
+	| { type: "CleanupSession", payload: {
+	id: string;
+}}
+	/** Recreate a session fresh (delete worktree and re-clone, data lost) */
+	| { type: "RecreateSessionFresh", payload: {
+	id: string;
+}};
 
 /** Response types for the API */
 export type Response = 
@@ -921,6 +959,24 @@ export type Response =
 }}
 	/** Generic success response */
 	| { type: "Ok", payload?: undefined }
+	/** Health check result for all sessions */
+	| { type: "HealthCheckResult", payload: HealthCheckResult }
+	/** Health report for a single session */
+	| { type: "SessionHealth", payload: SessionHealthReport }
+	/** Session started successfully */
+	| { type: "Started", payload?: undefined }
+	/** Session woken successfully */
+	| { type: "Woken", payload?: undefined }
+	/** Session recreated successfully */
+	| { type: "Recreated", payload: {
+	new_backend_id?: string;
+}}
+	/** Session cleaned up successfully */
+	| { type: "CleanedUp", payload?: undefined }
+	/** Action blocked error (e.g., recreate blocked for sprites with auto_destroy) */
+	| { type: "ActionBlocked", payload: {
+	reason: string;
+}}
 	/** Error response */
 	| { type: "Error", payload: {
 	code: string;
