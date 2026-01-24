@@ -732,6 +732,11 @@ export class Monorepo {
       .withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-cache"))
       .withWorkdir("/workspace")
       .withDirectory("/workspace", source.directory("packages/clauderon/mobile"))
+      // Copy the shared generated types (mobile uses a symlink that doesn't work in isolation)
+      .withDirectory(
+        "/workspace/src/types/generated",
+        source.directory("packages/clauderon/web/shared/src/generated")
+      )
       .withExec(["bun", "install", "--frozen-lockfile"]);
 
     // Typecheck
