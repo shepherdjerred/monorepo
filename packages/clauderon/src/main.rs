@@ -125,6 +125,38 @@ ENVIRONMENT:
         #[arg(long, default_value = "false")]
         dev: bool,
 
+        // Server Settings
+        /// HTTP server bind address (default: 127.0.0.1)
+        ///
+        /// Use 0.0.0.0 to bind to all interfaces.
+        /// Specific IPs auto-add 127.0.0.1 listener for Docker container access.
+        #[arg(long, env = "CLAUDERON_BIND_ADDR", help_heading = "Server Settings")]
+        bind_addr: Option<String>,
+
+        /// WebAuthn origin URL for authentication
+        ///
+        /// Required when binding to non-localhost addresses.
+        /// Example: http://192.168.1.100:3030 or https://clauderon.example.com
+        #[arg(long, env = "CLAUDERON_ORIGIN", help_heading = "Server Settings")]
+        origin: Option<String>,
+
+        /// Disable authentication (dangerous for non-localhost bindings)
+        ///
+        /// Only use in trusted networks or behind a reverse proxy with its own auth.
+        #[arg(long, env = "CLAUDERON_DISABLE_AUTH", help_heading = "Server Settings")]
+        disable_auth: bool,
+
+        /// Anthropic organization ID for Claude API usage tracking
+        ///
+        /// Falls back to ANTHROPIC_ORG_ID if not set.
+        #[arg(
+            long,
+            env = "CLAUDE_ORG_ID",
+            visible_alias = "anthropic-org-id",
+            help_heading = "Server Settings"
+        )]
+        org_id: Option<String>,
+
         // Feature Flags
         /// [default: false] Enable WebAuthn passwordless authentication for the web UI.
         /// Allows passkey-based login instead of session tokens.
@@ -517,6 +549,10 @@ async fn main() -> anyhow::Result<()> {
             no_proxy,
             http_port,
             dev,
+            bind_addr,
+            origin,
+            disable_auth,
+            org_id,
             enable_webauthn_auth,
             enable_ai_metadata,
             enable_auto_reconcile,
@@ -534,13 +570,26 @@ async fn main() -> anyhow::Result<()> {
                 enable_kubernetes_backend,
             };
 
+            // Build CLI server config overrides
+            let cli_server = clauderon::feature_flags::CliServerConfig {
+                bind_addr,
+                origin,
+                disable_auth: if disable_auth { Some(true) } else { None },
+                org_id,
+            };
+
             // Load feature flags with priority: CLI → env → TOML → defaults
             let flags = clauderon::feature_flags::FeatureFlags::load(Some(cli_flags))?;
             flags.log_state();
 
+            // Load server config with priority: CLI (incl. env via clap) → TOML → defaults
+            let server_config = clauderon::feature_flags::ServerConfig::load(cli_server)?;
+            server_config.log_state();
+
             let port = if http_port > 0 { Some(http_port) } else { None };
             let dev_mode = dev || std::env::var("CLAUDERON_DEV").is_ok();
-            api::server::run_daemon_with_http(!no_proxy, port, dev_mode, flags).await?;
+            api::server::run_daemon_with_http(!no_proxy, port, dev_mode, flags, server_config)
+                .await?;
         }
         Commands::Tui => {
             tui::run().await?;

@@ -231,6 +231,152 @@ struct EnvFeatureFlags {
 struct ConfigFile {
     #[serde(default)]
     feature_flags: Option<FeatureFlags>,
+    #[serde(default)]
+    server: Option<ServerConfig>,
+}
+
+/// Server configuration for the daemon.
+/// Config is loaded at startup and requires daemon restart to change.
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(default)]
+pub struct ServerConfig {
+    /// HTTP server bind address (default: 127.0.0.1)
+    pub bind_addr: Option<String>,
+
+    /// WebAuthn origin URL for authentication
+    pub origin: Option<String>,
+
+    /// Disable authentication (dangerous for non-localhost bindings)
+    pub disable_auth: Option<bool>,
+
+    /// Anthropic organization ID for Claude API usage tracking
+    pub org_id: Option<String>,
+}
+
+impl ServerConfig {
+    /// Load server config with priority: CLI args (incl. env via clap) → TOML → defaults
+    ///
+    /// Note: clap's `env` attribute handles env var fallback automatically for CLI args,
+    /// so we only need to merge CLI values on top of TOML values.
+    ///
+    /// # Errors
+    /// Returns an error if the TOML config file exists but cannot be parsed
+    pub fn load(cli_overrides: CliServerConfig) -> anyhow::Result<Self> {
+        // 1. Start with defaults
+        let mut config = Self::default();
+
+        // 2. Override from TOML config file (~/.clauderon/config.toml)
+        if let Some(toml_config) = Self::load_from_toml()? {
+            config.merge(&toml_config);
+        }
+
+        // 3. Override from CLI arguments (which include env vars via clap's `env` attribute)
+        config.merge_from_cli(&cli_overrides);
+
+        Ok(config)
+    }
+
+    /// Load server config from TOML config file
+    fn load_from_toml() -> anyhow::Result<Option<Self>> {
+        let config_path = match config_path() {
+            Some(path) => path,
+            None => {
+                // No home directory available, skip TOML loading
+                return Ok(None);
+            }
+        };
+
+        if !config_path.exists() {
+            return Ok(None);
+        }
+
+        let content = std::fs::read_to_string(&config_path)
+            .with_context(|| format!("Failed to read config file at {}", config_path.display()))?;
+
+        let config: ConfigFile = toml::from_str(&content)
+            .with_context(|| format!("Failed to parse config file at {}", config_path.display()))?;
+
+        Ok(config.server)
+    }
+
+    /// Merge another ServerConfig struct into this one (Some values override None)
+    fn merge(&mut self, other: &Self) {
+        if other.bind_addr.is_some() {
+            self.bind_addr.clone_from(&other.bind_addr);
+        }
+        if other.origin.is_some() {
+            self.origin.clone_from(&other.origin);
+        }
+        if other.disable_auth.is_some() {
+            self.disable_auth = other.disable_auth;
+        }
+        if other.org_id.is_some() {
+            self.org_id.clone_from(&other.org_id);
+        }
+    }
+
+    /// Merge CLI overrides (which are Option types to distinguish "not set")
+    fn merge_from_cli(&mut self, cli: &CliServerConfig) {
+        if cli.bind_addr.is_some() {
+            self.bind_addr.clone_from(&cli.bind_addr);
+        }
+        if cli.origin.is_some() {
+            self.origin.clone_from(&cli.origin);
+        }
+        if cli.disable_auth.is_some() {
+            self.disable_auth = cli.disable_auth;
+        }
+        if cli.org_id.is_some() {
+            self.org_id.clone_from(&cli.org_id);
+        }
+    }
+
+    /// Get bind address with default fallback
+    pub fn bind_addr(&self) -> &str {
+        self.bind_addr.as_deref().unwrap_or("127.0.0.1")
+    }
+
+    /// Get origin URL (None if not configured)
+    pub fn origin(&self) -> Option<&str> {
+        self.origin.as_deref()
+    }
+
+    /// Check if auth is disabled
+    pub fn is_auth_disabled(&self) -> bool {
+        self.disable_auth.unwrap_or(false)
+    }
+
+    /// Get organization ID (None if not configured)
+    pub fn org_id(&self) -> Option<&str> {
+        self.org_id.as_deref()
+    }
+
+    /// Log the current server config state (for observability)
+    #[tracing::instrument(skip(self))]
+    pub fn log_state(&self) {
+        tracing::info!("Server config loaded:");
+        tracing::info!("  bind_addr: {}", self.bind_addr());
+        if let Some(origin) = self.origin() {
+            tracing::info!("  origin: {}", origin);
+        } else {
+            tracing::info!("  origin: (not set)");
+        }
+        tracing::info!("  disable_auth: {}", self.is_auth_disabled());
+        if let Some(org_id) = self.org_id() {
+            tracing::info!("  org_id: {}", org_id);
+        } else {
+            tracing::info!("  org_id: (not set)");
+        }
+    }
+}
+
+/// CLI server config overrides (passed from clap)
+#[derive(Debug, Clone, Default)]
+pub struct CliServerConfig {
+    pub bind_addr: Option<String>,
+    pub origin: Option<String>,
+    pub disable_auth: Option<bool>,
+    pub org_id: Option<String>,
 }
 
 /// Parse boolean from environment variable
