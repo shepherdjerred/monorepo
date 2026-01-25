@@ -35,12 +35,14 @@ fn is_backend_available(backend: BackendType) -> bool {
 }
 
 /// Check if K8s proxy mode is configured
+#[must_use]
 pub fn is_k8s_proxy_configured() -> bool {
     KubernetesConfig::load_or_default().is_connected_mode()
 }
 
 /// Calculate layout for the create dialog.
 /// Returns (total_height, constraints) for consistent sizing between ui.rs and render().
+#[must_use]
 #[allow(clippy::cast_possible_truncation)]
 pub fn calculate_layout(dialog: &CreateDialogState) -> (u16, Vec<Constraint>) {
     // Dynamic prompt height: min 5 lines, max 15

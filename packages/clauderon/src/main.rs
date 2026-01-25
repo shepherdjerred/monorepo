@@ -583,7 +583,7 @@ async fn main() -> anyhow::Result<()> {
             flags.log_state();
 
             // Load server config with priority: CLI (incl. env via clap) → TOML → defaults
-            let server_config = clauderon::feature_flags::ServerConfig::load(cli_server)?;
+            let server_config = clauderon::feature_flags::ServerConfig::load(&cli_server)?;
             server_config.log_state();
 
             let port = if http_port > 0 { Some(http_port) } else { None };
