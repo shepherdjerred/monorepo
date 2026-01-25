@@ -218,7 +218,8 @@ function getCrossCompileContainer(
       "clang",
       "libssl-dev:arm64",
       "pkg-config",
-      "binutils"
+      // binutils-aarch64-linux-gnu provides the aarch64 cross-linker (ld, ar, etc.)
+      "binutils-aarch64-linux-gnu"
     ])
     // Add cross-compilation targets
     .withExec(["rustup", "target", "add", "x86_64-unknown-linux-gnu"])
@@ -874,6 +875,9 @@ export class Monorepo {
       if (target === "aarch64-unknown-linux-gnu") {
         buildContainer = container
           .withEnvVariable("CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER", "aarch64-linux-gnu-gcc")
+          // Override rustflags to not use mold (mold doesn't support cross-compilation well)
+          // This overrides the .cargo/config.toml setting
+          .withEnvVariable("CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_RUSTFLAGS", "")
           // Point openssl-sys to the ARM64 OpenSSL installation
           .withEnvVariable("OPENSSL_DIR", "/usr")
           .withEnvVariable("OPENSSL_LIB_DIR", "/usr/lib/aarch64-linux-gnu")
