@@ -155,6 +155,8 @@ pub struct SessionManager {
     usage_cache: Arc<RwLock<UsageCache>>,
     /// Feature flags for controlling behavior
     feature_flags: Arc<crate::feature_flags::FeatureFlags>,
+    /// Server config for org_id and other settings
+    server_config: Option<Arc<crate::feature_flags::ServerConfig>>,
 }
 
 impl SessionManager {
@@ -199,6 +201,7 @@ impl SessionManager {
             http_port: None,
             usage_cache: Arc::new(RwLock::new(UsageCache::new())),
             feature_flags,
+            server_config: None,
         })
     }
 
@@ -286,6 +289,14 @@ impl SessionManager {
     /// across VM/network boundaries).
     pub fn set_http_port(&mut self, port: u16) {
         self.http_port = Some(port);
+    }
+
+    /// Set the server config for org_id and other settings
+    ///
+    /// This should be called after construction to enable config-based org_id lookup
+    /// for Claude usage tracking.
+    pub fn set_server_config(&mut self, config: Arc<crate::feature_flags::ServerConfig>) {
+        self.server_config = Some(config);
     }
 
     /// Validate that the requested backend is enabled via feature flags
@@ -4307,7 +4318,8 @@ impl SessionManager {
                         drop(cache); // Release read lock
 
                         // Cache miss - fetch fresh data
-                        match Self::fetch_claude_usage(oauth_token).await {
+                        let org_id_override = self.server_config.as_ref().and_then(|c| c.org_id());
+                        match Self::fetch_claude_usage(oauth_token, org_id_override).await {
                             Ok(usage) => {
                                 tracing::info!(
                                     org_id = %usage.organization_id,
@@ -4390,10 +4402,11 @@ impl SessionManager {
     /// Fetch Claude Code usage data from Claude.ai API
     ///
     /// This attempts to get the org ID and usage data in one flow.
-    /// Falls back to environment variable if API calls fail.
-    #[instrument(skip(oauth_token))]
+    /// Falls back to config org_id, then environment variable if API calls fail.
+    #[instrument(skip(oauth_token, org_id_override))]
     async fn fetch_claude_usage(
         oauth_token: &str,
+        org_id_override: Option<&str>,
     ) -> Result<crate::api::protocol::ClaudeUsage, crate::api::protocol::UsageError> {
         use crate::api::claude_client::ClaudeApiClient;
         use crate::api::protocol::UsageError;
@@ -4428,26 +4441,34 @@ impl SessionManager {
                     });
                 }
 
-                // Fallback to environment variable
+                // Fallback to config org_id, then environment variable
                 tracing::warn!(
                     error = %e,
-                    "Failed to get org ID from Claude.ai API, trying CLAUDE_ORG_ID env var"
+                    "Failed to get org ID from Claude.ai API, trying config/env fallback"
                 );
 
-                let org_id = match std::env::var("CLAUDE_ORG_ID")
-                    .or_else(|_| std::env::var("ANTHROPIC_ORG_ID"))
-                {
-                    Ok(id) => id,
-                    Err(_) => {
-                        return Err(UsageError {
-                            error_type: "missing_org_id".to_string(),
-                            message: "Failed to get organization ID".to_string(),
-                            details: Some(format!(
-                                "API error: {}. No CLAUDE_ORG_ID env var set.",
-                                error_str
-                            )),
-                            suggestion: Some("Set CLAUDE_ORG_ID environment variable".to_string()),
-                        });
+                let org_id = if let Some(override_id) = org_id_override {
+                    tracing::debug!("Using org_id from config");
+                    override_id.to_string()
+                } else {
+                    match std::env::var("CLAUDE_ORG_ID")
+                        .or_else(|_| std::env::var("ANTHROPIC_ORG_ID"))
+                    {
+                        Ok(id) => id,
+                        Err(_) => {
+                            return Err(UsageError {
+                                error_type: "missing_org_id".to_string(),
+                                message: "Failed to get organization ID".to_string(),
+                                details: Some(format!(
+                                    "API error: {}. No org_id in config or CLAUDE_ORG_ID env var set.",
+                                    error_str
+                                )),
+                                suggestion: Some(
+                                    "Set org_id in config.toml, or CLAUDE_ORG_ID environment variable, or use --org-id CLI flag"
+                                        .to_string(),
+                                ),
+                            });
+                        }
                     }
                 };
 

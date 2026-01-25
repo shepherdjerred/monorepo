@@ -33,7 +33,9 @@ pub async fn run_daemon() -> anyhow::Result<()> {
 /// bound, or other I/O errors occur.
 pub async fn run_daemon_with_options(enable_proxy: bool) -> anyhow::Result<()> {
     let flags = crate::feature_flags::FeatureFlags::load(None)?;
-    run_daemon_with_http(enable_proxy, Some(3030), false, flags).await
+    let server_config =
+        crate::feature_flags::ServerConfig::load(crate::feature_flags::CliServerConfig::default())?;
+    run_daemon_with_http(enable_proxy, Some(3030), false, flags, server_config).await
 }
 
 /// Run the clauderon daemon with HTTP server option
@@ -43,6 +45,8 @@ pub async fn run_daemon_with_options(enable_proxy: bool) -> anyhow::Result<()> {
 /// * `enable_proxy` - Whether to enable proxy services
 /// * `http_port` - HTTP server port (None to disable)
 /// * `dev_mode` - Whether to serve frontend from filesystem instead of embedded
+/// * `feature_flags` - Feature flags configuration
+/// * `server_config` - Server configuration (bind address, origin, auth settings)
 ///
 /// # Errors
 ///
@@ -53,6 +57,7 @@ pub async fn run_daemon_with_http(
     http_port: Option<u16>,
     dev_mode: bool,
     feature_flags: crate::feature_flags::FeatureFlags,
+    server_config: crate::feature_flags::ServerConfig,
 ) -> anyhow::Result<()> {
     // Write daemon info for auto-restart detection
     use crate::utils::binary_info::DaemonInfo;
@@ -118,6 +123,9 @@ pub async fn run_daemon_with_http(
     if let Some(ref pm) = proxy_manager {
         session_manager.set_proxy_manager(Arc::clone(pm));
     }
+
+    // Wire up server config for org_id and other settings
+    session_manager.set_server_config(Arc::new(server_config.clone()));
 
     // Create event broadcaster and wire it up if HTTP server is enabled
     if let Some(port) = http_port {
@@ -193,6 +201,7 @@ pub async fn run_daemon_with_http(
             dev_mode,
             db_pool,
             feature_flags.clone(),
+            server_config,
         );
 
         tracing::info!(
@@ -295,20 +304,18 @@ async fn run_http_server(
     dev_mode: bool,
     db_pool: sqlx::SqlitePool,
     feature_flags: crate::feature_flags::FeatureFlags,
+    server_config: crate::feature_flags::ServerConfig,
 ) -> anyhow::Result<()> {
     use crate::api::http_server::create_router;
     use crate::api::ws_console::ws_console_handler;
     use crate::api::ws_events::ws_events_handler;
     use crate::auth::{AuthState, SessionStore, WebAuthnHandler};
 
-    // Read bind address from environment (default: localhost only)
-    let bind_addr =
-        std::env::var("CLAUDERON_BIND_ADDR").unwrap_or_else(|_| "127.0.0.1".to_string());
+    // Get bind address from config (CLI → env → TOML → default)
+    let bind_addr = server_config.bind_addr().to_string();
 
-    // Check if auth is explicitly disabled via environment variable
-    let auth_disabled = std::env::var("CLAUDERON_DISABLE_AUTH")
-        .map(|v| v == "1" || v.to_lowercase() == "true")
-        .unwrap_or(false);
+    // Check if auth is explicitly disabled via config
+    let auth_disabled = server_config.is_auth_disabled();
 
     // Determine if authentication is required (for any non-localhost binding)
     let is_localhost = bind_addr == "127.0.0.1" || bind_addr == "localhost";
@@ -330,28 +337,32 @@ async fn run_http_server(
 
     // Initialize auth state if needed
     let auth_state = if requires_auth {
-        // Read WebAuthn configuration from environment
-        let rp_origin = std::env::var("CLAUDERON_ORIGIN").ok();
-
-        // Validate origin is set when binding externally
-        let rp_origin = match rp_origin {
-            Some(origin) => origin,
+        // Get WebAuthn origin from config (CLI → env → TOML)
+        let rp_origin = match server_config.origin() {
+            Some(origin) => origin.to_string(),
             None => {
                 anyhow::bail!(
-                    "CLAUDERON_ORIGIN environment variable is required for non-localhost bindings\n\
+                    "Origin is required for non-localhost bindings\n\
                     \n\
                     WebAuthn authentication requires a valid origin URL that clients will use.\n\
                     \n\
                     Current binding: {}\n\
                     \n\
-                    Example:\n\
+                    Configure via CLI:\n\
+                      clauderon daemon --origin http://192.168.1.100:3030\n\
+                    \n\
+                    Or via environment variable:\n\
                       CLAUDERON_ORIGIN=http://192.168.1.100:3030 clauderon daemon\n\
                     \n\
+                    Or via config file (~/.clauderon/config.toml):\n\
+                      [server]\n\
+                      origin = \"http://192.168.1.100:3030\"\n\
+                    \n\
                     For HTTPS behind a reverse proxy:\n\
-                      CLAUDERON_ORIGIN=https://clauderon.example.com clauderon daemon\n\
+                      --origin https://clauderon.example.com\n\
                     \n\
                     Or disable authentication (not recommended for production):\n\
-                      CLAUDERON_DISABLE_AUTH=true clauderon daemon",
+                      --disable-auth",
                     bind_addr
                 );
             }

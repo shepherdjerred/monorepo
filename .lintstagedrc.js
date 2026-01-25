@@ -35,6 +35,6 @@ export default {
   "packages/clauderon/**/*.rs": (filenames) => {
     // Only run fmt check - clippy and test are too heavy for pre-commit
     // and should be run in CI instead
-    return [`sh -c 'cd packages/clauderon && cargo fmt --check'`];
+    return [`sh -c 'cd packages/clauderon && cargo fmt'`];
   },
 };
