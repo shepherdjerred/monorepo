@@ -873,11 +873,28 @@ export class Monorepo {
 
       // Configure linker and OpenSSL for aarch64 cross-compilation
       if (target === "aarch64-unknown-linux-gnu") {
+        // Override .cargo/config.toml to not use mold for aarch64 cross-compilation
+        // (mold doesn't work well with cross-compilation toolchains)
+        const cargoConfig = `
+[registries.crates-io]
+protocol = "sparse"
+
+[build]
+jobs = -1
+
+[target.x86_64-unknown-linux-gnu]
+linker = "clang"
+rustflags = ["-C", "link-arg=-fuse-ld=mold"]
+
+[target.aarch64-unknown-linux-gnu]
+linker = "aarch64-linux-gnu-gcc"
+# No rustflags - use default linker (not mold)
+
+[net]
+retry = 3
+`;
         buildContainer = container
-          .withEnvVariable("CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER", "aarch64-linux-gnu-gcc")
-          // Override rustflags to not use mold (mold doesn't support cross-compilation well)
-          // This overrides the .cargo/config.toml setting
-          .withEnvVariable("CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_RUSTFLAGS", "")
+          .withNewFile("/workspace/.cargo/config.toml", cargoConfig)
           // Point openssl-sys to the ARM64 OpenSSL installation
           .withEnvVariable("OPENSSL_DIR", "/usr")
           .withEnvVariable("OPENSSL_LIB_DIR", "/usr/lib/aarch64-linux-gnu")
