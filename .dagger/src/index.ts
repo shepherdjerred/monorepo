@@ -275,18 +275,22 @@ async function buildMuxBinary(
 }
 
 /**
- * Upload release assets to a GitHub release
- * Returns both outputs (for logging) and errors (for failure tracking)
+ * Upload release assets to a GitHub release using proper binary file handling
+ * @param githubToken GitHub token for authentication
+ * @param version The release version (without 'v' prefix)
+ * @param binariesDir Directory containing the built binaries
+ * @param filenames List of filenames to upload
  */
 async function uploadReleaseAssets(
   githubToken: Secret,
   version: string,
-  assets: Array<{ name: string; data: string }>
+  binariesDir: Directory,
+  filenames: string[]
 ): Promise<{ outputs: string[]; errors: string[] }> {
   const outputs: string[] = [];
   const errors: string[] = [];
 
-  // Use gh CLI to upload assets
+  // Use gh CLI to upload assets - mount the binaries directory directly
   let container = dag
     .container()
     .from(`oven/bun:${BUN_VERSION}-debian`)
@@ -300,27 +304,26 @@ async function uploadReleaseAssets(
     .withExec(["apt-get", "update"])
     .withExec(["apt-get", "install", "-y", "gh"])
     .withSecretVariable("GITHUB_TOKEN", githubToken)
-    .withWorkdir("/workspace");
+    .withWorkdir("/workspace")
+    // Mount binaries directory directly (preserves binary data)
+    .withDirectory("/workspace/binaries", binariesDir);
 
-  for (const asset of assets) {
-    // Write the binary to a file
-    container = container.withNewFile(`/workspace/${asset.name}`, asset.data);
-
+  for (const filename of filenames) {
     // Upload to release
     try {
       await container
         .withExec([
           "gh", "release", "upload",
           `clauderon-v${version}`,
-          asset.name,
+          `/workspace/binaries/${filename}`,
           "--repo", REPO_URL,
           "--clobber"
         ])
         .sync();
-      outputs.push(`✓ Uploaded ${asset.name}`);
+      outputs.push(`✓ Uploaded ${filename}`);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      const failureMsg = `Failed to upload ${asset.name}: ${errorMessage}`;
+      const failureMsg = `Failed to upload ${filename}: ${errorMessage}`;
       outputs.push(`✗ ${failureMsg}`);
       errors.push(failureMsg);
     }
@@ -599,35 +602,27 @@ export class Monorepo {
         }
       }
 
-      // Check if a clauderon release was created and upload binaries
-      const clauderonReleaseCreated = releaseResult.output.includes("clauderon-v") ||
-        releaseResult.output.includes("packages/clauderon");
+      // Check if a clauderon release was created - only if we can extract a specific version
+      const clauderonVersionMatch = releaseResult.output.match(/clauderon-v([\d.]+)/);
+      const clauderonVersion = clauderonVersionMatch?.[1];
 
-      if (clauderonReleaseCreated) {
+      if (clauderonVersion) {
         outputs.push("\n--- Multiplexer Release ---");
+        outputs.push(`Detected clauderon release: v${clauderonVersion}`);
 
-        // Extract clauderon version from release output or Cargo.toml
-        // For now, build and upload with the current version
         try {
           const binaries = await this.multiplexerBuild(source, s3AccessKeyId, s3SecretAccessKey);
 
-          // Get binary contents for upload
+          // Get filenames for upload
           const linuxTargets = CLAUDERON_TARGETS.filter(t => t.os === "linux");
-          const assets: Array<{ name: string; data: string }> = [];
+          const filenames = linuxTargets.map(({ os, arch }) => `clauderon-${os}-${arch}`);
 
-          for (const { os, arch } of linuxTargets) {
-            const filename = `clauderon-${os}-${arch}`;
-            const content = await binaries.file(filename).contents();
-            assets.push({ name: filename, data: content });
+          for (const filename of filenames) {
             outputs.push(`✓ Built ${filename}`);
           }
 
-          // Find the clauderon version from the release output
-          const clauderonVersionMatch = releaseResult.output.match(/clauderon-v([\d.]+)/);
-          const clauderonVersion = clauderonVersionMatch?.[1] ?? "0.1.0";
-
-          // Upload to GitHub release
-          const uploadResults = await uploadReleaseAssets(githubToken, clauderonVersion, assets);
+          // Upload to GitHub release (pass directory directly for proper binary handling)
+          const uploadResults = await uploadReleaseAssets(githubToken, clauderonVersion, binaries, filenames);
           outputs.push(...uploadResults.outputs);
           releaseErrors.push(...uploadResults.errors);
         } catch (error) {
@@ -636,6 +631,8 @@ export class Monorepo {
           outputs.push(`✗ ${failureMsg}`);
           releaseErrors.push(failureMsg);
         }
+      } else {
+        outputs.push("\nNo clauderon release detected - skipping binary upload");
       }
 
       // Fail CI if any release phase errors occurred
@@ -944,20 +941,17 @@ retry = 3
     outputs.push("\n--- Building Binaries ---");
     const binaries = await this.multiplexerBuild(source, s3AccessKeyId, s3SecretAccessKey);
 
-    // Get binary contents for upload
+    // Get filenames for upload
     const linuxTargets = CLAUDERON_TARGETS.filter(t => t.os === "linux");
-    const assets: Array<{ name: string; data: string }> = [];
+    const filenames = linuxTargets.map(({ os, arch }) => `clauderon-${os}-${arch}`);
 
-    for (const { os, arch } of linuxTargets) {
-      const filename = `clauderon-${os}-${arch}`;
-      const content = await binaries.file(filename).contents();
-      assets.push({ name: filename, data: content });
+    for (const filename of filenames) {
       outputs.push(`✓ Built ${filename}`);
     }
 
-    // Upload to GitHub release
+    // Upload to GitHub release (pass directory directly for proper binary handling)
     outputs.push("\n--- Uploading to GitHub Release ---");
-    const uploadResults = await uploadReleaseAssets(githubToken, version, assets);
+    const uploadResults = await uploadReleaseAssets(githubToken, version, binaries, filenames);
     outputs.push(...uploadResults.outputs);
 
     if (uploadResults.errors.length > 0) {
