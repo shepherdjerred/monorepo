@@ -32,6 +32,9 @@ pub fn docker_available() -> bool {
 /// Check if Kubernetes cluster is accessible via kubectl
 #[must_use]
 pub fn kubernetes_available() -> bool {
+    // Install rustls crypto provider (required by kube client)
+    let _ = rustls::crypto::ring::default_provider().install_default();
+
     Command::new("kubectl")
         .args(["cluster-info"])
         .output()

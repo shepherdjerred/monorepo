@@ -17,51 +17,54 @@ use clauderon::store::{SqliteStore, Store};
 use tempfile::TempDir;
 
 /// Initialize a directory as a git repository with an initial commit.
+/// Uses a single shell command for efficiency (5x faster than separate commands).
 fn init_git_repo(path: &Path) {
-    std::process::Command::new("git")
-        .args(["init"])
+    let output = std::process::Command::new("sh")
+        .args([
+            "-c",
+            r##"
+            git init -q &&
+            git config user.email "test@test.com" &&
+            git config user.name "Test User" &&
+            echo "# Test Repo" > README.md &&
+            git add -A &&
+            git commit -q -m "Initial commit"
+            "##,
+        ])
         .current_dir(path)
         .output()
-        .expect("Failed to run git init");
+        .expect("Failed to init git repo");
 
-    std::process::Command::new("git")
-        .args(["config", "user.email", "test@test.com"])
-        .current_dir(path)
-        .output()
-        .expect("Failed to configure git email");
-
-    std::process::Command::new("git")
-        .args(["config", "user.name", "Test User"])
-        .current_dir(path)
-        .output()
-        .expect("Failed to configure git name");
-
-    std::fs::write(path.join("README.md"), "# Test Repo").expect("Failed to create README");
-
-    std::process::Command::new("git")
-        .args(["add", "."])
-        .current_dir(path)
-        .output()
-        .expect("Failed to run git add");
-
-    std::process::Command::new("git")
-        .args(["commit", "-m", "Initial commit"])
-        .current_dir(path)
-        .output()
-        .expect("Failed to run git commit");
+    assert!(
+        output.status.success(),
+        "Failed to init git repo at {}: {}",
+        path.display(),
+        String::from_utf8_lossy(&output.stderr)
+    );
 }
 
 /// Helper to create a test environment with a real temp directory for repos
 async fn create_test_manager() -> (SessionManager, TempDir, TempDir) {
+    create_test_manager_with_limit(None).await
+}
+
+/// Helper to create a test environment with a configurable recent repos limit.
+/// Use a smaller limit (e.g., 5) for limit enforcement tests to speed them up.
+async fn create_test_manager_with_limit(
+    max_recent_repos: Option<usize>,
+) -> (SessionManager, TempDir, TempDir) {
     let temp_dir = TempDir::new().expect("Failed to create temp dir for DB");
     let repos_dir = TempDir::new().expect("Failed to create temp dir for repos");
 
     let db_path = temp_dir.path().join("test.db");
-    let store = Arc::new(
-        SqliteStore::new(&db_path)
-            .await
-            .expect("Failed to create store"),
-    );
+    let mut store = SqliteStore::new(&db_path)
+        .await
+        .expect("Failed to create store");
+
+    if let Some(limit) = max_recent_repos {
+        store = store.with_max_recent_repos(limit);
+    }
+    let store = Arc::new(store);
 
     let git = Arc::new(MockGitBackend::new());
     let zellij = Arc::new(MockExecutionBackend::zellij());
@@ -146,67 +149,36 @@ async fn test_recent_repo_tracked_on_session_create() {
 
 #[tokio::test]
 async fn test_path_canonicalization_prevents_duplicates() {
-    let (manager, _temp_dir, repos_dir) = create_test_manager().await;
+    // Test canonicalization directly at store level (fast)
+    let temp_dir = TempDir::new().expect("Failed to create temp dir");
+    let repos_dir = TempDir::new().expect("Failed to create repos dir");
 
-    // Create a repo directory with git initialized
+    let db_path = temp_dir.path().join("test.db");
+    let store = SqliteStore::new(&db_path)
+        .await
+        .expect("Failed to create store");
+
+    // Create a repo directory
     let repo_path = repos_dir.path().join("test-repo");
     std::fs::create_dir_all(&repo_path).expect("Failed to create repo dir");
-    init_git_repo(&repo_path);
 
-    // Create sessions with different representations of the same path
     let canonical = repo_path.canonicalize().expect("Failed to canonicalize");
 
-    // Session 1: Use canonical path
-    manager
-        .create_session(
-            canonical.to_string_lossy().to_string(),
-            None,
-            "Prompt 1".to_string(),
-            BackendType::Zellij,
-            AgentType::ClaudeCode,
-            None,
-            true,
-            false, // dangerous_copy_creds
-            false,
-            false,
-            AccessMode::default(),
-            vec![],
-            None,
-            None,
-            None,
-            None,
-            None, // storage_class
-        )
+    // Add using canonical path
+    store
+        .add_recent_repo(canonical.clone(), PathBuf::new())
         .await
-        .expect("Failed to create session 1");
+        .expect("Failed to add canonical path");
 
-    // Session 2: Use path with /./
-    let path_with_dot = format!("{}/.", canonical.to_string_lossy());
-    manager
-        .create_session(
-            path_with_dot,
-            None,
-            "Prompt 2".to_string(),
-            BackendType::Zellij,
-            AgentType::ClaudeCode,
-            None,
-            true,
-            false, // dangerous_copy_creds
-            false,
-            false,
-            AccessMode::default(),
-            vec![],
-            None,
-            None,
-            None,
-            None,
-            None, // storage_class
-        )
+    // Add using path with /./  (will canonicalize to same path)
+    let path_with_dot = PathBuf::from(format!("{}/.", canonical.display()));
+    store
+        .add_recent_repo(path_with_dot, PathBuf::new())
         .await
-        .expect("Failed to create session 2");
+        .expect("Failed to add path with dot");
 
-    // Should only have 1 recent repo (same path)
-    let recent = manager
+    // Should only have 1 recent repo (same canonical path)
+    let recent = store
         .get_recent_repos()
         .await
         .expect("Failed to get recent repos");
@@ -216,44 +188,33 @@ async fn test_path_canonicalization_prevents_duplicates() {
 
 #[tokio::test]
 async fn test_limit_enforcement_removes_oldest() {
-    let (manager, _temp_dir, repos_dir) = create_test_manager().await;
+    // Test limit enforcement directly at the store level (fast, no session creation)
+    let temp_dir = TempDir::new().expect("Failed to create temp dir");
+    let repos_dir = TempDir::new().expect("Failed to create repos dir");
 
-    // Create 21 different repos to exceed the limit of 20
-    for i in 0..21 {
+    let db_path = temp_dir.path().join("test.db");
+    let store = SqliteStore::new(&db_path)
+        .await
+        .expect("Failed to create store")
+        .with_max_recent_repos(5);
+
+    // Create 6 repo directories to exceed the limit of 5
+    for i in 0..6 {
         let repo_path = repos_dir.path().join(format!("repo-{i}"));
         std::fs::create_dir_all(&repo_path).expect("Failed to create repo dir");
-        init_git_repo(&repo_path);
 
-        manager
-            .create_session(
-                repo_path.to_string_lossy().to_string(),
-                None,
-                format!("Prompt {i}"),
-                BackendType::Zellij,
-                AgentType::ClaudeCode,
-                None,
-                true,
-                false, // dangerous_copy_creds
-                false,
-                false,
-                AccessMode::default(),
-                vec![],
-                None,
-                None,
-                None,
-                None,
-                None, // storage_class
-            )
+        store
+            .add_recent_repo(repo_path, PathBuf::new())
             .await
-            .expect("Failed to create session");
+            .expect("Failed to add recent repo");
     }
 
-    // Should only have 20 repos (the limit)
-    let recent = manager
+    // Should only have 5 repos (the limit)
+    let recent = store
         .get_recent_repos()
         .await
         .expect("Failed to get recent repos");
-    assert_eq!(recent.len(), 20, "Should enforce limit of 20 repos");
+    assert_eq!(recent.len(), 5, "Should enforce limit of 5 repos");
 
     // The first repo (repo-0) should not be in the list
     let first_repo = repos_dir.path().join("repo-0").canonicalize().unwrap();
@@ -262,8 +223,8 @@ async fn test_limit_enforcement_removes_oldest() {
         "Oldest repo should have been removed"
     );
 
-    // The last repo (repo-10) should be in the list
-    let last_repo = repos_dir.path().join("repo-10").canonicalize().unwrap();
+    // The last repo (repo-5) should be in the list
+    let last_repo = repos_dir.path().join("repo-5").canonicalize().unwrap();
     assert!(
         recent.iter().any(|r| r.repo_path == last_repo),
         "Newest repo should be in the list"
@@ -272,37 +233,25 @@ async fn test_limit_enforcement_removes_oldest() {
 
 #[tokio::test]
 async fn test_upsert_behavior_updates_timestamp() {
-    let (manager, _temp_dir, repos_dir) = create_test_manager().await;
+    // Test upsert directly at store level (fast)
+    let temp_dir = TempDir::new().expect("Failed to create temp dir");
+    let repos_dir = TempDir::new().expect("Failed to create repos dir");
+
+    let db_path = temp_dir.path().join("test.db");
+    let store = SqliteStore::new(&db_path)
+        .await
+        .expect("Failed to create store");
 
     let repo_path = repos_dir.path().join("test-repo");
     std::fs::create_dir_all(&repo_path).expect("Failed to create repo dir");
-    init_git_repo(&repo_path);
 
-    // Create first session
-    manager
-        .create_session(
-            repo_path.to_string_lossy().to_string(),
-            None,
-            "Prompt 1".to_string(),
-            BackendType::Zellij,
-            AgentType::ClaudeCode,
-            None,
-            true,
-            false, // dangerous_copy_creds
-            false,
-            false,
-            AccessMode::default(),
-            vec![],
-            None,
-            None,
-            None,
-            None,
-            None, // storage_class
-        )
+    // Add repo first time
+    store
+        .add_recent_repo(repo_path.clone(), PathBuf::new())
         .await
-        .expect("Failed to create session 1");
+        .expect("Failed to add repo");
 
-    let recent1 = manager
+    let recent1 = store
         .get_recent_repos()
         .await
         .expect("Failed to get recent repos");
@@ -310,34 +259,16 @@ async fn test_upsert_behavior_updates_timestamp() {
     let timestamp1 = recent1[0].last_used;
 
     // Wait a bit to ensure timestamp will be different
-    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+    tokio::time::sleep(std::time::Duration::from_millis(10)).await;
 
-    // Create second session with same repo
-    manager
-        .create_session(
-            repo_path.to_string_lossy().to_string(),
-            None,
-            "Prompt 2".to_string(),
-            BackendType::Zellij,
-            AgentType::ClaudeCode,
-            None,
-            true,
-            false, // dangerous_copy_creds
-            false,
-            false,
-            AccessMode::default(),
-            vec![],
-            None,
-            None,
-            None,
-            None,
-            None, // storage_class
-        )
+    // Add same repo again (upsert)
+    store
+        .add_recent_repo(repo_path, PathBuf::new())
         .await
-        .expect("Failed to create session 2");
+        .expect("Failed to add repo again");
 
     // Should still have only 1 repo, but timestamp should be updated
-    let recent2 = manager
+    let recent2 = store
         .get_recent_repos()
         .await
         .expect("Failed to get recent repos");
@@ -352,42 +283,30 @@ async fn test_upsert_behavior_updates_timestamp() {
 
 #[tokio::test]
 async fn test_recent_repos_ordered_by_most_recent() {
-    let (manager, _temp_dir, repos_dir) = create_test_manager().await;
+    // Test ordering directly at store level (fast)
+    let temp_dir = TempDir::new().expect("Failed to create temp dir");
+    let repos_dir = TempDir::new().expect("Failed to create repos dir");
 
-    // Create 3 repos in order
+    let db_path = temp_dir.path().join("test.db");
+    let store = SqliteStore::new(&db_path)
+        .await
+        .expect("Failed to create store");
+
+    // Create 3 repos in order with small delays for different timestamps
     for i in 0..3 {
         let repo_path = repos_dir.path().join(format!("repo-{i}"));
         std::fs::create_dir_all(&repo_path).expect("Failed to create repo dir");
-        init_git_repo(&repo_path);
 
-        manager
-            .create_session(
-                repo_path.to_string_lossy().to_string(),
-                None,
-                format!("Prompt {i}"),
-                BackendType::Zellij,
-                AgentType::ClaudeCode,
-                None,
-                true,
-                false, // dangerous_copy_creds
-                false,
-                false,
-                AccessMode::default(),
-                vec![],
-                None,
-                None,
-                None,
-                None,
-                None, // storage_class
-            )
+        store
+            .add_recent_repo(repo_path, PathBuf::new())
             .await
-            .expect("Failed to create session");
+            .expect("Failed to add repo");
 
         // Small delay to ensure different timestamps
-        tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+        tokio::time::sleep(std::time::Duration::from_millis(10)).await;
     }
 
-    let recent = manager
+    let recent = store
         .get_recent_repos()
         .await
         .expect("Failed to get recent repos");
@@ -459,72 +378,32 @@ async fn test_nonexistent_repo_handles_gracefully() {
 
 #[tokio::test]
 async fn test_subdirectories_tracked_separately() {
-    let (manager, _temp_dir, repos_dir) = create_test_manager().await;
+    // Test subdirectory tracking directly at store level (fast)
+    let temp_dir = TempDir::new().expect("Failed to create temp dir");
+    let repos_dir = TempDir::new().expect("Failed to create repos dir");
 
-    // Create a monorepo with subdirectories
+    let db_path = temp_dir.path().join("test.db");
+    let store = SqliteStore::new(&db_path)
+        .await
+        .expect("Failed to create store");
+
+    // Create a monorepo directory
     let repo_path = repos_dir.path().join("monorepo");
     std::fs::create_dir_all(&repo_path).expect("Failed to create repo dir");
-    init_git_repo(&repo_path);
 
-    // Create subdirectories
-    let packages_foo = repo_path.join("packages/foo");
-    let packages_bar = repo_path.join("packages/bar");
-    std::fs::create_dir_all(&packages_foo).expect("Failed to create packages/foo");
-    std::fs::create_dir_all(&packages_bar).expect("Failed to create packages/bar");
-
-    // Create session in packages/foo
-    manager
-        .create_session(
-            packages_foo.to_string_lossy().to_string(),
-            None,
-            "Prompt 1".to_string(),
-            BackendType::Zellij,
-            AgentType::ClaudeCode,
-            None,
-            true,
-            false, // dangerous_copy_creds
-            false,
-            false,
-            AccessMode::default(),
-            vec![],
-            None,
-            None,
-            None,
-            None,
-            None, // storage_class
-        )
+    // Add two different subdirectories
+    store
+        .add_recent_repo(repo_path.clone(), PathBuf::from("packages/foo"))
         .await
-        .expect("Failed to create session in packages/foo");
+        .expect("Failed to add packages/foo");
 
-    // Small delay to ensure different timestamps
-    tokio::time::sleep(std::time::Duration::from_millis(50)).await;
-
-    // Create session in packages/bar
-    manager
-        .create_session(
-            packages_bar.to_string_lossy().to_string(),
-            None,
-            "Prompt 2".to_string(),
-            BackendType::Zellij,
-            AgentType::ClaudeCode,
-            None,
-            true,
-            false, // dangerous_copy_creds
-            false,
-            false,
-            AccessMode::default(),
-            vec![],
-            None,
-            None,
-            None,
-            None,
-            None, // storage_class
-        )
+    store
+        .add_recent_repo(repo_path.clone(), PathBuf::from("packages/bar"))
         .await
-        .expect("Failed to create session in packages/bar");
+        .expect("Failed to add packages/bar");
 
     // Should have 2 separate entries
-    let recent = manager
+    let recent = store
         .get_recent_repos()
         .await
         .expect("Failed to get recent repos");
@@ -534,7 +413,7 @@ async fn test_subdirectories_tracked_separately() {
         "Should have 2 separate entries for different subdirectories"
     );
 
-    // Both should have the same repo_path (git root)
+    // Both should have the same repo_path
     let canonical_repo = repo_path.canonicalize().expect("Failed to canonicalize");
     assert_eq!(recent[0].repo_path, canonical_repo);
     assert_eq!(recent[1].repo_path, canonical_repo);
@@ -556,40 +435,25 @@ async fn test_subdirectories_tracked_separately() {
 
 #[tokio::test]
 async fn test_same_subdir_updates_timestamp() {
-    let (manager, _temp_dir, repos_dir) = create_test_manager().await;
+    // Test timestamp update for same subdirectory at store level (fast)
+    let temp_dir = TempDir::new().expect("Failed to create temp dir");
+    let repos_dir = TempDir::new().expect("Failed to create repos dir");
+
+    let db_path = temp_dir.path().join("test.db");
+    let store = SqliteStore::new(&db_path)
+        .await
+        .expect("Failed to create store");
 
     let repo_path = repos_dir.path().join("monorepo");
     std::fs::create_dir_all(&repo_path).expect("Failed to create repo dir");
-    init_git_repo(&repo_path);
 
-    let packages_foo = repo_path.join("packages/foo");
-    std::fs::create_dir_all(&packages_foo).expect("Failed to create packages/foo");
-
-    // Create first session in packages/foo
-    manager
-        .create_session(
-            packages_foo.to_string_lossy().to_string(),
-            None,
-            "Prompt 1".to_string(),
-            BackendType::Zellij,
-            AgentType::ClaudeCode,
-            None,
-            true,
-            false, // dangerous_copy_creds
-            false,
-            false,
-            AccessMode::default(),
-            vec![],
-            None,
-            None,
-            None,
-            None,
-            None, // storage_class
-        )
+    // Add subdirectory first time
+    store
+        .add_recent_repo(repo_path.clone(), PathBuf::from("packages/foo"))
         .await
-        .expect("Failed to create session 1");
+        .expect("Failed to add subdirectory");
 
-    let recent1 = manager
+    let recent1 = store
         .get_recent_repos()
         .await
         .expect("Failed to get recent repos");
@@ -597,34 +461,16 @@ async fn test_same_subdir_updates_timestamp() {
     let timestamp1 = recent1[0].last_used;
 
     // Wait to ensure different timestamp
-    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+    tokio::time::sleep(std::time::Duration::from_millis(10)).await;
 
-    // Create second session in same subdirectory
-    manager
-        .create_session(
-            packages_foo.to_string_lossy().to_string(),
-            None,
-            "Prompt 2".to_string(),
-            BackendType::Zellij,
-            AgentType::ClaudeCode,
-            None, // model
-            true,
-            false, // dangerous_copy_creds
-            false,
-            false,
-            AccessMode::default(),
-            vec![],
-            None,
-            None,
-            None,
-            None,
-            None, // storage_class
-        )
+    // Add same subdirectory again (upsert)
+    store
+        .add_recent_repo(repo_path, PathBuf::from("packages/foo"))
         .await
-        .expect("Failed to create session 2");
+        .expect("Failed to add subdirectory again");
 
     // Should still have only 1 entry (same repo + subdir)
-    let recent2 = manager
+    let recent2 = store
         .get_recent_repos()
         .await
         .expect("Failed to get recent repos");
@@ -644,57 +490,40 @@ async fn test_same_subdir_updates_timestamp() {
 
 #[tokio::test]
 async fn test_subdirectories_respect_limit() {
-    let (manager, _temp_dir, repos_dir) = create_test_manager().await;
+    // Test subdirectory limit enforcement directly at the store level (fast)
+    let temp_dir = TempDir::new().expect("Failed to create temp dir");
+    let repos_dir = TempDir::new().expect("Failed to create repos dir");
 
-    // Create a monorepo
+    let db_path = temp_dir.path().join("test.db");
+    let store = SqliteStore::new(&db_path)
+        .await
+        .expect("Failed to create store")
+        .with_max_recent_repos(5);
+
+    // Create a monorepo directory
     let repo_path = repos_dir.path().join("monorepo");
     std::fs::create_dir_all(&repo_path).expect("Failed to create repo dir");
-    init_git_repo(&repo_path);
 
-    // Create 22 different subdirectories to exceed the 20 limit
-    for i in 0..22 {
-        let subdir = repo_path.join(format!("package-{i}"));
-        std::fs::create_dir_all(&subdir).expect("Failed to create subdir");
-
-        manager
-            .create_session(
-                subdir.to_string_lossy().to_string(),
-                None,
-                format!("Prompt {i}"),
-                BackendType::Zellij,
-                AgentType::ClaudeCode,
-                None,
-                true,
-                false, // dangerous_copy_creds
-                false,
-                false,
-                AccessMode::default(),
-                vec![],
-                None,
-                None,
-                None,
-                None,
-                None, // storage_class
-            )
+    // Add 6 different subdirectories to exceed the limit of 5
+    for i in 0..6 {
+        store
+            .add_recent_repo(repo_path.clone(), PathBuf::from(format!("package-{i}")))
             .await
-            .expect("Failed to create session");
-
-        // Small delay to ensure different timestamps
-        tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+            .expect("Failed to add recent repo");
     }
 
-    // Should only have 20 entries (the limit)
-    let recent = manager
+    // Should only have 5 entries (the limit)
+    let recent = store
         .get_recent_repos()
         .await
         .expect("Failed to get recent repos");
     assert_eq!(
         recent.len(),
-        20,
-        "Should enforce limit of 20 entries even with subdirectories"
+        5,
+        "Should enforce limit of 5 entries even with subdirectories"
     );
 
-    // The oldest subdirectories should not be in the list
+    // The oldest subdirectory should not be in the list
     let subdirs: Vec<String> = recent
         .iter()
         .map(|r| r.subdirectory.to_string_lossy().to_string())
@@ -704,18 +533,14 @@ async fn test_subdirectories_respect_limit() {
         !subdirs.contains(&"package-0".to_string()),
         "Oldest subdirectory should have been removed"
     );
-    assert!(
-        !subdirs.contains(&"package-1".to_string()),
-        "Second oldest subdirectory should have been removed"
-    );
 
     // The newest subdirectories should be in the list
     assert!(
-        subdirs.contains(&"package-21".to_string()),
+        subdirs.contains(&"package-5".to_string()),
         "Newest subdirectory should be in the list"
     );
     assert!(
-        subdirs.contains(&"package-20".to_string()),
+        subdirs.contains(&"package-4".to_string()),
         "Second newest subdirectory should be in the list"
     );
 }

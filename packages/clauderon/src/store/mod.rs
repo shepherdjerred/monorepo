@@ -17,8 +17,8 @@ pub struct RecentRepo {
     pub last_used: DateTime<Utc>,
 }
 
-/// Maximum number of recent repositories to track
-pub const MAX_RECENT_REPOS: usize = 20;
+/// Default maximum number of recent repositories to track
+pub const DEFAULT_MAX_RECENT_REPOS: usize = 20;
 
 /// Trait for session storage backends
 #[async_trait]

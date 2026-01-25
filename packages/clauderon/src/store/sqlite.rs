@@ -13,6 +13,8 @@ use crate::core::{Event, Session};
 /// SQLite-based session store
 pub struct SqliteStore {
     pool: SqlitePool,
+    /// Maximum number of recent repositories to track
+    max_recent_repos: usize,
 }
 
 impl SqliteStore {
@@ -41,7 +43,10 @@ impl SqliteStore {
         // Run migrations
         Self::run_migrations(&pool).await?;
 
-        Ok(Self { pool })
+        Ok(Self {
+            pool,
+            max_recent_repos: super::DEFAULT_MAX_RECENT_REPOS,
+        })
     }
 
     /// Get a clone of the underlying connection pool
@@ -52,6 +57,15 @@ impl SqliteStore {
     #[must_use]
     pub fn pool(&self) -> SqlitePool {
         self.pool.clone()
+    }
+
+    /// Set the maximum number of recent repositories to track.
+    ///
+    /// This is primarily useful for testing to speed up limit enforcement tests.
+    #[must_use]
+    pub fn with_max_recent_repos(mut self, limit: usize) -> Self {
+        self.max_recent_repos = limit;
+        self
     }
 
     /// Run database migrations
@@ -1304,7 +1318,7 @@ impl Store for SqliteStore {
     async fn get_recent_repos(&self) -> anyhow::Result<Vec<RecentRepo>> {
         let query = format!(
             "SELECT * FROM recent_repos ORDER BY last_used DESC LIMIT {}",
-            super::MAX_RECENT_REPOS
+            self.max_recent_repos
         );
 
         let rows = sqlx::query_as::<_, RecentRepoRow>(&query)
