@@ -61,6 +61,7 @@ export default defineConfig({
           items: [
             { label: "CLI Commands", slug: "reference/cli" },
             { label: "Configuration", slug: "reference/configuration" },
+            { label: "Configuration Audit", slug: "reference/configuration-audit" },
             { label: "API", slug: "reference/api" },
             { label: "Environment Variables", slug: "reference/environment-variables" },
             { label: "File Locations", slug: "reference/file-locations" },
