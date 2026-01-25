@@ -7,22 +7,101 @@ use ratatui::{
 };
 
 use super::SPINNER_FRAMES;
-use crate::backends::{KubernetesConfig, SpritesConfig};
+use crate::backends::{ImagePullPolicy, KubernetesConfig, SpritesConfig};
 use crate::core::{
     AccessMode, AgentType, BackendType,
     session::{ClaudeModel, CodexModel, GeminiModel, SessionModel},
 };
-use crate::tui::app::{App, CreateDialogFocus};
+use crate::tui::app::{App, CreateDialogFocus, CreateDialogState};
+
+// Layout constants - single source of truth for field heights
+const TEXT_FIELD_HEIGHT: u16 = 3;
+const RADIO_FIELD_HEIGHT: u16 = 2;
+const CHECKBOX_HEIGHT: u16 = 1;
+const SPACER_HEIGHT: u16 = 1;
+const BUTTON_HEIGHT: u16 = 1;
+const OUTER_MARGIN: u16 = 2; // margin(1) adds 1 on each side = 2 total
+const OUTER_BORDER: u16 = 2; // border on top and bottom
 
 /// Check if a backend is available (configured) for use
 fn is_backend_available(backend: BackendType) -> bool {
     match backend {
         BackendType::Sprites => SpritesConfig::load_or_default().is_connected_mode(),
-        BackendType::Kubernetes => KubernetesConfig::load_or_default().is_connected_mode(),
+        BackendType::Kubernetes => true, // Always available, use dangerous-copy-creds if no proxy
         BackendType::Zellij | BackendType::Docker => true,
         #[cfg(target_os = "macos")]
         BackendType::AppleContainer => true,
     }
+}
+
+/// Check if K8s proxy mode is configured
+pub fn is_k8s_proxy_configured() -> bool {
+    KubernetesConfig::load_or_default().is_connected_mode()
+}
+
+/// Calculate layout for the create dialog.
+/// Returns (total_height, constraints) for consistent sizing between ui.rs and render().
+#[allow(clippy::cast_possible_truncation)]
+pub fn calculate_layout(dialog: &CreateDialogState) -> (u16, Vec<Constraint>) {
+    // Dynamic prompt height: min 5 lines, max 15
+    let prompt_lines = dialog.prompt.lines().count().max(1);
+    let prompt_height = prompt_lines.clamp(5, 15) as u16 + 2; // +2 for borders
+
+    // Dynamic images height: 0 if empty, otherwise show up to 3 images + borders
+    let images_height = if dialog.images.is_empty() {
+        0
+    } else {
+        dialog.images.len().min(3) as u16 + 2
+    };
+
+    // Check conditions for optional fields
+    let is_k8s = dialog.backend == BackendType::Kubernetes;
+    let show_copy_creds = is_k8s && !is_k8s_proxy_configured();
+
+    // Build constraints dynamically
+    let mut constraints = vec![
+        Constraint::Length(prompt_height),      // Prompt (dynamic)
+        Constraint::Length(images_height),      // Images (dynamic, 0 if none)
+        Constraint::Length(TEXT_FIELD_HEIGHT),  // Repo path
+        Constraint::Length(TEXT_FIELD_HEIGHT),  // Base branch
+        Constraint::Length(SPACER_HEIGHT),      // Spacer
+        Constraint::Length(RADIO_FIELD_HEIGHT), // Backend
+        Constraint::Length(RADIO_FIELD_HEIGHT), // Agent
+        Constraint::Length(RADIO_FIELD_HEIGHT), // Model
+        Constraint::Length(SPACER_HEIGHT),      // Spacer
+        Constraint::Length(RADIO_FIELD_HEIGHT), // Access mode
+        Constraint::Length(CHECKBOX_HEIGHT),    // Skip checks
+        Constraint::Length(CHECKBOX_HEIGHT),    // Plan mode
+    ];
+
+    // Add dangerous copy creds checkbox (only for K8s without proxy)
+    if show_copy_creds {
+        constraints.push(Constraint::Length(CHECKBOX_HEIGHT));
+    }
+
+    // Add K8s-specific fields
+    if is_k8s {
+        constraints.push(Constraint::Length(TEXT_FIELD_HEIGHT)); // Container image
+        constraints.push(Constraint::Length(RADIO_FIELD_HEIGHT)); // Pull policy
+        constraints.push(Constraint::Length(TEXT_FIELD_HEIGHT)); // Storage class
+    }
+
+    // Footer
+    constraints.push(Constraint::Length(SPACER_HEIGHT)); // Spacer
+    constraints.push(Constraint::Length(BUTTON_HEIGHT)); // Buttons
+
+    // Calculate total height from constraints
+    let content_height: u16 = constraints
+        .iter()
+        .filter_map(|c| match c {
+            Constraint::Length(h) => Some(*h),
+            _ => None,
+        })
+        .sum();
+
+    let total_height = content_height + OUTER_MARGIN + OUTER_BORDER;
+
+    (total_height, constraints)
 }
 
 /// Render the create session dialog
@@ -48,66 +127,73 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
 
     let dialog = &app.create_dialog;
 
-    // Calculate dynamic height for prompt field based on content
+    // Get layout constraints from single source of truth
+    let (_total_height, constraints) = calculate_layout(dialog);
+
+    // Check conditions for layout indexing
+    let is_k8s = dialog.backend == BackendType::Kubernetes;
+    let show_copy_creds = is_k8s && !is_k8s_proxy_configured();
+
+    // Calculate visible lines for prompt field (matches calculate_layout)
     let prompt_lines = dialog.prompt.lines().count().max(1);
-    let prompt_height = prompt_lines.max(5); // Min 5 lines, no max
+    let prompt_height = prompt_lines.clamp(5, 15);
 
-    // Calculate images height (0 if no images, or limited height if images present)
-    // Safe cast: limited to 3 images max, well within u16 range
-    #[allow(clippy::cast_possible_truncation)]
-    let images_height = if dialog.images.is_empty() {
-        0
-    } else {
-        dialog.images.len().min(3) as u16 + 2 // Show up to 3 images, +2 for borders
-    };
-
-    // Inner area (with padding)
-    // Safe cast: terminal UI dimensions are always within u16 range
-    #[allow(clippy::cast_possible_truncation)]
+    // Apply layout
     let inner = Layout::default()
         .direction(Direction::Vertical)
         .margin(1)
-        .constraints([
-            Constraint::Length(prompt_height as u16 + 2), // Prompt (dynamic + borders)
-            Constraint::Length(images_height),            // Images (dynamic)
-            Constraint::Length(3),                        // Repo path
-            Constraint::Length(3),                        // Base branch
-            Constraint::Length(2),                        // Backend
-            Constraint::Length(2),                        // Agent
-            Constraint::Length(2),                        // Model
-            Constraint::Length(2),                        // Access mode
-            Constraint::Length(2),                        // Skip checks
-            Constraint::Length(2),                        // Plan mode
-            Constraint::Length(1),                        // Spacer
-            Constraint::Length(1),                        // Buttons
-        ])
+        .constraints(constraints)
         .split(area);
 
-    // Explicit layout indices to prevent indexing errors
-    let mut layout_idx = 0;
-    let prompt_idx = layout_idx;
-    layout_idx += 1;
-    let images_idx = layout_idx;
-    layout_idx += 1;
-    let repo_idx = layout_idx;
-    layout_idx += 1;
-    let base_branch_idx = layout_idx;
-    layout_idx += 1;
-    let backend_idx = layout_idx;
-    layout_idx += 1;
-    let agent_idx = layout_idx;
-    layout_idx += 1;
-    let model_idx = layout_idx;
-    layout_idx += 1;
-    let access_idx = layout_idx;
-    layout_idx += 1;
-    let skip_checks_idx = layout_idx;
-    layout_idx += 1;
-    let plan_mode_idx = layout_idx;
-    layout_idx += 1;
-    let _spacer_idx = layout_idx;
-    layout_idx += 1;
-    let buttons_idx = layout_idx;
+    // Calculate indices dynamically based on which fields are present
+    // This matches the order constraints are added in calculate_layout()
+    let mut idx = 0;
+    let prompt_idx = idx;
+    idx += 1;
+    let images_idx = idx;
+    idx += 1;
+    let repo_idx = idx;
+    idx += 1;
+    let base_branch_idx = idx;
+    idx += 1;
+    idx += 1; // spacer
+    let backend_idx = idx;
+    idx += 1;
+    let agent_idx = idx;
+    idx += 1;
+    let model_idx = idx;
+    idx += 1;
+    idx += 1; // spacer
+    let access_idx = idx;
+    idx += 1;
+    let skip_checks_idx = idx;
+    idx += 1;
+    let plan_mode_idx = idx;
+    idx += 1;
+
+    // Conditional fields - only increment index if field is shown
+    let dangerous_copy_creds_idx = if show_copy_creds {
+        let i = idx;
+        idx += 1;
+        i
+    } else {
+        0 // Won't be used
+    };
+
+    let (container_image_idx, pull_policy_idx, storage_class_idx) = if is_k8s {
+        let ci = idx;
+        idx += 1;
+        let pp = idx;
+        idx += 1;
+        let sc = idx;
+        idx += 1;
+        (ci, pp, sc)
+    } else {
+        (0, 0, 0) // Won't be used
+    };
+
+    idx += 1; // spacer
+    let buttons_idx = idx;
 
     // Prompt field (multiline with scrolling)
     render_multiline_field(
@@ -146,14 +232,8 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
     );
 
     // Backend selection - show unavailable backends grayed out
-    let k8s_available = is_backend_available(BackendType::Kubernetes);
     let sprites_available = is_backend_available(BackendType::Sprites);
 
-    let k8s_label = if k8s_available {
-        "Kubernetes"
-    } else {
-        "Kubernetes (not configured)"
-    };
     let sprites_label = if sprites_available {
         "Sprites"
     } else {
@@ -168,9 +248,9 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
 
     if dialog.feature_flags.enable_kubernetes_backend {
         backend_options.push((
-            k8s_label,
+            "Kubernetes",
             dialog.backend == BackendType::Kubernetes,
-            k8s_available,
+            true, // Always available, use dangerous-copy-creds if no proxy
         ));
     }
 
@@ -383,6 +463,54 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         dialog.focus == CreateDialogFocus::PlanMode,
         inner[plan_mode_idx],
     );
+
+    // Dangerous copy creds checkbox (only show for K8s when proxy not configured)
+    if show_copy_creds {
+        render_checkbox_field(
+            frame,
+            "Copy credentials to container (dangerous, no proxy)",
+            dialog.dangerous_copy_creds,
+            dialog.focus == CreateDialogFocus::DangerousCopyCreds,
+            inner[dangerous_copy_creds_idx],
+        );
+    }
+
+    // K8s-specific options (only show when K8s backend is selected)
+    if is_k8s {
+        // Container image text field
+        render_text_field(
+            frame,
+            "Container Image (optional)",
+            &dialog.container_image,
+            dialog.focus == CreateDialogFocus::ContainerImage,
+            inner[container_image_idx],
+        );
+
+        // Pull policy radio buttons
+        render_radio_field(
+            frame,
+            "Pull Policy",
+            &[
+                (
+                    "IfNotPresent",
+                    dialog.pull_policy == ImagePullPolicy::IfNotPresent,
+                ),
+                ("Always", dialog.pull_policy == ImagePullPolicy::Always),
+                ("Never", dialog.pull_policy == ImagePullPolicy::Never),
+            ],
+            dialog.focus == CreateDialogFocus::PullPolicy,
+            inner[pull_policy_idx],
+        );
+
+        // Storage class text field
+        render_text_field(
+            frame,
+            "Storage Class (optional)",
+            &dialog.storage_class,
+            dialog.focus == CreateDialogFocus::StorageClass,
+            inner[storage_class_idx],
+        );
+    }
 
     // Buttons
     render_buttons(

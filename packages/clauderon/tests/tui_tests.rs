@@ -156,7 +156,9 @@ fn test_create_dialog_focus_cycle() {
 
     assert_eq!(app.create_dialog.focus, CreateDialogFocus::Prompt);
 
-    // Simulate Tab cycling
+    // Simulate Tab cycling (default is Zellij backend, so K8s fields are skipped)
+    // Note: K8s-specific fields (DangerousCopyCreds, ContainerImage, PullPolicy, StorageClass)
+    // are only shown when K8s backend is selected
     let focuses = [
         CreateDialogFocus::RepoPath,
         CreateDialogFocus::BaseBranch,
@@ -166,11 +168,13 @@ fn test_create_dialog_focus_cycle() {
         CreateDialogFocus::AccessMode,
         CreateDialogFocus::SkipChecks,
         CreateDialogFocus::PlanMode,
-        CreateDialogFocus::Buttons,
-        CreateDialogFocus::Prompt, // Back to start
+        CreateDialogFocus::Buttons, // Skips K8s fields since default backend is Zellij
+        CreateDialogFocus::Prompt,  // Back to start
     ];
 
     for expected_focus in focuses {
+        // Simulate navigation logic (same as events.rs Tab handler)
+        let is_k8s = app.create_dialog.backend == clauderon::core::BackendType::Kubernetes;
         app.create_dialog.focus = match app.create_dialog.focus {
             CreateDialogFocus::Prompt => CreateDialogFocus::RepoPath,
             CreateDialogFocus::RepoPath => CreateDialogFocus::BaseBranch,
@@ -180,7 +184,17 @@ fn test_create_dialog_focus_cycle() {
             CreateDialogFocus::Model => CreateDialogFocus::AccessMode,
             CreateDialogFocus::AccessMode => CreateDialogFocus::SkipChecks,
             CreateDialogFocus::SkipChecks => CreateDialogFocus::PlanMode,
-            CreateDialogFocus::PlanMode => CreateDialogFocus::Buttons,
+            CreateDialogFocus::PlanMode => {
+                if is_k8s {
+                    CreateDialogFocus::DangerousCopyCreds
+                } else {
+                    CreateDialogFocus::Buttons
+                }
+            }
+            CreateDialogFocus::DangerousCopyCreds => CreateDialogFocus::ContainerImage,
+            CreateDialogFocus::ContainerImage => CreateDialogFocus::PullPolicy,
+            CreateDialogFocus::PullPolicy => CreateDialogFocus::StorageClass,
+            CreateDialogFocus::StorageClass => CreateDialogFocus::Buttons,
             CreateDialogFocus::Buttons => CreateDialogFocus::Prompt,
         };
         assert_eq!(app.create_dialog.focus, expected_focus);
@@ -310,6 +324,7 @@ async fn test_create_dialog_tab_navigation() {
     handle_key_event(&mut app, key(KeyCode::Tab)).await.unwrap();
     assert_eq!(app.create_dialog.focus, CreateDialogFocus::PlanMode);
 
+    // Default backend is Zellij, so K8s fields are skipped
     handle_key_event(&mut app, key(KeyCode::Tab)).await.unwrap();
     assert_eq!(app.create_dialog.focus, CreateDialogFocus::Buttons);
 
@@ -1383,6 +1398,339 @@ fn test_render_signal_menu_without_panic() {
 
     let mut app = App::new();
     app.open_signal_menu();
+
+    // Should render without panicking
+    terminal.draw(|frame| ui::render(frame, &app)).unwrap();
+}
+
+// ============================================================================
+// Kubernetes Backend UI Parity Tests
+// ============================================================================
+
+#[test]
+fn test_k8s_specific_fields_initialized() {
+    use clauderon::backends::ImagePullPolicy;
+
+    let app = App::new();
+
+    // Verify K8s-specific fields have correct defaults
+    assert_eq!(app.create_dialog.container_image, "");
+    assert_eq!(app.create_dialog.pull_policy, ImagePullPolicy::IfNotPresent);
+    assert_eq!(app.create_dialog.storage_class, "");
+    assert!(!app.create_dialog.dangerous_copy_creds);
+}
+
+#[test]
+fn test_toggle_pull_policy() {
+    use clauderon::backends::ImagePullPolicy;
+
+    let mut app = App::new();
+    app.open_create_dialog();
+
+    // Default is IfNotPresent
+    assert_eq!(app.create_dialog.pull_policy, ImagePullPolicy::IfNotPresent);
+
+    // Toggle: IfNotPresent -> Always
+    app.create_dialog.toggle_pull_policy();
+    assert_eq!(app.create_dialog.pull_policy, ImagePullPolicy::Always);
+
+    // Toggle: Always -> Never
+    app.create_dialog.toggle_pull_policy();
+    assert_eq!(app.create_dialog.pull_policy, ImagePullPolicy::Never);
+
+    // Toggle: Never -> IfNotPresent (wraps around)
+    app.create_dialog.toggle_pull_policy();
+    assert_eq!(app.create_dialog.pull_policy, ImagePullPolicy::IfNotPresent);
+}
+
+#[test]
+fn test_dangerous_copy_creds_toggle() {
+    let mut app = App::new();
+    app.open_create_dialog();
+
+    assert!(!app.create_dialog.dangerous_copy_creds);
+
+    app.create_dialog.dangerous_copy_creds = !app.create_dialog.dangerous_copy_creds;
+    assert!(app.create_dialog.dangerous_copy_creds);
+
+    app.create_dialog.dangerous_copy_creds = !app.create_dialog.dangerous_copy_creds;
+    assert!(!app.create_dialog.dangerous_copy_creds);
+}
+
+#[tokio::test]
+async fn test_k8s_navigation_with_k8s_backend() {
+    use clauderon::feature_flags::FeatureFlags;
+    use std::sync::Arc;
+
+    let mut app = App::new();
+    app.open_create_dialog();
+
+    // Enable K8s feature flag and switch to K8s backend
+    app.create_dialog.feature_flags = Arc::new(FeatureFlags {
+        enable_kubernetes_backend: true,
+        ..Default::default()
+    });
+    app.create_dialog.backend = BackendType::Kubernetes;
+
+    // Start at PlanMode
+    app.create_dialog.focus = CreateDialogFocus::PlanMode;
+
+    // Tab should go to DangerousCopyCreds (K8s field)
+    handle_key_event(&mut app, key(KeyCode::Tab)).await.unwrap();
+    assert_eq!(
+        app.create_dialog.focus,
+        CreateDialogFocus::DangerousCopyCreds
+    );
+
+    // Tab should go to ContainerImage
+    handle_key_event(&mut app, key(KeyCode::Tab)).await.unwrap();
+    assert_eq!(app.create_dialog.focus, CreateDialogFocus::ContainerImage);
+
+    // Tab should go to PullPolicy
+    handle_key_event(&mut app, key(KeyCode::Tab)).await.unwrap();
+    assert_eq!(app.create_dialog.focus, CreateDialogFocus::PullPolicy);
+
+    // Tab should go to StorageClass
+    handle_key_event(&mut app, key(KeyCode::Tab)).await.unwrap();
+    assert_eq!(app.create_dialog.focus, CreateDialogFocus::StorageClass);
+
+    // Tab should go to Buttons
+    handle_key_event(&mut app, key(KeyCode::Tab)).await.unwrap();
+    assert_eq!(app.create_dialog.focus, CreateDialogFocus::Buttons);
+}
+
+#[tokio::test]
+async fn test_k8s_navigation_skipped_without_k8s_backend() {
+    let mut app = App::new();
+    app.open_create_dialog();
+
+    // Default backend is Zellij, K8s fields should be skipped
+    assert_eq!(app.create_dialog.backend, BackendType::Zellij);
+
+    // Start at PlanMode
+    app.create_dialog.focus = CreateDialogFocus::PlanMode;
+
+    // Tab should skip K8s fields and go directly to Buttons
+    handle_key_event(&mut app, key(KeyCode::Tab)).await.unwrap();
+    assert_eq!(app.create_dialog.focus, CreateDialogFocus::Buttons);
+}
+
+#[tokio::test]
+async fn test_container_image_text_input() {
+    use clauderon::feature_flags::FeatureFlags;
+    use std::sync::Arc;
+
+    let mut app = App::new();
+    app.open_create_dialog();
+
+    // Enable K8s and switch to K8s backend
+    app.create_dialog.feature_flags = Arc::new(FeatureFlags {
+        enable_kubernetes_backend: true,
+        ..Default::default()
+    });
+    app.create_dialog.backend = BackendType::Kubernetes;
+    app.create_dialog.focus = CreateDialogFocus::ContainerImage;
+
+    assert_eq!(app.create_dialog.container_image, "");
+
+    // Type characters
+    handle_key_event(&mut app, char_key('m')).await.unwrap();
+    handle_key_event(&mut app, char_key('y')).await.unwrap();
+    handle_key_event(&mut app, char_key('-')).await.unwrap();
+    handle_key_event(&mut app, char_key('i')).await.unwrap();
+    handle_key_event(&mut app, char_key('m')).await.unwrap();
+    handle_key_event(&mut app, char_key('a')).await.unwrap();
+    handle_key_event(&mut app, char_key('g')).await.unwrap();
+    handle_key_event(&mut app, char_key('e')).await.unwrap();
+
+    assert_eq!(app.create_dialog.container_image, "my-image");
+
+    // Backspace
+    handle_key_event(&mut app, key(KeyCode::Backspace))
+        .await
+        .unwrap();
+    assert_eq!(app.create_dialog.container_image, "my-imag");
+}
+
+#[tokio::test]
+async fn test_storage_class_text_input() {
+    use clauderon::feature_flags::FeatureFlags;
+    use std::sync::Arc;
+
+    let mut app = App::new();
+    app.open_create_dialog();
+
+    // Enable K8s and switch to K8s backend
+    app.create_dialog.feature_flags = Arc::new(FeatureFlags {
+        enable_kubernetes_backend: true,
+        ..Default::default()
+    });
+    app.create_dialog.backend = BackendType::Kubernetes;
+    app.create_dialog.focus = CreateDialogFocus::StorageClass;
+
+    assert_eq!(app.create_dialog.storage_class, "");
+
+    // Type storage class name
+    handle_key_event(&mut app, char_key('s')).await.unwrap();
+    handle_key_event(&mut app, char_key('s')).await.unwrap();
+    handle_key_event(&mut app, char_key('d')).await.unwrap();
+
+    assert_eq!(app.create_dialog.storage_class, "ssd");
+
+    // Backspace
+    handle_key_event(&mut app, key(KeyCode::Backspace))
+        .await
+        .unwrap();
+    assert_eq!(app.create_dialog.storage_class, "ss");
+}
+
+#[tokio::test]
+async fn test_pull_policy_toggle_with_keyboard() {
+    use clauderon::backends::ImagePullPolicy;
+    use clauderon::feature_flags::FeatureFlags;
+    use std::sync::Arc;
+
+    let mut app = App::new();
+    app.open_create_dialog();
+
+    // Enable K8s and switch to K8s backend
+    app.create_dialog.feature_flags = Arc::new(FeatureFlags {
+        enable_kubernetes_backend: true,
+        ..Default::default()
+    });
+    app.create_dialog.backend = BackendType::Kubernetes;
+    app.create_dialog.focus = CreateDialogFocus::PullPolicy;
+
+    assert_eq!(app.create_dialog.pull_policy, ImagePullPolicy::IfNotPresent);
+
+    // Space toggles pull policy
+    handle_key_event(&mut app, char_key(' ')).await.unwrap();
+    assert_eq!(app.create_dialog.pull_policy, ImagePullPolicy::Always);
+
+    // Left/Right also toggles
+    handle_key_event(&mut app, key(KeyCode::Right))
+        .await
+        .unwrap();
+    assert_eq!(app.create_dialog.pull_policy, ImagePullPolicy::Never);
+
+    handle_key_event(&mut app, key(KeyCode::Left))
+        .await
+        .unwrap();
+    assert_eq!(app.create_dialog.pull_policy, ImagePullPolicy::IfNotPresent);
+}
+
+#[tokio::test]
+async fn test_dangerous_copy_creds_toggle_with_keyboard() {
+    use clauderon::feature_flags::FeatureFlags;
+    use std::sync::Arc;
+
+    let mut app = App::new();
+    app.open_create_dialog();
+
+    // Enable K8s and switch to K8s backend
+    app.create_dialog.feature_flags = Arc::new(FeatureFlags {
+        enable_kubernetes_backend: true,
+        ..Default::default()
+    });
+    app.create_dialog.backend = BackendType::Kubernetes;
+    app.create_dialog.focus = CreateDialogFocus::DangerousCopyCreds;
+
+    assert!(!app.create_dialog.dangerous_copy_creds);
+
+    // Space toggles
+    handle_key_event(&mut app, char_key(' ')).await.unwrap();
+    assert!(app.create_dialog.dangerous_copy_creds);
+
+    // Left/Right also toggles
+    handle_key_event(&mut app, key(KeyCode::Left))
+        .await
+        .unwrap();
+    assert!(!app.create_dialog.dangerous_copy_creds);
+
+    handle_key_event(&mut app, key(KeyCode::Right))
+        .await
+        .unwrap();
+    assert!(app.create_dialog.dangerous_copy_creds);
+}
+
+#[tokio::test]
+async fn test_k8s_session_creation_passes_options() {
+    use clauderon::backends::ImagePullPolicy;
+    use clauderon::feature_flags::FeatureFlags;
+    use std::sync::Arc;
+
+    let mut app = App::new();
+    let mock = MockApiClient::new();
+
+    app.set_client(Box::new(mock));
+    app.open_create_dialog();
+
+    // Enable K8s and configure K8s-specific options
+    app.create_dialog.feature_flags = Arc::new(FeatureFlags {
+        enable_kubernetes_backend: true,
+        ..Default::default()
+    });
+    app.create_dialog.backend = BackendType::Kubernetes;
+    app.create_dialog.repo_path = "/tmp/repo".to_string();
+    app.create_dialog.prompt = "Test prompt".to_string();
+    app.create_dialog.container_image = "my-custom-image:latest".to_string();
+    app.create_dialog.pull_policy = ImagePullPolicy::Always;
+    app.create_dialog.storage_class = "premium-ssd".to_string();
+    app.create_dialog.dangerous_copy_creds = true;
+
+    // Create session should succeed
+    app.create_session_from_dialog().await.unwrap();
+
+    assert_eq!(app.mode, AppMode::SessionList);
+    assert_eq!(app.sessions.len(), 1);
+}
+
+#[test]
+fn test_k8s_backend_available_with_feature_flag() {
+    use clauderon::feature_flags::FeatureFlags;
+    use std::sync::Arc;
+
+    let mut app = App::new();
+    app.open_create_dialog();
+
+    // Enable K8s feature flag
+    app.create_dialog.feature_flags = Arc::new(FeatureFlags {
+        enable_kubernetes_backend: true,
+        ..Default::default()
+    });
+
+    // K8s backend should be available (is_backend_available returns true)
+    // This is tested indirectly by verifying we can select K8s backend
+    app.create_dialog.backend = BackendType::Zellij;
+    app.create_dialog.toggle_backend(); // Zellij -> Docker
+    assert_eq!(app.create_dialog.backend, BackendType::Docker);
+
+    app.create_dialog.toggle_backend(); // Docker -> Kubernetes (now available)
+    assert_eq!(app.create_dialog.backend, BackendType::Kubernetes);
+}
+
+#[test]
+fn test_render_create_dialog_with_k8s_backend() {
+    use clauderon::feature_flags::FeatureFlags;
+    use clauderon::tui::ui;
+    use ratatui::Terminal;
+    use ratatui::backend::TestBackend;
+    use std::sync::Arc;
+
+    let backend = TestBackend::new(120, 50); // Larger terminal for K8s fields
+    let mut terminal = Terminal::new(backend).unwrap();
+
+    let mut app = App::new();
+    app.open_create_dialog();
+
+    // Enable K8s and switch to K8s backend
+    app.create_dialog.feature_flags = Arc::new(FeatureFlags {
+        enable_kubernetes_backend: true,
+        ..Default::default()
+    });
+    app.create_dialog.backend = BackendType::Kubernetes;
+    app.create_dialog.container_image = "test-image".to_string();
+    app.create_dialog.storage_class = "fast-ssd".to_string();
 
     // Should render without panicking
     terminal.draw(|frame| ui::render(frame, &app)).unwrap();

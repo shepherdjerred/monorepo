@@ -32,34 +32,11 @@ pub fn render(frame: &mut Frame, app: &App) {
     // Render modal dialogs on top
     match app.mode {
         AppMode::CreateDialog => {
-            // Calculate required height based on prompt content
-            let prompt_lines = app.create_dialog.prompt.lines().count().max(1);
-            let prompt_height = prompt_lines.clamp(5, usize::MAX); // Min 5 lines, no max
-            let images_height = if app.create_dialog.images.is_empty() {
-                0
-            } else {
-                app.create_dialog.images.len().min(3) + 2 // Show up to 3 images, +2 for borders
-            };
+            // Get required height from single source of truth
+            let (required_height, _constraints) =
+                create_dialog::calculate_layout(&app.create_dialog);
 
-            // Calculate total required height:
-            // - Prompt field: prompt_height + 2 (borders)
-            // - Images field: images_height
-            // - Repo path: 3
-            // - Backend: 2
-            // - Agent: 2
-            // - Access mode: 2
-            // - Skip checks: 2
-            // - Plan mode: 2
-            // - Spacer: 1
-            // - Buttons: 1
-            // - Outer margins: 2
-            // - Outer border: 2
-            // Safe cast: terminal UI dimensions are always within u16 range
-            #[allow(clippy::cast_possible_truncation)]
-            let required_height =
-                (prompt_height + 2 + images_height + 3 + 2 + 2 + 2 + 2 + 2 + 1 + 1 + 2 + 2) as u16;
-
-            let dialog_area = centered_rect_with_height(60, required_height, frame.area());
+            let dialog_area = centered_rect_with_height(70, required_height, frame.area());
             frame.render_widget(Clear, dialog_area);
             create_dialog::render(frame, app, dialog_area);
         }
