@@ -28,14 +28,17 @@ clauderon daemon [OPTIONS]
 ```
 
 **Feature Flags:**
-```
---enable-webauthn-auth       Enable passwordless WebAuthn authentication
---enable-ai-metadata         Enable AI-generated session titles
---enable-auto-reconcile      Auto-reconcile sessions on startup
---enable-usage-tracking      Enable Claude usage tracking
---enable-kubernetes-backend  Enable Kubernetes backend (experimental)
---enable-proxy-port-reuse    Enable proxy port reuse (experimental)
-```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--enable-webauthn-auth` | `false` | WebAuthn passwordless authentication for web UI |
+| `--enable-ai-metadata` | `true` | AI-generated session titles from prompts |
+| `--enable-auto-reconcile` | `true` | Sync database with backends on startup |
+| `--enable-usage-tracking` | `false` | Track Claude API usage per session |
+| `--enable-kubernetes-backend` | `false` | Enable Kubernetes backend (experimental) |
+| `--enable-proxy-port-reuse` | `false` | Reuse proxy ports across sessions (experimental) |
+
+See [Feature Flags Reference](/reference/feature-flags/) for detailed documentation.
 
 **Example:**
 ```bash
@@ -363,16 +366,18 @@ clauderon config credentials
 
 Feature flags can also be set via environment variables:
 
-| Variable | Description |
-|----------|-------------|
-| `CLAUDERON_FEATURE_ENABLE_WEBAUTHN_AUTH` | Passwordless auth |
-| `CLAUDERON_FEATURE_ENABLE_AI_METADATA` | AI session titles |
-| `CLAUDERON_FEATURE_ENABLE_AUTO_RECONCILE` | Auto-reconcile |
-| `CLAUDERON_FEATURE_ENABLE_USAGE_TRACKING` | Usage tracking |
-| `CLAUDERON_FEATURE_ENABLE_KUBERNETES_BACKEND` | K8s backend |
-| `CLAUDERON_FEATURE_ENABLE_PROXY_PORT_REUSE` | Proxy port reuse |
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `CLAUDERON_FEATURE_ENABLE_WEBAUTHN_AUTH` | `false` | WebAuthn passwordless auth |
+| `CLAUDERON_FEATURE_ENABLE_AI_METADATA` | `true` | AI-generated session titles |
+| `CLAUDERON_FEATURE_ENABLE_AUTO_RECONCILE` | `true` | Auto-reconcile on startup |
+| `CLAUDERON_FEATURE_ENABLE_USAGE_TRACKING` | `false` | Claude usage tracking |
+| `CLAUDERON_FEATURE_ENABLE_KUBERNETES_BACKEND` | `false` | Kubernetes backend |
+| `CLAUDERON_FEATURE_ENABLE_PROXY_PORT_REUSE` | `false` | Proxy port reuse |
 
-Set to `1` or `true` to enable.
+Values: `1`, `true`, `yes`, `on` to enable; `0`, `false`, `no`, `off` to disable.
+
+See [Feature Flags Reference](/reference/feature-flags/) for detailed documentation.
 
 ## Exit Codes
 
@@ -386,6 +391,7 @@ Set to `1` or `true` to enable.
 
 ## See Also
 
+- [Feature Flags Reference](/reference/feature-flags/) - Detailed feature flag documentation
 - [Configuration Reference](/reference/configuration/) - Configuration file options
 - [Environment Variables](/reference/environment-variables/) - Complete environment variable reference
 - [File Locations](/reference/file-locations/) - Where clauderon stores data

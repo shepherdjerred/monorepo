@@ -126,34 +126,41 @@ ENVIRONMENT:
         dev: bool,
 
         // Feature Flags
-        /// Enable experimental WebAuthn passwordless authentication
-        /// Can also be set via CLAUDERON_FEATURE_ENABLE_WEBAUTHN_AUTH environment variable
-        #[arg(long)]
+        /// [default: false] Enable WebAuthn passwordless authentication for the web UI.
+        /// Allows passkey-based login instead of session tokens.
+        /// Env: CLAUDERON_FEATURE_ENABLE_WEBAUTHN_AUTH
+        #[arg(long, help_heading = "Feature Flags")]
         enable_webauthn_auth: Option<bool>,
 
-        /// Enable AI-powered session metadata generation
-        /// Can also be set via CLAUDERON_FEATURE_ENABLE_AI_METADATA environment variable
-        #[arg(long)]
+        /// [default: true] Enable AI-powered session metadata generation.
+        /// Uses Claude to generate descriptive session titles from prompts.
+        /// Env: CLAUDERON_FEATURE_ENABLE_AI_METADATA
+        #[arg(long, help_heading = "Feature Flags")]
         enable_ai_metadata: Option<bool>,
 
-        /// Enable automatic session reconciliation on startup
-        /// Can also be set via CLAUDERON_FEATURE_ENABLE_AUTO_RECONCILE environment variable
-        #[arg(long)]
+        /// [default: true] Enable automatic session reconciliation on startup.
+        /// Syncs database state with actual backend resources (containers, pods, etc).
+        /// Env: CLAUDERON_FEATURE_ENABLE_AUTO_RECONCILE
+        #[arg(long, help_heading = "Feature Flags")]
         enable_auto_reconcile: Option<bool>,
 
-        /// Enable session proxy port reuse (experimental)
-        /// Can also be set via CLAUDERON_FEATURE_ENABLE_PROXY_PORT_REUSE environment variable
-        #[arg(long)]
+        /// [default: false] Enable proxy port reuse across sessions (experimental).
+        /// Reduces port allocation but may cause conflicts.
+        /// Env: CLAUDERON_FEATURE_ENABLE_PROXY_PORT_REUSE
+        #[arg(long, help_heading = "Feature Flags")]
         enable_proxy_port_reuse: Option<bool>,
 
-        /// Enable Claude usage tracking via API
-        /// Can also be set via CLAUDERON_FEATURE_ENABLE_USAGE_TRACKING environment variable
-        #[arg(long)]
+        /// [default: false] Enable Claude API usage tracking.
+        /// Records token usage and costs per session.
+        /// Env: CLAUDERON_FEATURE_ENABLE_USAGE_TRACKING
+        #[arg(long, help_heading = "Feature Flags")]
         enable_usage_tracking: Option<bool>,
 
-        /// Enable Kubernetes backend (experimental, disabled by default)
-        /// Can also be set via CLAUDERON_FEATURE_ENABLE_KUBERNETES_BACKEND environment variable
-        #[arg(long)]
+        /// [default: false] Enable Kubernetes backend (experimental).
+        /// Allows running sessions as pods in a K8s cluster.
+        /// Requires: kubectl configured, namespace created, storage class available.
+        /// Env: CLAUDERON_FEATURE_ENABLE_KUBERNETES_BACKEND
+        #[arg(long, help_heading = "Feature Flags")]
         enable_kubernetes_backend: Option<bool>,
     },
 

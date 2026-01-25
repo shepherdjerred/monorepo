@@ -335,7 +335,8 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
             _ => {}
         },
         KeyCode::Tab => {
-            // Cycle through fields
+            // Cycle through fields (K8s-specific fields only shown when K8s backend selected)
+            let is_k8s = app.create_dialog.backend == crate::core::BackendType::Kubernetes;
             app.create_dialog.focus = match app.create_dialog.focus {
                 CreateDialogFocus::Prompt => CreateDialogFocus::RepoPath,
                 CreateDialogFocus::RepoPath => CreateDialogFocus::BaseBranch,
@@ -345,12 +346,23 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                 CreateDialogFocus::Model => CreateDialogFocus::AccessMode,
                 CreateDialogFocus::AccessMode => CreateDialogFocus::SkipChecks,
                 CreateDialogFocus::SkipChecks => CreateDialogFocus::PlanMode,
-                CreateDialogFocus::PlanMode => CreateDialogFocus::Buttons,
+                CreateDialogFocus::PlanMode => {
+                    if is_k8s {
+                        CreateDialogFocus::DangerousCopyCreds
+                    } else {
+                        CreateDialogFocus::Buttons
+                    }
+                }
+                CreateDialogFocus::DangerousCopyCreds => CreateDialogFocus::ContainerImage,
+                CreateDialogFocus::ContainerImage => CreateDialogFocus::PullPolicy,
+                CreateDialogFocus::PullPolicy => CreateDialogFocus::StorageClass,
+                CreateDialogFocus::StorageClass => CreateDialogFocus::Buttons,
                 CreateDialogFocus::Buttons => CreateDialogFocus::Prompt,
             };
         }
         KeyCode::BackTab => {
-            // Cycle backwards
+            // Cycle backwards (K8s-specific fields only shown when K8s backend selected)
+            let is_k8s = app.create_dialog.backend == crate::core::BackendType::Kubernetes;
             app.create_dialog.focus = match app.create_dialog.focus {
                 CreateDialogFocus::Prompt => CreateDialogFocus::Buttons,
                 CreateDialogFocus::RepoPath => CreateDialogFocus::Prompt,
@@ -361,7 +373,17 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                 CreateDialogFocus::AccessMode => CreateDialogFocus::Model,
                 CreateDialogFocus::SkipChecks => CreateDialogFocus::AccessMode,
                 CreateDialogFocus::PlanMode => CreateDialogFocus::SkipChecks,
-                CreateDialogFocus::Buttons => CreateDialogFocus::PlanMode,
+                CreateDialogFocus::DangerousCopyCreds => CreateDialogFocus::PlanMode,
+                CreateDialogFocus::ContainerImage => CreateDialogFocus::DangerousCopyCreds,
+                CreateDialogFocus::PullPolicy => CreateDialogFocus::ContainerImage,
+                CreateDialogFocus::StorageClass => CreateDialogFocus::PullPolicy,
+                CreateDialogFocus::Buttons => {
+                    if is_k8s {
+                        CreateDialogFocus::StorageClass
+                    } else {
+                        CreateDialogFocus::PlanMode
+                    }
+                }
             };
         }
         KeyCode::Enter => match app.create_dialog.focus {
@@ -396,6 +418,26 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                     app.progress_rx = Some(rx);
 
                     // Capture data for the background task
+                    // Only pass K8s-specific options when using K8s backend
+                    let (container_image, pull_policy, storage_class) =
+                        if app.create_dialog.backend == BackendType::Kubernetes {
+                            (
+                                if app.create_dialog.container_image.is_empty() {
+                                    None
+                                } else {
+                                    Some(app.create_dialog.container_image.clone())
+                                },
+                                Some(app.create_dialog.pull_policy.to_string()),
+                                if app.create_dialog.storage_class.is_empty() {
+                                    None
+                                } else {
+                                    Some(app.create_dialog.storage_class.clone())
+                                },
+                            )
+                        } else {
+                            (None, None, None)
+                        };
+
                     let request = CreateSessionRequest {
                         repo_path: app.create_dialog.repo_path.clone(),
                         repositories: None, // TUI doesn't support multi-repo yet
@@ -404,16 +446,16 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                         agent: app.create_dialog.agent,
                         model: app.create_dialog.model.clone(), // Use selected model from dialog
                         dangerous_skip_checks: app.create_dialog.skip_checks,
-                        dangerous_copy_creds: false, // TUI defaults to proxy mode
-                        print_mode: false,           // TUI always uses interactive mode
+                        dangerous_copy_creds: app.create_dialog.dangerous_copy_creds,
+                        print_mode: false, // TUI always uses interactive mode
                         plan_mode: app.create_dialog.plan_mode,
                         access_mode: app.create_dialog.access_mode,
                         images: app.create_dialog.images.clone(),
-                        container_image: None,
-                        pull_policy: None,
+                        container_image,
+                        pull_policy,
                         cpu_limit: None,
                         memory_limit: None,
-                        storage_class: None,
+                        storage_class,
                     };
 
                     // Spawn background task
@@ -505,7 +547,8 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                     app.create_dialog.ensure_cursor_visible();
                 }
             } else {
-                // Navigate to previous field
+                // Navigate to previous field (K8s-specific fields only when K8s backend selected)
+                let is_k8s = app.create_dialog.backend == crate::core::BackendType::Kubernetes;
                 app.create_dialog.focus = match app.create_dialog.focus {
                     CreateDialogFocus::Prompt => CreateDialogFocus::Buttons,
                     CreateDialogFocus::RepoPath => CreateDialogFocus::Prompt,
@@ -516,7 +559,17 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                     CreateDialogFocus::AccessMode => CreateDialogFocus::Model,
                     CreateDialogFocus::SkipChecks => CreateDialogFocus::AccessMode,
                     CreateDialogFocus::PlanMode => CreateDialogFocus::SkipChecks,
-                    CreateDialogFocus::Buttons => CreateDialogFocus::PlanMode,
+                    CreateDialogFocus::DangerousCopyCreds => CreateDialogFocus::PlanMode,
+                    CreateDialogFocus::ContainerImage => CreateDialogFocus::DangerousCopyCreds,
+                    CreateDialogFocus::PullPolicy => CreateDialogFocus::ContainerImage,
+                    CreateDialogFocus::StorageClass => CreateDialogFocus::PullPolicy,
+                    CreateDialogFocus::Buttons => {
+                        if is_k8s {
+                            CreateDialogFocus::StorageClass
+                        } else {
+                            CreateDialogFocus::PlanMode
+                        }
+                    }
                 };
             }
         }
@@ -540,7 +593,8 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                     app.create_dialog.ensure_cursor_visible();
                 }
             } else {
-                // Navigate to next field
+                // Navigate to next field (K8s-specific fields only when K8s backend selected)
+                let is_k8s = app.create_dialog.backend == crate::core::BackendType::Kubernetes;
                 app.create_dialog.focus = match app.create_dialog.focus {
                     CreateDialogFocus::Prompt => CreateDialogFocus::RepoPath,
                     CreateDialogFocus::RepoPath => CreateDialogFocus::BaseBranch,
@@ -550,7 +604,17 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                     CreateDialogFocus::Model => CreateDialogFocus::AccessMode,
                     CreateDialogFocus::AccessMode => CreateDialogFocus::SkipChecks,
                     CreateDialogFocus::SkipChecks => CreateDialogFocus::PlanMode,
-                    CreateDialogFocus::PlanMode => CreateDialogFocus::Buttons,
+                    CreateDialogFocus::PlanMode => {
+                        if is_k8s {
+                            CreateDialogFocus::DangerousCopyCreds
+                        } else {
+                            CreateDialogFocus::Buttons
+                        }
+                    }
+                    CreateDialogFocus::DangerousCopyCreds => CreateDialogFocus::ContainerImage,
+                    CreateDialogFocus::ContainerImage => CreateDialogFocus::PullPolicy,
+                    CreateDialogFocus::PullPolicy => CreateDialogFocus::StorageClass,
+                    CreateDialogFocus::StorageClass => CreateDialogFocus::Buttons,
                     CreateDialogFocus::Buttons => CreateDialogFocus::Prompt,
                 };
             }
@@ -601,10 +665,19 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
             CreateDialogFocus::PlanMode => {
                 app.create_dialog.plan_mode = !app.create_dialog.plan_mode;
             }
+            CreateDialogFocus::DangerousCopyCreds => {
+                app.create_dialog.dangerous_copy_creds = !app.create_dialog.dangerous_copy_creds;
+            }
+            CreateDialogFocus::PullPolicy => {
+                app.create_dialog.toggle_pull_policy();
+            }
             CreateDialogFocus::Buttons => {
                 app.create_dialog.button_create_focused = !app.create_dialog.button_create_focused;
             }
-            CreateDialogFocus::RepoPath | CreateDialogFocus::BaseBranch => {}
+            CreateDialogFocus::RepoPath
+            | CreateDialogFocus::BaseBranch
+            | CreateDialogFocus::ContainerImage
+            | CreateDialogFocus::StorageClass => {}
         },
         KeyCode::Char(' ') => {
             match app.create_dialog.focus {
@@ -625,6 +698,21 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                 }
                 CreateDialogFocus::PlanMode => {
                     app.create_dialog.plan_mode = !app.create_dialog.plan_mode;
+                }
+                CreateDialogFocus::DangerousCopyCreds => {
+                    app.create_dialog.dangerous_copy_creds =
+                        !app.create_dialog.dangerous_copy_creds;
+                }
+                CreateDialogFocus::PullPolicy => {
+                    app.create_dialog.toggle_pull_policy();
+                }
+                CreateDialogFocus::ContainerImage => {
+                    // Insert space character in container image field
+                    app.create_dialog.container_image.push(' ');
+                }
+                CreateDialogFocus::StorageClass => {
+                    // Insert space character in storage class field
+                    app.create_dialog.storage_class.push(' ');
                 }
                 CreateDialogFocus::Prompt => {
                     (
@@ -672,6 +760,14 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                 // Insert character in base branch field
                 app.create_dialog.base_branch.push(c);
             }
+            CreateDialogFocus::ContainerImage => {
+                // Insert character in container image field
+                app.create_dialog.container_image.push(c);
+            }
+            CreateDialogFocus::StorageClass => {
+                // Insert character in storage class field
+                app.create_dialog.storage_class.push(c);
+            }
             // RepoPath no longer accepts typed input - use directory picker instead
             _ => {}
         },
@@ -694,6 +790,14 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
             CreateDialogFocus::BaseBranch => {
                 // Delete last character from base branch
                 app.create_dialog.base_branch.pop();
+            }
+            CreateDialogFocus::ContainerImage => {
+                // Delete last character from container image
+                app.create_dialog.container_image.pop();
+            }
+            CreateDialogFocus::StorageClass => {
+                // Delete last character from storage class
+                app.create_dialog.storage_class.pop();
             }
             _ => {}
         },

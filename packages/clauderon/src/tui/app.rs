@@ -8,7 +8,7 @@ use uuid::Uuid;
 
 use crate::api::console_protocol::SignalType;
 use crate::api::{ApiClient, Client};
-use crate::backends::{KubernetesConfig, SpritesConfig};
+use crate::backends::{ImagePullPolicy, KubernetesConfig, SpritesConfig};
 use crate::core::session::{HealthCheckResult, SessionHealthReport, SessionModel};
 use crate::core::{AccessMode, AgentType, BackendType, Session, SessionStatus};
 use crate::tui::attached::PtySession;
@@ -219,6 +219,10 @@ pub enum CreateDialogFocus {
     AccessMode,
     SkipChecks,
     PlanMode,
+    DangerousCopyCreds,
+    ContainerImage,
+    PullPolicy,
+    StorageClass,
     Buttons,
 }
 
@@ -262,6 +266,7 @@ pub struct DirectoryPickerState {
 
 /// Create dialog state for managing session creation UI.
 #[derive(Debug, Clone)]
+#[allow(clippy::struct_excessive_bools)]
 pub struct CreateDialogState {
     pub prompt: String,
     pub repo_path: String,
@@ -271,6 +276,20 @@ pub struct CreateDialogState {
     pub skip_checks: bool,
     pub plan_mode: bool,
     pub access_mode: AccessMode,
+
+    /// Copy credentials directly to container (dangerous, bypasses proxy).
+    /// Used when proxy mode is not configured for K8s backend.
+    pub dangerous_copy_creds: bool,
+
+    // === Kubernetes-specific options ===
+    /// Custom container image for K8s backend (empty = use default)
+    pub container_image: String,
+
+    /// Image pull policy for K8s backend
+    pub pull_policy: ImagePullPolicy,
+
+    /// Storage class for K8s persistent volume (empty = use default)
+    pub storage_class: String,
 
     /// Base branch to clone from (for clone-based backends like Sprites/K8s).
     /// When empty, clones the repository's default branch.
@@ -529,15 +548,15 @@ impl CreateDialogState {
 
     /// Check if a backend is available for use.
     ///
-    /// Remote backends (Sprites, Kubernetes) require configuration to be usable:
+    /// Remote backends (Sprites) require configuration to be usable:
     /// - Sprites: requires `daemon_address` in sprites-config.toml
-    /// - Kubernetes: requires `proxy_mode` != Disabled in k8s-config.toml
     ///
+    /// Kubernetes is always available when enabled via feature flag - use dangerous-copy-creds if no proxy configured.
     /// Local backends (Zellij, Docker, AppleContainer) are always available.
-    fn is_backend_available(backend: BackendType) -> bool {
+    fn is_backend_available(&self, backend: BackendType) -> bool {
         match backend {
             BackendType::Sprites => SpritesConfig::load_or_default().is_connected_mode(),
-            BackendType::Kubernetes => KubernetesConfig::load_or_default().is_connected_mode(),
+            BackendType::Kubernetes => self.feature_flags.enable_kubernetes_backend, // Available if feature enabled
             BackendType::Zellij | BackendType::Docker => true,
             #[cfg(target_os = "macos")]
             BackendType::AppleContainer => true,
@@ -611,7 +630,7 @@ impl CreateDialogState {
         const MAX_BACKENDS: usize = 4;
 
         for _ in 0..MAX_BACKENDS {
-            if Self::is_backend_available(next) {
+            if self.is_backend_available(next) {
                 self.backend = next;
                 self.update_skip_checks_for_backend();
                 return;
@@ -640,7 +659,7 @@ impl CreateDialogState {
         const MAX_BACKENDS: usize = 4;
 
         for _ in 0..MAX_BACKENDS {
-            if Self::is_backend_available(prev) {
+            if self.is_backend_available(prev) {
                 self.backend = prev;
                 self.update_skip_checks_for_backend();
                 return;
@@ -660,6 +679,15 @@ impl CreateDialogState {
         self.access_mode = match self.access_mode {
             AccessMode::ReadOnly => AccessMode::ReadWrite,
             AccessMode::ReadWrite => AccessMode::ReadOnly,
+        };
+    }
+
+    /// Toggle through image pull policies: IfNotPresent → Always → Never → IfNotPresent
+    pub fn toggle_pull_policy(&mut self) {
+        self.pull_policy = match self.pull_policy {
+            ImagePullPolicy::IfNotPresent => ImagePullPolicy::Always,
+            ImagePullPolicy::Always => ImagePullPolicy::Never,
+            ImagePullPolicy::Never => ImagePullPolicy::IfNotPresent,
         };
     }
 
@@ -837,9 +865,13 @@ impl Default for CreateDialogState {
             agent: AgentType::ClaudeCode,
             model: None, // Default to CLI default
             skip_checks: false,
-            plan_mode: true,                    // Default to plan mode ON
-            access_mode: AccessMode::default(), // ReadOnly by default (secure)
-            base_branch: String::new(),         // Empty = use repo default branch
+            plan_mode: true,                         // Default to plan mode ON
+            access_mode: AccessMode::default(),      // ReadOnly by default (secure)
+            dangerous_copy_creds: false,             // Default to proxy mode (secure)
+            container_image: String::new(),          // Empty = use default image
+            pull_policy: ImagePullPolicy::default(), // IfNotPresent
+            storage_class: String::new(),            // Empty = use default storage class
+            base_branch: String::new(),              // Empty = use repo default branch
             images: Vec::new(),
             prompt_cursor_line: 0,
             prompt_cursor_col: 0,
@@ -1476,6 +1508,26 @@ impl App {
         use crate::api::protocol::CreateSessionRequest;
         use crate::core::{AgentType, BackendType};
 
+        // Only pass K8s-specific options when using K8s backend
+        let (container_image, pull_policy, storage_class) =
+            if self.create_dialog.backend == BackendType::Kubernetes {
+                (
+                    if self.create_dialog.container_image.is_empty() {
+                        None
+                    } else {
+                        Some(self.create_dialog.container_image.clone())
+                    },
+                    Some(self.create_dialog.pull_policy.to_string()),
+                    if self.create_dialog.storage_class.is_empty() {
+                        None
+                    } else {
+                        Some(self.create_dialog.storage_class.clone())
+                    },
+                )
+            } else {
+                (None, None, None)
+            };
+
         let request = CreateSessionRequest {
             repo_path: self.create_dialog.repo_path.clone(),
             repositories: None, // TUI doesn't support multi-repo yet
@@ -1484,16 +1536,16 @@ impl App {
             agent: self.create_dialog.agent,
             model: self.create_dialog.model.clone(), // Use selected model from dialog
             dangerous_skip_checks: self.create_dialog.skip_checks,
-            dangerous_copy_creds: false, // TUI defaults to proxy mode
-            print_mode: false,           // TUI always uses interactive mode
+            dangerous_copy_creds: self.create_dialog.dangerous_copy_creds,
+            print_mode: false, // TUI always uses interactive mode
             plan_mode: self.create_dialog.plan_mode,
             access_mode: self.create_dialog.access_mode,
             images: self.create_dialog.images.clone(),
-            container_image: None, // TODO: Add TUI fields for container customization
-            pull_policy: None,
+            container_image,
+            pull_policy,
             cpu_limit: None,
             memory_limit: None,
-            storage_class: None, // TUI doesn't support storage class selection yet
+            storage_class,
         };
 
         if let Some(client) = &mut self.client {
