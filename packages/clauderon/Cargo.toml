@@ -109,7 +109,7 @@ webauthn-rs-proto = "0.5"
 reqwest = { version = "0.13", features = ["json", "rustls"], default-features = false }
 
 [dev-dependencies]
-cargo-husky = { version = "1", features = ["precommit-hook", "run-cargo-fmt", "run-cargo-clippy"] }
+cargo-husky = { version = "1", features = ["precommit-hook", "user-hooks"] }
 tempfile = "3"
 proptest = "1.0"
 

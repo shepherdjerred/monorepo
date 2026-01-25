@@ -33,8 +33,9 @@ pub async fn run_daemon() -> anyhow::Result<()> {
 /// bound, or other I/O errors occur.
 pub async fn run_daemon_with_options(enable_proxy: bool) -> anyhow::Result<()> {
     let flags = crate::feature_flags::FeatureFlags::load(None)?;
-    let server_config =
-        crate::feature_flags::ServerConfig::load(crate::feature_flags::CliServerConfig::default())?;
+    let server_config = crate::feature_flags::ServerConfig::load(
+        &crate::feature_flags::CliServerConfig::default(),
+    )?;
     run_daemon_with_http(enable_proxy, Some(3030), false, flags, server_config).await
 }
 

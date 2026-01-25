@@ -261,7 +261,7 @@ impl ServerConfig {
     ///
     /// # Errors
     /// Returns an error if the TOML config file exists but cannot be parsed
-    pub fn load(cli_overrides: CliServerConfig) -> anyhow::Result<Self> {
+    pub fn load(cli_overrides: &CliServerConfig) -> anyhow::Result<Self> {
         // 1. Start with defaults
         let mut config = Self::default();
 
@@ -271,7 +271,7 @@ impl ServerConfig {
         }
 
         // 3. Override from CLI arguments (which include env vars via clap's `env` attribute)
-        config.merge_from_cli(&cli_overrides);
+        config.merge_from_cli(cli_overrides);
 
         Ok(config)
     }
@@ -332,21 +332,25 @@ impl ServerConfig {
     }
 
     /// Get bind address with default fallback
+    #[must_use]
     pub fn bind_addr(&self) -> &str {
         self.bind_addr.as_deref().unwrap_or("127.0.0.1")
     }
 
     /// Get origin URL (None if not configured)
+    #[must_use]
     pub fn origin(&self) -> Option<&str> {
         self.origin.as_deref()
     }
 
     /// Check if auth is disabled
+    #[must_use]
     pub fn is_auth_disabled(&self) -> bool {
         self.disable_auth.unwrap_or(false)
     }
 
     /// Get organization ID (None if not configured)
+    #[must_use]
     pub fn org_id(&self) -> Option<&str> {
         self.org_id.as_deref()
     }
