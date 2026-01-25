@@ -521,7 +521,10 @@ impl CreateDialogState {
     }
 
     pub fn reset(&mut self) {
+        // Preserve feature flags when resetting - they should persist across dialog opens
+        let feature_flags = self.feature_flags.clone();
         *self = Self::new();
+        self.feature_flags = feature_flags;
     }
 
     /// Check if a backend is available for use.
