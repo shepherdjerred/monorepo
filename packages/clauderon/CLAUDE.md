@@ -20,18 +20,30 @@ cd web && bun run build
 cargo build
 
 # Development
-cargo test
 cargo run -- tui
 cargo run -- serve
-cargo nextest run              # Faster parallel tests
-
-# Mise tasks (see mise.toml)
-mise run build
-mise run test-fast
-mise run setup-tools           # Install nextest, bacon, cargo-watch
 
 # Mobile
 cd mobile && bun run ios|android|macos
+```
+
+## Testing
+
+Prefer `cargo nextest run` over `cargo test` for faster parallel execution:
+
+```bash
+cargo nextest run                      # Run all tests
+cargo nextest run --run-ignored all    # Include ignored tests
+cargo nextest run -E 'test(/recent/)'  # Filter by pattern
+mise run test-fast                     # Run via mise
+```
+
+## Mise Tasks
+
+```bash
+mise run build                         # Full build
+mise run test-fast                     # Run tests with nextest
+mise run setup-tools                   # Install nextest, bacon, cargo-watch
 ```
 
 ## CI
