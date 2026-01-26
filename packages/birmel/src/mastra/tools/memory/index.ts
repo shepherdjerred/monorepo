@@ -82,14 +82,20 @@ export const manageMemoryTool = createTool({
     try {
       const scope = ctx.scope;
       const persona = scope === "owner" ? await getGuildPersona(ctx.guildId) : null;
-      const scopeLabel = scope === "owner" ? `owner (${persona})` : "server";
+      const scopeLabel = scope === "owner" ? `owner (${persona ?? "unknown"})` : "server";
       const template = scope === "owner" ? OWNER_MEMORY_TEMPLATE : SERVER_MEMORY_TEMPLATE;
 
       switch (ctx.action) {
         case "get": {
-          const memoryContent = scope === "owner"
-            ? await getOwnerWorkingMemory(ctx.guildId, persona!)
-            : await getServerWorkingMemory(ctx.guildId);
+          let memoryContent: string | null;
+          if (scope === "owner") {
+            if (!persona) {
+              return { success: false, message: "Could not determine persona for owner memory" };
+            }
+            memoryContent = await getOwnerWorkingMemory(ctx.guildId, persona);
+          } else {
+            memoryContent = await getServerWorkingMemory(ctx.guildId);
+          }
 
           if (!memoryContent) {
             return {
@@ -116,7 +122,10 @@ export const manageMemoryTool = createTool({
           }
 
           if (scope === "owner") {
-            await updateOwnerWorkingMemory(ctx.guildId, persona!, ctx.memory);
+            if (!persona) {
+              return { success: false, message: "Could not determine persona for owner memory" };
+            }
+            await updateOwnerWorkingMemory(ctx.guildId, persona, ctx.memory);
           } else {
             await updateServerWorkingMemory(ctx.guildId, ctx.memory);
           }
@@ -129,9 +138,15 @@ export const manageMemoryTool = createTool({
             return { success: false, message: "item and section are required for append" };
           }
 
-          const current = scope === "owner"
-            ? await getOwnerWorkingMemory(ctx.guildId, persona!)
-            : await getServerWorkingMemory(ctx.guildId);
+          let current: string | null;
+          if (scope === "owner") {
+            if (!persona) {
+              return { success: false, message: "Could not determine persona for owner memory" };
+            }
+            current = await getOwnerWorkingMemory(ctx.guildId, persona);
+          } else {
+            current = await getServerWorkingMemory(ctx.guildId);
+          }
 
           const updated = appendToSection(current ?? template, ctx.section, ctx.item, scope);
           if (updated.length > MAX_MEMORY_SIZE) {
@@ -142,7 +157,10 @@ export const manageMemoryTool = createTool({
           }
 
           if (scope === "owner") {
-            await updateOwnerWorkingMemory(ctx.guildId, persona!, updated);
+            if (!persona) {
+              return { success: false, message: "Could not determine persona for owner memory" };
+            }
+            await updateOwnerWorkingMemory(ctx.guildId, persona, updated);
           } else {
             await updateServerWorkingMemory(ctx.guildId, updated);
           }
@@ -152,7 +170,10 @@ export const manageMemoryTool = createTool({
 
         case "clear": {
           if (scope === "owner") {
-            await updateOwnerWorkingMemory(ctx.guildId, persona!, template);
+            if (!persona) {
+              return { success: false, message: "Could not determine persona for owner memory" };
+            }
+            await updateOwnerWorkingMemory(ctx.guildId, persona, template);
           } else {
             await updateServerWorkingMemory(ctx.guildId, template);
           }
