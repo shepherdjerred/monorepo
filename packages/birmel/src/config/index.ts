@@ -120,7 +120,7 @@ function loadConfigFromEnv(): Config {
     editor: {
       enabled: parseBoolean(process.env["EDITOR_ENABLED"], false),
       allowedRepos: parseJSON<
-        { name: string; path: string; allowedPaths?: string[]; branch?: string }[]
+        { name: string; repo: string; allowedPaths?: string[]; branch?: string }[]
       >(process.env["EDITOR_ALLOWED_REPOS"], []),
       maxSessionDurationMs: parseNumber(
         process.env["EDITOR_MAX_SESSION_DURATION_MS"],

@@ -11,6 +11,7 @@ import {
   getSession,
   getPendingChanges,
   updateSessionState,
+  cleanupSessionClone,
   SessionState,
   hasValidAuth,
   getAuthorizationUrl,
@@ -153,6 +154,14 @@ async function handleApprove(
     return;
   }
 
+  // Verify cloned repo path exists
+  if (!session.clonedRepoPath) {
+    await interaction.editReply({
+      content: "No cloned repository found for this session.",
+    });
+    return;
+  }
+
   // Update state to approved
   await updateSessionState(sessionId, SessionState.APPROVED);
 
@@ -166,7 +175,7 @@ async function handleApprove(
 
   const result = await createPullRequest({
     userId: interaction.user.id,
-    repoName: session.repoName,
+    repoPath: session.clonedRepoPath,
     branchName: pendingChanges.branchName,
     baseBranch: pendingChanges.baseBranch,
     title,
@@ -218,6 +227,9 @@ async function handleReject(
   interaction: ButtonInteraction,
   sessionId: string,
 ): Promise<void> {
+  // Cleanup cloned repo
+  await cleanupSessionClone(sessionId);
+
   await updateSessionState(sessionId, SessionState.REJECTED);
 
   // Update the original message

@@ -1,4 +1,4 @@
-import { createTool } from "@mastra/core/tools";
+import { createTool } from "../../../voltagent/tools/create-tool.js";
 import { z } from "zod";
 import type { ButtonBuilder as ButtonBuilderType } from "discord.js";
 
@@ -17,6 +17,7 @@ import {
   isRepoAllowed,
   getOrCreateSession,
   updateSdkSessionId,
+  updateClonedRepoPath,
   storePendingChanges,
   updateMessageId,
   updateSummary,
@@ -27,8 +28,10 @@ import {
   generateBranchName,
   checkClaudePrerequisites,
   hasValidAuth,
+  getAuth,
   isGitHubConfigured,
   getGitHubConfig,
+  cloneRepo,
 } from "../../../editor/index.js";
 
 const logger = loggers.tools.child("editor.edit-repo");
@@ -137,17 +140,44 @@ export const editRepoTool = createTool({
         });
 
         // Get or create session
-        const session = await getOrCreateSession({
+        let session = await getOrCreateSession({
           userId: reqCtx.userId,
           guildId: reqCtx.guildId,
           channelId: reqCtx.sourceChannelId,
           repoName,
         });
 
+        // Clone repo on first edit if not already cloned
+        let workingDirectory = session.clonedRepoPath;
+        if (!workingDirectory) {
+          const auth = await getAuth(reqCtx.userId);
+          if (!auth) {
+            return {
+              success: false,
+              message: "GitHub authentication required to clone repository.",
+            };
+          }
+
+          logger.info("Cloning repository for first edit", {
+            repo: repoConfig.repo,
+            sessionId: session.id,
+          });
+
+          workingDirectory = await cloneRepo({
+            repo: repoConfig.repo,
+            branch: repoConfig.branch,
+            token: auth.accessToken,
+            sessionId: session.id,
+          });
+
+          // Update session with cloned repo path
+          session = await updateClonedRepoPath(session.id, workingDirectory);
+        }
+
         // Execute Claude edit
         const result = await executeEdit({
           prompt: instruction,
-          workingDirectory: repoConfig.path,
+          workingDirectory,
           ...(session.sdkSessionId && { resumeSessionId: session.sdkSessionId }),
           allowedPaths: repoConfig.allowedPaths,
         });

@@ -1,4 +1,4 @@
-import { createTool } from "@mastra/core/tools";
+import { createTool } from "../../../voltagent/tools/create-tool.js";
 import { z } from "zod";
 import { loggers } from "../../../utils/logger.js";
 import { withToolSpan, captureException } from "../../../observability/index.js";
@@ -101,6 +101,14 @@ export const approveChangesTool = createTool({
           };
         }
 
+        // Verify cloned repo path exists
+        if (!session.clonedRepoPath) {
+          return {
+            success: false,
+            message: "No cloned repository found for this session.",
+          };
+        }
+
         logger.info("Approving changes", {
           sessionId: session.id,
           userId: reqCtx.userId,
@@ -120,7 +128,7 @@ export const approveChangesTool = createTool({
 
         const result = await createPullRequest({
           userId: reqCtx.userId,
-          repoName: session.repoName,
+          repoPath: session.clonedRepoPath,
           branchName: pendingChanges.branchName,
           baseBranch: pendingChanges.baseBranch,
           title,

@@ -1,6 +1,7 @@
 import { prisma } from "../database/index.js";
 import { loggers } from "../utils/index.js";
 import { getMaxSessionDuration, getMaxSessionsPerUser } from "./config.js";
+import { cleanupClone } from "./repo-clone.js";
 import {
   SessionState,
   type CreateSessionParams,
@@ -127,6 +128,19 @@ export async function updateSdkSessionId(
 }
 
 /**
+ * Update session with cloned repo path
+ */
+export async function updateClonedRepoPath(
+  sessionId: string,
+  clonedRepoPath: string,
+): Promise<EditorSession> {
+  return prisma.editorSession.update({
+    where: { id: sessionId },
+    data: { clonedRepoPath },
+  });
+}
+
+/**
  * Store pending changes for a session
  */
 export async function storePendingChanges(
@@ -207,25 +221,71 @@ export async function updateSummary(
 }
 
 /**
- * Update session with PR URL
+ * Update session with PR URL and cleanup cloned repo
  */
 export async function updatePrUrl(
   sessionId: string,
   prUrl: string,
 ): Promise<EditorSession> {
+  const session = await prisma.editorSession.findUnique({
+    where: { id: sessionId },
+    select: { clonedRepoPath: true },
+  });
+
+  // Cleanup cloned repo since PR is created
+  if (session?.clonedRepoPath) {
+    await cleanupClone(session.clonedRepoPath);
+  }
+
   return prisma.editorSession.update({
     where: { id: sessionId },
     data: {
       prUrl,
       state: SessionState.PR_CREATED,
+      clonedRepoPath: null, // Clear the path since we cleaned up
     },
   });
 }
 
 /**
- * Expire old sessions
+ * Cleanup cloned repo for a session
+ */
+export async function cleanupSessionClone(sessionId: string): Promise<void> {
+  const session = await prisma.editorSession.findUnique({
+    where: { id: sessionId },
+    select: { clonedRepoPath: true },
+  });
+
+  if (session?.clonedRepoPath) {
+    await cleanupClone(session.clonedRepoPath);
+    await prisma.editorSession.update({
+      where: { id: sessionId },
+      data: { clonedRepoPath: null },
+    });
+  }
+}
+
+/**
+ * Expire old sessions and cleanup cloned repos
  */
 export async function expireOldSessions(): Promise<number> {
+  // First, find sessions to expire so we can cleanup their repos
+  const sessionsToExpire = await prisma.editorSession.findMany({
+    where: {
+      state: SessionState.ACTIVE,
+      expiresAt: { lt: new Date() },
+    },
+    select: { id: true, clonedRepoPath: true },
+  });
+
+  // Cleanup cloned repos
+  for (const session of sessionsToExpire) {
+    if (session.clonedRepoPath) {
+      await cleanupClone(session.clonedRepoPath);
+    }
+  }
+
+  // Update session states
   const result = await prisma.editorSession.updateMany({
     where: {
       state: SessionState.ACTIVE,

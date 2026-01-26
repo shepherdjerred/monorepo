@@ -1,11 +1,5 @@
 import type { Client, Message } from "discord.js";
-import type { getClassifierAgent as GetClassifierAgentFn } from "../../mastra/index.js";
-import type { parseClassificationResult as ParseClassificationResultFn } from "../../mastra/agents/classifier-agent.js";
 import { loggers } from "../../utils/logger.js";
-import {
-  getRecentChannelMessages,
-  formatMessagesForClassifier,
-} from "../utils/channel-history.js";
 import {
   withSpan,
   setSentryContext,
@@ -40,20 +34,6 @@ function markMessageProcessed(messageId: string): boolean {
   return true; // Successfully marked as processing
 }
 
-// Lazy-loaded to avoid circular dependency with tools
-let classifierModule: { getClassifierAgent: typeof GetClassifierAgentFn } | null = null;
-let parserModule: { parseClassificationResult: typeof ParseClassificationResultFn } | null = null;
-
-async function getClassifierAgent() {
-  classifierModule ??= await import("../../mastra/index.js");
-  return classifierModule.getClassifierAgent();
-}
-
-async function getParseClassificationResult() {
-  parserModule ??= await import("../../mastra/agents/classifier-agent.js");
-  return parserModule.parseClassificationResult;
-}
-
 export type { ImageAttachment };
 
 export type MessageContext = {
@@ -73,9 +53,6 @@ let messageHandler: MessageHandler | null = null;
 export function setMessageHandler(handler: MessageHandler): void {
   messageHandler = handler;
 }
-
-// Confidence threshold for contextual classification
-const CLASSIFICATION_CONFIDENCE_THRESHOLD = 0.7;
 
 // Allowed user IDs - only respond to messages from these users
 const ALLOWED_USER_IDS = new Set([
@@ -101,7 +78,7 @@ const ALLOWED_USER_IDS = new Set([
 
 /**
  * Determine if the bot should respond to a message.
- * Uses direct triggers first, then falls back to AI classification.
+ * Uses direct triggers: @mention or dynamic wake word.
  */
 async function shouldRespond(
   message: Message,
@@ -137,65 +114,8 @@ async function shouldRespond(
     return true;
   }
 
-  // Contextual classification: use AI to decide
-  const discordContext = {
-    ...(message.guild?.id ? { guildId: message.guild.id } : {}),
-    channelId: message.channel.id,
-    userId: message.author.id,
-    messageId: message.id,
-  };
-
-  try {
-    return await withSpan("classifier.decide", discordContext, async (span) => {
-      const recentMessages = await getRecentChannelMessages(message, 10);
-      span.setAttribute("context.message_count", recentMessages.length);
-
-      const formattedContext = formatMessagesForClassifier(
-        recentMessages,
-        message
-      );
-
-      const classifier = await getClassifierAgent();
-      const result = await classifier.generate(formattedContext);
-
-      const parseClassificationResult = await getParseClassificationResult();
-      const classification = parseClassificationResult(result.text);
-
-      span.setAttribute("classification.should_respond", classification.shouldRespond);
-      span.setAttribute("classification.confidence", classification.confidence);
-
-      logger.debug("Classification result", {
-        shouldRespond: classification.shouldRespond,
-        confidence: classification.confidence,
-        reasoning: classification.reasoning,
-      });
-
-      // Only respond if confident enough
-      if (
-        classification.shouldRespond &&
-        classification.confidence >= CLASSIFICATION_CONFIDENCE_THRESHOLD
-      ) {
-        logger.debug("Responding: contextual classification", {
-          confidence: classification.confidence,
-        });
-        return true;
-      }
-
-      return false;
-    });
-  } catch (error) {
-    logger.error("Classification failed, defaulting to no response", error);
-    captureException(error as Error, {
-      operation: "shouldRespond.classification",
-      discord: {
-        ...(message.guild?.id ? { guildId: message.guild.id } : {}),
-        channelId: message.channel.id,
-        userId: message.author.id,
-        messageId: message.id,
-      },
-    });
-    return false;
-  }
+  // No trigger matched
+  return false;
 }
 
 export function setupMessageCreateHandler(client: Client): void {

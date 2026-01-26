@@ -1,4 +1,4 @@
-import { createTool } from "@mastra/core/tools";
+import { createTool } from "../../../voltagent/tools/create-tool.js";
 import { z } from "zod";
 import { chromium, type Browser, type Page } from "playwright";
 import { getConfig } from "../../../config/index.js";

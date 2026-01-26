@@ -115,7 +115,7 @@ export const ElectionsConfigSchema = z.object({
 
 export const EditorRepoConfigSchema = z.object({
   name: z.string(),
-  path: z.string(),
+  repo: z.string(), // GitHub repo path: "owner/repo"
   allowedPaths: z.array(z.string()).default(["**/*"]),
   branch: z.string().default("main"),
 });

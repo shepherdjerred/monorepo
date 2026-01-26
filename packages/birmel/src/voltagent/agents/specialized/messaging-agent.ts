@@ -1,15 +1,13 @@
-import { Agent } from "@mastra/core/agent";
-import type { ToolsInput } from "@mastra/core/agent";
+import { Agent } from "@voltagent/core";
 import { openai } from "@ai-sdk/openai";
 import { getConfig } from "../../../config/index.js";
-import { messagingToolSet, toolsToRecord } from "../../tools/tool-sets.js";
+import { messagingToolSet } from "../../../mastra/tools/tool-sets.js";
 
 const config = getConfig();
 
 export const messagingAgent = new Agent({
-  id: "messaging-agent",
-  name: "Messaging Agent",
-  description: `This agent handles Discord messaging operations.
+  name: "messaging-agent",
+  purpose: `This agent handles Discord messaging operations.
     It can send, edit, delete, and pin messages.
     It creates and manages threads and polls.
     It schedules messages for later delivery.
@@ -25,6 +23,6 @@ export const messagingAgent = new Agent({
 
     CRITICAL: Send exactly ONE reply per request. If the tool returns "ALREADY REPLIED", stop immediately.
     Do NOT attempt to send another reply - the user has already received the response.`,
-  model: openai.chat(config.openai.model),
-  tools: toolsToRecord(messagingToolSet) as ToolsInput,
+  model: openai(config.openai.model),
+  tools: messagingToolSet,
 });
