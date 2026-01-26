@@ -1,12 +1,13 @@
-import { createTool } from "@mastra/core/tools";
+import { createTool } from "../../../voltagent/tools/create-tool.js";
 import { z } from "zod";
 import {
-  getMemory,
-  getGlobalThreadId,
-  getOwnerThreadId,
+  getServerWorkingMemory,
+  updateServerWorkingMemory,
+  getOwnerWorkingMemory,
+  updateOwnerWorkingMemory,
   SERVER_MEMORY_TEMPLATE,
   OWNER_MEMORY_TEMPLATE,
-} from "../../memory/index.js";
+} from "../../../voltagent/memory/index.js";
 import { getGuildPersona } from "../../../persona/index.js";
 import { logger } from "../../../utils/logger.js";
 
@@ -79,29 +80,18 @@ export const manageMemoryTool = createTool({
   }),
   execute: async (ctx) => {
     try {
-      const memory = getMemory();
       const scope = ctx.scope;
-
-      // Resolve thread ID and template based on scope
-      let threadId: string;
-      let template: string;
-      let scopeLabel: string;
-
-      if (scope === "owner") {
-        const persona = await getGuildPersona(ctx.guildId);
-        threadId = getOwnerThreadId(ctx.guildId, persona);
-        template = OWNER_MEMORY_TEMPLATE;
-        scopeLabel = `owner (${persona})`;
-      } else {
-        threadId = getGlobalThreadId(ctx.guildId);
-        template = SERVER_MEMORY_TEMPLATE;
-        scopeLabel = "server";
-      }
+      const persona = scope === "owner" ? await getGuildPersona(ctx.guildId) : null;
+      const scopeLabel = scope === "owner" ? `owner (${persona})` : "server";
+      const template = scope === "owner" ? OWNER_MEMORY_TEMPLATE : SERVER_MEMORY_TEMPLATE;
 
       switch (ctx.action) {
         case "get": {
-          const thread = await memory.getThreadById({ threadId });
-          if (!thread?.metadata?.["workingMemory"]) {
+          const memoryContent = scope === "owner"
+            ? await getOwnerWorkingMemory(ctx.guildId, persona!)
+            : await getServerWorkingMemory(ctx.guildId);
+
+          if (!memoryContent) {
             return {
               success: true,
               message: `No ${scopeLabel} memory set yet`,
@@ -111,7 +101,7 @@ export const manageMemoryTool = createTool({
           return {
             success: true,
             message: `Retrieved ${scopeLabel} memory`,
-            data: { memory: thread.metadata["workingMemory"] as string },
+            data: { memory: memoryContent },
           };
         }
 
@@ -124,15 +114,11 @@ export const manageMemoryTool = createTool({
               message: `Memory too long (${String(ctx.memory.length)} chars, max ${String(MAX_MEMORY_SIZE)}). Summarize or remove old items.`,
             };
           }
-          let thread = await memory.getThreadById({ threadId });
-          if (!thread) {
-            thread = await memory.createThread({
-              threadId,
-              resourceId: `guild:${ctx.guildId}`,
-              metadata: { workingMemory: ctx.memory },
-            });
+
+          if (scope === "owner") {
+            await updateOwnerWorkingMemory(ctx.guildId, persona!, ctx.memory);
           } else {
-            await memory.updateWorkingMemory({ threadId, resourceId: `guild:${ctx.guildId}`, workingMemory: ctx.memory });
+            await updateServerWorkingMemory(ctx.guildId, ctx.memory);
           }
           logger.info(`${scopeLabel} memory updated`, { guildId: ctx.guildId, scope });
           return { success: true, message: `${scopeLabel} memory updated successfully` };
@@ -142,10 +128,12 @@ export const manageMemoryTool = createTool({
           if (!ctx.item || !ctx.section) {
             return { success: false, message: "item and section are required for append" };
           }
-          const thread = await memory.getThreadById({ threadId });
-          const current = (thread?.metadata?.["workingMemory"] as string) || template;
 
-          const updated = appendToSection(current, ctx.section, ctx.item, scope);
+          const current = scope === "owner"
+            ? await getOwnerWorkingMemory(ctx.guildId, persona!)
+            : await getServerWorkingMemory(ctx.guildId);
+
+          const updated = appendToSection(current ?? template, ctx.section, ctx.item, scope);
           if (updated.length > MAX_MEMORY_SIZE) {
             return {
               success: false,
@@ -153,25 +141,21 @@ export const manageMemoryTool = createTool({
             };
           }
 
-          if (!thread) {
-            await memory.createThread({
-              threadId,
-              resourceId: `guild:${ctx.guildId}`,
-              metadata: { workingMemory: updated },
-            });
+          if (scope === "owner") {
+            await updateOwnerWorkingMemory(ctx.guildId, persona!, updated);
           } else {
-            await memory.updateWorkingMemory({ threadId, resourceId: `guild:${ctx.guildId}`, workingMemory: updated });
+            await updateServerWorkingMemory(ctx.guildId, updated);
           }
           logger.info(`${scopeLabel} memory appended`, { guildId: ctx.guildId, scope, section: ctx.section });
           return { success: true, message: `Added to ${scopeLabel} ${ctx.section}: ${ctx.item}` };
         }
 
         case "clear": {
-          const thread = await memory.getThreadById({ threadId });
-          if (!thread) {
-            return { success: true, message: `${scopeLabel} memory was already empty` };
+          if (scope === "owner") {
+            await updateOwnerWorkingMemory(ctx.guildId, persona!, template);
+          } else {
+            await updateServerWorkingMemory(ctx.guildId, template);
           }
-          await memory.updateWorkingMemory({ threadId, resourceId: `guild:${ctx.guildId}`, workingMemory: template });
           logger.info(`${scopeLabel} memory cleared`, { guildId: ctx.guildId, scope });
           return { success: true, message: `${scopeLabel} memory cleared to default template` };
         }

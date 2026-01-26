@@ -1,6 +1,5 @@
 import { spawn } from "child_process";
 import { loggers } from "../utils/index.js";
-import { getRepoConfig } from "./config.js";
 import { getAuth } from "./github-oauth.js";
 import type { FileChange } from "./types.js";
 
@@ -8,7 +7,7 @@ const logger = loggers.editor.child("github-pr");
 
 export type CreatePROptions = {
   userId: string;
-  repoName: string;
+  repoPath: string; // Path to the cloned repo directory
   branchName: string;
   baseBranch: string;
   title: string;
@@ -29,13 +28,8 @@ export type PRResult = {
 export async function createPullRequest(
   opts: CreatePROptions,
 ): Promise<PRResult> {
-  const { userId, repoName, branchName, baseBranch, title, body, changes } =
+  const { userId, repoPath, branchName, baseBranch, title, body, changes } =
     opts;
-
-  const repoConfig = getRepoConfig(repoName);
-  if (!repoConfig) {
-    return { success: false, error: `Repository '${repoName}' not configured` };
-  }
 
   const auth = await getAuth(userId);
   if (!auth) {
@@ -44,18 +38,18 @@ export async function createPullRequest(
 
   try {
     // Create branch
-    await runGitCommand(repoConfig.path, ["checkout", "-b", branchName]);
+    await runGitCommand(repoPath, ["checkout", "-b", branchName]);
 
     // Apply changes
     for (const change of changes) {
-      await applyChange(repoConfig.path, change);
+      await applyChange(repoPath, change);
     }
 
     // Stage all changes
-    await runGitCommand(repoConfig.path, ["add", "-A"]);
+    await runGitCommand(repoPath, ["add", "-A"]);
 
     // Commit
-    await runGitCommand(repoConfig.path, [
+    await runGitCommand(repoPath, [
       "commit",
       "-m",
       title,
@@ -64,13 +58,13 @@ export async function createPullRequest(
     ]);
 
     // Push with token auth
-    const remoteUrl = await getRemoteUrl(repoConfig.path);
+    const remoteUrl = await getRemoteUrl(repoPath);
     const authedUrl = injectToken(remoteUrl, auth.accessToken);
-    await runGitCommand(repoConfig.path, ["push", authedUrl, branchName]);
+    await runGitCommand(repoPath, ["push", authedUrl, branchName]);
 
     // Create PR using gh CLI
     const prUrl = await createPRWithGh({
-      workingDir: repoConfig.path,
+      workingDir: repoPath,
       title,
       body,
       baseBranch,
@@ -79,7 +73,7 @@ export async function createPullRequest(
     });
 
     // Checkout back to base branch
-    await runGitCommand(repoConfig.path, ["checkout", baseBranch]);
+    await runGitCommand(repoPath, ["checkout", baseBranch]);
 
     return { success: true, prUrl };
   } catch (error) {
@@ -88,8 +82,8 @@ export async function createPullRequest(
 
     // Try to clean up
     try {
-      await runGitCommand(repoConfig.path, ["checkout", baseBranch]);
-      await runGitCommand(repoConfig.path, ["branch", "-D", branchName]);
+      await runGitCommand(repoPath, ["checkout", baseBranch]);
+      await runGitCommand(repoPath, ["branch", "-D", branchName]);
     } catch {
       // Ignore cleanup errors
     }

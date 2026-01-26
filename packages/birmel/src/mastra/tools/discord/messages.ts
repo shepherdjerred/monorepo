@@ -1,4 +1,4 @@
-import { createTool } from "@mastra/core/tools";
+import { createTool } from "../../../voltagent/tools/create-tool.js";
 import { z } from "zod";
 import type { TextChannel } from "discord.js";
 import { getDiscordClient } from "../../../discord/index.js";
@@ -6,83 +6,19 @@ import { loggers } from "../../../utils/logger.js";
 import { withToolSpan, captureException } from "../../../observability/index.js";
 import { getRequestContext, hasReplySent, markReplySent } from "../request-context.js";
 import { validateSnowflakes, validateSnowflakeArray } from "./validation.js";
-import { prepareMessageWorkflow } from "../../workflows/index.js";
-import { getConfig } from "../../../config/index.js";
 import { isDiscordAPIError, formatDiscordAPIError } from "./error-utils.js";
-import { getMemory, getGlobalThreadId, getOwnerThreadId } from "../../memory/index.js";
-import { getGuildPersona } from "../../../persona/index.js";
 
 const logger = loggers.tools.child("discord.messages");
 
 /**
- * Fetch both server and owner memory for style context.
+ * NOTE: Stylization is now handled at the agent level via prompt-embedded persona.
+ * Messages are styled as they're generated, not as a post-processing step.
+ * This function is kept as a pass-through for backwards compatibility.
  */
-async function fetchMemoryForStyle(
-  guildId: string,
-): Promise<{ serverMemory: string | null; ownerMemory: string | null }> {
-  try {
-    const memory = getMemory();
-
-    // Fetch server memory
-    const serverThreadId = getGlobalThreadId(guildId);
-    const serverThread = await memory.getThreadById({ threadId: serverThreadId });
-    const serverMemory = (serverThread?.metadata?.["workingMemory"] as string | undefined) ?? null;
-
-    // Fetch owner memory
-    const persona = await getGuildPersona(guildId);
-    const ownerThreadId = getOwnerThreadId(guildId, persona);
-    const ownerThread = await memory.getThreadById({ threadId: ownerThreadId });
-    const ownerMemory = (ownerThread?.metadata?.["workingMemory"] as string | undefined) ?? null;
-
-    return { serverMemory, ownerMemory };
-  } catch (error) {
-    logger.warn("Failed to fetch memory for style", { error, guildId });
-    return { serverMemory: null, ownerMemory: null };
-  }
-}
-
-/**
- * Apply style transformation to message content using the prepare-message workflow.
- * Uses the guild's current persona to stylize the response.
- */
-async function stylizeContent(content: string, guildId: string | undefined): Promise<string> {
-  const config = getConfig();
-  if (!config.persona.enabled || !guildId) {
-    return content;
-  }
-
-  try {
-    // Fetch memory to pass to the style workflow
-    const { serverMemory, ownerMemory } = await fetchMemoryForStyle(guildId);
-
-    const run = await prepareMessageWorkflow.createRun();
-    const result = await run.start({
-      inputData: {
-        content,
-        guildId,
-        ...(serverMemory && { serverMemory }),
-        ...(ownerMemory && { ownerMemory }),
-      },
-    });
-
-    if (result.status === "success") {
-      logger.debug("Message styled via workflow", {
-        persona: result.result.persona,
-        wasStyled: result.result.wasStyled,
-        originalLength: content.length,
-        styledLength: result.result.content.length,
-        hasServerMemory: Boolean(serverMemory),
-        hasOwnerMemory: Boolean(ownerMemory),
-      });
-      return result.result.content;
-    }
-
-    logger.warn("Workflow did not return success, using original content", { status: result.status });
-    return content;
-  } catch (error) {
-    logger.error("Failed to stylize content via workflow, using original", { error });
-    return content;
-  }
+async function stylizeContent(content: string, _guildId: string | undefined): Promise<string> {
+  // Stylization is now done at the agent level via prompt-embedded persona
+  // This saves the 2-5 second blocking LLM call that was slowing down responses
+  return content;
 }
 
 export const manageMessageTool = createTool({

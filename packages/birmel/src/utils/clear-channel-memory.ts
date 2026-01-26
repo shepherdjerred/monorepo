@@ -1,4 +1,4 @@
-import { getMemory, getChannelThreadId } from "../mastra/memory/index.js";
+import { getMemory, getChannelConversationId } from "../voltagent/memory/index.js";
 import { logger } from "./logger.js";
 
 /**
@@ -8,14 +8,15 @@ import { logger } from "./logger.js";
  * @param channelId - Discord channel ID to clear history for
  */
 export async function clearChannelMemory(channelId: string): Promise<void> {
-  const threadId = getChannelThreadId(channelId);
-  logger.info(`Clearing memory for channel ${channelId} (thread: ${threadId})`);
+  const conversationId = getChannelConversationId(channelId);
+  logger.info(`Clearing memory for channel ${channelId} (conversation: ${conversationId})`);
 
   try {
     const memory = getMemory();
 
-    // Delete the thread which will remove all messages
-    await memory.deleteThread(threadId);
+    // Clear all messages for this conversation
+    // The userId is required by the API but not used for channel-level clearing
+    await memory.clearMessages("system", conversationId);
 
     logger.info(`Successfully cleared memory for channel ${channelId}`);
   } catch (error) {

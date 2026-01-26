@@ -1,5 +1,6 @@
 export {
   buildStyleContext,
+  buildPersonaPrompt,
   stylizeResponse,
   type StyleContext,
   type StyleCard,

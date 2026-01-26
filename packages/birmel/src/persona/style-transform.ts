@@ -114,6 +114,31 @@ ${originalMessage}
 - Output ONLY the restyled message with no quotes or explanation`;
 }
 
+/**
+ * Build persona context for prompt-embedded styling.
+ * This returns a format suitable for injecting into the system prompt.
+ */
+export function buildPersonaPrompt(persona: string): {
+  name: string;
+  voice: string;
+  markers: string;
+  samples: string[];
+} | null {
+  const styleContext = buildStyleContext(persona);
+  if (!styleContext) {
+    return null;
+  }
+
+  const { styleCard } = styleContext;
+
+  return {
+    name: persona,
+    voice: styleCard.voice.slice(0, 4).map((v) => `- ${v}`).join("\n"),
+    markers: styleCard.style_markers.slice(0, 4).map((m) => `- ${m}`).join("\n"),
+    samples: styleCard.sample_messages.slice(0, 10),
+  };
+}
+
 export async function stylizeResponse(
   response: string,
   persona: string,

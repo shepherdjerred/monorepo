@@ -1,4 +1,4 @@
-import { createTool } from "@mastra/core/tools";
+import { createTool } from "../../../voltagent/tools/create-tool.js";
 import { z } from "zod";
 import { getDiscordClient } from "../../../discord/index.js";
 import { loggers } from "../../../utils/logger.js";

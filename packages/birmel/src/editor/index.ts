@@ -21,6 +21,7 @@ export {
   canCreateSession,
   getOrCreateSession,
   updateSdkSessionId,
+  updateClonedRepoPath,
   storePendingChanges,
   getPendingChanges,
   updateSessionState,
@@ -30,7 +31,11 @@ export {
   expireOldSessions,
   deleteSession,
   extendSession,
+  cleanupSessionClone,
 } from "./session-manager.js";
+
+// Repo cloning
+export { cloneRepo, cleanupClone } from "./repo-clone.js";
 
 // Claude Code client
 export {

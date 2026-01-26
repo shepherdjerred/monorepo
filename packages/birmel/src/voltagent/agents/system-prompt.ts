@@ -72,3 +72,37 @@ For single destructive actions (kick one person, delete one role), proceed if us
 - Use the user's numeric Discord ID (not "@me") for "my" requests
 - Keep all responses under 2000 characters
 `;
+
+/**
+ * Build a system prompt with persona context injected.
+ * This allows prompt-embedded persona styling instead of a blocking stylization LLM call.
+ */
+export function buildSystemPromptWithPersona(
+  personaContext?: { name: string; voice: string; markers: string; samples: string[] } | null
+): string {
+  if (!personaContext) {
+    return SYSTEM_PROMPT;
+  }
+
+  const sampleMessages = personaContext.samples
+    .slice(0, 10)
+    .map((m) => `- "${m}"`)
+    .join("\n");
+
+  return `${SYSTEM_PROMPT}
+
+## Persona: ${personaContext.name}
+
+You are currently embodying ${personaContext.name}'s voice and writing style.
+
+**Voice Characteristics:**
+${personaContext.voice}
+
+**Style Markers:**
+${personaContext.markers}
+
+**Example Messages (write in this style):**
+${sampleMessages}
+
+Match their typical message length, punctuation, casing, and tone. Absorb the style, don't copy messages verbatim.`;
+}
