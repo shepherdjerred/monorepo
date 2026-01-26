@@ -4,6 +4,7 @@ import type { ColorResolvable } from "discord.js";
 import { getDiscordClient } from "../../../discord/index.js";
 import { logger } from "../../../utils/logger.js";
 import { validateSnowflakes } from "./validation.js";
+import { isDiscordAPIError, formatDiscordAPIError } from "./error-utils.js";
 
 export const manageRoleTool = createTool({
   id: "manage-role",
@@ -133,6 +134,14 @@ export const manageRoleTool = createTool({
               message: "name is required for creating a role",
             };
           }
+          // Safety: limit role creation to avoid hitting Discord's 250 role limit
+          const existingRoles = await guild.roles.fetch();
+          if (existingRoles.size >= 240) {
+            return {
+              success: false,
+              message: `Server has too many roles (${String(existingRoles.size)}/250). Delete some roles before creating new ones.`,
+            };
+          }
           const role = await guild.roles.create({
             name: ctx.name,
             ...(ctx.color !== undefined && { color: ctx.color as ColorResolvable }),
@@ -225,10 +234,24 @@ export const manageRoleTool = createTool({
         }
       }
     } catch (error) {
+      if (isDiscordAPIError(error)) {
+        logger.error("Discord API error in manage-role", {
+          code: error.code,
+          status: error.status,
+          message: error.message,
+          method: error.method,
+          url: error.url,
+          ctx,
+        });
+        return {
+          success: false,
+          message: formatDiscordAPIError(error),
+        };
+      }
       logger.error("Failed to manage role", error);
       return {
         success: false,
-        message: `Failed to manage role: ${(error as Error).message}`,
+        message: `Failed: ${(error as Error).message}`,
       };
     }
   },

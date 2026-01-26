@@ -12,6 +12,7 @@ import {
   moderationAgent,
   musicAgent,
   automationAgent,
+  editorAgent,
 } from "./agents/specialized/index.js";
 import { createClassifierAgent } from "./agents/classifier-agent.js";
 import { stylizationAgent } from "./agents/stylization-agent.js";
@@ -36,6 +37,7 @@ export const mastra = new Mastra({
     moderation: moderationAgent,
     music: musicAgent,
     automation: automationAgent,
+    editor: editorAgent,
     // Utility agents
     classifier: classifierAgent,
     stylizer: stylizationAgent,
@@ -97,6 +99,7 @@ export {
   moderationAgent,
   musicAgent,
   automationAgent,
+  editorAgent,
 } from "./agents/specialized/index.js";
 
 // Legacy exports (for backwards compatibility)

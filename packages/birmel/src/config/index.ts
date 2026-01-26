@@ -117,6 +117,29 @@ function loadConfigFromEnv(): Config {
       timezone: process.env["ELECTION_TIMEZONE"] ?? "America/Los_Angeles",
       channelId: process.env["ELECTION_CHANNEL_ID"],
     },
+    editor: {
+      enabled: parseBoolean(process.env["EDITOR_ENABLED"], false),
+      allowedRepos: parseJSON<
+        { name: string; path: string; allowedPaths?: string[]; branch?: string }[]
+      >(process.env["EDITOR_ALLOWED_REPOS"], []),
+      maxSessionDurationMs: parseNumber(
+        process.env["EDITOR_MAX_SESSION_DURATION_MS"],
+        1800000,
+      ),
+      maxSessionsPerUser: parseNumber(
+        process.env["EDITOR_MAX_SESSIONS_PER_USER"],
+        1,
+      ),
+      oauthPort: parseNumber(process.env["EDITOR_OAUTH_PORT"], 4112),
+      oauthHost: process.env["EDITOR_OAUTH_HOST"] ?? "0.0.0.0",
+      github: process.env["EDITOR_GITHUB_CLIENT_ID"]
+        ? {
+            clientId: process.env["EDITOR_GITHUB_CLIENT_ID"] ?? "",
+            clientSecret: process.env["EDITOR_GITHUB_CLIENT_SECRET"] ?? "",
+            callbackUrl: process.env["EDITOR_GITHUB_CALLBACK_URL"] ?? "",
+          }
+        : undefined,
+    },
   };
 
   return ConfigSchema.parse(rawConfig);

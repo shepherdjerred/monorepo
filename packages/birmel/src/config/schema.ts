@@ -113,6 +113,29 @@ export const ElectionsConfigSchema = z.object({
   dayOfWeek: z.number().min(0).max(6).default(3), // 0=Sunday, 3=Wednesday, 6=Saturday
 });
 
+export const EditorRepoConfigSchema = z.object({
+  name: z.string(),
+  path: z.string(),
+  allowedPaths: z.array(z.string()).default(["**/*"]),
+  branch: z.string().default("main"),
+});
+
+export const EditorConfigSchema = z.object({
+  enabled: z.boolean().default(false),
+  allowedRepos: z.array(EditorRepoConfigSchema).default([]),
+  maxSessionDurationMs: z.number().default(1800000), // 30 minutes
+  maxSessionsPerUser: z.number().default(1),
+  oauthPort: z.number().default(4112),
+  oauthHost: z.string().default("0.0.0.0"),
+  github: z
+    .object({
+      clientId: z.string(),
+      clientSecret: z.string(),
+      callbackUrl: z.string(),
+    })
+    .optional(),
+});
+
 export const ConfigSchema = z.object({
   discord: DiscordConfigSchema,
   openai: OpenAIConfigSchema,
@@ -129,6 +152,7 @@ export const ConfigSchema = z.object({
   birthdays: BirthdayConfigSchema,
   activityTracking: ActivityTrackingConfigSchema,
   elections: ElectionsConfigSchema,
+  editor: EditorConfigSchema,
 });
 
 export type Config = z.infer<typeof ConfigSchema>;
@@ -147,3 +171,5 @@ export type BrowserConfig = z.infer<typeof BrowserConfigSchema>;
 export type BirthdayConfig = z.infer<typeof BirthdayConfigSchema>;
 export type ActivityTrackingConfig = z.infer<typeof ActivityTrackingConfigSchema>;
 export type ElectionsConfig = z.infer<typeof ElectionsConfigSchema>;
+export type EditorRepoConfig = z.infer<typeof EditorRepoConfigSchema>;
+export type EditorConfig = z.infer<typeof EditorConfigSchema>;

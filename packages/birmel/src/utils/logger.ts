@@ -128,4 +128,5 @@ export const loggers = {
   database: createLogger("database"),
   events: createLogger("events"),
   automation: createLogger("automation"),
+  editor: createLogger("editor"),
 };

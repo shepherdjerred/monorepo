@@ -14,6 +14,10 @@ const workflowInputSchema = z.object({
 	content: z.string(),
 	/** Guild ID for persona lookup */
 	guildId: z.string(),
+	/** Server memory (permanent rules) */
+	serverMemory: z.string().optional(),
+	/** Owner memory (current owner's preferences) */
+	ownerMemory: z.string().optional(),
 });
 
 /**
@@ -70,10 +74,12 @@ const transformStep = createStep({
 			};
 		}
 
-		// Build the stylization prompt
+		// Build the stylization prompt with memory context
 		const stylizationPrompt = formatStylizationPrompt(
 			styleContext,
 			inputData.content,
+			inputData.serverMemory,
+			inputData.ownerMemory,
 		);
 
 		// Use the stylization agent
@@ -99,6 +105,8 @@ const transformStep = createStep({
 function formatStylizationPrompt(
 	context: StyleContext,
 	originalMessage: string,
+	serverMemory?: string,
+	ownerMemory?: string,
 ): string {
 	const { styleCard, persona } = context;
 
@@ -109,6 +117,18 @@ function formatStylizationPrompt(
 		.slice(0, 8)
 		.map((m) => `"${m}"`)
 		.join("\n");
+
+	// Build memory context section if any memory is present
+	let memorySection = "";
+	if (serverMemory || ownerMemory) {
+		memorySection = "\n## Memory Context\nConsider these rules when styling:\n";
+		if (serverMemory) {
+			memorySection += `\n**Server Rules:**\n${serverMemory}\n`;
+		}
+		if (ownerMemory) {
+			memorySection += `\n**Owner Rules:**\n${ownerMemory}\n`;
+		}
+	}
 
 	return `Rewrite the following message to match ${persona}'s writing style. Keep the EXACT same meaning and content, but change the tone, vocabulary, and sentence structure.
 
@@ -127,7 +147,7 @@ function formatStylizationPrompt(
 
 **Sample Messages:**
 ${sampleMessages}
-
+${memorySection}
 ---
 
 **Original message to restyle:**
@@ -137,6 +157,7 @@ ${originalMessage}
 - Absorb the style, don't copy messages verbatim
 - Match their typical message length, punctuation, and casing
 - Keep all factual content from the original
+- Follow any rules from memory context (if present)
 - Output ONLY the restyled message with no quotes or explanation`;
 }
 

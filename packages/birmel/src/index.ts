@@ -22,9 +22,11 @@ import {
   routingAgent,
   startMastraServer,
 } from "./mastra/index.js";
-import { getMemory, getGlobalThreadId } from "./mastra/memory/index.js";
+import { getMemory, getGlobalThreadId, getOwnerThreadId } from "./mastra/memory/index.js";
+import { getGuildPersona } from "./persona/index.js";
 import { initializeMusicPlayer, destroyMusicPlayer } from "./music/index.js";
 import { startScheduler, stopScheduler } from "./scheduler/index.js";
+import { startOAuthServer, stopOAuthServer } from "./editor/index.js";
 import { withTyping } from "./discord/utils/typing.js";
 import { logger } from "./utils/index.js";
 import type { MessageContext } from "./discord/index.js";
@@ -33,26 +35,45 @@ import { getRecentChannelMessages } from "./discord/utils/channel-history.js";
 import { runWithRequestContext } from "./mastra/tools/request-context.js";
 
 /**
- * Fetch global working memory for a guild.
- * This contains server-wide rules like "don't do X".
+ * Fetch server working memory for a guild.
+ * This contains permanent server-wide rules like "don't do X".
  */
-async function getGlobalMemoryContext(guildId: string): Promise<string | null> {
+async function getServerMemoryContext(guildId: string): Promise<string | null> {
   try {
     const memory = getMemory();
     const threadId = getGlobalThreadId(guildId);
 
-    // Try to get the thread to access working memory
-    const thread = await memory.getThreadById({
-      threadId,
-    });
+    const thread = await memory.getThreadById({ threadId });
 
     if (thread?.metadata?.["workingMemory"]) {
       return thread.metadata["workingMemory"] as string;
     }
     return null;
   } catch {
-    // Thread doesn't exist yet, that's fine
     return null;
+  }
+}
+
+/**
+ * Fetch owner-specific working memory for a guild.
+ * This contains current owner's preferences that switch when ownership changes.
+ */
+async function getOwnerMemoryContext(
+  guildId: string,
+): Promise<{ memory: string | null; persona: string }> {
+  try {
+    const persona = await getGuildPersona(guildId);
+    const memory = getMemory();
+    const threadId = getOwnerThreadId(guildId, persona);
+
+    const thread = await memory.getThreadById({ threadId });
+
+    return {
+      memory: thread?.metadata?.["workingMemory"] as string | null ?? null,
+      persona,
+    };
+  } catch {
+    return { memory: null, persona: "default" };
   }
 }
 
@@ -93,15 +114,22 @@ async function handleMessage(context: MessageContext): Promise<void> {
       contentLength: context.content.length,
     });
 
-    // Fetch global memory (server rules) to inject into prompt
-    logger.debug("Fetching global memory", { requestId, guildId: context.guildId });
-    const globalMemory = await getGlobalMemoryContext(context.guildId);
-    const globalContext = globalMemory
-      ? `\n## Server Rules & Memory\n${globalMemory}\n`
-      : "";
+    // Fetch both server and owner memory tiers
+    logger.debug("Fetching memory tiers", { requestId, guildId: context.guildId });
+    const [serverMemory, ownerResult] = await Promise.all([
+      getServerMemoryContext(context.guildId),
+      getOwnerMemoryContext(context.guildId),
+    ]);
 
-    if (globalMemory) {
-      logger.debug("Global memory found", { requestId, memoryLength: globalMemory.length });
+    // Build memory context sections
+    let memoryContext = "";
+    if (serverMemory) {
+      memoryContext += `\n## Server Memory (permanent)\n${serverMemory}\n`;
+      logger.debug("Server memory found", { requestId, memoryLength: serverMemory.length });
+    }
+    if (ownerResult.memory) {
+      memoryContext += `\n## Owner Memory (${ownerResult.persona})\n${ownerResult.memory}\n`;
+      logger.debug("Owner memory found", { requestId, persona: ownerResult.persona, memoryLength: ownerResult.memory.length });
     }
 
     // Fetch recent Discord messages for conversational context
@@ -119,7 +147,7 @@ ${context.attachments.length > 0 ? `[User attached ${String(context.attachments.
 
 Guild ID: ${context.guildId}
 Channel ID: ${context.channelId}
-${globalContext}${conversationHistory}`;
+${memoryContext}${conversationHistory}`;
 
     // Show typing indicator while generating response via Agent Network
     // The routing agent coordinates specialized sub-agents (messaging, server, moderation, music, automation)
@@ -215,6 +243,7 @@ async function shutdown(): Promise<void> {
   logger.info("Shutting down Birmel...");
 
   stopScheduler();
+  await stopOAuthServer();
   await destroyMusicPlayer();
   await destroyDiscordClient();
   await disconnectPrisma();
@@ -259,6 +288,9 @@ async function main(): Promise<void> {
 
   // Start Mastra Studio server
   await startMastraServer();
+
+  // Start OAuth server for GitHub authentication (exposed via Tailscale Funnel)
+  await startOAuthServer();
 
   // Handle graceful shutdown
   process.on("SIGINT", () => void shutdown());

@@ -151,3 +151,35 @@ model ScheduledTask {
   @@index([guildId])
   @@index([enabled, scheduledAt])
 }
+
+model EditorSession {
+  id             String    @id @default(uuid())
+  userId         String
+  guildId        String
+  channelId      String
+  threadId       String?
+  messageId      String?
+  repoName       String
+  sdkSessionId   String?
+  state          String    @default("active")
+  pendingChanges String?
+  summary        String?
+  prUrl          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  expiresAt      DateTime
+
+  @@index([userId, state])
+  @@index([guildId])
+  @@index([threadId])
+}
+
+model GitHubAuth {
+  id           String    @id @default(uuid())
+  userId       String    @unique
+  accessToken  String
+  refreshToken String?
+  expiresAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
