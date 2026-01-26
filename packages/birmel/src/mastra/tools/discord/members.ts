@@ -29,6 +29,7 @@ export const manageMemberTool = createTool({
         joinedAt: z.string().nullable(),
         roles: z.array(z.string()),
         isOwner: z.boolean(),
+        voiceChannelId: z.string().nullable(),
       }),
       z.array(z.object({
         id: z.string(),
@@ -65,6 +66,7 @@ export const manageMemberTool = createTool({
               joinedAt: member.joinedAt?.toISOString() ?? null,
               roles: member.roles.cache.map((r) => r.name),
               isOwner: guild.ownerId === member.id,
+              voiceChannelId: member.voice.channelId,
             },
           };
         }

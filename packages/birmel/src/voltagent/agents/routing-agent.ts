@@ -51,7 +51,7 @@ export const routingAgent = new Agent({
  * This is useful for dynamic persona injection per-request.
  */
 export function createRoutingAgentWithPersona(
-  personaContext?: { name: string; voice: string; markers: string; samples: string[] } | null
+  personaContext?: { name: string; description: string; voice: string; markers: string; samples: string[] } | null
 ) {
   return new Agent({
     name: "birmel-router",

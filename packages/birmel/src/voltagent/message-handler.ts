@@ -25,6 +25,32 @@ const EDIT_INTERVAL_MS = 1500;
 // Minimum content length before showing in progressive update
 const MIN_CONTENT_LENGTH = 20;
 
+// Tool status messages for conversational feedback
+const TOOL_STATUS_MESSAGES: Record<string, string> = {
+  // Music tools
+  "music-playback": "Finding and queueing that for you...",
+  "music-queue": "Managing the queue...",
+  // Discord tools
+  "manage-message": "Sending message...",
+  "manage-channel": "Configuring channel...",
+  "manage-role": "Managing roles...",
+  "manage-member": "Looking up member info...",
+  "manage-server": "Checking server settings...",
+  // Activity tools
+  "get-activity-stats": "Checking activity stats...",
+  "record-activity": "Recording activity...",
+  // Memory tools
+  "manage-memory": "Checking memory...",
+  // Automation tools
+  "manage-timer": "Setting up timer...",
+  // Default
+  default: "Working on it...",
+};
+
+function getToolStatusMessage(toolName: string): string {
+  return TOOL_STATUS_MESSAGES[toolName] ?? TOOL_STATUS_MESSAGES.default;
+}
+
 /**
  * Handle a Discord message with VoltAgent streaming and progressive updates.
  */
@@ -121,24 +147,56 @@ ${memoryContext}${conversationHistory}`;
           conversationId: getChannelConversationId(context.channelId),
         });
 
-        // Process the text stream with progressive edits
-        for await (const chunk of response.textStream) {
-          accumulated += chunk;
+        // Track current tool status for conversational updates
+        let currentToolStatus = "";
+        let hasShownToolStatus = false;
 
-          // Edit every EDIT_INTERVAL_MS to avoid rate limits
+        // Helper to process a text delta
+        const processTextDelta = (text: string) => {
+          accumulated += text;
+          // Clear tool status once we start getting text
+          if (currentToolStatus && hasShownToolStatus) {
+            currentToolStatus = "";
+          }
+        };
+
+        // Helper to process a tool call
+        const processToolCall = (toolName: string) => {
+          currentToolStatus = getToolStatusMessage(toolName);
+          hasShownToolStatus = false;
+          logger.debug("Tool call started", { toolName, accumulated: accumulated.length });
+        };
+
+        // Helper to update Discord message
+        const maybeEditMessage = async () => {
           const now = Date.now();
-          if (
-            now - lastEditTime >= EDIT_INTERVAL_MS &&
-            accumulated.length >= MIN_CONTENT_LENGTH
-          ) {
+          if (now - lastEditTime < EDIT_INTERVAL_MS) return;
+
+          // Build display content: show tool status if no text yet
+          let displayContent = accumulated;
+          if (currentToolStatus && !hasShownToolStatus && accumulated.length < MIN_CONTENT_LENGTH) {
+            displayContent = `*${currentToolStatus}*`;
+            hasShownToolStatus = true;
+          }
+
+          if (displayContent.length >= MIN_CONTENT_LENGTH || (currentToolStatus && hasShownToolStatus)) {
             try {
-              await placeholderMsg.edit(accumulated + TYPING_CURSOR);
+              await placeholderMsg.edit(displayContent + TYPING_CURSOR);
               lastEditTime = now;
             } catch (editError) {
-              // If edit fails (e.g., message deleted), log and continue
               logger.debug("Failed to edit placeholder message", { editError });
             }
           }
+        };
+
+        // Use fullStream to get tool events along with text
+        for await (const part of response.fullStream) {
+          if (part.type === "text-delta" && "textDelta" in part) {
+            processTextDelta(part.textDelta as string);
+          } else if (part.type === "tool-call" && "toolName" in part) {
+            processToolCall(part.toolName);
+          }
+          await maybeEditMessage();
         }
       },
     );

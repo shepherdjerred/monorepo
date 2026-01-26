@@ -19,9 +19,18 @@ export type RecordReactionActivityInput = {
   emoji: string;
 }
 
+export type RecordVoiceActivityInput = {
+  guildId: string;
+  userId: string;
+  channelId: string;
+  action: "join" | "leave" | "switch";
+  previousChannelId?: string;
+}
+
 export type ActivityStats = {
   messageCount: number;
   reactionCount: number;
+  voiceCount: number;
   totalActivity: number;
   rank: number;
 }
@@ -85,6 +94,31 @@ export function recordReactionActivity(input: RecordReactionActivityInput): void
 }
 
 /**
+ * Record a voice activity (fire-and-forget pattern)
+ */
+export function recordVoiceActivity(input: RecordVoiceActivityInput): void {
+  void prisma.userActivity
+    .create({
+      data: {
+        guildId: input.guildId,
+        userId: input.userId,
+        channelId: input.channelId,
+        activityType: "voice",
+        metadata: JSON.stringify({
+          action: input.action,
+          ...(input.previousChannelId && { previousChannelId: input.previousChannelId }),
+        }),
+      },
+    })
+    .catch((error: unknown) => {
+      logger.error("Failed to record voice activity", error, {
+        guildId: input.guildId,
+        userId: input.userId,
+      });
+    });
+}
+
+/**
  * Get activity statistics for a specific user
  */
 export async function getUserActivityStats(
@@ -103,7 +137,7 @@ export async function getUserActivityStats(
     }),
   };
 
-  const [messageCount, reactionCount] = await Promise.all([
+  const [messageCount, reactionCount, voiceCount] = await Promise.all([
     // Count messages
     prisma.userActivity.count({
       where: { ...where, activityType: "message" },
@@ -112,9 +146,13 @@ export async function getUserActivityStats(
     prisma.userActivity.count({
       where: { ...where, activityType: "reaction" },
     }),
+    // Count voice activity
+    prisma.userActivity.count({
+      where: { ...where, activityType: "voice" },
+    }),
   ]);
 
-  const totalActivity = messageCount + reactionCount;
+  const totalActivity = messageCount + reactionCount + voiceCount;
 
   // Calculate rank: count how many users have higher total activity
   const higherActivityCount = await prisma.$queryRaw<{ count: number }[]>`
@@ -134,6 +172,7 @@ export async function getUserActivityStats(
   return {
     messageCount,
     reactionCount,
+    voiceCount,
     totalActivity,
     rank,
   };
@@ -146,7 +185,7 @@ export async function getTopActiveUsers(
   guildId: string,
   options?: {
     limit?: number;
-    activityType?: "message" | "reaction" | "all";
+    activityType?: "message" | "reaction" | "voice" | "all";
     dateRange?: { start: Date; end: Date };
   }
 ): Promise<TopUser[]> {
