@@ -132,7 +132,7 @@ export const manageMemoryTool = createTool({
               metadata: { workingMemory: ctx.memory },
             });
           } else {
-            await memory.updateWorkingMemory({ threadId, workingMemory: ctx.memory });
+            await memory.updateWorkingMemory({ threadId, resourceId: `guild:${ctx.guildId}`, workingMemory: ctx.memory });
           }
           logger.info(`${scopeLabel} memory updated`, { guildId: ctx.guildId, scope });
           return { success: true, message: `${scopeLabel} memory updated successfully` };
@@ -160,7 +160,7 @@ export const manageMemoryTool = createTool({
               metadata: { workingMemory: updated },
             });
           } else {
-            await memory.updateWorkingMemory({ threadId, workingMemory: updated });
+            await memory.updateWorkingMemory({ threadId, resourceId: `guild:${ctx.guildId}`, workingMemory: updated });
           }
           logger.info(`${scopeLabel} memory appended`, { guildId: ctx.guildId, scope, section: ctx.section });
           return { success: true, message: `Added to ${scopeLabel} ${ctx.section}: ${ctx.item}` };
@@ -171,7 +171,7 @@ export const manageMemoryTool = createTool({
           if (!thread) {
             return { success: true, message: `${scopeLabel} memory was already empty` };
           }
-          await memory.updateWorkingMemory({ threadId, workingMemory: template });
+          await memory.updateWorkingMemory({ threadId, resourceId: `guild:${ctx.guildId}`, workingMemory: template });
           logger.info(`${scopeLabel} memory cleared`, { guildId: ctx.guildId, scope });
           return { success: true, message: `${scopeLabel} memory cleared to default template` };
         }
