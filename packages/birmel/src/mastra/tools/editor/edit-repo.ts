@@ -4,8 +4,14 @@ import {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
-  EmbedBuilder,
+  type EmbedBuilder as EmbedBuilderType,
 } from "discord.js";
+
+// Lazy-load EmbedBuilder to avoid module resolution issues in test environments
+async function getEmbedBuilder(): Promise<typeof EmbedBuilderType> {
+  const { EmbedBuilder } = await import("discord.js");
+  return EmbedBuilder;
+}
 import { getDiscordClient } from "../../../discord/index.js";
 import { loggers } from "../../../utils/logger.js";
 import { withToolSpan, captureException } from "../../../observability/index.js";
@@ -170,6 +176,7 @@ export const editRepoTool = createTool({
         const channel = await client.channels.fetch(reqCtx.sourceChannelId);
 
         if (channel && "send" in channel) {
+          const EmbedBuilder = await getEmbedBuilder();
           const embed = new EmbedBuilder()
             .setTitle("File Changes Ready for Review")
             .setDescription(result.summary)

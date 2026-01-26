@@ -1,5 +1,10 @@
-import type { Client, ButtonInteraction } from "discord.js";
-import { EmbedBuilder } from "discord.js";
+import type { Client, ButtonInteraction, EmbedBuilder as EmbedBuilderType } from "discord.js";
+
+// Lazy-load EmbedBuilder to avoid module resolution issues in test environments
+async function getEmbedBuilder(): Promise<typeof EmbedBuilderType> {
+  const { EmbedBuilder } = await import("discord.js");
+  return EmbedBuilder;
+}
 import { loggers } from "../../utils/index.js";
 import { captureException } from "../../observability/index.js";
 import {
@@ -182,6 +187,7 @@ async function handleApprove(
   // Update the original message
   try {
     const message = await interaction.message.fetch();
+    const EmbedBuilder = await getEmbedBuilder();
     const embed = new EmbedBuilder()
       .setTitle("Pull Request Created")
       .setDescription(session.summary ?? "Changes applied")
@@ -217,6 +223,7 @@ async function handleReject(
     const message = await interaction.message.fetch();
     const existingEmbed = message.embeds[0];
 
+    const EmbedBuilder = await getEmbedBuilder();
     const embed = new EmbedBuilder()
       .setTitle("Changes Rejected")
       .setDescription(existingEmbed?.description ?? "Changes were rejected")
