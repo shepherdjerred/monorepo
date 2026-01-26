@@ -120,6 +120,7 @@ ${originalMessage}
  */
 export function buildPersonaPrompt(persona: string): {
   name: string;
+  description: string;
   voice: string;
   markers: string;
   samples: string[];
@@ -133,6 +134,7 @@ export function buildPersonaPrompt(persona: string): {
 
   return {
     name: persona,
+    description: styleCard.summary,
     voice: styleCard.voice.slice(0, 4).map((v) => `- ${v}`).join("\n"),
     markers: styleCard.style_markers.slice(0, 4).map((m) => `- ${m}`).join("\n"),
     samples: styleCard.sample_messages.slice(0, 10),

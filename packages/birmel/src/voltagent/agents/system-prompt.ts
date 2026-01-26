@@ -77,7 +77,7 @@ For single destructive actions (kick one person, delete one role), proceed if us
  * This allows prompt-embedded persona styling instead of a blocking stylization LLM call.
  */
 export function buildSystemPromptWithPersona(
-  personaContext?: { name: string; voice: string; markers: string; samples: string[] } | null
+  personaContext?: { name: string; description: string; voice: string; markers: string; samples: string[] } | null
 ): string {
   if (!personaContext) {
     return SYSTEM_PROMPT;
@@ -93,6 +93,9 @@ export function buildSystemPromptWithPersona(
 ## Persona: ${personaContext.name}
 
 You are currently embodying ${personaContext.name}'s voice and writing style.
+
+**Who is ${personaContext.name}:**
+${personaContext.description}
 
 **Voice Characteristics:**
 ${personaContext.voice}
