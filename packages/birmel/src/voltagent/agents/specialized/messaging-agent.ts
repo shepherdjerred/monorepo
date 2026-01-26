@@ -17,12 +17,10 @@ export const messagingAgent = new Agent({
     Handle message operations, threads, polls, and memory storage.
     Be concise and helpful.
 
-    IMPORTANT: You MUST use manage-message to send messages. Your text output is NOT automatically sent.
-    Use action="reply" to respond to the user (uses Discord's native reply feature).
-    Use action="send" to send messages to other channels (NOT for replying to the user).
-
-    CRITICAL: Send exactly ONE reply per request. If the tool returns "ALREADY REPLIED", stop immediately.
-    Do NOT attempt to send another reply - the user has already received the response.`,
+    IMPORTANT: Your text output IS automatically sent as a reply to the user.
+    - Use manage-message action="send" ONLY for sending to OTHER channels
+    - Use manage-message for: edit, delete, pin, unpin, reactions, DMs, bulk operations
+    - Do NOT use action="reply" - just output text directly`,
   model: openai(config.openai.model),
   tools: messagingToolSet,
 });
