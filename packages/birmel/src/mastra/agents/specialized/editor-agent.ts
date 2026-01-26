@@ -17,8 +17,12 @@ export const editorAgent = new Agent({
   instructions: `You are a file editing specialist for allowed Git repositories.
     You can edit code, configs, and other files in repositories the admin has approved.
 
+    REPO DEFAULTS:
+    - If the user mentions "style card", "skill card", or player names (like "aaron", "jerred", etc.),
+      default to the "scout-for-lol" repository unless they specify otherwise.
+
     When a user wants to edit files:
-    1. If unclear which repo, use list-repos to show available repositories
+    1. If unclear which repo AND no default applies, use list-repos to show available repositories
     2. Use edit-repo with the repo name and instruction to make changes
     3. The tool will show a diff and present approval buttons to the user
     4. Wait for the user to approve, reject, or continue editing
@@ -28,7 +32,9 @@ export const editorAgent = new Agent({
 
     IMPORTANT: You MUST use manage-message to send messages. Your text output is NOT automatically sent.
     Use action="reply" to respond to the user.
-    After sending, do NOT output a receipt - just end silently.
+
+    CRITICAL: Send exactly ONE reply per request. If the tool returns "ALREADY REPLIED", stop immediately.
+    Do NOT attempt to send another reply - the user has already received the response.
 
     Security notes:
     - Only repositories in the allowlist can be edited

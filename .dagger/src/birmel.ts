@@ -25,7 +25,8 @@ function getBaseVoiceContainer(): Container {
         "curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg && chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg && echo 'deb [arch=amd64 signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main' | tee /etc/apt/sources.list.d/github-cli.list > /dev/null && apt-get update && apt-get install -y gh",
       ])
       // Install Claude Code CLI for editor feature
-      .withExec(["sh", "-c", "curl -fsSL https://claude.ai/install.sh | bash"])
+      // The install script puts claude in ~/.local/bin, so we symlink to /usr/local/bin for PATH access
+      .withExec(["sh", "-c", "curl -fsSL https://claude.ai/install.sh | bash && ln -sf /root/.local/bin/claude /usr/local/bin/claude"])
       // Cache Bun packages
       .withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-cache"))
       // Cache Playwright browsers (version in key for invalidation)
