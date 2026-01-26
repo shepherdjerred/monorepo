@@ -1,0 +1,273 @@
+import { spawn } from "child_process";
+import { loggers } from "../utils/index.js";
+import { getRepoConfig } from "./config.js";
+import { getAuth } from "./github-oauth.js";
+import type { FileChange } from "./types.js";
+
+const logger = loggers.editor.child("github-pr");
+
+export interface CreatePROptions {
+  userId: string;
+  repoName: string;
+  branchName: string;
+  baseBranch: string;
+  title: string;
+  body: string;
+  changes: FileChange[];
+}
+
+export interface PRResult {
+  success: boolean;
+  prUrl?: string;
+  error?: string;
+}
+
+/**
+ * Create a PR with the given changes
+ * Uses gh CLI for authentication and PR creation
+ */
+export async function createPullRequest(
+  opts: CreatePROptions,
+): Promise<PRResult> {
+  const { userId, repoName, branchName, baseBranch, title, body, changes } =
+    opts;
+
+  const repoConfig = getRepoConfig(repoName);
+  if (!repoConfig) {
+    return { success: false, error: `Repository '${repoName}' not configured` };
+  }
+
+  const auth = await getAuth(userId);
+  if (!auth) {
+    return { success: false, error: "GitHub authentication required" };
+  }
+
+  try {
+    // Create branch
+    await runGitCommand(repoConfig.path, ["checkout", "-b", branchName]);
+
+    // Apply changes
+    for (const change of changes) {
+      await applyChange(repoConfig.path, change);
+    }
+
+    // Stage all changes
+    await runGitCommand(repoConfig.path, ["add", "-A"]);
+
+    // Commit
+    await runGitCommand(repoConfig.path, [
+      "commit",
+      "-m",
+      title,
+      "-m",
+      "Created via Discord bot",
+    ]);
+
+    // Push with token auth
+    const remoteUrl = await getRemoteUrl(repoConfig.path);
+    const authedUrl = injectToken(remoteUrl, auth.accessToken);
+    await runGitCommand(repoConfig.path, ["push", authedUrl, branchName]);
+
+    // Create PR using gh CLI
+    const prUrl = await createPRWithGh({
+      workingDir: repoConfig.path,
+      title,
+      body,
+      baseBranch,
+      headBranch: branchName,
+      token: auth.accessToken,
+    });
+
+    // Checkout back to base branch
+    await runGitCommand(repoConfig.path, ["checkout", baseBranch]);
+
+    return { success: true, prUrl };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    logger.error("Failed to create PR", error);
+
+    // Try to clean up
+    try {
+      await runGitCommand(repoConfig.path, ["checkout", baseBranch]);
+      await runGitCommand(repoConfig.path, ["branch", "-D", branchName]);
+    } catch {
+      // Ignore cleanup errors
+    }
+
+    return { success: false, error: message };
+  }
+}
+
+async function runGitCommand(cwd: string, args: string[]): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const proc = spawn("git", args, { cwd, stdio: ["pipe", "pipe", "pipe"] });
+
+    let stdout = "";
+    let stderr = "";
+
+    proc.stdout.on("data", (data: Buffer) => {
+      stdout += data.toString();
+    });
+
+    proc.stderr.on("data", (data: Buffer) => {
+      stderr += data.toString();
+    });
+
+    proc.on("close", (code) => {
+      if (code !== 0) {
+        reject(new Error(`git ${args.join(" ")} failed: ${stderr}`));
+      } else {
+        resolve(stdout.trim());
+      }
+    });
+
+    proc.on("error", reject);
+  });
+}
+
+async function getRemoteUrl(cwd: string): Promise<string> {
+  return runGitCommand(cwd, ["remote", "get-url", "origin"]);
+}
+
+function injectToken(url: string, token: string): string {
+  // Convert https://github.com/user/repo.git to https://token@github.com/user/repo.git
+  if (url.startsWith("https://")) {
+    return url.replace("https://", `https://${token}@`);
+  }
+  // For SSH URLs, we'd need a different approach
+  return url;
+}
+
+async function applyChange(cwd: string, change: FileChange): Promise<void> {
+  const { writeFile, unlink, mkdir } = await import("fs/promises");
+  const { join, dirname } = await import("path");
+
+  const fullPath = join(cwd, change.filePath);
+
+  switch (change.changeType) {
+    case "create":
+    case "modify":
+      if (change.newContent !== null) {
+        await mkdir(dirname(fullPath), { recursive: true });
+        await writeFile(fullPath, change.newContent, "utf-8");
+      }
+      break;
+
+    case "delete":
+      await unlink(fullPath).catch(() => {
+        // Ignore if file doesn't exist
+      });
+      break;
+  }
+}
+
+interface CreatePRWithGhOptions {
+  workingDir: string;
+  title: string;
+  body: string;
+  baseBranch: string;
+  headBranch: string;
+  token: string;
+}
+
+async function createPRWithGh(opts: CreatePRWithGhOptions): Promise<string> {
+  const { workingDir, title, body, baseBranch, headBranch, token } = opts;
+
+  return new Promise((resolve, reject) => {
+    const proc = spawn(
+      "gh",
+      [
+        "pr",
+        "create",
+        "--title",
+        title,
+        "--body",
+        body,
+        "--base",
+        baseBranch,
+        "--head",
+        headBranch,
+      ],
+      {
+        cwd: workingDir,
+        env: { ...process.env, GH_TOKEN: token },
+        stdio: ["pipe", "pipe", "pipe"],
+      },
+    );
+
+    let stdout = "";
+    let stderr = "";
+
+    proc.stdout.on("data", (data: Buffer) => {
+      stdout += data.toString();
+    });
+
+    proc.stderr.on("data", (data: Buffer) => {
+      stderr += data.toString();
+    });
+
+    proc.on("close", (code) => {
+      if (code !== 0) {
+        reject(new Error(`gh pr create failed: ${stderr}`));
+      } else {
+        // gh pr create outputs the PR URL
+        resolve(stdout.trim());
+      }
+    });
+
+    proc.on("error", reject);
+  });
+}
+
+/**
+ * Generate a branch name for the changes
+ */
+export function generateBranchName(summary: string): string {
+  const timestamp = Date.now();
+  const slug = summary
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .slice(0, 30)
+    .replace(/^-|-$/g, "");
+
+  return `discord-edit/${slug || "changes"}-${timestamp}`;
+}
+
+/**
+ * Generate PR title from summary
+ */
+export function generatePRTitle(summary: string): string {
+  const cleaned = summary.replace(/\n/g, " ").trim();
+  if (cleaned.length <= 72) {
+    return cleaned;
+  }
+  return cleaned.slice(0, 69) + "...";
+}
+
+/**
+ * Generate PR body from session context
+ */
+export function generatePRBody(
+  summary: string,
+  changes: FileChange[],
+  username: string,
+): string {
+  const fileList = changes
+    .map((c) => {
+      const icon = c.changeType === "create" ? "+" : c.changeType === "delete" ? "-" : "~";
+      return `- ${icon} \`${c.filePath}\``;
+    })
+    .join("\n");
+
+  return `## Summary
+
+${summary}
+
+## Changed Files
+
+${fileList}
+
+---
+*Created via Discord by ${username}*
+`;
+}

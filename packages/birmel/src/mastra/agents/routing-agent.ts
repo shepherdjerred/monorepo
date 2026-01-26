@@ -9,6 +9,7 @@ import { serverAgent } from "./specialized/server-agent.js";
 import { moderationAgent } from "./specialized/moderation-agent.js";
 import { musicAgent } from "./specialized/music-agent.js";
 import { automationAgent } from "./specialized/automation-agent.js";
+import { editorAgent } from "./specialized/editor-agent.js";
 
 const config = getConfig();
 
@@ -28,6 +29,7 @@ export const routingAgent = new Agent({
     moderationAgent,
     musicAgent,
     automationAgent,
+    editorAgent,
   },
   memory: createMemory(),
 });
@@ -48,6 +50,7 @@ export function createRoutingAgent() {
       moderationAgent,
       musicAgent,
       automationAgent,
+      editorAgent,
     },
     memory: createMemory(),
   });

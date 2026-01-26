@@ -5,21 +5,33 @@ import { getConfig } from "../../config/index.js";
 let memoryInstance: Memory | null = null;
 
 /**
- * Working memory template for global server rules and persistent instructions.
- * This is what gets updated when someone says "remember to always X" or "don't do Y".
+ * Working memory template for server-wide rules (permanent, independent of owner).
  */
-const GLOBAL_MEMORY_TEMPLATE = `# Server Rules & Persistent Instructions
-Instructions that apply to all conversations in this server.
-
-## Rules
+export const SERVER_MEMORY_TEMPLATE = `# Server Rules
 - (none yet)
 
-## Preferences
+# Preferences
 - (none yet)
 
-## Notes
+# Notes
 - (none yet)
 `;
+
+/**
+ * Working memory template for owner-specific preferences (switches when ownership changes).
+ */
+export const OWNER_MEMORY_TEMPLATE = `# Owner Rules
+- (none yet)
+
+# Owner Preferences
+- (none yet)
+
+# Owner Notes
+- (none yet)
+`;
+
+// Keep old name for backwards compatibility
+const GLOBAL_MEMORY_TEMPLATE = SERVER_MEMORY_TEMPLATE;
 
 export function createMemory(): Memory {
   if (memoryInstance) {
@@ -66,14 +78,29 @@ export function getMemory(): Memory {
 // =============================================================================
 
 /**
- * GLOBAL MEMORY - Server-wide rules and instructions
- * Persists across all channels and users. Used for "remember to always X".
+ * SERVER MEMORY - Permanent server-wide rules and instructions
+ * Persists regardless of owner. Used for "remember to always X".
  */
 export function getGlobalThreadId(guildId: string): string {
   return `guild:${guildId}:global`;
 }
 
+// Alias for clarity
+export const getServerThreadId = getGlobalThreadId;
+
 export function getGlobalResourceId(guildId: string): string {
+  return `guild:${guildId}`;
+}
+
+/**
+ * OWNER MEMORY - Owner-specific preferences and rules
+ * Tied to the current elected owner. Switches when ownership changes.
+ */
+export function getOwnerThreadId(guildId: string, ownerPersona: string): string {
+  return `guild:${guildId}:owner:${ownerPersona}`;
+}
+
+export function getOwnerResourceId(guildId: string): string {
   return `guild:${guildId}`;
 }
 

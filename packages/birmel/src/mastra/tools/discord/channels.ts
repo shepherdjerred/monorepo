@@ -5,6 +5,7 @@ import { getDiscordClient } from "../../../discord/index.js";
 import { loggers } from "../../../utils/logger.js";
 import { withToolSpan, captureException } from "../../../observability/index.js";
 import { validateSnowflakes } from "./validation.js";
+import { isDiscordAPIError, formatDiscordAPIError } from "./error-utils.js";
 
 const logger = loggers.tools.child("discord.channels");
 
@@ -101,6 +102,14 @@ export const manageChannelTool = createTool({
           case "create": {
             if (!ctx.guildId || !ctx.name || !ctx.type) return { success: false, message: "guildId, name, and type are required for create" };
             const guild = await client.guilds.fetch(ctx.guildId);
+            // Safety: limit channel creation to avoid hitting Discord's 500 channel limit
+            const existingChannels = await guild.channels.fetch();
+            if (existingChannels.size >= 450) {
+              return {
+                success: false,
+                message: `Server has too many channels (${String(existingChannels.size)}/500). Delete some channels before creating new ones.`,
+              };
+            }
             const typeMap = { text: ChannelType.GuildText, voice: ChannelType.GuildVoice, category: ChannelType.GuildCategory } as const;
             const channel = await guild.channels.create({
               name: ctx.name,
@@ -151,6 +160,21 @@ export const manageChannelTool = createTool({
           }
         }
       } catch (error) {
+        if (isDiscordAPIError(error)) {
+          logger.error("Discord API error in manage-channel", {
+            code: error.code,
+            status: error.status,
+            message: error.message,
+            method: error.method,
+            url: error.url,
+            ctx,
+          });
+          captureException(new Error(formatDiscordAPIError(error)), { operation: "tool.manage-channel" });
+          return {
+            success: false,
+            message: formatDiscordAPIError(error),
+          };
+        }
         logger.error("Failed to manage channel", error);
         captureException(error as Error, { operation: "tool.manage-channel" });
         return { success: false, message: `Failed: ${(error as Error).message}` };

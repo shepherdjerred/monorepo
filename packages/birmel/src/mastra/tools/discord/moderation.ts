@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getDiscordClient } from "../../../discord/index.js";
 import { logger } from "../../../utils/logger.js";
 import { validateSnowflakes } from "./validation.js";
+import { isDiscordAPIError, formatDiscordAPIError } from "./error-utils.js";
 
 export const moderateMemberTool = createTool({
   id: "moderate-member",
@@ -95,8 +96,22 @@ export const moderateMemberTool = createTool({
         }
       }
     } catch (error) {
+      if (isDiscordAPIError(error)) {
+        logger.error("Discord API error in moderate-member", {
+          code: error.code,
+          status: error.status,
+          message: error.message,
+          method: error.method,
+          url: error.url,
+          ctx,
+        });
+        return {
+          success: false,
+          message: formatDiscordAPIError(error),
+        };
+      }
       logger.error("Failed to moderate member", error);
-      return { success: false, message: `Failed to moderate member: ${(error as Error).message}` };
+      return { success: false, message: `Failed: ${(error as Error).message}` };
     }
   },
 });

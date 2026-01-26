@@ -25,6 +25,7 @@ import { memoryTools } from "./memory/index.js";
 import { sqliteTools } from "./database/sqlite-query.js";
 import { electionTools } from "./elections/elections.js";
 import { birthdayTools } from "./birthdays/index.js";
+import { editorTools } from "./editor/index.js";
 
 /**
  * Messaging Agent - handles messages, threads, polls, and scheduling
@@ -78,7 +79,15 @@ export const automationToolSet = [
   ...birthdayTools,
 ];
 
-export type AgentType = "messaging" | "server" | "moderation" | "music" | "automation";
+/**
+ * Editor Agent - handles file editing in allowed repositories
+ */
+export const editorToolSet = [
+  ...editorTools,
+  ...messageTools, // Needs message tools for replies
+];
+
+export type AgentType = "messaging" | "server" | "moderation" | "music" | "automation" | "editor";
 
 /**
  * Get the appropriate tool set for an agent type
@@ -95,6 +104,8 @@ export function getToolSet(agentType: AgentType) {
       return musicToolSet;
     case "automation":
       return automationToolSet;
+    case "editor":
+      return editorToolSet;
   }
 }
 
@@ -113,6 +124,8 @@ export function getAgentDescription(agentType: AgentType): string {
       return "Play, pause, skip, stop music. Manage queue. Control volume and loop mode.";
     case "automation":
       return "Set reminders and timers. Run shell commands. Browser automation. Fetch weather/news. Manage elections and birthdays. Schedule events.";
+    case "editor":
+      return "Edit files in allowed repositories. Create pull requests. List available repos. Approve or reject pending changes.";
   }
 }
 
@@ -132,3 +145,4 @@ console.log(`[tool-sets] Server: ${String(serverToolSet.length)} tools`);
 console.log(`[tool-sets] Moderation: ${String(moderationToolSet.length)} tools`);
 console.log(`[tool-sets] Music: ${String(musicToolSet.length)} tools`);
 console.log(`[tool-sets] Automation: ${String(automationToolSet.length)} tools`);
+console.log(`[tool-sets] Editor: ${String(editorToolSet.length)} tools`);

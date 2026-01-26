@@ -1,15 +1,45 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
+import type { TextChannel } from "discord.js";
 import { getDiscordClient } from "../../../discord/index.js";
 import { loggers } from "../../../utils/logger.js";
 import { withToolSpan, captureException } from "../../../observability/index.js";
 import { getRequestContext, hasReplySent, markReplySent } from "../request-context.js";
-import type { TextChannel } from "discord.js";
 import { validateSnowflakes, validateSnowflakeArray } from "./validation.js";
 import { prepareMessageWorkflow } from "../../workflows/index.js";
 import { getConfig } from "../../../config/index.js";
+import { isDiscordAPIError, formatDiscordAPIError } from "./error-utils.js";
+import { getMemory, getGlobalThreadId, getOwnerThreadId } from "../../memory/index.js";
+import { getGuildPersona } from "../../../persona/index.js";
 
 const logger = loggers.tools.child("discord.messages");
+
+/**
+ * Fetch both server and owner memory for style context.
+ */
+async function fetchMemoryForStyle(
+  guildId: string,
+): Promise<{ serverMemory: string | null; ownerMemory: string | null }> {
+  try {
+    const memory = getMemory();
+
+    // Fetch server memory
+    const serverThreadId = getGlobalThreadId(guildId);
+    const serverThread = await memory.getThreadById({ threadId: serverThreadId });
+    const serverMemory = (serverThread?.metadata?.["workingMemory"] as string | undefined) ?? null;
+
+    // Fetch owner memory
+    const persona = await getGuildPersona(guildId);
+    const ownerThreadId = getOwnerThreadId(guildId, persona);
+    const ownerThread = await memory.getThreadById({ threadId: ownerThreadId });
+    const ownerMemory = (ownerThread?.metadata?.["workingMemory"] as string | undefined) ?? null;
+
+    return { serverMemory, ownerMemory };
+  } catch (error) {
+    logger.warn("Failed to fetch memory for style", { error, guildId });
+    return { serverMemory: null, ownerMemory: null };
+  }
+}
 
 /**
  * Apply style transformation to message content using the prepare-message workflow.
@@ -22,11 +52,16 @@ async function stylizeContent(content: string, guildId: string | undefined): Pro
   }
 
   try {
+    // Fetch memory to pass to the style workflow
+    const { serverMemory, ownerMemory } = await fetchMemoryForStyle(guildId);
+
     const run = await prepareMessageWorkflow.createRun();
     const result = await run.start({
       inputData: {
         content,
         guildId,
+        ...(serverMemory && { serverMemory }),
+        ...(ownerMemory && { ownerMemory }),
       },
     });
 
@@ -36,6 +71,8 @@ async function stylizeContent(content: string, guildId: string | undefined): Pro
         wasStyled: result.result.wasStyled,
         originalLength: content.length,
         styledLength: result.result.content.length,
+        hasServerMemory: Boolean(serverMemory),
+        hasOwnerMemory: Boolean(ownerMemory),
       });
       return result.result.content;
     }
@@ -182,6 +219,10 @@ export const manageMessageTool = createTool({
             if (!ctx.channelId || !ctx.messageIds?.length) {
               return { success: false, message: "channelId and messageIds are required for bulk-delete" };
             }
+            // Safety: limit bulk delete to Discord's max of 100 messages
+            if (ctx.messageIds.length > 100) {
+              return { success: false, message: "Cannot delete more than 100 messages at once (Discord limit)" };
+            }
             const channel = await client.channels.fetch(ctx.channelId);
             if (!channel?.isTextBased()) {
               return { success: false, message: "Channel is not a text channel" };
@@ -282,6 +323,21 @@ export const manageMessageTool = createTool({
           }
         }
       } catch (error) {
+        if (isDiscordAPIError(error)) {
+          logger.error("Discord API error in manage-message", {
+            code: error.code,
+            status: error.status,
+            message: error.message,
+            method: error.method,
+            url: error.url,
+            ctx,
+          });
+          captureException(new Error(formatDiscordAPIError(error)), { operation: "tool.manage-message" });
+          return {
+            success: false,
+            message: formatDiscordAPIError(error),
+          };
+        }
         logger.error("Failed to manage message", error);
         captureException(error as Error, { operation: "tool.manage-message" });
         return { success: false, message: `Failed: ${(error as Error).message}` };

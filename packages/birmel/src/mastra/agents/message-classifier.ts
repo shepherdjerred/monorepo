@@ -106,6 +106,26 @@ const AUTOMATION_KEYWORDS = [
   "schedule event",
 ];
 
+const EDITOR_KEYWORDS = [
+  "edit file",
+  "edit code",
+  "edit repo",
+  "edit repository",
+  "update file",
+  "update code",
+  "modify file",
+  "modify code",
+  "change file",
+  "change code",
+  "style card",
+  "config file",
+  "pull request",
+  "pr",
+  "create pr",
+  "make changes",
+  "code change",
+];
+
 /**
  * Classify a message to determine which agent type should handle it.
  */
@@ -119,6 +139,7 @@ export function classifyMessage(content: string): AgentType {
     moderation: 0,
     music: 0,
     automation: 0,
+    editor: 0,
   };
 
   for (const kw of MUSIC_KEYWORDS) {
@@ -135,6 +156,9 @@ export function classifyMessage(content: string): AgentType {
   }
   for (const kw of MESSAGING_KEYWORDS) {
     if (lowerContent.includes(kw)) scores.messaging++;
+  }
+  for (const kw of EDITOR_KEYWORDS) {
+    if (lowerContent.includes(kw)) scores.editor++;
   }
 
   // Find the highest scoring agent type
@@ -172,6 +196,9 @@ export function detectMultiAgentNeed(content: string): AgentType[] {
   }
   if (MESSAGING_KEYWORDS.some((kw) => lowerContent.includes(kw))) {
     needed.push("messaging");
+  }
+  if (EDITOR_KEYWORDS.some((kw) => lowerContent.includes(kw))) {
+    needed.push("editor");
   }
 
   return needed.length > 0 ? needed : ["messaging"];
