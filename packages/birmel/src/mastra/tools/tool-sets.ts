@@ -125,7 +125,7 @@ export function getAgentDescription(agentType: AgentType): string {
     case "automation":
       return "Set reminders and timers. Run shell commands. Browser automation. Fetch weather/news. Manage elections and birthdays. Schedule events.";
     case "editor":
-      return "Edit files in allowed repositories. Create pull requests. List available repos. Approve or reject pending changes.";
+      return "Edit files in allowed repositories. Create pull requests. Connect GitHub account. List available repos. Approve or reject pending changes.";
   }
 }
 

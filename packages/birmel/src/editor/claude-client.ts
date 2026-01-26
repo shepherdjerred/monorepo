@@ -296,29 +296,22 @@ export async function checkClaudePrerequisites(): Promise<{
 }
 
 /**
- * Check if gh CLI is available and authenticated
+ * Check if gh CLI is installed (per-user OAuth tokens are used for auth)
  */
 export async function checkGhPrerequisites(): Promise<{
   installed: boolean;
-  authenticated: boolean;
 }> {
   return new Promise((resolve) => {
-    const proc = spawn("gh", ["auth", "status"], {
+    const proc = spawn("gh", ["--version"], {
       stdio: ["pipe", "pipe", "pipe"],
     });
 
     proc.on("close", (code) => {
-      resolve({
-        installed: true,
-        authenticated: code === 0,
-      });
+      resolve({ installed: code === 0 });
     });
 
     proc.on("error", () => {
-      resolve({
-        installed: false,
-        authenticated: false,
-      });
+      resolve({ installed: false });
     });
   });
 }

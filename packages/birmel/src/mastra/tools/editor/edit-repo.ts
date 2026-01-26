@@ -26,6 +26,9 @@ import {
   formatChangedFilesList,
   generateBranchName,
   checkClaudePrerequisites,
+  hasValidAuth,
+  isGitHubConfigured,
+  getGitHubConfig,
 } from "../../../editor/index.js";
 
 const logger = loggers.tools.child("editor.edit-repo");
@@ -88,6 +91,26 @@ export const editRepoTool = createTool({
           return {
             success: false,
             message: "Could not determine request context.",
+          };
+        }
+
+        // Check GitHub OAuth is configured
+        if (!isGitHubConfigured()) {
+          return {
+            success: false,
+            message: "GitHub OAuth is not configured. Contact the bot administrator.",
+          };
+        }
+
+        // Check user has GitHub auth before allowing edits
+        const hasAuth = await hasValidAuth(reqCtx.userId);
+        if (!hasAuth) {
+          const config = getGitHubConfig();
+          // Derive OAuth start URL from callback URL (remove /callback suffix)
+          const authUrl = config?.callbackUrl.replace("/callback", `?user=${reqCtx.userId}`) ?? "";
+          return {
+            success: false,
+            message: `You need to connect your GitHub account before editing. Click here to authenticate: ${authUrl}`,
           };
         }
 

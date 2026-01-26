@@ -40,10 +40,8 @@ export async function startOAuthServer(): Promise<void> {
     logger.warn("GitHub CLI (gh) not installed - PR creation will not work", {
       installCmd: "brew install gh",
     });
-  } else if (!ghCheck.authenticated) {
-    logger.warn("GitHub CLI not authenticated - run 'gh auth login'");
   } else {
-    logger.info("GitHub CLI authenticated");
+    logger.info("GitHub CLI found (per-user OAuth tokens used for auth)");
   }
 
   if (!config.editor.github) {
