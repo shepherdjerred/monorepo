@@ -47,7 +47,7 @@ export function createMemory(): Memory {
     }),
     vector: new LibSQLVector({
       id: "memory-vector",
-      connectionUrl: config.mastra.memoryDbPath,
+      url: config.mastra.memoryDbPath,
     }),
     embedder: "openai/text-embedding-3-small",
     options: {

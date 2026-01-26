@@ -155,8 +155,14 @@ export const manageMessageTool = createTool({
             }
             // Prevent duplicate replies to the same message
             if (hasReplySent()) {
-              logger.warn("Reply already sent for this request, ignoring duplicate", { content: ctx.content.slice(0, 50) });
-              return { success: true, message: "Reply already sent (duplicate prevented)" };
+              logger.warn("Duplicate reply attempt blocked", {
+                content: ctx.content.slice(0, 50),
+                attemptedContentLength: ctx.content.length,
+              });
+              return {
+                success: true,
+                message: "ALREADY REPLIED - A reply was already sent to this user's message. Do NOT attempt to reply again. The user has received the response. Your task is complete.",
+              };
             }
             const requestContext = getRequestContext();
             if (!requestContext?.sourceMessageId || !requestContext.sourceChannelId) {
