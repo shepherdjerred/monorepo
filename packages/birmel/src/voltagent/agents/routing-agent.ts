@@ -40,7 +40,7 @@ export const routingAgent = new Agent({
   hooks: {
     // Skip supervisor post-processing - return sub-agent result directly
     // This saves tokens and reduces latency
-    onHandoffComplete: async ({ bail }) => {
+    onHandoffComplete: ({ bail }) => {
       bail(); // Return sub-agent result directly without supervisor summarizing
     },
   },
@@ -72,7 +72,7 @@ export function createRoutingAgentWithPersona(
     },
     memory: createMemory(),
     hooks: {
-      onHandoffComplete: async ({ bail }) => {
+      onHandoffComplete: ({ bail }) => {
         bail();
       },
     },

@@ -15,7 +15,7 @@ const logger = loggers.tools.child("discord.messages");
  * Messages are styled as they're generated, not as a post-processing step.
  * This function is kept as a pass-through for backwards compatibility.
  */
-async function stylizeContent(content: string, _guildId: string | undefined): Promise<string> {
+function stylizeContent(content: string, _guildId: string | undefined): string {
   // Stylization is now done at the agent level via prompt-embedded persona
   // This saves the 2-5 second blocking LLM call that was slowing down responses
   return content;
@@ -79,7 +79,7 @@ export const manageMessageTool = createTool({
               return { success: false, message: "Channel is not a text channel" };
             }
             const requestContext = getRequestContext();
-            const styledContent = await stylizeContent(ctx.content, requestContext?.guildId);
+            const styledContent = stylizeContent(ctx.content, requestContext?.guildId);
             const sent = await (channel as TextChannel).send(styledContent);
             logger.info("Message sent", { channelId: ctx.channelId, messageId: sent.id });
             return { success: true, message: "Message sent successfully", data: { messageId: sent.id } };
@@ -109,7 +109,7 @@ export const manageMessageTool = createTool({
               return { success: false, message: "Channel is not a text channel" };
             }
             const originalMessage = await (channel as TextChannel).messages.fetch(requestContext.sourceMessageId);
-            const styledContent = await stylizeContent(ctx.content, requestContext.guildId);
+            const styledContent = stylizeContent(ctx.content, requestContext.guildId);
             const sent = await originalMessage.reply(styledContent);
             markReplySent();
             logger.info("Reply sent", { channelId: requestContext.sourceChannelId, messageId: sent.id, replyTo: requestContext.sourceMessageId });
@@ -123,7 +123,7 @@ export const manageMessageTool = createTool({
             const user = await client.users.fetch(ctx.userId);
             const dmChannel = await user.createDM();
             const requestContext = getRequestContext();
-            const styledContent = await stylizeContent(ctx.content, requestContext?.guildId);
+            const styledContent = stylizeContent(ctx.content, requestContext?.guildId);
             const sent = await dmChannel.send(styledContent);
             logger.info("DM sent", { userId: ctx.userId, messageId: sent.id });
             return { success: true, message: "Direct message sent successfully", data: { messageId: sent.id } };

@@ -115,7 +115,8 @@ ${memoryContext}${conversationHistory}`;
           ? { role: "user" as const, content: messageContent }
           : messageContent;
 
-        const response = await agent.streamText(String(input), {
+        const inputStr = typeof input === "string" ? input : JSON.stringify(input);
+        const response = await agent.streamText(inputStr, {
           userId: context.userId,
           conversationId: getChannelConversationId(context.channelId),
         });

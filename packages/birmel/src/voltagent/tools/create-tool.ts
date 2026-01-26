@@ -55,13 +55,12 @@ export function createTool<T extends ToolSchema, O extends ToolSchema | undefine
   }
 
   // Create VoltAgent tool with adapted options
-  // Use explicit type to avoid type inference issues
   if (options.outputSchema) {
     return voltAgentCreateTool({
       name,
       description: options.description,
       parameters,
-      outputSchema: options.outputSchema as ToolSchema,
+      outputSchema: options.outputSchema,
       execute: async (args) => {
         return await options.execute(args as z.infer<T>);
       },
