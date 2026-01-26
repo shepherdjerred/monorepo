@@ -93,7 +93,7 @@ export const getActivityStatsTool = createTool({
     userId: z.string().optional().describe("The user ID (required for user action)"),
     startDate: z.string().optional().describe("Start date for activity range (ISO format)"),
     endDate: z.string().optional().describe("End date for activity range (ISO format)"),
-    activityType: z.enum(["message", "reaction", "all"]).optional()
+    activityType: z.enum(["message", "reaction", "voice", "all"]).optional()
       .describe("Type of activity to rank by (for leaderboard, default: all)"),
     limit: z.number().min(1).max(100).optional().describe("Number of users to return (for leaderboard, default: 10)"),
   }),
@@ -105,6 +105,7 @@ export const getActivityStatsTool = createTool({
         userId: z.string(),
         messageCount: z.number(),
         reactionCount: z.number(),
+        voiceCount: z.number(),
         totalActivity: z.number(),
         rank: z.number(),
       }),
