@@ -24,7 +24,8 @@ import {
 const logger = loggers.discord.child("interaction-create");
 
 export function setupInteractionHandler(client: Client): void {
-  client.on("interactionCreate", async (interaction) => {
+  client.on("interactionCreate", (interaction) => {
+    void (async () => {
     if (!interaction.isButton()) return;
 
     // Only handle editor-related buttons
@@ -51,6 +52,7 @@ export function setupInteractionHandler(client: Client): void {
         // Ignore if we can't respond
       }
     }
+    })();
   });
 
   logger.info("Interaction handler registered");
@@ -176,7 +178,7 @@ async function handleApprove(
     // Revert state
     await updateSessionState(sessionId, SessionState.PENDING_APPROVAL);
     await interaction.editReply({
-      content: `Failed to create PR: ${result.error}`,
+      content: `Failed to create PR: ${result.error ?? "Unknown error"}`,
     });
     return;
   }
@@ -208,7 +210,7 @@ async function handleApprove(
   }
 
   await interaction.editReply({
-    content: `Pull request created: ${result.prUrl}`,
+    content: `Pull request created: ${result.prUrl ?? "N/A"}`,
   });
 }
 

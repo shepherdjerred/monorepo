@@ -34,20 +34,20 @@ export const listReposTool = createTool({
     return withToolSpan("list-repos", reqCtx?.guildId, async () => {
       // Check if editor is enabled
       if (!isEditorEnabled()) {
-        return {
+        return await Promise.resolve({
           success: false,
           message: "File editing feature is not enabled.",
-        };
+        });
       }
 
       const repos = getAllowedRepos();
 
       if (repos.length === 0) {
-        return {
+        return await Promise.resolve({
           success: true,
           message: "No repositories are configured for editing.",
           data: { repos: [] },
-        };
+        });
       }
 
       logger.debug("Listing available repos", { count: repos.length });
@@ -60,11 +60,11 @@ export const listReposTool = createTool({
 
       const repoNames = repoList.map((r) => r.name).join(", ");
 
-      return {
+      return await Promise.resolve({
         success: true,
         message: `Available repositories: ${repoNames}`,
         data: { repos: repoList },
-      };
+      });
     });
   },
 });

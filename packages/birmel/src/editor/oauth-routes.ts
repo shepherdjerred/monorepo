@@ -25,7 +25,10 @@ export function createOAuthRoutes(): Hono {
       return c.json({ error: "GitHub OAuth not configured" }, 500);
     }
 
-    const config = getGitHubConfig()!;
+    const config = getGitHubConfig();
+    if (!config) {
+      return c.json({ error: "GitHub OAuth not configured" }, 500);
+    }
     const userId = c.req.query("user");
 
     if (!userId) {

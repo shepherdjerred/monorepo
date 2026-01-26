@@ -133,7 +133,7 @@ export const approveChangesTool = createTool({
           await updateSessionState(session.id, SessionState.PENDING_APPROVAL);
           return {
             success: false,
-            message: `Failed to create PR: ${result.error}`,
+            message: `Failed to create PR: ${result.error ?? "Unknown error"}`,
           };
         }
 

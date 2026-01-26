@@ -3,7 +3,7 @@ import type { EditorSession, GitHubAuth } from "@prisma/client";
 /**
  * Represents a file change captured from Claude Agent SDK
  */
-export interface FileChange {
+export type FileChange = {
   filePath: string;
   oldContent: string | null;
   newContent: string | null;
@@ -13,7 +13,7 @@ export interface FileChange {
 /**
  * Result from executing an edit with Claude Agent SDK
  */
-export interface EditResult {
+export type EditResult = {
   sdkSessionId: string | null;
   changes: FileChange[];
   summary: string;
@@ -22,7 +22,7 @@ export interface EditResult {
 /**
  * Session creation parameters
  */
-export interface CreateSessionParams {
+export type CreateSessionParams = {
   userId: string;
   guildId: string;
   channelId: string;
@@ -33,7 +33,7 @@ export interface CreateSessionParams {
 /**
  * Pending changes stored as JSON in the session
  */
-export interface PendingChanges {
+export type PendingChanges = {
   changes: FileChange[];
   branchName: string;
   baseBranch: string;

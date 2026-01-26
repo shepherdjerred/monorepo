@@ -51,8 +51,8 @@ export async function startOAuthServer(): Promise<void> {
     return;
   }
 
-  const port = config.editor.oauthPort ?? 4112;
-  const host = config.editor.oauthHost ?? "0.0.0.0";
+  const port = config.editor.oauthPort;
+  const host = config.editor.oauthHost;
 
   const app = new Hono();
 
@@ -76,7 +76,7 @@ export async function startOAuthServer(): Promise<void> {
   logger.info("OAuth server started", {
     port,
     host,
-    url: `http://${host}:${port}`,
+    url: `http://${host}:${String(port)}`,
   });
 }
 
@@ -85,7 +85,7 @@ export async function startOAuthServer(): Promise<void> {
  */
 export async function stopOAuthServer(): Promise<void> {
   if (server) {
-    server.stop();
+    await server.stop();
     server = null;
     logger.info("OAuth server stopped");
   }

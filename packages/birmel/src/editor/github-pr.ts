@@ -6,7 +6,7 @@ import type { FileChange } from "./types.js";
 
 const logger = loggers.editor.child("github-pr");
 
-export interface CreatePROptions {
+export type CreatePROptions = {
   userId: string;
   repoName: string;
   branchName: string;
@@ -16,7 +16,7 @@ export interface CreatePROptions {
   changes: FileChange[];
 }
 
-export interface PRResult {
+export type PRResult = {
   success: boolean;
   prUrl?: string;
   error?: string;
@@ -139,29 +139,29 @@ function injectToken(url: string, token: string): string {
 }
 
 async function applyChange(cwd: string, change: FileChange): Promise<void> {
-  const { writeFile, unlink, mkdir } = await import("fs/promises");
-  const { join, dirname } = await import("path");
+  const fsPromises = await import("fs/promises");
+  const pathModule = await import("path");
 
-  const fullPath = join(cwd, change.filePath);
+  const fullPath = pathModule.join(cwd, change.filePath);
 
   switch (change.changeType) {
     case "create":
     case "modify":
       if (change.newContent !== null) {
-        await mkdir(dirname(fullPath), { recursive: true });
-        await writeFile(fullPath, change.newContent, "utf-8");
+        await fsPromises.mkdir(pathModule.dirname(fullPath), { recursive: true });
+        await fsPromises.writeFile(fullPath, change.newContent, "utf-8");
       }
       break;
 
     case "delete":
-      await unlink(fullPath).catch(() => {
+      await fsPromises.unlink(fullPath).catch(() => {
         // Ignore if file doesn't exist
       });
       break;
   }
 }
 
-interface CreatePRWithGhOptions {
+type CreatePRWithGhOptions = {
   workingDir: string;
   title: string;
   body: string;
@@ -230,7 +230,7 @@ export function generateBranchName(summary: string): string {
     .slice(0, 30)
     .replace(/^-|-$/g, "");
 
-  return `discord-edit/${slug || "changes"}-${timestamp}`;
+  return `discord-edit/${slug || "changes"}-${String(timestamp)}`;
 }
 
 /**

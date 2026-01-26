@@ -4,7 +4,7 @@
  * which may not be directly importable in all contexts.
  */
 
-export interface DiscordAPIErrorLike {
+export type DiscordAPIErrorLike = {
   code: number;
   status: number;
   message: string;

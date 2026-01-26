@@ -133,7 +133,7 @@ export const getSessionTool = createTool({
 
       return {
         success: true,
-        message: `You have ${sessions.length} active session(s).`,
+        message: `You have ${String(sessions.length)} active session(s).`,
         data: {
           sessions: sessions.map((s) => ({
             id: s.id,
