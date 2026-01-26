@@ -7,7 +7,7 @@ const logger = loggers.editor.child("claude-client");
 /**
  * Options for executing an edit with Claude Code
  */
-export interface ExecuteEditOptions {
+export type ExecuteEditOptions = {
   prompt: string;
   workingDirectory: string;
   resumeSessionId?: string;
@@ -17,7 +17,7 @@ export interface ExecuteEditOptions {
 /**
  * Message types from Claude Code output
  */
-interface ClaudeMessage {
+type ClaudeMessage = {
   type: string;
   subtype?: string;
   session_id?: string;
@@ -130,7 +130,7 @@ export async function executeEdit(
           code,
           stderr,
         });
-        reject(new Error(`Claude process exited with code ${code}: ${stderr}`));
+        reject(new Error(`Claude process exited with code ${String(code)}: ${stderr}`));
         return;
       }
 
@@ -158,7 +158,7 @@ export async function executeEdit(
   });
 }
 
-interface MessageHandlers {
+type MessageHandlers = {
   setSessionId: (id: string) => void;
   addChange: (change: FileChange) => void;
   setSummary: (summary: string) => void;

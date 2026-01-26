@@ -86,7 +86,7 @@ export async function getOrCreateSession(
   const canCreate = await canCreateSession(params.userId);
   if (!canCreate) {
     throw new Error(
-      `Maximum sessions per user (${getMaxSessionsPerUser()}) reached`,
+      `Maximum sessions per user (${String(getMaxSessionsPerUser())}) reached`,
     );
   }
 

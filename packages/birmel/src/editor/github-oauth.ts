@@ -57,7 +57,7 @@ export async function exchangeCodeForToken(
       status: response.status,
       body: text,
     });
-    throw new Error(`Failed to exchange code for token: ${response.status}`);
+    throw new Error(`Failed to exchange code for token: ${String(response.status)}`);
   }
 
   const data = (await response.json()) as {
