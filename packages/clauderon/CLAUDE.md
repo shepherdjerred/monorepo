@@ -36,6 +36,7 @@ cargo nextest run                      # Run all tests
 cargo nextest run --run-ignored all    # Include ignored tests
 cargo nextest run -E 'test(/recent/)'  # Filter by pattern
 mise run test-fast                     # Run via mise
+cargo watch -x "nextest run"           # Auto-run tests on file changes
 ```
 
 ## Mise Tasks
