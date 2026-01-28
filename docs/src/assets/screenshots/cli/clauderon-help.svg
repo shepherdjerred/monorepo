@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg width="616" height="440" xmlns="http://www.w3.org/2000/svg">
+<svg width="760" height="1820" xmlns="http://www.w3.org/2000/svg">
   <style>
     .terminal {
       font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace;
@@ -11,25 +11,94 @@
   <rect width="100%" height="100%" fill="#1E1E1E" rx="6"/>
 
   <text class="terminal" fill="#D4D4D4" x="20" y="34">
-    <tspan x="20" dy="20">clauderon 0.1.0</tspan>
-    <tspan x="20" dy="20">Session manager for AI coding agents</tspan>
+    <tspan x="20" dy="20">clauderon manages isolated sessions for AI coding agents like Claude Code.</tspan>
     <tspan x="20" dy="20"></tspan>
-    <tspan x="20" dy="20">USAGE:</tspan>
-    <tspan x="20" dy="20">    clauderon &lt;SUBCOMMAND&gt;</tspan>
+    <tspan x="20" dy="20">It provides:</tspan>
+    <tspan x="20" dy="20">  - Session lifecycle management (create, list, attach, archive, delete)</tspan>
+    <tspan x="20" dy="20">  - Multiple backends (Zellij terminal multiplexer, Docker containers)</tspan>
+    <tspan x="20" dy="20">  - Credential proxy for secure API access</tspan>
+    <tspan x="20" dy="20">  - Real-time session monitoring via TUI or web UI</tspan>
     <tspan x="20" dy="20"></tspan>
-    <tspan x="20" dy="20">OPTIONS:</tspan>
-    <tspan x="20" dy="20">    -h, --help       Print help information</tspan>
-    <tspan x="20" dy="20">    -V, --version    Print version information</tspan>
+    <tspan x="20" dy="20">The daemon runs in the background and handles all session operations.</tspan>
+    <tspan x="20" dy="20">Sessions run in isolated git worktrees to prevent conflicts.</tspan>
     <tspan x="20" dy="20"></tspan>
-    <tspan x="20" dy="20">SUBCOMMANDS:</tspan>
-    <tspan x="20" dy="20">    create     Create a new session</tspan>
-    <tspan x="20" dy="20">    list       List all sessions</tspan>
-    <tspan x="20" dy="20">    attach     Attach to a running session</tspan>
-    <tspan x="20" dy="20">    stop       Stop a session</tspan>
-    <tspan x="20" dy="20">    delete     Delete a session</tspan>
-    <tspan x="20" dy="20">    config     Manage configuration</tspan>
-    <tspan x="20" dy="20">    serve      Start the web UI server</tspan>
-    <tspan x="20" dy="20">    tui        Launch terminal UI</tspan>
-    <tspan x="20" dy="20">    help       Print this message or the help of the given subcommand(s)</tspan>
+    <tspan x="20" dy="20">Usage: clauderon &lt;COMMAND&gt;</tspan>
+    <tspan x="20" dy="20"></tspan>
+    <tspan x="20" dy="20">Commands:</tspan>
+    <tspan x="20" dy="20">  daemon           Start the clauderon daemon</tspan>
+    <tspan x="20" dy="20">  tui              Launch the terminal UI</tspan>
+    <tspan x="20" dy="20">  create           Create a new session</tspan>
+    <tspan x="20" dy="20">  list             List all sessions</tspan>
+    <tspan x="20" dy="20">  attach           Attach to a session</tspan>
+    <tspan x="20" dy="20">  archive          Archive a session</tspan>
+    <tspan x="20" dy="20">  refresh          Refresh a session (pull latest image and recreate container)</tspan>
+    <tspan x="20" dy="20">  delete           Delete a session</tspan>
+    <tspan x="20" dy="20">  set-access-mode  Update session access mode</tspan>
+    <tspan x="20" dy="20">  reconcile        Reconcile database state with actual backends</tspan>
+    <tspan x="20" dy="20">  clean-cache      Clean Rust compiler cache volumes (frees disk space)</tspan>
+    <tspan x="20" dy="20">  config           Show configuration, paths, and environment info</tspan>
+    <tspan x="20" dy="20">  help             Print this message or the help of the given subcommand(s)</tspan>
+    <tspan x="20" dy="20"></tspan>
+    <tspan x="20" dy="20">Options:</tspan>
+    <tspan x="20" dy="20">  -h, --help</tspan>
+    <tspan x="20" dy="20">          Print help (see a summary with '-h')</tspan>
+    <tspan x="20" dy="20"></tspan>
+    <tspan x="20" dy="20">  -V, --version</tspan>
+    <tspan x="20" dy="20">          Print version</tspan>
+    <tspan x="20" dy="20"></tspan>
+    <tspan x="20" dy="20">QUICK START:</tspan>
+    <tspan x="20" dy="20">    clauderon create --repo ~/project --prompt 'Implement feature X'</tspan>
+    <tspan x="20" dy="20">    clauderon list</tspan>
+    <tspan x="20" dy="20">    clauderon attach &lt;session-name&gt;</tspan>
+    <tspan x="20" dy="20"></tspan>
+    <tspan x="20" dy="20">ENVIRONMENT VARIABLES:</tspan>
+    <tspan x="20" dy="20">    RUST_LOG                    Log level filter (default: clauderon=info)</tspan>
+    <tspan x="20" dy="20">    VISUAL, EDITOR              Preferred editor for prompts</tspan>
+    <tspan x="20" dy="20">    CLAUDERON_BIND_ADDR         HTTP server bind address (default: 127.0.0.1)</tspan>
+    <tspan x="20" dy="20">                                Specific IPs auto-add 127.0.0.1 listener for Docker</tspan>
+    <tspan x="20" dy="20">    CLAUDERON_ORIGIN            WebAuthn origin URL (required for non-localhost bindings)</tspan>
+    <tspan x="20" dy="20">                                Example: http://192.168.1.100:3030</tspan>
+    <tspan x="20" dy="20">    CLAUDERON_RP_ID             WebAuthn RP ID (default: hostname from ORIGIN)</tspan>
+    <tspan x="20" dy="20"></tspan>
+    <tspan x="20" dy="20">    Credentials (env var or file in ~/.clauderon/secrets/):</tspan>
+    <tspan x="20" dy="20">        GITHUB_TOKEN            GitHub API token</tspan>
+    <tspan x="20" dy="20">        CLAUDE_CODE_OAUTH_TOKEN Anthropic OAuth token</tspan>
+    <tspan x="20" dy="20">        OPENAI_API_KEY          OpenAI API key</tspan>
+    <tspan x="20" dy="20">        CODEX_API_KEY           Codex API key (alias of OPENAI_API_KEY)</tspan>
+    <tspan x="20" dy="20">        PAGERDUTY_TOKEN         PagerDuty API token (or PAGERDUTY_API_KEY)</tspan>
+    <tspan x="20" dy="20">        SENTRY_AUTH_TOKEN       Sentry authentication token</tspan>
+    <tspan x="20" dy="20">        GRAFANA_API_KEY         Grafana API key</tspan>
+    <tspan x="20" dy="20">        NPM_TOKEN               npm registry token</tspan>
+    <tspan x="20" dy="20">        DOCKER_TOKEN            Docker registry token</tspan>
+    <tspan x="20" dy="20">        K8S_TOKEN               Kubernetes token</tspan>
+    <tspan x="20" dy="20">        TALOS_TOKEN             Talos OS token</tspan>
+    <tspan x="20" dy="20">    Codex auth (env var or ~/.codex/auth.json):</tspan>
+    <tspan x="20" dy="20">        CODEX_ACCESS_TOKEN      Codex access token</tspan>
+    <tspan x="20" dy="20">        CODEX_REFRESH_TOKEN     Codex refresh token</tspan>
+    <tspan x="20" dy="20">        CODEX_ID_TOKEN          Codex ID token</tspan>
+    <tspan x="20" dy="20">        CODEX_ACCOUNT_ID        ChatGPT account ID (optional)</tspan>
+    <tspan x="20" dy="20">        CODEX_AUTH_JSON_PATH    Override ~/.codex/auth.json path</tspan>
+    <tspan x="20" dy="20"></tspan>
+    <tspan x="20" dy="20">FILE LOCATIONS:</tspan>
+    <tspan x="20" dy="20">    ~/.clauderon/               Base directory for all data</tspan>
+    <tspan x="20" dy="20">    ~/.clauderon/db.sqlite      Session database (SQLite)</tspan>
+    <tspan x="20" dy="20">    ~/.clauderon/clauderon.sock Unix socket for daemon IPC</tspan>
+    <tspan x="20" dy="20">    ~/.clauderon/hooks.sock     Unix socket for hook communication</tspan>
+    <tspan x="20" dy="20">    ~/.clauderon/worktrees/     Git worktrees for sessions</tspan>
+    <tspan x="20" dy="20">    ~/.clauderon/logs/          Log files (daily rotation)</tspan>
+    <tspan x="20" dy="20">    ~/.clauderon/config.toml    Main configuration file</tspan>
+    <tspan x="20" dy="20">    ~/.clauderon/proxy.toml     Proxy service configuration</tspan>
+    <tspan x="20" dy="20">    ~/.clauderon/audit.jsonl    HTTP proxy audit log</tspan>
+    <tspan x="20" dy="20">    ~/.clauderon/secrets/       Credential files directory</tspan>
+    <tspan x="20" dy="20"></tspan>
+    <tspan x="20" dy="20">PROXY CONFIGURATION (~/.clauderon/proxy.toml):</tspan>
+    <tspan x="20" dy="20">    secrets_dir                 Credential files directory (default: ~/.clauderon/secrets)</tspan>
+    <tspan x="20" dy="20">    talos_gateway_port          Talos mTLS gateway port (default: 18082)</tspan>
+    <tspan x="20" dy="20">    audit_enabled               Enable audit logging (default: true)</tspan>
+    <tspan x="20" dy="20">    audit_log_path              Audit log file path</tspan>
+    <tspan x="20" dy="20">    codex_auth_json_path        Path to host Codex auth.json (default: ~/.codex/auth.json)</tspan>
+    <tspan x="20" dy="20"></tspan>
+    <tspan x="20" dy="20">Use 'clauderon &lt;command&gt; --help' for command-specific information.</tspan>
+    <tspan x="20" dy="20">Use 'clauderon config' to inspect current configuration and paths.</tspan>
   </text>
 </svg>
