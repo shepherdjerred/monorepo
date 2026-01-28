@@ -1,0 +1,11 @@
+{
+  "name": "@shepherdjerred/resume",
+  "version": "1.0.0",
+  "private": true,
+  "description": "LaTeX resume - built and deployed via Dagger",
+  "scripts": {
+    "build": "true",
+    "test": "true",
+    "typecheck": "true"
+  }
+}
