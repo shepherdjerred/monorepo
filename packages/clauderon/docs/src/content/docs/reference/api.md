@@ -103,7 +103,7 @@ Create a new session.
 POST /api/sessions
 ```
 
-**Request Body:**
+**Request Body (Single Repository):**
 ```json
 {
   "repo_path": "/home/user/project",
@@ -111,18 +111,92 @@ POST /api/sessions
   "backend": "docker",
   "agent": "claude",
   "access_mode": "read-write",
-  "no_plan_mode": false
+  "no_plan_mode": false,
+  "model": "claude-sonnet-4-5"
 }
 ```
+
+**Request Body (Multi-Repository):**
+```json
+{
+  "name": "multi-repo-session",
+  "repositories": [
+    {
+      "path": "/home/user/project1",
+      "mount_name": "main"
+    },
+    {
+      "path": "/home/user/project2",
+      "mount_name": "lib"
+    }
+  ],
+  "prompt": "Refactor shared code",
+  "backend": "docker",
+  "agent": "claude",
+  "access_mode": "read-write"
+}
+```
+
+**Parameters:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `repo_path` | string | Yes* | Path to single repository |
+| `repositories` | array | Yes* | Array of repositories (multi-repo) |
+| `prompt` | string | Yes | Initial prompt for agent |
+| `backend` | string | No | Backend type (default: configured default) |
+| `agent` | string | No | Agent type (default: "claude") |
+| `access_mode` | string | No | Access mode (default: "read-write") |
+| `no_plan_mode` | boolean | No | Disable plan mode (default: false) |
+| `model` | string | No | AI model override (default: "claude-sonnet-4-5") |
+| `name` | string | No | Custom session name |
+| `base_branch` | string | No | Git base branch |
+| `image_paths` | array | No | Paths to images to attach |
+
+\* Either `repo_path` or `repositories` required (not both)
+
+**Repository object:**
+- `path` - Absolute path to repository
+- `mount_name` - Unique mount name (alphanumeric, hyphens, underscores)
+
+**Model options:**
+
+See [Model Selection Guide](/guides/model-selection/) for full list. Examples:
+- `claude-opus-4-5` - Most capable Claude
+- `claude-sonnet-4-5` - Default balanced Claude
+- `claude-haiku-4-5` - Fastest Claude
+- `gpt-5.2-codex` - GPT optimized for code
+- `gemini-3-pro` - Gemini with 1M context
+
+**Access mode options:**
+- `read-only` - Agent can read files only
+- `read-write` - Agent can read and write files
+- `full-access` - Agent has full system access
 
 **Response:**
 ```json
 {
   "id": "uuid",
   "name": "generated-session-name",
-  "status": "starting"
+  "status": "starting",
+  "repositories": [
+    {
+      "path": "/home/user/project1",
+      "mount_name": "main",
+      "mount_point": "/workspace/main"
+    }
+  ],
+  "model": "claude-sonnet-4-5"
 }
 ```
+
+**Multi-Repository Limitations:**
+- Maximum 5 repositories per session
+- Kubernetes backend not fully supported (TODO)
+- Mount names must be unique
+- Only available via Web UI and API (not CLI/TUI)
+
+See [Multi-Repository Guide](/guides/multi-repo/) for details.
 
 ### Delete Session
 
@@ -210,6 +284,355 @@ POST /api/sessions/:id/refresh
 }
 ```
 
+### Start Session
+
+Start a stopped session.
+
+```http
+POST /api/sessions/:id/start
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "status": "starting"
+}
+```
+
+**Use cases:**
+- Resume stopped Docker container
+- Restart session after manual stop
+- Wake from non-hibernated stop state
+
+### Wake Session
+
+Wake a hibernated session (Sprites backend).
+
+```http
+POST /api/sessions/:id/wake
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "status": "waking",
+  "estimated_time": "5-10s"
+}
+```
+
+**Backend support:**
+- ✅ Sprites (hibernation/wake)
+- ❌ Other backends (use start instead)
+
+### Recreate Session
+
+Recreate session container while preserving data.
+
+```http
+POST /api/sessions/:id/recreate
+```
+
+**Request Body (optional):**
+```json
+{
+  "fresh": false,
+  "reason": "Container failed to start"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "status": "recreating",
+  "data_preservation": {
+    "git_state": true,
+    "chat_history": true,
+    "uncommitted_changes": true
+  }
+}
+```
+
+**Preserves:**
+- Session metadata and chat history
+- Git repository (committed and uncommitted changes)
+- Configuration
+
+**Rebuilds:**
+- Container
+- Environment
+- Running processes
+
+### Recreate Session (Fresh)
+
+Recreate session with fresh git clone.
+
+```http
+POST /api/sessions/:id/recreate-fresh
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "status": "recreating",
+  "data_preservation": {
+    "git_state": false,
+    "chat_history": true,
+    "uncommitted_changes": false
+  }
+}
+```
+
+**Preserves:**
+- Session metadata and chat history
+- Configuration
+
+**Rebuilds:**
+- Container
+- Git repository (fresh clone, uncommitted changes lost)
+
+### Cleanup Session
+
+Cleanup session resources without deleting session record.
+
+```http
+POST /api/sessions/:id/cleanup
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "resources_cleaned": [
+    "container",
+    "volumes",
+    "worktree"
+  ]
+}
+```
+
+**Use cases:**
+- Remove orphaned resources
+- Free disk space while keeping metadata
+- Prepare for recreation
+
+### Get Session Health
+
+Check session health status and available recovery actions.
+
+```http
+GET /api/sessions/:id/health
+```
+
+**Response:**
+```json
+{
+  "session_id": "uuid",
+  "health": "Error",
+  "details": {
+    "container_status": "exited",
+    "exit_code": 1,
+    "error_message": "OCI runtime error",
+    "backend": "docker"
+  },
+  "available_actions": [
+    "recreate",
+    "recreate_fresh",
+    "cleanup"
+  ],
+  "data_preservation": {
+    "recreate": true,
+    "recreate_fresh": false,
+    "cleanup": false
+  },
+  "reconciliation": {
+    "attempts": 2,
+    "last_attempt": "2025-01-28T12:30:00Z",
+    "next_attempt": "2025-01-28T12:35:00Z",
+    "error": "Container failed to start"
+  },
+  "last_check": "2025-01-28T12:34:56Z"
+}
+```
+
+**Health states:**
+- `Healthy` - Session running normally
+- `Stopped` - Container stopped
+- `Hibernated` - Session suspended (Sprites)
+- `Pending` - Resource creation in progress
+- `Error` - Container failed
+- `CrashLoop` - Container repeatedly crashing (K8s)
+- `Missing` - Resource deleted externally
+
+See [Health & Reconciliation Guide](/guides/health-reconciliation/) for details.
+
+### Update Session Metadata
+
+Update session metadata (name, description, tags).
+
+```http
+POST /api/sessions/:id/metadata
+```
+
+**Request Body:**
+```json
+{
+  "name": "new-session-name",
+  "description": "Updated description",
+  "tags": ["feature-x", "backend"]
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "metadata": {
+    "name": "new-session-name",
+    "description": "Updated description",
+    "tags": ["feature-x", "backend"]
+  }
+}
+```
+
+### Regenerate Metadata (AI)
+
+Use AI to regenerate session metadata based on chat history.
+
+```http
+POST /api/sessions/:id/regenerate-metadata
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "metadata": {
+    "name": "auth-bug-fix",
+    "description": "Fixed authentication bug in login flow",
+    "tags": ["bugfix", "authentication", "security"]
+  }
+}
+```
+
+**Requirements:**
+- AI metadata feature enabled (`ai_metadata = true`)
+- Session has chat history
+- AI API credentials configured
+
+### Upload Files
+
+Upload files to a running session.
+
+```http
+POST /api/sessions/:id/upload
+```
+
+**Request:** Multipart form data
+
+```http
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary
+
+------WebKitFormBoundary
+Content-Disposition: form-data; name="file"; filename="data.json"
+Content-Type: application/json
+
+{ "key": "value" }
+------WebKitFormBoundary--
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "files": [
+    {
+      "name": "data.json",
+      "path": "/workspace/data.json",
+      "size": 18
+    }
+  ]
+}
+```
+
+**Upload destination:** Files uploaded to session's working directory.
+
+### Browse Directory
+
+Browse directories for session creation (Web UI helper endpoint).
+
+```http
+POST /api/browse-directory
+```
+
+**Request Body:**
+```json
+{
+  "path": "/home/user/projects",
+  "show_hidden": false
+}
+```
+
+**Response:**
+```json
+{
+  "current_path": "/home/user/projects",
+  "parent": "/home/user",
+  "entries": [
+    {
+      "name": "project1",
+      "path": "/home/user/projects/project1",
+      "is_dir": true,
+      "is_git_repo": true,
+      "size": null
+    },
+    {
+      "name": "README.md",
+      "path": "/home/user/projects/README.md",
+      "is_dir": false,
+      "is_git_repo": false,
+      "size": 1024
+    }
+  ]
+}
+```
+
+**Use cases:**
+- Directory picker in Web UI
+- Repository selection
+- Git repository discovery
+
+### Get Storage Classes (Kubernetes)
+
+Get available Kubernetes storage classes.
+
+```http
+GET /api/storage-classes
+```
+
+**Response:**
+```json
+{
+  "storage_classes": [
+    {
+      "name": "standard",
+      "provisioner": "kubernetes.io/gce-pd",
+      "is_default": true
+    },
+    {
+      "name": "fast-ssd",
+      "provisioner": "kubernetes.io/gce-pd",
+      "is_default": false
+    }
+  ]
+}
+```
+
+**Backend:** Kubernetes only. Returns empty for other backends.
+
 ### Get Configuration
 
 Get current configuration.
@@ -260,13 +683,22 @@ GET /api/credentials
 
 ## WebSocket API
 
-### Connect
+Clauderon provides two WebSocket endpoints:
+
+1. **Event Stream** - `/ws/events` - Session events and updates
+2. **Terminal Console** - `/ws/console/{sessionId}` - Interactive terminal access
+
+### Event Stream (`/ws/events`)
+
+Real-time session events, status changes, and chat updates.
+
+#### Connect
 
 ```
-ws://localhost:3030/ws
+ws://localhost:3030/ws/events
 ```
 
-### Message Format
+#### Message Format
 
 All messages are JSON:
 
@@ -388,6 +820,145 @@ Keep the connection alive.
   "type": "pong"
 }
 ```
+
+### Terminal Console (`/ws/console/{sessionId}`)
+
+Interactive terminal access to session container.
+
+#### Connect
+
+```
+ws://localhost:3030/ws/console/{sessionId}
+```
+
+#### Protocol
+
+The terminal console uses a binary protocol for terminal data:
+
+**Client to Server (Input):**
+```
+Binary data (user input keystrokes)
+```
+
+**Server to Client (Output):**
+```
+Binary data (terminal output, escape sequences)
+```
+
+#### Terminal Resize
+
+Send terminal resize events:
+
+**Send:**
+```json
+{
+  "type": "resize",
+  "cols": 120,
+  "rows": 40
+}
+```
+
+#### Attach Options
+
+Include options in connection URL:
+
+```
+ws://localhost:3030/ws/console/{sessionId}?cols=120&rows=40
+```
+
+**Query parameters:**
+- `cols` - Initial terminal columns (default: 80)
+- `rows` - Initial terminal rows (default: 24)
+
+#### Example (JavaScript with xterm.js)
+
+```javascript
+import { Terminal } from 'xterm';
+import { WebglAddon } from 'xterm-addon-webgl';
+import { FitAddon } from 'xterm-addon-fit';
+
+const term = new Terminal();
+const fitAddon = new FitAddon();
+term.loadAddon(fitAddon);
+term.open(document.getElementById('terminal'));
+fitAddon.fit();
+
+const ws = new WebSocket(`ws://localhost:3030/ws/console/${sessionId}`);
+
+ws.onopen = () => {
+  // Send initial terminal size
+  ws.send(JSON.stringify({
+    type: 'resize',
+    cols: term.cols,
+    rows: term.rows
+  }));
+};
+
+// Forward terminal input to WebSocket
+term.onData((data) => {
+  ws.send(data);
+});
+
+// Forward WebSocket output to terminal
+ws.onmessage = (event) => {
+  if (event.data instanceof Blob) {
+    event.data.text().then((text) => {
+      term.write(text);
+    });
+  } else {
+    term.write(event.data);
+  }
+};
+
+// Handle terminal resize
+window.addEventListener('resize', () => {
+  fitAddon.fit();
+  ws.send(JSON.stringify({
+    type: 'resize',
+    cols: term.cols,
+    rows: term.rows
+  }));
+});
+```
+
+#### Protocol Details
+
+**Message types:**
+
+1. **Data (Binary)** - Terminal I/O
+   - Client → Server: User input (keystrokes, paste)
+   - Server → Client: Terminal output (text, ANSI escape codes)
+
+2. **Resize (JSON)** - Terminal size change
+   ```json
+   {
+     "type": "resize",
+     "cols": 120,
+     "rows": 40
+   }
+   ```
+
+3. **Error (JSON)** - Error messages
+   ```json
+   {
+     "type": "error",
+     "message": "Session not found"
+   }
+   ```
+
+**Connection lifecycle:**
+
+1. Client connects to `/ws/console/{sessionId}`
+2. Server validates session exists and is running
+3. Server attaches to session's PTY (pseudo-terminal)
+4. Bidirectional data flow begins
+5. On disconnect, PTY remains attached (session continues running)
+
+**Security:**
+
+- Same authentication as REST API (token or cookie)
+- Session must belong to authenticated user
+- PTY access is exclusive (one console connection per session recommended)
 
 ## Error Responses
 

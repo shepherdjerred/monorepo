@@ -3,7 +3,7 @@ title: Mobile Apps
 description: Native mobile applications for clauderon
 ---
 
-clauderon provides native iOS and Android apps for managing sessions on the go.
+clauderon provides native mobile and desktop applications for managing sessions on the go, built with React Native to support iOS, Android, macOS, and Windows platforms.
 
 ## Features
 
@@ -35,17 +35,43 @@ clauderon provides native iOS and Android apps for managing sessions on the go.
 
 ## Platforms
 
-### iOS
+The clauderon React Native app supports multiple platforms:
 
-- iOS 16+
-- iPhone and iPad
-- Available on App Store (coming soon)
+### iOS & iPadOS
+
+- **iOS 16+** - iPhone support
+- **iPadOS 16+** - iPad optimized UI with split view support
+- **Installation** - App Store (in development)
 
 ### Android
 
-- Android 10+
-- Phone and tablet
-- Available on Google Play (coming soon)
+- **Android 10+** - Phone and tablet support
+- **Responsive UI** - Adapts to screen size automatically
+- **Installation** - Google Play (in development)
+
+### macOS
+
+- **macOS 11+** - Native macOS app via React Native macOS
+- **Desktop experience** - Full keyboard shortcuts and menu bar integration
+- **Installation** - Direct download or build from source
+
+### Windows
+
+- **Windows 10+** - Native Windows app via React Native Windows
+- **Desktop experience** - Native Windows controls and notifications
+- **Installation** - Direct download or build from source
+
+### Current Status
+
+**Mobile and desktop apps are currently in active development.** While the codebase exists in the `mobile/` directory, the apps are not yet published to app stores or available for download.
+
+**For immediate access**, use the Web UI which is fully functional and mobile-responsive:
+- Works in any modern browser (Safari, Chrome, Firefox, Edge)
+- Responsive design optimized for mobile screens
+- All features available (session management, chat, configuration)
+- No installation required
+
+Follow development progress or contribute at [GitHub repository link].
 
 ## Screenshots
 
@@ -97,14 +123,16 @@ Mobile apps connect to your clauderon daemon via:
 
 ## Comparison with Web UI
 
-| Feature | Mobile App | Web UI |
-|---------|------------|--------|
-| Platform | iOS/Android | Any browser |
-| Push notifications | Yes | No |
+| Feature | Mobile/Desktop App | Web UI |
+|---------|-------------------|--------|
+| Platform | iOS/iPadOS/Android/macOS/Windows | Any browser |
+| Push notifications | Yes (iOS/Android) | No |
 | Offline access | Session list cached | No |
-| Biometric auth | Yes | WebAuthn |
+| Biometric auth | Yes (Face ID, Touch ID, Windows Hello) | WebAuthn |
 | Performance | Native | Web |
-| Installation | App store | None |
+| Installation | App store/Download | None |
+| Terminal attach | Limited (view only) | Full xterm.js |
+| Multi-repo sessions | Planned | Yes |
 
 ## Use Cases
 
