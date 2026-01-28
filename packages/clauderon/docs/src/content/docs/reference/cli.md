@@ -3,9 +3,6 @@ title: CLI Reference
 description: Complete command-line interface reference
 ---
 
-![clauderon Help](~/assets/screenshots/cli/clauderon-help.svg)
-*Main help output showing all available commands*
-
 ## Global Options
 
 ```
@@ -64,9 +61,6 @@ Create a new session.
 ```bash
 clauderon create --repo <PATH> --prompt <TEXT> [OPTIONS]
 ```
-
-![clauderon create Help](~/assets/screenshots/cli/clauderon-create-help.svg)
-*Create command help showing all available options*
 
 **Required:**
 ```
