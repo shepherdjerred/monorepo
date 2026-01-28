@@ -76,7 +76,7 @@ mod tests {
 
 Located in `tests/` directory with `#[tokio::test]`:
 
-**Example:** `tests/api/sessions.rs`
+**Example:** `tests/api_tests.rs`
 
 #### Conditional E2E Tests
 
@@ -100,7 +100,7 @@ Mock backends for testing without external dependencies:
 - `MockGitBackend`: Simulates git operations
 - `MockApiClient`: Simulates API calls
 
-**Example:** `src/git/backends/mock.rs`
+**Example:** `src/backends/mock.rs`
 
 ### Test Helpers
 
@@ -127,7 +127,7 @@ skip_if_no_kubernetes!()
 #### Git Repository Initialization
 
 ```rust
-pub fn init_test_git_repo(dir: &Path) -> Result<()>
+pub fn init_git_repo(path: &Path)
 ```
 
 #### RAII Cleanup Guards
