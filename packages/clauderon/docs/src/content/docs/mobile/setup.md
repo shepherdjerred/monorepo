@@ -3,7 +3,9 @@ title: Mobile Setup
 description: Install and configure clauderon mobile apps
 ---
 
-This guide covers setting up the clauderon mobile apps for iOS and Android.
+This guide covers setting up the clauderon applications for iOS, iPadOS, Android, macOS, and Windows.
+
+**Important:** The native apps are currently in development. For immediate access to all features, use the [Web UI](/guides/web-ui/) which works on all devices and browsers.
 
 ## Prerequisites
 
@@ -72,33 +74,161 @@ Set the WebAuthn origin to match your domain:
 CLAUDERON_ORIGIN=https://clauderon.yourdomain.com clauderon daemon
 ```
 
-## iOS Installation
+## Building from Source
 
-### From App Store
+If you want to test the apps in development, you can build from source.
 
-1. Open App Store on your iPhone/iPad
-2. Search for "clauderon"
-3. Download and install
+### Prerequisites
 
-### TestFlight (Beta)
+**All Platforms:**
+- Node.js 18+ or Bun
+- React Native CLI
+- Git
 
-1. Join the beta at [link coming soon]
-2. Install TestFlight if needed
-3. Open the beta link
+**iOS/iPadOS:**
+- macOS with Xcode 14+
+- CocoaPods (`gem install cocoapods`)
+- iOS Simulator or physical device
 
-## Android Installation
+**Android:**
+- Android Studio with Android SDK
+- Java Development Kit (JDK) 17+
+- Android emulator or physical device
 
-### From Google Play
+**macOS:**
+- macOS with Xcode 14+
+- React Native macOS dependencies
 
-1. Open Google Play Store
-2. Search for "clauderon"
-3. Install the app
+**Windows:**
+- Windows 10+ with Visual Studio 2019+
+- Windows SDK
+- React Native Windows dependencies
 
-### APK (Sideload)
+### Build Steps
 
-1. Download APK from [releases]
-2. Enable "Install unknown apps" for your browser
-3. Install the APK
+```bash
+# Clone repository
+git clone https://github.com/yourusername/clauderon
+cd clauderon/mobile
+
+# Install dependencies
+bun install
+
+# iOS (requires macOS)
+cd ios && pod install && cd ..
+bun run ios
+
+# Android
+bun run android
+
+# macOS (requires macOS)
+bun run macos
+
+# Windows (requires Windows)
+bun run windows
+```
+
+### Development Server
+
+For development, the app connects to your local clauderon daemon:
+
+```bash
+# Terminal 1: Start clauderon daemon
+clauderon serve
+
+# Terminal 2: Start React Native
+cd mobile
+bun run ios  # or android/macos/windows
+```
+
+## Platform-Specific Setup
+
+### iOS & iPadOS
+
+**Status:** In active development
+
+**Current Options:**
+1. **Web UI (Recommended)** - Visit your clauderon server in Safari
+   - Add to Home Screen for app-like experience
+   - Full feature parity with desktop
+   - Responsive design for iPhone and iPad
+
+2. **Build from Source** - For developers who want to test
+   ```bash
+   cd mobile
+   bun install
+   bun run ios
+   ```
+
+**Future Availability:**
+- App Store release planned after beta testing phase
+- TestFlight beta program (join waitlist on GitHub)
+
+### Android
+
+**Status:** In active development
+
+**Current Options:**
+1. **Web UI (Recommended)** - Visit your clauderon server in Chrome/Firefox
+   - Add to Home Screen for app-like experience
+   - Full feature parity with desktop
+   - Responsive design for phones and tablets
+
+2. **Build from Source** - For developers who want to test
+   ```bash
+   cd mobile
+   bun install
+   bun run android
+   ```
+
+**Future Availability:**
+- Google Play release planned after beta testing phase
+- Direct APK downloads may be available before Play Store release
+
+### macOS
+
+**Status:** In active development
+
+**Current Options:**
+1. **Web UI** - Visit your clauderon server in any browser
+2. **CLI/TUI** - Full desktop experience via terminal
+   ```bash
+   # Install via cargo
+   cargo install clauderon
+
+   # Use TUI
+   clauderon tui
+   ```
+
+3. **Build React Native macOS App from Source**
+   ```bash
+   cd mobile
+   bun install
+   bun run macos
+   ```
+
+### Windows
+
+**Status:** In active development
+
+**Current Options:**
+1. **Web UI** - Visit your clauderon server in any browser
+2. **CLI** - Windows support via WSL or native Windows build
+   ```bash
+   # Via cargo
+   cargo install clauderon
+   ```
+
+3. **Build React Native Windows App from Source**
+   ```bash
+   cd mobile
+   bun install
+   bun run windows
+   ```
+
+**Future Availability:**
+- Direct download installers (.exe)
+- Microsoft Store consideration (after initial release)
 
 ## App Configuration
 
@@ -229,12 +359,15 @@ If your server is only accessible via VPN:
 
 ## App Permissions
 
-| Permission | Purpose |
-|------------|---------|
-| Face ID / Touch ID | Biometric authentication |
-| Notifications | Push notifications |
-| Network | Server communication |
-| Camera | QR code scanning (optional) |
+| Permission | Platform | Purpose |
+|------------|----------|---------|
+| Face ID / Touch ID | iOS/iPadOS | Biometric authentication |
+| Fingerprint / Face Unlock | Android | Biometric authentication |
+| Windows Hello | Windows | Biometric authentication |
+| Notifications | iOS/Android | Push notifications |
+| Network | All | Server communication |
+| Camera | Mobile | QR code scanning (optional) |
+| File System | Desktop | Session file access (optional) |
 
 ## See Also
 
