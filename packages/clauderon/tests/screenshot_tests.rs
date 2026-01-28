@@ -3,7 +3,7 @@
 //! These tests are marked with `#[ignore]` so they don't run in regular CI.
 //! Run manually with: `cargo test --test screenshot_tests -- --ignored`
 
-use ab_glyph::{FontRef, PxScale};
+use ab_glyph::{FontRef, PxScale, ScaleFont};
 use image::{ImageBuffer, Rgb, RgbImage};
 use imageproc::drawing::draw_text_mut;
 use ratatui::{Terminal, backend::TestBackend, style::Color};
@@ -15,9 +15,9 @@ use clauderon::tui::app::{App, AppMode, CreateDialogFocus};
 use clauderon::tui::ui;
 
 // Constants for rendering
-const CHAR_WIDTH: u32 = 12; // Width of a monospace character in pixels
-const CHAR_HEIGHT: u32 = 18; // Height of a monospace character in pixels (no line spacing - TUI style)
-const FONT_SIZE: f32 = 15.0; // Font size to fit in the char cell
+const CHAR_WIDTH: u32 = 10; // Width of a monospace character in pixels (Berkeley Mono at 16px)
+const CHAR_HEIGHT: u32 = 20; // Height of a monospace character in pixels (includes proper line height)
+const FONT_SIZE: f32 = 16.0; // Font size matching terminal rendering
 
 // Colors (VS Code Dark+ theme)
 const BG_COLOR: Rgb<u8> = Rgb([30, 30, 30]); // #1E1E1E
@@ -57,11 +57,6 @@ fn buffer_to_png(
     let width = u32::from(buffer.area.width);
     let height = u32::from(buffer.area.height);
 
-    // Create image with calculated dimensions
-    let img_width = width * CHAR_WIDTH;
-    let img_height = height * CHAR_HEIGHT;
-    let mut img: RgbImage = ImageBuffer::from_pixel(img_width, img_height, BG_COLOR);
-
     // Try to load font, fall back to simple rendering if not available
     let font_result = get_or_download_font();
 
@@ -69,13 +64,24 @@ fn buffer_to_png(
         let font = FontRef::try_from_slice(&font_data)?;
         let scale = PxScale::from(FONT_SIZE);
 
+        // Measure actual advance width for a standard monospace character
+        let scaled_font = font.as_scaled(scale);
+        let test_glyph = scaled_font.scaled_glyph('M');
+        let actual_advance = scaled_font.h_advance(test_glyph.id);
+        let char_advance = actual_advance.ceil() as u32;
+
+        // Create image with dimensions based on actual font metrics
+        let img_width = width * char_advance;
+        let img_height = height * CHAR_HEIGHT;
+        let mut img: RgbImage = ImageBuffer::from_pixel(img_width, img_height, BG_COLOR);
+
         // Render each character from the buffer using the font
         for y in 0..height {
             for x in 0..width {
                 if let Some(cell) = buffer.cell((x as u16, y as u16)) {
                     let symbol = cell.symbol();
                     if !symbol.is_empty() && symbol != " " {
-                        let px_x = x * CHAR_WIDTH;
+                        let px_x = x * char_advance;
                         let px_y = y * CHAR_HEIGHT;
 
                         // Extract color from cell
@@ -95,9 +101,20 @@ fn buffer_to_png(
                 }
             }
         }
+
+        // Save PNG
+        img.save(output_path)?;
+        println!("✓ Created {} ({}x{}, char width: {}px)",
+            output_path.display(), img_width, img_height, char_advance);
     } else {
         // Fallback: simple block rendering (no actual font rendering)
         println!("Warning: Font not available, using simple block rendering");
+
+        // Create image with fallback dimensions
+        let img_width = width * CHAR_WIDTH;
+        let img_height = height * CHAR_HEIGHT;
+        let mut img: RgbImage = ImageBuffer::from_pixel(img_width, img_height, BG_COLOR);
+
         for y in 0..height {
             for x in 0..width {
                 if let Some(cell) = buffer.cell((x as u16, y as u16)) {
@@ -119,11 +136,11 @@ fn buffer_to_png(
                 }
             }
         }
-    }
 
-    // Save PNG
-    img.save(output_path)?;
-    println!("✓ Created {}", output_path.display());
+        // Save PNG
+        img.save(output_path)?;
+        println!("✓ Created {} (fallback mode)", output_path.display());
+    }
 
     Ok(())
 }
