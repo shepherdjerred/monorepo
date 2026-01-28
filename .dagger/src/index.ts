@@ -1,4 +1,4 @@
-import { dag, object, func, Secret, Directory, Container } from "@dagger.io/dagger";
+import { dag, object, func, Secret, Directory, Container, File } from "@dagger.io/dagger";
 import { updateHomelabVersion, syncToS3 } from "@shepherdjerred/dagger-utils/containers";
 import {
   checkBirmel,
@@ -16,6 +16,8 @@ const PLAYWRIGHT_VERSION = "1.57.0";
 const RELEASE_PLEASE_VERSION = "17.1.3";
 // Rust version for clauderon
 const RUST_VERSION = "1.85";
+// LaTeX image for resume builds
+const LATEX_IMAGE = "blang/latex:ubuntu";
 // sccache version for Rust compilation caching
 const SCCACHE_VERSION = "0.9.1";
 
@@ -602,6 +604,20 @@ export class Monorepo {
         }
       }
 
+      // Deploy resume to S3
+      if (s3AccessKeyId && s3SecretAccessKey) {
+        outputs.push("\n--- Resume Deployment ---");
+        try {
+          const deployOutput = await this.resumeDeploy(source, s3AccessKeyId, s3SecretAccessKey);
+          outputs.push(deployOutput);
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          const failureMsg = `Failed to deploy resume: ${errorMessage}`;
+          outputs.push(`✗ ${failureMsg}`);
+          releaseErrors.push(failureMsg);
+        }
+      }
+
       // Check if a clauderon release was created - only if we can extract a specific version
       const clauderonVersionMatch = releaseResult.output.match(/clauderon-v([\d.]+)/);
       const clauderonVersion = clauderonVersionMatch?.[1];
@@ -1004,7 +1020,7 @@ retry = 3
     const syncOutput = await syncToS3({
       sourceDir: siteDir,
       bucketName: "clauderon",
-      endpointUrl: "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
+      endpointUrl: "https://seaweedfs.sjer.red",
       accessKeyId: s3AccessKeyId,
       secretAccessKey: s3SecretAccessKey,
       region: "us-east-1",
@@ -1014,6 +1030,61 @@ retry = 3
     outputs.push("✓ Deployed to SeaweedFS S3 (bucket: clauderon)");
     outputs.push(syncOutput);
 
+    return outputs.join("\n");
+  }
+
+  /**
+   * Build the resume PDF from LaTeX source.
+   */
+  @func()
+  resumeBuild(source: Directory): File {
+    return dag
+      .container()
+      .from(LATEX_IMAGE)
+      .withMountedDirectory("/workspace", source.directory("packages/resume"))
+      .withWorkdir("/workspace")
+      .withExec(["pdflatex", "resume.tex"])
+      .file("/workspace/resume.pdf");
+  }
+
+  /**
+   * Get resume output directory (PDF + HTML) for deployment.
+   */
+  @func()
+  resumeOutput(source: Directory): Directory {
+    const pdf = this.resumeBuild(source);
+    const resumeDir = source.directory("packages/resume");
+    return dag
+      .directory()
+      .withFile("resume.pdf", pdf)
+      .withFile("index.html", resumeDir.file("index.html"));
+  }
+
+  /**
+   * Deploy resume to SeaweedFS S3.
+   */
+  @func()
+  async resumeDeploy(
+    source: Directory,
+    s3AccessKeyId: Secret,
+    s3SecretAccessKey: Secret,
+  ): Promise<string> {
+    const outputs: string[] = [];
+    const outputDir = this.resumeOutput(source);
+    outputs.push("✓ Built resume.pdf");
+
+    const syncOutput = await syncToS3({
+      sourceDir: outputDir,
+      bucketName: "resume",
+      endpointUrl: "https://seaweedfs.sjer.red",
+      accessKeyId: s3AccessKeyId,
+      secretAccessKey: s3SecretAccessKey,
+      region: "us-east-1",
+      deleteRemoved: true,
+    });
+
+    outputs.push("✓ Deployed to SeaweedFS S3 (bucket: resume)");
+    outputs.push(syncOutput);
     return outputs.join("\n");
   }
 }
