@@ -15,7 +15,7 @@ use clauderon::tui::app::{App, AppMode, CreateDialogFocus};
 use clauderon::tui::ui;
 
 // Constants for rendering
-const CHAR_WIDTH: u32 = 10; // Width of a monospace character in pixels
+const CHAR_WIDTH: u32 = 12; // Width of a monospace character in pixels
 const CHAR_HEIGHT: u32 = 18; // Height of a monospace character in pixels (no line spacing - TUI style)
 const FONT_SIZE: f32 = 15.0; // Font size to fit in the char cell
 
