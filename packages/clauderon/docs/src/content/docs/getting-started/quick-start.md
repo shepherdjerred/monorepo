@@ -107,9 +107,6 @@ clauderon unarchive <session-name>
 clauderon delete <session-name>
 ```
 
-![Session List Output](~/assets/screenshots/cli/clauderon-list.svg)
-*CLI output showing active sessions with status and timestamps*
-
 ## Example Workflows
 
 ### Bug Fix Session
