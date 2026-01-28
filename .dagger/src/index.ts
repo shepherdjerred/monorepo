@@ -10,7 +10,7 @@ import {
 const PACKAGES = ["eslint-config", "dagger-utils", "bun-decompile"] as const;
 const REPO_URL = "shepherdjerred/monorepo";
 
-const BUN_VERSION = "1.3.5";
+const BUN_VERSION = "1.3.6";
 const PLAYWRIGHT_VERSION = "1.57.0";
 // Pin release-please version for reproducible builds
 const RELEASE_PLEASE_VERSION = "17.1.3";
@@ -78,6 +78,7 @@ function installWorkspaceDeps(source: Directory): Container {
     .withMountedFile("/workspace/packages/bun-decompile/package.json", source.file("packages/bun-decompile/package.json"))
     .withMountedFile("/workspace/packages/dagger-utils/package.json", source.file("packages/dagger-utils/package.json"))
     .withMountedFile("/workspace/packages/eslint-config/package.json", source.file("packages/eslint-config/package.json"))
+    .withMountedFile("/workspace/packages/resume/package.json", source.file("packages/resume/package.json"))
     // Clauderon web packages (nested workspace with own lockfile)
     .withMountedFile("/workspace/packages/clauderon/web/package.json", source.file("packages/clauderon/web/package.json"))
     .withMountedFile("/workspace/packages/clauderon/web/bun.lock", source.file("packages/clauderon/web/bun.lock"))

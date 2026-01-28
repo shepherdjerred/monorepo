@@ -1,7 +1,7 @@
 import type { Directory, Container, Secret } from "@dagger.io/dagger";
 import { dag } from "@dagger.io/dagger";
 
-const BUN_VERSION = "1.3.5";
+const BUN_VERSION = "1.3.6";
 const PLAYWRIGHT_VERSION = "1.57.0";
 
 /**
@@ -72,6 +72,7 @@ function installWorkspaceDeps(workspaceSource: Directory, useMounts: boolean): C
         "/workspace/packages/eslint-config/package.json",
         workspaceSource.file("packages/eslint-config/package.json"),
       )
+      .withMountedFile("/workspace/packages/resume/package.json", workspaceSource.file("packages/resume/package.json"))
       // Clauderon web packages (nested workspace with own lockfile)
       .withMountedFile(
         "/workspace/packages/clauderon/web/package.json",
@@ -113,6 +114,7 @@ function installWorkspaceDeps(workspaceSource: Directory, useMounts: boolean): C
         "/workspace/packages/eslint-config/package.json",
         workspaceSource.file("packages/eslint-config/package.json"),
       )
+      .withFile("/workspace/packages/resume/package.json", workspaceSource.file("packages/resume/package.json"))
       // Clauderon web packages (nested workspace with own lockfile)
       .withFile(
         "/workspace/packages/clauderon/web/package.json",
