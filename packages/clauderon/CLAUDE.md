@@ -63,6 +63,32 @@ dagger call ci
 
 **See [Testing Guide](docs/src/content/docs/reference/testing.md) for comprehensive documentation.**
 
+## Screenshots
+
+Generate screenshots for documentation (committed to git):
+
+```bash
+# Generate all screenshots (CLI, TUI, Web UI)
+./scripts/generate-all-screenshots.sh
+
+# Generate individual types
+./scripts/generate-cli-screenshots.sh          # SVG screenshots via custom script
+cargo test --test screenshot_tests -- --ignored # PNG screenshots via ratatui TestBackend
+cd web/frontend && bun run screenshots          # PNG screenshots via Playwright
+
+# Copy to docs
+./scripts/update-docs-screenshots.sh
+```
+
+**Output locations:**
+- Source: `screenshots/{cli,tui,web}/`
+- Docs: `docs/src/assets/screenshots/{cli,tui,web}/`
+
+**Technologies:**
+- CLI: Custom SVG generator (bash + heredoc templates)
+- TUI: ratatui TestBackend → PNG (image, ab_glyph crates)
+- Web: Playwright headless browser → PNG
+
 ## Mise Tasks
 
 ```bash
