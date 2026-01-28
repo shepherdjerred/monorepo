@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="616" height="440" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .terminal {
+      font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace;
+      font-size: 14px;
+      line-height: 20px;
+    }
+  </style>
+
+  <rect width="100%" height="100%" fill="#1E1E1E" rx="6"/>
+
+  <text class="terminal" fill="#D4D4D4" x="20" y="34">
+    <tspan x="20" dy="20">clauderon 0.1.0</tspan>
+    <tspan x="20" dy="20">Session manager for AI coding agents</tspan>
+    <tspan x="20" dy="20"></tspan>
+    <tspan x="20" dy="20">USAGE:</tspan>
+    <tspan x="20" dy="20">    clauderon &lt;SUBCOMMAND&gt;</tspan>
+    <tspan x="20" dy="20"></tspan>
+    <tspan x="20" dy="20">OPTIONS:</tspan>
+    <tspan x="20" dy="20">    -h, --help       Print help information</tspan>
+    <tspan x="20" dy="20">    -V, --version    Print version information</tspan>
+    <tspan x="20" dy="20"></tspan>
+    <tspan x="20" dy="20">SUBCOMMANDS:</tspan>
+    <tspan x="20" dy="20">    create     Create a new session</tspan>
+    <tspan x="20" dy="20">    list       List all sessions</tspan>
+    <tspan x="20" dy="20">    attach     Attach to a running session</tspan>
+    <tspan x="20" dy="20">    stop       Stop a session</tspan>
+    <tspan x="20" dy="20">    delete     Delete a session</tspan>
+    <tspan x="20" dy="20">    config     Manage configuration</tspan>
+    <tspan x="20" dy="20">    serve      Start the web UI server</tspan>
+    <tspan x="20" dy="20">    tui        Launch terminal UI</tspan>
+    <tspan x="20" dy="20">    help       Print this message or the help of the given subcommand(s)</tspan>
+  </text>
+</svg>

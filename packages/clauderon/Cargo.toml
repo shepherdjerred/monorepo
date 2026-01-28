@@ -116,6 +116,11 @@ proptest = "1.0"
 reqwest = { version = "0.13", features = ["json", "blocking"] }
 tokio-test = "0.4"
 
+# Screenshot generation (TUI PNG rendering)
+image = "0.25"
+ab_glyph = "0.2"
+imageproc = "0.25"
+
 [lints.rust]
 unsafe_code = "forbid"
 deprecated = "allow"
