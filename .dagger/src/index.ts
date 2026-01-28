@@ -78,6 +78,7 @@ function installWorkspaceDeps(source: Directory): Container {
     .withMountedFile("/workspace/packages/bun-decompile/package.json", source.file("packages/bun-decompile/package.json"))
     .withMountedFile("/workspace/packages/dagger-utils/package.json", source.file("packages/dagger-utils/package.json"))
     .withMountedFile("/workspace/packages/eslint-config/package.json", source.file("packages/eslint-config/package.json"))
+    .withMountedFile("/workspace/packages/resume/package.json", source.file("packages/resume/package.json"))
     // Clauderon web packages (nested workspace with own lockfile)
     .withMountedFile("/workspace/packages/clauderon/web/package.json", source.file("packages/clauderon/web/package.json"))
     .withMountedFile("/workspace/packages/clauderon/web/bun.lock", source.file("packages/clauderon/web/bun.lock"))
