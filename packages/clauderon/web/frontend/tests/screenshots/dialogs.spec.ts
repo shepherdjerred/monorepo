@@ -29,13 +29,12 @@ test.describe('Dialog UI', () => {
       // Wait for REAL dialog to appear
       await page.waitForTimeout(500);
 
-      // Take screenshot of REAL create dialog - 1080p high quality
+      // Take screenshot of REAL create dialog - 1080p
       const screenshotPath = join(__dirname, '..', '..', '..', '..', 'screenshots', 'web', 'create-dialog.png');
       await page.screenshot({
         path: screenshotPath,
         fullPage: false,
         type: 'png',
-        quality: 100,
       });
 
       console.log(`✓ Created create-dialog.png from REAL application`);
