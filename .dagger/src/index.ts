@@ -10,7 +10,7 @@ import {
 const PACKAGES = ["eslint-config", "dagger-utils", "bun-decompile"] as const;
 const REPO_URL = "shepherdjerred/monorepo";
 
-const BUN_VERSION = "1.3.5";
+const BUN_VERSION = "1.3.6";
 const PLAYWRIGHT_VERSION = "1.57.0";
 // Pin release-please version for reproducible builds
 const RELEASE_PLEASE_VERSION = "17.1.3";
