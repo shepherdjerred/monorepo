@@ -134,7 +134,10 @@ fn get_or_download_font() -> Result<Vec<u8>, Box<dyn std::error::Error>> {
     use std::path::PathBuf;
 
     // Try Berkeley Mono first (user's preferred font)
+    let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let berkeley_mono_paths = [
+        // Project web frontend assets (most likely location)
+        Some(manifest_dir.join("web/frontend/src/assets/fonts/BerkeleyMono-Regular.otf")),
         // User fonts directory (Linux)
         dirs::home_dir().map(|h| h.join(".local/share/fonts/BerkeleyMono-Regular.otf")),
         dirs::home_dir().map(|h| h.join(".fonts/BerkeleyMono-Regular.otf")),

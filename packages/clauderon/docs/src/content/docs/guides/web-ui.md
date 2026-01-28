@@ -19,6 +19,8 @@ Then navigate to http://localhost:3030
 
 The web UI uses WebAuthn for secure passwordless authentication.
 
+![Login Page](~/assets/screenshots/web/login.png)
+
 ## Features
 
 ### Dashboard
@@ -32,6 +34,10 @@ The main dashboard shows:
 - Access mode (read-only, read-write)
 - Creation time
 
+![Dashboard](~/assets/screenshots/web/dashboard.png)
+
+![Empty State](~/assets/screenshots/web/empty-state.png)
+
 ### Create Session
 
 Click "New Session" to create a session with:
@@ -41,6 +47,8 @@ Click "New Session" to create a session with:
 3. **Backend**: Choose from available backends
 4. **Agent**: Select AI agent
 5. **Access Mode**: Read-only or read-write
+
+![Create Session Dialog](~/assets/screenshots/web/create-dialog.png)
 
 ### Session Details
 
