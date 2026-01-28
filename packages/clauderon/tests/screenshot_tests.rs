@@ -6,7 +6,7 @@
 use ab_glyph::{FontRef, PxScale};
 use image::{ImageBuffer, Rgb, RgbImage};
 use imageproc::drawing::draw_text_mut;
-use ratatui::{backend::TestBackend, Terminal};
+use ratatui::{Terminal, backend::TestBackend};
 use std::path::PathBuf;
 
 use clauderon::api::MockApiClient;
@@ -15,16 +15,19 @@ use clauderon::tui::app::{App, AppMode, CreateDialogFocus};
 use clauderon::tui::ui;
 
 // Constants for rendering
-const CHAR_WIDTH: u32 = 9;  // Width of a monospace character in pixels
+const CHAR_WIDTH: u32 = 9; // Width of a monospace character in pixels
 const CHAR_HEIGHT: u32 = 18; // Height of a monospace character in pixels
 const FONT_SIZE: f32 = 14.0;
 
 // Colors (VS Code Dark+ theme)
-const BG_COLOR: Rgb<u8> = Rgb([30, 30, 30]);    // #1E1E1E
+const BG_COLOR: Rgb<u8> = Rgb([30, 30, 30]); // #1E1E1E
 const FG_COLOR: Rgb<u8> = Rgb([212, 212, 212]); // #D4D4D4
 
 /// Convert a ratatui TestBackend buffer to a PNG image
-fn buffer_to_png(buffer: &ratatui::buffer::Buffer, output_path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+fn buffer_to_png(
+    buffer: &ratatui::buffer::Buffer,
+    output_path: &PathBuf,
+) -> Result<(), Box<dyn std::error::Error>> {
     let width = buffer.area.width as u32;
     let height = buffer.area.height as u32;
 
@@ -76,7 +79,7 @@ fn buffer_to_png(buffer: &ratatui::buffer::Buffer, output_path: &PathBuf) -> Res
                         let px_y = y * CHAR_HEIGHT;
 
                         for dy in 0..CHAR_HEIGHT {
-                            for dx in 0..CHAR_WIDTH/2 {
+                            for dx in 0..CHAR_WIDTH / 2 {
                                 img.put_pixel(px_x + dx, px_y + dy, FG_COLOR);
                             }
                         }
