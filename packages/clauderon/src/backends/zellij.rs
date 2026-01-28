@@ -171,6 +171,7 @@ impl ExecutionBackend for ZellijBackend {
         let output = Command::new("zellij")
             .args(&pane_args[..])
             .env("ZELLIJ_SESSION_NAME", name)
+            .env("COLORTERM", "truecolor")
             .output()
             .await?;
 

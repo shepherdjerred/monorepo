@@ -943,6 +943,9 @@ echo "Git setup complete: branch ${{BRANCH_NAME}}"
                 "REQUESTS_CA_BUNDLE=/etc/clauderon/proxy-ca.pem".to_string(),
             ]);
 
+            // Enable 24-bit truecolor support for Claude Code terminal output
+            args.extend(["-e".to_string(), "COLORTERM=truecolor".to_string()]);
+
             // Volume mounts for proxy configs (read-only)
             // CA certificate is always mounted (required)
             args.extend([
