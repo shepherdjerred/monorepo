@@ -65,6 +65,7 @@ export default defineConfig({
             { label: "API", slug: "reference/api" },
             { label: "Environment Variables", slug: "reference/environment-variables" },
             { label: "File Locations", slug: "reference/file-locations" },
+            { label: "Testing", slug: "reference/testing" },
           ],
         },
       ],
