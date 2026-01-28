@@ -38,3 +38,66 @@ test.describe('Session Dashboard', () => {
     console.log(`✓ Created dashboard.png from REAL application`);
   });
 });
+
+test.describe('Session Details', () => {
+  test('capture session detail view', async ({ page }) => {
+    await page.goto('http://localhost:5173');
+    await page.waitForLoadState('networkidle');
+    
+    // Click on first session if available
+    const sessionRow = page.locator('[data-testid="session-row"]').first();
+    if (await sessionRow.isVisible()) {
+      await sessionRow.click();
+      await page.waitForTimeout(500);
+      
+      const screenshotPath = join(__dirname, '..', '..', '..', '..', 'screenshots', 'web', 'session-detail.png');
+      await page.screenshot({
+        path: screenshotPath,
+        fullPage: false,
+        type: 'png',
+        quality: 100,
+      });
+      
+      console.log(`✓ Created session-detail.png from REAL application`);
+    }
+  });
+
+  test('capture session list with filters', async ({ page }) => {
+    await page.goto('http://localhost:5173');
+    await page.waitForLoadState('networkidle');
+    
+    // Open filter menu if available
+    const filterButton = page.getByRole('button', { name: /filter|status/i }).first();
+    if (await filterButton.isVisible()) {
+      await filterButton.click();
+      await page.waitForTimeout(300);
+      
+      const screenshotPath = join(__dirname, '..', '..', '..', '..', 'screenshots', 'web', 'session-filters.png');
+      await page.screenshot({
+        path: screenshotPath,
+        fullPage: false,
+        type: 'png',
+        quality: 100,
+      });
+      
+      console.log(`✓ Created session-filters.png from REAL application`);
+    }
+  });
+
+  test('capture empty state', async ({ page }) => {
+    // This assumes a fresh instance with no sessions
+    await page.goto('http://localhost:5173');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(500);
+    
+    const screenshotPath = join(__dirname, '..', '..', '..', '..', 'screenshots', 'web', 'empty-state.png');
+    await page.screenshot({
+      path: screenshotPath,
+      fullPage: false,
+      type: 'png',
+      quality: 100,
+    });
+    
+    console.log(`✓ Created empty-state.png from REAL application`);
+  });
+});

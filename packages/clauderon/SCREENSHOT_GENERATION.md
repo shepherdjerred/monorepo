@@ -24,8 +24,18 @@ cargo build --release
 
 This will create:
 - `screenshots/cli/clauderon-help.svg` - Main help output
+- `screenshots/cli/clauderon-version.svg` - Version info
 - `screenshots/cli/clauderon-list.svg` - Session list
+- `screenshots/cli/clauderon-list-archived.svg` - List with archived sessions
 - `screenshots/cli/clauderon-create-help.svg` - Create command help
+- `screenshots/cli/clauderon-attach-help.svg` - Attach command help
+- `screenshots/cli/clauderon-archive-help.svg` - Archive command help
+- `screenshots/cli/clauderon-delete-help.svg` - Delete command help
+- `screenshots/cli/clauderon-daemon-help.svg` - Daemon command help
+- `screenshots/cli/clauderon-tui-help.svg` - TUI command help
+- `screenshots/cli/clauderon-config.svg` - Configuration output
+- `screenshots/cli/clauderon-reconcile-help.svg` - Reconcile command help
+- `screenshots/cli/clauderon-clean-cache-help.svg` - Clean cache command help
 
 **Note**: These use the REAL clauderon binary output, not mock data.
 
@@ -44,6 +54,9 @@ This will create:
 - `screenshots/tui/help-screen.png` - Help screen
 - `screenshots/tui/empty-session-list.png` - Empty state
 - `screenshots/tui/delete-confirmation.png` - Delete dialog
+- `screenshots/tui/archive-confirmation.png` - Archive confirmation
+- `screenshots/tui/health-modal.png` - Health status modal
+- `screenshots/tui/session-list-filtered.png` - Filtered session list
 
 **Note**: These render the REAL TUI components using the actual App state.
 
@@ -80,9 +93,12 @@ Generate PNG screenshots from the real web application using Playwright:
    ```
 
 This will create:
-- `screenshots/web/login.png` - Login page
-- `screenshots/web/dashboard.png` - Session dashboard
-- `screenshots/web/create-dialog.png` - Create session dialog
+- `screenshots/web/login.png` - Login page (1920x1080)
+- `screenshots/web/dashboard.png` - Session dashboard (1920x1080)
+- `screenshots/web/create-dialog.png` - Create session dialog (1920x1080)
+- `screenshots/web/session-detail.png` - Session detail view (1920x1080)
+- `screenshots/web/session-filters.png` - Session filters (1920x1080)
+- `screenshots/web/empty-state.png` - Empty state (1920x1080)
 
 **Note**: These screenshot the REAL React application, not mock HTML.
 
