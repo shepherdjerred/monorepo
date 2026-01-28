@@ -24,6 +24,7 @@ const BG_COLOR: Rgb<u8> = Rgb([30, 30, 30]); // #1E1E1E
 const FG_COLOR: Rgb<u8> = Rgb([212, 212, 212]); // #D4D4D4
 
 /// Convert a ratatui TestBackend buffer to a PNG image
+#[allow(clippy::cast_possible_truncation, clippy::cast_possible_wrap)]
 fn buffer_to_png(
     buffer: &ratatui::buffer::Buffer,
     output_path: &PathBuf,
