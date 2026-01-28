@@ -118,6 +118,8 @@ jobs:
             --branch="${{ github.ref_name }}"
             --github-token=env:GH_TOKEN
             --npm-token=env:NPM_TOKEN
+            --s3-access-key-id=env:S3_ACCESS_KEY_ID
+            --s3-secret-access-key=env:S3_SECRET_ACCESS_KEY
           )
 
           if [[ "${{ github.ref_name }}" == "main" ]]; then
@@ -126,8 +128,6 @@ jobs:
               --git-sha="${{ github.sha }}"
               --registry-username="${{ github.actor }}"
               --registry-password=env:GITHUB_TOKEN
-              --s3-access-key-id=env:S3_ACCESS_KEY_ID
-              --s3-secret-access-key=env:S3_SECRET_ACCESS_KEY
             )
           fi
 
