@@ -519,7 +519,7 @@ GET /api/sessions/{id}
 
 ## See Also
 
-- [Session Management](/guides/session-management/) - General session concepts
-- [Docker Backend](/guides/docker/) - Docker-specific configuration
 - [Web Interface](/guides/web-ui/) - Creating multi-repo sessions in Web UI
+- [Docker Backend](/guides/docker/) - Docker-specific configuration
 - [API Reference](/reference/api/) - Full API documentation
+- [Quick Start](/getting-started/quick-start/) - Getting started with sessions

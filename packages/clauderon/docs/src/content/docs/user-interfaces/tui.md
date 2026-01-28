@@ -470,5 +470,4 @@ mouse_enabled = false
 
 - [CLI Reference](/reference/cli) - Command-line alternatives to TUI features
 - [Web Interface](/guides/web-ui) - Full-featured web UI with chat history
-- [Keyboard Shortcuts Cheat Sheet](/reference/shortcuts) - Printable shortcut reference
-- [Session Management](/guides/session-management) - Managing session lifecycle
+- [Troubleshooting](/guides/troubleshooting) - Common issues and solutions
