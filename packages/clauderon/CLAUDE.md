@@ -29,14 +29,39 @@ cd mobile && bun run ios|android|macos
 
 ## Testing
 
-Prefer `cargo nextest run` over `cargo test` for faster parallel execution:
+**Quick Reference:**
 
 ```bash
-cargo nextest run                      # Run all tests
-cargo nextest run --run-ignored all    # Include ignored tests
-cargo nextest run -E 'test(/recent/)'  # Filter by pattern
-mise run test-fast                     # Run via mise
+# Rust (Backend + TUI/CLI)
+cargo nextest run                      # All tests (faster than cargo test)
+cargo nextest run --run-ignored all    # Include E2E tests
+cargo nextest run -E 'test(/pattern/)' # Filter tests
+mise run test-fast                     # via mise
+
+# Web (TypeScript/React)
+cd web && bun run test                 # All web tests
+cd web/frontend && bun test            # Frontend only
+cd web/client && bun test              # Client only
+
+# Mobile (React Native)
+cd mobile && bun test                  # Jest tests
+cd mobile && bun test:windows          # Windows-specific
+
+# Full build + test (CI simulation)
+dagger call ci
 ```
+
+**Test Organization:**
+- **Rust**: 44 test files (24 in `tests/`, unit tests in `src/`)
+- **Web**: 9 test files (colocated with `.test.ts(x)`)
+- **Mobile**: Jest setup with `@rnx-kit/jest-preset`
+
+**Key Patterns:**
+- **Conditional E2E**: Tests marked `#[ignore]` skip when Docker/K8s unavailable
+- **Test Helpers**: See `tests/common/mod.rs` for availability checks, skip macros, cleanup guards
+- **Mocks**: Mock backends (`MockGitBackend`, `MockApiClient`) for testing without external deps
+
+**See [Testing Guide](docs/src/content/docs/reference/testing.md) for comprehensive documentation.**
 
 ## Mise Tasks
 
