@@ -109,7 +109,7 @@ def create_svg(input_file, output_file):
 <svg width="{svg_width}" height="{svg_height}" xmlns="http://www.w3.org/2000/svg">
   <style>
     .terminal {{
-      font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace;
+      font-family: 'Berkeley Mono', 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace;
       font-size: 14px;
       white-space: pre;
     }}
