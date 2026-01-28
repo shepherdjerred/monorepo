@@ -1,6 +1,10 @@
 import path from "path";
 
 export default {
+  "**/package.json": () => {
+    // Verify lockfile is up to date when package.json changes
+    return ["bun install --frozen-lockfile"];
+  },
   "packages/*/src/**/*.{ts,tsx,js,jsx}": (filenames) => {
     // Group files by package
     const packageMap = new Map();
