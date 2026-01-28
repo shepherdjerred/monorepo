@@ -133,7 +133,28 @@ fn get_or_download_font() -> Result<Vec<u8>, Box<dyn std::error::Error>> {
     use std::fs;
     use std::path::PathBuf;
 
-    // Check for embedded font first
+    // Try Berkeley Mono first (user's preferred font)
+    let berkeley_mono_paths = [
+        // User fonts directory (Linux)
+        dirs::home_dir().map(|h| h.join(".local/share/fonts/BerkeleyMono-Regular.otf")),
+        dirs::home_dir().map(|h| h.join(".fonts/BerkeleyMono-Regular.otf")),
+        // System fonts (macOS)
+        Some(PathBuf::from("/Library/Fonts/BerkeleyMono-Regular.otf")),
+        dirs::home_dir().map(|h| h.join("Library/Fonts/BerkeleyMono-Regular.otf")),
+        // Common user locations
+        dirs::home_dir().map(|h| h.join(".local/share/fonts/berkeley-mono/BerkeleyMono-Regular.otf")),
+    ];
+
+    for path_opt in berkeley_mono_paths {
+        if let Some(path) = path_opt {
+            if path.exists() {
+                println!("Using Berkeley Mono font: {}", path.display());
+                return Ok(fs::read(&path)?);
+            }
+        }
+    }
+
+    // Check for embedded font
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let font_path = manifest_dir.join("assets").join("DejaVuSansMono.ttf");
 

@@ -25,11 +25,13 @@ test.describe('Authentication UI', () => {
     // Wait a bit for any animations
     await page.waitForTimeout(500);
 
-    // Take screenshot of REAL login page
+    // Take screenshot of REAL login page - 1080p high quality
     const screenshotPath = join(__dirname, '..', '..', '..', '..', 'screenshots', 'web', 'login.png');
     await page.screenshot({
       path: screenshotPath,
       fullPage: false,
+      type: 'png',
+      quality: 100,
     });
 
     console.log(`✓ Created login.png from REAL application`);

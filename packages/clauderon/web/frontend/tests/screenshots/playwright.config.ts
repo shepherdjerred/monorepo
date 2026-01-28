@@ -36,11 +36,14 @@ export default defineConfig({
     // Base URL - assumes dev server is running
     baseURL: 'http://localhost:5173',
 
-    // Screenshot settings
-    screenshot: 'only-on-failure',
+    // Screenshot settings - high quality
+    screenshot: {
+      mode: 'only-on-failure',
+      fullPage: false,
+    },
 
-    // Viewport size for screenshots
-    viewport: { width: 1280, height: 720 },
+    // Viewport size for screenshots - 1080p for high quality
+    viewport: { width: 1920, height: 1080 },
 
     // Ignore HTTPS errors for local development
     ignoreHTTPSErrors: true,

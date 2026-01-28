@@ -26,11 +26,13 @@ test.describe('Session Dashboard', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1000);
 
-    // Take screenshot of REAL dashboard
+    // Take screenshot of REAL dashboard - 1080p high quality
     const screenshotPath = join(__dirname, '..', '..', '..', '..', 'screenshots', 'web', 'dashboard.png');
     await page.screenshot({
       path: screenshotPath,
       fullPage: false,
+      type: 'png',
+      quality: 100,
     });
 
     console.log(`✓ Created dashboard.png from REAL application`);
