@@ -61,12 +61,19 @@ generate_svg() {
   <text class="terminal" fill="$FG_COLOR" x="$padding" y="$((padding + 14))">
 EOF
 
-    # Add each line as a tspan element
+    # Add each line as a tspan element with absolute y positions
     local y=$((padding + 14))
+    local first_line=true
     while IFS= read -r line; do
         # Escape XML special characters
         line=$(echo "$line" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/"/\&quot;/g')
-        echo "    <tspan x=\"$padding\" dy=\"${line_height}\">${line}</tspan>" >> "$SCREENSHOTS_DIR/$output_file"
+        if [ "$first_line" = true ]; then
+            echo "    <tspan x=\"$padding\" y=\"$y\">${line}</tspan>" >> "$SCREENSHOTS_DIR/$output_file"
+            first_line=false
+        else
+            echo "    <tspan x=\"$padding\" y=\"$y\">${line}</tspan>" >> "$SCREENSHOTS_DIR/$output_file"
+        fi
+        y=$((y + line_height))
     done < "$temp_file"
 
     cat >> "$SCREENSHOTS_DIR/$output_file" <<EOF

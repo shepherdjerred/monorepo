@@ -6,7 +6,7 @@
 use ab_glyph::{FontRef, PxScale};
 use image::{ImageBuffer, Rgb, RgbImage};
 use imageproc::drawing::draw_text_mut;
-use ratatui::{Terminal, backend::TestBackend};
+use ratatui::{Terminal, backend::TestBackend, style::Color};
 use std::path::PathBuf;
 
 use clauderon::api::MockApiClient;
@@ -22,6 +22,31 @@ const FONT_SIZE: f32 = 14.0;
 // Colors (VS Code Dark+ theme)
 const BG_COLOR: Rgb<u8> = Rgb([30, 30, 30]); // #1E1E1E
 const FG_COLOR: Rgb<u8> = Rgb([212, 212, 212]); // #D4D4D4
+
+/// Convert ratatui Color to RGB
+fn ratatui_color_to_rgb(color: Color) -> Rgb<u8> {
+    match color {
+        Color::Reset => FG_COLOR,
+        Color::Black => Rgb([0, 0, 0]),
+        Color::Red => Rgb([205, 49, 49]),
+        Color::Green => Rgb([13, 188, 121]),
+        Color::Yellow => Rgb([229, 229, 16]),
+        Color::Blue => Rgb([36, 114, 200]),
+        Color::Magenta => Rgb([188, 63, 188]),
+        Color::Cyan => Rgb([17, 168, 205]),
+        Color::Gray => Rgb([102, 102, 102]),
+        Color::DarkGray => Rgb([102, 102, 102]),
+        Color::LightRed => Rgb([241, 76, 76]),
+        Color::LightGreen => Rgb([35, 209, 139]),
+        Color::LightYellow => Rgb([245, 245, 67]),
+        Color::LightBlue => Rgb([59, 142, 234]),
+        Color::LightMagenta => Rgb([214, 112, 214]),
+        Color::LightCyan => Rgb([41, 184, 219]),
+        Color::White => Rgb([229, 229, 229]),
+        Color::Rgb(r, g, b) => Rgb([r, g, b]),
+        Color::Indexed(_) => FG_COLOR, // Fallback for indexed colors
+    }
+}
 
 /// Convert a ratatui TestBackend buffer to a PNG image
 #[allow(clippy::cast_possible_truncation, clippy::cast_possible_wrap)]
@@ -53,10 +78,13 @@ fn buffer_to_png(
                         let px_x = x * CHAR_WIDTH;
                         let px_y = y * CHAR_HEIGHT;
 
+                        // Extract color from cell
+                        let color = ratatui_color_to_rgb(cell.fg);
+
                         // Draw text (character by character)
                         draw_text_mut(
                             &mut img,
-                            FG_COLOR,
+                            color,
                             px_x as i32,
                             px_y as i32,
                             scale,
@@ -79,9 +107,12 @@ fn buffer_to_png(
                         let px_x = x * CHAR_WIDTH;
                         let px_y = y * CHAR_HEIGHT;
 
+                        // Extract color from cell
+                        let color = ratatui_color_to_rgb(cell.fg);
+
                         for dy in 0..CHAR_HEIGHT {
                             for dx in 0..CHAR_WIDTH / 2 {
-                                img.put_pixel(px_x + dx, px_y + dy, FG_COLOR);
+                                img.put_pixel(px_x + dx, px_y + dy, color);
                             }
                         }
                     }
