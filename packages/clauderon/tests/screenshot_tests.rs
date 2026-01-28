@@ -29,8 +29,8 @@ fn buffer_to_png(
     buffer: &ratatui::buffer::Buffer,
     output_path: &PathBuf,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let width = buffer.area.width as u32;
-    let height = buffer.area.height as u32;
+    let width = u32::from(buffer.area.width);
+    let height = u32::from(buffer.area.height);
 
     // Create image with calculated dimensions
     let img_width = width * CHAR_WIDTH;
