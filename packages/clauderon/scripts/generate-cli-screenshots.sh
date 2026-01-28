@@ -175,9 +175,27 @@ echo "=============================="
 echo ""
 
 # Generate screenshots from ACTUAL clauderon commands
+
+# Main help and version
 generate_svg "$CLAUDERON --help" "clauderon-help.svg"
+generate_svg "$CLAUDERON --version" "clauderon-version.svg"
+
+# Session management
 generate_svg "$CLAUDERON list" "clauderon-list.svg"
+generate_svg "$CLAUDERON list --archived" "clauderon-list-archived.svg"
 generate_svg "$CLAUDERON create --help" "clauderon-create-help.svg"
+generate_svg "$CLAUDERON attach --help" "clauderon-attach-help.svg"
+generate_svg "$CLAUDERON archive --help" "clauderon-archive-help.svg"
+generate_svg "$CLAUDERON delete --help" "clauderon-delete-help.svg"
+
+# Daemon and TUI
+generate_svg "$CLAUDERON daemon --help" "clauderon-daemon-help.svg"
+generate_svg "$CLAUDERON tui --help" "clauderon-tui-help.svg"
+
+# Config and utilities
+generate_svg "$CLAUDERON config" "clauderon-config.svg"
+generate_svg "$CLAUDERON reconcile --help" "clauderon-reconcile-help.svg"
+generate_svg "$CLAUDERON clean-cache --help" "clauderon-clean-cache-help.svg"
 
 echo ""
 echo "✓ All CLI screenshots generated in $SCREENSHOTS_DIR"
