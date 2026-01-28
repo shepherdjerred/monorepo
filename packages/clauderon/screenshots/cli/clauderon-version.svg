@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="400" height="100" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .terminal {
+      font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace;
+      font-size: 14px;
+      white-space: pre;
+    }
+  </style>
+  <rect width="100%" height="100%" fill="#1E1E1E" rx="6"/>
+  <text class="terminal" y="34">
+    <tspan x="20" fill="#D4D4D4">clauderon 0.1.0</tspan>  </text>
+</svg>
