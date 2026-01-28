@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="456" height="860" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .terminal {
+      font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace;
+      font-size: 14px;
+      white-space: pre;
+    }
+  </style>
+  <rect width="100%" height="100%" fill="#1E1E1E" rx="6"/>
+  <text class="terminal" y="34">
+    <tspan x="20" fill="#D4D4D4">customizable-select-component-y100 Archived Docker</tspan>  </text>
+  <text class="terminal" y="54">
+    <tspan x="20" fill="#D4D4D4">session-v4vo                   Archived Docker</tspan>  </text>
+  <text class="terminal" y="74">
+    <tspan x="20" fill="#D4D4D4">check-sccache-status-wne8      Archived Docker</tspan>  </text>
+  <text class="terminal" y="94">
+    <tspan x="20" fill="#D4D4D4">regenerate-toast-notification-luaa Archived Docker</tspan>  </text>
+  <text class="terminal" y="114">
+    <tspan x="20" fill="#D4D4D4">improve-monorepo-selector-ux-m7vv Archived Docker</tspan>  </text>
+  <text class="terminal" y="134">
+    <tspan x="20" fill="#D4D4D4">fix-chat-view-multirepo-t64l   Archived Docker</tspan>  </text>
+  <text class="terminal" y="154">
+    <tspan x="20" fill="#D4D4D4">docs-s3-cloudfront-deploy-sx9y Archived Docker</tspan>  </text>
+  <text class="terminal" y="174">
+    <tspan x="20" fill="#D4D4D4">remove-session-idle-animation-qiet Archived Docker</tspan>  </text>
+  <text class="terminal" y="194">
+    <tspan x="20" fill="#D4D4D4">fix-dagger-cache-release-dw3r  Archived Docker</tspan>  </text>
+  <text class="terminal" y="214">
+    <tspan x="20" fill="#D4D4D4">hide-k8s-backend-flag-hjiw     Archived Docker</tspan>  </text>
+  <text class="terminal" y="234">
+    <tspan x="20" fill="#D4D4D4">multi-repo-toggle-control-eexj Archived Docker</tspan>  </text>
+  <text class="terminal" y="254">
+    <tspan x="20" fill="#D4D4D4">add-workflow-stage-indicators-ixkm Archived Docker</tspan>  </text>
+  <text class="terminal" y="274">
+    <tspan x="20" fill="#D4D4D4">check-sccache-status-b7dh      Archived Docker</tspan>  </text>
+  <text class="terminal" y="294">
+    <tspan x="20" fill="#D4D4D4">token-usage-cost-metrics-vdc6  Archived Docker</tspan>  </text>
+  <text class="terminal" y="314">
+    <tspan x="20" fill="#D4D4D4">fix-pr-434-readonly-jzps       Archived Docker</tspan>  </text>
+  <text class="terminal" y="334">
+    <tspan x="20" fill="#D4D4D4">fix-experimental-models-flag-i85p Archived Docker</tspan>  </text>
+  <text class="terminal" y="354">
+    <tspan x="20" fill="#D4D4D4">fre-progressive-disclosure-j2r0 Archived Docker</tspan>  </text>
+  <text class="terminal" y="374">
+    <tspan x="20" fill="#D4D4D4">hide-experimental-models-cfid  Archived Docker</tspan>  </text>
+  <text class="terminal" y="394">
+    <tspan x="20" fill="#D4D4D4">readonly-mode-flag-wp8g        Archived Docker</tspan>  </text>
+  <text class="terminal" y="414">
+    <tspan x="20" fill="#D4D4D4">progressive-disclosure-sessions-x4y2 Archived Docker</tspan>  </text>
+  <text class="terminal" y="434">
+    <tspan x="20" fill="#D4D4D4">test-monorepo-1vft             Archived Docker</tspan>  </text>
+  <text class="terminal" y="454">
+    <tspan x="20" fill="#D4D4D4">test-claude-functionality-ezde Archived Docker</tspan>  </text>
+  <text class="terminal" y="474">
+    <tspan x="20" fill="#D4D4D4">test-monorepo-suite-vrvh       Archived Sprites</tspan>  </text>
+  <text class="terminal" y="494">
+    <tspan x="20" fill="#D4D4D4">pr-merge-button-prod-zaal      Archived Docker</tspan>  </text>
+  <text class="terminal" y="514">
+    <tspan x="20" fill="#D4D4D4">test-sprite-rendering-9fcy     Archived Sprites</tspan>  </text>
+  <text class="terminal" y="534">
+    <tspan x="20" fill="#D4D4D4">test-codex-integration-7h2h    Archived Docker</tspan>  </text>
+  <text class="terminal" y="554">
+    <tspan x="20" fill="#D4D4D4">add-pr-merge-button-qocx       Archived Docker</tspan>  </text>
+  <text class="terminal" y="574">
+    <tspan x="20" fill="#D4D4D4">fre-progressive-disclosure-j2r0-t7yu Archived Docker</tspan>  </text>
+  <text class="terminal" y="594">
+    <tspan x="20" fill="#D4D4D4">token-usage-cost-metrics-79kd  Archived Docker</tspan>  </text>
+  <text class="terminal" y="614">
+    <tspan x="20" fill="#D4D4D4">hide-experimental-models-prod-enlp Archived Docker</tspan>  </text>
+  <text class="terminal" y="634">
+    <tspan x="20" fill="#D4D4D4">readonly-mode-flag-wp8g-mn62   Archived Docker</tspan>  </text>
+  <text class="terminal" y="654">
+    <tspan x="20" fill="#D4D4D4">prod-progressive-disclosure-rvh6 Archived Docker</tspan>  </text>
+  <text class="terminal" y="674">
+    <tspan x="20" fill="#D4D4D4">fix-k8s-backend-tui-display-o7yr Archived Docker</tspan>  </text>
+  <text class="terminal" y="694">
+    <tspan x="20" fill="#D4D4D4">automate-ui-screenshots-3jrt   Running Docker</tspan>  </text>
+  <text class="terminal" y="714">
+    <tspan x="20" fill="#D4D4D4">audit-docs-pages-vpyx          Running Docker</tspan>  </text>
+  <text class="terminal" y="734">
+    <tspan x="20" fill="#D4D4D4">web-terminal-theme-modes-h95q  Running Docker</tspan>  </text>
+  <text class="terminal" y="754">
+    <tspan x="20" fill="#D4D4D4">add-clauderon-vm-tests-zkb8    Running Docker</tspan>  </text>
+  <text class="terminal" y="774">
+    <tspan x="20" fill="#D4D4D4">document-testing-strategy-84de Running Docker</tspan>  </text>
+  <text class="terminal" y="794">
+    <tspan x="20" fill="#D4D4D4">clauderon-github-integration-uw7p Running Docker</tspan>  </text>
+  <text class="terminal" y="814">
+    <tspan x="20" fill="#D4D4D4">fix-rust-linker-permissions-8br3 Running Docker</tspan>  </text>
+  <text class="terminal" y="834">
+    <tspan x="20" fill="#D4D4D4">setup-colorterm-truecolor-6vei Running Docker</tspan>  </text>
+</svg>
