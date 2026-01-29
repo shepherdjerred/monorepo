@@ -155,6 +155,11 @@ description = "Run Rust tests with nextest (faster, requires cargo-nextest)"
 depends = ["build-docs", "build-web"]
 run = "cargo nextest run"
 
+[tasks.test-config]
+description = "Run fast config isolation tests"
+depends = ["build-docs", "build-web"]
+run = "cargo nextest run --test config_isolation_tests"
+
 [tasks.check]
 description = "Run cargo check"
 depends = ["build-docs", "build-web"]
