@@ -33,6 +33,24 @@ export type StorageClassInfo = {
 }
 
 /**
+ * GitHub issue state filter
+ * TODO: Import from @clauderon/shared after next cargo build
+ */
+export type IssueState = "open" | "closed" | "all";
+
+/**
+ * GitHub issue for display in UI
+ * TODO: Import from @clauderon/shared after next cargo build
+ */
+export type GitHubIssueDto = {
+  number: number;
+  title: string;
+  body: string;
+  url: string;
+  labels: string[];
+}
+
+/**
  * Configuration options for ClauderonClient
  */
 export type ClauderonClientConfig = {
@@ -194,6 +212,19 @@ export class ClauderonClient {
   async getRecentRepos(): Promise<RecentRepoDto[]> {
     const response = await this.request<{ repos: RecentRepoDto[] }>("GET", "/api/recent-repos");
     return response.repos;
+  }
+
+  /**
+   * List GitHub issues for a repository
+   * @param repoPath Path to the git repository
+   * @param state Issue state filter (open, closed, all)
+   */
+  async listGitHubIssues(repoPath: string, state: IssueState = "open"): Promise<GitHubIssueDto[]> {
+    const response = await this.request<{ issues: GitHubIssueDto[] }>("POST", "/api/github/issues", {
+      repo_path: repoPath,
+      state,
+    });
+    return response.issues;
   }
 
   /**
