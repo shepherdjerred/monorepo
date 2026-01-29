@@ -116,6 +116,14 @@ clauderon delete <session-name>
 
 ![TUI Session List](~/assets/screenshots/tui/session-list.png)
 
+When you delete a session, you'll see a confirmation dialog:
+
+![TUI Delete Confirmation](~/assets/screenshots/tui/delete-confirmation.png)
+
+If you don't have any sessions yet, you'll see an empty state:
+
+![TUI Empty Session List](~/assets/screenshots/tui/empty-session-list.png)
+
 ## Example Workflows
 
 ### Bug Fix Session
