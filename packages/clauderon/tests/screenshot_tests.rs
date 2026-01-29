@@ -57,11 +57,14 @@ fn buffer_to_png(
     let width = u32::from(buffer.area.width);
     let height = u32::from(buffer.area.height);
 
-    // Try to load font, fall back to simple rendering if not available
-    let font_result = get_or_download_font();
+    // Try to load fonts
+    let font_result = get_primary_font();
+    let symbol_font_data = get_symbol_font();
 
     if let Ok(font_data) = font_result {
         let font = FontRef::try_from_slice(&font_data)?;
+        let symbol_font = symbol_font_data.as_ref()
+            .and_then(|data| FontRef::try_from_slice(data).ok());
         let scale = PxScale::from(FONT_SIZE);
 
         // Measure actual advance width for a standard monospace character
@@ -87,15 +90,21 @@ fn buffer_to_png(
                         // Extract color from cell
                         let color = ratatui_color_to_rgb(cell.fg);
 
-                        // Check if font has glyph for this character
+                        // Check if primary font has glyph for this character
                         let has_glyph = symbol.chars().all(|c| {
                             scaled_font.glyph_id(c) != ab_glyph::GlyphId(0)
                         });
 
-                        if !has_glyph {
-                            println!("Warning: Font missing glyph for '{}' (U+{:04X})",
-                                symbol, symbol.chars().next().unwrap() as u32);
-                        }
+                        // Choose font: use symbol font if primary is missing glyph
+                        let font_to_use = if !has_glyph {
+                            if let Some(ref sym_font) = symbol_font {
+                                sym_font
+                            } else {
+                                &font
+                            }
+                        } else {
+                            &font
+                        };
 
                         // Draw text (character by character)
                         draw_text_mut(
@@ -104,7 +113,7 @@ fn buffer_to_png(
                             px_x as i32,
                             px_y as i32,
                             scale,
-                            &font,
+                            font_to_use,
                             symbol,
                         );
                     }
@@ -155,12 +164,11 @@ fn buffer_to_png(
     Ok(())
 }
 
-/// Get font data, downloading if necessary
-fn get_or_download_font() -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+/// Get font data (primary font for regular characters)
+fn get_primary_font() -> Result<Vec<u8>, Box<dyn std::error::Error>> {
     use std::fs;
     use std::path::PathBuf;
 
-    // Try Berkeley Mono first
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let berkeley_mono_paths = [
         // User fonts directory (macOS) - check first for full glyph coverage
@@ -184,14 +192,13 @@ fn get_or_download_font() -> Result<Vec<u8>, Box<dyn std::error::Error>> {
     for path_opt in berkeley_mono_paths {
         if let Some(path) = path_opt {
             if path.exists() {
-                println!("Using Berkeley Mono font: {}", path.display());
+                println!("Using primary font (Berkeley Mono): {}", path.display());
                 return Ok(fs::read(&path)?);
             }
         }
     }
 
     // Check for embedded font
-    let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let font_path = manifest_dir.join("assets").join("DejaVuSansMono.ttf");
 
     if font_path.exists() {
@@ -212,6 +219,35 @@ fn get_or_download_font() -> Result<Vec<u8>, Box<dyn std::error::Error>> {
     }
 
     Err("No suitable monospace font found".into())
+}
+
+/// Get fallback font for symbols (Nerd Font)
+fn get_symbol_font() -> Option<Vec<u8>> {
+    use std::fs;
+
+    let symbol_font_paths = [
+        // User fonts directory (macOS)
+        dirs::home_dir().map(|h| h.join("Library/Fonts/SymbolsNerdFontMono-Regular.ttf")),
+        // Common locations
+        dirs::home_dir().map(|h| h.join(".local/share/fonts/SymbolsNerdFontMono-Regular.ttf")),
+        dirs::home_dir().map(|h| h.join(".fonts/SymbolsNerdFontMono-Regular.ttf")),
+    ];
+
+    for path_opt in symbol_font_paths {
+        if let Some(path) = path_opt {
+            if path.exists() {
+                println!("Using symbol fallback font (Nerd Font): {}", path.display());
+                return fs::read(&path).ok();
+            }
+        }
+    }
+
+    None
+}
+
+/// Wrapper for dual-font system (backward compat)
+fn get_or_download_font() -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+    get_primary_font()
 }
 
 /// Helper to get screenshots directory
