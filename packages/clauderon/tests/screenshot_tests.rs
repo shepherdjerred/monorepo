@@ -87,6 +87,16 @@ fn buffer_to_png(
                         // Extract color from cell
                         let color = ratatui_color_to_rgb(cell.fg);
 
+                        // Check if font has glyph for this character
+                        let has_glyph = symbol.chars().all(|c| {
+                            scaled_font.glyph_id(c) != ab_glyph::GlyphId(0)
+                        });
+
+                        if !has_glyph {
+                            println!("Warning: Font missing glyph for '{}' (U+{:04X})",
+                                symbol, symbol.chars().next().unwrap() as u32);
+                        }
+
                         // Draw text (character by character)
                         draw_text_mut(
                             &mut img,
@@ -150,19 +160,20 @@ fn get_or_download_font() -> Result<Vec<u8>, Box<dyn std::error::Error>> {
     use std::fs;
     use std::path::PathBuf;
 
-    // Try Berkeley Mono first (user's preferred font)
+    // Try Berkeley Mono - prioritize system fonts over in-repo version
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let berkeley_mono_paths = [
-        // Project web frontend assets (most likely location)
-        Some(manifest_dir.join("web/frontend/src/assets/fonts/BerkeleyMono-Regular.otf")),
+        // User fonts directory (macOS) - check first for full glyph coverage
+        dirs::home_dir().map(|h| h.join("Library/Fonts/BerkeleyMono-Regular.otf")),
+        // System fonts (macOS)
+        Some(PathBuf::from("/Library/Fonts/BerkeleyMono-Regular.otf")),
         // User fonts directory (Linux)
         dirs::home_dir().map(|h| h.join(".local/share/fonts/BerkeleyMono-Regular.otf")),
         dirs::home_dir().map(|h| h.join(".fonts/BerkeleyMono-Regular.otf")),
-        // System fonts (macOS)
-        Some(PathBuf::from("/Library/Fonts/BerkeleyMono-Regular.otf")),
-        dirs::home_dir().map(|h| h.join("Library/Fonts/BerkeleyMono-Regular.otf")),
         // Common user locations
         dirs::home_dir().map(|h| h.join(".local/share/fonts/berkeley-mono/BerkeleyMono-Regular.otf")),
+        // Project web frontend assets (fallback - may have limited glyphs)
+        Some(manifest_dir.join("web/frontend/src/assets/fonts/BerkeleyMono-Regular.otf")),
     ];
 
     for path_opt in berkeley_mono_paths {
