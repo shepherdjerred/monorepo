@@ -1,0 +1,389 @@
+//! TUI screenshot tests - generates PNG images from TestBackend for documentation
+//!
+//! These tests are marked with `#[ignore]` so they don't run in regular CI.
+//! Run manually with: `cargo test --test screenshot_tests -- --ignored`
+
+use ab_glyph::{Font, FontRef, PxScale, ScaleFont};
+use image::{ImageBuffer, Rgb, RgbImage};
+use imageproc::drawing::draw_text_mut;
+use ratatui::{Terminal, backend::TestBackend, style::Color};
+use std::path::PathBuf;
+
+use clauderon::api::MockApiClient;
+use clauderon::core::{BackendType, SessionStatus};
+use clauderon::tui::app::{App, AppMode, CreateDialogFocus};
+use clauderon::tui::ui;
+
+// Constants for rendering
+const CHAR_WIDTH: u32 = 10; // Width of a monospace character in pixels (fallback, actual width measured from font)
+const CHAR_HEIGHT: u32 = 16; // Height of a monospace character in pixels (tight TUI spacing, no extra line height)
+const FONT_SIZE: f32 = 16.0; // Font size matching terminal rendering
+
+// Colors (VS Code Dark+ theme)
+const BG_COLOR: Rgb<u8> = Rgb([30, 30, 30]); // #1E1E1E
+const FG_COLOR: Rgb<u8> = Rgb([212, 212, 212]); // #D4D4D4
+
+/// Convert ratatui Color to RGB
+fn ratatui_color_to_rgb(color: Color) -> Rgb<u8> {
+    match color {
+        Color::Reset | Color::Indexed(_) => FG_COLOR, // Fallback colors
+        Color::Black => Rgb([0, 0, 0]),
+        Color::Red => Rgb([205, 49, 49]),
+        Color::Green => Rgb([13, 188, 121]),
+        Color::Yellow => Rgb([229, 229, 16]),
+        Color::Blue => Rgb([36, 114, 200]),
+        Color::Magenta => Rgb([188, 63, 188]),
+        Color::Cyan => Rgb([17, 168, 205]),
+        Color::Gray | Color::DarkGray => Rgb([102, 102, 102]),
+        Color::LightRed => Rgb([241, 76, 76]),
+        Color::LightGreen => Rgb([35, 209, 139]),
+        Color::LightYellow => Rgb([245, 245, 67]),
+        Color::LightBlue => Rgb([59, 142, 234]),
+        Color::LightMagenta => Rgb([214, 112, 214]),
+        Color::LightCyan => Rgb([41, 184, 219]),
+        Color::White => Rgb([229, 229, 229]),
+        Color::Rgb(r, g, b) => Rgb([r, g, b]),
+    }
+}
+
+/// Convert a ratatui TestBackend buffer to a PNG image
+#[allow(
+    clippy::cast_possible_truncation,
+    clippy::cast_possible_wrap,
+    clippy::cast_sign_loss
+)]
+fn buffer_to_png(
+    buffer: &ratatui::buffer::Buffer,
+    output_path: &PathBuf,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let width = u32::from(buffer.area.width);
+    let height = u32::from(buffer.area.height);
+
+    // Try to load fonts
+    let font_result = get_primary_font();
+    let symbol_font_data = get_symbol_font();
+
+    if let Ok(font_data) = font_result {
+        let font = FontRef::try_from_slice(&font_data)?;
+        let symbol_font = symbol_font_data
+            .as_ref()
+            .and_then(|data| FontRef::try_from_slice(data).ok());
+        let scale = PxScale::from(FONT_SIZE);
+
+        // Measure actual advance width for a standard monospace character
+        let scaled_font = font.as_scaled(scale);
+        let test_glyph = scaled_font.scaled_glyph('M');
+        let actual_advance = scaled_font.h_advance(test_glyph.id);
+        let char_advance = actual_advance.ceil().max(0.0) as u32;
+
+        // Create image with dimensions based on actual font metrics
+        let img_width = width * char_advance;
+        let img_height = height * CHAR_HEIGHT;
+        let mut img: RgbImage = ImageBuffer::from_pixel(img_width, img_height, BG_COLOR);
+
+        // Render each character from the buffer using the font
+        for y in 0..height {
+            for x in 0..width {
+                if let Some(cell) = buffer.cell((x as u16, y as u16)) {
+                    let symbol = cell.symbol();
+                    if !symbol.is_empty() && symbol != " " {
+                        let px_x = x * char_advance;
+                        let px_y = y * CHAR_HEIGHT;
+
+                        // Extract color from cell
+                        let color = ratatui_color_to_rgb(cell.fg);
+
+                        // Check if primary font has glyph for this character
+                        let has_glyph = symbol
+                            .chars()
+                            .all(|c| scaled_font.glyph_id(c) != ab_glyph::GlyphId(0));
+
+                        // Choose font: use symbol font if primary is missing glyph
+                        let font_to_use = if !has_glyph {
+                            if let Some(ref sym_font) = symbol_font {
+                                sym_font
+                            } else {
+                                &font
+                            }
+                        } else {
+                            &font
+                        };
+
+                        // Draw text (character by character)
+                        draw_text_mut(
+                            &mut img,
+                            color,
+                            px_x as i32,
+                            px_y as i32,
+                            scale,
+                            font_to_use,
+                            symbol,
+                        );
+                    }
+                }
+            }
+        }
+
+        // Save PNG
+        img.save(output_path)?;
+        println!(
+            "✓ Created {} ({}x{}, char width: {}px)",
+            output_path.display(),
+            img_width,
+            img_height,
+            char_advance
+        );
+    } else {
+        // Fallback: simple block rendering (no actual font rendering)
+        println!("Warning: Font not available, using simple block rendering");
+
+        // Create image with fallback dimensions
+        let img_width = width * CHAR_WIDTH;
+        let img_height = height * CHAR_HEIGHT;
+        let mut img: RgbImage = ImageBuffer::from_pixel(img_width, img_height, BG_COLOR);
+
+        for y in 0..height {
+            for x in 0..width {
+                if let Some(cell) = buffer.cell((x as u16, y as u16)) {
+                    let symbol = cell.symbol();
+                    if !symbol.is_empty() && symbol != " " {
+                        // Draw a simple rectangle for each character
+                        let px_x = x * CHAR_WIDTH;
+                        let px_y = y * CHAR_HEIGHT;
+
+                        // Extract color from cell
+                        let color = ratatui_color_to_rgb(cell.fg);
+
+                        for dy in 0..CHAR_HEIGHT {
+                            for dx in 0..CHAR_WIDTH / 2 {
+                                img.put_pixel(px_x + dx, px_y + dy, color);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Save PNG
+        img.save(output_path)?;
+        println!("✓ Created {} (fallback mode)", output_path.display());
+    }
+
+    Ok(())
+}
+
+/// Get font data (primary font for regular characters)
+fn get_primary_font() -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+    use std::fs;
+    use std::path::PathBuf;
+
+    let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let berkeley_mono_paths = [
+        // User fonts directory (macOS) - check first for full glyph coverage
+        dirs::home_dir().map(|h| h.join("Library/Fonts/BerkeleyMono-Regular.ttf")),
+        dirs::home_dir().map(|h| h.join("Library/Fonts/BerkeleyMono-Regular.otf")),
+        // System fonts (macOS)
+        Some(PathBuf::from("/Library/Fonts/BerkeleyMono-Regular.ttf")),
+        Some(PathBuf::from("/Library/Fonts/BerkeleyMono-Regular.otf")),
+        // User fonts directory (Linux)
+        dirs::home_dir().map(|h| h.join(".local/share/fonts/BerkeleyMono-Regular.ttf")),
+        dirs::home_dir().map(|h| h.join(".local/share/fonts/BerkeleyMono-Regular.otf")),
+        dirs::home_dir().map(|h| h.join(".fonts/BerkeleyMono-Regular.ttf")),
+        dirs::home_dir().map(|h| h.join(".fonts/BerkeleyMono-Regular.otf")),
+        // Common user locations
+        dirs::home_dir()
+            .map(|h| h.join(".local/share/fonts/berkeley-mono/BerkeleyMono-Regular.ttf")),
+        dirs::home_dir()
+            .map(|h| h.join(".local/share/fonts/berkeley-mono/BerkeleyMono-Regular.otf")),
+        // Project web frontend assets (fallback - may have limited glyphs)
+        Some(manifest_dir.join("web/frontend/src/assets/fonts/BerkeleyMono-Regular.otf")),
+    ];
+
+    for path in berkeley_mono_paths.into_iter().flatten() {
+        if path.exists() {
+            println!("Using primary font (Berkeley Mono): {}", path.display());
+            return Ok(fs::read(&path)?);
+        }
+    }
+
+    // Check for embedded font
+    let font_path = manifest_dir.join("assets").join("DejaVuSansMono.ttf");
+
+    if font_path.exists() {
+        return Ok(fs::read(&font_path)?);
+    }
+
+    // Try to find system font
+    let system_fonts = [
+        "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf",
+        "/System/Library/Fonts/Monaco.ttf",
+        "/System/Library/Fonts/Menlo.ttc",
+    ];
+
+    for path in &system_fonts {
+        if std::path::Path::new(path).exists() {
+            return Ok(fs::read(path)?);
+        }
+    }
+
+    Err("No suitable monospace font found".into())
+}
+
+/// Get fallback font for symbols (Nerd Font)
+fn get_symbol_font() -> Option<Vec<u8>> {
+    use std::fs;
+
+    let symbol_font_paths = [
+        // User fonts directory (macOS)
+        dirs::home_dir().map(|h| h.join("Library/Fonts/SymbolsNerdFontMono-Regular.ttf")),
+        // Common locations
+        dirs::home_dir().map(|h| h.join(".local/share/fonts/SymbolsNerdFontMono-Regular.ttf")),
+        dirs::home_dir().map(|h| h.join(".fonts/SymbolsNerdFontMono-Regular.ttf")),
+    ];
+
+    for path in symbol_font_paths.into_iter().flatten() {
+        if path.exists() {
+            println!("Using symbol fallback font (Nerd Font): {}", path.display());
+            return fs::read(&path).ok();
+        }
+    }
+
+    None
+}
+
+/// Wrapper for dual-font system (backward compat)
+fn get_or_download_font() -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+    get_primary_font()
+}
+
+/// Helper to get screenshots directory
+fn screenshots_dir() -> PathBuf {
+    let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    path.push("screenshots");
+    path.push("tui");
+    std::fs::create_dir_all(&path).unwrap();
+    path
+}
+
+// ============================================================================
+// Screenshot Generation Tests
+// ============================================================================
+
+/// Generate screenshot of session list with sample data
+#[tokio::test]
+#[ignore] // Run manually with --ignored flag
+async fn generate_session_list_screenshot() {
+    let backend = TestBackend::new(100, 30);
+    let mut terminal = Terminal::new(backend).unwrap();
+
+    let mut app = App::new();
+    let mock = MockApiClient::new();
+
+    // Add sample sessions
+    let s1 = MockApiClient::create_mock_session("dev-environment", SessionStatus::Running);
+    let s2 = MockApiClient::create_mock_session("test-suite", SessionStatus::Idle);
+    let s3 = MockApiClient::create_mock_session("prod-debug", SessionStatus::Running);
+    mock.add_session(s1).await;
+    mock.add_session(s2).await;
+    mock.add_session(s3).await;
+
+    app.set_client(Box::new(mock));
+    app.refresh_sessions().await.unwrap();
+
+    // Render
+    terminal.draw(|frame| ui::render(frame, &app)).unwrap();
+
+    // Convert to PNG
+    let buffer = terminal.backend().buffer();
+    let output_path = screenshots_dir().join("session-list.png");
+    buffer_to_png(buffer, &output_path).unwrap();
+}
+
+/// Generate screenshot of create session dialog
+#[tokio::test]
+#[ignore]
+async fn generate_create_dialog_screenshot() {
+    let backend = TestBackend::new(100, 35);
+    let mut terminal = Terminal::new(backend).unwrap();
+
+    let mut app = App::new();
+    app.open_create_dialog();
+
+    // Fill in some sample data to show what the dialog looks like
+    app.create_dialog.prompt = "Implement user authentication".to_string();
+    app.create_dialog.repo_path = "/Users/dev/myproject".to_string();
+    app.create_dialog.base_branch = "main".to_string();
+    app.create_dialog.backend = BackendType::Docker;
+    app.create_dialog.focus = CreateDialogFocus::Prompt;
+
+    // Render
+    terminal.draw(|frame| ui::render(frame, &app)).unwrap();
+
+    // Convert to PNG
+    let buffer = terminal.backend().buffer();
+    let output_path = screenshots_dir().join("create-dialog.png");
+    buffer_to_png(buffer, &output_path).unwrap();
+}
+
+/// Generate screenshot of help screen
+#[test]
+#[ignore]
+fn generate_help_screen_screenshot() {
+    let backend = TestBackend::new(100, 30);
+    let mut terminal = Terminal::new(backend).unwrap();
+
+    let mut app = App::new();
+    app.mode = AppMode::Help;
+
+    // Render
+    terminal.draw(|frame| ui::render(frame, &app)).unwrap();
+
+    // Convert to PNG
+    let buffer = terminal.backend().buffer();
+    let output_path = screenshots_dir().join("help-screen.png");
+    buffer_to_png(buffer, &output_path).unwrap();
+}
+
+/// Generate screenshot of empty session list
+#[test]
+#[ignore]
+fn generate_empty_session_list_screenshot() {
+    let backend = TestBackend::new(100, 25);
+    let mut terminal = Terminal::new(backend).unwrap();
+
+    let app = App::new();
+
+    // Render
+    terminal.draw(|frame| ui::render(frame, &app)).unwrap();
+
+    // Convert to PNG
+    let buffer = terminal.backend().buffer();
+    let output_path = screenshots_dir().join("empty-session-list.png");
+    buffer_to_png(buffer, &output_path).unwrap();
+}
+
+/// Generate screenshot of delete confirmation dialog
+#[tokio::test]
+#[ignore]
+async fn generate_delete_confirmation_screenshot() {
+    let backend = TestBackend::new(100, 30);
+    let mut terminal = Terminal::new(backend).unwrap();
+
+    let mut app = App::new();
+    let mock = MockApiClient::new();
+
+    let session = MockApiClient::create_mock_session("old-session", SessionStatus::Idle);
+    mock.add_session(session).await;
+
+    app.set_client(Box::new(mock));
+    app.refresh_sessions().await.unwrap();
+    app.open_delete_confirm();
+
+    // Render
+    terminal.draw(|frame| ui::render(frame, &app)).unwrap();
+
+    // Convert to PNG
+    let buffer = terminal.backend().buffer();
+    let output_path = screenshots_dir().join("delete-confirmation.png");
+    buffer_to_png(buffer, &output_path).unwrap();
+}

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="952" height="460" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .terminal {
+      font-family: 'Berkeley Mono', 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace;
+      font-size: 14px;
+      white-space: pre;
+    }
+  </style>
+  <rect width="100%" height="100%" fill="#1E1E1E" rx="6"/>
+  <text class="terminal" y="34">
+    <tspan x="20" fill="#D4D4D4">Launch the terminal UI</tspan>  </text>
+  <text class="terminal" y="74">
+    <tspan x="20" fill="#D4D4D4">Interactive terminal interface for managing sessions. Provides real-time session status, creation, and attachment.</tspan>  </text>
+  <text class="terminal" y="114">
+    <tspan x="20" fill="#D4D4D4">Usage: clauderon tui</tspan>  </text>
+  <text class="terminal" y="154">
+    <tspan x="20" fill="#D4D4D4">Options:</tspan>  </text>
+  <text class="terminal" y="174">
+    <tspan x="20" fill="#D4D4D4">  -h, --help</tspan>  </text>
+  <text class="terminal" y="194">
+    <tspan x="20" fill="#D4D4D4">          Print help (see a summary with &#x27;-h&#x27;)</tspan>  </text>
+  <text class="terminal" y="234">
+    <tspan x="20" fill="#D4D4D4">EXAMPLES:</tspan>  </text>
+  <text class="terminal" y="254">
+    <tspan x="20" fill="#D4D4D4">    # Launch the TUI</tspan>  </text>
+  <text class="terminal" y="274">
+    <tspan x="20" fill="#D4D4D4">    clauderon tui</tspan>  </text>
+  <text class="terminal" y="314">
+    <tspan x="20" fill="#D4D4D4">KEYBOARD SHORTCUTS:</tspan>  </text>
+  <text class="terminal" y="334">
+    <tspan x="20" fill="#D4D4D4">    q           Quit</tspan>  </text>
+  <text class="terminal" y="354">
+    <tspan x="20" fill="#D4D4D4">    j/k         Navigate up/down</tspan>  </text>
+  <text class="terminal" y="374">
+    <tspan x="20" fill="#D4D4D4">    Enter       Attach to selected session</tspan>  </text>
+  <text class="terminal" y="394">
+    <tspan x="20" fill="#D4D4D4">    n           Create new session</tspan>  </text>
+  <text class="terminal" y="414">
+    <tspan x="20" fill="#D4D4D4">    a           Archive selected session</tspan>  </text>
+  <text class="terminal" y="434">
+    <tspan x="20" fill="#D4D4D4">    d           Delete selected session</tspan>  </text>
+</svg>
