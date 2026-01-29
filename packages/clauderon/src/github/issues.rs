@@ -67,7 +67,7 @@ pub async fn fetch_issues(repo_path: &Path, state: IssueState) -> anyhow::Result
         .with_context(|| format!("Failed to parse gh issue list JSON: {}", json_output))?;
 
     // Convert to our issue format
-    let issues = raw_issues
+    let issues: Vec<GitHubIssue> = raw_issues
         .into_iter()
         .map(|raw| GitHubIssue {
             number: raw.number,
