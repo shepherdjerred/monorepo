@@ -47,7 +47,11 @@ fn ratatui_color_to_rgb(color: Color) -> Rgb<u8> {
 }
 
 /// Convert a ratatui TestBackend buffer to a PNG image
-#[allow(clippy::cast_possible_truncation, clippy::cast_possible_wrap)]
+#[allow(
+    clippy::cast_possible_truncation,
+    clippy::cast_possible_wrap,
+    clippy::cast_sign_loss
+)]
 fn buffer_to_png(
     buffer: &ratatui::buffer::Buffer,
     output_path: &PathBuf,
@@ -70,7 +74,7 @@ fn buffer_to_png(
         let scaled_font = font.as_scaled(scale);
         let test_glyph = scaled_font.scaled_glyph('M');
         let actual_advance = scaled_font.h_advance(test_glyph.id);
-        let char_advance = actual_advance.max(0.0).ceil() as u32;
+        let char_advance = actual_advance.ceil().max(0.0) as u32;
 
         // Create image with dimensions based on actual font metrics
         let img_width = width * char_advance;
