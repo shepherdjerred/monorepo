@@ -84,6 +84,7 @@ export default defineConfig({
             { label: "Feature Flags", slug: "reference/feature-flags" },
             { label: "Feature Parity", slug: "reference/feature-parity" },
             { label: "Test Coverage", slug: "reference/test-coverage" },
+            { label: "Testing", slug: "reference/testing" },
           ],
         },
       ],
