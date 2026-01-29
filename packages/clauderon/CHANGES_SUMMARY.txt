@@ -1,0 +1,18 @@
+# GitHub Auto-Code Integration - Changes Summary
+
+## Files Modified (7)
+1. src/feature_flags.rs - Added enable_auto_code flag
+2. src/core/session.rs - Added GitHub issue tracking fields  
+3. src/store/sqlite.rs - Migration v18 for new columns
+4. src/api/protocol.rs - Added issue DTOs and API types
+5. src/api/handlers.rs - Added ListGitHubIssues handler
+6. src/agents/mod.rs - Exported auto_code_instructions
+7. src/lib.rs - Added github module
+
+## Files Created (4)
+1. src/github/mod.rs - GitHub module exports
+2. src/github/issues.rs - Issue fetching via gh CLI
+3. src/agents/instructions.rs - Autonomous workflow instructions
+4. AUTO_CODE_IMPLEMENTATION_STATUS.md - Implementation tracking
+
+## Code Statistics

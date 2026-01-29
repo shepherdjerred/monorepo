@@ -138,12 +138,24 @@ Starting implementation phase...
     )
 }
 
-/// Escape a string for safe inclusion in shell commands
-/// Handles quotes, newlines, and special characters
+/// Escape a string for safe inclusion in shell commands and markdown
+///
+/// This function escapes characters that could be problematic in shell contexts
+/// or markdown formatting. Since these instructions are primarily for Claude to
+/// read and understand (not direct shell execution), we focus on:
+/// - Single quotes (most common issue in shell strings)
+/// - Newlines/carriage returns (break command structure)
+/// - Backticks (markdown code blocks, shell command substitution)
+/// - Dollar signs (shell variable expansion)
+///
+/// Other characters like ", \, !, # are generally safe in the markdown/prompt
+/// context where these instructions are used.
 fn escape_for_shell(s: &str) -> String {
     s.replace('\'', "'\\''")
         .replace('\n', " ")
         .replace('\r', "")
+        .replace('`', "\\`")
+        .replace('$', "\\$")
 }
 
 #[cfg(test)]
@@ -182,6 +194,8 @@ mod tests {
         assert_eq!(escape_for_shell("with'quote"), "with'\\''quote");
         assert_eq!(escape_for_shell("line1\nline2"), "line1 line2");
         assert_eq!(escape_for_shell("has\r\nwindows"), "has windows");
+        assert_eq!(escape_for_shell("with`backtick"), "with\\`backtick");
+        assert_eq!(escape_for_shell("$variable"), "\\$variable");
     }
 
     #[test]

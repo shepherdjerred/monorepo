@@ -152,6 +152,16 @@ pub enum IssueState {
     All,
 }
 
+impl std::fmt::Display for IssueState {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Open => write!(f, "open"),
+            Self::Closed => write!(f, "closed"),
+            Self::All => write!(f, "all"),
+        }
+    }
+}
+
 /// GitHub issue for display in UI
 #[typeshare]
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -294,10 +304,9 @@ pub struct CreateSessionRequest {
     /// If not specified, uses cluster default or config file setting.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub storage_class: Option<String>,
-
-    /// GitHub issue number to link to this session (for auto-code workflow)
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub github_issue_number: Option<u32>,
+    // Note: github_issue_number will be added when session creation wiring is implemented
+    // in a future PR (Phase 4 completion). For now, issue selection is available via the
+    // ListGitHubIssues API, but not yet integrated into session creation flow.
 }
 
 /// Default to plan mode for safety - allows users to explore and understand

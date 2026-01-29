@@ -1,29 +1,10 @@
 use anyhow::Context;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use std::path::Path;
 use tracing::instrument;
 
-/// GitHub issue state filter
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
-pub enum IssueState {
-    /// Only open issues
-    Open,
-    /// Only closed issues
-    Closed,
-    /// All issues
-    All,
-}
-
-impl std::fmt::Display for IssueState {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Open => write!(f, "open"),
-            Self::Closed => write!(f, "closed"),
-            Self::All => write!(f, "all"),
-        }
-    }
-}
+// Re-export IssueState from protocol to avoid duplication
+pub use crate::api::protocol::IssueState;
 
 /// A GitHub issue with essential metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -158,10 +139,5 @@ mod tests {
         assert_eq!(raw_issues.len(), 0);
     }
 
-    #[test]
-    fn test_issue_state_display() {
-        assert_eq!(IssueState::Open.to_string(), "open");
-        assert_eq!(IssueState::Closed.to_string(), "closed");
-        assert_eq!(IssueState::All.to_string(), "all");
-    }
+    // Note: IssueState display test moved to src/api/protocol.rs
 }
