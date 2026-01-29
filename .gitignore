@@ -24,3 +24,4 @@ packages/birmel/prisma/data/
 /.local/
 /.npm/
 /.rustup/
+.config/
