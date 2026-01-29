@@ -5,7 +5,7 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-DOCS_DIR="$(cd "$PROJECT_DIR/../.." && pwd)/docs"
+DOCS_DIR="$PROJECT_DIR/docs"
 
 SCREENSHOTS_SRC="$PROJECT_DIR/screenshots"
 SCREENSHOTS_DEST="$DOCS_DIR/src/assets/screenshots"
