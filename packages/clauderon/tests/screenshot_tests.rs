@@ -26,7 +26,7 @@ const FG_COLOR: Rgb<u8> = Rgb([212, 212, 212]); // #D4D4D4
 /// Convert ratatui Color to RGB
 fn ratatui_color_to_rgb(color: Color) -> Rgb<u8> {
     match color {
-        Color::Reset => FG_COLOR,
+        Color::Reset | Color::Indexed(_) => FG_COLOR, // Fallback colors
         Color::Black => Rgb([0, 0, 0]),
         Color::Red => Rgb([205, 49, 49]),
         Color::Green => Rgb([13, 188, 121]),
@@ -34,8 +34,7 @@ fn ratatui_color_to_rgb(color: Color) -> Rgb<u8> {
         Color::Blue => Rgb([36, 114, 200]),
         Color::Magenta => Rgb([188, 63, 188]),
         Color::Cyan => Rgb([17, 168, 205]),
-        Color::Gray => Rgb([102, 102, 102]),
-        Color::DarkGray => Rgb([102, 102, 102]),
+        Color::Gray | Color::DarkGray => Rgb([102, 102, 102]),
         Color::LightRed => Rgb([241, 76, 76]),
         Color::LightGreen => Rgb([35, 209, 139]),
         Color::LightYellow => Rgb([245, 245, 67]),
@@ -44,7 +43,6 @@ fn ratatui_color_to_rgb(color: Color) -> Rgb<u8> {
         Color::LightCyan => Rgb([41, 184, 219]),
         Color::White => Rgb([229, 229, 229]),
         Color::Rgb(r, g, b) => Rgb([r, g, b]),
-        Color::Indexed(_) => FG_COLOR, // Fallback for indexed colors
     }
 }
 
@@ -72,7 +70,7 @@ fn buffer_to_png(
         let scaled_font = font.as_scaled(scale);
         let test_glyph = scaled_font.scaled_glyph('M');
         let actual_advance = scaled_font.h_advance(test_glyph.id);
-        let char_advance = actual_advance.ceil() as u32;
+        let char_advance = actual_advance.max(0.0).ceil() as u32;
 
         // Create image with dimensions based on actual font metrics
         let img_width = width * char_advance;
@@ -197,12 +195,10 @@ fn get_primary_font() -> Result<Vec<u8>, Box<dyn std::error::Error>> {
         Some(manifest_dir.join("web/frontend/src/assets/fonts/BerkeleyMono-Regular.otf")),
     ];
 
-    for path_opt in berkeley_mono_paths {
-        if let Some(path) = path_opt {
-            if path.exists() {
-                println!("Using primary font (Berkeley Mono): {}", path.display());
-                return Ok(fs::read(&path)?);
-            }
+    for path in berkeley_mono_paths.into_iter().flatten() {
+        if path.exists() {
+            println!("Using primary font (Berkeley Mono): {}", path.display());
+            return Ok(fs::read(&path)?);
         }
     }
 
@@ -241,12 +237,10 @@ fn get_symbol_font() -> Option<Vec<u8>> {
         dirs::home_dir().map(|h| h.join(".fonts/SymbolsNerdFontMono-Regular.ttf")),
     ];
 
-    for path_opt in symbol_font_paths {
-        if let Some(path) = path_opt {
-            if path.exists() {
-                println!("Using symbol fallback font (Nerd Font): {}", path.display());
-                return fs::read(&path).ok();
-            }
+    for path in symbol_font_paths.into_iter().flatten() {
+        if path.exists() {
+            println!("Using symbol fallback font (Nerd Font): {}", path.display());
+            return fs::read(&path).ok();
         }
     }
 
