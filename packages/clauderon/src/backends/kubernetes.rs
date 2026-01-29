@@ -975,6 +975,13 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
             ..Default::default()
         });
 
+        // Enable 24-bit truecolor support for Claude Code terminal output
+        env.push(EnvVar {
+            name: "COLORTERM".to_string(),
+            value: Some("truecolor".to_string()),
+            ..Default::default()
+        });
+
         // Build agent command
         // Build a wrapper script that handles both initial creation and pod restart:
         // - On first run: session file doesn't exist → create new session with prompt
