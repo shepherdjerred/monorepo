@@ -274,6 +274,12 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
         return Ok(());
     }
 
+    // If GitHub issue picker is active, handle its events first
+    if app.create_dialog.github_issue_picker.is_active {
+        handle_github_issue_picker_key(app, key).await?;
+        return Ok(());
+    }
+
     // Handle Ctrl+E for opening external editor when Prompt is focused
     if key.modifiers.contains(KeyModifiers::CONTROL)
         && key.code == KeyCode::Char('e')
@@ -337,9 +343,17 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
         KeyCode::Tab => {
             // Cycle through fields (K8s-specific fields only shown when K8s backend selected)
             let is_k8s = app.create_dialog.backend == crate::core::BackendType::Kubernetes;
+            let show_github_issue = app.create_dialog.feature_flags.enable_auto_code;
             app.create_dialog.focus = match app.create_dialog.focus {
                 CreateDialogFocus::Prompt => CreateDialogFocus::RepoPath,
-                CreateDialogFocus::RepoPath => CreateDialogFocus::BaseBranch,
+                CreateDialogFocus::RepoPath => {
+                    if show_github_issue {
+                        CreateDialogFocus::GitHubIssue
+                    } else {
+                        CreateDialogFocus::BaseBranch
+                    }
+                }
+                CreateDialogFocus::GitHubIssue => CreateDialogFocus::BaseBranch,
                 CreateDialogFocus::BaseBranch => CreateDialogFocus::Backend,
                 CreateDialogFocus::Backend => CreateDialogFocus::Agent,
                 CreateDialogFocus::Agent => CreateDialogFocus::Model,
@@ -363,10 +377,19 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
         KeyCode::BackTab => {
             // Cycle backwards (K8s-specific fields only shown when K8s backend selected)
             let is_k8s = app.create_dialog.backend == crate::core::BackendType::Kubernetes;
+            let show_github_issue = app.create_dialog.feature_flags.enable_auto_code;
             app.create_dialog.focus = match app.create_dialog.focus {
                 CreateDialogFocus::Prompt => CreateDialogFocus::Buttons,
                 CreateDialogFocus::RepoPath => CreateDialogFocus::Prompt,
-                CreateDialogFocus::BaseBranch => CreateDialogFocus::RepoPath,
+                CreateDialogFocus::GitHubIssue => CreateDialogFocus::RepoPath,
+                CreateDialogFocus::BaseBranch => {
+                    if show_github_issue {
+                        CreateDialogFocus::GitHubIssue
+                    } else {
+                        CreateDialogFocus::RepoPath
+                    }
+                }
+
                 CreateDialogFocus::Backend => CreateDialogFocus::BaseBranch,
                 CreateDialogFocus::Agent => CreateDialogFocus::Backend,
                 CreateDialogFocus::Model => CreateDialogFocus::Agent,
@@ -525,6 +548,30 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                     Some(crate::utils::expand_tilde(&app.create_dialog.repo_path))
                 };
                 app.create_dialog.directory_picker.open(initial_path);
+            }
+            CreateDialogFocus::GitHubIssue => {
+                // Open GitHub issue picker and load issues
+                if !app.create_dialog.repo_path.is_empty() {
+                    app.create_dialog.github_issue_picker.is_active = true;
+                    app.create_dialog.github_issue_picker.loading = true;
+                    app.create_dialog.github_issue_picker.error = None;
+
+                    // Fetch issues from GitHub
+                    let repo_path = std::path::PathBuf::from(&app.create_dialog.repo_path);
+                    match crate::github::fetch_issues(&repo_path, crate::github::IssueState::Open)
+                        .await
+                    {
+                        Ok(issues) => {
+                            app.create_dialog.github_issue_picker.load_issues(issues);
+                            app.create_dialog.github_issue_picker.loading = false;
+                        }
+                        Err(e) => {
+                            app.create_dialog.github_issue_picker.error =
+                                Some(format!("Failed to fetch issues: {}", e));
+                            app.create_dialog.github_issue_picker.loading = false;
+                        }
+                    }
+                }
             }
             _ => {}
         },
@@ -815,6 +862,41 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
             }
             _ => {}
         },
+        _ => {}
+    }
+    Ok(())
+}
+
+async fn handle_github_issue_picker_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
+    let picker = &mut app.create_dialog.github_issue_picker;
+
+    match key.code {
+        KeyCode::Esc => {
+            picker.is_active = false;
+        }
+        KeyCode::Enter | KeyCode::Tab => {
+            if let Some(issue) = picker.selected_issue() {
+                app.create_dialog.selected_issue_number = Some(issue.number);
+                picker.is_active = false;
+            }
+        }
+        KeyCode::Up | KeyCode::Char('k') => {
+            if picker.selected_index > 0 {
+                picker.selected_index -= 1;
+            }
+        }
+        KeyCode::Down | KeyCode::Char('j') => {
+            let max_idx = picker.filtered_issues.len().saturating_sub(1);
+            if picker.selected_index < max_idx {
+                picker.selected_index += 1;
+            }
+        }
+        KeyCode::Backspace => {
+            picker.remove_search_char();
+        }
+        KeyCode::Char(c) => {
+            picker.add_search_char(c);
+        }
         _ => {}
     }
     Ok(())

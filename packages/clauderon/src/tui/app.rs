@@ -212,6 +212,7 @@ pub enum CreateDialogFocus {
     #[default]
     Prompt,
     RepoPath,
+    GitHubIssue,
     BaseBranch,
     Backend,
     Agent,
@@ -264,6 +265,27 @@ pub struct DirectoryPickerState {
     matcher: nucleo_matcher::Matcher,
 }
 
+/// GitHub issue picker state
+#[derive(Debug, Clone)]
+pub struct GitHubIssuePickerState {
+    /// All issues from GitHub
+    pub issues: Vec<crate::github::GitHubIssue>,
+    /// Filtered issues based on search query
+    pub filtered_issues: Vec<crate::github::GitHubIssue>,
+    /// Current search query
+    pub search_query: String,
+    /// Selected index in filtered list
+    pub selected_index: usize,
+    /// Whether picker is currently active
+    pub is_active: bool,
+    /// Error message if issue fetch failed
+    pub error: Option<String>,
+    /// Loading state
+    pub loading: bool,
+    /// Fuzzy matcher instance
+    matcher: nucleo_matcher::Matcher,
+}
+
 /// Create dialog state for managing session creation UI.
 #[derive(Debug, Clone)]
 #[allow(clippy::struct_excessive_bools)]
@@ -309,6 +331,8 @@ pub struct CreateDialogState {
     pub focus: CreateDialogFocus,
     pub button_create_focused: bool, // true = Create, false = Cancel
     pub directory_picker: DirectoryPickerState,
+    pub github_issue_picker: GitHubIssuePickerState,
+    pub selected_issue_number: Option<u32>,
     /// Feature flags (for conditional backend availability)
     pub feature_flags: std::sync::Arc<crate::feature_flags::FeatureFlags>,
 }
@@ -528,6 +552,86 @@ impl Default for DirectoryPickerState {
             selected_index: 0,
             is_active: false,
             error: None,
+            matcher: nucleo_matcher::Matcher::new(nucleo_matcher::Config::DEFAULT),
+        }
+    }
+}
+
+impl GitHubIssuePickerState {
+    /// Create a new GitHub issue picker state
+    #[must_use]
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Load GitHub issues from API response
+    pub fn load_issues(&mut self, issues: Vec<crate::github::GitHubIssue>) {
+        self.issues = issues;
+        self.apply_filter();
+    }
+
+    /// Apply search filter to issues
+    pub fn apply_filter(&mut self) {
+        if self.search_query.is_empty() {
+            self.filtered_issues = self.issues.clone();
+        } else {
+            let query = Utf32String::from(&self.search_query);
+            let mut scored_issues: Vec<_> = self
+                .issues
+                .iter()
+                .filter_map(|issue| {
+                    let search_text = format!(
+                        "{} {} {}",
+                        issue.number,
+                        issue.title,
+                        issue.labels.join(" ")
+                    );
+                    let haystack = Utf32String::from(&search_text);
+                    self.matcher
+                        .fuzzy_match(&haystack, &query)
+                        .map(|score| (issue.clone(), score))
+                })
+                .collect();
+
+            scored_issues.sort_by(|a, b| b.1.cmp(&a.1));
+            self.filtered_issues = scored_issues.into_iter().map(|(issue, _)| issue).collect();
+        }
+
+        // Reset selection if needed
+        if self.selected_index >= self.filtered_issues.len() {
+            self.selected_index = self.filtered_issues.len().saturating_sub(1);
+        }
+    }
+
+    /// Add a character to the search query
+    pub fn add_search_char(&mut self, c: char) {
+        self.search_query.push(c);
+        self.apply_filter();
+    }
+
+    /// Remove the last character from the search query
+    pub fn remove_search_char(&mut self) {
+        self.search_query.pop();
+        self.apply_filter();
+    }
+
+    /// Get the currently selected issue
+    #[must_use]
+    pub fn selected_issue(&self) -> Option<&crate::github::GitHubIssue> {
+        self.filtered_issues.get(self.selected_index)
+    }
+}
+
+impl Default for GitHubIssuePickerState {
+    fn default() -> Self {
+        Self {
+            issues: Vec::new(),
+            filtered_issues: Vec::new(),
+            search_query: String::new(),
+            selected_index: 0,
+            is_active: false,
+            error: None,
+            loading: false,
             matcher: nucleo_matcher::Matcher::new(nucleo_matcher::Config::DEFAULT),
         }
     }
@@ -879,6 +983,8 @@ impl Default for CreateDialogState {
             focus: CreateDialogFocus::default(),
             button_create_focused: false,
             directory_picker: DirectoryPickerState::new(),
+            github_issue_picker: GitHubIssuePickerState::new(),
+            selected_issue_number: None,
             feature_flags: std::sync::Arc::new(crate::feature_flags::FeatureFlags::default()),
         }
     }
