@@ -116,11 +116,11 @@ for dirname, commit_date in subdirs_with_dates:
             cog.outl("*No description available.*")
     cog.outl()
 ]]]-->
-**7 active packages**
+**8 active packages**
 
-### [mux-site](https://github.com/shepherdjerred/monorepo/tree/main/packages/mux-site) (2026-01-04)
+### [resume](https://github.com/shepherdjerred/monorepo/tree/main/packages/resume) (2026-01-27)
 
-This project is a website built using Astro, leveraging the @astrojs/starlight theme for documentation and sharp for image processing. TypeScript is used for type safety during development. The source code and static files are organized under the src and public directories, respectively, while Astro's configuration and tooling manage site generation and build processes.
+This project is a LaTeX-based resume that is built and deployed using Dagger, a modern CI/CD tool. The repository includes the LaTeX source file (resume.tex), a generated HTML version (index.html), and configuration files, but does not rely on any Node.js dependencies despite using a package.json for metadata. Key technologies are LaTeX for document preparation and Dagger for automated build and deployment processes.
 
 ### [clauderon](https://github.com/shepherdjerred/monorepo/tree/main/packages/clauderon) (2026-01-01)
 
@@ -133,6 +133,10 @@ This project, bun-decompile, is a CLI tool designed to extract and de-minify sou
 ### [claude-plugin](https://github.com/shepherdjerred/monorepo/tree/main/packages/claude-plugin) (2025-12-23)
 
 This project implements a system for managing and utilizing AI agents. It uses Python and likely leverages frameworks such as LangChain for orchestrating agent workflows. The agents can be configured for various tasks, enabling flexible and modular AI-powered solutions.
+
+### [a2ui-poc](https://github.com/shepherdjerred/monorepo/tree/main/packages/a2ui-poc) (2025-12-20)
+
+Sorry, I only see a reference to the file `CLAUDE.md`, but I don't have its content. Please provide the contents of `CLAUDE.md` or additional source files so I can summarize the project for you.
 
 ### [birmel](https://github.com/shepherdjerred/monorepo/tree/main/packages/birmel) (2025-12-20)
 
