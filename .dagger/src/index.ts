@@ -105,7 +105,9 @@ function installWorkspaceDeps(source: Directory): Container {
     // Clauderon web packages
     .withMountedDirectory("/workspace/packages/clauderon/web/shared", source.directory("packages/clauderon/web/shared"))
     .withMountedDirectory("/workspace/packages/clauderon/web/client", source.directory("packages/clauderon/web/client"))
-    .withMountedDirectory("/workspace/packages/clauderon/web/frontend", source.directory("packages/clauderon/web/frontend"));
+    .withMountedDirectory("/workspace/packages/clauderon/web/frontend", source.directory("packages/clauderon/web/frontend"))
+    // Clauderon docs (remount with full source including screenshots)
+    .withMountedDirectory("/workspace/packages/clauderon/docs", source.directory("packages/clauderon/docs"));
 
   // PHASE 4: Re-run bun install to recreate workspace node_modules symlinks
   // (Source mounts in Phase 3 replace the symlinks that Phase 2 created)
