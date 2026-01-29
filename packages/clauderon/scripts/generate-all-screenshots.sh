@@ -83,3 +83,4 @@ echo "  1. Review generated screenshots"
 echo "  2. Commit to git: git add screenshots/ docs/"
 echo "  3. Build docs: cd docs && bun run build"
 echo ""
+
