@@ -36,6 +36,10 @@ The main dashboard shows:
 
 ![Dashboard](~/assets/screenshots/web/dashboard.png)
 
+You can filter sessions by status, backend, agent, and other criteria:
+
+![Session Filters](~/assets/screenshots/web/session-filters.png)
+
 ![Empty State](~/assets/screenshots/web/empty-state.png)
 
 ### Create Session
