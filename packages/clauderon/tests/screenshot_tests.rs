@@ -164,13 +164,18 @@ fn get_or_download_font() -> Result<Vec<u8>, Box<dyn std::error::Error>> {
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let berkeley_mono_paths = [
         // User fonts directory (macOS) - check first for full glyph coverage
+        dirs::home_dir().map(|h| h.join("Library/Fonts/BerkeleyMono-Regular.ttf")),
         dirs::home_dir().map(|h| h.join("Library/Fonts/BerkeleyMono-Regular.otf")),
         // System fonts (macOS)
+        Some(PathBuf::from("/Library/Fonts/BerkeleyMono-Regular.ttf")),
         Some(PathBuf::from("/Library/Fonts/BerkeleyMono-Regular.otf")),
         // User fonts directory (Linux)
+        dirs::home_dir().map(|h| h.join(".local/share/fonts/BerkeleyMono-Regular.ttf")),
         dirs::home_dir().map(|h| h.join(".local/share/fonts/BerkeleyMono-Regular.otf")),
+        dirs::home_dir().map(|h| h.join(".fonts/BerkeleyMono-Regular.ttf")),
         dirs::home_dir().map(|h| h.join(".fonts/BerkeleyMono-Regular.otf")),
         // Common user locations
+        dirs::home_dir().map(|h| h.join(".local/share/fonts/berkeley-mono/BerkeleyMono-Regular.ttf")),
         dirs::home_dir().map(|h| h.join(".local/share/fonts/berkeley-mono/BerkeleyMono-Regular.otf")),
         // Project web frontend assets (fallback - may have limited glyphs)
         Some(manifest_dir.join("web/frontend/src/assets/fonts/BerkeleyMono-Regular.otf")),
