@@ -139,19 +139,14 @@ function getRustContainer(
     .withMountedDirectory("/workspace", source.directory("packages/clauderon"))
     .withExec(["rustup", "component", "add", "rustfmt", "clippy"]);
 
-  // Install sccache for compilation caching
-  container = withSccache(container);
-
-  // Configure sccache with S3 backend (shared cache across all builds)
-  container = container
-    .withEnvVariable("RUSTC_WRAPPER", "sccache")
-    .withEnvVariable("SCCACHE_BUCKET", "sccache")
-    .withEnvVariable("SCCACHE_ENDPOINT", "https://seaweedfs.sjer.red")
-    .withEnvVariable("SCCACHE_REGION", "us-east-1");
-
-  // Add S3 credentials for sccache if provided
+  // Only use sccache when S3 credentials are provided (avoid AWS metadata timeout)
   if (s3AccessKeyId && s3SecretAccessKey) {
+    container = withSccache(container);
     container = container
+      .withEnvVariable("RUSTC_WRAPPER", "sccache")
+      .withEnvVariable("SCCACHE_BUCKET", "sccache")
+      .withEnvVariable("SCCACHE_ENDPOINT", "https://seaweedfs.sjer.red")
+      .withEnvVariable("SCCACHE_REGION", "us-east-1")
       .withSecretVariable("AWS_ACCESS_KEY_ID", s3AccessKeyId)
       .withSecretVariable("AWS_SECRET_ACCESS_KEY", s3SecretAccessKey);
   }
@@ -228,19 +223,14 @@ function getCrossCompileContainer(
     .withExec(["rustup", "target", "add", "x86_64-unknown-linux-gnu"])
     .withExec(["rustup", "target", "add", "aarch64-unknown-linux-gnu"]);
 
-  // Install sccache for compilation caching
-  container = withSccache(container);
-
-  // Configure sccache with S3 backend (shared cache across all builds)
-  container = container
-    .withEnvVariable("RUSTC_WRAPPER", "sccache")
-    .withEnvVariable("SCCACHE_BUCKET", "sccache")
-    .withEnvVariable("SCCACHE_ENDPOINT", "https://seaweedfs.sjer.red")
-    .withEnvVariable("SCCACHE_REGION", "us-east-1");
-
-  // Add S3 credentials for sccache if provided
+  // Only use sccache when S3 credentials are provided (avoid AWS metadata timeout)
   if (s3AccessKeyId && s3SecretAccessKey) {
+    container = withSccache(container);
     container = container
+      .withEnvVariable("RUSTC_WRAPPER", "sccache")
+      .withEnvVariable("SCCACHE_BUCKET", "sccache")
+      .withEnvVariable("SCCACHE_ENDPOINT", "https://seaweedfs.sjer.red")
+      .withEnvVariable("SCCACHE_REGION", "us-east-1")
       .withSecretVariable("AWS_ACCESS_KEY_ID", s3AccessKeyId)
       .withSecretVariable("AWS_SECRET_ACCESS_KEY", s3SecretAccessKey);
   }

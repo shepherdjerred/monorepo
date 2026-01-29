@@ -326,17 +326,11 @@ export function Console({ sessionId, sessionName, onClose, onSwitchToChat }: Con
 
   return (
     <>
-      <div className="fixed inset-0 z-40" style={{
-        backgroundColor: 'hsl(220, 90%, 8%)',
-        opacity: 0.85
-      }} />
+      <div className="fixed inset-0 z-40 bg-background/85 backdrop-blur-sm" />
       <div className="fixed inset-0 flex items-center justify-center p-8 z-50">
-        <div className="max-w-5xl w-full h-[85vh] flex flex-col border-4 border-primary" style={{
-          backgroundColor: 'hsl(220, 15%, 95%)',
-          boxShadow: '12px 12px 0 hsl(220, 85%, 25%), 24px 24px 0 hsl(220, 90%, 10%)'
-        }}>
+        <div className="max-w-5xl w-full h-[85vh] flex flex-col border-4 border-primary bg-card console-brutalist-shadow">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b-4 border-primary" style={{ backgroundColor: 'hsl(220, 85%, 25%)' }}>
+        <div className="flex items-center justify-between p-4 border-b-4 border-primary bg-primary">
           <div className="flex items-center gap-4">
             <h2 className="text-2xl font-bold font-mono uppercase tracking-wider text-white">
               {sessionName}
@@ -378,12 +372,7 @@ export function Console({ sessionId, sessionName, onClose, onSwitchToChat }: Con
         {error && (
           <div
             key={errorKey}
-            className="p-4 border-b-4 font-mono flex items-start justify-between gap-4"
-            style={{
-              backgroundColor: 'hsl(0, 75%, 95%)',
-              color: 'hsl(0, 75%, 40%)',
-              borderColor: 'hsl(0, 75%, 50%)'
-            }}
+            className="p-4 border-b-4 font-mono flex items-start justify-between gap-4 bg-destructive/10 text-destructive border-destructive"
           >
             <div className="flex-1">
               <strong className="font-bold">ERROR:</strong> {error}
@@ -412,12 +401,12 @@ export function Console({ sessionId, sessionName, onClose, onSwitchToChat }: Con
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t-4 border-primary text-sm" style={{ backgroundColor: 'hsl(220, 15%, 90%)' }}>
-          <p className="font-mono" style={{ color: 'hsl(220, 20%, 45%)' }}>
-            <kbd className="px-2 py-1 border-2 font-bold mr-2" style={{ backgroundColor: 'hsl(220, 85%, 25%)', color: 'white', borderColor: 'hsl(220, 85%, 25%)' }}>CTRL+C</kbd>
-            <span style={{ color: 'hsl(220, 90%, 10%)' }}>interrupt signal</span>
+        <div className="p-4 border-t-4 border-primary text-sm bg-muted">
+          <p className="font-mono text-muted-foreground">
+            <kbd className="px-2 py-1 border-2 font-bold mr-2 bg-primary text-primary-foreground border-primary">CTRL+C</kbd>
+            <span className="text-foreground">interrupt signal</span>
             <span className="mx-3">│</span>
-            <span style={{ color: 'hsl(220, 90%, 10%)' }}>Close to detach (session persists)</span>
+            <span className="text-foreground">Close to detach (session persists)</span>
           </p>
         </div>
         </div>

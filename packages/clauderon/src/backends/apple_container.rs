@@ -384,6 +384,8 @@ impl AppleContainerBackend {
             "-e".to_string(),
             "TERM=xterm-256color".to_string(),
             "-e".to_string(),
+            "COLORTERM=truecolor".to_string(),
+            "-e".to_string(),
             "HOME=/workspace".to_string(),
         ]);
 
