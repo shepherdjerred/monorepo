@@ -3,7 +3,7 @@
 //! These tests are marked with `#[ignore]` so they don't run in regular CI.
 //! Run manually with: `cargo test --test screenshot_tests -- --ignored`
 
-use ab_glyph::{FontRef, PxScale, ScaleFont};
+use ab_glyph::{Font, FontRef, PxScale};
 use image::{ImageBuffer, Rgb, RgbImage};
 use imageproc::drawing::draw_text_mut;
 use ratatui::{Terminal, backend::TestBackend, style::Color};
