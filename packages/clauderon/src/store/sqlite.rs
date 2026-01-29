@@ -160,6 +160,10 @@ impl SqliteStore {
             Self::migrate_to_v17(pool).await?;
         }
 
+        if current_version < 18 {
+            Self::migrate_to_v18(pool).await?;
+        }
+
         Ok(())
     }
 
@@ -1037,6 +1041,51 @@ impl SqliteStore {
         tracing::info!("Migration v17 complete");
         Ok(())
     }
+
+    /// Migration v18: Add auto-code workflow fields (github_issue_number, github_issue_url, auto_code_enabled)
+    async fn migrate_to_v18(pool: &SqlitePool) -> anyhow::Result<()> {
+        tracing::info!("Applying migration v18: Add auto-code workflow fields");
+
+        // Check if github_issue_number column exists (for idempotency)
+        let column_exists: bool = sqlx::query_scalar(
+            "SELECT COUNT(*) > 0 FROM pragma_table_info('sessions') WHERE name = 'github_issue_number'",
+        )
+        .fetch_one(pool)
+        .await?;
+
+        if !column_exists {
+            // Add github_issue_number column
+            sqlx::query("ALTER TABLE sessions ADD COLUMN github_issue_number INTEGER")
+                .execute(pool)
+                .await?;
+            tracing::debug!("Added github_issue_number column to sessions table");
+
+            // Add github_issue_url column
+            sqlx::query("ALTER TABLE sessions ADD COLUMN github_issue_url TEXT")
+                .execute(pool)
+                .await?;
+            tracing::debug!("Added github_issue_url column to sessions table");
+
+            // Add auto_code_enabled column
+            sqlx::query(
+                "ALTER TABLE sessions ADD COLUMN auto_code_enabled INTEGER NOT NULL DEFAULT 0",
+            )
+            .execute(pool)
+            .await?;
+            tracing::debug!("Added auto_code_enabled column to sessions table");
+        }
+
+        // Record migration
+        let now = Utc::now();
+        sqlx::query("INSERT OR REPLACE INTO schema_version (version, applied_at) VALUES (?, ?)")
+            .bind(18)
+            .bind(now.to_rfc3339())
+            .execute(pool)
+            .await?;
+
+        tracing::info!("Migration v18 complete");
+        Ok(())
+    }
 }
 
 #[async_trait]
@@ -1167,10 +1216,11 @@ impl Store for SqliteStore {
                 id, name, title, description, status, backend, agent, model, repo_path, worktree_path,
                 subdirectory, branch_name, backend_id, initial_prompt, dangerous_skip_checks, dangerous_copy_creds,
                 pr_url, pr_check_status, pr_review_decision, claude_status, claude_status_updated_at,
-                merge_conflict, worktree_dirty, worktree_changed_files, access_mode, proxy_port, history_file_path,
+                merge_conflict, worktree_dirty, worktree_changed_files, github_issue_number, github_issue_url, auto_code_enabled,
+                access_mode, proxy_port, history_file_path,
                 reconcile_attempts, last_reconcile_error, last_reconcile_at, error_message,
                 created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ",
         )
         .bind(session.id.to_string())
@@ -1216,6 +1266,9 @@ impl Store for SqliteStore {
                 .as_ref()
                 .and_then(|files| serde_json::to_string(files).ok()),
         )
+        .bind(session.github_issue_number.map(i64::from))
+        .bind(&session.github_issue_url)
+        .bind(session.auto_code_enabled)
         .bind(session.access_mode.to_string())
         .bind(session.proxy_port.map(i64::from))
         .bind(
@@ -1500,6 +1553,9 @@ struct SessionRow {
     merge_conflict: bool,
     worktree_dirty: bool,
     worktree_changed_files: Option<String>,
+    github_issue_number: Option<i64>,
+    github_issue_url: Option<String>,
+    auto_code_enabled: bool,
     access_mode: String,
     proxy_port: Option<i64>,
     history_file_path: Option<String>,
@@ -1679,6 +1735,11 @@ impl TryFrom<SessionRow> for Session {
                 .worktree_changed_files
                 .as_ref()
                 .and_then(|json| serde_json::from_str(json).ok()),
+            // Safe cast: issue numbers are positive integers
+            #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+            github_issue_number: row.github_issue_number.map(|n| n as u32),
+            github_issue_url: row.github_issue_url,
+            auto_code_enabled: row.auto_code_enabled,
             access_mode: row.access_mode.parse().unwrap_or_default(),
             // Safe cast: port numbers are always within u16 range (0-65535)
             #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]

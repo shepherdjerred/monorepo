@@ -60,11 +60,22 @@ pub fn calculate_layout(dialog: &CreateDialogState) -> (u16, Vec<Constraint>) {
     let is_k8s = dialog.backend == BackendType::Kubernetes;
     let show_copy_creds = is_k8s && !is_k8s_proxy_configured();
 
+    // Check if auto-code feature is enabled
+    let show_github_issue = dialog.feature_flags.enable_auto_code;
+
     // Build constraints dynamically
     let mut constraints = vec![
-        Constraint::Length(prompt_height),      // Prompt (dynamic)
-        Constraint::Length(images_height),      // Images (dynamic, 0 if none)
-        Constraint::Length(TEXT_FIELD_HEIGHT),  // Repo path
+        Constraint::Length(prompt_height),     // Prompt (dynamic)
+        Constraint::Length(images_height),     // Images (dynamic, 0 if none)
+        Constraint::Length(TEXT_FIELD_HEIGHT), // Repo path
+    ];
+
+    // Add GitHub issue field (only if auto-code feature enabled)
+    if show_github_issue {
+        constraints.push(Constraint::Length(TEXT_FIELD_HEIGHT)); // GitHub issue
+    }
+
+    constraints.extend_from_slice(&[
         Constraint::Length(TEXT_FIELD_HEIGHT),  // Base branch
         Constraint::Length(SPACER_HEIGHT),      // Spacer
         Constraint::Length(RADIO_FIELD_HEIGHT), // Backend
@@ -74,7 +85,7 @@ pub fn calculate_layout(dialog: &CreateDialogState) -> (u16, Vec<Constraint>) {
         Constraint::Length(RADIO_FIELD_HEIGHT), // Access mode
         Constraint::Length(CHECKBOX_HEIGHT),    // Skip checks
         Constraint::Length(CHECKBOX_HEIGHT),    // Plan mode
-    ];
+    ]);
 
     // Add dangerous copy creds checkbox (only for K8s without proxy)
     if show_copy_creds {
@@ -135,6 +146,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
     // Check conditions for layout indexing
     let is_k8s = dialog.backend == BackendType::Kubernetes;
     let show_copy_creds = is_k8s && !is_k8s_proxy_configured();
+    let show_github_issue = dialog.feature_flags.enable_auto_code;
 
     // Calculate visible lines for prompt field (matches calculate_layout)
     let prompt_lines = dialog.prompt.lines().count().max(1);
@@ -156,6 +168,16 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
     idx += 1;
     let repo_idx = idx;
     idx += 1;
+
+    // GitHub issue field (only if auto-code feature enabled)
+    let github_issue_idx = if show_github_issue {
+        let i = idx;
+        idx += 1;
+        i
+    } else {
+        0 // Won't be used
+    };
+
     let base_branch_idx = idx;
     idx += 1;
     idx += 1; // spacer
@@ -223,6 +245,18 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         dialog.focus == CreateDialogFocus::RepoPath,
         inner[repo_idx],
     );
+
+    // GitHub issue field (only if auto-code feature enabled)
+    if show_github_issue {
+        render_github_issue_field(
+            frame,
+            "GitHub Issue (optional, for auto-code)",
+            dialog.selected_issue_number,
+            &dialog.github_issue_picker.issues,
+            dialog.focus == CreateDialogFocus::GitHubIssue,
+            inner[github_issue_idx],
+        );
+    }
 
     // Base branch field (for clone-based backends)
     render_text_field(
@@ -533,6 +567,18 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
         frame.render_widget(Clear, picker_area);
         directory_picker::render(frame, &app.create_dialog.directory_picker, picker_area);
     }
+
+    // Render GitHub issue picker modal if active
+    if app.create_dialog.github_issue_picker.is_active {
+        use super::issue_picker;
+
+        // Create centered modal within the create dialog
+        let picker_area = centered_rect_in_area(80, 70, area);
+
+        // Clear the area and render picker
+        frame.render_widget(Clear, picker_area);
+        issue_picker::render(frame, &app.create_dialog.github_issue_picker, picker_area);
+    }
 }
 
 fn render_text_field(frame: &mut Frame, label: &str, value: &str, focused: bool, area: Rect) {
@@ -626,6 +672,48 @@ fn render_images_field(frame: &mut Frame, images: &[String], area: Rect) {
         .collect();
 
     let paragraph = Paragraph::new(image_lines).block(block);
+    frame.render_widget(paragraph, area);
+}
+
+fn render_github_issue_field(
+    frame: &mut Frame,
+    label: &str,
+    selected_issue_number: Option<u32>,
+    issues: &[crate::github::GitHubIssue],
+    focused: bool,
+    area: Rect,
+) {
+    let style = if focused {
+        Style::default().fg(Color::Yellow)
+    } else {
+        Style::default()
+    };
+
+    let block = Block::default()
+        .title(format!(" {label} "))
+        .borders(Borders::ALL)
+        .border_style(style);
+
+    let display_value = if let Some(number) = selected_issue_number {
+        // Find the issue title from the issues list
+        issues
+            .iter()
+            .find(|i| i.number == number)
+            .map(|i| format!("#{} - {}", i.number, i.title))
+            .unwrap_or_else(|| format!("#{}", number))
+    } else if focused {
+        "(Press Enter to select)".to_string()
+    } else {
+        "(no issue)".to_string()
+    };
+
+    let value_style = if selected_issue_number.is_none() {
+        Style::default().fg(Color::DarkGray)
+    } else {
+        Style::default()
+    };
+
+    let paragraph = Paragraph::new(Span::styled(display_value, value_style)).block(block);
     frame.render_widget(paragraph, area);
 }
 

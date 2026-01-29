@@ -300,6 +300,23 @@ export function SessionCard({ session, healthReport, onAttach, onEdit, onArchive
               <Badge variant="secondary" className="font-mono text-xs">
                 {session.access_mode}
               </Badge>
+              {session.auto_code_enabled && (
+                <Badge variant="outline" className="border-primary border-2 text-primary font-semibold text-xs">
+                  🤖 AUTO-CODE
+                </Badge>
+              )}
+              {session.auto_code_enabled && session.pr_url && (
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    "border-2 font-semibold text-xs",
+                    getStageColor(getWorkflowStage(session)).replace('bg-', 'border-'),
+                    getStageColor(getWorkflowStage(session)).replace('bg-', 'text-')
+                  )}
+                >
+                  {getWorkflowStage(session)}
+                </Badge>
+              )}
               {healthReport && healthReport.state.type !== "Healthy" && (
                 <TooltipProvider>
                   <Tooltip>
@@ -341,6 +358,24 @@ export function SessionCard({ session, healthReport, onAttach, onEdit, onArchive
           <p className="text-sm text-muted-foreground leading-relaxed mb-4 line-clamp-2">
             {session.initial_prompt}
           </p>
+        )}
+
+        {/* GitHub Issue Link */}
+        {session.github_issue_url && (
+          <div className="mb-4 flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Resolving:</span>
+            <a
+              href={session.github_issue_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-primary hover:underline font-medium flex items-center gap-1"
+            >
+              Issue #{session.github_issue_number}
+              <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+            </a>
+          </div>
         )}
 
         {/* Workflow Progress - shows PR workflow stage progression */}

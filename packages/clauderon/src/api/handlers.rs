@@ -59,6 +59,7 @@ pub async fn handle_request(
                         req.cpu_limit,
                         req.memory_limit,
                         req.storage_class.clone(),
+                        req.github_issue_number,
                     )
                     .await
                 {
@@ -105,6 +106,7 @@ pub async fn handle_request(
                         req.cpu_limit,
                         req.memory_limit,
                         req.storage_class.clone(),
+                        req.github_issue_number,
                     )
                     .await
                 {
@@ -454,6 +456,36 @@ pub async fn handle_request(
                     Response::Error {
                         code: "RECREATE_FRESH_ERROR".to_string(),
                         message: e.to_string(),
+                    }
+                }
+            }
+        }
+
+        Request::ListGitHubIssues { repo_path, state } => {
+            use std::path::PathBuf;
+            let path = PathBuf::from(&repo_path);
+
+            match crate::github::fetch_issues(&path, state).await {
+                Ok(issues) => {
+                    tracing::info!(repo_path = %repo_path, count = issues.len(), "Fetched GitHub issues");
+                    Response::GitHubIssues(
+                        issues
+                            .into_iter()
+                            .map(|issue| super::protocol::GitHubIssueDto {
+                                number: issue.number,
+                                title: issue.title,
+                                body: issue.body,
+                                url: issue.url,
+                                labels: issue.labels,
+                            })
+                            .collect(),
+                    )
+                }
+                Err(e) => {
+                    tracing::error!(repo_path = %repo_path, error = %e, "Failed to fetch GitHub issues");
+                    Response::Error {
+                        code: "GITHUB_ERROR".to_string(),
+                        message: format!("Failed to fetch GitHub issues: {e}"),
                     }
                 }
             }

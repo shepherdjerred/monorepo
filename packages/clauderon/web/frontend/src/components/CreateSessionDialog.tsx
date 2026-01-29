@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { X, Check, AlertCircle, Plus, Trash2, Star } from "lucide-react";
 import { RepositoryPathSelector } from "./RepositoryPathSelector";
+import { GitHubIssuePicker } from "./GitHubIssuePicker";
 import { ProviderIcon } from "./ProviderIcon";
 import { toast } from "sonner";
 import { AGENT_CAPABILITIES } from "@/lib/agent-features";
@@ -52,6 +53,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
     cpu_limit: "",
     memory_limit: "",
     storage_class: "",
+    github_issue_number: undefined as number | undefined,
   });
 
   // Auto-check dangerous_skip_checks for Docker, Kubernetes, and Sprites, uncheck for Zellij
@@ -353,6 +355,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
         ...(formData.cpu_limit && { cpu_limit: formData.cpu_limit }),
         ...(formData.memory_limit && { memory_limit: formData.memory_limit }),
         ...(formData.storage_class && { storage_class: formData.storage_class }),
+        ...(formData.github_issue_number && { github_issue_number: formData.github_issue_number }),
       };
 
       const result = await createSession(request);
@@ -588,6 +591,30 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
               </div>
             )}
           </div>
+
+          {/* GitHub Issue Picker - only show when auto_code feature is enabled */}
+          {featureFlags?.enable_auto_code && (
+            <div className="space-y-2">
+              <Label className="font-semibold">
+                GitHub Issue (Optional)
+                <span className="ml-2 text-xs font-normal text-muted-foreground">
+                  Auto-code workflow
+                </span>
+              </Label>
+              <GitHubIssuePicker
+                repoPath={multiRepoEnabled ? repositories.find(r => r.is_primary)?.repo_path ?? '' : repositories[0]?.repo_path ?? ''}
+                value={formData.github_issue_number}
+                onChange={(issueNumber) => {
+                  setFormData({ ...formData, github_issue_number: issueNumber });
+                }}
+              />
+              {formData.github_issue_number && (
+                <p className="text-xs text-muted-foreground">
+                  This session will autonomously work to resolve the selected issue
+                </p>
+              )}
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="initial_prompt" className="font-semibold">Initial Prompt</Label>
