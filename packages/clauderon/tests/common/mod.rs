@@ -360,3 +360,87 @@ impl Drop for SpriteCleanupGuard {
         }
     }
 }
+
+/// Isolated test environment with custom filesystem and environment setup
+///
+/// Creates temporary directories and manages environment variables for isolated testing.
+/// This is useful for testing configuration scenarios without affecting the host system.
+pub struct IsolatedEnv {
+    pub temp_dir: tempfile::TempDir,
+    pub home_dir: std::path::PathBuf,
+    pub kube_config_path: Option<std::path::PathBuf>,
+}
+
+impl IsolatedEnv {
+    /// Create environment with no kubeconfig
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if temporary directory creation fails
+    pub fn no_kubeconfig() -> anyhow::Result<Self> {
+        let temp_dir = tempfile::TempDir::new()?;
+        let home_dir = temp_dir.path().join("home");
+        std::fs::create_dir(&home_dir)?;
+
+        Ok(Self {
+            temp_dir,
+            home_dir,
+            kube_config_path: None,
+        })
+    }
+
+    /// Create environment with invalid kubeconfig (malformed YAML)
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if directory or file creation fails
+    pub fn invalid_kubeconfig() -> anyhow::Result<Self> {
+        let temp_dir = tempfile::TempDir::new()?;
+        let home_dir = temp_dir.path().join("home");
+        std::fs::create_dir_all(home_dir.join(".kube"))?;
+
+        let kube_config_path = home_dir.join(".kube/config");
+        std::fs::write(&kube_config_path, "invalid: yaml: content: [[[malformed")?;
+
+        Ok(Self {
+            temp_dir,
+            home_dir,
+            kube_config_path: Some(kube_config_path),
+        })
+    }
+
+    /// Create environment with empty kubeconfig file
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if directory or file creation fails
+    pub fn empty_kubeconfig() -> anyhow::Result<Self> {
+        let temp_dir = tempfile::TempDir::new()?;
+        let home_dir = temp_dir.path().join("home");
+        std::fs::create_dir_all(home_dir.join(".kube"))?;
+
+        let kube_config_path = home_dir.join(".kube/config");
+        std::fs::write(&kube_config_path, "")?;
+
+        Ok(Self {
+            temp_dir,
+            home_dir,
+            kube_config_path: Some(kube_config_path),
+        })
+    }
+
+    /// Get environment variables to use for this isolated env
+    ///
+    /// Returns a vector of (key, value) pairs that should be set for testing.
+    #[must_use]
+    pub fn env_vars(&self) -> Vec<(&str, String)> {
+        let mut vars = vec![("HOME", self.home_dir.to_string_lossy().to_string())];
+        if let Some(ref path) = self.kube_config_path {
+            vars.push(("KUBECONFIG", path.to_string_lossy().to_string()));
+        } else {
+            // Set empty string to clear KUBECONFIG
+            vars.push(("KUBECONFIG", String::new()));
+        }
+        vars
+    }
+}
