@@ -63,7 +63,8 @@ fn buffer_to_png(
 
     if let Ok(font_data) = font_result {
         let font = FontRef::try_from_slice(&font_data)?;
-        let symbol_font = symbol_font_data.as_ref()
+        let symbol_font = symbol_font_data
+            .as_ref()
             .and_then(|data| FontRef::try_from_slice(data).ok());
         let scale = PxScale::from(FONT_SIZE);
 
@@ -91,9 +92,9 @@ fn buffer_to_png(
                         let color = ratatui_color_to_rgb(cell.fg);
 
                         // Check if primary font has glyph for this character
-                        let has_glyph = symbol.chars().all(|c| {
-                            scaled_font.glyph_id(c) != ab_glyph::GlyphId(0)
-                        });
+                        let has_glyph = symbol
+                            .chars()
+                            .all(|c| scaled_font.glyph_id(c) != ab_glyph::GlyphId(0));
 
                         // Choose font: use symbol font if primary is missing glyph
                         let font_to_use = if !has_glyph {
@@ -123,8 +124,13 @@ fn buffer_to_png(
 
         // Save PNG
         img.save(output_path)?;
-        println!("✓ Created {} ({}x{}, char width: {}px)",
-            output_path.display(), img_width, img_height, char_advance);
+        println!(
+            "✓ Created {} ({}x{}, char width: {}px)",
+            output_path.display(),
+            img_width,
+            img_height,
+            char_advance
+        );
     } else {
         // Fallback: simple block rendering (no actual font rendering)
         println!("Warning: Font not available, using simple block rendering");
@@ -183,8 +189,10 @@ fn get_primary_font() -> Result<Vec<u8>, Box<dyn std::error::Error>> {
         dirs::home_dir().map(|h| h.join(".fonts/BerkeleyMono-Regular.ttf")),
         dirs::home_dir().map(|h| h.join(".fonts/BerkeleyMono-Regular.otf")),
         // Common user locations
-        dirs::home_dir().map(|h| h.join(".local/share/fonts/berkeley-mono/BerkeleyMono-Regular.ttf")),
-        dirs::home_dir().map(|h| h.join(".local/share/fonts/berkeley-mono/BerkeleyMono-Regular.otf")),
+        dirs::home_dir()
+            .map(|h| h.join(".local/share/fonts/berkeley-mono/BerkeleyMono-Regular.ttf")),
+        dirs::home_dir()
+            .map(|h| h.join(".local/share/fonts/berkeley-mono/BerkeleyMono-Regular.otf")),
         // Project web frontend assets (fallback - may have limited glyphs)
         Some(manifest_dir.join("web/frontend/src/assets/fonts/BerkeleyMono-Regular.otf")),
     ];
