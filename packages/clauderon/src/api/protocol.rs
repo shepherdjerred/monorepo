@@ -78,6 +78,12 @@ pub enum Request {
 
     /// Recreate a session fresh (delete worktree and re-clone, data lost)
     RecreateSessionFresh { id: String },
+
+    /// List GitHub issues for a repository
+    ListGitHubIssues {
+        repo_path: String,
+        state: IssueState,
+    },
 }
 
 /// Recent repository entry with timestamp
@@ -131,6 +137,35 @@ pub struct BrowseDirectoryResponse {
 
     /// Error message if path doesn't exist or permission denied
     pub error: Option<String>,
+}
+
+/// GitHub issue state filter
+#[typeshare]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum IssueState {
+    /// Only open issues
+    Open,
+    /// Only closed issues
+    Closed,
+    /// All issues
+    All,
+}
+
+/// GitHub issue for display in UI
+#[typeshare]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GitHubIssueDto {
+    /// Issue number
+    pub number: u32,
+    /// Issue title
+    pub title: String,
+    /// Issue body (description)
+    pub body: String,
+    /// Issue URL
+    pub url: String,
+    /// Issue labels
+    pub labels: Vec<String>,
 }
 
 /// Input for a single repository in a multi-repo session
@@ -259,6 +294,10 @@ pub struct CreateSessionRequest {
     /// If not specified, uses cluster default or config file setting.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub storage_class: Option<String>,
+
+    /// GitHub issue number to link to this session (for auto-code workflow)
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub github_issue_number: Option<u32>,
 }
 
 /// Default to plan mode for safety - allows users to explore and understand
@@ -388,6 +427,9 @@ pub enum Response {
 
     /// Action blocked error (e.g., recreate blocked for sprites with auto_destroy)
     ActionBlocked { reason: String },
+
+    /// List of GitHub issues
+    GitHubIssues(Vec<GitHubIssueDto>),
 
     /// Error response
     Error { code: String, message: String },

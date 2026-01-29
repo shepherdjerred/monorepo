@@ -27,6 +27,9 @@ pub struct FeatureFlags {
 
     /// Enable Kubernetes backend (experimental, disabled by default)
     pub enable_kubernetes_backend: bool,
+
+    /// Enable autonomous GitHub issue resolution workflow
+    pub enable_auto_code: bool,
 }
 
 impl Default for FeatureFlags {
@@ -38,6 +41,7 @@ impl Default for FeatureFlags {
             enable_proxy_port_reuse: false,
             enable_usage_tracking: false,
             enable_kubernetes_backend: false,
+            enable_auto_code: false,
         }
     }
 }
@@ -113,6 +117,7 @@ impl FeatureFlags {
             enable_kubernetes_backend: parse_env_bool_option(
                 "CLAUDERON_FEATURE_ENABLE_KUBERNETES_BACKEND",
             ),
+            enable_auto_code: parse_env_bool_option("CLAUDERON_FEATURE_ENABLE_AUTO_CODE"),
         }
     }
 
@@ -139,6 +144,9 @@ impl FeatureFlags {
         if other.enable_kubernetes_backend != defaults.enable_kubernetes_backend {
             self.enable_kubernetes_backend = other.enable_kubernetes_backend;
         }
+        if other.enable_auto_code != defaults.enable_auto_code {
+            self.enable_auto_code = other.enable_auto_code;
+        }
     }
 
     /// Merge environment variable overrides (which are Option<bool> to distinguish "not set")
@@ -160,6 +168,9 @@ impl FeatureFlags {
         }
         if let Some(val) = env.enable_kubernetes_backend {
             self.enable_kubernetes_backend = val;
+        }
+        if let Some(val) = env.enable_auto_code {
+            self.enable_auto_code = val;
         }
     }
 
@@ -183,6 +194,9 @@ impl FeatureFlags {
         if let Some(val) = cli.enable_kubernetes_backend {
             self.enable_kubernetes_backend = val;
         }
+        if let Some(val) = cli.enable_auto_code {
+            self.enable_auto_code = val;
+        }
     }
 
     /// Log the current feature flag state (for observability)
@@ -201,6 +215,7 @@ impl FeatureFlags {
             "  enable_kubernetes_backend: {}",
             self.enable_kubernetes_backend
         );
+        tracing::info!("  enable_auto_code: {}", self.enable_auto_code);
     }
 }
 
@@ -213,6 +228,7 @@ pub struct CliFeatureFlags {
     pub enable_proxy_port_reuse: Option<bool>,
     pub enable_usage_tracking: Option<bool>,
     pub enable_kubernetes_backend: Option<bool>,
+    pub enable_auto_code: Option<bool>,
 }
 
 /// Environment variable feature flag overrides (returns Option<bool> to distinguish "not set")
@@ -224,6 +240,7 @@ struct EnvFeatureFlags {
     pub enable_proxy_port_reuse: Option<bool>,
     pub enable_usage_tracking: Option<bool>,
     pub enable_kubernetes_backend: Option<bool>,
+    pub enable_auto_code: Option<bool>,
 }
 
 /// Configuration file structure

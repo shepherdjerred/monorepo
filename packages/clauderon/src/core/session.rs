@@ -127,6 +127,16 @@ pub struct Session {
     /// List of changed files in the worktree with their git status
     pub worktree_changed_files: Option<Vec<crate::utils::git::ChangedFile>>,
 
+    /// GitHub issue number linked to this session (for auto-code workflow)
+    pub github_issue_number: Option<u32>,
+
+    /// GitHub issue URL linked to this session
+    pub github_issue_url: Option<String>,
+
+    /// Whether this session is running the autonomous auto-code workflow
+    #[serde(default)]
+    pub auto_code_enabled: bool,
+
     /// Access mode for proxy filtering
     pub access_mode: AccessMode,
 
@@ -227,6 +237,9 @@ impl Session {
             merge_conflict: false,
             worktree_dirty: false,
             worktree_changed_files: None,
+            github_issue_number: None,
+            github_issue_url: None,
+            auto_code_enabled: false,
             access_mode: config.access_mode,
             proxy_port: None,
             history_file_path: None,

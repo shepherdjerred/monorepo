@@ -6,6 +6,7 @@ pub mod ci;
 pub mod config;
 pub mod core;
 pub mod feature_flags;
+pub mod github;
 pub mod hooks;
 pub mod observability;
 pub mod plugins;
