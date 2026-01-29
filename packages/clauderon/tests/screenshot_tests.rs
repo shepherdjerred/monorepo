@@ -15,8 +15,8 @@ use clauderon::tui::app::{App, AppMode, CreateDialogFocus};
 use clauderon::tui::ui;
 
 // Constants for rendering
-const CHAR_WIDTH: u32 = 10; // Width of a monospace character in pixels (Berkeley Mono at 16px)
-const CHAR_HEIGHT: u32 = 20; // Height of a monospace character in pixels (includes proper line height)
+const CHAR_WIDTH: u32 = 10; // Width of a monospace character in pixels (fallback, actual width measured from font)
+const CHAR_HEIGHT: u32 = 17; // Height of a monospace character in pixels (tight TUI spacing, no extra line height)
 const FONT_SIZE: f32 = 16.0; // Font size matching terminal rendering
 
 // Colors (VS Code Dark+ theme)
