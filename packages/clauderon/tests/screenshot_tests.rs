@@ -160,25 +160,7 @@ fn get_or_download_font() -> Result<Vec<u8>, Box<dyn std::error::Error>> {
     use std::fs;
     use std::path::PathBuf;
 
-    // Try Nerd Font first - has full Unicode glyph coverage including symbols
-    let nerd_font_paths = [
-        // User fonts directory (macOS)
-        dirs::home_dir().map(|h| h.join("Library/Fonts/SymbolsNerdFontMono-Regular.ttf")),
-        // Common locations
-        dirs::home_dir().map(|h| h.join(".local/share/fonts/SymbolsNerdFontMono-Regular.ttf")),
-        dirs::home_dir().map(|h| h.join(".fonts/SymbolsNerdFontMono-Regular.ttf")),
-    ];
-
-    for path_opt in nerd_font_paths {
-        if let Some(path) = path_opt {
-            if path.exists() {
-                println!("Using Nerd Font: {}", path.display());
-                return Ok(fs::read(&path)?);
-            }
-        }
-    }
-
-    // Try Berkeley Mono as fallback
+    // Try Berkeley Mono first
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let berkeley_mono_paths = [
         // User fonts directory (macOS) - check first for full glyph coverage
