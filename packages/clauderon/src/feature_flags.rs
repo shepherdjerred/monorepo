@@ -490,6 +490,7 @@ mod tests {
             enable_proxy_port_reuse: true,
             enable_usage_tracking: true,
             enable_kubernetes_backend: true,
+            enable_auto_code: false,
         };
 
         // Merge with defaults - should not change anything
