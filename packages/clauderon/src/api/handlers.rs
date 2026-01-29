@@ -59,6 +59,7 @@ pub async fn handle_request(
                         req.cpu_limit,
                         req.memory_limit,
                         req.storage_class.clone(),
+                        req.github_issue_number,
                     )
                     .await
                 {
@@ -105,6 +106,7 @@ pub async fn handle_request(
                         req.cpu_limit,
                         req.memory_limit,
                         req.storage_class.clone(),
+                        req.github_issue_number,
                     )
                     .await
                 {

@@ -82,6 +82,64 @@ pub async fn fetch_issues(repo_path: &Path, state: IssueState) -> anyhow::Result
     Ok(issues)
 }
 
+/// Fetch a specific GitHub issue by number using gh CLI
+///
+/// # Errors
+/// Returns an error if:
+/// - gh CLI is not installed
+/// - Not in a git repository
+/// - Issue number not found
+/// - GitHub API returns an error
+/// - JSON parsing fails
+#[instrument(skip(repo_path), fields(repo_path = %repo_path.display(), number = %number))]
+pub async fn fetch_issue_by_number(repo_path: &Path, number: u32) -> anyhow::Result<GitHubIssue> {
+    tracing::debug!("Fetching GitHub issue by number");
+
+    let output = tokio::process::Command::new("gh")
+        .current_dir(repo_path)
+        .args([
+            "issue",
+            "view",
+            &number.to_string(),
+            "--json",
+            "number,title,body,url,labels",
+        ])
+        .output()
+        .await
+        .context("Failed to execute gh command - is gh CLI installed?")?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(anyhow::anyhow!(
+            "gh issue view #{} failed: {}",
+            number,
+            stderr
+        ));
+    }
+
+    let json_output = String::from_utf8_lossy(&output.stdout);
+
+    // Parse JSON response from gh CLI
+    let raw_issue: RawGitHubIssue = serde_json::from_str(&json_output).with_context(|| {
+        format!(
+            "Failed to parse gh issue view JSON for issue #{}: {}",
+            number, json_output
+        )
+    })?;
+
+    // Convert to our issue format
+    let issue = GitHubIssue {
+        number: raw_issue.number,
+        title: raw_issue.title,
+        body: raw_issue.body.unwrap_or_default(),
+        url: raw_issue.url,
+        labels: raw_issue.labels.into_iter().map(|l| l.name).collect(),
+    };
+
+    tracing::info!("Fetched GitHub issue #{}", issue.number);
+    Ok(issue)
+}
+
 /// Raw GitHub issue JSON structure from gh CLI
 #[derive(Debug, Deserialize)]
 struct RawGitHubIssue {

@@ -882,6 +882,7 @@ impl SessionManager {
         cpu_limit: Option<String>,
         memory_limit: Option<String>,
         storage_class: Option<String>,
+        github_issue_number: Option<u32>,
     ) -> anyhow::Result<Uuid> {
         // Validate backend is enabled
         self.validate_backend_enabled(backend)?;
@@ -1149,6 +1150,7 @@ impl SessionManager {
                     cpu_limit,
                     memory_limit,
                     storage_class,
+                    github_issue_number,
                 )
                 .await;
         });
@@ -1183,6 +1185,7 @@ impl SessionManager {
         cpu_limit: Option<String>,
         memory_limit: Option<String>,
         storage_class: Option<String>,
+        github_issue_number: Option<u32>,
     ) {
         // Acquire semaphore to limit concurrent creations
         let Ok(_permit) = self.creation_semaphore.acquire().await else {
@@ -1399,15 +1402,70 @@ impl SessionManager {
             };
 
             update_progress(3, "Preparing agent environment".to_string()).await;
+
+            // Transform prompt with auto-code instructions if issue is linked
+            let mut transformed_prompt = initial_prompt.clone();
+
+            // Inject auto-code workflow instructions when github_issue_number is provided
+            if let Some(issue_number) = github_issue_number {
+                if self.feature_flags.enable_auto_code {
+                    tracing::info!(
+                        session_id = %session_id,
+                        issue_number = issue_number,
+                        "Injecting auto-code workflow instructions"
+                    );
+
+                    // Fetch issue from GitHub
+                    match crate::github::fetch_issue_by_number(
+                        &PathBuf::from(&repo_path),
+                        issue_number,
+                    )
+                    .await
+                    {
+                        Ok(issue) => {
+                            // Prepend auto-code workflow instructions
+                            let auto_code_prompt = crate::agents::auto_code_instructions(&issue);
+                            transformed_prompt =
+                                format!("{}\n\n{}", auto_code_prompt, transformed_prompt);
+
+                            // Save issue metadata to session
+                            let mut sessions = self.sessions.write().await;
+                            if let Some(session) = sessions.iter_mut().find(|s| s.id == session_id)
+                            {
+                                session.github_issue_number = Some(issue.number);
+                                session.github_issue_url = Some(issue.url.clone());
+                                session.auto_code_enabled = true;
+                                if let Err(e) = self.store.save_session(session).await {
+                                    tracing::error!(
+                                        session_id = %session_id,
+                                        error = ?e,
+                                        "Failed to save GitHub issue metadata to session"
+                                    );
+                                }
+                            }
+                            drop(sessions);
+
+                            tracing::debug!("Auto-code instructions prepended to prompt");
+                        }
+                        Err(e) => {
+                            tracing::warn!(
+                                session_id = %session_id,
+                                issue_number = issue_number,
+                                error = ?e,
+                                "Failed to fetch GitHub issue, skipping auto-code instructions"
+                            );
+                        }
+                    }
+                }
+            }
+
             // Prepend plan mode instruction if enabled
-            let transformed_prompt = if plan_mode {
-                format!(
+            if plan_mode {
+                transformed_prompt = format!(
                     "Enter plan mode and create a plan before doing anything.\n\n{}",
-                    initial_prompt.trim()
-                )
-            } else {
-                initial_prompt.clone()
-            };
+                    transformed_prompt.trim()
+                );
+            }
 
             update_progress(4, "Starting backend resource".to_string()).await;
 
@@ -1741,6 +1799,7 @@ impl SessionManager {
         cpu_limit: Option<String>,
         memory_limit: Option<String>,
         storage_class: Option<String>,
+        github_issue_number: Option<u32>,
     ) -> anyhow::Result<(Session, Option<Vec<String>>)> {
         // Validate backend is enabled
         self.validate_backend_enabled(backend)?;
@@ -1936,15 +1995,52 @@ impl SessionManager {
             None // Non-container backends don't need proxy
         };
 
+        // Transform prompt with auto-code instructions if issue is linked
+        let mut transformed_prompt = initial_prompt.clone();
+
+        // Inject auto-code workflow instructions when github_issue_number is provided
+        if let Some(issue_number) = github_issue_number {
+            if self.feature_flags.enable_auto_code {
+                tracing::info!(
+                    session_id = %session.id,
+                    issue_number = issue_number,
+                    "Injecting auto-code workflow instructions"
+                );
+
+                // Fetch issue from GitHub
+                match crate::github::fetch_issue_by_number(&repo_path_buf, issue_number).await {
+                    Ok(issue) => {
+                        // Prepend auto-code workflow instructions
+                        let auto_code_prompt = crate::agents::auto_code_instructions(&issue);
+                        transformed_prompt =
+                            format!("{}\n\n{}", auto_code_prompt, transformed_prompt);
+
+                        // Save issue metadata to session
+                        session.github_issue_number = Some(issue.number);
+                        session.github_issue_url = Some(issue.url.clone());
+                        session.auto_code_enabled = true;
+
+                        tracing::debug!("Auto-code instructions prepended to prompt");
+                    }
+                    Err(e) => {
+                        tracing::warn!(
+                            session_id = %session.id,
+                            issue_number = issue_number,
+                            error = ?e,
+                            "Failed to fetch GitHub issue, skipping auto-code instructions"
+                        );
+                    }
+                }
+            }
+        }
+
         // Prepend plan mode instruction if enabled
-        let transformed_prompt = if plan_mode {
-            format!(
+        if plan_mode {
+            transformed_prompt = format!(
                 "Enter plan mode and create a plan before doing anything.\n\n{}",
-                initial_prompt.trim()
-            )
-        } else {
-            initial_prompt.clone()
-        };
+                transformed_prompt.trim()
+            );
+        }
 
         // Parse container image configuration
         let container_image_config = if let Some(image) = container_image {

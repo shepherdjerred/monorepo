@@ -304,9 +304,13 @@ pub struct CreateSessionRequest {
     /// If not specified, uses cluster default or config file setting.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub storage_class: Option<String>,
-    // Note: github_issue_number will be added when session creation wiring is implemented
-    // in a future PR (Phase 4 completion). For now, issue selection is available via the
-    // ListGitHubIssues API, but not yet integrated into session creation flow.
+
+    /// Optional: GitHub issue number to link to this session.
+    ///
+    /// When provided and auto_code feature flag is enabled, the session will
+    /// automatically include autonomous workflow instructions for resolving the issue.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub github_issue_number: Option<u32>,
 }
 
 /// Default to plan mode for safety - allows users to explore and understand

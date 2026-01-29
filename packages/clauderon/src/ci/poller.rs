@@ -304,7 +304,7 @@ impl CIPoller {
             CheckStatus::Pending
         };
 
-        // Second, get review decision using gh pr view
+        // Second, get review decision and merge state using gh pr view
         let review_output = tokio::process::Command::new("gh")
             .current_dir(repo_path)
             .args([
@@ -312,12 +312,13 @@ impl CIPoller {
                 "view",
                 &pr_number.to_string(),
                 "--json",
-                "reviewDecision",
+                "reviewDecision,state",
             ])
             .output()
             .await?;
 
         let mut new_review_decision: Option<ReviewDecision> = None;
+        let mut is_merged = false;
         if review_output.status.success() {
             let review_json = String::from_utf8_lossy(&review_output.stdout);
             if let Ok(data) = serde_json::from_str::<serde_json::Value>(&review_json) {
@@ -328,25 +329,62 @@ impl CIPoller {
                     Some("REVIEW_REQUIRED") | None => Some(ReviewDecision::ReviewRequired),
                     _ => None,
                 };
+
+                // Check if PR is merged (state values: OPEN, CLOSED, MERGED)
+                is_merged = data["state"].as_str() == Some("MERGED");
             }
         }
 
         // Update session if status changed
         let current_session = self.manager.get_session(&session_id.to_string()).await;
         if let Some(session) = current_session {
-            // Update check status if changed
-            if session.pr_check_status != Some(new_check_status) {
-                self.manager
-                    .update_pr_check_status(*session_id, new_check_status)
-                    .await?;
-            }
-
-            // Update review decision if changed
-            if let Some(decision) = new_review_decision {
-                if session.pr_review_decision != Some(decision) {
+            // Handle PR merge - update status and trigger auto-archive
+            if is_merged {
+                // Update check status to Merged
+                if session.pr_check_status != Some(CheckStatus::Merged) {
                     self.manager
-                        .update_pr_review_decision(*session_id, decision)
+                        .update_pr_check_status(*session_id, CheckStatus::Merged)
                         .await?;
+                }
+
+                // Trigger auto-archive for auto-code sessions
+                if session.auto_code_enabled {
+                    tracing::info!(
+                        session_id = %session_id,
+                        pr_url = %pr_url,
+                        issue_number = ?session.github_issue_number,
+                        "PR merged, auto-archiving session"
+                    );
+
+                    if let Err(e) = self.manager.archive_session(&session_id.to_string()).await {
+                        tracing::error!(
+                            session_id = %session_id,
+                            error = ?e,
+                            "Failed to auto-archive session after PR merge"
+                        );
+                    } else {
+                        tracing::info!(
+                            session_id = %session_id,
+                            "Successfully auto-archived session after PR merge"
+                        );
+                    }
+                }
+            } else {
+                // PR not merged yet - update normal statuses
+                // Update check status if changed
+                if session.pr_check_status != Some(new_check_status) {
+                    self.manager
+                        .update_pr_check_status(*session_id, new_check_status)
+                        .await?;
+                }
+
+                // Update review decision if changed
+                if let Some(decision) = new_review_decision {
+                    if session.pr_review_decision != Some(decision) {
+                        self.manager
+                            .update_pr_review_decision(*session_id, decision)
+                            .await?;
+                    }
                 }
             }
         }
