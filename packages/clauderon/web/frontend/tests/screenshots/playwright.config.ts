@@ -7,7 +7,8 @@ import { defineConfig, devices } from '@playwright/test';
  * Or: playwright test tests/screenshots
  */
 export default defineConfig({
-  testDir: './tests/screenshots',
+  // Test files are in current directory (config is at tests/screenshots/)
+  testDir: '.',
 
   // Output directory for screenshots
   outputDir: '../../screenshots/web',
