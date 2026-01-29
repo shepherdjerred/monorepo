@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.6.1](https://github.com/shepherdjerred/monorepo/compare/dagger-utils-v0.6.0...dagger-utils-v0.6.1) (2026-01-28)
+
+
+### Bug Fixes
+
+* add cache-busting to release-please functions ([4dec63d](https://github.com/shepherdjerred/monorepo/commit/4dec63de34245ea1c227a24821ea7ff9c77fa745))
+* **clippy:** resolve merge conflicts and apply lint fixes ([80e379f](https://github.com/shepherdjerred/monorepo/commit/80e379f7b4cee39c66ad1efb0377df13f8f6514f))
+* **dagger-utils:** add mailcap for correct S3 Content-Type headers ([4145907](https://github.com/shepherdjerred/monorepo/commit/4145907815ba62d786c54d361b2081806bc8571d))
+
 ## [0.6.0](https://github.com/shepherdjerred/monorepo/compare/dagger-utils-v0.5.0...dagger-utils-v0.6.0) (2026-01-05)
 
 
