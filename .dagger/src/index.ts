@@ -79,6 +79,7 @@ function installWorkspaceDeps(source: Directory): Container {
     .withMountedFile("/workspace/packages/dagger-utils/package.json", source.file("packages/dagger-utils/package.json"))
     .withMountedFile("/workspace/packages/eslint-config/package.json", source.file("packages/eslint-config/package.json"))
     .withMountedFile("/workspace/packages/resume/package.json", source.file("packages/resume/package.json"))
+    .withMountedFile("/workspace/packages/tools/package.json", source.file("packages/tools/package.json"))
     // Clauderon web packages (nested workspace with own lockfile)
     .withMountedFile("/workspace/packages/clauderon/web/package.json", source.file("packages/clauderon/web/package.json"))
     .withMountedFile("/workspace/packages/clauderon/web/bun.lock", source.file("packages/clauderon/web/bun.lock"))
@@ -99,6 +100,7 @@ function installWorkspaceDeps(source: Directory): Container {
     .withMountedDirectory("/workspace/packages/bun-decompile", source.directory("packages/bun-decompile"))
     .withMountedDirectory("/workspace/packages/dagger-utils", source.directory("packages/dagger-utils"))
     .withMountedDirectory("/workspace/packages/eslint-config", source.directory("packages/eslint-config"))
+    .withMountedDirectory("/workspace/packages/tools", source.directory("packages/tools"))
     // Clauderon web packages
     .withMountedDirectory("/workspace/packages/clauderon/web/shared", source.directory("packages/clauderon/web/shared"))
     .withMountedDirectory("/workspace/packages/clauderon/web/client", source.directory("packages/clauderon/web/client"))
