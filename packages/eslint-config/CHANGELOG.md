@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/shepherdjerred/monorepo/compare/eslint-config-v0.2.0...eslint-config-v0.3.0) (2026-01-28)
+
+
+### Features
+
+* add base_branch support, codex parser, and CLAUDE.md improvements ([d8946b8](https://github.com/shepherdjerred/monorepo/commit/d8946b8318d9e1181c491299c58b173923160263))
+
 ## [0.2.0](https://github.com/shepherdjerred/monorepo/compare/eslint-config-v0.1.0...eslint-config-v0.2.0) (2025-12-20)
 
 
