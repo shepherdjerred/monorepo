@@ -68,3 +68,22 @@ export {
   type ManifestReleaseOptions,
 } from "./release-please";
 export { updateHomelabVersion, type UpdateHomelabVersionOptions } from "./homelab";
+export {
+  getClaudeContainer,
+  withGhCli,
+  withClaudeAuth,
+  withClaudeRun,
+  executeClaudeRun,
+  postReview,
+  postBatchedReview,
+  postComment,
+  REVIEW_VERDICT_SCHEMA,
+  type ClaudeContainerOptions,
+  type ClaudeAuthOptions,
+  type ClaudeRunOptions,
+  type PostReviewOptions,
+  type InlineComment,
+  type BatchedReviewOptions,
+  type PostCommentOptions,
+  type ReviewVerdict,
+} from "./claude";

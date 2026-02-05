@@ -57,6 +57,23 @@ export {
   type GitHubReleaseOptions,
   type ManifestPrOptions,
   type ManifestReleaseOptions,
+  getClaudeContainer,
+  withGhCli,
+  withClaudeAuth,
+  withClaudeRun,
+  executeClaudeRun,
+  postReview,
+  postBatchedReview,
+  postComment,
+  REVIEW_VERDICT_SCHEMA,
+  type ClaudeContainerOptions,
+  type ClaudeAuthOptions,
+  type ClaudeRunOptions,
+  type PostReviewOptions,
+  type InlineComment,
+  type BatchedReviewOptions,
+  type PostCommentOptions,
+  type ReviewVerdict,
 } from "./containers";
 
 // Utilities
