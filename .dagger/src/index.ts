@@ -6,6 +6,7 @@ import {
   smokeTestBirmelImageWithContainer,
   publishBirmelImageWithContainer,
 } from "./birmel.js";
+import { reviewPr, handleInteractive } from "./code-review.js";
 
 const PACKAGES = ["eslint-config", "dagger-utils", "bun-decompile"] as const;
 const REPO_URL = "shepherdjerred/monorepo";
@@ -1079,5 +1080,79 @@ retry = 3
     outputs.push("✓ Deployed to SeaweedFS S3 (bucket: resume)");
     outputs.push(syncOutput);
     return outputs.join("\n");
+  }
+
+  /**
+   * Run automatic code review on a PR.
+   * Analyzes PR complexity, runs Claude review, and posts approval/request-changes.
+   *
+   * @param source - Source directory with git repo
+   * @param githubToken - GitHub token for posting reviews
+   * @param claudeOauthToken - Claude Code OAuth token
+   * @param prNumber - PR number to review
+   * @param baseBranch - Base branch (e.g., "main")
+   * @param headSha - Head commit SHA
+   */
+  @func()
+  async codeReview(
+    source: Directory,
+    githubToken: Secret,
+    claudeOauthToken: Secret,
+    prNumber: number,
+    baseBranch: string,
+    headSha: string,
+  ): Promise<string> {
+    return reviewPr({
+      source,
+      githubToken,
+      claudeOauthToken,
+      prNumber,
+      baseBranch,
+      headSha,
+    });
+  }
+
+  /**
+   * Handle interactive @claude mention in a PR comment.
+   *
+   * @param source - Source directory with git repo
+   * @param githubToken - GitHub token for posting comments
+   * @param claudeOauthToken - Claude Code OAuth token
+   * @param prNumber - PR number
+   * @param commentBody - The comment text (as Secret to support env: prefix)
+   * @param commentPath - Optional file path for review comments
+   * @param commentLine - Optional line number for review comments
+   * @param commentDiffHunk - Optional diff context for review comments
+   */
+  @func()
+  async codeReviewInteractive(
+    source: Directory,
+    githubToken: Secret,
+    claudeOauthToken: Secret,
+    prNumber: number,
+    commentBody: Secret,
+    commentPath?: string,
+    commentLine?: number,
+    commentDiffHunk?: string,
+  ): Promise<string> {
+    // Extract comment body from secret
+    // Note: In Dagger, we need to handle secrets carefully
+    // The commentBody is passed as Secret so env: prefix works in GHA
+    const bodyText = await commentBody.plaintext();
+
+    return handleInteractive({
+      source,
+      githubToken,
+      claudeOauthToken,
+      prNumber,
+      commentBody: bodyText,
+      eventContext: commentPath
+        ? {
+            path: commentPath,
+            line: commentLine,
+            diffHunk: commentDiffHunk,
+          }
+        : undefined,
+    });
   }
 }
