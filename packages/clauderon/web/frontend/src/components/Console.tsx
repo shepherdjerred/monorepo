@@ -12,6 +12,56 @@ type ConsoleProps = {
   onSwitchToChat?: () => void;
 }
 
+// Terminal color themes
+const terminalThemes = {
+  light: {
+    background: "#ffffff",
+    foreground: "#1a1a1a",
+    cursor: "#1a1a1a",
+    cursorAccent: "#ffffff",
+    selectionBackground: "rgba(33, 66, 131, 0.3)",
+    black: "#000000",
+    red: "#cd3131",
+    green: "#00bc00",
+    yellow: "#949800",
+    blue: "#0451a5",
+    magenta: "#bc05bc",
+    cyan: "#0598bc",
+    white: "#555555",
+    brightBlack: "#666666",
+    brightRed: "#cd3131",
+    brightGreen: "#14ce14",
+    brightYellow: "#b5ba00",
+    brightBlue: "#0451a5",
+    brightMagenta: "#bc05bc",
+    brightCyan: "#0598bc",
+    brightWhite: "#a5a5a5",
+  },
+  dark: {
+    background: "#0a0e14",
+    foreground: "#e6e1dc",
+    cursor: "#00ff00",
+    cursorAccent: "#000000",
+    selectionBackground: "rgba(72, 118, 255, 0.3)",
+    black: "#000000",
+    red: "#ff3333",
+    green: "#00ff00",
+    yellow: "#ffff00",
+    blue: "#0066ff",
+    magenta: "#cc00ff",
+    cyan: "#00ffff",
+    white: "#cccccc",
+    brightBlack: "#666666",
+    brightRed: "#ff6666",
+    brightGreen: "#66ff66",
+    brightYellow: "#ffff66",
+    brightBlue: "#6666ff",
+    brightMagenta: "#ff66ff",
+    brightCyan: "#66ffff",
+    brightWhite: "#ffffff",
+  },
+};
+
 /**
  * Convert technical error to user-friendly message
  */
@@ -78,56 +128,6 @@ export function Console({ sessionId, sessionName, onClose, onSwitchToChat }: Con
   // Get current theme from document
   const getCurrentTheme = (): 'light' | 'dark' => {
     return document.documentElement.classList.contains('dark') ? 'dark' : 'light';
-  };
-
-  // Terminal color themes
-  const terminalThemes = {
-    light: {
-      background: "#ffffff",
-      foreground: "#1a1a1a",
-      cursor: "#1a1a1a",
-      cursorAccent: "#ffffff",
-      selectionBackground: "rgba(33, 66, 131, 0.3)",
-      black: "#000000",
-      red: "#cd3131",
-      green: "#00bc00",
-      yellow: "#949800",
-      blue: "#0451a5",
-      magenta: "#bc05bc",
-      cyan: "#0598bc",
-      white: "#555555",
-      brightBlack: "#666666",
-      brightRed: "#cd3131",
-      brightGreen: "#14ce14",
-      brightYellow: "#b5ba00",
-      brightBlue: "#0451a5",
-      brightMagenta: "#bc05bc",
-      brightCyan: "#0598bc",
-      brightWhite: "#a5a5a5",
-    },
-    dark: {
-      background: "#0a0e14",
-      foreground: "#e6e1dc",
-      cursor: "#00ff00",
-      cursorAccent: "#000000",
-      selectionBackground: "rgba(72, 118, 255, 0.3)",
-      black: "#000000",
-      red: "#ff3333",
-      green: "#00ff00",
-      yellow: "#ffff00",
-      blue: "#0066ff",
-      magenta: "#cc00ff",
-      cyan: "#00ffff",
-      white: "#cccccc",
-      brightBlack: "#666666",
-      brightRed: "#ff6666",
-      brightGreen: "#66ff66",
-      brightYellow: "#ffff66",
-      brightBlue: "#6666ff",
-      brightMagenta: "#ff66ff",
-      brightCyan: "#66ffff",
-      brightWhite: "#ffffff",
-    },
   };
 
   // Initialize terminal
@@ -257,7 +257,7 @@ export function Console({ sessionId, sessionName, onClose, onSwitchToChat }: Con
           tags: {
             error_type: 'terminal_decode',
             decode_stage: err.stage,
-            session_id: err.context.sessionId || 'unknown',
+            session_id: err.context.sessionId ?? 'unknown',
           },
           contexts: {
             decode: {
@@ -326,17 +326,11 @@ export function Console({ sessionId, sessionName, onClose, onSwitchToChat }: Con
 
   return (
     <>
-      <div className="fixed inset-0 z-40" style={{
-        backgroundColor: 'hsl(220, 90%, 8%)',
-        opacity: 0.85
-      }} />
+      <div className="fixed inset-0 z-40 bg-background/85 backdrop-blur-sm" />
       <div className="fixed inset-0 flex items-center justify-center p-8 z-50">
-        <div className="max-w-5xl w-full h-[85vh] flex flex-col border-4 border-primary" style={{
-          backgroundColor: 'hsl(220, 15%, 95%)',
-          boxShadow: '12px 12px 0 hsl(220, 85%, 25%), 24px 24px 0 hsl(220, 90%, 10%)'
-        }}>
+        <div className="max-w-5xl w-full h-[85vh] flex flex-col border-4 border-primary bg-card console-brutalist-shadow">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b-4 border-primary" style={{ backgroundColor: 'hsl(220, 85%, 25%)' }}>
+        <div className="flex items-center justify-between p-4 border-b-4 border-primary bg-primary">
           <div className="flex items-center gap-4">
             <h2 className="text-2xl font-bold font-mono uppercase tracking-wider text-white">
               {sessionName}
@@ -378,12 +372,7 @@ export function Console({ sessionId, sessionName, onClose, onSwitchToChat }: Con
         {error && (
           <div
             key={errorKey}
-            className="p-4 border-b-4 font-mono flex items-start justify-between gap-4"
-            style={{
-              backgroundColor: 'hsl(0, 75%, 95%)',
-              color: 'hsl(0, 75%, 40%)',
-              borderColor: 'hsl(0, 75%, 50%)'
-            }}
+            className="p-4 border-b-4 font-mono flex items-start justify-between gap-4 bg-destructive/10 text-destructive border-destructive"
           >
             <div className="flex-1">
               <strong className="font-bold">ERROR:</strong> {error}
@@ -412,12 +401,12 @@ export function Console({ sessionId, sessionName, onClose, onSwitchToChat }: Con
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t-4 border-primary text-sm" style={{ backgroundColor: 'hsl(220, 15%, 90%)' }}>
-          <p className="font-mono" style={{ color: 'hsl(220, 20%, 45%)' }}>
-            <kbd className="px-2 py-1 border-2 font-bold mr-2" style={{ backgroundColor: 'hsl(220, 85%, 25%)', color: 'white', borderColor: 'hsl(220, 85%, 25%)' }}>CTRL+C</kbd>
-            <span style={{ color: 'hsl(220, 90%, 10%)' }}>interrupt signal</span>
+        <div className="p-4 border-t-4 border-primary text-sm bg-muted">
+          <p className="font-mono text-muted-foreground">
+            <kbd className="px-2 py-1 border-2 font-bold mr-2 bg-primary text-primary-foreground border-primary">CTRL+C</kbd>
+            <span className="text-foreground">interrupt signal</span>
             <span className="mx-3">│</span>
-            <span style={{ color: 'hsl(220, 90%, 10%)' }}>Close to detach (session persists)</span>
+            <span className="text-foreground">Close to detach (session persists)</span>
           </p>
         </div>
         </div>

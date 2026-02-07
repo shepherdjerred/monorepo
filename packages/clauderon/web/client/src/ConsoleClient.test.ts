@@ -1,6 +1,7 @@
 import { describe, expect, test, mock, beforeEach, afterEach } from "bun:test";
 import { ConsoleClient } from "./ConsoleClient";
 import { WebSocketError } from "./errors";
+import type { DecodeError } from "./errors";
 
 // Mock WebSocket implementation
 class MockWebSocket {
@@ -560,13 +561,10 @@ describe("ConsoleClient", () => {
       ws.simulateMessage(message);
 
       expect(onError).toHaveBeenCalledTimes(1);
-      const error = onError.mock.calls[0]![0];
+      const error = onError.mock.calls[0]![0] as DecodeError;
       expect(error.name).toBe("DecodeError");
-      // @ts-expect-error - DecodeError has stage property
       expect(error.stage).toBe("validation");
-      // @ts-expect-error - DecodeError has context property
       expect(error.context.sessionId).toBe("session1");
-      // @ts-expect-error - DecodeError has context property
       expect(error.context.dataLength).toBe(3);
     });
 
@@ -592,11 +590,9 @@ describe("ConsoleClient", () => {
       // This test mainly verifies the error path exists and has correct structure
       // In production, specific byte sequences cause atob to fail
       if (onError.mock.calls.length > 0) {
-        const error = onError.mock.calls[0]![0];
+        const error = onError.mock.calls[0]![0] as DecodeError;
         expect(error.name).toBe("DecodeError");
-        // @ts-expect-error - DecodeError has stage property
         expect(error.stage).toBe("base64");
-        // @ts-expect-error - DecodeError has context property
         expect(error.context.dataSample).toBe(problematicBase64);
       }
     });
@@ -618,10 +614,8 @@ describe("ConsoleClient", () => {
       ws.simulateMessage(message);
 
       expect(onError).toHaveBeenCalledTimes(1);
-      const error = onError.mock.calls[0]![0];
-      // @ts-expect-error - DecodeError has context property
+      const error = onError.mock.calls[0]![0] as DecodeError;
       expect(error.context.dataSample.length).toBeLessThanOrEqual(100); // Sample is truncated
-      // @ts-expect-error - DecodeError has context property
       expect(error.context.dataLength).toBe(201); // Full length is preserved
     });
 
@@ -654,9 +648,8 @@ describe("ConsoleClient", () => {
 
       // If an error occurred, verify it has proper context
       if (onError.mock.calls.length > 0) {
-        const error = onError.mock.calls[0]![0];
+        const error = onError.mock.calls[0]![0] as DecodeError;
         expect(error.name).toBe("DecodeError");
-        // @ts-expect-error - DecodeError has context property
         expect(error.context.dataLength).toBe(1368);
       }
     });

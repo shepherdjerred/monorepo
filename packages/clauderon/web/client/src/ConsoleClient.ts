@@ -6,6 +6,10 @@ import { WebSocketError, DecodeError } from "./errors.js";
 type ConsoleMessage = {
   type: string;
   data?: string;
+  rows?: number;
+  cols?: number;
+  cursor_row?: number;
+  cursor_col?: number;
 };
 
 /**
@@ -73,10 +77,10 @@ export class ConsoleClient {
   private decoder: TextDecoder | null = null;
 
   // Error throttling to prevent UI freezes
-  private errorCount: number = 0;
-  private lastErrorTime: number = 0;
+  private errorCount = 0;
+  private lastErrorTime = 0;
   private readonly MAX_ERRORS_PER_SECOND = 5;
-  private isErrorThrottled: boolean = false;
+  private isErrorThrottled = false;
 
   private listeners: {
     connected: (() => void)[];
@@ -127,11 +131,11 @@ export class ConsoleClient {
         try {
           const message = JSON.parse(event.data) as ConsoleMessage;
 
-          if (message.type === "output") {
+          if (message.type === "snapshot" || message.type === "output") {
             // Validate data field exists and is a string
             if (typeof message.data !== "string") {
               console.warn(
-                `[ConsoleClient] Invalid output message for session ${this.sessionId}: ` +
+                `[ConsoleClient] Invalid output message for session ${String(this.sessionId)}: ` +
                 `data field is ${typeof message.data}, expected string`
               );
               return;
@@ -139,7 +143,7 @@ export class ConsoleClient {
 
             // Check for empty data
             if (message.data.length === 0) {
-              console.debug(`[ConsoleClient] Received empty output data for session ${this.sessionId}`);
+              console.debug(`[ConsoleClient] Received empty output data for session ${String(this.sessionId)}`);
               // Empty data is valid - just emit empty string
               this.emit("data", "");
               return;
@@ -149,8 +153,8 @@ export class ConsoleClient {
             if (!isValidBase64(message.data)) {
               if (this.shouldEmitError()) {
                 console.error(
-                  `[ConsoleClient] Invalid base64 format (stage: validation) for session ${this.sessionId}. ` +
-                  `Length: ${message.data.length}, ` +
+                  `[ConsoleClient] Invalid base64 format (stage: validation) for session ${String(this.sessionId)}. ` +
+                  `Length: ${String(message.data.length)}, ` +
                   `First 50 chars: ${message.data.substring(0, 50)}`
                 );
                 this.emit(
@@ -173,8 +177,8 @@ export class ConsoleClient {
             if (message.data.length > MAX_MESSAGE_SIZE) {
               if (this.shouldEmitError()) {
                 console.error(
-                  `[ConsoleClient] Message size exceeded limit for session ${this.sessionId}. ` +
-                  `Size: ${message.data.length} bytes, Max: ${MAX_MESSAGE_SIZE} bytes`
+                  `[ConsoleClient] Message size exceeded limit for session ${String(this.sessionId)}. ` +
+                  `Size: ${String(message.data.length)} bytes, Max: ${String(MAX_MESSAGE_SIZE)} bytes`
                 );
                 this.emit(
                   "error",
@@ -189,8 +193,8 @@ export class ConsoleClient {
 
             // Log raw message for debugging
             console.debug(
-              `[ConsoleClient] Processing output message for session ${this.sessionId}. ` +
-              `Data length: ${message.data.length}, ` +
+              `[ConsoleClient] Processing output message for session ${String(this.sessionId)}. ` +
+              `Data length: ${String(message.data.length)}, ` +
               `First 50 chars: ${message.data.substring(0, 50)}`
             );
 
@@ -203,16 +207,16 @@ export class ConsoleClient {
 
               // Log decoded bytes for debugging
               console.debug(
-                `[ConsoleClient] Base64 decoded for session ${this.sessionId}. ` +
-                `Bytes length: ${bytes.length}, ` +
+                `[ConsoleClient] Base64 decoded for session ${String(this.sessionId)}. ` +
+                `Bytes length: ${String(bytes.length)}, ` +
                 `First 32 bytes: ${Array.from(bytes.slice(0, 32)).map(b => '0x' + b.toString(16).padStart(2, '0')).join(' ')}`
               );
             } catch (atobError) {
               if (this.shouldEmitError()) {
                 const errorMsg = atobError instanceof Error ? atobError.message : String(atobError);
                 console.error(
-                  `[ConsoleClient] Base64 decode error (stage: atob) for session ${this.sessionId}: ${errorMsg}. ` +
-                  `Data length: ${message.data.length}, ` +
+                  `[ConsoleClient] Base64 decode error (stage: atob) for session ${String(this.sessionId)}: ${errorMsg}. ` +
+                  `Data length: ${String(message.data.length)}, ` +
                   `Sample: ${message.data.substring(0, 100)}`
                 );
                 this.emit(
@@ -237,7 +241,10 @@ export class ConsoleClient {
               // Use stream mode to handle incomplete UTF-8 sequences at chunk boundaries
               // fatal: false means replace invalid bytes with � instead of throwing
               // stream: true means buffer incomplete sequences for next chunk
-              const decoded = this.decoder!.decode(bytes, { stream: true });
+              if (!this.decoder) {
+                throw new Error("Decoder not initialized");
+              }
+              const decoded = this.decoder.decode(bytes, { stream: true });
               this.emit("data", decoded);
             } catch (utf8Error) {
               if (this.shouldEmitError()) {
@@ -247,11 +254,11 @@ export class ConsoleClient {
                   .map(b => '0x' + b.toString(16).padStart(2, '0'))
                   .join(' ');
                 console.error(
-                  `[ConsoleClient] UTF-8 decode error (stage: utf8) for session ${this.sessionId}: ${errorMsg}. ` +
-                  `Bytes length: ${bytes.length}, ` +
+                  `[ConsoleClient] UTF-8 decode error (stage: utf8) for session ${String(this.sessionId)}: ${errorMsg}. ` +
+                  `Bytes length: ${String(bytes.length)}, ` +
                   `Hex sample: ${hexSample}, ` +
                   `Decoder state: ${this.decoder ? 'initialized' : 'null'}, ` +
-                  `Original base64 length: ${message.data.length}, ` +
+                  `Original base64 length: ${String(message.data.length)}, ` +
                   `Original base64 sample: ${message.data.substring(0, 100)}`
                 );
                 this.emit(
@@ -275,7 +282,7 @@ export class ConsoleClient {
           if (this.shouldEmitError()) {
             const errorMsg = error instanceof Error ? error.message : String(error);
             console.error(
-              `[ConsoleClient] Message parse error for session ${this.sessionId}: ${errorMsg}`
+              `[ConsoleClient] Message parse error for session ${String(this.sessionId)}: ${errorMsg}`
             );
             this.emit(
               "error",
@@ -450,7 +457,7 @@ export class ConsoleClient {
       if (!this.isErrorThrottled) {
         this.isErrorThrottled = true;
         console.error(
-          `[ConsoleClient] Error rate exceeded for session ${this.sessionId}. ` +
+          `[ConsoleClient] Error rate exceeded for session ${String(this.sessionId)}. ` +
           `Throttling errors to prevent UI freeze. Check server logs.`
         );
       }

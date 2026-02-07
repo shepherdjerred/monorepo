@@ -5,80 +5,143 @@ description: Create your first clauderon session in minutes
 
 This guide will walk you through creating your first clauderon session.
 
-## Start the TUI
+## 1. Start the Daemon
 
-Launch clauderon without any arguments to open the terminal user interface:
+clauderon requires a background daemon for session management:
 
 ```bash
-clauderon
+clauderon daemon
 ```
 
-You'll see the main session list view. Use the keyboard to navigate:
+The daemon starts:
+- HTTP server at http://localhost:3030
+- Credential proxy for secure token injection
+- Session lifecycle management
 
-- `n` - Create a new session
-- `Enter` - Attach to a session
-- `d` - Delete a session
+Keep this terminal running, or run the daemon in the background.
+
+## 2. Create a Session
+
+### Via CLI
+
+```bash
+clauderon create --repo ~/my-project --prompt "Fix the login bug"
+```
+
+Required flags:
+- `--repo` - Path to your git repository
+- `--prompt` - Initial task for the AI agent
+
+Optional flags:
+- `--backend` - zellij (default), docker, kubernetes, sprites, apple
+- `--agent` - claude (default), codex, gemini
+- `--access-mode` - read-write (default), read-only
+
+### Via Web UI
+
+1. Open http://localhost:3030
+2. Click "New Session"
+3. Select repository and enter prompt
+4. Choose backend and agent
+
+### Via TUI
+
+```bash
+clauderon tui
+```
+
+Press `n` to create a new session interactively.
+
+**Keyboard shortcuts:**
+- `n` - Create new session
+- `Enter` - Attach to session
+- `a` - Archive session
+- `d` - Delete session
+- `j/k` - Navigate up/down
 - `q` - Quit
 
-## Create a Session
+## 3. Configure Credentials
 
-Press `n` to create a new session. You'll be prompted to configure:
-
-1. **Session Name**: A memorable name for your session
-2. **Backend**: Choose Docker or Zellij
-3. **Working Directory**: The directory to mount/work in
-4. **Git Repository** (optional): Clone a repo for the session
-
-## Configure Credentials
-
-Create a configuration file at `~/.config/clauderon/config.toml`:
-
-```toml
-[credentials]
-# Your Anthropic API key for Claude
-anthropic_api_key = "sk-ant-..."
-
-# GitHub OAuth token for git operations
-github_token = "ghp_..."
-
-[proxy]
-# Port for the HTTP proxy
-port = 8080
-
-# Auto-generate TLS certificates
-generate_certs = true
-```
-
-## Run Claude Code in a Session
-
-Once your session is created and attached:
+Credentials are stored in `~/.clauderon/secrets/`:
 
 ```bash
-# The proxy is automatically configured
-# Claude Code will use the proxy for API calls
-claude
-
-# Your real credentials are never exposed to the agent
-echo $ANTHROPIC_API_KEY  # Shows "placeholder"
+mkdir -p ~/.clauderon/secrets
+echo "your-github-token" > ~/.clauderon/secrets/github_token
+echo "your-anthropic-token" > ~/.clauderon/secrets/anthropic_oauth_token
+chmod 600 ~/.clauderon/secrets/*
 ```
 
-## Session Lifecycle
+Or use 1Password for automatic credential injection (see [1Password Guide](/guides/onepassword/)).
 
-Sessions persist across clauderon restarts:
+### Supported Credentials
+
+| Credential | File Name |
+|------------|-----------|
+| GitHub | `github_token` |
+| Anthropic OAuth | `anthropic_oauth_token` |
+| OpenAI/Codex | `openai_api_key` |
+| PagerDuty | `pagerduty_token` |
+| Sentry | `sentry_auth_token` |
+| Grafana | `grafana_api_key` |
+| npm | `npm_token` |
+
+## 4. Session Lifecycle
 
 ```bash
-# List all sessions
+# List sessions
 clauderon list
 
-# Attach to an existing session
+# List including archived
+clauderon list --archived
+
+# Attach to session terminal
 clauderon attach <session-name>
 
-# Delete a session
+# Archive (hide but preserve)
+clauderon archive <session-name>
+
+# Restore archived session
+clauderon unarchive <session-name>
+
+# Delete permanently
 clauderon delete <session-name>
+```
+
+## Example Workflows
+
+### Bug Fix Session
+
+```bash
+# Start a session to fix a specific bug
+clauderon create \
+  --repo ~/my-project \
+  --prompt "Fix the authentication timeout bug in the login handler"
+```
+
+### Code Review Session (Read-Only)
+
+```bash
+# Create a read-only session for safe code exploration
+clauderon create \
+  --access-mode read-only \
+  --repo ~/my-project \
+  --prompt "Review the recent changes to the payment module"
+```
+
+### Docker-Isolated Session
+
+```bash
+# Use Docker for full isolation
+clauderon create \
+  --backend docker \
+  --repo ~/my-project \
+  --prompt "Refactor the database layer"
 ```
 
 ## Next Steps
 
-- Learn about [Docker Backend](/guides/docker/) configuration
-- Configure the [Credential Proxy](/guides/proxy/)
-- View the full [CLI Reference](/reference/cli/)
+- [Choose a Backend](/getting-started/backends/) - Compare isolation options
+- [Choose an Agent](/getting-started/agents/) - Compare AI agents
+- [Configure 1Password](/guides/onepassword/) - Secure credential management
+- [Web Interface Guide](/guides/web-ui/) - Browser-based session management
+- [CLI Reference](/reference/cli/) - Complete command documentation

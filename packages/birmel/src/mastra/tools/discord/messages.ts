@@ -1,51 +1,24 @@
-import { createTool } from "@mastra/core/tools";
+import { createTool } from "../../../voltagent/tools/create-tool.js";
 import { z } from "zod";
+import type { TextChannel } from "discord.js";
 import { getDiscordClient } from "../../../discord/index.js";
 import { loggers } from "../../../utils/logger.js";
 import { withToolSpan, captureException } from "../../../observability/index.js";
 import { getRequestContext, hasReplySent, markReplySent } from "../request-context.js";
-import type { TextChannel } from "discord.js";
 import { validateSnowflakes, validateSnowflakeArray } from "./validation.js";
-import { prepareMessageWorkflow } from "../../workflows/index.js";
-import { getConfig } from "../../../config/index.js";
+import { isDiscordAPIError, formatDiscordAPIError } from "./error-utils.js";
 
 const logger = loggers.tools.child("discord.messages");
 
 /**
- * Apply style transformation to message content using the prepare-message workflow.
- * Uses the guild's current persona to stylize the response.
+ * NOTE: Stylization is now handled at the agent level via prompt-embedded persona.
+ * Messages are styled as they're generated, not as a post-processing step.
+ * This function is kept as a pass-through for backwards compatibility.
  */
-async function stylizeContent(content: string, guildId: string | undefined): Promise<string> {
-  const config = getConfig();
-  if (!config.persona.enabled || !guildId) {
-    return content;
-  }
-
-  try {
-    const run = await prepareMessageWorkflow.createRun();
-    const result = await run.start({
-      inputData: {
-        content,
-        guildId,
-      },
-    });
-
-    if (result.status === "success") {
-      logger.debug("Message styled via workflow", {
-        persona: result.result.persona,
-        wasStyled: result.result.wasStyled,
-        originalLength: content.length,
-        styledLength: result.result.content.length,
-      });
-      return result.result.content;
-    }
-
-    logger.warn("Workflow did not return success, using original content", { status: result.status });
-    return content;
-  } catch (error) {
-    logger.error("Failed to stylize content via workflow, using original", { error });
-    return content;
-  }
+function stylizeContent(content: string, _guildId: string | undefined): string {
+  // Stylization is now done at the agent level via prompt-embedded persona
+  // This saves the 2-5 second blocking LLM call that was slowing down responses
+  return content;
 }
 
 export const manageMessageTool = createTool({
@@ -106,7 +79,7 @@ export const manageMessageTool = createTool({
               return { success: false, message: "Channel is not a text channel" };
             }
             const requestContext = getRequestContext();
-            const styledContent = await stylizeContent(ctx.content, requestContext?.guildId);
+            const styledContent = stylizeContent(ctx.content, requestContext?.guildId);
             const sent = await (channel as TextChannel).send(styledContent);
             logger.info("Message sent", { channelId: ctx.channelId, messageId: sent.id });
             return { success: true, message: "Message sent successfully", data: { messageId: sent.id } };
@@ -118,8 +91,14 @@ export const manageMessageTool = createTool({
             }
             // Prevent duplicate replies to the same message
             if (hasReplySent()) {
-              logger.warn("Reply already sent for this request, ignoring duplicate", { content: ctx.content.slice(0, 50) });
-              return { success: true, message: "Reply already sent (duplicate prevented)" };
+              logger.warn("Duplicate reply attempt blocked", {
+                content: ctx.content.slice(0, 50),
+                attemptedContentLength: ctx.content.length,
+              });
+              return {
+                success: true,
+                message: "ALREADY REPLIED - A reply was already sent to this user's message. Do NOT attempt to reply again. The user has received the response. Your task is complete.",
+              };
             }
             const requestContext = getRequestContext();
             if (!requestContext?.sourceMessageId || !requestContext.sourceChannelId) {
@@ -130,7 +109,7 @@ export const manageMessageTool = createTool({
               return { success: false, message: "Channel is not a text channel" };
             }
             const originalMessage = await (channel as TextChannel).messages.fetch(requestContext.sourceMessageId);
-            const styledContent = await stylizeContent(ctx.content, requestContext.guildId);
+            const styledContent = stylizeContent(ctx.content, requestContext.guildId);
             const sent = await originalMessage.reply(styledContent);
             markReplySent();
             logger.info("Reply sent", { channelId: requestContext.sourceChannelId, messageId: sent.id, replyTo: requestContext.sourceMessageId });
@@ -144,7 +123,7 @@ export const manageMessageTool = createTool({
             const user = await client.users.fetch(ctx.userId);
             const dmChannel = await user.createDM();
             const requestContext = getRequestContext();
-            const styledContent = await stylizeContent(ctx.content, requestContext?.guildId);
+            const styledContent = stylizeContent(ctx.content, requestContext?.guildId);
             const sent = await dmChannel.send(styledContent);
             logger.info("DM sent", { userId: ctx.userId, messageId: sent.id });
             return { success: true, message: "Direct message sent successfully", data: { messageId: sent.id } };
@@ -181,6 +160,10 @@ export const manageMessageTool = createTool({
           case "bulk-delete": {
             if (!ctx.channelId || !ctx.messageIds?.length) {
               return { success: false, message: "channelId and messageIds are required for bulk-delete" };
+            }
+            // Safety: limit bulk delete to Discord's max of 100 messages
+            if (ctx.messageIds.length > 100) {
+              return { success: false, message: "Cannot delete more than 100 messages at once (Discord limit)" };
             }
             const channel = await client.channels.fetch(ctx.channelId);
             if (!channel?.isTextBased()) {
@@ -282,6 +265,21 @@ export const manageMessageTool = createTool({
           }
         }
       } catch (error) {
+        if (isDiscordAPIError(error)) {
+          logger.error("Discord API error in manage-message", {
+            code: error.code,
+            status: error.status,
+            message: error.message,
+            method: error.method,
+            url: error.url,
+            ctx,
+          });
+          captureException(new Error(formatDiscordAPIError(error)), { operation: "tool.manage-message" });
+          return {
+            success: false,
+            message: formatDiscordAPIError(error),
+          };
+        }
         logger.error("Failed to manage message", error);
         captureException(error as Error, { operation: "tool.manage-message" });
         return { success: false, message: `Failed: ${(error as Error).message}` };

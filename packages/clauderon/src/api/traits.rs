@@ -3,6 +3,7 @@
 use async_trait::async_trait;
 
 use crate::core::Session;
+use crate::core::session::HealthCheckResult;
 
 use super::protocol::CreateSessionRequest;
 use super::types::ReconcileReportDto;
@@ -47,4 +48,28 @@ pub trait ApiClient: Send + Sync {
 
     /// Get recent repositories with timestamps.
     async fn get_recent_repos(&mut self) -> anyhow::Result<Vec<super::protocol::RecentRepoDto>>;
+
+    /// Get current feature flags from the daemon.
+    async fn get_feature_flags(&mut self) -> anyhow::Result<crate::feature_flags::FeatureFlags>;
+
+    /// Get health status of all sessions.
+    async fn get_health(&mut self) -> anyhow::Result<HealthCheckResult>;
+
+    /// Start a stopped session.
+    async fn start_session(&mut self, id: uuid::Uuid) -> anyhow::Result<()>;
+
+    /// Wake a hibernated session.
+    async fn wake_session(&mut self, id: uuid::Uuid) -> anyhow::Result<()>;
+
+    /// Recreate a session (preserves data).
+    async fn recreate_session(&mut self, id: uuid::Uuid) -> anyhow::Result<()>;
+
+    /// Recreate a session fresh (data lost).
+    async fn recreate_session_fresh(&mut self, id: uuid::Uuid) -> anyhow::Result<()>;
+
+    /// Update session image and recreate.
+    async fn update_session_image(&mut self, id: uuid::Uuid) -> anyhow::Result<()>;
+
+    /// Cleanup a session (remove from clauderon).
+    async fn cleanup_session(&mut self, id: uuid::Uuid) -> anyhow::Result<()>;
 }

@@ -1,11 +1,14 @@
 import { useState, useMemo, useEffect } from "react";
-import type { Session } from "@clauderon/client";
+import type { Session, SessionHealthReport } from "@clauderon/client";
 import { SessionStatus } from "@clauderon/shared";
 import { SessionCard } from "./SessionCard";
 import { ThemeToggle } from "./ThemeToggle";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { StatusDialog } from "./StatusDialog";
 import { EditSessionDialog } from "./EditSessionDialog";
+import { StartupHealthModal } from "./StartupHealthModal";
+import { RecreateConfirmModal } from "./RecreateConfirmModal";
+import { RecreateBlockedModal } from "./RecreateBlockedModal";
 import { useSessionContext } from "../contexts/SessionContext";
 import { toast } from "sonner";
 import { Plus, RefreshCw, Info } from "lucide-react";
@@ -24,8 +27,23 @@ type FilterStatus = "all" | "running" | "idle" | "completed" | "archived";
 const TAB_TRIGGER_CLASS = "cursor-pointer transition-all duration-200 hover:bg-primary/20 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-2 data-[state=active]:border-primary data-[state=active]:shadow-[4px_4px_0_hsl(220,85%,25%)] data-[state=active]:font-bold";
 
 export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
-  const { sessions, isLoading, error, refreshSessions, archiveSession, unarchiveSession, refreshSession, deleteSession } =
-    useSessionContext();
+  const {
+    sessions,
+    isLoading,
+    error,
+    refreshSessions,
+    archiveSession,
+    unarchiveSession,
+    refreshSession,
+    deleteSession,
+    getSessionHealth,
+    refreshHealth,
+    healthReports,
+    startSession,
+    wakeSession,
+    recreateSession,
+    cleanupSession,
+  } = useSessionContext();
 
   // Initialize filter from URL parameter
   const getInitialFilter = (): FilterStatus => {
@@ -46,6 +64,18 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
   const [showStatusDialog, setShowStatusDialog] = useState(false);
   const [lastRefreshTime, setLastRefreshTime] = useState<Date>(new Date());
   const [, setTickCounter] = useState(0); // Force re-render for time display
+
+  // Health modal state
+  const [showStartupHealthModal, setShowStartupHealthModal] = useState(false);
+  const [recreateModalSession, setRecreateModalSession] = useState<{
+    session: Session;
+    healthReport: SessionHealthReport;
+  } | null>(null);
+  const [blockedModalSession, setBlockedModalSession] = useState<{
+    session: Session;
+    healthReport: SessionHealthReport;
+  } | null>(null);
+  const [startupHealthCheckDone, setStartupHealthCheckDone] = useState(false);
 
   const filteredSessions = useMemo(() => {
     const sessionArray = Array.from(sessions.values());
@@ -75,13 +105,13 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
   // Auto-refresh every 2 seconds (silent - no loading indicators)
   useEffect(() => {
     const interval = setInterval(() => {
-      void refreshSessions(false).then(() => {
+      void Promise.all([refreshSessions(false), refreshHealth()]).then(() => {
         setLastRefreshTime(new Date());
       });
     }, 2000);
 
     return () => { clearInterval(interval); };
-  }, [refreshSessions]);
+  }, [refreshSessions, refreshHealth]);
 
   // Update time display every second
   useEffect(() => {
@@ -92,13 +122,34 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
     return () => { clearInterval(interval); };
   }, []);
 
+  // Startup health check - show modal if there are unhealthy sessions
+  useEffect(() => {
+    if (startupHealthCheckDone || isLoading || healthReports.size === 0) return;
+
+    const unhealthySessions = Array.from(healthReports.values()).filter(
+      (report) => report.state.type !== "Healthy"
+    );
+
+    if (unhealthySessions.length > 0) {
+      setShowStartupHealthModal(true);
+    }
+    setStartupHealthCheckDone(true);
+  }, [healthReports, isLoading, startupHealthCheckDone]);
+
+  // Compute unhealthy sessions for the startup modal
+  const unhealthySessions = useMemo(() => {
+    return Array.from(healthReports.values()).filter(
+      (report) => report.state.type !== "Healthy"
+    );
+  }, [healthReports]);
+
   // Format last refresh time for display
   const getTimeSinceRefresh = (): string => {
     const seconds = Math.floor((Date.now() - lastRefreshTime.getTime()) / 1000);
     if (seconds < 5) return "just now";
-    if (seconds < 60) return `${seconds}s ago`;
+    if (seconds < 60) return `${String(seconds)}s ago`;
     const minutes = Math.floor(seconds / 60);
-    return `${minutes}m ago`;
+    return `${String(minutes)}m ago`;
   };
 
   const handleEdit = (session: Session) => {
@@ -118,7 +169,18 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
   };
 
   const handleRefresh = (session: Session) => {
-    setConfirmDialog({ type: "refresh", session });
+    const healthReport = getSessionHealth(session.id);
+    if (healthReport) {
+      // Check if this session has no available actions (blocked)
+      if (healthReport.available_actions.length === 0) {
+        setBlockedModalSession({ session, healthReport });
+      } else {
+        setRecreateModalSession({ session, healthReport });
+      }
+    } else {
+      // Fallback to legacy refresh dialog if no health report
+      setConfirmDialog({ type: "refresh", session });
+    }
   };
 
   const handleConfirm = () => {
@@ -127,25 +189,25 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
     if (confirmDialog.type === "archive") {
       void archiveSession(confirmDialog.session.id).then(() => {
         toast.success(`Session "${confirmDialog.session.name}" archived`);
-      }).catch((err) => {
+      }).catch((err: unknown) => {
         toast.error(`Failed to archive: ${err instanceof Error ? err.message : String(err)}`);
       });
     } else if (confirmDialog.type === "unarchive") {
       void unarchiveSession(confirmDialog.session.id).then(() => {
         toast.success(`Session "${confirmDialog.session.name}" restored from archive`);
-      }).catch((err) => {
+      }).catch((err: unknown) => {
         toast.error(`Failed to unarchive: ${err instanceof Error ? err.message : String(err)}`);
       });
     } else if (confirmDialog.type === "refresh") {
       void refreshSession(confirmDialog.session.id).then(() => {
         toast.success(`Session "${confirmDialog.session.name}" is being refreshed`);
-      }).catch((err) => {
+      }).catch((err: unknown) => {
         toast.error(`Failed to refresh: ${err instanceof Error ? err.message : String(err)}`);
       });
     } else {
       void deleteSession(confirmDialog.session.id).then(() => {
         toast.info(`Deleting session "${confirmDialog.session.name}"...`);
-      }).catch((err) => {
+      }).catch((err: unknown) => {
         toast.error(`Failed to delete: ${err instanceof Error ? err.message : String(err)}`);
       });
     }
@@ -291,18 +353,22 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
               gridAutoFlow: 'dense'
             }}
           >
-            {filteredSessions.map((session) => (
-              <SessionCard
-                key={session.id}
-                session={session}
-                onAttach={onAttach}
-                onEdit={handleEdit}
-                onArchive={handleArchive}
-                onUnarchive={handleUnarchive}
-                onRefresh={handleRefresh}
-                onDelete={handleDelete}
-              />
-            ))}
+            {filteredSessions.map((session) => {
+              const healthReport = getSessionHealth(session.id);
+              return (
+                <SessionCard
+                  key={session.id}
+                  session={session}
+                  {...(healthReport !== undefined ? { healthReport } : {})}
+                  onAttach={onAttach}
+                  onEdit={handleEdit}
+                  onArchive={handleArchive}
+                  onUnarchive={handleUnarchive}
+                  onRefresh={handleRefresh}
+                  onDelete={handleDelete}
+                />
+              );
+            })}
           </div>
         )}
       </main>
@@ -359,6 +425,87 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
       {/* Status Dialog */}
       {showStatusDialog && (
         <StatusDialog onClose={() => { setShowStatusDialog(false); }} />
+      )}
+
+      {/* Startup Health Modal */}
+      <StartupHealthModal
+        open={showStartupHealthModal}
+        onOpenChange={setShowStartupHealthModal}
+        unhealthySessions={unhealthySessions}
+        onViewSessions={() => {
+          // Filter could potentially focus on unhealthy sessions
+          // For now just dismiss the modal
+        }}
+      />
+
+      {/* Recreate Confirm Modal */}
+      {recreateModalSession && (
+        <RecreateConfirmModal
+          open={true}
+          onOpenChange={(open) => {
+            if (!open) {
+              setRecreateModalSession(null);
+            }
+          }}
+          session={recreateModalSession.session}
+          healthReport={recreateModalSession.healthReport}
+          onStart={() => {
+            void startSession(recreateModalSession.session.id).then(() => {
+              toast.success(`Session "${recreateModalSession.session.name}" started`);
+            }).catch((err: unknown) => {
+              toast.error(`Failed to start: ${err instanceof Error ? err.message : String(err)}`);
+            });
+          }}
+          onWake={() => {
+            void wakeSession(recreateModalSession.session.id).then(() => {
+              toast.success(`Session "${recreateModalSession.session.name}" is waking up`);
+            }).catch((err: unknown) => {
+              toast.error(`Failed to wake: ${err instanceof Error ? err.message : String(err)}`);
+            });
+          }}
+          onRecreate={() => {
+            void recreateSession(recreateModalSession.session.id).then(() => {
+              toast.success(`Session "${recreateModalSession.session.name}" is being recreated`);
+            }).catch((err: unknown) => {
+              toast.error(`Failed to recreate: ${err instanceof Error ? err.message : String(err)}`);
+            });
+          }}
+          onRecreateFresh={() => {
+            void recreateSession(recreateModalSession.session.id).then(() => {
+              toast.success(`Session "${recreateModalSession.session.name}" is being recreated fresh`);
+            }).catch((err: unknown) => {
+              toast.error(`Failed to recreate fresh: ${err instanceof Error ? err.message : String(err)}`);
+            });
+          }}
+          onUpdateImage={() => {
+            void refreshSession(recreateModalSession.session.id).then(() => {
+              toast.success(`Session "${recreateModalSession.session.name}" is being refreshed with latest image`);
+            }).catch((err: unknown) => {
+              toast.error(`Failed to update image: ${err instanceof Error ? err.message : String(err)}`);
+            });
+          }}
+          onCleanup={() => {
+            void cleanupSession(recreateModalSession.session.id).then(() => {
+              toast.success(`Session "${recreateModalSession.session.name}" cleaned up`);
+            }).catch((err: unknown) => {
+              toast.error(`Failed to cleanup: ${err instanceof Error ? err.message : String(err)}`);
+            });
+          }}
+        />
+      )}
+
+      {/* Recreate Blocked Modal */}
+      {blockedModalSession && (
+        <RecreateBlockedModal
+          open={true}
+          onOpenChange={(open) => {
+            if (!open) {
+              setBlockedModalSession(null);
+            }
+          }}
+          session={blockedModalSession.session}
+          healthReport={blockedModalSession.healthReport}
+        />
       )}
     </div>
   );

@@ -46,7 +46,9 @@ export function SessionListScreen({ navigation }: SessionListScreenProps) {
       headerRight: () => (
         <TouchableOpacity
           style={[styles.headerButton, { borderColor: colors.textWhite }]}
-          onPress={() => navigation.navigate("CreateSession")}
+          onPress={() => {
+            navigation.navigate("CreateSession");
+          }}
         >
           <Text style={[styles.headerButtonText, { color: colors.textWhite }]}>+ New</Text>
         </TouchableOpacity>
@@ -58,7 +60,7 @@ export function SessionListScreen({ navigation }: SessionListScreenProps) {
     (session: Session) => {
       navigation.navigate("EditSession", { session });
     },
-    [navigation]
+    [navigation],
   );
 
   const filteredSessions = useMemo(() => {
@@ -140,9 +142,7 @@ export function SessionListScreen({ navigation }: SessionListScreenProps) {
       {filteredSessions.length === 0 ? (
         <View style={styles.emptyState}>
           <Text style={[styles.emptyStateText, { color: colors.textLight }]}>
-            {sessions.size === 0
-              ? "No sessions found"
-              : `No ${filter} sessions`}
+            {sessions.size === 0 ? "No sessions found" : `No ${filter} sessions`}
           </Text>
           {sessions.size === 0 && (
             <Text style={[styles.emptySubtext, { color: colors.textLight }]}>
@@ -157,19 +157,31 @@ export function SessionListScreen({ navigation }: SessionListScreenProps) {
           renderItem={({ item }) => (
             <SessionCard
               session={item}
-              onPress={() => handleSessionPress(item.id, item.name)}
-              onEdit={() => handleEditSession(item)}
-              onArchive={() => setArchiveTarget(item)}
-              onUnarchive={() => setArchiveTarget(item)}
-              onDelete={() => setDeleteTarget(item)}
-              onRefresh={() => setRefreshTarget(item)}
+              onPress={() => {
+                handleSessionPress(item.id, item.name);
+              }}
+              onEdit={() => {
+                handleEditSession(item);
+              }}
+              onArchive={() => {
+                setArchiveTarget(item);
+              }}
+              onUnarchive={() => {
+                setArchiveTarget(item);
+              }}
+              onDelete={() => {
+                setDeleteTarget(item);
+              }}
+              onRefresh={() => {
+                setRefreshTarget(item);
+              }}
             />
           )}
           contentContainerStyle={styles.listContent}
           refreshControl={
             <RefreshControl
               refreshing={isLoading}
-              onRefresh={refreshSessions}
+              onRefresh={() => void refreshSessions()}
               colors={[colors.primary]}
               tintColor={colors.primary}
             />
@@ -181,49 +193,49 @@ export function SessionListScreen({ navigation }: SessionListScreenProps) {
       <ConfirmDialog
         visible={deleteTarget !== null}
         title="Delete Session"
-        description={`Are you sure you want to delete "${deleteTarget?.name}"? This action cannot be undone.`}
+        description={`Are you sure you want to delete "${deleteTarget?.name ?? ""}"? This action cannot be undone.`}
         confirmLabel="Delete"
         cancelLabel="Cancel"
         variant="destructive"
         loading={isDeleting}
-        onConfirm={handleDeleteConfirm}
-        onCancel={() => setDeleteTarget(null)}
+        onConfirm={() => void handleDeleteConfirm()}
+        onCancel={() => {
+          setDeleteTarget(null);
+        }}
       />
 
       {/* Archive confirmation dialog */}
       <ConfirmDialog
         visible={archiveTarget !== null}
         title={
-          archiveTarget?.status === SessionStatus.Archived
-            ? "Unarchive Session"
-            : "Archive Session"
+          archiveTarget?.status === SessionStatus.Archived ? "Unarchive Session" : "Archive Session"
         }
         description={
           archiveTarget?.status === SessionStatus.Archived
-            ? `Are you sure you want to unarchive "${archiveTarget?.name}"?`
-            : `Are you sure you want to archive "${archiveTarget?.name}"?`
+            ? `Are you sure you want to unarchive "${archiveTarget?.name ?? ""}"?`
+            : `Are you sure you want to archive "${archiveTarget?.name ?? ""}"?`
         }
-        confirmLabel={
-          archiveTarget?.status === SessionStatus.Archived
-            ? "Unarchive"
-            : "Archive"
-        }
+        confirmLabel={archiveTarget?.status === SessionStatus.Archived ? "Unarchive" : "Archive"}
         cancelLabel="Cancel"
         loading={isArchiving}
-        onConfirm={handleArchiveConfirm}
-        onCancel={() => setArchiveTarget(null)}
+        onConfirm={() => void handleArchiveConfirm()}
+        onCancel={() => {
+          setArchiveTarget(null);
+        }}
       />
 
       {/* Refresh confirmation dialog */}
       <ConfirmDialog
         visible={refreshTarget !== null}
         title="Refresh Session"
-        description={`This will pull the latest container image and recreate the container for "${refreshTarget?.name}". The session history will be preserved.`}
+        description={`This will pull the latest container image and recreate the container for "${refreshTarget?.name ?? ""}". The session history will be preserved.`}
         confirmLabel="Refresh"
         cancelLabel="Cancel"
         loading={isRefreshing}
-        onConfirm={handleRefreshConfirm}
-        onCancel={() => setRefreshTarget(null)}
+        onConfirm={() => void handleRefreshConfirm()}
+        onCancel={() => {
+          setRefreshTarget(null);
+        }}
       />
     </View>
   );

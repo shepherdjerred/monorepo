@@ -3,6 +3,7 @@ pub mod daemon;
 pub mod directory;
 pub mod editor;
 pub mod git;
+pub mod log_cleanup;
 pub mod name_generator;
 pub mod paths;
 pub mod random;

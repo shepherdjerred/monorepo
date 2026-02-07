@@ -96,6 +96,10 @@ impl ResourceLimits {
     ///
     /// Checks that CPU and memory values follow expected patterns.
     /// Does not validate against system constraints.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if CPU or memory limits have invalid format.
     pub fn validate(&self) -> anyhow::Result<()> {
         if let Some(cpu) = &self.cpu {
             validate_cpu_limit(cpu)?;
@@ -260,6 +264,10 @@ impl ImageConfig {
     /// - Valid characters (alphanumeric, dots, hyphens, underscores, slashes, colons)
     /// - Reasonable length (max 256 characters)
     /// - No shell metacharacters or path traversal attempts
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the image name is invalid or contains unsafe characters.
     pub fn validate(&self) -> anyhow::Result<()> {
         validate_image_name(&self.image)
     }
@@ -324,6 +332,17 @@ pub struct DockerConfig {
     /// Example: `["--cap-add=SYS_PTRACE", "--security-opt=seccomp=unconfined"]`
     #[serde(default)]
     pub extra_flags: Vec<String>,
+
+    /// Use Docker volumes instead of bind mounts (default: false)
+    ///
+    /// When enabled, Docker creates a named volume for each session and clones
+    /// repositories into it (similar to Sprites/K8s backends). This enables:
+    /// - Remote Docker hosts without local filesystem access
+    /// - Truly isolated sessions that don't rely on local worktrees
+    ///
+    /// When disabled (default), bind mounts local worktrees directly into containers.
+    #[serde(default)]
+    pub use_volume_mode: bool,
 }
 
 impl Default for DockerConfig {
@@ -336,6 +355,7 @@ impl Default for DockerConfig {
             },
             resources: None,
             extra_flags: Vec::new(),
+            use_volume_mode: false,
         }
     }
 }

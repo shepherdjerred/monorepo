@@ -95,6 +95,9 @@ impl IntoResponse for AuthError {
 /// GET /api/auth/status
 ///
 /// Returns authentication status (always public)
+///
+/// # Errors
+/// Returns an error if the database query fails
 pub async fn auth_status(
     State(state): State<AuthState>,
     jar: CookieJar,
@@ -139,6 +142,9 @@ pub async fn auth_status(
 /// POST /api/auth/register/start
 ///
 /// Start passkey registration
+///
+/// # Errors
+/// Returns an error if the username already exists or database operations fail
 pub async fn register_start(
     State(state): State<AuthState>,
     Json(request): Json<RegistrationStartRequest>,
@@ -193,6 +199,9 @@ pub async fn register_start(
 /// POST /api/auth/register/finish
 ///
 /// Finish passkey registration and create user
+///
+/// # Errors
+/// Returns an error if the challenge is invalid, expired, or passkey verification fails
 pub async fn register_finish(
     State(state): State<AuthState>,
     jar: CookieJar,
@@ -315,6 +324,9 @@ pub async fn register_finish(
 /// POST /api/auth/login/start
 ///
 /// Start passkey authentication
+///
+/// # Errors
+/// Returns an error if the user doesn't exist or database operations fail
 pub async fn login_start(
     State(state): State<AuthState>,
     Json(request): Json<LoginStartRequest>,
@@ -388,6 +400,9 @@ pub async fn login_start(
 /// POST /api/auth/login/finish
 ///
 /// Finish passkey authentication and create session
+///
+/// # Errors
+/// Returns an error if the challenge is invalid, expired, or passkey verification fails
 pub async fn login_finish(
     State(state): State<AuthState>,
     jar: CookieJar,
@@ -488,6 +503,9 @@ pub async fn login_finish(
 /// POST /api/auth/logout
 ///
 /// Delete current session
+///
+/// # Errors
+/// Returns an error if the session ID is invalid or database operations fail
 pub async fn logout(
     State(state): State<AuthState>,
     jar: CookieJar,

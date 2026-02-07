@@ -51,6 +51,10 @@ pub struct ClaudeApiClient {
 
 impl ClaudeApiClient {
     /// Create a new Claude.ai API client
+    ///
+    /// # Panics
+    ///
+    /// Panics if the HTTP client cannot be built with the default configuration.
     #[must_use]
     pub fn new() -> Self {
         let http_client = Client::builder()
@@ -65,6 +69,10 @@ impl ClaudeApiClient {
     }
 
     /// Validate OAuth token format (basic sanity check)
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the token doesn't start with 'sk-ant-' or is shorter than 20 characters.
     pub fn validate_token_format(token: &str) -> Result<()> {
         if !token.starts_with("sk-ant-") {
             anyhow::bail!("Invalid token format: must start with 'sk-ant-'");
@@ -116,6 +124,10 @@ impl ClaudeApiClient {
     }
 
     /// Get current account with retry
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the API request fails after 3 retry attempts or if authentication fails.
     pub async fn get_current_account_with_retry(
         &self,
         oauth_token: &str,
@@ -124,6 +136,10 @@ impl ClaudeApiClient {
     }
 
     /// Get usage with retry
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the API request fails after 3 retry attempts or if authentication fails.
     pub async fn get_usage_with_retry(
         &self,
         oauth_token: &str,
@@ -133,6 +149,10 @@ impl ClaudeApiClient {
     }
 
     /// Get current account and organization information
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the API request fails, returns a non-success status code, or if the response cannot be parsed.
     #[instrument(skip(self, oauth_token))]
     pub async fn get_current_account(&self, oauth_token: &str) -> Result<(String, Option<String>)> {
         let url = format!("{}/api/auth/current_account", self.base_url);
@@ -174,6 +194,10 @@ impl ClaudeApiClient {
     }
 
     /// Get Claude Code usage data for an organization
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the API request fails, returns a non-success status code, or if the response cannot be parsed.
     #[instrument(skip(self, oauth_token), fields(org_id = %org_id))]
     pub async fn get_usage(
         &self,

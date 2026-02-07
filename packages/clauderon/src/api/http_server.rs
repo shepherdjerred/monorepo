@@ -5,6 +5,7 @@ use crate::api::ws_events::{EventBroadcaster, broadcast_event};
 use crate::auth::{self, AuthState};
 use crate::core::manager::SessionManager;
 use crate::core::session::AccessMode;
+use crate::core::session::AgentType;
 use crate::core::session::ClaudeWorkingStatus;
 use crate::hooks::{HookEvent, HookMessage};
 use axum::{
@@ -65,6 +66,13 @@ pub fn create_router(auth_state: &Option<AuthState>, dev_mode: bool) -> Router<A
         )
         .route("/api/sessions/{id}/history", get(get_session_history))
         .route("/api/sessions/{id}/upload", post(upload_file))
+        // Health and recreate endpoints
+        .route("/api/health", get(get_health))
+        .route("/api/sessions/{id}/health", get(get_session_health))
+        .route("/api/sessions/{id}/start", post(start_session))
+        .route("/api/sessions/{id}/wake", post(wake_session))
+        .route("/api/sessions/{id}/recreate", post(recreate_session))
+        .route("/api/sessions/{id}/cleanup", post(cleanup_session))
         .route("/api/recent-repos", get(get_recent_repos))
         .route("/api/browse-directory", post(browse_directory))
         .route("/api/status", get(get_system_status))
@@ -285,6 +293,7 @@ async fn create_session(
             request.agent,
             request.model,
             request.dangerous_skip_checks,
+            request.dangerous_copy_creds,
             request.print_mode,
             request.plan_mode,
             request.access_mode,
@@ -367,6 +376,129 @@ async fn refresh_session(
     if let Some(session) = state.session_manager.get_session(&id).await {
         broadcast_event(&state.event_broadcaster, Event::SessionUpdated(session)).await;
     }
+
+    Ok(StatusCode::NO_CONTENT)
+}
+
+/// Get health status of all sessions
+async fn get_health(
+    State(state): State<AppState>,
+) -> Json<crate::core::session::HealthCheckResult> {
+    let result = state.session_manager.check_all_sessions_health().await;
+    Json(result)
+}
+
+/// Get health status of a single session
+async fn get_session_health(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+) -> Result<Json<crate::core::session::SessionHealthReport>, AppError> {
+    validate_session_id(&id)?;
+
+    let session_id = Uuid::parse_str(&id)
+        .map_err(|e| AppError::BadRequest(format!("Invalid session ID: {e}")))?;
+
+    let report = state
+        .session_manager
+        .check_session_health(session_id)
+        .await?;
+
+    Ok(Json(report))
+}
+
+/// Start a stopped session (container/pod)
+async fn start_session(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+) -> Result<StatusCode, AppError> {
+    validate_session_id(&id)?;
+
+    let session_id = Uuid::parse_str(&id)
+        .map_err(|e| AppError::BadRequest(format!("Invalid session ID: {e}")))?;
+
+    state.session_manager.start_session(session_id).await?;
+
+    // Broadcast session updated event
+    if let Some(session) = state.session_manager.get_session(&id).await {
+        broadcast_event(&state.event_broadcaster, Event::SessionUpdated(session)).await;
+    }
+
+    Ok(StatusCode::NO_CONTENT)
+}
+
+/// Wake a hibernated session (sprites)
+async fn wake_session(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+) -> Result<StatusCode, AppError> {
+    validate_session_id(&id)?;
+
+    let session_id = Uuid::parse_str(&id)
+        .map_err(|e| AppError::BadRequest(format!("Invalid session ID: {e}")))?;
+
+    state.session_manager.wake_session(session_id).await?;
+
+    // Broadcast session updated event
+    if let Some(session) = state.session_manager.get_session(&id).await {
+        broadcast_event(&state.event_broadcaster, Event::SessionUpdated(session)).await;
+    }
+
+    Ok(StatusCode::NO_CONTENT)
+}
+
+/// Recreate a session (delete and recreate backend)
+///
+/// Returns the result of the recreation, or an error if blocked.
+async fn recreate_session(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+) -> Result<Json<serde_json::Value>, AppError> {
+    validate_session_id(&id)?;
+
+    let session_id = Uuid::parse_str(&id)
+        .map_err(|e| AppError::BadRequest(format!("Invalid session ID: {e}")))?;
+
+    match state.session_manager.recreate_session(session_id).await {
+        Ok(result) => {
+            // Broadcast session updated event
+            if let Some(session) = state.session_manager.get_session(&id).await {
+                broadcast_event(&state.event_broadcaster, Event::SessionUpdated(session)).await;
+            }
+
+            Ok(Json(json!({
+                "session_id": result.session_id.to_string(),
+                "new_backend_id": result.new_backend_id,
+                "message": result.message
+            })))
+        }
+        Err(crate::core::manager::RecreateError::Blocked(blocked)) => {
+            // Return 409 Conflict for blocked recreates
+            Err(AppError::ActionBlocked {
+                reason: blocked.reason,
+            })
+        }
+        Err(crate::core::manager::RecreateError::Other(e)) => Err(AppError::SessionManager(e)),
+    }
+}
+
+/// Cleanup a session (remove from database when worktree is already missing)
+async fn cleanup_session(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+) -> Result<StatusCode, AppError> {
+    validate_session_id(&id)?;
+
+    let session_id = Uuid::parse_str(&id)
+        .map_err(|e| AppError::BadRequest(format!("Invalid session ID: {e}")))?;
+
+    state.session_manager.cleanup_session(session_id).await?;
+
+    // Broadcast session deleted event
+    broadcast_event(
+        &state.event_broadcaster,
+        Event::SessionDeleted { id: id.clone() },
+    )
+    .await;
 
     Ok(StatusCode::NO_CONTENT)
 }
@@ -693,7 +825,11 @@ async fn upload_file(
     }))
 }
 
-/// Get session history from Claude Code's JSONL file
+/// Get session history from agent's JSONL file
+///
+/// Supports both Claude Code and Codex history formats:
+/// - Claude Code: `<worktree>/.claude/projects/-workspace/<session-id>.jsonl`
+/// - Codex: `<worktree>/.codex/sessions/{year}/{month}/{day}/*-{session_id}.jsonl`
 ///
 /// Query parameters:
 /// - `since_line`: Optional line number to start from (for incremental updates)
@@ -711,28 +847,96 @@ async fn get_session_history(
         .await
         .ok_or_else(|| AppError::NotFound(format!("Session not found: {id}")))?;
 
-    let history_path = session
-        .history_file_path
-        .ok_or_else(|| AppError::NotFound("History file path not configured".to_string()))?;
+    // Get history path based on agent type
+    let history_path = match session.agent {
+        AgentType::ClaudeCode => {
+            // Use cached path for Claude Code
+            let path = session.history_file_path.ok_or_else(|| {
+                AppError::NotFound("History file path not configured".to_string())
+            })?;
 
-    // Security: Validate path is within worktree bounds and matches expected pattern
-    if !history_path.starts_with(&session.worktree_path) {
-        return Err(AppError::BadRequest(
-            "Invalid history file path: outside worktree".to_string(),
-        ));
-    }
+            // Security: Validate path is within worktree bounds and matches expected pattern
+            if !path.starts_with(&session.worktree_path) {
+                return Err(AppError::BadRequest(
+                    "Invalid history file path: outside worktree".to_string(),
+                ));
+            }
 
-    // Verify path matches expected pattern (defense in depth)
-    let expected_path = crate::core::session::get_history_file_path(
-        &session.worktree_path,
-        &session.id,
-        &session.subdirectory,
-    );
-    if history_path != expected_path {
-        return Err(AppError::BadRequest(
-            "Invalid history file path: pattern mismatch".to_string(),
-        ));
-    }
+            // Verify path matches expected pattern (defense in depth)
+            let expected_path = crate::core::session::get_history_file_path(
+                &session.worktree_path,
+                &session.id,
+                &session.subdirectory,
+            );
+            if path != expected_path {
+                return Err(AppError::BadRequest(
+                    "Invalid history file path: pattern mismatch".to_string(),
+                ));
+            }
+
+            path
+        }
+        AgentType::Codex => {
+            // For Codex: use cached path if available, otherwise search
+            if let Some(ref cached_path) = session.history_file_path {
+                // Validate cached path
+                if !crate::core::session::validate_codex_history_path(
+                    cached_path,
+                    &session.worktree_path,
+                    &session.id,
+                ) {
+                    return Err(AppError::BadRequest(
+                        "Invalid Codex history path".to_string(),
+                    ));
+                }
+                cached_path.clone()
+            } else {
+                // Search for the history file
+                let found_path = crate::core::session::find_codex_history_file(
+                    &session.worktree_path,
+                    &session.id,
+                )
+                .ok_or_else(|| {
+                    AppError::NotFound("Codex history file not found yet".to_string())
+                })?;
+
+                // Validate the found path
+                if !crate::core::session::validate_codex_history_path(
+                    &found_path,
+                    &session.worktree_path,
+                    &session.id,
+                ) {
+                    return Err(AppError::BadRequest(
+                        "Invalid Codex history path".to_string(),
+                    ));
+                }
+
+                // Cache the discovered path (fire-and-forget)
+                let session_manager = state.session_manager.clone();
+                let session_id = session.id;
+                let path_to_cache = found_path.clone();
+                tokio::spawn(async move {
+                    if let Err(e) = session_manager
+                        .update_history_file_path(session_id, &path_to_cache)
+                        .await
+                    {
+                        tracing::warn!(
+                            session_id = %session_id,
+                            error = %e,
+                            "Failed to cache Codex history file path"
+                        );
+                    }
+                });
+
+                found_path
+            }
+        }
+        AgentType::Gemini => {
+            return Err(AppError::NotFound(
+                "Gemini history not yet supported".to_string(),
+            ));
+        }
+    };
 
     // Check if file exists
     if !history_path.exists() {
@@ -835,6 +1039,10 @@ pub enum AppError {
     NotFound(String),
     NotImplemented(String),
     BadRequest(String),
+    /// Action was blocked (e.g., recreate blocked for safety reasons)
+    ActionBlocked {
+        reason: String,
+    },
 }
 
 impl From<anyhow::Error> for AppError {
@@ -845,22 +1053,31 @@ impl From<anyhow::Error> for AppError {
 
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
-        let (status, error_message) = match self {
+        let (status, error_message, is_blocked) = match self {
             Self::SessionManager(err) => {
                 tracing::error!("Session manager error: {err}");
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
                     format!("Internal error: {err}"),
+                    false,
                 )
             }
-            Self::NotFound(msg) => (StatusCode::NOT_FOUND, msg),
-            Self::NotImplemented(msg) => (StatusCode::NOT_IMPLEMENTED, msg),
-            Self::BadRequest(msg) => (StatusCode::BAD_REQUEST, msg),
+            Self::NotFound(msg) => (StatusCode::NOT_FOUND, msg, false),
+            Self::NotImplemented(msg) => (StatusCode::NOT_IMPLEMENTED, msg, false),
+            Self::BadRequest(msg) => (StatusCode::BAD_REQUEST, msg, false),
+            Self::ActionBlocked { reason } => (StatusCode::CONFLICT, reason, true),
         };
 
-        let body = Json(json!({
-            "error": error_message,
-        }));
+        let body = if is_blocked {
+            Json(json!({
+                "error": error_message,
+                "blocked": true,
+            }))
+        } else {
+            Json(json!({
+                "error": error_message,
+            }))
+        };
 
         (status, body).into_response()
     }

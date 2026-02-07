@@ -7,7 +7,10 @@ use ratatui::{
 };
 
 use super::app::{App, AppMode};
-use super::components::{create_dialog, reconcile_error_dialog, session_list, status_bar};
+use super::components::{
+    create_dialog, health_modal, reconcile_error_dialog, recreate_blocked_dialog,
+    recreate_confirm_dialog, session_list, status_bar,
+};
 use crate::core::BackendType;
 
 /// Render the entire UI
@@ -29,32 +32,11 @@ pub fn render(frame: &mut Frame, app: &App) {
     // Render modal dialogs on top
     match app.mode {
         AppMode::CreateDialog => {
-            // Calculate required height based on prompt content
-            let prompt_lines = app.create_dialog.prompt.lines().count().max(1);
-            let prompt_height = prompt_lines.clamp(5, usize::MAX); // Min 5 lines, no max
-            let images_height = if app.create_dialog.images.is_empty() {
-                0
-            } else {
-                app.create_dialog.images.len().min(3) + 2 // Show up to 3 images, +2 for borders
-            };
+            // Get required height from single source of truth
+            let (required_height, _constraints) =
+                create_dialog::calculate_layout(&app.create_dialog);
 
-            // Calculate total required height:
-            // - Prompt field: prompt_height + 2 (borders)
-            // - Images field: images_height
-            // - Repo path: 3
-            // - Backend: 2
-            // - Agent: 2
-            // - Access mode: 2
-            // - Skip checks: 2
-            // - Plan mode: 2
-            // - Spacer: 1
-            // - Buttons: 1
-            // - Outer margins: 2
-            // - Outer border: 2
-            let required_height =
-                (prompt_height + 2 + images_height + 3 + 2 + 2 + 2 + 2 + 2 + 1 + 1 + 2 + 2) as u16;
-
-            let dialog_area = centered_rect_with_height(60, required_height, frame.area());
+            let dialog_area = centered_rect_with_height(70, required_height, frame.area());
             frame.render_widget(Clear, dialog_area);
             create_dialog::render(frame, app, dialog_area);
         }
@@ -75,6 +57,15 @@ pub fn render(frame: &mut Frame, app: &App) {
             let dialog_area = centered_rect(60, 70, frame.area());
             frame.render_widget(Clear, dialog_area);
             render_signal_menu(frame, app, dialog_area);
+        }
+        AppMode::StartupHealthModal => {
+            health_modal::render(frame, app, frame.area());
+        }
+        AppMode::RecreateConfirm => {
+            recreate_confirm_dialog::render(frame, app, frame.area());
+        }
+        AppMode::RecreateBlocked => {
+            recreate_blocked_dialog::render(frame, app, frame.area());
         }
         AppMode::SessionList
         | AppMode::Attached

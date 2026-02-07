@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { create } from "@github/webauthn-json";
+import { create, type CredentialCreationOptionsJSON, type PublicKeyCredentialWithAttestationJSON } from "@github/webauthn-json";
 import { useClauderonClient } from "../hooks/useClauderonClient";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -20,20 +20,20 @@ export function RegistrationPage() {
     try {
       // Start registration flow
       const trimmedDisplayName = displayName.trim();
-      const { challenge_id, options } = await client.registerStart({
+      const response: { challenge_id: string; options: CredentialCreationOptionsJSON } = await client.registerStart({
         username,
         ...(trimmedDisplayName && { display_name: trimmedDisplayName }),
-      });
+      }) as { challenge_id: string; options: CredentialCreationOptionsJSON };
 
       // Trigger passkey creation
-      const credential = await create(options);
+      const credential: PublicKeyCredentialWithAttestationJSON = await create(response.options);
 
       // Finish registration flow
       const trimmedDeviceName = deviceName.trim();
       await client.registerFinish({
         username,
-        challenge_id,
-        credential: credential as any,
+        challenge_id: response.challenge_id,
+        credential: credential as unknown as Record<string, unknown>,
         ...(trimmedDeviceName && { device_name: trimmedDeviceName }),
       });
 
@@ -55,7 +55,7 @@ export function RegistrationPage() {
           <p className="text-muted-foreground mt-2">Create your account with a passkey</p>
         </div>
 
-        <form onSubmit={handleRegister} className="space-y-4">
+        <form onSubmit={(e) => { void handleRegister(e); }} className="space-y-4">
           <div>
             <label htmlFor="username" className="block text-sm font-medium mb-2">
               Username *

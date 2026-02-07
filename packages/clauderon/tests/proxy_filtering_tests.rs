@@ -84,6 +84,8 @@ async fn create_test_manager_with_proxy() -> (
     let docker = Arc::new(MockExecutionBackend::docker());
     let kubernetes = Arc::new(MockExecutionBackend::kubernetes());
     let sprites = Arc::new(MockExecutionBackend::sprites());
+    #[cfg(target_os = "macos")]
+    let apple_container = Arc::new(MockExecutionBackend::apple_container());
 
     // Helper functions to coerce Arc<Concrete> to Arc<dyn Trait>
     fn to_git_ops(arc: Arc<MockGitBackend>) -> Arc<dyn GitOperations> {
@@ -93,7 +95,10 @@ async fn create_test_manager_with_proxy() -> (
         arc
     }
 
-    let feature_flags = Arc::new(clauderon::feature_flags::FeatureFlags::default());
+    let feature_flags = Arc::new(clauderon::feature_flags::FeatureFlags {
+        enable_readonly_mode: true,
+        ..Default::default()
+    });
     let mut manager = SessionManager::new(
         store,
         to_git_ops(Arc::clone(&git)),
@@ -101,6 +106,8 @@ async fn create_test_manager_with_proxy() -> (
         to_exec_backend(Arc::clone(&docker)),
         to_exec_backend(Arc::clone(&kubernetes)),
         None,
+        #[cfg(target_os = "macos")]
+        to_exec_backend(Arc::clone(&apple_container)),
         to_exec_backend(Arc::clone(&sprites)),
         feature_flags,
     )
@@ -220,6 +227,7 @@ async fn test_create_session_with_read_only_mode() {
             AgentType::ClaudeCode,
             None, // model
             true,
+            false, // dangerous_copy_creds
             false, // print_mode
             false, // plan_mode
             AccessMode::ReadOnly,
@@ -257,6 +265,7 @@ async fn test_create_session_with_read_write_mode() {
             AgentType::ClaudeCode,
             None, // model
             true,
+            false, // dangerous_copy_creds
             false, // print_mode
             false, // plan_mode
             AccessMode::ReadWrite,
@@ -290,6 +299,7 @@ async fn test_zellij_backend_ignores_proxy_port() {
             AgentType::ClaudeCode,
             None, // model
             true,
+            false, // dangerous_copy_creds
             false, // print_mode
             false, // plan_mode
             AccessMode::ReadOnly,
@@ -325,6 +335,7 @@ async fn test_update_access_mode_by_name() {
             AgentType::ClaudeCode,
             None, // model
             true,
+            false, // dangerous_copy_creds
             false, // print_mode
             false, // plan_mode
             AccessMode::ReadOnly,
@@ -370,6 +381,7 @@ async fn test_update_access_mode_by_id() {
             AgentType::ClaudeCode,
             None, // model
             true,
+            false, // dangerous_copy_creds
             false, // print_mode
             false, // plan_mode
             AccessMode::ReadWrite,
@@ -502,6 +514,8 @@ async fn test_access_mode_persists_across_restarts() {
         let docker = Arc::new(MockExecutionBackend::docker());
         let kubernetes = Arc::new(MockExecutionBackend::kubernetes());
         let sprites = Arc::new(MockExecutionBackend::sprites());
+        #[cfg(target_os = "macos")]
+        let apple_container = Arc::new(MockExecutionBackend::apple_container());
 
         fn to_git_ops(arc: Arc<MockGitBackend>) -> Arc<dyn GitOperations> {
             arc
@@ -517,10 +531,12 @@ async fn test_access_mode_persists_across_restarts() {
         let manager = SessionManager::new(
             store,
             to_git_ops(git),
-            to_exec_backend(zellij),
-            to_exec_backend(docker),
-            to_exec_backend(kubernetes),
+            to_exec_backend(Arc::clone(&zellij)),
+            to_exec_backend(Arc::clone(&docker)),
+            to_exec_backend(Arc::clone(&kubernetes)),
             None,
+            #[cfg(target_os = "macos")]
+            to_exec_backend(apple_container),
             to_exec_backend(sprites),
             feature_flags,
         )
@@ -536,6 +552,7 @@ async fn test_access_mode_persists_across_restarts() {
                 AgentType::ClaudeCode,
                 None, // model
                 true,
+                false, // dangerous_copy_creds
                 false, // print_mode
                 false, // plan_mode
                 AccessMode::ReadOnly,
@@ -564,6 +581,8 @@ async fn test_access_mode_persists_across_restarts() {
         let docker = Arc::new(MockExecutionBackend::docker());
         let kubernetes = Arc::new(MockExecutionBackend::kubernetes());
         let sprites = Arc::new(MockExecutionBackend::sprites());
+        #[cfg(target_os = "macos")]
+        let apple_container = Arc::new(MockExecutionBackend::apple_container());
 
         fn to_git_ops(arc: Arc<MockGitBackend>) -> Arc<dyn GitOperations> {
             arc
@@ -579,10 +598,12 @@ async fn test_access_mode_persists_across_restarts() {
         let manager = SessionManager::new(
             store,
             to_git_ops(git),
-            to_exec_backend(zellij),
-            to_exec_backend(docker),
-            to_exec_backend(kubernetes),
+            to_exec_backend(Arc::clone(&zellij)),
+            to_exec_backend(Arc::clone(&docker)),
+            to_exec_backend(Arc::clone(&kubernetes)),
             None,
+            #[cfg(target_os = "macos")]
+            to_exec_backend(apple_container),
             to_exec_backend(sprites),
             feature_flags,
         )
@@ -625,6 +646,7 @@ async fn test_proxy_port_persists_in_database() {
             backend: BackendType::Docker,
             agent: AgentType::ClaudeCode,
             dangerous_skip_checks: true,
+            dangerous_copy_creds: false,
             access_mode: AccessMode::ReadWrite,
             repositories: None,
             model: None,
@@ -681,6 +703,7 @@ async fn test_delete_session_cleans_up_proxy() {
             AgentType::ClaudeCode,
             None, // model
             true,
+            false, // dangerous_copy_creds
             false, // print_mode
             false, // plan_mode
             AccessMode::ReadOnly,

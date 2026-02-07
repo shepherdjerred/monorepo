@@ -1,4 +1,4 @@
-import { createTool } from "@mastra/core/tools";
+import { createTool } from "../../../voltagent/tools/create-tool.js";
 import { z } from "zod";
 import { loggers } from "../../../utils/logger.js";
 import { captureException, withToolSpan } from "../../../observability/index.js";

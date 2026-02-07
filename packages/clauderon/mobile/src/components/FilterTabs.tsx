@@ -1,11 +1,5 @@
 import React from "react";
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  StyleSheet,
-} from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
 import { useTheme } from "../contexts/ThemeContext";
 import { typography } from "../styles/typography";
 
@@ -28,7 +22,12 @@ export function FilterTabs({ value, onChange }: FilterTabsProps) {
   const { colors } = useTheme();
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: colors.surface, borderBottomColor: colors.border },
+      ]}
+    >
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -42,7 +41,9 @@ export function FilterTabs({ value, onChange }: FilterTabsProps) {
               { borderColor: colors.border, backgroundColor: colors.surface },
               value === tab.key && { backgroundColor: colors.primary },
             ]}
-            onPress={() => onChange(tab.key)}
+            onPress={() => {
+              onChange(tab.key);
+            }}
           >
             <Text
               style={[

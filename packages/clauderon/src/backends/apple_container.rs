@@ -193,6 +193,85 @@ impl AppleContainerBackend {
         }
     }
 
+    /// Ensure cache volumes exist with correct ownership for the current user.
+    ///
+    /// Docker named volumes are created with root ownership by default. When containers
+    /// run as non-root users, they can't write to these volumes.
+    ///
+    /// This function creates each cache volume and fixes ownership by running a small
+    /// alpine container that chowns the volume contents to the specified UID:GID.
+    ///
+    /// This is idempotent - if the volume already has correct ownership, the chown
+    /// is a fast no-op.
+    #[instrument(skip(self))]
+    async fn ensure_cache_volumes_with_ownership(&self, uid: u32, gid: u32) {
+        let volumes = [
+            "clauderon-cargo-registry",
+            "clauderon-cargo-git",
+            "clauderon-sccache",
+        ];
+
+        for volume_name in volumes {
+            // Create volume if it doesn't exist (idempotent)
+            let create_output = Command::new("docker")
+                .args(["volume", "create", volume_name])
+                .output()
+                .await;
+
+            if let Err(e) = create_output {
+                tracing::warn!(
+                    volume = volume_name,
+                    error = %e,
+                    "Failed to create Docker volume"
+                );
+                continue;
+            }
+
+            // Fix ownership using alpine container
+            // This is fast if ownership is already correct (chown is a no-op)
+            let chown_output = Command::new("docker")
+                .args([
+                    "run",
+                    "--rm",
+                    "-v",
+                    &format!("{volume_name}:/vol"),
+                    "alpine:latest",
+                    "chown",
+                    "-R",
+                    &format!("{uid}:{gid}"),
+                    "/vol",
+                ])
+                .output()
+                .await;
+
+            match chown_output {
+                Ok(output) if output.status.success() => {
+                    tracing::debug!(
+                        volume = volume_name,
+                        uid = uid,
+                        gid = gid,
+                        "Ensured volume ownership"
+                    );
+                }
+                Ok(output) => {
+                    let stderr = String::from_utf8_lossy(&output.stderr);
+                    tracing::warn!(
+                        volume = volume_name,
+                        stderr = %stderr,
+                        "Failed to fix volume ownership"
+                    );
+                }
+                Err(e) => {
+                    tracing::warn!(
+                        volume = volume_name,
+                        error = %e,
+                        "Failed to run ownership fix container"
+                    );
+                }
+            }
+        }
+    }
+
     /// Build the container run command arguments (exposed for testing)
     ///
     /// Returns all arguments that would be passed to `container run`.
@@ -233,7 +312,7 @@ impl AppleContainerBackend {
         let (image_str, pull_policy) = if let Some(image_cfg) = image_override {
             // Validate override image
             image_cfg.validate()?;
-            (image_cfg.image.as_str(), image_cfg.pull_policy.clone())
+            (image_cfg.image.as_str(), image_cfg.pull_policy)
         } else if let Some(ref img) = config.container_image {
             // Validate config image using ImageConfig validation
             let temp_config = ImageConfig {
@@ -304,6 +383,8 @@ impl AppleContainerBackend {
         args.extend([
             "-e".to_string(),
             "TERM=xterm-256color".to_string(),
+            "-e".to_string(),
+            "COLORTERM=truecolor".to_string(),
             "-e".to_string(),
             "HOME=/workspace".to_string(),
         ]);
@@ -757,7 +838,7 @@ fi"#;
                             cmd_vec.push(image.clone());
                         }
                         if !escaped_prompt.is_empty() {
-                            cmd_vec.push(escaped_prompt.clone());
+                            cmd_vec.push(escaped_prompt);
                         }
                         let cmd = cmd_vec
                             .iter()
@@ -820,6 +901,7 @@ fi"#;
     }
 
     /// Build the attach command arguments
+    #[must_use]
     pub fn build_attach_args(name: &str) -> Vec<String> {
         vec![
             "bash".to_string(),
@@ -862,8 +944,13 @@ impl ExecutionBackend for AppleContainerBackend {
             "Creating Apple container"
         );
 
-        // Get UID using safe users crate
+        // Get UID and GID using safe users crate
         let uid = users::get_current_uid();
+        let gid = users::get_current_gid();
+
+        // Ensure cache volumes exist with correct ownership before creating container
+        // This fixes permission issues with Docker named volumes (which are created as root by default)
+        self.ensure_cache_volumes_with_ownership(uid, gid).await;
 
         // Build proxy config
         let proxy_config = options.session_proxy_port.map(|session_port| {
@@ -1020,5 +1107,95 @@ impl ExecutionBackend for AppleContainerBackend {
             "Log retrieval not supported for Apple Container backend. \
             This is a platform limitation as the container CLI lacks a logs command."
         )
+    }
+
+    /// Get Apple Container backend capabilities
+    ///
+    /// Apple Containers with bind mounts preserve data because the code is on the host filesystem.
+    fn capabilities(&self) -> super::traits::BackendCapabilities {
+        super::traits::BackendCapabilities {
+            can_recreate: true,
+            can_update_image: true,
+            preserves_data_on_recreate: true,
+            can_start: true,
+            can_wake: false,
+            data_preservation_description: "Your code is safe (mounted from your computer). Only container-local files will be lost.",
+        }
+    }
+
+    /// Check the health of an Apple Container
+    ///
+    /// Uses `container list` to check container state.
+    #[instrument(skip(self), fields(name = %name))]
+    async fn check_health(
+        &self,
+        name: &str,
+    ) -> anyhow::Result<super::traits::BackendResourceHealth> {
+        use super::traits::BackendResourceHealth;
+        use tokio::process::Command;
+
+        // Use `container list` to get container state
+        let output = Command::new("container")
+            .args(["list", "--format", "json"])
+            .output()
+            .await?;
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            anyhow::bail!("Failed to list containers: {stderr}");
+        }
+
+        let stdout = String::from_utf8_lossy(&output.stdout);
+
+        // Parse JSON output to find our container
+        // The format is a JSON array of container objects
+        if let Ok(containers) = serde_json::from_str::<Vec<serde_json::Value>>(&stdout) {
+            for container in containers {
+                if container.get("name").and_then(|v| v.as_str()) == Some(name) {
+                    let state = container
+                        .get("state")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("unknown");
+
+                    return match state {
+                        "running" => Ok(BackendResourceHealth::Running),
+                        "stopped" | "exited" | "created" | "paused" => {
+                            Ok(BackendResourceHealth::Stopped)
+                        }
+                        other => Ok(BackendResourceHealth::Error {
+                            message: format!("Unknown container state: {other}"),
+                        }),
+                    };
+                }
+            }
+        }
+
+        // Container not found
+        Ok(BackendResourceHealth::NotFound)
+    }
+
+    /// Start a stopped Apple Container
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the container cannot be started.
+    #[instrument(skip(self), fields(name = %name))]
+    async fn start(&self, name: &str) -> anyhow::Result<()> {
+        use tokio::process::Command;
+
+        tracing::info!(container = %name, "Starting stopped Apple Container");
+
+        let output = Command::new("container")
+            .args(["start", name])
+            .output()
+            .await?;
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            anyhow::bail!("Failed to start Apple Container: {stderr}");
+        }
+
+        tracing::info!(container = %name, "Successfully started Apple Container");
+        Ok(())
     }
 }

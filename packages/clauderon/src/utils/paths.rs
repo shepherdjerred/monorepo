@@ -42,10 +42,16 @@ pub fn worktree_path(session_name: &str) -> PathBuf {
     worktrees_dir().join(session_name)
 }
 
-/// Get the path to the log file
+/// Get the directory for log files
+#[must_use]
+pub fn logs_dir() -> PathBuf {
+    base_dir().join("logs")
+}
+
+/// Get the path to the log file (deprecated: use logs_dir with timestamped filename)
 #[must_use]
 pub fn log_path() -> PathBuf {
-    base_dir().join("logs").join("clauderon.log")
+    logs_dir().join("clauderon.log")
 }
 
 /// Get the path to the config file

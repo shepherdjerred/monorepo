@@ -1,16 +1,5 @@
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  useCallback,
-  useMemo,
-} from "react";
-import type {
-  Session,
-  CreateSessionRequest,
-  AccessMode,
-} from "../types/generated";
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
+import type { Session, CreateSessionRequest, AccessMode } from "../types/generated";
 import { ClauderonClient } from "../api/ClauderonClient";
 import type { SessionEvent } from "../api/EventsClient";
 import { EventsClient } from "../api/EventsClient";
@@ -134,7 +123,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         return null;
       }
     },
-    [client]
+    [client],
   );
 
   const deleteSession = useCallback(
@@ -150,7 +139,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         throw err;
       }
     },
-    [client]
+    [client],
   );
 
   const archiveSession = useCallback(
@@ -162,13 +151,11 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       try {
         await client.archiveSession(id);
       } catch (err) {
-        setError(
-          err instanceof Error ? err : new Error("Failed to archive session")
-        );
+        setError(err instanceof Error ? err : new Error("Failed to archive session"));
         throw err;
       }
     },
-    [client]
+    [client],
   );
 
   const unarchiveSession = useCallback(
@@ -180,13 +167,11 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       try {
         await client.unarchiveSession(id);
       } catch (err) {
-        setError(
-          err instanceof Error ? err : new Error("Failed to unarchive session")
-        );
+        setError(err instanceof Error ? err : new Error("Failed to unarchive session"));
         throw err;
       }
     },
-    [client]
+    [client],
   );
 
   const refreshSession = useCallback(
@@ -198,13 +183,11 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       try {
         await client.refreshSession(id);
       } catch (err) {
-        setError(
-          err instanceof Error ? err : new Error("Failed to refresh session")
-        );
+        setError(err instanceof Error ? err : new Error("Failed to refresh session"));
         throw err;
       }
     },
-    [client]
+    [client],
   );
 
   const updateAccessMode = useCallback(
@@ -216,13 +199,11 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       try {
         await client.updateAccessMode(id, mode);
       } catch (err) {
-        setError(
-          err instanceof Error ? err : new Error("Failed to update access mode")
-        );
+        setError(err instanceof Error ? err : new Error("Failed to update access mode"));
         throw err;
       }
     },
-    [client]
+    [client],
   );
 
   const value: SessionContextValue = {
@@ -239,9 +220,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     refreshSessions,
   };
 
-  return (
-    <SessionContext.Provider value={value}>{children}</SessionContext.Provider>
-  );
+  return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }
 
 export function useSessionContext(): SessionContextValue {

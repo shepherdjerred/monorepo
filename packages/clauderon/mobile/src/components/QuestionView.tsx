@@ -10,21 +10,23 @@ type QuestionViewProps = {
 
 export function QuestionView({ message }: QuestionViewProps) {
   // Find the AskUserQuestion tool use
-  const questionTool = message.toolUses?.find(tool => tool.name === "AskUserQuestion");
+  const questionTool = message.toolUses?.find((tool) => tool.name === "AskUserQuestion");
 
-  if (!questionTool || !questionTool.input) {
+  if (!questionTool?.input) {
     return null;
   }
 
-  const questions = questionTool.input['questions'] as Array<{
-    question: string;
-    header: string;
-    options: Array<{
-      label: string;
-      description: string;
-    }>;
-    multiSelect: boolean;
-  }> | undefined;
+  const questions = questionTool.input["questions"] as
+    | {
+        question: string;
+        header: string;
+        options: {
+          label: string;
+          description: string;
+        }[];
+        multiSelect: boolean;
+      }[]
+    | undefined;
 
   if (!questions || questions.length === 0) {
     return null;
@@ -86,7 +88,8 @@ export function QuestionView({ message }: QuestionViewProps) {
       {/* Note */}
       <View style={styles.footer}>
         <Text style={styles.footerText}>
-          📝 This question was presented in the active Claude Code session. Check the terminal for response status.
+          📝 This question was presented in the active Claude Code session. Check the terminal for
+          response status.
         </Text>
       </View>
     </View>
@@ -97,13 +100,13 @@ export function QuestionView({ message }: QuestionViewProps) {
  * Check if a message contains a question (AskUserQuestion tool use)
  */
 export function isQuestion(message: Message): boolean {
-  return message.toolUses?.some(tool => tool.name === "AskUserQuestion") ?? false;
+  return message.toolUses?.some((tool) => tool.name === "AskUserQuestion") ?? false;
 }
 
 const styles = StyleSheet.create({
   container: {
     borderWidth: 4,
-    borderColor: colors.accent || colors.primary,
+    borderColor: colors.primary,
     backgroundColor: colors.surface,
     padding: 16,
   },

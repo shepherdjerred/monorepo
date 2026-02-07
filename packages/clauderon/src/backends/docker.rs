@@ -173,7 +173,7 @@ impl DockerBackend {
         }
 
         // Check for reserved names
-        let reserved = ["workspace", "clauderon", "repos", "primary"];
+        let reserved = ["workspace", "clauderon", "repos"];
         if reserved.contains(&mount_name.to_lowercase().as_str()) {
             anyhow::bail!("Mount name '{}' is reserved", mount_name);
         }
@@ -231,6 +231,279 @@ impl DockerBackend {
         }
     }
 
+    /// Ensure cache volumes exist with correct ownership for the current user.
+    ///
+    /// Docker named volumes are created with root ownership by default. When containers
+    /// run as non-root users (via --user), they can't write to these volumes.
+    ///
+    /// This function creates each cache volume and fixes ownership by running a small
+    /// alpine container that chowns the volume contents to the specified UID:GID.
+    ///
+    /// This is idempotent - if the volume already has correct ownership, the chown
+    /// is a fast no-op.
+    #[instrument(skip(self))]
+    async fn ensure_cache_volumes_with_ownership(&self, uid: u32, gid: u32) {
+        let volumes = [
+            "clauderon-cargo-registry",
+            "clauderon-cargo-git",
+            "clauderon-sccache",
+        ];
+
+        for volume_name in volumes {
+            // Create volume if it doesn't exist (idempotent)
+            let create_output = Command::new("docker")
+                .args(["volume", "create", volume_name])
+                .output()
+                .await;
+
+            if let Err(e) = create_output {
+                tracing::warn!(
+                    volume = volume_name,
+                    error = %e,
+                    "Failed to create Docker volume"
+                );
+                continue;
+            }
+
+            // Fix ownership using alpine container
+            // This is fast if ownership is already correct (chown is a no-op)
+            let chown_output = Command::new("docker")
+                .args([
+                    "run",
+                    "--rm",
+                    "-v",
+                    &format!("{volume_name}:/vol"),
+                    "alpine:latest",
+                    "chown",
+                    "-R",
+                    &format!("{uid}:{gid}"),
+                    "/vol",
+                ])
+                .output()
+                .await;
+
+            match chown_output {
+                Ok(output) if output.status.success() => {
+                    tracing::debug!(
+                        volume = volume_name,
+                        uid = uid,
+                        gid = gid,
+                        "Ensured volume ownership"
+                    );
+                }
+                Ok(output) => {
+                    let stderr = String::from_utf8_lossy(&output.stderr);
+                    tracing::warn!(
+                        volume = volume_name,
+                        stderr = %stderr,
+                        "Failed to fix volume ownership"
+                    );
+                }
+                Err(e) => {
+                    tracing::warn!(
+                        volume = volume_name,
+                        error = %e,
+                        "Failed to run ownership fix container"
+                    );
+                }
+            }
+        }
+    }
+
+    /// Create a workspace volume for volume mode.
+    ///
+    /// Creates a named Docker volume for the session's workspace.
+    /// The volume name is `clauderon-{session_name}-workspace`.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the docker volume create command fails.
+    #[instrument(skip(self))]
+    async fn create_workspace_volume(&self, session_name: &str) -> anyhow::Result<String> {
+        let volume_name = format!("clauderon-{session_name}-workspace");
+
+        let output = Command::new("docker")
+            .args(["volume", "create", &volume_name])
+            .output()
+            .await?;
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            anyhow::bail!("Failed to create workspace volume: {stderr}");
+        }
+
+        tracing::info!(
+            volume = %volume_name,
+            session = %session_name,
+            "Created workspace volume"
+        );
+
+        Ok(volume_name)
+    }
+
+    /// Clone a repository into a Docker volume.
+    ///
+    /// Runs an init container to clone the repo into the volume, similar to K8s init containers.
+    /// Uses the clone-then-branch strategy:
+    /// 1. Clone from remote (with base_branch if specified)
+    /// 2. Check if target branch exists on remote
+    /// 3. Create or checkout the branch
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if cloning fails.
+    #[instrument(skip(self))]
+    async fn clone_into_volume(
+        &self,
+        volume_name: &str,
+        git_remote_url: &str,
+        branch_name: &str,
+        base_branch: Option<&str>,
+        git_user_name: Option<&str>,
+        git_user_email: Option<&str>,
+        uid: u32,
+        gid: u32,
+    ) -> anyhow::Result<()> {
+        // Build the clone script
+        let base_branch_clone = base_branch.map_or_else(
+            || "git clone ${GIT_REMOTE_URL} .".to_string(),
+            |b| format!("git clone --branch {b} --single-branch ${{GIT_REMOTE_URL}} ."),
+        );
+
+        let script = format!(
+            r#"
+set -e
+cd /workspace
+
+# Clone repo (with base_branch if specified, otherwise default branch)
+if [ ! -d ".git" ]; then
+  {base_branch_clone}
+else
+  echo "Repository already cloned"
+fi
+
+# Fetch latest changes
+git fetch --all
+
+# Check if target branch exists on remote
+if git ls-remote --heads origin "${{BRANCH_NAME}}" | grep -q "${{BRANCH_NAME}}"; then
+  # Branch exists on remote - fetch and checkout
+  git fetch origin "${{BRANCH_NAME}}"
+  git checkout -b "${{BRANCH_NAME}}" "origin/${{BRANCH_NAME}}" || git checkout "${{BRANCH_NAME}}"
+else
+  # Branch doesn't exist - create new local branch
+  git checkout -b "${{BRANCH_NAME}}" || git checkout "${{BRANCH_NAME}}"
+fi
+
+# Set git user config from env vars (if provided)
+if [ -n "$GIT_AUTHOR_NAME" ]; then
+  git config user.name "$GIT_AUTHOR_NAME"
+fi
+if [ -n "$GIT_AUTHOR_EMAIL" ]; then
+  git config user.email "$GIT_AUTHOR_EMAIL"
+fi
+
+# Create cache directories with correct permissions
+mkdir -p .cargo/registry .cargo/git .cache/sccache
+
+# Fix ownership
+chown -R {uid}:{gid} /workspace
+
+echo "Git setup complete: branch ${{BRANCH_NAME}}"
+"#
+        );
+
+        let mut args = vec![
+            "run".to_string(),
+            "--rm".to_string(),
+            "-v".to_string(),
+            format!("{volume_name}:/workspace"),
+            "-e".to_string(),
+            format!("GIT_REMOTE_URL={git_remote_url}"),
+            "-e".to_string(),
+            format!("BRANCH_NAME={branch_name}"),
+        ];
+
+        if let Some(name) = git_user_name {
+            args.extend(["-e".to_string(), format!("GIT_AUTHOR_NAME={name}")]);
+        }
+
+        if let Some(email) = git_user_email {
+            args.extend(["-e".to_string(), format!("GIT_AUTHOR_EMAIL={email}")]);
+        }
+
+        args.extend([
+            "alpine/git:latest".to_string(),
+            "/bin/sh".to_string(),
+            "-c".to_string(),
+            script,
+        ]);
+
+        tracing::info!(
+            volume = %volume_name,
+            remote = %git_remote_url,
+            branch = %branch_name,
+            base_branch = ?base_branch,
+            "Cloning repository into volume"
+        );
+
+        let output = Command::new("docker").args(&args).output().await?;
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            let stdout = String::from_utf8_lossy(&output.stdout);
+            tracing::error!(
+                volume = %volume_name,
+                stderr = %stderr,
+                stdout = %stdout,
+                "Failed to clone repository into volume"
+            );
+            anyhow::bail!("Failed to clone repository into volume: {stderr}");
+        }
+
+        tracing::info!(
+            volume = %volume_name,
+            branch = %branch_name,
+            "Successfully cloned repository into volume"
+        );
+
+        Ok(())
+    }
+
+    /// Delete a workspace volume.
+    ///
+    /// Called when deleting a session that used volume mode.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the docker volume rm command fails.
+    #[instrument(skip(self))]
+    async fn delete_workspace_volume(&self, session_name: &str) -> anyhow::Result<()> {
+        let volume_name = format!("clauderon-{session_name}-workspace");
+
+        let output = Command::new("docker")
+            .args(["volume", "rm", "-f", &volume_name])
+            .output()
+            .await?;
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            tracing::warn!(
+                volume = %volume_name,
+                stderr = %stderr,
+                "Failed to delete workspace volume (may not exist)"
+            );
+        } else {
+            tracing::info!(
+                volume = %volume_name,
+                session = %session_name,
+                "Deleted workspace volume"
+            );
+        }
+
+        Ok(())
+    }
+
     /// Pull the latest version of the Docker image
     ///
     /// # Errors
@@ -273,6 +546,7 @@ impl DockerBackend {
     /// # Errors
     ///
     /// Returns an error if the proxy CA certificate is required but missing.
+    #[allow(clippy::too_many_arguments)]
     pub fn build_create_args(
         name: &str,
         workdir: &Path,
@@ -293,6 +567,8 @@ impl DockerBackend {
         resource_override: Option<&ResourceLimits>,
         model: Option<&str>,
         repositories: &[crate::core::SessionRepository],
+        volume_mode: bool,
+        workspace_volume: Option<&str>,
     ) -> anyhow::Result<Vec<String>> {
         let container_name = format!("clauderon-{name}");
         let escaped_prompt = initial_prompt.replace('\'', "'\\''");
@@ -325,9 +601,24 @@ impl DockerBackend {
             args.extend(resources.to_docker_args());
         }
 
-        // Mount repositories (multi-repo mode if repositories is non-empty, legacy mode otherwise)
-        let working_dir = if repositories.is_empty() {
-            // LEGACY MODE: Single repository using workdir parameter
+        // Mount repositories (volume mode, multi-repo mode, or legacy mode)
+        let working_dir = if volume_mode {
+            // VOLUME MODE: Use named Docker volume instead of bind mount
+            // The volume should already be created and have the repo cloned into it
+            let vol_name = workspace_volume.ok_or_else(|| {
+                anyhow::anyhow!("volume_mode is true but workspace_volume is not provided")
+            })?;
+
+            args.extend(["-v".to_string(), format!("{vol_name}:/workspace")]);
+
+            // Set working directory based on initial_workdir
+            if initial_workdir.as_os_str().is_empty() {
+                "/workspace".to_string()
+            } else {
+                format!("/workspace/{}", initial_workdir.display())
+            }
+        } else if repositories.is_empty() {
+            // LEGACY MODE: Single repository using workdir parameter (bind mount)
             args.extend([
                 "-v".to_string(),
                 format!("{display}:/workspace", display = workdir.display()),
@@ -390,6 +681,8 @@ impl DockerBackend {
             working_dir,
             "-e".to_string(),
             "TERM=xterm-256color".to_string(),
+            "-e".to_string(),
+            "COLORTERM=truecolor".to_string(),
             "-e".to_string(),
             "HOME=/workspace".to_string(),
         ]);
@@ -458,68 +751,70 @@ impl DockerBackend {
 
         // Detect if repositories are git worktrees and mount parent .git directories
         // In multi-repo mode, check each repository; in legacy mode, check the single workdir
-        let repos_to_check: Vec<&Path> = if repositories.is_empty() {
-            vec![workdir]
-        } else {
-            repositories
-                .iter()
-                .map(|r| r.worktree_path.as_path())
-                .collect()
-        };
+        if !volume_mode {
+            let repos_to_check: Vec<&Path> = if repositories.is_empty() {
+                vec![workdir]
+            } else {
+                repositories
+                    .iter()
+                    .map(|r| r.worktree_path.as_path())
+                    .collect()
+            };
 
-        // Track mounted parent .git directories to avoid duplicates
-        let mut mounted_git_dirs = std::collections::HashSet::new();
+            // Track mounted parent .git directories to avoid duplicates
+            let mut mounted_git_dirs = std::collections::HashSet::new();
 
-        for repo_workdir in repos_to_check {
-            match crate::utils::git::detect_worktree_parent_git_dir(repo_workdir) {
-                Ok(Some(parent_git_dir)) => {
-                    // Only mount if not already mounted (multiple repos might share same parent)
-                    if mounted_git_dirs.insert(parent_git_dir.clone()) {
-                        tracing::info!(
+            for repo_workdir in repos_to_check {
+                match crate::utils::git::detect_worktree_parent_git_dir(repo_workdir) {
+                    Ok(Some(parent_git_dir)) => {
+                        // Only mount if not already mounted (multiple repos might share same parent)
+                        if mounted_git_dirs.insert(parent_git_dir.clone()) {
+                            tracing::info!(
+                                workdir = %repo_workdir.display(),
+                                parent_git = %parent_git_dir.display(),
+                                "Detected git worktree, mounting parent .git directory"
+                            );
+
+                            // Mount the parent .git directory to the same absolute path in the container
+                            // This allows git operations (including commits) to work correctly with worktrees
+                            // Read-write access is required for commits, branch operations, etc.
+                            //
+                            // NOTE: This requires the host and container to have compatible filesystem layouts.
+                            // The parent .git directory must be accessible at the same absolute path.
+                            // This works for most cases but may fail if:
+                            // - The parent repo is on a different volume than the worktree
+                            // - There are path conflicts in the container
+                            // - The worktree and parent repo are in very different directory structures
+                            args.extend([
+                                "-v".to_string(),
+                                format!(
+                                    "{display1}:{display2}",
+                                    display1 = parent_git_dir.display(),
+                                    display2 = parent_git_dir.display()
+                                ),
+                            ]);
+                        }
+                    }
+                    Ok(None) => {
+                        // Not a git worktree, that's fine - normal git repos work without extra mounts
+                        tracing::debug!(
                             workdir = %repo_workdir.display(),
-                            parent_git = %parent_git_dir.display(),
-                            "Detected git worktree, mounting parent .git directory"
+                            "Not a git worktree, skipping parent .git mount"
                         );
-
-                        // Mount the parent .git directory to the same absolute path in the container
-                        // This allows git operations (including commits) to work correctly with worktrees
-                        // Read-write access is required for commits, branch operations, etc.
-                        //
-                        // NOTE: This requires the host and container to have compatible filesystem layouts.
-                        // The parent .git directory must be accessible at the same absolute path.
-                        // This works for most cases but may fail if:
-                        // - The parent repo is on a different volume than the worktree
-                        // - There are path conflicts in the container
-                        // - The worktree and parent repo are in very different directory structures
-                        args.extend([
-                            "-v".to_string(),
-                            format!(
-                                "{display1}:{display2}",
-                                display1 = parent_git_dir.display(),
-                                display2 = parent_git_dir.display()
-                            ),
-                        ]);
+                    }
+                    Err(e) => {
+                        // Failed to detect worktree - log a warning but continue
+                        // Git operations may not work properly if this is actually a worktree
+                        tracing::warn!(
+                            workdir = %repo_workdir.display(),
+                            error = %e,
+                            "Failed to detect git worktree, git operations may not work correctly. \
+                            If this directory is a git worktree, you may need to fix the .git file or parent repository."
+                        );
                     }
                 }
-                Ok(None) => {
-                    // Not a git worktree, that's fine - normal git repos work without extra mounts
-                    tracing::debug!(
-                        workdir = %repo_workdir.display(),
-                        "Not a git worktree, skipping parent .git mount"
-                    );
-                }
-                Err(e) => {
-                    // Failed to detect worktree - log a warning but continue
-                    // Git operations may not work properly if this is actually a worktree
-                    tracing::warn!(
-                        workdir = %repo_workdir.display(),
-                        error = %e,
-                        "Failed to detect git worktree, git operations may not work correctly. \
-                        If this directory is a git worktree, you may need to fix the .git file or parent repository."
-                    );
-                }
             }
-        }
+        } // end !volume_mode check
 
         // Add proxy configuration
         if let Some(proxy) = proxy_config {
@@ -1158,7 +1453,12 @@ impl ExecutionBackend for DockerBackend {
 
         // Create the container with the worktree mounted
         // Run as current user to avoid root privileges (claude refuses --dangerously-skip-permissions as root)
-        let uid = std::process::id();
+        let uid = users::get_current_uid();
+        let gid = users::get_current_gid();
+
+        // Ensure cache volumes exist with correct ownership before creating container
+        // This fixes permission issues with Docker named volumes (which are created as root by default)
+        self.ensure_cache_volumes_with_ownership(uid, gid).await;
 
         // Build proxy config dynamically from session-specific port
         let proxy_config = options
@@ -1170,9 +1470,45 @@ impl ExecutionBackend for DockerBackend {
         // Read git user configuration from the host
         let (git_user_name, git_user_email) = read_git_user_config().await;
 
-        // Ensure cache directories exist before creating container
+        // Ensure cache directories exist before creating container (only for non-volume mode)
         // This prevents Docker from creating them as root when mounting named volumes
-        Self::ensure_cache_directories(workdir);
+        if !options.volume_mode {
+            Self::ensure_cache_directories(workdir);
+        }
+
+        // Handle volume mode: create volume and clone repo into it
+        let workspace_volume = if options.volume_mode {
+            // Get repository info - need at least one repository for volume mode
+            let primary_repo = options
+                .repositories
+                .iter()
+                .find(|r| r.is_primary)
+                .or_else(|| options.repositories.first())
+                .ok_or_else(|| anyhow::anyhow!("volume_mode requires at least one repository"))?;
+
+            // Get git remote URL from the repo_path
+            let remote_url = crate::utils::git::get_remote_url(&primary_repo.repo_path).await?;
+
+            // Create the workspace volume
+            let volume_name = self.create_workspace_volume(name).await?;
+
+            // Clone into the volume using clone-then-branch strategy
+            self.clone_into_volume(
+                &volume_name,
+                &remote_url,
+                &primary_repo.branch_name,
+                primary_repo.base_branch.as_deref(),
+                git_user_name.as_deref(),
+                git_user_email.as_deref(),
+                uid,
+                gid,
+            )
+            .await?;
+
+            Some(volume_name)
+        } else {
+            None
+        };
 
         let args = Self::build_create_args(
             name,
@@ -1194,6 +1530,8 @@ impl ExecutionBackend for DockerBackend {
             options.container_resources.as_ref(),
             options.model.as_deref(),
             &options.repositories,
+            options.volume_mode,
+            workspace_volume.as_deref(),
         )?;
         let output = Command::new("docker").args(&args).output().await?;
 
@@ -1274,6 +1612,12 @@ impl ExecutionBackend for DockerBackend {
 
         tracing::info!(container = name, "Deleted Docker container");
 
+        // Also try to delete workspace volume (if it exists)
+        // Extract session name from container name (clauderon-{session_name})
+        if let Some(session_name) = name.strip_prefix("clauderon-") {
+            let _ = self.delete_workspace_volume(session_name).await;
+        }
+
         Ok(())
     }
 
@@ -1302,11 +1646,95 @@ impl ExecutionBackend for DockerBackend {
 
         Ok(String::from_utf8_lossy(&output.stdout).to_string())
     }
+
+    /// Get Docker backend capabilities
+    ///
+    /// Docker with bind mounts preserves data because the code is on the host filesystem.
+    /// Docker supports starting stopped containers and updating images.
+    fn capabilities(&self) -> super::traits::BackendCapabilities {
+        super::traits::BackendCapabilities {
+            can_recreate: true,
+            can_update_image: true,
+            preserves_data_on_recreate: true,
+            can_start: true,
+            can_wake: false,
+            data_preservation_description: "Your code is safe (mounted from your computer). Only container-local files will be lost.",
+        }
+    }
+
+    /// Check the health of a Docker container
+    ///
+    /// Uses `docker inspect` to get detailed container state.
+    #[instrument(skip(self), fields(name = %name))]
+    async fn check_health(
+        &self,
+        name: &str,
+    ) -> anyhow::Result<super::traits::BackendResourceHealth> {
+        // Use docker inspect to get container state
+        let output = Command::new("docker")
+            .args(["inspect", "--format", "{{.State.Status}}", name])
+            .output()
+            .await?;
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            // Container not found
+            if stderr.contains("No such") || stderr.contains("not found") {
+                return Ok(super::traits::BackendResourceHealth::NotFound);
+            }
+            anyhow::bail!("Failed to inspect Docker container: {stderr}");
+        }
+
+        let status = String::from_utf8_lossy(&output.stdout)
+            .trim()
+            .to_lowercase();
+
+        match status.as_str() {
+            "running" => Ok(super::traits::BackendResourceHealth::Running),
+            "exited" | "stopped" | "paused" | "created" => {
+                Ok(super::traits::BackendResourceHealth::Stopped)
+            }
+            "dead" => Ok(super::traits::BackendResourceHealth::Error {
+                message: "Container is in dead state".to_string(),
+            }),
+            "restarting" => Ok(super::traits::BackendResourceHealth::Pending),
+            other => Ok(super::traits::BackendResourceHealth::Error {
+                message: format!("Unknown container state: {other}"),
+            }),
+        }
+    }
+
+    /// Start a stopped Docker container
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the container cannot be started.
+    #[instrument(skip(self), fields(name = %name))]
+    async fn start(&self, name: &str) -> anyhow::Result<()> {
+        tracing::info!(container = %name, "Starting stopped Docker container");
+
+        let output = Command::new("docker")
+            .args(["start", name])
+            .output()
+            .await?;
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            anyhow::bail!("Failed to start Docker container: {stderr}");
+        }
+
+        tracing::info!(container = %name, "Successfully started Docker container");
+        Ok(())
+    }
 }
 
 // Legacy method names for backward compatibility during migration
 impl DockerBackend {
     /// Create a new Docker container (legacy name)
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the container creation fails.
     #[deprecated(note = "Use ExecutionBackend::create instead")]
     pub async fn create_container(
         &self,
@@ -1326,6 +1754,7 @@ impl DockerBackend {
                 session_proxy_port: None,
                 images: vec![],
                 dangerous_skip_checks: false,
+                dangerous_copy_creds: false, // Docker is local, no copy-creds needed
                 session_id: None,
                 initial_workdir: std::path::PathBuf::new(),
                 http_port: None,
@@ -1333,18 +1762,27 @@ impl DockerBackend {
                 container_resources: None,
                 repositories: vec![], // Legacy single-repo mode
                 storage_class_override: None,
+                volume_mode: false,
             },
         )
         .await
     }
 
     /// Check if a Docker container exists (legacy name)
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the Docker command fails.
     #[deprecated(note = "Use ExecutionBackend::exists instead")]
     pub async fn container_exists(&self, name: &str) -> anyhow::Result<bool> {
         self.exists(name).await
     }
 
     /// Delete a Docker container (legacy name)
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the Docker command fails.
     #[deprecated(note = "Use ExecutionBackend::delete instead")]
     pub async fn delete_container(&self, name: &str) -> anyhow::Result<()> {
         self.delete(name).await
@@ -1375,10 +1813,12 @@ mod tests {
             None,  // session_id
             None,  // http_port
             &DockerConfig::default(),
-            None, // image_override
-            None, // resource_override
-            None, // model
-            &[],  // repositories (empty = legacy mode)
+            None,  // image_override
+            None,  // resource_override
+            None,  // model
+            &[],   // repositories (empty = legacy mode)
+            false, // volume_mode
+            None,  // workspace_volume
         )
         .expect("Failed to build args");
 
@@ -1451,10 +1891,12 @@ mod tests {
             None,  // session_id
             None,  // http_port
             &DockerConfig::default(),
-            None, // image_override
-            None, // resource_override
-            None, // model
-            &[],  // repositories (empty = legacy mode)
+            None,  // image_override
+            None,  // resource_override
+            None,  // model
+            &[],   // repositories (empty = legacy mode)
+            false, // volume_mode
+            None,  // workspace_volume
         )
         .expect("Failed to build args");
 
@@ -1488,10 +1930,12 @@ mod tests {
             None,  // session_id
             None,  // http_port
             &DockerConfig::default(),
-            None, // image_override
-            None, // resource_override
-            None, // model
-            &[],  // repositories (empty = legacy mode)
+            None,  // image_override
+            None,  // resource_override
+            None,  // model
+            &[],   // repositories (empty = legacy mode)
+            false, // volume_mode
+            None,  // workspace_volume
         )
         .expect("Failed to build args");
 
@@ -1528,10 +1972,12 @@ mod tests {
             None,  // session_id
             None,  // http_port
             &DockerConfig::default(),
-            None, // image_override
-            None, // resource_override
-            None, // model
-            &[],  // repositories (empty = legacy mode)
+            None,  // image_override
+            None,  // resource_override
+            None,  // model
+            &[],   // repositories (empty = legacy mode)
+            false, // volume_mode
+            None,  // workspace_volume
         )
         .expect("Failed to build args");
 
@@ -1568,10 +2014,12 @@ mod tests {
             None,  // session_id
             None,  // http_port
             &DockerConfig::default(),
-            None, // image_override
-            None, // resource_override
-            None, // model
-            &[],  // repositories (empty = legacy mode)
+            None,  // image_override
+            None,  // resource_override
+            None,  // model
+            &[],   // repositories (empty = legacy mode)
+            false, // volume_mode
+            None,  // workspace_volume
         )
         .expect("Failed to build args");
 
@@ -1669,10 +2117,12 @@ mod tests {
             None,  // session_id
             None,  // http_port
             &DockerConfig::default(),
-            None, // image_override
-            None, // resource_override
-            None, // model
-            &[],  // repositories (empty = legacy mode)
+            None,  // image_override
+            None,  // resource_override
+            None,  // model
+            &[],   // repositories (empty = legacy mode)
+            false, // volume_mode
+            None,  // workspace_volume
         )
         .expect("Failed to build args");
 
@@ -1705,10 +2155,12 @@ mod tests {
             None,  // session_id
             None,  // http_port
             &DockerConfig::default(),
-            None, // image_override
-            None, // resource_override
-            None, // model
-            &[],  // repositories (empty = legacy mode)
+            None,  // image_override
+            None,  // resource_override
+            None,  // model
+            &[],   // repositories (empty = legacy mode)
+            false, // volume_mode
+            None,  // workspace_volume
         )
         .expect("Failed to build args");
 
@@ -1754,10 +2206,12 @@ mod tests {
             None,  // session_id
             None,  // http_port
             &DockerConfig::default(),
-            None, // image_override
-            None, // resource_override
-            None, // model
-            &[],  // repositories (empty = legacy mode)
+            None,  // image_override
+            None,  // resource_override
+            None,  // model
+            &[],   // repositories (empty = legacy mode)
+            false, // volume_mode
+            None,  // workspace_volume
         )
         .expect("Failed to build args");
 
@@ -1801,10 +2255,12 @@ mod tests {
             None,  // session_id
             None,  // http_port
             &DockerConfig::default(),
-            None, // image_override
-            None, // resource_override
-            None, // model
-            &[],  // repositories (empty = legacy mode)
+            None,  // image_override
+            None,  // resource_override
+            None,  // model
+            &[],   // repositories (empty = legacy mode)
+            false, // volume_mode
+            None,  // workspace_volume
         )
         .expect("Failed to build args");
 
@@ -1832,10 +2288,12 @@ mod tests {
             None,  // session_id
             None,  // http_port
             &DockerConfig::default(),
-            None, // image_override
-            None, // resource_override
-            None, // model
-            &[],  // repositories (empty = legacy mode)
+            None,  // image_override
+            None,  // resource_override
+            None,  // model
+            &[],   // repositories (empty = legacy mode)
+            false, // volume_mode
+            None,  // workspace_volume
         )
         .expect("Failed to build args");
 
@@ -1873,10 +2331,12 @@ mod tests {
             None,  // session_id
             None,  // http_port
             &DockerConfig::default(),
-            None, // image_override
-            None, // resource_override
-            None, // model
-            &[],  // repositories (empty = legacy mode)
+            None,  // image_override
+            None,  // resource_override
+            None,  // model
+            &[],   // repositories (empty = legacy mode)
+            false, // volume_mode
+            None,  // workspace_volume
         )
         .expect("Failed to build args");
 
@@ -1913,10 +2373,12 @@ mod tests {
             None, // session_id
             None, // http_port
             &DockerConfig::default(),
-            None, // image_override
-            None, // resource_override
-            None, // model
-            &[],  // repositories (empty = legacy mode)
+            None,  // image_override
+            None,  // resource_override
+            None,  // model
+            &[],   // repositories (empty = legacy mode)
+            false, // volume_mode
+            None,  // workspace_volume
         )
         .expect("Failed to build args");
 
@@ -1950,10 +2412,12 @@ mod tests {
             None,  // session_id
             None,  // http_port
             &DockerConfig::default(),
-            None, // image_override
-            None, // resource_override
-            None, // model
-            &[],  // repositories (empty = legacy mode)
+            None,  // image_override
+            None,  // resource_override
+            None,  // model
+            &[],   // repositories (empty = legacy mode)
+            false, // volume_mode
+            None,  // workspace_volume
         )
         .expect("Failed to build args");
 
@@ -2009,10 +2473,12 @@ mod tests {
             None,  // session_id
             None,  // http_port
             &DockerConfig::default(),
-            None, // image_override
-            None, // resource_override
-            None, // model
-            &[],  // repositories (empty = legacy mode)
+            None,  // image_override
+            None,  // resource_override
+            None,  // model
+            &[],   // repositories (empty = legacy mode)
+            false, // volume_mode
+            None,  // workspace_volume
         )
         .expect("Failed to build args");
 
@@ -2067,10 +2533,12 @@ mod tests {
             None,  // session_id
             None,  // http_port
             &DockerConfig::default(),
-            None, // image_override
-            None, // resource_override
-            None, // model
-            &[],  // repositories (empty = legacy mode)
+            None,  // image_override
+            None,  // resource_override
+            None,  // model
+            &[],   // repositories (empty = legacy mode)
+            false, // volume_mode
+            None,  // workspace_volume
         )
         .expect("Failed to build args");
 
@@ -2110,8 +2578,10 @@ mod tests {
             &DockerConfig::default(),
             None,
             None,
-            None, // model
-            &[],  // repositories (empty = legacy mode)
+            None,  // model
+            &[],   // repositories (empty = legacy mode)
+            false, // volume_mode
+            None,  // workspace_volume
         )
         .expect("Failed to build args");
 
@@ -2155,6 +2625,8 @@ mod tests {
             None,
             None, // model
             &[],
+            false, // volume_mode
+            None,  // workspace_volume
         )
         .expect("Failed to build args");
 
@@ -2212,10 +2684,12 @@ mod tests {
             None,  // session_id
             None,  // http_port
             &DockerConfig::default(),
-            None, // image_override
-            None, // resource_override
-            None, // model
-            &[],  // repositories (empty = legacy mode)
+            None,  // image_override
+            None,  // resource_override
+            None,  // model
+            &[],   // repositories (empty = legacy mode)
+            false, // volume_mode
+            None,  // workspace_volume
         )
         .expect("Failed to build args");
 
@@ -2269,10 +2743,12 @@ mod tests {
             None,  // session_id
             None,  // http_port
             &DockerConfig::default(),
-            None, // image_override
-            None, // resource_override
-            None, // model
-            &[],  // repositories (empty = legacy mode)
+            None,  // image_override
+            None,  // resource_override
+            None,  // model
+            &[],   // repositories (empty = legacy mode)
+            false, // volume_mode
+            None,  // workspace_volume
         )
         .expect("Failed to build args");
 
@@ -2316,10 +2792,12 @@ mod tests {
             None,  // session_id
             None,  // http_port
             &DockerConfig::default(),
-            None, // image_override
-            None, // resource_override
-            None, // model
-            &[],  // repositories (empty = legacy mode)
+            None,  // image_override
+            None,  // resource_override
+            None,  // model
+            &[],   // repositories (empty = legacy mode)
+            false, // volume_mode
+            None,  // workspace_volume
         )
         .expect("Failed to build args");
 
@@ -2364,10 +2842,12 @@ mod tests {
             None,  // session_id
             None,  // http_port
             &DockerConfig::default(),
-            None, // image_override
-            None, // resource_override
-            None, // model
-            &[],  // repositories (empty = legacy mode)
+            None,  // image_override
+            None,  // resource_override
+            None,  // model
+            &[],   // repositories (empty = legacy mode)
+            false, // volume_mode
+            None,  // workspace_volume
         )
         .expect("Failed to build args");
 
@@ -2399,10 +2879,12 @@ mod tests {
             None,  // session_id
             None,  // http_port
             &DockerConfig::default(),
-            None, // image_override
-            None, // resource_override
-            None, // model
-            &[],  // repositories (empty = legacy mode)
+            None,  // image_override
+            None,  // resource_override
+            None,  // model
+            &[],   // repositories (empty = legacy mode)
+            false, // volume_mode
+            None,  // workspace_volume
         )
         .expect("Failed to build args");
 
@@ -2447,10 +2929,12 @@ mod tests {
             None,  // session_id
             None,  // http_port
             &DockerConfig::default(),
-            None, // image_override
-            None, // resource_override
-            None, // model
-            &[],  // repositories (empty = legacy mode)
+            None,  // image_override
+            None,  // resource_override
+            None,  // model
+            &[],   // repositories (empty = legacy mode)
+            false, // volume_mode
+            None,  // workspace_volume
         )
         .expect("Failed to build args");
 
@@ -2486,8 +2970,10 @@ mod tests {
             &DockerConfig::default(),
             None,
             None,
-            None, // model
-            &[],  // repositories
+            None,  // model
+            &[],   // repositories
+            false, // volume_mode
+            None,  // workspace_volume
         )
         .expect("Failed to build args");
 
@@ -2528,8 +3014,10 @@ mod tests {
             &DockerConfig::default(),
             None,
             None,
-            None, // model
-            &[],  // repositories
+            None,  // model
+            &[],   // repositories
+            false, // volume_mode
+            None,  // workspace_volume
         )
         .expect("Failed to build args");
 

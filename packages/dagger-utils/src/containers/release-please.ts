@@ -69,6 +69,7 @@ export async function releasePr(options: ReleasePrOptions): Promise<string> {
 
   const container = getReleasePleaseContainer(options.container)
     .withSecretVariable("GITHUB_TOKEN", options.ghToken)
+    .withEnvVariable("CACHE_BUST", Date.now().toString())
     .withExec([
       "sh",
       "-c",
@@ -113,6 +114,7 @@ export async function githubRelease(options: GitHubReleaseOptions): Promise<stri
 
   const container = getReleasePleaseContainer(options.container)
     .withSecretVariable("GITHUB_TOKEN", options.ghToken)
+    .withEnvVariable("CACHE_BUST", Date.now().toString())
     .withExec([
       "sh",
       "-c",
@@ -153,6 +155,7 @@ export async function manifestPr(options: ManifestPrOptions): Promise<string> {
 
   const container = getReleasePleaseContainer(options.container)
     .withSecretVariable("GITHUB_TOKEN", options.ghToken)
+    .withEnvVariable("CACHE_BUST", Date.now().toString())
     .withExec([
       "sh",
       "-c",
@@ -189,6 +192,7 @@ export type ManifestReleaseOptions = {
 export async function manifestRelease(options: ManifestReleaseOptions): Promise<string> {
   const container = getReleasePleaseContainer(options.container)
     .withSecretVariable("GITHUB_TOKEN", options.ghToken)
+    .withEnvVariable("CACHE_BUST", Date.now().toString())
     .withExec([
       "sh",
       "-c",

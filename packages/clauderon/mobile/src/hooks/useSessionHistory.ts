@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { parseHistoryLines } from "../lib/historyParser";
+import { parseHistoryLinesAuto } from "../lib/historyParser";
 import type { Message } from "../lib/claudeParser";
 import { useClauderonClient } from "./useClauderonClient";
 
@@ -16,10 +16,7 @@ export type HistoryState = {
  * @param sessionId Session ID to fetch history for
  * @param pollingInterval Polling interval in ms (default: 2000)
  */
-export function useSessionHistory(
-  sessionId: string | null,
-  pollingInterval = 2000
-): HistoryState {
+export function useSessionHistory(sessionId: string | null, pollingInterval = 2000): HistoryState {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -43,7 +40,7 @@ export function useSessionHistory(
         const response = await client.getSessionHistory(
           sessionId,
           lastLineRef.current,
-          undefined // no limit
+          undefined, // no limit
         );
 
         if (!isActive) {
@@ -53,16 +50,14 @@ export function useSessionHistory(
         setFileExists(response.fileExists);
 
         if (!response.fileExists) {
-          setError(
-            "History file does not exist yet. Start a conversation to create it."
-          );
+          setError("History file does not exist yet. Start a conversation to create it.");
           setIsLoading(false);
           return;
         }
 
         if (response.lines.length > 0) {
-          // Parse new messages
-          const newMessages = parseHistoryLines(response.lines);
+          // Parse new messages (auto-detects Claude Code vs Codex format)
+          const newMessages = parseHistoryLinesAuto(response.lines);
 
           // Append to existing messages
           setMessages((prev) => [...prev, ...newMessages]);

@@ -11,6 +11,16 @@ import { ApiError, NetworkError, SessionNotFoundError } from "./errors";
 import { Platform } from "react-native";
 
 /**
+ * React Native file object for FormData
+ * This is the RN-specific format for file uploads
+ */
+type ReactNativeFile = {
+  uri: string;
+  type: string;
+  name: string;
+};
+
+/**
  * Configuration options for ClauderonClient
  */
 export type ClauderonClientConfig = {
@@ -41,10 +51,7 @@ export class ClauderonClient {
    * List all sessions
    */
   async listSessions(): Promise<Session[]> {
-    const response = await this.request<{ sessions: Session[] }>(
-      "GET",
-      "/api/sessions"
-    );
+    const response = await this.request<{ sessions: Session[] }>("GET", "/api/sessions");
     return response.sessions;
   }
 
@@ -55,7 +62,7 @@ export class ClauderonClient {
     try {
       const response = await this.request<{ session: Session }>(
         "GET",
-        `/api/sessions/${encodeURIComponent(id)}`
+        `/api/sessions/${encodeURIComponent(id)}`,
       );
       return response.session;
     } catch (error) {
@@ -69,13 +76,11 @@ export class ClauderonClient {
   /**
    * Create a new session
    */
-  async createSession(
-    request: CreateSessionRequest
-  ): Promise<{ id: string; warnings?: string[] }> {
+  async createSession(request: CreateSessionRequest): Promise<{ id: string; warnings?: string[] }> {
     const response = await this.request<{ id: string; warnings?: string[] }>(
       "POST",
       "/api/sessions",
-      request
+      request,
     );
     return response;
   }
@@ -91,35 +96,24 @@ export class ClauderonClient {
    * Archive a session
    */
   async archiveSession(id: string): Promise<void> {
-    await this.request(
-      "POST",
-      `/api/sessions/${encodeURIComponent(id)}/archive`
-    );
+    await this.request("POST", `/api/sessions/${encodeURIComponent(id)}/archive`);
   }
 
   /**
    * Unarchive a session
    */
   async unarchiveSession(id: string): Promise<void> {
-    await this.request(
-      "POST",
-      `/api/sessions/${encodeURIComponent(id)}/unarchive`
-    );
+    await this.request("POST", `/api/sessions/${encodeURIComponent(id)}/unarchive`);
   }
 
   /**
    * Update session metadata (title and/or description)
    */
-  async updateSessionMetadata(
-    id: string,
-    title?: string,
-    description?: string
-  ): Promise<void> {
-    await this.request(
-      "POST",
-      `/api/sessions/${encodeURIComponent(id)}/metadata`,
-      { title, description }
-    );
+  async updateSessionMetadata(id: string, title?: string, description?: string): Promise<void> {
+    await this.request("POST", `/api/sessions/${encodeURIComponent(id)}/metadata`, {
+      title,
+      description,
+    });
   }
 
   /**
@@ -128,7 +122,7 @@ export class ClauderonClient {
   async regenerateMetadata(id: string): Promise<Session> {
     const response = await this.request<{ session: Session }>(
       "POST",
-      `/api/sessions/${encodeURIComponent(id)}/regenerate-metadata`
+      `/api/sessions/${encodeURIComponent(id)}/regenerate-metadata`,
     );
     return response.session;
   }
@@ -137,20 +131,14 @@ export class ClauderonClient {
    * Refresh a Docker session (pull latest image and recreate container)
    */
   async refreshSession(id: string): Promise<void> {
-    await this.request(
-      "POST",
-      `/api/sessions/${encodeURIComponent(id)}/refresh`
-    );
+    await this.request("POST", `/api/sessions/${encodeURIComponent(id)}/refresh`);
   }
 
   /**
    * Get recent repositories
    */
   async getRecentRepos(): Promise<RecentRepoDto[]> {
-    const response = await this.request<{ repos: RecentRepoDto[] }>(
-      "GET",
-      "/api/recent-repos"
-    );
+    const response = await this.request<{ repos: RecentRepoDto[] }>("GET", "/api/recent-repos");
     return response.repos;
   }
 
@@ -158,11 +146,9 @@ export class ClauderonClient {
    * Update session access mode
    */
   async updateAccessMode(id: string, mode: AccessMode): Promise<void> {
-    await this.request(
-      "POST",
-      `/api/sessions/${encodeURIComponent(id)}/access-mode`,
-      { access_mode: mode }
-    );
+    await this.request("POST", `/api/sessions/${encodeURIComponent(id)}/access-mode`, {
+      access_mode: mode,
+    });
   }
 
   /**
@@ -195,7 +181,7 @@ export class ClauderonClient {
   async getSessionHistory(
     id: string,
     sinceLine?: number,
-    limit?: number
+    limit?: number,
   ): Promise<{ lines: string[]; totalLines: number; fileExists: boolean }> {
     const params = new URLSearchParams();
     if (sinceLine !== undefined) {
@@ -230,22 +216,22 @@ export class ClauderonClient {
   async uploadImage(
     sessionId: string,
     imageUri: string,
-    fileName: string
+    fileName: string,
   ): Promise<UploadResponse> {
     const formData = new FormData();
 
     // React Native FormData expects an object with uri, type, and name
     // iOS and macOS need "file://" prefix removed, Android and Windows use as-is
     const normalizedUri =
-      Platform.OS === "ios" || Platform.OS === "macos"
-        ? imageUri.replace("file://", "")
-        : imageUri;
+      Platform.OS === "ios" || Platform.OS === "macos" ? imageUri.replace("file://", "") : imageUri;
 
-    formData.append("file", {
+    const file: ReactNativeFile = {
       uri: normalizedUri,
       type: "image/jpeg", // Default to JPEG, could be improved to detect actual type
       name: fileName,
-    } as any);
+    };
+    // React Native's FormData accepts RN-specific file objects
+    formData.append("file", file as unknown as Blob);
 
     const url = `${this.baseUrl}/api/sessions/${encodeURIComponent(sessionId)}/upload`;
 
@@ -261,10 +247,9 @@ export class ClauderonClient {
       if (!response.ok) {
         const data = (await response.json()) as { error?: string };
         throw new ApiError(
-          data.error ??
-            `HTTP ${String(response.status)}: ${response.statusText}`,
+          data.error ?? `HTTP ${String(response.status)}: ${response.statusText}`,
           undefined,
-          response.status
+          response.status,
         );
       }
 
@@ -275,7 +260,7 @@ export class ClauderonClient {
       }
       throw new NetworkError(
         `Failed to upload image: ${error instanceof Error ? error.message : String(error)}`,
-        error
+        error,
       );
     }
   }
@@ -283,11 +268,7 @@ export class ClauderonClient {
   /**
    * Internal method to make HTTP requests
    */
-  private async request<T = void>(
-    method: string,
-    path: string,
-    body?: unknown
-  ): Promise<T> {
+  private async request<T = void>(method: string, path: string, body?: unknown): Promise<T> {
     const url = `${this.baseUrl}${path}`;
 
     try {
@@ -305,10 +286,7 @@ export class ClauderonClient {
       const response = await this.fetch(url, init);
 
       // Handle empty responses (204 No Content, etc.)
-      if (
-        response.status === 204 ||
-        response.headers.get("content-length") === "0"
-      ) {
+      if (response.status === 204 || response.headers.get("content-length") === "0") {
         return undefined as T;
       }
 
@@ -319,10 +297,9 @@ export class ClauderonClient {
       if (!response.ok) {
         const errorData = data as { error?: string };
         throw new ApiError(
-          errorData.error ??
-            `HTTP ${String(response.status)}: ${response.statusText}`,
+          errorData.error ?? `HTTP ${String(response.status)}: ${response.statusText}`,
           undefined,
-          response.status
+          response.status,
         );
       }
 
@@ -333,7 +310,7 @@ export class ClauderonClient {
       }
       throw new NetworkError(
         `Failed to fetch ${method} ${path}: ${error instanceof Error ? error.message : String(error)}`,
-        error
+        error,
       );
     }
   }

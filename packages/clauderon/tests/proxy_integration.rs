@@ -45,6 +45,8 @@ fn test_proxy_config_flows_to_container_args() {
         None,
         None, // model
         &[],
+        false, // volume_mode
+        None,  // workspace_volume
     )
     .expect("Failed to build args");
 
@@ -134,6 +136,8 @@ fn test_disabled_proxy_config_no_args() {
         None,
         None, // model
         &[],
+        false, // volume_mode
+        None,  // workspace_volume
     )
     .expect("Failed to build args");
 
@@ -174,6 +178,8 @@ fn test_none_proxy_config_no_args() {
         None,
         None, // model
         &[],
+        false, // volume_mode
+        None,  // workspace_volume
     )
     .expect("Failed to build args");
 
@@ -217,6 +223,8 @@ fn test_proxy_port_in_env_vars() {
         None,
         None, // model
         &[],
+        false, // volume_mode
+        None,  // workspace_volume
     )
     .expect("Failed to build args");
 
@@ -267,6 +275,8 @@ fn test_clauderon_dir_in_volume_mounts() {
         None,
         None, // model
         &[],
+        false, // volume_mode
+        None,  // workspace_volume
     )
     .expect("Failed to build args");
 

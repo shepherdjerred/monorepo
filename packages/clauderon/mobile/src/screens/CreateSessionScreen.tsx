@@ -120,7 +120,9 @@ export function CreateSessionScreen({ navigation }: CreateSessionScreenProps) {
             />
             <TouchableOpacity
               style={themedStyles.browseButton}
-              onPress={() => setShowRecentRepos(true)}
+              onPress={() => {
+                setShowRecentRepos(true);
+              }}
             >
               <Text style={[styles.browseButtonText, { color: colors.textDark }]}>Recent</Text>
             </TouchableOpacity>
@@ -153,7 +155,9 @@ export function CreateSessionScreen({ navigation }: CreateSessionScreenProps) {
                   themedStyles.optionButton,
                   backend === b.value && { backgroundColor: colors.primary },
                 ]}
-                onPress={() => setBackend(b.value)}
+                onPress={() => {
+                  setBackend(b.value);
+                }}
               >
                 <Text
                   style={[
@@ -180,7 +184,9 @@ export function CreateSessionScreen({ navigation }: CreateSessionScreenProps) {
                   themedStyles.optionButton,
                   agent === a.value && { backgroundColor: colors.primary },
                 ]}
-                onPress={() => setAgent(a.value)}
+                onPress={() => {
+                  setAgent(a.value);
+                }}
               >
                 <Text
                   style={[
@@ -205,7 +211,9 @@ export function CreateSessionScreen({ navigation }: CreateSessionScreenProps) {
                 themedStyles.optionButton,
                 accessMode === AccessMode.ReadOnly && { backgroundColor: colors.primary },
               ]}
-              onPress={() => setAccessMode(AccessMode.ReadOnly)}
+              onPress={() => {
+                setAccessMode(AccessMode.ReadOnly);
+              }}
             >
               <Text
                 style={[
@@ -222,7 +230,9 @@ export function CreateSessionScreen({ navigation }: CreateSessionScreenProps) {
                 themedStyles.optionButton,
                 accessMode === AccessMode.ReadWrite && { backgroundColor: colors.primary },
               ]}
-              onPress={() => setAccessMode(AccessMode.ReadWrite)}
+              onPress={() => {
+                setAccessMode(AccessMode.ReadWrite);
+              }}
             >
               <Text
                 style={[
@@ -261,10 +271,12 @@ export function CreateSessionScreen({ navigation }: CreateSessionScreenProps) {
       </ScrollView>
 
       {/* Action Buttons */}
-      <View style={[themedStyles.actionBar]}>
+      <View style={themedStyles.actionBar}>
         <TouchableOpacity
           style={[themedStyles.actionButton, { backgroundColor: colors.surface }]}
-          onPress={() => navigation.goBack()}
+          onPress={() => {
+            navigation.goBack();
+          }}
           disabled={isSubmitting}
         >
           <Text style={[styles.buttonText, { color: colors.textDark }]}>Cancel</Text>
@@ -275,7 +287,7 @@ export function CreateSessionScreen({ navigation }: CreateSessionScreenProps) {
             { backgroundColor: colors.primary },
             isSubmitting && styles.buttonDisabled,
           ]}
-          onPress={handleSubmit}
+          onPress={() => void handleSubmit()}
           disabled={isSubmitting}
         >
           {isSubmitting ? (
@@ -290,7 +302,9 @@ export function CreateSessionScreen({ navigation }: CreateSessionScreenProps) {
       <RecentReposSelector
         visible={showRecentRepos}
         onSelect={handleRepoSelect}
-        onClose={() => setShowRecentRepos(false)}
+        onClose={() => {
+          setShowRecentRepos(false);
+        }}
       />
     </View>
   );

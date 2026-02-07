@@ -13,6 +13,8 @@ use crate::core::{Event, Session};
 /// SQLite-based session store
 pub struct SqliteStore {
     pool: SqlitePool,
+    /// Maximum number of recent repositories to track
+    max_recent_repos: usize,
 }
 
 impl SqliteStore {
@@ -41,7 +43,10 @@ impl SqliteStore {
         // Run migrations
         Self::run_migrations(&pool).await?;
 
-        Ok(Self { pool })
+        Ok(Self {
+            pool,
+            max_recent_repos: super::DEFAULT_MAX_RECENT_REPOS,
+        })
     }
 
     /// Get a clone of the underlying connection pool
@@ -52,6 +57,15 @@ impl SqliteStore {
     #[must_use]
     pub fn pool(&self) -> SqlitePool {
         self.pool.clone()
+    }
+
+    /// Set the maximum number of recent repositories to track.
+    ///
+    /// This is primarily useful for testing to speed up limit enforcement tests.
+    #[must_use]
+    pub fn with_max_recent_repos(mut self, limit: usize) -> Self {
+        self.max_recent_repos = limit;
+        self
     }
 
     /// Run database migrations
@@ -132,6 +146,18 @@ impl SqliteStore {
 
         if current_version < 14 {
             Self::migrate_to_v14(pool).await?;
+        }
+
+        if current_version < 15 {
+            Self::migrate_to_v15(pool).await?;
+        }
+
+        if current_version < 16 {
+            Self::migrate_to_v16(pool).await?;
+        }
+
+        if current_version < 17 {
+            Self::migrate_to_v17(pool).await?;
         }
 
         Ok(())
@@ -916,6 +942,101 @@ impl SqliteStore {
         tracing::info!("Migration v14 complete");
         Ok(())
     }
+
+    /// Migration v15: Add pr_review_decision column for workflow stages
+    async fn migrate_to_v15(pool: &SqlitePool) -> anyhow::Result<()> {
+        tracing::info!("Applying migration v15: Add PR review decision");
+
+        // Check if column exists
+        let review_decision_exists: bool = sqlx::query_scalar(
+            "SELECT COUNT(*) > 0 FROM pragma_table_info('sessions') WHERE name = 'pr_review_decision'",
+        )
+        .fetch_one(pool)
+        .await?;
+
+        if !review_decision_exists {
+            // Store as TEXT with serialization for ReviewDecision enum
+            // NULL for sessions without PR review data
+            sqlx::query("ALTER TABLE sessions ADD COLUMN pr_review_decision TEXT")
+                .execute(pool)
+                .await?;
+            tracing::debug!("Added pr_review_decision column to sessions table");
+        }
+
+        // Record migration
+        let now = Utc::now();
+        sqlx::query("INSERT OR REPLACE INTO schema_version (version, applied_at) VALUES (?, ?)")
+            .bind(15)
+            .bind(now.to_rfc3339())
+            .execute(pool)
+            .await?;
+
+        tracing::info!("Migration v15 complete");
+        Ok(())
+    }
+
+    /// Migration v16: Add base_branch column to session_repositories for clone-based backends
+    async fn migrate_to_v16(pool: &SqlitePool) -> anyhow::Result<()> {
+        tracing::info!("Applying migration v16: Add base_branch column to session_repositories");
+
+        // Check if column exists
+        let base_branch_exists: bool = sqlx::query_scalar(
+            "SELECT COUNT(*) > 0 FROM pragma_table_info('session_repositories') WHERE name = 'base_branch'",
+        )
+        .fetch_one(pool)
+        .await?;
+
+        if !base_branch_exists {
+            // NULL means use repository's default branch
+            sqlx::query("ALTER TABLE session_repositories ADD COLUMN base_branch TEXT")
+                .execute(pool)
+                .await?;
+            tracing::debug!("Added base_branch column to session_repositories table");
+        }
+
+        // Record migration
+        let now = Utc::now();
+        sqlx::query("INSERT OR REPLACE INTO schema_version (version, applied_at) VALUES (?, ?)")
+            .bind(16)
+            .bind(now.to_rfc3339())
+            .execute(pool)
+            .await?;
+
+        tracing::info!("Migration v16 complete");
+        Ok(())
+    }
+
+    /// Migration v17: Add dangerous_copy_creds column for tracking copy-creds mode sessions
+    async fn migrate_to_v17(pool: &SqlitePool) -> anyhow::Result<()> {
+        tracing::info!("Applying migration v17: Add dangerous_copy_creds column");
+
+        // Check if column exists (for idempotency)
+        let column_exists: bool = sqlx::query_scalar(
+            "SELECT COUNT(*) > 0 FROM pragma_table_info('sessions') WHERE name = 'dangerous_copy_creds'",
+        )
+        .fetch_one(pool)
+        .await?;
+
+        if !column_exists {
+            sqlx::query(
+                "ALTER TABLE sessions ADD COLUMN dangerous_copy_creds INTEGER NOT NULL DEFAULT 0",
+            )
+            .execute(pool)
+            .await?;
+            tracing::debug!("Added dangerous_copy_creds column to sessions table");
+        }
+
+        // Record migration
+        let now = Utc::now();
+        sqlx::query("INSERT OR REPLACE INTO schema_version (version, applied_at) VALUES (?, ?)")
+            .bind(17)
+            .bind(now.to_rfc3339())
+            .execute(pool)
+            .await?;
+
+        tracing::info!("Migration v17 complete");
+        Ok(())
+    }
 }
 
 #[async_trait]
@@ -938,6 +1059,10 @@ impl Store for SqliteStore {
             // Load repositories from junction table
             match self.get_session_repositories(session.id).await {
                 Ok(repos) if !repos.is_empty() => {
+                    // Sync top-level subdirectory with primary repo
+                    if let Some(primary) = repos.iter().find(|r| r.is_primary) {
+                        session.subdirectory.clone_from(&primary.subdirectory);
+                    }
                     session.repositories = Some(repos);
                 }
                 Ok(_) => {
@@ -950,6 +1075,7 @@ impl Store for SqliteStore {
                         branch_name: session.branch_name.clone(),
                         mount_name: "primary".to_string(),
                         is_primary: true,
+                        base_branch: None,
                     }]);
                 }
                 Err(e) => {
@@ -966,6 +1092,7 @@ impl Store for SqliteStore {
                         branch_name: session.branch_name.clone(),
                         mount_name: "primary".to_string(),
                         is_primary: true,
+                        base_branch: None,
                     }]);
                 }
             }
@@ -990,6 +1117,10 @@ impl Store for SqliteStore {
                 // Load repositories from junction table
                 match self.get_session_repositories(session.id).await {
                     Ok(repos) if !repos.is_empty() => {
+                        // Sync top-level subdirectory with primary repo
+                        if let Some(primary) = repos.iter().find(|r| r.is_primary) {
+                            session.subdirectory.clone_from(&primary.subdirectory);
+                        }
                         session.repositories = Some(repos);
                     }
                     Ok(_) => {
@@ -1001,6 +1132,7 @@ impl Store for SqliteStore {
                             branch_name: session.branch_name.clone(),
                             mount_name: "primary".to_string(),
                             is_primary: true,
+                            base_branch: None,
                         }]);
                     }
                     Err(e) => {
@@ -1016,6 +1148,7 @@ impl Store for SqliteStore {
                             branch_name: session.branch_name.clone(),
                             mount_name: "primary".to_string(),
                             is_primary: true,
+                            base_branch: None,
                         }]);
                     }
                 }
@@ -1032,12 +1165,12 @@ impl Store for SqliteStore {
             r"
             INSERT OR REPLACE INTO sessions (
                 id, name, title, description, status, backend, agent, model, repo_path, worktree_path,
-                subdirectory, branch_name, backend_id, initial_prompt, dangerous_skip_checks,
-                pr_url, pr_check_status, claude_status, claude_status_updated_at,
+                subdirectory, branch_name, backend_id, initial_prompt, dangerous_skip_checks, dangerous_copy_creds,
+                pr_url, pr_check_status, pr_review_decision, claude_status, claude_status_updated_at,
                 merge_conflict, worktree_dirty, worktree_changed_files, access_mode, proxy_port, history_file_path,
                 reconcile_attempts, last_reconcile_error, last_reconcile_at, error_message,
                 created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ",
         )
         .bind(session.id.to_string())
@@ -1061,10 +1194,16 @@ impl Store for SqliteStore {
         .bind(&session.backend_id)
         .bind(&session.initial_prompt)
         .bind(session.dangerous_skip_checks)
+        .bind(session.dangerous_copy_creds)
         .bind(&session.pr_url)
         .bind(
             session
                 .pr_check_status
+                .and_then(|s| serde_json::to_string(&s).ok()),
+        )
+        .bind(
+            session
+                .pr_review_decision
                 .and_then(|s| serde_json::to_string(&s).ok()),
         )
         .bind(serde_json::to_string(&session.claude_status)?)
@@ -1179,7 +1318,7 @@ impl Store for SqliteStore {
     async fn get_recent_repos(&self) -> anyhow::Result<Vec<RecentRepo>> {
         let query = format!(
             "SELECT * FROM recent_repos ORDER BY last_used DESC LIMIT {}",
-            super::MAX_RECENT_REPOS
+            self.max_recent_repos
         );
 
         let rows = sqlx::query_as::<_, RecentRepoRow>(&query)
@@ -1229,7 +1368,7 @@ impl Store for SqliteStore {
 
         let rows = sqlx::query(
             r"
-            SELECT repo_path, subdirectory, worktree_path, branch_name, mount_name, is_primary
+            SELECT repo_path, subdirectory, worktree_path, branch_name, mount_name, is_primary, base_branch
             FROM session_repositories
             WHERE session_id = ?
             ORDER BY display_order ASC, is_primary DESC
@@ -1248,6 +1387,7 @@ impl Store for SqliteStore {
                 branch_name: row.try_get("branch_name")?,
                 mount_name: row.try_get("mount_name")?,
                 is_primary: row.try_get::<i64, _>("is_primary")? != 0,
+                base_branch: row.try_get::<Option<String>, _>("base_branch")?,
             });
         }
 
@@ -1283,9 +1423,9 @@ impl Store for SqliteStore {
                 r"
                 INSERT INTO session_repositories (
                     session_id, repo_path, subdirectory, worktree_path,
-                    branch_name, mount_name, is_primary, display_order
+                    branch_name, mount_name, is_primary, display_order, base_branch
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ",
             )
             .bind(session_id.to_string())
@@ -1296,6 +1436,7 @@ impl Store for SqliteStore {
             .bind(&repo.mount_name)
             .bind(i64::from(repo.is_primary))
             .bind(display_order)
+            .bind(&repo.base_branch)
             .execute(&mut *tx)
             .await?;
         }
@@ -1333,6 +1474,7 @@ const fn event_type_name(event_type: &crate::core::events::EventType) -> &'stati
 
 /// Row type for sessions table
 #[derive(sqlx::FromRow)]
+#[allow(clippy::struct_excessive_bools)]
 struct SessionRow {
     id: String,
     name: String,
@@ -1349,8 +1491,10 @@ struct SessionRow {
     backend_id: Option<String>,
     initial_prompt: String,
     dangerous_skip_checks: bool,
+    dangerous_copy_creds: bool,
     pr_url: Option<String>,
     pr_check_status: Option<String>,
+    pr_review_decision: Option<String>,
     claude_status: String,
     claude_status_updated_at: Option<String>,
     merge_conflict: bool,
@@ -1417,6 +1561,20 @@ impl TryFrom<SessionRow> for Session {
                 serde_json::from_str(&s).map_err(|e| {
                     anyhow::anyhow!(
                         "session '{}': invalid pr_check_status '{}': {}",
+                        row.name,
+                        s,
+                        e
+                    )
+                })
+            })
+            .transpose()?;
+
+        let pr_review_decision = row
+            .pr_review_decision
+            .map(|s| {
+                serde_json::from_str(&s).map_err(|e| {
+                    anyhow::anyhow!(
+                        "session '{}': invalid pr_review_decision '{}': {}",
                         row.name,
                         s,
                         e
@@ -1509,8 +1667,10 @@ impl TryFrom<SessionRow> for Session {
             backend_id: row.backend_id,
             initial_prompt: row.initial_prompt,
             dangerous_skip_checks: row.dangerous_skip_checks,
+            dangerous_copy_creds: row.dangerous_copy_creds,
             pr_url: row.pr_url,
             pr_check_status,
+            pr_review_decision,
             claude_status,
             claude_status_updated_at,
             merge_conflict: row.merge_conflict,
@@ -1520,8 +1680,12 @@ impl TryFrom<SessionRow> for Session {
                 .as_ref()
                 .and_then(|json| serde_json::from_str(json).ok()),
             access_mode: row.access_mode.parse().unwrap_or_default(),
+            // Safe cast: port numbers are always within u16 range (0-65535)
+            #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
             proxy_port: row.proxy_port.map(|p| p as u16),
             history_file_path: row.history_file_path.map(PathBuf::from),
+            // Safe cast: reconcile attempts are bounded by application logic
+            #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
             reconcile_attempts: row.reconcile_attempts as u32,
             last_reconcile_error: row.last_reconcile_error,
             last_reconcile_at,

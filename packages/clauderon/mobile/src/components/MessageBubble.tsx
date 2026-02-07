@@ -47,21 +47,9 @@ export function MessageBubble({ message }: MessageBubbleProps) {
   }
 
   return (
-    <View
-      style={[
-        styles.container,
-        isUser ? styles.userContainer : styles.assistantContainer,
-      ]}
-    >
-      <View
-        style={[
-          styles.bubble,
-          isUser ? styles.userBubble : styles.assistantBubble,
-        ]}
-      >
-        {message.content && (
-          <Markdown style={markdownStyles}>{message.content}</Markdown>
-        )}
+    <View style={[styles.container, isUser ? styles.userContainer : styles.assistantContainer]}>
+      <View style={[styles.bubble, isUser ? styles.userBubble : styles.assistantBubble]}>
+        {message.content && <Markdown style={markdownStyles}>{message.content}</Markdown>}
 
         {message.toolUses && message.toolUses.length > 0 && (
           <View style={styles.toolsContainer}>
@@ -89,14 +77,12 @@ export function MessageBubble({ message }: MessageBubbleProps) {
               <View key={index} style={styles.codeBlock}>
                 <View style={styles.codeHeader}>
                   <Text style={styles.codeLang}>{block.language}</Text>
-                  {block.filePath && (
-                    <Text style={styles.codeFilePath}>{block.filePath}</Text>
-                  )}
+                  {block.filePath && <Text style={styles.codeFilePath}>{block.filePath}</Text>}
                 </View>
                 <ScrollView horizontal style={styles.codeScroll}>
                   <View style={styles.codeContent}>
                     <SyntaxHighlighter
-                      language={block.language || "text"}
+                      language={block.language ?? "text"}
                       style={atomOneDark}
                       customStyle={{
                         backgroundColor: colors.backgroundDark,
@@ -115,9 +101,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
           </View>
         )}
 
-        <Text style={styles.timestamp}>
-          {formatTime(message.timestamp)}
-        </Text>
+        <Text style={styles.timestamp}>{formatTime(message.timestamp)}</Text>
       </View>
     </View>
   );
@@ -270,7 +254,7 @@ const markdownStyles = {
   },
   link: {
     color: colors.primary,
-    textDecorationLine: "underline",
+    textDecorationLine: "underline" as const,
   },
   blockquote: {
     borderLeftWidth: 4,

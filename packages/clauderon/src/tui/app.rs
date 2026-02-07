@@ -8,7 +8,8 @@ use uuid::Uuid;
 
 use crate::api::console_protocol::SignalType;
 use crate::api::{ApiClient, Client};
-use crate::core::session::SessionModel;
+use crate::backends::{ImagePullPolicy, KubernetesConfig, SpritesConfig};
+use crate::core::session::{HealthCheckResult, SessionHealthReport, SessionModel};
 use crate::core::{AccessMode, AgentType, BackendType, Session, SessionStatus};
 use crate::tui::attached::PtySession;
 
@@ -98,6 +99,12 @@ pub enum AppMode {
     ReconcileError,
     /// Signal menu dialog
     SignalMenu,
+    /// Startup health modal showing sessions that need attention
+    StartupHealthModal,
+    /// Recreate confirmation dialog
+    RecreateConfirm,
+    /// Recreate blocked dialog (cannot safely recreate)
+    RecreateBlocked,
 }
 
 /// Copy mode state for text selection and navigation
@@ -205,12 +212,17 @@ pub enum CreateDialogFocus {
     #[default]
     Prompt,
     RepoPath,
+    BaseBranch,
     Backend,
     Agent,
     Model,
     AccessMode,
     SkipChecks,
     PlanMode,
+    DangerousCopyCreds,
+    ContainerImage,
+    PullPolicy,
+    StorageClass,
     Buttons,
 }
 
@@ -221,6 +233,8 @@ pub struct DirEntry {
     pub name: String,
     /// Full path to the entry
     pub path: PathBuf,
+    /// Subdirectory component (for recent repos with subdirectories)
+    pub subdirectory: PathBuf,
     /// Whether this is the parent directory (..)
     pub is_parent: bool,
     /// Whether this is from recent repos list
@@ -250,8 +264,9 @@ pub struct DirectoryPickerState {
     matcher: nucleo_matcher::Matcher,
 }
 
-/// Create dialog state
+/// Create dialog state for managing session creation UI.
 #[derive(Debug, Clone)]
+#[allow(clippy::struct_excessive_bools)]
 pub struct CreateDialogState {
     pub prompt: String,
     pub repo_path: String,
@@ -261,6 +276,24 @@ pub struct CreateDialogState {
     pub skip_checks: bool,
     pub plan_mode: bool,
     pub access_mode: AccessMode,
+
+    /// Copy credentials directly to container (dangerous, bypasses proxy).
+    /// Used when proxy mode is not configured for K8s backend.
+    pub dangerous_copy_creds: bool,
+
+    // === Kubernetes-specific options ===
+    /// Custom container image for K8s backend (empty = use default)
+    pub container_image: String,
+
+    /// Image pull policy for K8s backend
+    pub pull_policy: ImagePullPolicy,
+
+    /// Storage class for K8s persistent volume (empty = use default)
+    pub storage_class: String,
+
+    /// Base branch to clone from (for clone-based backends like Sprites/K8s).
+    /// When empty, clones the repository's default branch.
+    pub base_branch: String,
 
     /// Image file paths to attach to the prompt.
     ///
@@ -276,6 +309,8 @@ pub struct CreateDialogState {
     pub focus: CreateDialogFocus,
     pub button_create_focused: bool, // true = Create, false = Cancel
     pub directory_picker: DirectoryPickerState,
+    /// Feature flags (for conditional backend availability)
+    pub feature_flags: std::sync::Arc<crate::feature_flags::FeatureFlags>,
 }
 
 impl DirectoryPickerState {
@@ -300,6 +335,9 @@ impl DirectoryPickerState {
                     |n| n.to_string_lossy().to_string(),
                 );
 
+                // Store subdirectory component
+                let subdirectory = PathBuf::from(&dto.subdirectory);
+
                 // Include subdirectory in the display name if present
                 let name = if dto.subdirectory.is_empty() {
                     repo_name
@@ -310,6 +348,7 @@ impl DirectoryPickerState {
                 Some(DirEntry {
                     name,
                     path,
+                    subdirectory,
                     is_parent: false,
                     is_recent: true,
                 })
@@ -353,6 +392,7 @@ impl DirectoryPickerState {
             self.all_entries.push(DirEntry {
                 name: "..".to_string(),
                 path: parent.to_path_buf(),
+                subdirectory: PathBuf::new(),
                 is_parent: true,
                 is_recent: false,
             });
@@ -366,6 +406,7 @@ impl DirectoryPickerState {
                         self.all_entries.push(DirEntry {
                             name: name.to_string_lossy().to_string(),
                             path: dir,
+                            subdirectory: PathBuf::new(),
                             is_parent: false,
                             is_recent: false,
                         });
@@ -499,12 +540,32 @@ impl CreateDialogState {
     }
 
     pub fn reset(&mut self) {
+        // Preserve feature flags when resetting - they should persist across dialog opens
+        let feature_flags = self.feature_flags.clone();
         *self = Self::new();
+        self.feature_flags = feature_flags;
     }
 
-    /// Cycle through backends: Zellij → Docker → Kubernetes → Sprites → [AppleContainer] → Zellij, auto-adjusting skip_checks
-    pub fn toggle_backend(&mut self) {
-        self.backend = match self.backend {
+    /// Check if a backend is available for use.
+    ///
+    /// Remote backends (Sprites) require configuration to be usable:
+    /// - Sprites: requires `daemon_address` in sprites-config.toml
+    ///
+    /// Kubernetes is always available when enabled via feature flag - use dangerous-copy-creds if no proxy configured.
+    /// Local backends (Zellij, Docker, AppleContainer) are always available.
+    fn is_backend_available(&self, backend: BackendType) -> bool {
+        match backend {
+            BackendType::Sprites => SpritesConfig::load_or_default().is_connected_mode(),
+            BackendType::Kubernetes => self.feature_flags.enable_kubernetes_backend, // Available if feature enabled
+            BackendType::Zellij | BackendType::Docker => true,
+            #[cfg(target_os = "macos")]
+            BackendType::AppleContainer => true,
+        }
+    }
+
+    /// Get the next backend in the cycle order.
+    fn next_backend(backend: BackendType) -> BackendType {
+        match backend {
             BackendType::Zellij => BackendType::Docker,
             BackendType::Docker => BackendType::Kubernetes,
             BackendType::Kubernetes => BackendType::Sprites,
@@ -514,9 +575,26 @@ impl CreateDialogState {
             BackendType::AppleContainer => BackendType::Zellij,
             #[cfg(not(target_os = "macos"))]
             BackendType::Sprites => BackendType::Zellij,
-        };
+        }
+    }
 
-        // Auto-toggle skip_checks based on backend:
+    /// Get the previous backend in the cycle order.
+    fn prev_backend(backend: BackendType) -> BackendType {
+        match backend {
+            #[cfg(target_os = "macos")]
+            BackendType::Zellij => BackendType::AppleContainer,
+            #[cfg(target_os = "macos")]
+            BackendType::AppleContainer => BackendType::Sprites,
+            #[cfg(not(target_os = "macos"))]
+            BackendType::Zellij => BackendType::Sprites,
+            BackendType::Sprites => BackendType::Kubernetes,
+            BackendType::Kubernetes => BackendType::Docker,
+            BackendType::Docker => BackendType::Zellij,
+        }
+    }
+
+    /// Update skip_checks based on the selected backend.
+    fn update_skip_checks_for_backend(&mut self) {
         // Docker, Kubernetes, Sprites, and AppleContainer benefit from skipping checks (isolated environments)
         // Zellij runs locally so checks are more important
         #[cfg(target_os = "macos")]
@@ -538,35 +616,62 @@ impl CreateDialogState {
         }
     }
 
-    /// Cycle through backends in reverse: Zellij → [AppleContainer] → Sprites → Kubernetes → Docker → Zellij
-    pub fn toggle_backend_reverse(&mut self) {
-        self.backend = match self.backend {
-            #[cfg(target_os = "macos")]
-            BackendType::Zellij => BackendType::AppleContainer,
-            #[cfg(target_os = "macos")]
-            BackendType::AppleContainer => BackendType::Sprites,
-            #[cfg(not(target_os = "macos"))]
-            BackendType::Zellij => BackendType::Sprites,
-            BackendType::Sprites => BackendType::Kubernetes,
-            BackendType::Kubernetes => BackendType::Docker,
-            BackendType::Docker => BackendType::Zellij,
-        };
+    /// Cycle through backends: Zellij → Docker → Kubernetes → Sprites → [AppleContainer] → Zellij, auto-adjusting skip_checks
+    /// Skips backends that are not configured/available.
+    pub fn toggle_backend(&mut self) {
+        let starting_backend = self.backend;
+        let mut next = Self::next_backend(self.backend);
 
-        // Auto-toggle skip_checks based on backend (same logic as forward toggle)
+        // Loop to find the next available backend
+        // Maximum iterations = number of backends to prevent infinite loop
         #[cfg(target_os = "macos")]
-        let is_container_backend = matches!(
-            self.backend,
-            BackendType::Docker
-                | BackendType::Kubernetes
-                | BackendType::Sprites
-                | BackendType::AppleContainer
-        );
+        const MAX_BACKENDS: usize = 5;
         #[cfg(not(target_os = "macos"))]
-        let is_container_backend = matches!(
-            self.backend,
-            BackendType::Docker | BackendType::Kubernetes | BackendType::Sprites
-        );
-        self.skip_checks = is_container_backend;
+        const MAX_BACKENDS: usize = 4;
+
+        for _ in 0..MAX_BACKENDS {
+            if self.is_backend_available(next) {
+                self.backend = next;
+                self.update_skip_checks_for_backend();
+                return;
+            }
+            next = Self::next_backend(next);
+            // If we've cycled back to the start, stay on current
+            if next == starting_backend {
+                break;
+            }
+        }
+
+        // No available backend found, stay on current (shouldn't happen in practice
+        // since Zellij and Docker are always available)
+    }
+
+    /// Cycle through backends in reverse: Zellij → [AppleContainer] → Sprites → Kubernetes → Docker → Zellij
+    /// Skips backends that are not configured/available.
+    pub fn toggle_backend_reverse(&mut self) {
+        let starting_backend = self.backend;
+        let mut prev = Self::prev_backend(self.backend);
+
+        // Loop to find the previous available backend
+        #[cfg(target_os = "macos")]
+        const MAX_BACKENDS: usize = 5;
+        #[cfg(not(target_os = "macos"))]
+        const MAX_BACKENDS: usize = 4;
+
+        for _ in 0..MAX_BACKENDS {
+            if self.is_backend_available(prev) {
+                self.backend = prev;
+                self.update_skip_checks_for_backend();
+                return;
+            }
+            prev = Self::prev_backend(prev);
+            // If we've cycled back to the start, stay on current
+            if prev == starting_backend {
+                break;
+            }
+        }
+
+        // No available backend found, stay on current
     }
 
     /// Toggle between ReadOnly and ReadWrite access modes
@@ -574,6 +679,15 @@ impl CreateDialogState {
         self.access_mode = match self.access_mode {
             AccessMode::ReadOnly => AccessMode::ReadWrite,
             AccessMode::ReadWrite => AccessMode::ReadOnly,
+        };
+    }
+
+    /// Toggle through image pull policies: IfNotPresent → Always → Never → IfNotPresent
+    pub fn toggle_pull_policy(&mut self) {
+        self.pull_policy = match self.pull_policy {
+            ImagePullPolicy::IfNotPresent => ImagePullPolicy::Always,
+            ImagePullPolicy::Always => ImagePullPolicy::Never,
+            ImagePullPolicy::Never => ImagePullPolicy::IfNotPresent,
         };
     }
 
@@ -751,8 +865,13 @@ impl Default for CreateDialogState {
             agent: AgentType::ClaudeCode,
             model: None, // Default to CLI default
             skip_checks: false,
-            plan_mode: true,                    // Default to plan mode ON
-            access_mode: AccessMode::default(), // ReadOnly by default (secure)
+            plan_mode: true,                         // Default to plan mode ON
+            access_mode: AccessMode::default(),      // ReadOnly by default (secure)
+            dangerous_copy_creds: false,             // Default to proxy mode (secure)
+            container_image: String::new(),          // Empty = use default image
+            pull_policy: ImagePullPolicy::default(), // IfNotPresent
+            storage_class: String::new(),            // Empty = use default storage class
+            base_branch: String::new(),              // Empty = use repo default branch
             images: Vec::new(),
             prompt_cursor_line: 0,
             prompt_cursor_col: 0,
@@ -760,11 +879,13 @@ impl Default for CreateDialogState {
             focus: CreateDialogFocus::default(),
             button_create_focused: false,
             directory_picker: DirectoryPickerState::new(),
+            feature_flags: std::sync::Arc::new(crate::feature_flags::FeatureFlags::default()),
         }
     }
 }
 
 /// Main application state
+#[allow(clippy::struct_excessive_bools)]
 pub struct App {
     /// Current mode/view
     pub mode: AppMode,
@@ -844,6 +965,21 @@ pub struct App {
 
     /// Last signal send result for status display
     pub last_signal_result: Option<SignalResult>,
+
+    /// Cached health reports for all sessions
+    pub session_health: HashMap<Uuid, SessionHealthReport>,
+
+    /// Startup health check result (shown in modal on first load)
+    pub startup_health_result: Option<HealthCheckResult>,
+
+    /// Whether the startup health modal has been shown/dismissed
+    pub startup_health_shown: bool,
+
+    /// Session ID for recreate confirmation dialog
+    pub recreate_confirm_session_id: Option<Uuid>,
+
+    /// Whether the details section is expanded in recreate confirm dialog
+    pub recreate_details_expanded: bool,
 }
 
 impl App {
@@ -878,6 +1014,11 @@ impl App {
             reconcile_error_session_id: None,
             signal_menu: None,
             last_signal_result: None,
+            session_health: HashMap::new(),
+            startup_health_result: None,
+            startup_health_shown: false,
+            recreate_confirm_session_id: None,
+            recreate_details_expanded: false,
         }
     }
 
@@ -888,7 +1029,11 @@ impl App {
     /// Returns an error if the daemon connection fails.
     pub async fn connect(&mut self) -> anyhow::Result<()> {
         match Client::connect().await {
-            Ok(client) => {
+            Ok(mut client) => {
+                // Fetch feature flags from the daemon
+                if let Ok(flags) = client.get_feature_flags().await {
+                    self.create_dialog.feature_flags = std::sync::Arc::new(flags);
+                }
                 self.client = Some(Box::new(client));
                 self.connection_error = None;
                 Ok(())
@@ -929,6 +1074,133 @@ impl App {
             }
         }
         Ok(())
+    }
+
+    /// Refresh health data for all sessions
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if fetching health data fails.
+    pub async fn refresh_health(&mut self) -> anyhow::Result<()> {
+        if let Some(client) = &mut self.client {
+            let health_result = client.get_health().await?;
+            self.session_health.clear();
+            for report in &health_result.sessions {
+                self.session_health
+                    .insert(report.session_id, report.clone());
+            }
+
+            // On startup, show the health modal if there are issues
+            if !self.startup_health_shown && health_result.has_issues() {
+                self.startup_health_result = Some(health_result);
+                self.mode = AppMode::StartupHealthModal;
+            }
+            self.startup_health_shown = true;
+        }
+        Ok(())
+    }
+
+    /// Dismiss the startup health modal
+    pub fn dismiss_startup_health_modal(&mut self) {
+        self.startup_health_result = None;
+        self.mode = AppMode::SessionList;
+    }
+
+    /// Open the recreate confirmation dialog for the selected session
+    pub fn open_recreate_dialog(&mut self) {
+        if let Some(session) = self.selected_session() {
+            let session_id = session.id;
+            if let Some(health) = self.session_health.get(&session_id) {
+                self.recreate_confirm_session_id = Some(session_id);
+                self.recreate_details_expanded = false;
+
+                // If no actions are available (blocked), show blocked dialog
+                if health.available_actions.is_empty() {
+                    self.mode = AppMode::RecreateBlocked;
+                } else {
+                    self.mode = AppMode::RecreateConfirm;
+                }
+            } else {
+                self.status_message =
+                    Some("Health info not available - try refreshing".to_string());
+            }
+        }
+    }
+
+    /// Close the recreate dialog and return to session list
+    pub fn close_recreate_dialog(&mut self) {
+        self.recreate_confirm_session_id = None;
+        self.recreate_details_expanded = false;
+        self.mode = AppMode::SessionList;
+    }
+
+    /// Start a stopped session
+    pub async fn start_session(&mut self, id: Uuid) -> anyhow::Result<()> {
+        if let Some(client) = &mut self.client {
+            client.start_session(id).await?;
+        }
+        self.refresh_sessions().await?;
+        Ok(())
+    }
+
+    /// Wake a hibernated session
+    pub async fn wake_session(&mut self, id: Uuid) -> anyhow::Result<()> {
+        if let Some(client) = &mut self.client {
+            client.wake_session(id).await?;
+        }
+        self.refresh_sessions().await?;
+        Ok(())
+    }
+
+    /// Recreate a session (preserves data)
+    pub async fn recreate_session(&mut self, id: Uuid) -> anyhow::Result<()> {
+        if let Some(client) = &mut self.client {
+            client.recreate_session(id).await?;
+        }
+        self.refresh_sessions().await?;
+        Ok(())
+    }
+
+    /// Recreate a session fresh (data lost)
+    pub async fn recreate_session_fresh(&mut self, id: Uuid) -> anyhow::Result<()> {
+        if let Some(client) = &mut self.client {
+            client.recreate_session_fresh(id).await?;
+        }
+        self.refresh_sessions().await?;
+        Ok(())
+    }
+
+    /// Update session image and recreate
+    pub async fn update_session_image(&mut self, id: Uuid) -> anyhow::Result<()> {
+        if let Some(client) = &mut self.client {
+            client.update_session_image(id).await?;
+        }
+        self.refresh_sessions().await?;
+        Ok(())
+    }
+
+    /// Cleanup a session (remove from clauderon, worktree missing)
+    pub async fn cleanup_session(&mut self, id: Uuid) -> anyhow::Result<()> {
+        if let Some(client) = &mut self.client {
+            client.cleanup_session(id).await?;
+        }
+        self.refresh_sessions().await?;
+        Ok(())
+    }
+
+    /// Get sessions needing attention from the startup health result
+    #[must_use]
+    pub fn sessions_needing_attention(&self) -> Vec<&SessionHealthReport> {
+        self.startup_health_result
+            .as_ref()
+            .map(|r| r.sessions_needing_attention())
+            .unwrap_or_default()
+    }
+
+    /// Get health report for a session
+    #[must_use]
+    pub fn get_session_health(&self, session_id: uuid::Uuid) -> Option<&SessionHealthReport> {
+        self.session_health.get(&session_id)
     }
 
     /// Get the currently selected session
@@ -1236,6 +1508,26 @@ impl App {
         use crate::api::protocol::CreateSessionRequest;
         use crate::core::{AgentType, BackendType};
 
+        // Only pass K8s-specific options when using K8s backend
+        let (container_image, pull_policy, storage_class) =
+            if self.create_dialog.backend == BackendType::Kubernetes {
+                (
+                    if self.create_dialog.container_image.is_empty() {
+                        None
+                    } else {
+                        Some(self.create_dialog.container_image.clone())
+                    },
+                    Some(self.create_dialog.pull_policy.to_string()),
+                    if self.create_dialog.storage_class.is_empty() {
+                        None
+                    } else {
+                        Some(self.create_dialog.storage_class.clone())
+                    },
+                )
+            } else {
+                (None, None, None)
+            };
+
         let request = CreateSessionRequest {
             repo_path: self.create_dialog.repo_path.clone(),
             repositories: None, // TUI doesn't support multi-repo yet
@@ -1244,15 +1536,16 @@ impl App {
             agent: self.create_dialog.agent,
             model: self.create_dialog.model.clone(), // Use selected model from dialog
             dangerous_skip_checks: self.create_dialog.skip_checks,
+            dangerous_copy_creds: self.create_dialog.dangerous_copy_creds,
             print_mode: false, // TUI always uses interactive mode
             plan_mode: self.create_dialog.plan_mode,
             access_mode: self.create_dialog.access_mode,
             images: self.create_dialog.images.clone(),
-            container_image: None, // TODO: Add TUI fields for container customization
-            pull_policy: None,
+            container_image,
+            pull_policy,
             cpu_limit: None,
             memory_limit: None,
-            storage_class: None, // TUI doesn't support storage class selection yet
+            storage_class,
         };
 
         if let Some(client) = &mut self.client {
@@ -1385,6 +1678,20 @@ impl App {
             .and_then(|id| self.sessions.iter().find(|s| s.id == id))
     }
 
+    /// Get the session for recreate confirm/blocked dialog
+    #[must_use]
+    pub fn get_recreate_session(&self) -> Option<&Session> {
+        self.recreate_confirm_session_id
+            .and_then(|id| self.sessions.iter().find(|s| s.id == id))
+    }
+
+    /// Get the health report for recreate confirm/blocked dialog
+    #[must_use]
+    pub fn get_recreate_session_health(&self) -> Option<&SessionHealthReport> {
+        self.recreate_confirm_session_id
+            .and_then(|id| self.session_health.get(&id))
+    }
+
     /// Request quit
     pub const fn quit(&mut self) {
         self.should_quit = true;
@@ -1401,6 +1708,11 @@ impl App {
     ///
     /// Creates a new PTY session if one doesn't exist, or reattaches to an existing one.
     ///
+    /// Supported backends:
+    /// - Docker: Uses console socket via daemon
+    /// - Sprites: Uses console socket via daemon
+    /// - Kubernetes: Uses console socket via daemon
+    ///
     /// # Errors
     ///
     /// Returns an error if the session cannot be attached.
@@ -1409,10 +1721,15 @@ impl App {
             .selected_session()
             .ok_or_else(|| anyhow::anyhow!("No session selected"))?;
 
-        // Only Docker sessions support PTY attachment for now
-        if session.backend != crate::core::BackendType::Docker {
+        // Docker, Sprites, and Kubernetes sessions support PTY attachment
+        if !matches!(
+            session.backend,
+            crate::core::BackendType::Docker
+                | crate::core::BackendType::Sprites
+                | crate::core::BackendType::Kubernetes
+        ) {
             return Err(anyhow::anyhow!(
-                "PTY attachment only supported for Docker sessions"
+                "PTY attachment only supported for Docker, Sprites, and Kubernetes sessions"
             ));
         }
 
@@ -1619,37 +1936,39 @@ impl App {
         self.attached_session_id.is_some() && matches!(self.mode, AppMode::Attached)
     }
 
-    /// Switch to the next Docker session while attached.
+    /// Switch to the next attachable session while attached.
     /// Returns true if switched, false if no next session.
     pub async fn switch_to_next_session(&mut self) -> anyhow::Result<bool> {
         use crate::core::{BackendType, SessionStatus};
 
-        // Get list of Docker sessions (only those support PTY)
-        let docker_sessions: Vec<_> = self
+        // Get list of attachable sessions (Docker, Sprites, and Kubernetes support PTY)
+        let attachable_sessions: Vec<_> = self
             .sessions
             .iter()
             .filter(|s| {
-                s.backend == BackendType::Docker
-                    && s.backend_id.is_some()
+                matches!(
+                    s.backend,
+                    BackendType::Docker | BackendType::Sprites | BackendType::Kubernetes
+                ) && s.backend_id.is_some()
                     && s.status != SessionStatus::Archived
             })
             .collect();
 
-        if docker_sessions.len() <= 1 {
+        if attachable_sessions.len() <= 1 {
             return Ok(false);
         }
 
         // Find current session's index
-        let current_idx = docker_sessions
+        let current_idx = attachable_sessions
             .iter()
             .position(|s| Some(s.id) == self.attached_session_id);
 
         let next_idx = match current_idx {
-            Some(idx) => (idx + 1) % docker_sessions.len(),
+            Some(idx) => (idx + 1) % attachable_sessions.len(),
             None => 0,
         };
 
-        let next_session = docker_sessions[next_idx];
+        let next_session = attachable_sessions[next_idx];
         let session_id = next_session.id;
         let container_id = next_session.backend_id.clone().unwrap();
 
@@ -1671,38 +1990,40 @@ impl App {
         Ok(true)
     }
 
-    /// Switch to the previous Docker session while attached.
+    /// Switch to the previous attachable session while attached.
     /// Returns true if switched, false if no previous session.
     pub async fn switch_to_previous_session(&mut self) -> anyhow::Result<bool> {
         use crate::core::{BackendType, SessionStatus};
 
-        // Get list of Docker sessions (only those support PTY)
-        let docker_sessions: Vec<_> = self
+        // Get list of attachable sessions (Docker, Sprites, and Kubernetes support PTY)
+        let attachable_sessions: Vec<_> = self
             .sessions
             .iter()
             .filter(|s| {
-                s.backend == BackendType::Docker
-                    && s.backend_id.is_some()
+                matches!(
+                    s.backend,
+                    BackendType::Docker | BackendType::Sprites | BackendType::Kubernetes
+                ) && s.backend_id.is_some()
                     && s.status != SessionStatus::Archived
             })
             .collect();
 
-        if docker_sessions.len() <= 1 {
+        if attachable_sessions.len() <= 1 {
             return Ok(false);
         }
 
         // Find current session's index
-        let current_idx = docker_sessions
+        let current_idx = attachable_sessions
             .iter()
             .position(|s| Some(s.id) == self.attached_session_id);
 
         let prev_idx = match current_idx {
-            Some(0) => docker_sessions.len() - 1,
+            Some(0) => attachable_sessions.len() - 1,
             Some(idx) => idx - 1,
             None => 0,
         };
 
-        let prev_session = docker_sessions[prev_idx];
+        let prev_session = attachable_sessions[prev_idx];
         let session_id = prev_session.id;
         let container_id = prev_session.backend_id.clone().unwrap();
 

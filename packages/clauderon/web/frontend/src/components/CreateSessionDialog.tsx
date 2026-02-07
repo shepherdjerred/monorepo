@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import type { CreateSessionRequest, BackendType, AccessMode, StorageClassInfo, CreateRepositoryInput, SessionModel, ClaudeModel, CodexModel, GeminiModel } from "@clauderon/client";
-import { AgentType } from "@clauderon/shared";
+import { AgentType, type FeatureFlags } from "@clauderon/shared";
 import { useSessionContext } from "../contexts/SessionContext";
 import { useFeatureFlags } from "../contexts/FeatureFlagsContext";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,7 @@ type RepositoryEntry = {
   repo_path: string;
   mount_name: string;
   is_primary: boolean;
+  base_branch: string;
 };
 
 export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
@@ -29,12 +30,14 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [featureFlags, setFeatureFlags] = useState<FeatureFlags | null>(null);
   const [storageClasses, setStorageClasses] = useState<StorageClassInfo[]>([]);
   const [loadingStorageClasses, setLoadingStorageClasses] = useState(false);
 
   // Multi-repo state
+  const [multiRepoEnabled, setMultiRepoEnabled] = useState(false);
   const [repositories, setRepositories] = useState<RepositoryEntry[]>([
-    { id: '1', repo_path: '', mount_name: 'primary', is_primary: true }
+    { id: '1', repo_path: '', mount_name: '', is_primary: true, base_branch: '' }
   ]);
 
   const [formData, setFormData] = useState({
@@ -53,17 +56,17 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
     storage_class: "",
   });
 
-  // Auto-check dangerous_skip_checks for Docker and Kubernetes, uncheck for Zellij
+  // Auto-check dangerous_skip_checks for Docker, Kubernetes, and Sprites, uncheck for Zellij
   useEffect(() => {
     setFormData(prev => ({
       ...prev,
-      dangerous_skip_checks: prev.backend === "Docker" || prev.backend === "Kubernetes"
+      dangerous_skip_checks: (prev.backend as string) === "Docker" || (prev.backend as string) === "Kubernetes" || (prev.backend as string) === "Sprites"
     }));
   }, [formData.backend]);
 
   // Fetch storage classes when Kubernetes backend is selected
   useEffect(() => {
-    if (formData.backend === "Kubernetes") {
+    if ((formData.backend as string) === "Kubernetes") {
       setLoadingStorageClasses(true);
       client.getStorageClasses()
         .then((classes) => {
@@ -74,7 +77,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
             setFormData(prev => ({ ...prev, storage_class: defaultClass.name }));
           }
         })
-        .catch((err) => {
+        .catch((err: unknown) => {
           console.error('Failed to fetch storage classes:', err);
           toast.warning('Could not load storage classes from cluster');
           setStorageClasses([]);
@@ -87,12 +90,52 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
       setStorageClasses([]);
       setFormData(prev => ({ ...prev, storage_class: "" }));
     }
-  }, [formData.backend, client]);
+  }, [formData.backend, formData.storage_class, client]);
 
   // Reset model when agent changes
   useEffect(() => {
     setFormData(prev => ({ ...prev, model: undefined }));
   }, [formData.agent]);
+
+  // Fetch feature flags on mount
+  useEffect(() => {
+    const fetchFlags = async () => {
+      try {
+        const response = await fetch('/api/feature-flags');
+        const data: { flags: FeatureFlags } = await response.json() as { flags: FeatureFlags };
+        setFeatureFlags(data.flags);
+      } catch (error) {
+        console.error('Failed to fetch feature flags:', error);
+      }
+    };
+    void fetchFlags();
+  }, []);
+
+  // Reset backend if Kubernetes is disabled
+  useEffect(() => {
+    if ((formData.backend as string) === "Kubernetes" && featureFlags && !featureFlags.enable_kubernetes_backend) {
+      setFormData(prev => ({ ...prev, backend: "Docker" as BackendType }));
+    }
+  }, [featureFlags, formData.backend]);
+
+  // Sync repositories array with multi-repo toggle
+  useEffect(() => {
+    if (multiRepoEnabled) {
+      // When enabled: Ensure at least 2 repos (add empty second repo if needed)
+      setRepositories(prev => prev.length === 1
+        ? [...prev, { id: String(Date.now()), repo_path: '', mount_name: '', is_primary: false, base_branch: '' }]
+        : prev
+      );
+    } else {
+      // When disabled: Keep only first repo, discard others immediately
+      setRepositories(prev => {
+        if (prev.length > 1 && prev[0]) {
+          return [prev[0]];
+        }
+        return prev;
+      });
+    }
+  }, [multiRepoEnabled]);
 
   // Compute available models based on selected agent
   const availableModels = useMemo(() => {
@@ -131,40 +174,9 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
     }
   }, [formData.agent]);
 
-  // Auto-generate mount name from repo path
-  const generateMountName = (repoPath: string): string => {
-    if (!repoPath) return '';
-
-    // Extract last part of path and convert to valid mount name
-    const pathParts = repoPath.split('/');
-    const lastName = pathParts[pathParts.length - 1] || pathParts[pathParts.length - 2] || 'repo';
-
-    return lastName
-      .toLowerCase()
-      .replace(/[^a-z0-9-_]/g, '-')
-      .replace(/_/g, '-')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '');
-  };
-
   const handleRepoPathChange = (id: string, newPath: string) => {
-    setRepositories(repos => repos.map(repo => {
-      if (repo.id === id) {
-        // Auto-generate mount name if it hasn't been manually edited
-        const shouldAutoGenerate = !repo.mount_name || repo.mount_name === generateMountName(repo.repo_path);
-        return {
-          ...repo,
-          repo_path: newPath,
-          mount_name: shouldAutoGenerate ? generateMountName(newPath) : repo.mount_name
-        };
-      }
-      return repo;
-    }));
-  };
-
-  const handleMountNameChange = (id: string, newMountName: string) => {
     setRepositories(repos => repos.map(repo =>
-      repo.id === id ? { ...repo, mount_name: newMountName } : repo
+      repo.id === id ? { ...repo, repo_path: newPath } : repo
     ));
   };
 
@@ -173,6 +185,18 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
       ...repo,
       is_primary: repo.id === id
     })));
+  };
+
+  const handleMountNameChange = (id: string, newName: string) => {
+    setRepositories(repos => repos.map(repo =>
+      repo.id === id ? { ...repo, mount_name: newName } : repo
+    ));
+  };
+
+  const handleBaseBranchChange = (id: string, newBaseBranch: string) => {
+    setRepositories(repos => repos.map(repo =>
+      repo.id === id ? { ...repo, base_branch: newBaseBranch } : repo
+    ));
   };
 
   const handleAddRepository = () => {
@@ -186,7 +210,8 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
       id: newId,
       repo_path: '',
       mount_name: '',
-      is_primary: false
+      is_primary: false,
+      base_branch: ''
     }]);
   };
 
@@ -201,8 +226,8 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
     const newRepos = repositories.filter(r => r.id !== id);
 
     // If removing primary, set the first remaining repo as primary
-    if (repoToRemove?.is_primary && newRepos.length > 0) {
-      newRepos[0]!.is_primary = true;
+    if (repoToRemove?.is_primary && newRepos.length > 0 && newRepos[0]) {
+      newRepos[0].is_primary = true;
     }
 
     setRepositories(newRepos);
@@ -211,6 +236,19 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
   const validateRepositories = (): string | null => {
     if (repositories.length === 0) {
       return "At least one repository is required";
+    }
+
+    // Single mode: Only first repo needs path
+    if (!multiRepoEnabled) {
+      if (!repositories[0]?.repo_path.trim()) {
+        return "Repository path is required";
+      }
+      return null;
+    }
+
+    // Multi mode validation
+    if (repositories.length < 2) {
+      return "Multi-repository mode requires at least 2 repositories";
     }
 
     // Check all repos have paths
@@ -252,6 +290,11 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
       }
     }
 
+    // Check backend compatibility
+    if ((formData.backend as string) !== "Docker") {
+      return "Multi-repository mode is only supported with Docker backend";
+    }
+
     return null;
   };
 
@@ -261,7 +304,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
     setError(null);
 
     // Validate storage class for Kubernetes backend
-    if (formData.backend === "Kubernetes" && storageClasses.length > 0) {
+    if ((formData.backend as string) === "Kubernetes" && storageClasses.length > 0) {
       const hasDefault = storageClasses.some(sc => sc.is_default);
       if (!hasDefault && !formData.storage_class) {
         setError("No default storage class available. Please select a storage class.");
@@ -279,17 +322,23 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
         return;
       }
 
-      // Build CreateRepositoryInput array (only if multi-repo)
-      const repoInputs: CreateRepositoryInput[] | undefined = repositories.length > 1
+      // Build CreateRepositoryInput array
+      // Use repositories array if multi-repo enabled, or if base_branch is specified (for Sprites/K8s)
+      const firstRepo = repositories[0];
+      if (!firstRepo) {
+        throw new Error("No repository specified");
+      }
+      const needsRepositoriesArray = multiRepoEnabled || firstRepo.base_branch;
+      const repoInputs: CreateRepositoryInput[] | undefined = needsRepositoriesArray
         ? repositories.map(repo => ({
             repo_path: repo.repo_path,
-            ...(repo.mount_name && { mount_name: repo.mount_name }),
-            is_primary: repo.is_primary
+            is_primary: repo.is_primary,
+            ...(repo.base_branch && { base_branch: repo.base_branch })
           }))
         : undefined;
 
       const request: CreateSessionRequest = {
-        repo_path: repositories[0]!.repo_path, // Legacy field for backward compat
+        repo_path: firstRepo.repo_path, // Legacy field for backward compat
         ...(repoInputs && { repositories: repoInputs }), // New multi-repo field
         initial_prompt: formData.initial_prompt,
         backend: formData.backend,
@@ -312,7 +361,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
 
       // Upload images if any were selected
       if (selectedFiles.length > 0 && result) {
-        toast.info(`Uploading ${selectedFiles.length} image(s)...`);
+        toast.info(`Uploading ${String(selectedFiles.length)} image(s)...`);
         for (const file of selectedFiles) {
           try {
             await client.uploadImage(result, file);
@@ -391,67 +440,93 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
             </div>
           )}
 
-          {flags?.enable_readonly_mode && (
-            <div className="p-3 border-2 border-yellow-500 bg-yellow-50 text-yellow-900 rounded text-sm">
-              <strong>⚠ Experimental:</strong> Read-only mode is experimental with known security
-              issues. It restricts HTTP proxy to GET/HEAD/OPTIONS requests only.
+          {/* Multi-Repository Mode Toggle */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="multi-repo-enabled"
+                checked={multiRepoEnabled}
+                onChange={(e) => { setMultiRepoEnabled(e.target.checked); }}
+                className="cursor-pointer w-4 h-4 rounded border-2 border-input"
+              />
+              <Label htmlFor="multi-repo-enabled" className="cursor-pointer font-semibold">
+                Enable Multi-Repository Mode
+              </Label>
             </div>
-          )}
+            <p className="text-sm text-muted-foreground pl-6">
+              Mount multiple git repositories in the same session. Only supported with Docker backend.
+            </p>
+            {multiRepoEnabled && (formData.backend as string) !== "Docker" && (
+              <div className="p-3 border-2 text-sm font-mono ml-6" style={{
+                backgroundColor: 'hsl(45, 75%, 95%)',
+                borderColor: 'hsl(45, 75%, 50%)',
+                color: 'hsl(45, 75%, 30%)'
+              }}>
+                <strong>Warning:</strong> Multi-repository mode requires Docker backend.
+                Please select Docker above or disable multi-repository mode.
+              </div>
+            )}
+          </div>
 
           {/* Repositories Section */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <Label className="font-semibold">
-                Repositories {repositories.length > 1 && `(${repositories.length}/5)`}
+                {multiRepoEnabled ? `Repositories (${String(repositories.length)}/5)` : 'Repository'}
               </Label>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleAddRepository}
-                disabled={repositories.length >= 5}
-                className="flex items-center gap-1"
-              >
-                <Plus className="w-4 h-4" />
-                Add Repository
-              </Button>
+              {multiRepoEnabled && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAddRepository}
+                  disabled={repositories.length >= 5}
+                  className="flex items-center gap-1"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Repository
+                </Button>
+              )}
             </div>
 
             {repositories.map((repo, index) => (
               <div key={repo.id} className="border-2 border-primary p-3 space-y-2" style={{ backgroundColor: 'hsl(220, 15%, 98%)' }}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-sm font-semibold">#{index + 1}</span>
-                    {repo.is_primary && (
-                      <span className="flex items-center gap-1 px-2 py-0.5 text-xs font-bold border-2 border-yellow-600 bg-yellow-100 text-yellow-800">
-                        <Star className="w-3 h-3 fill-yellow-600" />
-                        PRIMARY
-                      </span>
-                    )}
+                {multiRepoEnabled && (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-sm font-semibold">#{index + 1}</span>
+                      {repo.is_primary && (
+                        <span className="flex items-center gap-1 px-2 py-0.5 text-xs font-bold border-2 border-yellow-600 bg-yellow-100 text-yellow-800">
+                          <Star className="w-3 h-3 fill-yellow-600" />
+                          PRIMARY
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {!repo.is_primary && (
+                        <button
+                          type="button"
+                          onClick={() => { handleSetPrimary(repo.id); }}
+                          className="text-xs px-2 py-1 border-2 hover:bg-yellow-100 hover:border-yellow-600"
+                          title="Set as primary repository"
+                        >
+                          Set Primary
+                        </button>
+                      )}
+                      {repositories.length > 2 && (
+                        <button
+                          type="button"
+                          onClick={() => { handleRemoveRepository(repo.id); }}
+                          className="p-1 border-2 hover:bg-red-100 hover:border-red-600 text-red-600"
+                          title="Remove repository"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {!repo.is_primary && (
-                      <button
-                        type="button"
-                        onClick={() => { handleSetPrimary(repo.id); }}
-                        className="text-xs px-2 py-1 border-2 hover:bg-yellow-100 hover:border-yellow-600"
-                        title="Set as primary repository"
-                      >
-                        Set Primary
-                      </button>
-                    )}
-                    {repositories.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => { handleRemoveRepository(repo.id); }}
-                        className="p-1 border-2 hover:bg-red-100 hover:border-red-600 text-red-600"
-                        title="Remove repository"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-                </div>
+                )}
 
                 <div className="space-y-2">
                   <Label htmlFor={`repo-path-${repo.id}`} className="text-sm">Repository Path</Label>
@@ -463,35 +538,55 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor={`mount-name-${repo.id}`} className="text-sm">
-                    Mount Name <span className="text-xs text-muted-foreground">(alphanumeric + hyphens/underscores)</span>
+                  <Label htmlFor={`base-branch-${repo.id}`} className="text-sm">
+                    Base Branch <span className="text-xs text-muted-foreground">(optional, for Sprites/K8s)</span>
                   </Label>
                   <input
                     type="text"
-                    id={`mount-name-${repo.id}`}
-                    value={repo.mount_name}
-                    onChange={(e) => { handleMountNameChange(repo.id, e.target.value); }}
-                    placeholder="auto-generated"
+                    id={`base-branch-${repo.id}`}
+                    value={repo.base_branch}
+                    onChange={(e) => { handleBaseBranchChange(repo.id, e.target.value); }}
+                    placeholder="main (default)"
                     className="w-full px-3 py-2 border-2 rounded font-mono text-sm"
-                    pattern="[a-z0-9][a-z0-9-_]{0,62}[a-z0-9]"
-                    maxLength={64}
-                    required
+                    maxLength={128}
                   />
                   <p className="text-xs text-muted-foreground">
-                    Container path: {repo.is_primary ? '/workspace' : `/repos/${repo.mount_name || '...'}`}
+                    Branch to clone from for clone-based backends (Sprites, Kubernetes). Leave empty for default branch.
                   </p>
                 </div>
+
+                {multiRepoEnabled && (
+                  <div className="space-y-2">
+                    <Label htmlFor={`mount-name-${repo.id}`} className="text-sm">
+                      Mount Name <span className="text-xs text-muted-foreground">(alphanumeric + hyphens/underscores)</span>
+                    </Label>
+                    <input
+                      type="text"
+                      id={`mount-name-${repo.id}`}
+                      value={repo.mount_name}
+                      onChange={(e) => { handleMountNameChange(repo.id, e.target.value); }}
+                      placeholder="auto-generated"
+                      className="w-full px-3 py-2 border-2 rounded font-mono text-sm"
+                      pattern="[a-z0-9][a-z0-9-_]{0,62}[a-z0-9]"
+                      maxLength={64}
+                      required
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Container path: {repo.is_primary ? '/workspace' : `/repos/${repo.mount_name || '...'}`}
+                    </p>
+                  </div>
+                )}
               </div>
             ))}
 
-            {repositories.length > 1 && formData.backend !== "Docker" && (
+            {repositories.length > 1 && (formData.backend as string) !== "Docker" && (
               <div className="p-3 border-2 text-sm font-mono" style={{
                 backgroundColor: 'hsl(45, 75%, 95%)',
                 borderColor: 'hsl(45, 75%, 50%)',
                 color: 'hsl(45, 75%, 30%)'
               }}>
                 <strong>Warning:</strong> Multi-repository sessions are only supported with Docker backend.
-                Zellij and Kubernetes backends will reject multi-repo sessions.
+                Zellij, Kubernetes, and Sprites backends will reject multi-repo sessions.
               </div>
             )}
           </div>
@@ -505,7 +600,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                 { setFormData({ ...formData, initial_prompt: e.target.value }); }
               }
               className="flex w-full rounded-md border-2 border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm min-h-[100px]"
-              placeholder={formData.agent === "Codex" ? "What should Codex do?" : "What should Claude Code do?"}
+              placeholder={(formData.agent as string) === "Codex" ? "What should Codex do?" : "What should Claude Code do?"}
               required
             />
           </div>
@@ -523,7 +618,10 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
               >
                 <option value="Docker">Docker</option>
                 <option value="Zellij">Zellij</option>
-                <option value="Kubernetes">Kubernetes</option>
+                {featureFlags?.enable_kubernetes_backend && (
+                  <option value="Kubernetes">Kubernetes</option>
+                )}
+                <option value="Sprites">Sprites</option>
               </select>
             </div>
 
@@ -569,7 +667,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                 id="model"
                 value={formData.model ? JSON.stringify(formData.model) : ""}
                 onChange={(e) => {
-                  const value = e.target.value ? JSON.parse(e.target.value) : undefined;
+                  const value: SessionModel | undefined = e.target.value ? JSON.parse(e.target.value) as SessionModel : undefined;
                   setFormData({ ...formData, model: value });
                 }}
                 className="cursor-pointer flex h-10 w-full rounded-md border-2 border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
@@ -608,7 +706,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
           </div>
 
           {/* Agent Capabilities Info */}
-          {formData.agent && AGENT_CAPABILITIES[formData.agent] && (
+          {formData.agent in AGENT_CAPABILITIES && (
             <div className="mt-2 p-3 border-2 text-sm" style={{
               backgroundColor: 'hsl(220, 15%, 98%)',
               borderColor: 'hsl(220, 85%, 65%)',
@@ -639,7 +737,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
             </div>
           )}
 
-          {formData.backend === "Kubernetes" && (
+          {(formData.backend as string) === "Kubernetes" && (
             <div className="mt-2 p-3 border-2 text-sm font-mono" style={{
               backgroundColor: 'hsl(220, 15%, 90%)',
               borderColor: 'hsl(220, 85%, 65%)',
@@ -746,7 +844,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
               </div>
 
               {/* Storage Class (Kubernetes only) */}
-              {formData.backend === "Kubernetes" && (
+              {(formData.backend as string) === "Kubernetes" && (
                 <div className="space-y-2">
                   <Label htmlFor="storage_class">Storage Class (Kubernetes)</Label>
                   {loadingStorageClasses ? (
@@ -756,7 +854,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                       <select
                         id="storage_class"
                         value={formData.storage_class}
-                        onChange={(e) => setFormData({ ...formData, storage_class: e.target.value })}
+                        onChange={(e) => { setFormData({ ...formData, storage_class: e.target.value }); }}
                         className="w-full px-3 py-2 border-2 rounded font-mono text-sm"
                       >
                         <option value="">Use default from config</option>

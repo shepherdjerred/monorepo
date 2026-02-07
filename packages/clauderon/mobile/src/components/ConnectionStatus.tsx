@@ -8,17 +8,11 @@ type ConnectionStatusProps = {
   label?: string;
 };
 
-export function ConnectionStatus({
-  isConnected,
-  label = "Daemon",
-}: ConnectionStatusProps) {
+export function ConnectionStatus({ isConnected, label = "Daemon" }: ConnectionStatusProps) {
   return (
     <View style={styles.container}>
       <View
-        style={[
-          styles.indicator,
-          { backgroundColor: isConnected ? colors.success : colors.error },
-        ]}
+        style={[styles.indicator, { backgroundColor: isConnected ? colors.success : colors.error }]}
       />
       <Text style={styles.label}>
         {label}: {isConnected ? "Connected" : "Disconnected"}

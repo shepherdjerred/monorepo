@@ -17,10 +17,7 @@ import { typography } from "../styles/typography";
 
 type EditSessionScreenProps = RootStackScreenProps<"EditSession">;
 
-export function EditSessionScreen({
-  navigation,
-  route,
-}: EditSessionScreenProps) {
+export function EditSessionScreen({ navigation, route }: EditSessionScreenProps) {
   const { session } = route.params;
   const { client } = useSessionContext();
   const { colors } = useTheme();
@@ -106,11 +103,8 @@ export function EditSessionScreen({
 
         {/* Regenerate Button */}
         <TouchableOpacity
-          style={[
-            themedStyles.regenerateButton,
-            isLoading && styles.buttonDisabled,
-          ]}
-          onPress={handleRegenerate}
+          style={[themedStyles.regenerateButton, isLoading && styles.buttonDisabled]}
+          onPress={() => void handleRegenerate()}
           disabled={isLoading}
         >
           {isRegenerating ? (
@@ -127,7 +121,9 @@ export function EditSessionScreen({
       <View style={themedStyles.actionBar}>
         <TouchableOpacity
           style={[themedStyles.actionButton, { backgroundColor: colors.surface }]}
-          onPress={() => navigation.goBack()}
+          onPress={() => {
+            navigation.goBack();
+          }}
           disabled={isLoading}
         >
           <Text style={[styles.buttonText, { color: colors.textDark }]}>Cancel</Text>
@@ -138,7 +134,7 @@ export function EditSessionScreen({
             { backgroundColor: colors.primary },
             isLoading && styles.buttonDisabled,
           ]}
-          onPress={handleSave}
+          onPress={() => void handleSave()}
           disabled={isLoading}
         >
           {isSaving ? (

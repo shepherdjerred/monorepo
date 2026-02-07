@@ -20,6 +20,16 @@ export interface AuthStatus {
 	current_user?: AuthUser;
 }
 
+/** Blocker details for a session */
+export interface BlockerDetails {
+	/** Whether CI checks are failing */
+	ci_failing: boolean;
+	/** Whether the branch has merge conflicts */
+	merge_conflict: boolean;
+	/** Whether changes have been requested on the PR */
+	changes_requested: boolean;
+}
+
 /** Request to browse a directory on the daemon's filesystem */
 export interface BrowseDirectoryRequest {
 	/** Path to the directory to browse */
@@ -116,6 +126,12 @@ export interface CreateRepositoryInput {
 	 * Exactly one repository must be marked as primary in multi-repo sessions.
 	 */
 	is_primary: boolean;
+	/**
+	 * Base branch to clone from (for clone-based backends like Sprites/K8s).
+	 * When None, clones the repository's default branch.
+	 * The session's working branch is always created fresh from this base.
+	 */
+	base_branch?: string;
 }
 
 /** Execution backend type */
@@ -183,6 +199,13 @@ export interface CreateSessionRequest {
 	model?: SessionModel;
 	/** Skip safety checks */
 	dangerous_skip_checks: boolean;
+	/**
+	 * For remote backends: copy real credentials into the container.
+	 * 
+	 * WARNING: This is dangerous - it exposes your API tokens to the remote environment.
+	 * Only use when the daemon is not reachable from the remote backend.
+	 */
+	dangerous_copy_creds?: boolean;
 	/** Run in print mode (non-interactive, outputs response and exits) */
 	print_mode?: boolean;
 	/** Start in plan mode */
@@ -233,6 +256,14 @@ export interface CreateSessionRequest {
 	 * - Kubernetes: `"2Gi"` (2 gibibytes), `"512Mi"` (512 mebibytes)
 	 */
 	memory_limit?: string;
+	/**
+	 * Optional: Storage class for persistent volumes (Kubernetes only).
+	 * 
+	 * Format: Storage class name (e.g., `"gp2"`, `"standard"`)
+	 * Only applicable to Kubernetes backend.
+	 * If not specified, uses cluster default or config file setting.
+	 */
+	storage_class?: string;
 }
 
 /** Credential availability status */
@@ -266,6 +297,8 @@ export interface FeatureFlags {
 	enable_proxy_port_reuse: boolean;
 	/** Enable Claude usage tracking via API */
 	enable_usage_tracking: boolean;
+	/** Enable Kubernetes backend (experimental, disabled by default) */
+	enable_kubernetes_backend: boolean;
 	/** Enable read-only mode (experimental, security issues #424, #205) */
 	enable_readonly_mode: boolean;
 }
@@ -276,6 +309,91 @@ export interface FeatureFlagsResponse {
 	flags: FeatureFlags;
 	/** Whether flags require daemon restart to change */
 	requires_restart: boolean;
+}
+
+/**
+ * State of a session's backend resource
+ * 
+ * This enum represents the actual state of the underlying resource (container,
+ * pod, or sprite) as observed during a health check.
+ */
+export type ResourceState = 
+	/** Backend is running and healthy */
+	| { type: "Healthy", content?: undefined }
+	/** Backend is stopped/exited (can be started) */
+	| { type: "Stopped", content?: undefined }
+	/** Sprites: sprite is hibernated (can be woken) */
+	| { type: "Hibernated", content?: undefined }
+	/** Kubernetes: pod is waiting for resources (Pending state) */
+	| { type: "Pending", content?: undefined }
+	/** Backend resource is gone but can be recreated (data preserved) */
+	| { type: "Missing", content?: undefined }
+	/** Backend is in an error state */
+	| { type: "Error", content: {
+	message: string;
+}}
+	/** Kubernetes: pod is in CrashLoopBackOff */
+	| { type: "CrashLoop", content?: undefined }
+	/** Resource was deleted externally (outside clauderon) */
+	| { type: "DeletedExternally", content?: undefined }
+	/**
+	 * Data has been lost and cannot be recovered
+	 * (e.g., PVC deleted, sprite with auto_destroy deleted)
+	 */
+	| { type: "DataLost", content: {
+	reason: string;
+}}
+	/** Git worktree was deleted */
+	| { type: "WorktreeMissing", content?: undefined };
+
+/** Actions that can be performed on a session based on its current state */
+export enum AvailableAction {
+	/** Start a stopped container (Docker: docker start) */
+	Start = "Start",
+	/** Wake a hibernated sprite */
+	Wake = "Wake",
+	/** Delete and recreate the backend resource (preserves data) */
+	Recreate = "Recreate",
+	/** Recreate with a fresh git clone (data will be lost) */
+	RecreateFresh = "RecreateFresh",
+	/** Pull new Docker image and recreate container */
+	UpdateImage = "UpdateImage",
+	/** Remove the session from clauderon (cleanup orphaned session) */
+	Cleanup = "Cleanup",
+}
+
+/** Detailed health report for a single session */
+export interface SessionHealthReport {
+	/** Session ID */
+	session_id: string;
+	/** Session name */
+	session_name: string;
+	/** Backend type (Docker, Kubernetes, Zellij, Sprites) */
+	backend_type: BackendType;
+	/** Current resource state */
+	state: ResourceState;
+	/** Actions available for this session based on current state */
+	available_actions: AvailableAction[];
+	/** Recommended action (if any) */
+	recommended_action?: AvailableAction;
+	/** Human-readable summary of the current state */
+	description: string;
+	/** Technical details (for expandable section in UI) */
+	details: string;
+	/** Is user work preserved if we take action? */
+	data_safe: boolean;
+}
+
+/** Result of checking health of all sessions */
+export interface HealthCheckResult {
+	/** Health reports for all sessions */
+	sessions: SessionHealthReport[];
+	/** Count of healthy sessions */
+	healthy_count: number;
+	/** Count of sessions needing attention */
+	needs_attention_count: number;
+	/** Count of sessions that are blocked (cannot be recreated) */
+	blocked_count: number;
 }
 
 /** Request to finish passkey authentication */
@@ -349,6 +467,18 @@ export interface ReconcileReportDto {
 	gave_up: string[];
 }
 
+/** Result of a recreate operation */
+export interface RecreateResult {
+	/** Session ID that was recreated */
+	session_id: string;
+	/** New backend ID after recreation */
+	new_backend_id: string;
+	/** Whether the operation was successful */
+	success: boolean;
+	/** Human-readable message about the result */
+	message: string;
+}
+
 /** Request to finish passkey registration */
 export interface RegistrationFinishRequest {
 	username: string;
@@ -406,6 +536,11 @@ export interface SessionRepository {
 	mount_name: string;
 	/** Whether this is the primary repository (determines working directory) */
 	is_primary: boolean;
+	/**
+	 * Base branch to clone from (for clone-based backends like Sprites)
+	 * When None, clones the repository's default branch
+	 */
+	base_branch?: string;
 }
 
 /** PR check status */
@@ -420,6 +555,16 @@ export enum CheckStatus {
 	Mergeable = "Mergeable",
 	/** PR has been merged */
 	Merged = "Merged",
+}
+
+/** PR review decision status */
+export enum ReviewDecision {
+	/** Review is required but not yet provided */
+	ReviewRequired = "ReviewRequired",
+	/** Changes have been requested */
+	ChangesRequested = "ChangesRequested",
+	/** PR has been approved */
+	Approved = "Approved",
 }
 
 /** Claude agent working status */
@@ -476,10 +621,17 @@ export interface Session {
 	initial_prompt: string;
 	/** Whether to skip safety checks */
 	dangerous_skip_checks: boolean;
+	/**
+	 * Whether this session was created with --dangerous-copy-creds
+	 * Sessions with copy-creds have no hook-based status tracking (degraded mode)
+	 */
+	dangerous_copy_creds?: boolean;
 	/** URL of the associated pull request */
 	pr_url?: string;
 	/** Status of PR checks */
 	pr_check_status?: CheckStatus;
+	/** PR review decision (approval status) */
+	pr_review_decision?: ReviewDecision;
 	/** Current Claude agent working status (from hooks) */
 	claude_status: ClaudeWorkingStatus;
 	/** Timestamp of last Claude status update */
@@ -736,6 +888,34 @@ export type Request =
 	/** Refresh a session (pull latest image and recreate container) */
 	| { type: "RefreshSession", payload: {
 	id: string;
+}}
+	/** Get current feature flags */
+	| { type: "GetFeatureFlags", payload?: undefined }
+	/** Get health status of all sessions */
+	| { type: "GetHealth", payload?: undefined }
+	/** Get health status of a single session */
+	| { type: "GetSessionHealth", payload: {
+	id: string;
+}}
+	/** Start a stopped session (container/pod) */
+	| { type: "StartSession", payload: {
+	id: string;
+}}
+	/** Wake a hibernated session (sprites) */
+	| { type: "WakeSession", payload: {
+	id: string;
+}}
+	/** Recreate a session (delete and recreate backend) */
+	| { type: "RecreateSession", payload: {
+	id: string;
+}}
+	/** Cleanup a session (remove from database, worktree already missing) */
+	| { type: "CleanupSession", payload: {
+	id: string;
+}}
+	/** Recreate a session fresh (delete worktree and re-clone, data lost) */
+	| { type: "RecreateSessionFresh", payload: {
+	id: string;
 }};
 
 /** Response types for the API */
@@ -775,11 +955,49 @@ export type Response =
 	| { type: "SessionId", payload: {
 	session_id: string;
 }}
+	/** Current feature flags */
+	| { type: "FeatureFlags", payload: {
+	flags: FeatureFlags;
+}}
 	/** Generic success response */
 	| { type: "Ok", payload?: undefined }
+	/** Health check result for all sessions */
+	| { type: "HealthCheckResult", payload: HealthCheckResult }
+	/** Health report for a single session */
+	| { type: "SessionHealth", payload: SessionHealthReport }
+	/** Session started successfully */
+	| { type: "Started", payload?: undefined }
+	/** Session woken successfully */
+	| { type: "Woken", payload?: undefined }
+	/** Session recreated successfully */
+	| { type: "Recreated", payload: {
+	new_backend_id?: string;
+}}
+	/** Session cleaned up successfully */
+	| { type: "CleanedUp", payload?: undefined }
+	/** Action blocked error (e.g., recreate blocked for sprites with auto_destroy) */
+	| { type: "ActionBlocked", payload: {
+	reason: string;
+}}
 	/** Error response */
 	| { type: "Error", payload: {
 	code: string;
 	message: string;
 }};
+
+/** Workflow stage computed from session state */
+export enum WorkflowStage {
+	/** Planning phase - no PR yet, Claude is working */
+	Planning = "Planning",
+	/** Implementation phase - PR created, CI running or waiting */
+	Implementation = "Implementation",
+	/** Review phase - PR waiting for approval */
+	Review = "Review",
+	/** Blocked phase - has blockers (CI failing, conflicts, changes requested) */
+	Blocked = "Blocked",
+	/** Ready to merge - all checks pass, approved, no conflicts */
+	ReadyToMerge = "ReadyToMerge",
+	/** Merged - PR has been merged */
+	Merged = "Merged",
+}
 

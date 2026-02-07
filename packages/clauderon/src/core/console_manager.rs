@@ -134,8 +134,122 @@ impl ConsoleSession {
         })
     }
 
+    async fn spawn_sprites(backend_id: &str) -> anyhow::Result<Self> {
+        let (pty, pts) = pty_process::open()?;
+        let cmd = pty_process::Command::new("sprite").args(["console", "-s", backend_id]);
+        let _child = cmd.spawn(pts)?;
+
+        let (pty_reader, pty_writer) = pty.into_split();
+
+        let (write_tx, write_rx) = mpsc::channel(WRITE_CHANNEL_SIZE);
+        let (output_tx, _) = broadcast::channel(OUTPUT_CHANNEL_SIZE);
+        let terminal_buffer = Arc::new(Mutex::new(TerminalBuffer::new(24, 80)));
+        let cancel_token = CancellationToken::new();
+
+        let reader_task = {
+            let terminal_buffer = Arc::clone(&terminal_buffer);
+            let output_tx = output_tx.clone();
+            let write_tx = write_tx.clone();
+            let cancel_token = cancel_token.clone();
+            tokio::spawn(async move {
+                Self::reader_loop(
+                    pty_reader,
+                    terminal_buffer,
+                    output_tx,
+                    write_tx,
+                    cancel_token,
+                )
+                .await;
+            })
+        };
+
+        let writer_task = {
+            let cancel_token = cancel_token.clone();
+            tokio::spawn(async move {
+                Self::writer_loop(pty_writer, write_rx, cancel_token).await;
+            })
+        };
+
+        Ok(Self {
+            write_tx,
+            output_tx,
+            terminal_buffer,
+            cancel_token,
+            reader_task,
+            writer_task,
+        })
+    }
+
+    async fn spawn_kubernetes(pod_name: &str, namespace: &str) -> anyhow::Result<Self> {
+        let (pty, pts) = pty_process::open()?;
+        let cmd = pty_process::Command::new("kubectl").args([
+            "exec", "-it", "-n", namespace, pod_name, "-c", "claude", "--", "bash",
+        ]);
+        let _child = cmd.spawn(pts)?;
+
+        let (pty_reader, pty_writer) = pty.into_split();
+
+        let (write_tx, write_rx) = mpsc::channel(WRITE_CHANNEL_SIZE);
+        let (output_tx, _) = broadcast::channel(OUTPUT_CHANNEL_SIZE);
+        let terminal_buffer = Arc::new(Mutex::new(TerminalBuffer::new(24, 80)));
+        let cancel_token = CancellationToken::new();
+
+        let reader_task = {
+            let terminal_buffer = Arc::clone(&terminal_buffer);
+            let output_tx = output_tx.clone();
+            let write_tx = write_tx.clone();
+            let cancel_token = cancel_token.clone();
+            tokio::spawn(async move {
+                Self::reader_loop(
+                    pty_reader,
+                    terminal_buffer,
+                    output_tx,
+                    write_tx,
+                    cancel_token,
+                )
+                .await;
+            })
+        };
+
+        let writer_task = {
+            let cancel_token = cancel_token.clone();
+            tokio::spawn(async move {
+                Self::writer_loop(pty_writer, write_rx, cancel_token).await;
+            })
+        };
+
+        Ok(Self {
+            write_tx,
+            output_tx,
+            terminal_buffer,
+            cancel_token,
+            reader_task,
+            writer_task,
+        })
+    }
+
     fn subscribe(&self) -> broadcast::Receiver<Vec<u8>> {
         self.output_tx.subscribe()
+    }
+
+    /// Atomically take a snapshot of the terminal buffer and subscribe to output.
+    ///
+    /// This ensures no race condition where data could appear in both the snapshot
+    /// and the first broadcast message. The lock is held while both operations occur.
+    ///
+    /// Returns: (snapshot_bytes, rows, cols, cursor_row, cursor_col, receiver)
+    async fn snapshot_and_subscribe(
+        &self,
+    ) -> (Vec<u8>, u16, u16, u16, u16, broadcast::Receiver<Vec<u8>>) {
+        let buffer = self.terminal_buffer.lock().await;
+        let snapshot = buffer.snapshot();
+        let (rows, cols) = buffer.size();
+        let (cursor_row, cursor_col) = buffer.screen().cursor_position();
+
+        // Subscribe while still holding the lock
+        let receiver = self.output_tx.subscribe();
+
+        (snapshot, rows, cols, cursor_row, cursor_col, receiver)
     }
 
     async fn send_input(&self, data: Vec<u8>) -> anyhow::Result<()> {
@@ -208,10 +322,11 @@ impl ConsoleSession {
                                         }
                                     }
                                 }
-                            }
-
-                            if !output.is_empty() {
-                                let _ = output_tx.send(output);
+                                // Broadcast inside lock to prevent race conditions
+                                // where a snapshot captures data that's also in a pending broadcast
+                                if !output.is_empty() {
+                                    let _ = output_tx.send(output);
+                                }
                             }
 
                             for response in responses {
@@ -306,6 +421,7 @@ impl ConsoleManager {
         Self::default()
     }
 
+    #[allow(clippy::missing_errors_doc)]
     pub async fn ensure_session(
         &self,
         session_id: Uuid,
@@ -322,14 +438,14 @@ impl ConsoleManager {
         let session = match backend {
             BackendType::Docker => ConsoleSession::spawn_docker(backend_id).await?,
             BackendType::Zellij => ConsoleSession::spawn_zellij(backend_id).await?,
+            BackendType::Sprites => ConsoleSession::spawn_sprites(backend_id).await?,
             BackendType::Kubernetes => {
-                anyhow::bail!("Console manager not supported for backend: {backend:?}")
+                // Load Kubernetes config to get the namespace
+                let k8s_config = crate::backends::KubernetesConfig::load_or_default();
+                ConsoleSession::spawn_kubernetes(backend_id, &k8s_config.namespace).await?
             }
             #[cfg(target_os = "macos")]
             BackendType::AppleContainer => {
-                anyhow::bail!("Console manager not supported for backend: {backend:?}")
-            }
-            BackendType::Sprites => {
                 anyhow::bail!("Console manager not supported for backend: {backend:?}")
             }
         };
@@ -367,6 +483,17 @@ impl ConsoleSessionHandle {
         self.session.subscribe()
     }
 
+    /// Atomically take a snapshot of the terminal buffer and subscribe to output.
+    ///
+    /// This prevents race conditions where data appears in both snapshot and stream.
+    /// Returns: (snapshot_bytes, rows, cols, cursor_row, cursor_col, receiver)
+    pub async fn snapshot_and_subscribe(
+        &self,
+    ) -> (Vec<u8>, u16, u16, u16, u16, broadcast::Receiver<Vec<u8>>) {
+        self.session.snapshot_and_subscribe().await
+    }
+
+    #[allow(clippy::missing_errors_doc)]
     pub async fn send_input(&self, data: Vec<u8>) -> anyhow::Result<()> {
         self.session.send_input(data).await
     }
@@ -375,6 +502,7 @@ impl ConsoleSessionHandle {
         self.session.resize(rows, cols).await;
     }
 
+    #[allow(clippy::missing_errors_doc)]
     #[tracing::instrument(skip(self), fields(signal = ?signal))]
     pub async fn send_signal(&self, signal: SignalType) -> anyhow::Result<()> {
         self.session.send_signal(signal).await

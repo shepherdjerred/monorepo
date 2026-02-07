@@ -25,6 +25,9 @@ pub struct FeatureFlags {
     /// Enable Claude usage tracking via API
     pub enable_usage_tracking: bool,
 
+    /// Enable Kubernetes backend (experimental, disabled by default)
+    pub enable_kubernetes_backend: bool,
+
     /// Enable read-only mode (experimental, security issues #424, #205)
     pub enable_readonly_mode: bool,
 }
@@ -37,6 +40,7 @@ impl Default for FeatureFlags {
             enable_auto_reconcile: true,
             enable_proxy_port_reuse: false,
             enable_usage_tracking: false,
+            enable_kubernetes_backend: false,
             enable_readonly_mode: false,
         }
     }
@@ -51,7 +55,11 @@ impl FeatureFlags {
     /// - enable_auto_reconcile: Automatic session reconciliation on startup
     /// - enable_proxy_port_reuse: Session proxy port reuse behavior
     /// - enable_usage_tracking: Claude usage tracking via API
+    /// - enable_kubernetes_backend: Kubernetes backend support
     /// - enable_readonly_mode: Read-only mode access restrictions
+    ///
+    /// # Errors
+    /// Returns an error if the TOML config file exists but cannot be parsed
     pub fn load(cli_overrides: Option<CliFeatureFlags>) -> anyhow::Result<Self> {
         // 1. Start with defaults
         let mut flags = Self::default();
@@ -108,6 +116,9 @@ impl FeatureFlags {
                 "CLAUDERON_FEATURE_ENABLE_PROXY_PORT_REUSE",
             ),
             enable_usage_tracking: parse_env_bool_option("CLAUDERON_FEATURE_ENABLE_USAGE_TRACKING"),
+            enable_kubernetes_backend: parse_env_bool_option(
+                "CLAUDERON_FEATURE_ENABLE_KUBERNETES_BACKEND",
+            ),
             enable_readonly_mode: parse_env_bool_option("CLAUDERON_FEATURE_ENABLE_READONLY_MODE"),
         }
     }
@@ -132,6 +143,9 @@ impl FeatureFlags {
         if other.enable_usage_tracking != defaults.enable_usage_tracking {
             self.enable_usage_tracking = other.enable_usage_tracking;
         }
+        if other.enable_kubernetes_backend != defaults.enable_kubernetes_backend {
+            self.enable_kubernetes_backend = other.enable_kubernetes_backend;
+        }
         if other.enable_readonly_mode != defaults.enable_readonly_mode {
             self.enable_readonly_mode = other.enable_readonly_mode;
         }
@@ -153,6 +167,9 @@ impl FeatureFlags {
         }
         if let Some(val) = env.enable_usage_tracking {
             self.enable_usage_tracking = val;
+        }
+        if let Some(val) = env.enable_kubernetes_backend {
+            self.enable_kubernetes_backend = val;
         }
         if let Some(val) = env.enable_readonly_mode {
             self.enable_readonly_mode = val;
@@ -176,6 +193,9 @@ impl FeatureFlags {
         if let Some(val) = cli.enable_usage_tracking {
             self.enable_usage_tracking = val;
         }
+        if let Some(val) = cli.enable_kubernetes_backend {
+            self.enable_kubernetes_backend = val;
+        }
         if let Some(val) = cli.enable_readonly_mode {
             self.enable_readonly_mode = val;
         }
@@ -193,6 +213,10 @@ impl FeatureFlags {
             self.enable_proxy_port_reuse
         );
         tracing::info!("  enable_usage_tracking: {}", self.enable_usage_tracking);
+        tracing::info!(
+            "  enable_kubernetes_backend: {}",
+            self.enable_kubernetes_backend
+        );
         tracing::info!("  enable_readonly_mode: {}", self.enable_readonly_mode);
     }
 }
@@ -205,6 +229,7 @@ pub struct CliFeatureFlags {
     pub enable_auto_reconcile: Option<bool>,
     pub enable_proxy_port_reuse: Option<bool>,
     pub enable_usage_tracking: Option<bool>,
+    pub enable_kubernetes_backend: Option<bool>,
     pub enable_readonly_mode: Option<bool>,
 }
 
@@ -216,6 +241,7 @@ struct EnvFeatureFlags {
     pub enable_auto_reconcile: Option<bool>,
     pub enable_proxy_port_reuse: Option<bool>,
     pub enable_usage_tracking: Option<bool>,
+    pub enable_kubernetes_backend: Option<bool>,
     pub enable_readonly_mode: Option<bool>,
 }
 
@@ -224,6 +250,156 @@ struct EnvFeatureFlags {
 struct ConfigFile {
     #[serde(default)]
     feature_flags: Option<FeatureFlags>,
+    #[serde(default)]
+    server: Option<ServerConfig>,
+}
+
+/// Server configuration for the daemon.
+/// Config is loaded at startup and requires daemon restart to change.
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(default)]
+pub struct ServerConfig {
+    /// HTTP server bind address (default: 127.0.0.1)
+    pub bind_addr: Option<String>,
+
+    /// WebAuthn origin URL for authentication
+    pub origin: Option<String>,
+
+    /// Disable authentication (dangerous for non-localhost bindings)
+    pub disable_auth: Option<bool>,
+
+    /// Anthropic organization ID for Claude API usage tracking
+    pub org_id: Option<String>,
+}
+
+impl ServerConfig {
+    /// Load server config with priority: CLI args (incl. env via clap) → TOML → defaults
+    ///
+    /// Note: clap's `env` attribute handles env var fallback automatically for CLI args,
+    /// so we only need to merge CLI values on top of TOML values.
+    ///
+    /// # Errors
+    /// Returns an error if the TOML config file exists but cannot be parsed
+    pub fn load(cli_overrides: &CliServerConfig) -> anyhow::Result<Self> {
+        // 1. Start with defaults
+        let mut config = Self::default();
+
+        // 2. Override from TOML config file (~/.clauderon/config.toml)
+        if let Some(toml_config) = Self::load_from_toml()? {
+            config.merge(&toml_config);
+        }
+
+        // 3. Override from CLI arguments (which include env vars via clap's `env` attribute)
+        config.merge_from_cli(cli_overrides);
+
+        Ok(config)
+    }
+
+    /// Load server config from TOML config file
+    fn load_from_toml() -> anyhow::Result<Option<Self>> {
+        let config_path = match config_path() {
+            Some(path) => path,
+            None => {
+                // No home directory available, skip TOML loading
+                return Ok(None);
+            }
+        };
+
+        if !config_path.exists() {
+            return Ok(None);
+        }
+
+        let content = std::fs::read_to_string(&config_path)
+            .with_context(|| format!("Failed to read config file at {}", config_path.display()))?;
+
+        let config: ConfigFile = toml::from_str(&content)
+            .with_context(|| format!("Failed to parse config file at {}", config_path.display()))?;
+
+        Ok(config.server)
+    }
+
+    /// Merge another ServerConfig struct into this one (Some values override None)
+    fn merge(&mut self, other: &Self) {
+        if other.bind_addr.is_some() {
+            self.bind_addr.clone_from(&other.bind_addr);
+        }
+        if other.origin.is_some() {
+            self.origin.clone_from(&other.origin);
+        }
+        if other.disable_auth.is_some() {
+            self.disable_auth = other.disable_auth;
+        }
+        if other.org_id.is_some() {
+            self.org_id.clone_from(&other.org_id);
+        }
+    }
+
+    /// Merge CLI overrides (which are Option types to distinguish "not set")
+    fn merge_from_cli(&mut self, cli: &CliServerConfig) {
+        if cli.bind_addr.is_some() {
+            self.bind_addr.clone_from(&cli.bind_addr);
+        }
+        if cli.origin.is_some() {
+            self.origin.clone_from(&cli.origin);
+        }
+        if cli.disable_auth.is_some() {
+            self.disable_auth = cli.disable_auth;
+        }
+        if cli.org_id.is_some() {
+            self.org_id.clone_from(&cli.org_id);
+        }
+    }
+
+    /// Get bind address with default fallback
+    #[must_use]
+    pub fn bind_addr(&self) -> &str {
+        self.bind_addr.as_deref().unwrap_or("127.0.0.1")
+    }
+
+    /// Get origin URL (None if not configured)
+    #[must_use]
+    pub fn origin(&self) -> Option<&str> {
+        self.origin.as_deref()
+    }
+
+    /// Check if auth is disabled
+    #[must_use]
+    pub fn is_auth_disabled(&self) -> bool {
+        self.disable_auth.unwrap_or(false)
+    }
+
+    /// Get organization ID (None if not configured)
+    #[must_use]
+    pub fn org_id(&self) -> Option<&str> {
+        self.org_id.as_deref()
+    }
+
+    /// Log the current server config state (for observability)
+    #[tracing::instrument(skip(self))]
+    pub fn log_state(&self) {
+        tracing::info!("Server config loaded:");
+        tracing::info!("  bind_addr: {}", self.bind_addr());
+        if let Some(origin) = self.origin() {
+            tracing::info!("  origin: {}", origin);
+        } else {
+            tracing::info!("  origin: (not set)");
+        }
+        tracing::info!("  disable_auth: {}", self.is_auth_disabled());
+        if let Some(org_id) = self.org_id() {
+            tracing::info!("  org_id: {}", org_id);
+        } else {
+            tracing::info!("  org_id: (not set)");
+        }
+    }
+}
+
+/// CLI server config overrides (passed from clap)
+#[derive(Debug, Clone, Default)]
+pub struct CliServerConfig {
+    pub bind_addr: Option<String>,
+    pub origin: Option<String>,
+    pub disable_auth: Option<bool>,
+    pub org_id: Option<String>,
 }
 
 /// Parse boolean from environment variable
@@ -289,6 +465,7 @@ mod tests {
         assert!(flags.enable_auto_reconcile);
         assert!(!flags.enable_proxy_port_reuse);
         assert!(!flags.enable_usage_tracking);
+        assert!(!flags.enable_kubernetes_backend);
         assert!(!flags.enable_readonly_mode);
     }
 
@@ -315,6 +492,7 @@ mod tests {
             enable_auto_reconcile: false,
             enable_proxy_port_reuse: true,
             enable_usage_tracking: true,
+            enable_kubernetes_backend: true,
             enable_readonly_mode: false,
         };
 
@@ -328,6 +506,8 @@ mod tests {
         assert!(!base.enable_auto_reconcile);
         assert!(base.enable_proxy_port_reuse);
         assert!(base.enable_usage_tracking);
+        assert!(base.enable_kubernetes_backend);
+        assert!(!base.enable_readonly_mode);
     }
 
     #[test]

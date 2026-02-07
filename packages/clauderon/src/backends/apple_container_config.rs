@@ -8,7 +8,7 @@ use super::container_config::{ImageConfig, ImagePullPolicy, ResourceLimits};
 /// Configuration for the Apple Container backend
 ///
 /// This config can be loaded from `~/.clauderon/apple-container-config.toml`
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct AppleContainerConfig {
     /// Custom container image to use (default: ghcr.io/anthropics/claude-code)
     pub container_image: Option<String>,
@@ -110,16 +110,6 @@ impl AppleContainerConfig {
         }
 
         Ok(())
-    }
-}
-
-impl Default for AppleContainerConfig {
-    fn default() -> Self {
-        Self {
-            container_image: None,
-            resources: None,
-            extra_flags: Vec::new(),
-        }
     }
 }
 

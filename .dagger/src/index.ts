@@ -1,4 +1,4 @@
-import { dag, object, func, Secret, Directory, Container } from "@dagger.io/dagger";
+import { dag, object, func, Secret, Directory, Container, File } from "@dagger.io/dagger";
 import { updateHomelabVersion, syncToS3 } from "@shepherdjerred/dagger-utils/containers";
 import {
   checkBirmel,
@@ -6,21 +6,24 @@ import {
   smokeTestBirmelImageWithContainer,
   publishBirmelImageWithContainer,
 } from "./birmel.js";
+import { reviewPr, handleInteractive } from "./code-review.js";
 
 const PACKAGES = ["eslint-config", "dagger-utils", "bun-decompile"] as const;
 const REPO_URL = "shepherdjerred/monorepo";
 
-const BUN_VERSION = "1.3.5";
+const BUN_VERSION = "1.3.6";
 const PLAYWRIGHT_VERSION = "1.57.0";
 // Pin release-please version for reproducible builds
 const RELEASE_PLEASE_VERSION = "17.1.3";
 // Rust version for clauderon
 const RUST_VERSION = "1.85";
+// LaTeX image for resume builds
+const LATEX_IMAGE = "blang/latex:ubuntu";
 // sccache version for Rust compilation caching
 const SCCACHE_VERSION = "0.9.1";
 
-// Cross-compilation targets for mux binary
-const MUX_TARGETS = [
+// Cross-compilation targets for clauderon binary
+const CLAUDERON_TARGETS = [
   { target: "x86_64-unknown-linux-gnu", os: "linux", arch: "x86_64" },
   { target: "aarch64-unknown-linux-gnu", os: "linux", arch: "arm64" },
   { target: "x86_64-apple-darwin", os: "darwin", arch: "x86_64" },
@@ -76,6 +79,8 @@ function installWorkspaceDeps(source: Directory): Container {
     .withMountedFile("/workspace/packages/bun-decompile/package.json", source.file("packages/bun-decompile/package.json"))
     .withMountedFile("/workspace/packages/dagger-utils/package.json", source.file("packages/dagger-utils/package.json"))
     .withMountedFile("/workspace/packages/eslint-config/package.json", source.file("packages/eslint-config/package.json"))
+    .withMountedFile("/workspace/packages/resume/package.json", source.file("packages/resume/package.json"))
+    .withMountedFile("/workspace/packages/tools/package.json", source.file("packages/tools/package.json"))
     // Clauderon web packages (nested workspace with own lockfile)
     .withMountedFile("/workspace/packages/clauderon/web/package.json", source.file("packages/clauderon/web/package.json"))
     .withMountedFile("/workspace/packages/clauderon/web/bun.lock", source.file("packages/clauderon/web/bun.lock"))
@@ -96,6 +101,7 @@ function installWorkspaceDeps(source: Directory): Container {
     .withMountedDirectory("/workspace/packages/bun-decompile", source.directory("packages/bun-decompile"))
     .withMountedDirectory("/workspace/packages/dagger-utils", source.directory("packages/dagger-utils"))
     .withMountedDirectory("/workspace/packages/eslint-config", source.directory("packages/eslint-config"))
+    .withMountedDirectory("/workspace/packages/tools", source.directory("packages/tools"))
     // Clauderon web packages
     .withMountedDirectory("/workspace/packages/clauderon/web/shared", source.directory("packages/clauderon/web/shared"))
     .withMountedDirectory("/workspace/packages/clauderon/web/client", source.directory("packages/clauderon/web/client"))
@@ -112,26 +118,41 @@ function installWorkspaceDeps(source: Directory): Container {
  * Get a Rust container with caching enabled for clauderon builds
  * @param source The full workspace source directory
  * @param frontendDist Optional pre-built frontend dist directory (from Bun container)
+ * @param s3AccessKeyId Optional S3 access key for sccache
+ * @param s3SecretAccessKey Optional S3 secret key for sccache
  */
-function getRustContainer(source: Directory, frontendDist?: Directory): Container {
+function getRustContainer(
+  source: Directory,
+  frontendDist?: Directory,
+  s3AccessKeyId?: Secret,
+  s3SecretAccessKey?: Secret
+): Container {
   let container = dag
     .container()
     .from(`rust:${RUST_VERSION}-bookworm`)
     .withWorkdir("/workspace")
+    // Install mold linker for faster linking (~5-10x faster than ld)
+    .withMountedCache("/var/cache/apt", dag.cacheVolume(`apt-cache-rust-${RUST_VERSION}`))
+    .withMountedCache("/var/lib/apt", dag.cacheVolume(`apt-lib-rust-${RUST_VERSION}`))
+    .withExec(["apt-get", "update"])
+    .withExec(["apt-get", "install", "-y", "mold", "clang"])
     .withMountedCache("/usr/local/cargo/registry", dag.cacheVolume("cargo-registry"))
     .withMountedCache("/usr/local/cargo/git", dag.cacheVolume("cargo-git"))
     .withMountedCache("/workspace/target", dag.cacheVolume("clauderon-target"))
     .withMountedDirectory("/workspace", source.directory("packages/clauderon"))
     .withExec(["rustup", "component", "add", "rustfmt", "clippy"]);
 
-  // Install sccache for compilation caching
-  container = withSccache(container);
-
-  // Configure sccache
-  container = container
-    .withMountedCache("/sccache", dag.cacheVolume("sccache-cache"))
-    .withEnvVariable("RUSTC_WRAPPER", "sccache")
-    .withEnvVariable("SCCACHE_DIR", "/sccache");
+  // Only use sccache when S3 credentials are provided (avoid AWS metadata timeout)
+  if (s3AccessKeyId && s3SecretAccessKey) {
+    container = withSccache(container);
+    container = container
+      .withEnvVariable("RUSTC_WRAPPER", "sccache")
+      .withEnvVariable("SCCACHE_BUCKET", "sccache")
+      .withEnvVariable("SCCACHE_ENDPOINT", "https://seaweedfs.sjer.red")
+      .withEnvVariable("SCCACHE_REGION", "us-east-1")
+      .withSecretVariable("AWS_ACCESS_KEY_ID", s3AccessKeyId)
+      .withSecretVariable("AWS_SECRET_ACCESS_KEY", s3SecretAccessKey);
+  }
 
   // Mount the pre-built frontend dist if provided
   if (frontendDist) {
@@ -165,40 +186,63 @@ function withSccache(container: Container): Container {
 }
 
 /**
- * Get a Rust container with cross-compilation toolchains for mux builds
+ * Get a Rust container with cross-compilation toolchains for clauderon builds
+ * @param source The full workspace source directory
+ * @param s3AccessKeyId Optional S3 access key for sccache
+ * @param s3SecretAccessKey Optional S3 secret key for sccache
  */
-function getCrossCompileContainer(source: Directory): Container {
+function getCrossCompileContainer(
+  source: Directory,
+  s3AccessKeyId?: Secret,
+  s3SecretAccessKey?: Secret
+): Container {
   let container = dag
     .container()
     .from(`rust:${RUST_VERSION}-bookworm`)
     .withWorkdir("/workspace")
+    .withMountedCache("/var/cache/apt", dag.cacheVolume(`apt-cache-rust-${RUST_VERSION}-cross`))
+    .withMountedCache("/var/lib/apt", dag.cacheVolume(`apt-lib-rust-${RUST_VERSION}-cross`))
     .withMountedCache("/usr/local/cargo/registry", dag.cacheVolume("cargo-registry"))
     .withMountedCache("/usr/local/cargo/git", dag.cacheVolume("cargo-git"))
     // Use separate target directories for cross-compilation to avoid conflicts
     .withEnvVariable("CARGO_TARGET_DIR", "/workspace/target-cross")
     .withMountedCache("/workspace/target-cross", dag.cacheVolume("clauderon-cross-target"))
     .withMountedDirectory("/workspace", source.directory("packages/clauderon"))
-    // Install cross-compilation dependencies
+    // Enable multiarch for ARM64 packages
+    .withExec(["dpkg", "--add-architecture", "arm64"])
+    // Install cross-compilation dependencies, mold linker, and ARM64 OpenSSL
     .withExec(["apt-get", "update"])
-    .withExec(["apt-get", "install", "-y", "gcc-aarch64-linux-gnu", "libc6-dev-arm64-cross"])
+    .withExec(["apt-get", "install", "-y",
+      "gcc-aarch64-linux-gnu",
+      "libc6-dev-arm64-cross",
+      "mold",
+      "clang",
+      "libssl-dev:arm64",
+      "pkg-config",
+      // binutils-aarch64-linux-gnu provides the aarch64 cross-linker (ld, ar, etc.)
+      "binutils-aarch64-linux-gnu"
+    ])
     // Add cross-compilation targets
     .withExec(["rustup", "target", "add", "x86_64-unknown-linux-gnu"])
     .withExec(["rustup", "target", "add", "aarch64-unknown-linux-gnu"]);
 
-  // Install sccache for compilation caching
-  container = withSccache(container);
-
-  // Configure sccache with separate cache for cross builds to avoid conflicts
-  container = container
-    .withMountedCache("/sccache-cross", dag.cacheVolume("sccache-cache-cross"))
-    .withEnvVariable("RUSTC_WRAPPER", "sccache")
-    .withEnvVariable("SCCACHE_DIR", "/sccache-cross");
+  // Only use sccache when S3 credentials are provided (avoid AWS metadata timeout)
+  if (s3AccessKeyId && s3SecretAccessKey) {
+    container = withSccache(container);
+    container = container
+      .withEnvVariable("RUSTC_WRAPPER", "sccache")
+      .withEnvVariable("SCCACHE_BUCKET", "sccache")
+      .withEnvVariable("SCCACHE_ENDPOINT", "https://seaweedfs.sjer.red")
+      .withEnvVariable("SCCACHE_REGION", "us-east-1")
+      .withSecretVariable("AWS_ACCESS_KEY_ID", s3AccessKeyId)
+      .withSecretVariable("AWS_SECRET_ACCESS_KEY", s3SecretAccessKey);
+  }
 
   return container;
 }
 
 /**
- * Build mux binary for a specific target
+ * Build clauderon binary for a specific target
  */
 async function buildMuxBinary(
   container: Container,
@@ -219,24 +263,30 @@ async function buildMuxBinary(
   ]);
 
   // Get the binary
-  const binaryPath = `/workspace/target-cross/${target}/release/mux`;
+  const binaryPath = `/workspace/target-cross/${target}/release/clauderon`;
   const binary = await buildContainer.file(binaryPath).contents();
 
-  const filename = `mux-${os}-${arch}`;
+  const filename = `clauderon-${os}-${arch}`;
   return { file: filename, content: binary };
 }
 
 /**
- * Upload release assets to a GitHub release
+ * Upload release assets to a GitHub release using proper binary file handling
+ * @param githubToken GitHub token for authentication
+ * @param version The release version (without 'v' prefix)
+ * @param binariesDir Directory containing the built binaries
+ * @param filenames List of filenames to upload
  */
 async function uploadReleaseAssets(
   githubToken: Secret,
   version: string,
-  assets: Array<{ name: string; data: string }>
-): Promise<string[]> {
+  binariesDir: Directory,
+  filenames: string[]
+): Promise<{ outputs: string[]; errors: string[] }> {
   const outputs: string[] = [];
+  const errors: string[] = [];
 
-  // Use gh CLI to upload assets
+  // Use gh CLI to upload assets - mount the binaries directory directly
   let container = dag
     .container()
     .from(`oven/bun:${BUN_VERSION}-debian`)
@@ -250,31 +300,32 @@ async function uploadReleaseAssets(
     .withExec(["apt-get", "update"])
     .withExec(["apt-get", "install", "-y", "gh"])
     .withSecretVariable("GITHUB_TOKEN", githubToken)
-    .withWorkdir("/workspace");
+    .withWorkdir("/workspace")
+    // Mount binaries directory directly (preserves binary data)
+    .withDirectory("/workspace/binaries", binariesDir);
 
-  for (const asset of assets) {
-    // Write the binary to a file
-    container = container.withNewFile(`/workspace/${asset.name}`, asset.data);
-
+  for (const filename of filenames) {
     // Upload to release
     try {
       await container
         .withExec([
           "gh", "release", "upload",
-          `mux-v${version}`,
-          asset.name,
+          `clauderon-v${version}`,
+          `/workspace/binaries/${filename}`,
           "--repo", REPO_URL,
           "--clobber"
         ])
         .sync();
-      outputs.push(`✓ Uploaded ${asset.name}`);
+      outputs.push(`✓ Uploaded ${filename}`);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      outputs.push(`✗ Failed to upload ${asset.name}: ${errorMessage}`);
+      const failureMsg = `Failed to upload ${filename}: ${errorMessage}`;
+      outputs.push(`✗ ${failureMsg}`);
+      errors.push(failureMsg);
     }
   }
 
-  return outputs;
+  return { outputs, errors };
 }
 
 /**
@@ -380,7 +431,7 @@ export class Monorepo {
 
     // Step 1: Generate TypeScript types from Rust using typeshare
     // This must happen BEFORE building web packages since they import these types
-    let rustContainer = getRustContainer(source);
+    let rustContainer = getRustContainer(source, undefined, s3AccessKeyId, s3SecretAccessKey);
     // Install typeshare-cli and run it to generate types
     rustContainer = rustContainer
       .withExec(["cargo", "install", "typeshare-cli", "--locked"])
@@ -421,13 +472,17 @@ export class Monorepo {
 
     // Clauderon Rust validation (fmt, clippy, test, build)
     outputs.push("\n--- Clauderon Rust Validation ---");
-    outputs.push(await this.clauderonCi(source, frontendDist));
+    outputs.push(await this.clauderonCi(source, frontendDist, s3AccessKeyId, s3SecretAccessKey));
 
     // Now build remaining packages (web packages already built, will be skipped or fast)
     // Note: Skip tests here - bun-decompile tests fail in CI (requires `bun build --compile`)
     container = container.withExec(["bun", "run", "build"]);
     await container.sync();
     outputs.push("✓ Build");
+
+    // Clauderon Mobile validation (React Native)
+    outputs.push("\n--- Clauderon Mobile Validation ---");
+    outputs.push(await this.mobileCi(source));
 
     // Birmel CI
     outputs.push("\n--- Birmel Validation ---");
@@ -445,6 +500,7 @@ export class Monorepo {
 
     if (isRelease && githubToken && npmToken) {
       outputs.push("\n--- Release Workflow ---");
+      const releaseErrors: string[] = [];
 
       // Create/update release PRs using non-deprecated release-pr command
       const prContainer = getReleasePleaseContainer()
@@ -492,7 +548,9 @@ export class Monorepo {
             outputs.push(`✓ Published @shepherdjerred/${pkg}`);
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : String(error);
-            outputs.push(`✗ Failed to publish @shepherdjerred/${pkg}: ${errorMessage}`);
+            const failureMsg = `Failed to publish @shepherdjerred/${pkg}: ${errorMessage}`;
+            outputs.push(`✗ ${failureMsg}`);
+            releaseErrors.push(failureMsg);
           }
         }
       } else {
@@ -534,44 +592,65 @@ export class Monorepo {
           outputs.push(deployOutput);
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : String(error);
-          outputs.push(`✗ Failed to deploy clauderon docs: ${errorMessage}`);
+          const failureMsg = `Failed to deploy clauderon docs: ${errorMessage}`;
+          outputs.push(`✗ ${failureMsg}`);
+          releaseErrors.push(failureMsg);
         }
       }
 
-      // Check if a mux release was created and upload binaries
-      const muxReleaseCreated = releaseResult.output.includes("mux-v") ||
-        releaseResult.output.includes("packages/clauderon");
-
-      if (muxReleaseCreated) {
-        outputs.push("\n--- Multiplexer Release ---");
-
-        // Extract mux version from release output or Cargo.toml
-        // For now, build and upload with the current version
+      // Deploy resume to S3
+      if (s3AccessKeyId && s3SecretAccessKey) {
+        outputs.push("\n--- Resume Deployment ---");
         try {
-          const binaries = await this.multiplexerBuild(source);
+          const deployOutput = await this.resumeDeploy(source, s3AccessKeyId, s3SecretAccessKey);
+          outputs.push(deployOutput);
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          const failureMsg = `Failed to deploy resume: ${errorMessage}`;
+          outputs.push(`✗ ${failureMsg}`);
+          releaseErrors.push(failureMsg);
+        }
+      }
 
-          // Get binary contents for upload
-          const linuxTargets = MUX_TARGETS.filter(t => t.os === "linux");
-          const assets: Array<{ name: string; data: string }> = [];
+      // Check if a clauderon release was created - only if we can extract a specific version
+      const clauderonVersionMatch = releaseResult.output.match(/clauderon-v([\d.]+)/);
+      const clauderonVersion = clauderonVersionMatch?.[1];
 
-          for (const { os, arch } of linuxTargets) {
-            const filename = `mux-${os}-${arch}`;
-            const content = await binaries.file(filename).contents();
-            assets.push({ name: filename, data: content });
+      if (clauderonVersion) {
+        outputs.push("\n--- Multiplexer Release ---");
+        outputs.push(`Detected clauderon release: v${clauderonVersion}`);
+
+        try {
+          const binaries = await this.multiplexerBuild(source, s3AccessKeyId, s3SecretAccessKey);
+
+          // Get filenames for upload
+          const linuxTargets = CLAUDERON_TARGETS.filter(t => t.os === "linux");
+          const filenames = linuxTargets.map(({ os, arch }) => `clauderon-${os}-${arch}`);
+
+          for (const filename of filenames) {
             outputs.push(`✓ Built ${filename}`);
           }
 
-          // Find the mux version from the release output
-          const muxVersionMatch = releaseResult.output.match(/mux-v([\d.]+)/);
-          const muxVersion = muxVersionMatch?.[1] ?? "0.1.0";
-
-          // Upload to GitHub release
-          const uploadResults = await uploadReleaseAssets(githubToken, muxVersion, assets);
-          outputs.push(...uploadResults);
+          // Upload to GitHub release (pass directory directly for proper binary handling)
+          const uploadResults = await uploadReleaseAssets(githubToken, clauderonVersion, binaries, filenames);
+          outputs.push(...uploadResults.outputs);
+          releaseErrors.push(...uploadResults.errors);
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : String(error);
-          outputs.push(`✗ Failed to build/upload mux binaries: ${errorMessage}`);
+          const failureMsg = `Failed to build/upload clauderon binaries: ${errorMessage}`;
+          outputs.push(`✗ ${failureMsg}`);
+          releaseErrors.push(failureMsg);
         }
+      } else {
+        outputs.push("\nNo clauderon release detected - skipping binary upload");
+      }
+
+      // Fail CI if any release phase errors occurred
+      if (releaseErrors.length > 0) {
+        outputs.push(`\n--- Release Phase Failed ---`);
+        outputs.push(`${releaseErrors.length} error(s) occurred during release:`);
+        releaseErrors.forEach((err, i) => outputs.push(`  ${i + 1}. ${err}`));
+        throw new Error(`Release phase failed with ${releaseErrors.length} error(s):\n${releaseErrors.join("\n")}`);
       }
     }
 
@@ -678,15 +757,68 @@ export class Monorepo {
   }
 
   /**
+   * Run Clauderon Mobile CI: lint, typecheck, format check, test
+   * @param source The full workspace source directory
+   */
+  @func()
+  async mobileCi(source: Directory): Promise<string> {
+    const outputs: string[] = [];
+
+    let container = dag
+      .container()
+      .from(`oven/bun:${BUN_VERSION}-debian`)
+      .withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-cache"))
+      .withWorkdir("/workspace")
+      .withDirectory("/workspace", source.directory("packages/clauderon/mobile"))
+      // Copy the shared generated types (mobile uses a symlink that doesn't work in isolation)
+      .withDirectory(
+        "/workspace/src/types/generated",
+        source.directory("packages/clauderon/web/shared/src/generated")
+      )
+      // Copy the base tsconfig that mobile extends
+      .withFile("/tsconfig.base.json", source.file("tsconfig.base.json"))
+      .withExec(["bun", "install", "--frozen-lockfile"]);
+
+    // Typecheck
+    container = container.withExec(["bun", "run", "typecheck"]);
+    await container.sync();
+    outputs.push("✓ Mobile typecheck passed");
+
+    // Lint
+    container = container.withExec(["bun", "run", "lint"]);
+    await container.sync();
+    outputs.push("✓ Mobile lint passed");
+
+    // Format check
+    container = container.withExec(["bun", "run", "format:check"]);
+    await container.sync();
+    outputs.push("✓ Mobile format check passed");
+
+    // Tests
+    container = container.withExec(["bun", "run", "test"]);
+    await container.sync();
+    outputs.push("✓ Mobile tests passed");
+
+    return outputs.join("\n");
+  }
+
+  /**
    * Run Clauderon CI: fmt check, clippy, test, build
    * @param source The full workspace source directory
    * @param frontendDist Optional pre-built frontend dist directory (required for cargo build)
+   * @param s3AccessKeyId Optional S3 access key for sccache
+   * @param s3SecretAccessKey Optional S3 secret key for sccache
    */
   @func()
-  async clauderonCi(source: Directory, frontendDist?: Directory): Promise<string> {
+  async clauderonCi(
+    source: Directory,
+    frontendDist?: Directory,
+    s3AccessKeyId?: Secret,
+    s3SecretAccessKey?: Secret
+  ): Promise<string> {
     const outputs: string[] = [];
 
-    let container = getRustContainer(source, frontendDist);
+    let container = getRustContainer(source, frontendDist, s3AccessKeyId, s3SecretAccessKey);
 
     // Mount the built frontend if provided (required for Rust build - it embeds static files)
     if (frontendDist) {
@@ -724,25 +856,59 @@ export class Monorepo {
   }
 
   /**
-   * Build mux binaries for Linux (x86_64 and ARM64)
+   * Build clauderon binaries for Linux (x86_64 and ARM64)
    * Returns the built binaries as files
+   * @param source The full workspace source directory
+   * @param s3AccessKeyId Optional S3 access key for sccache
+   * @param s3SecretAccessKey Optional S3 secret key for sccache
    */
   @func()
-  async multiplexerBuild(source: Directory): Promise<Directory> {
-    const container = getCrossCompileContainer(source);
+  async multiplexerBuild(
+    source: Directory,
+    s3AccessKeyId?: Secret,
+    s3SecretAccessKey?: Secret
+  ): Promise<Directory> {
+    const container = getCrossCompileContainer(source, s3AccessKeyId, s3SecretAccessKey);
 
     // Build for Linux targets only (cross-compiling to macOS requires different tooling)
-    const linuxTargets = MUX_TARGETS.filter(t => t.os === "linux");
+    const linuxTargets = CLAUDERON_TARGETS.filter(t => t.os === "linux");
 
     let outputContainer = dag.directory();
 
     for (const { target, os, arch } of linuxTargets) {
       let buildContainer = container;
 
-      // Configure linker for aarch64 cross-compilation
+      // Configure linker and OpenSSL for aarch64 cross-compilation
       if (target === "aarch64-unknown-linux-gnu") {
+        // Override .cargo/config.toml to not use mold for aarch64 cross-compilation
+        // (mold doesn't work well with cross-compilation toolchains)
+        const cargoConfig = `
+[registries.crates-io]
+protocol = "sparse"
+
+[build]
+jobs = -1
+
+[target.x86_64-unknown-linux-gnu]
+linker = "clang"
+rustflags = ["-C", "link-arg=-fuse-ld=mold"]
+
+[target.aarch64-unknown-linux-gnu]
+linker = "aarch64-linux-gnu-gcc"
+# No rustflags - use default linker (not mold)
+
+[net]
+retry = 3
+`;
         buildContainer = container
-          .withEnvVariable("CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER", "aarch64-linux-gnu-gcc");
+          .withNewFile("/workspace/.cargo/config.toml", cargoConfig)
+          // Point openssl-sys to the ARM64 OpenSSL installation
+          .withEnvVariable("OPENSSL_DIR", "/usr")
+          .withEnvVariable("OPENSSL_LIB_DIR", "/usr/lib/aarch64-linux-gnu")
+          .withEnvVariable("OPENSSL_INCLUDE_DIR", "/usr/include")
+          // Tell pkg-config to allow cross-compilation
+          .withEnvVariable("PKG_CONFIG_ALLOW_CROSS", "1")
+          .withEnvVariable("PKG_CONFIG_PATH", "/usr/lib/aarch64-linux-gnu/pkgconfig");
       }
 
       // Build the release binary
@@ -751,8 +917,8 @@ export class Monorepo {
       ]);
 
       // Get the binary and add to output directory
-      const binaryPath = `/workspace/target-cross/${target}/release/mux`;
-      const filename = `mux-${os}-${arch}`;
+      const binaryPath = `/workspace/target-cross/${target}/release/clauderon`;
+      const filename = `clauderon-${os}-${arch}`;
       outputContainer = outputContainer.withFile(filename, buildContainer.file(binaryPath));
     }
 
@@ -761,38 +927,46 @@ export class Monorepo {
 
   /**
    * Full Multiplexer release: CI + build binaries + upload to GitHub release
+   * @param source The full workspace source directory
+   * @param version The version to release
+   * @param githubToken GitHub token for uploading release assets
+   * @param s3AccessKeyId Optional S3 access key for sccache
+   * @param s3SecretAccessKey Optional S3 secret key for sccache
    */
   @func()
   async multiplexerRelease(
     source: Directory,
     version: string,
     githubToken: Secret,
+    s3AccessKeyId?: Secret,
+    s3SecretAccessKey?: Secret,
   ): Promise<string> {
     const outputs: string[] = [];
 
     // Run CI first
     outputs.push("--- Clauderon CI ---");
-    outputs.push(await this.clauderonCi(source));
+    outputs.push(await this.clauderonCi(source, undefined, s3AccessKeyId, s3SecretAccessKey));
 
     // Build binaries for Linux
     outputs.push("\n--- Building Binaries ---");
-    const binaries = await this.multiplexerBuild(source);
+    const binaries = await this.multiplexerBuild(source, s3AccessKeyId, s3SecretAccessKey);
 
-    // Get binary contents for upload
-    const linuxTargets = MUX_TARGETS.filter(t => t.os === "linux");
-    const assets: Array<{ name: string; data: string }> = [];
+    // Get filenames for upload
+    const linuxTargets = CLAUDERON_TARGETS.filter(t => t.os === "linux");
+    const filenames = linuxTargets.map(({ os, arch }) => `clauderon-${os}-${arch}`);
 
-    for (const { os, arch } of linuxTargets) {
-      const filename = `mux-${os}-${arch}`;
-      const content = await binaries.file(filename).contents();
-      assets.push({ name: filename, data: content });
+    for (const filename of filenames) {
       outputs.push(`✓ Built ${filename}`);
     }
 
-    // Upload to GitHub release
+    // Upload to GitHub release (pass directory directly for proper binary handling)
     outputs.push("\n--- Uploading to GitHub Release ---");
-    const uploadResults = await uploadReleaseAssets(githubToken, version, assets);
-    outputs.push(...uploadResults);
+    const uploadResults = await uploadReleaseAssets(githubToken, version, binaries, filenames);
+    outputs.push(...uploadResults.outputs);
+
+    if (uploadResults.errors.length > 0) {
+      throw new Error(`Failed to upload ${uploadResults.errors.length} asset(s):\n${uploadResults.errors.join("\n")}`);
+    }
 
     return outputs.join("\n");
   }
@@ -840,7 +1014,7 @@ export class Monorepo {
     const syncOutput = await syncToS3({
       sourceDir: siteDir,
       bucketName: "clauderon",
-      endpointUrl: "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
+      endpointUrl: "https://seaweedfs.sjer.red",
       accessKeyId: s3AccessKeyId,
       secretAccessKey: s3SecretAccessKey,
       region: "us-east-1",
@@ -851,5 +1025,134 @@ export class Monorepo {
     outputs.push(syncOutput);
 
     return outputs.join("\n");
+  }
+
+  /**
+   * Build the resume PDF from LaTeX source.
+   */
+  @func()
+  resumeBuild(source: Directory): File {
+    return dag
+      .container()
+      .from(LATEX_IMAGE)
+      .withMountedDirectory("/workspace", source.directory("packages/resume"))
+      .withWorkdir("/workspace")
+      .withExec(["pdflatex", "resume.tex"])
+      .file("/workspace/resume.pdf");
+  }
+
+  /**
+   * Get resume output directory (PDF + HTML) for deployment.
+   */
+  @func()
+  resumeOutput(source: Directory): Directory {
+    const pdf = this.resumeBuild(source);
+    const resumeDir = source.directory("packages/resume");
+    return dag
+      .directory()
+      .withFile("resume.pdf", pdf)
+      .withFile("index.html", resumeDir.file("index.html"));
+  }
+
+  /**
+   * Deploy resume to SeaweedFS S3.
+   */
+  @func()
+  async resumeDeploy(
+    source: Directory,
+    s3AccessKeyId: Secret,
+    s3SecretAccessKey: Secret,
+  ): Promise<string> {
+    const outputs: string[] = [];
+    const outputDir = this.resumeOutput(source);
+    outputs.push("✓ Built resume.pdf");
+
+    const syncOutput = await syncToS3({
+      sourceDir: outputDir,
+      bucketName: "resume",
+      endpointUrl: "https://seaweedfs.sjer.red",
+      accessKeyId: s3AccessKeyId,
+      secretAccessKey: s3SecretAccessKey,
+      region: "us-east-1",
+      deleteRemoved: true,
+    });
+
+    outputs.push("✓ Deployed to SeaweedFS S3 (bucket: resume)");
+    outputs.push(syncOutput);
+    return outputs.join("\n");
+  }
+
+  /**
+   * Run automatic code review on a PR.
+   * Analyzes PR complexity, runs Claude review, and posts approval/request-changes.
+   *
+   * @param source - Source directory with git repo
+   * @param githubToken - GitHub token for posting reviews
+   * @param claudeOauthToken - Claude Code OAuth token
+   * @param prNumber - PR number to review
+   * @param baseBranch - Base branch (e.g., "main")
+   * @param headSha - Head commit SHA
+   */
+  @func()
+  async codeReview(
+    source: Directory,
+    githubToken: Secret,
+    claudeOauthToken: Secret,
+    prNumber: number,
+    baseBranch: string,
+    headSha: string,
+  ): Promise<string> {
+    return reviewPr({
+      source,
+      githubToken,
+      claudeOauthToken,
+      prNumber,
+      baseBranch,
+      headSha,
+    });
+  }
+
+  /**
+   * Handle interactive @claude mention in a PR comment.
+   *
+   * @param source - Source directory with git repo
+   * @param githubToken - GitHub token for posting comments
+   * @param claudeOauthToken - Claude Code OAuth token
+   * @param prNumber - PR number
+   * @param commentBody - The comment text (as Secret to support env: prefix)
+   * @param commentPath - Optional file path for review comments
+   * @param commentLine - Optional line number for review comments
+   * @param commentDiffHunk - Optional diff context for review comments
+   */
+  @func()
+  async codeReviewInteractive(
+    source: Directory,
+    githubToken: Secret,
+    claudeOauthToken: Secret,
+    prNumber: number,
+    commentBody: Secret,
+    commentPath?: string,
+    commentLine?: number,
+    commentDiffHunk?: string,
+  ): Promise<string> {
+    // Extract comment body from secret
+    // Note: In Dagger, we need to handle secrets carefully
+    // The commentBody is passed as Secret so env: prefix works in GHA
+    const bodyText = await commentBody.plaintext();
+
+    return handleInteractive({
+      source,
+      githubToken,
+      claudeOauthToken,
+      prNumber,
+      commentBody: bodyText,
+      eventContext: commentPath
+        ? {
+            path: commentPath,
+            line: commentLine,
+            diffHunk: commentDiffHunk,
+          }
+        : undefined,
+    });
   }
 }

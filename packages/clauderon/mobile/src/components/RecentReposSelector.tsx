@@ -21,11 +21,7 @@ type RecentReposSelectorProps = {
   onClose: () => void;
 };
 
-export function RecentReposSelector({
-  visible,
-  onSelect,
-  onClose,
-}: RecentReposSelectorProps) {
+export function RecentReposSelector({ visible, onSelect, onClose }: RecentReposSelectorProps) {
   const { client } = useSessionContext();
   const { colors } = useTheme();
   const [repos, setRepos] = useState<RecentRepoDto[]>([]);
@@ -54,27 +50,23 @@ export function RecentReposSelector({
   }, [visible, loadRepos]);
 
   const handleSelect = (repo: RecentRepoDto) => {
-    const path = repo.subdirectory
-      ? `${repo.repo_path}/${repo.subdirectory}`
-      : repo.repo_path;
+    const path = repo.subdirectory ? `${repo.repo_path}/${repo.subdirectory}` : repo.repo_path;
     onSelect(path);
   };
 
   const themedStyles = getThemedStyles(colors);
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={onClose}
-    >
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={themedStyles.sheet}>
           <View style={[styles.header, { borderBottomColor: colors.border }]}>
             <Text style={[styles.title, { color: colors.textDark }]}>Recent Repositories</Text>
             <TouchableOpacity
-              style={[styles.closeButton, { borderColor: colors.border, backgroundColor: colors.surface }]}
+              style={[
+                styles.closeButton,
+                { borderColor: colors.border, backgroundColor: colors.surface },
+              ]}
               onPress={onClose}
             >
               <Text style={[styles.closeButtonText, { color: colors.textDark }]}>X</Text>
@@ -90,31 +82,37 @@ export function RecentReposSelector({
             <View style={styles.centered}>
               <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
               <TouchableOpacity
-                style={[styles.retryButton, { borderColor: colors.border, backgroundColor: colors.primary }]}
-                onPress={loadRepos}
+                style={[
+                  styles.retryButton,
+                  { borderColor: colors.border, backgroundColor: colors.primary },
+                ]}
+                onPress={() => void loadRepos()}
               >
                 <Text style={[styles.retryButtonText, { color: colors.textWhite }]}>Retry</Text>
               </TouchableOpacity>
             </View>
           ) : repos.length === 0 ? (
             <View style={styles.centered}>
-              <Text style={[styles.emptyText, { color: colors.textLight }]}>No recent repositories</Text>
+              <Text style={[styles.emptyText, { color: colors.textLight }]}>
+                No recent repositories
+              </Text>
             </View>
           ) : (
             <FlatList
               data={repos}
-              keyExtractor={(item) =>
-                `${item.repo_path}-${item.subdirectory || "root"}`
-              }
+              keyExtractor={(item) => `${item.repo_path}-${item.subdirectory || "root"}`}
               renderItem={({ item }) => (
                 <TouchableOpacity
-                  style={[styles.repoItem, { borderColor: colors.border, backgroundColor: colors.surface }]}
-                  onPress={() => handleSelect(item)}
+                  style={[
+                    styles.repoItem,
+                    { borderColor: colors.border, backgroundColor: colors.surface },
+                  ]}
+                  onPress={() => {
+                    handleSelect(item);
+                  }}
                 >
                   <Text style={[styles.repoPath, { color: colors.textDark }]} numberOfLines={1}>
-                    {item.subdirectory
-                      ? `${item.repo_path}/${item.subdirectory}`
-                      : item.repo_path}
+                    {item.subdirectory ? `${item.repo_path}/${item.subdirectory}` : item.repo_path}
                   </Text>
                   <Text style={[styles.repoTime, { color: colors.textLight }]}>
                     {formatRelativeTime(new Date(item.last_used))}

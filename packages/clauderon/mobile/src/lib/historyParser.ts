@@ -1,10 +1,14 @@
 /**
  * Parser for Claude Code session history JSONL files.
  * Converts structured JSONL format to Message objects for display.
+ *
+ * Also provides auto-detection to route to the correct parser
+ * for different agent formats (Claude Code vs Codex).
  */
 
 import type { Message, MessageRole, ToolUse, CodeBlock } from "./claudeParser";
 import { extractCodeBlocks } from "./claudeParser";
+import { isCodexFormat, parseCodexHistoryLines } from "./codexHistoryParser";
 
 /**
  * Raw JSONL entry from Claude Code's history file
@@ -150,9 +154,7 @@ export function parseHistoryLines(lines: string[]): Message[] {
           const toolUse = toolUseMap.get(block.tool_use_id);
           if (toolUse) {
             toolUse.result =
-              typeof block.content === "string"
-                ? block.content
-                : JSON.stringify(block.content);
+              typeof block.content === "string" ? block.content : JSON.stringify(block.content);
           }
         }
       }
@@ -160,7 +162,34 @@ export function parseHistoryLines(lines: string[]): Message[] {
   }
 
   // Return only the parsed messages (filter out nulls)
-  return parsedEntries
-    .map(({ message }) => message)
-    .filter((m): m is Message => m !== null);
+  return parsedEntries.map(({ message }) => message).filter((m): m is Message => m !== null);
+}
+
+/**
+ * Auto-detect history format and parse using the appropriate parser.
+ *
+ * This function detects whether the JSONL lines are from Claude Code or Codex
+ * and routes to the appropriate parser.
+ *
+ * @param lines - Array of JSONL lines from the history file
+ * @returns Array of parsed messages
+ */
+export function parseHistoryLinesAuto(lines: string[]): Message[] {
+  if (lines.length === 0) {
+    return [];
+  }
+
+  // Find the first non-empty line
+  const firstLine = lines.find((l) => l.trim());
+  if (!firstLine) {
+    return [];
+  }
+
+  // Detect format and use appropriate parser
+  if (isCodexFormat(firstLine)) {
+    return parseCodexHistoryLines(lines);
+  }
+
+  // Default to Claude Code parser
+  return parseHistoryLines(lines);
 }

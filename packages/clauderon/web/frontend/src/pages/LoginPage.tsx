@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { get } from "@github/webauthn-json";
+import { get, type CredentialRequestOptionsJSON, type PublicKeyCredentialWithAssertionJSON } from "@github/webauthn-json";
 import { useClauderonClient } from "../hooks/useClauderonClient";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -17,16 +17,16 @@ export function LoginPage() {
 
     try {
       // Start login flow
-      const { challenge_id, options } = await client.loginStart({ username });
+      const response: { challenge_id: string; options: CredentialRequestOptionsJSON } = await client.loginStart({ username }) as { challenge_id: string; options: CredentialRequestOptionsJSON };
 
       // Trigger passkey authentication
-      const credential = await get(options);
+      const credential: PublicKeyCredentialWithAssertionJSON = await get(response.options);
 
       // Finish login flow
       await client.loginFinish({
         username,
-        challenge_id,
-        credential: credential as any,
+        challenge_id: response.challenge_id,
+        credential: credential as unknown as Record<string, unknown>,
       });
 
       // Refresh auth status
@@ -47,7 +47,7 @@ export function LoginPage() {
           <p className="text-muted-foreground mt-2">Sign in to Clauderon</p>
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-4">
+        <form onSubmit={(e) => { void handleLogin(e); }} className="space-y-4">
           <div>
             <label htmlFor="username" className="block text-sm font-medium mb-2">
               Username

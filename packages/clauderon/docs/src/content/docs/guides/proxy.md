@@ -3,13 +3,13 @@ title: Credential Proxy
 description: How clauderon secures credentials with HTTP proxy interception
 ---
 
-The credential proxy is the core security component of clauderon. It intercepts HTTP/HTTPS requests and injects credentials at request time.
+The credential proxy is the core security component of clauderon. It intercepts HTTP/HTTPS requests and injects credentials at request time, ensuring AI agents never see your actual tokens.
 
 ## Architecture
 
 ```
 ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│   AI Agent      │────▶│   clauderon Proxy     │────▶│   API Server    │
+│   AI Agent      │────▶│ clauderon Proxy │────▶│   API Server    │
 │ (placeholder    │     │ (injects real   │     │ (receives real  │
 │  credentials)   │     │  credentials)   │     │  credentials)   │
 └─────────────────┘     └─────────────────┘     └─────────────────┘
@@ -20,109 +20,164 @@ The credential proxy is the core security component of clauderon. It intercepts 
 1. **Agent Configuration**: AI agents run with placeholder credentials
 2. **Request Interception**: All HTTP/HTTPS traffic routes through the proxy
 3. **Credential Injection**: The proxy replaces placeholders with real tokens
-4. **Request Filtering**: Malicious patterns are blocked
-5. **Response Forwarding**: Responses are passed back to the agent
+4. **Access Control**: Read-only mode blocks write operations
+5. **Audit Logging**: All requests are logged for security review
+6. **Response Forwarding**: Responses are passed back to the agent
 
 ## TLS Interception
 
 For HTTPS traffic, clauderon generates a Certificate Authority (CA) that:
 
-- Signs certificates for each requested domain
+- Signs certificates on-the-fly for each requested domain
 - Is trusted by the session environment
 - Enables credential injection for encrypted traffic
 
 ### CA Certificate Location
 
-The CA certificate is stored at:
-
 ```
-~/.config/clauderon/ca/ca.crt
+~/.clauderon/proxy-ca.pem      # Public certificate (mounted in containers)
+~/.clauderon/proxy-ca-key.pem  # Private key (host only, never mounted)
 ```
 
 Sessions automatically trust this CA via environment configuration.
 
-## Configuration
+## Supported Credential Types
 
-Configure the proxy in `~/.config/clauderon/config.toml`:
+| Credential | Environment Variable | Secret File |
+|------------|---------------------|-------------|
+| GitHub | `GITHUB_TOKEN` | `github_token` |
+| Anthropic OAuth | `CLAUDE_CODE_OAUTH_TOKEN` | `anthropic_oauth_token` |
+| OpenAI/Codex | `OPENAI_API_KEY` | `openai_api_key` |
+| PagerDuty | `PAGERDUTY_TOKEN` | `pagerduty_token` |
+| Sentry | `SENTRY_AUTH_TOKEN` | `sentry_auth_token` |
+| Grafana | `GRAFANA_API_KEY` | `grafana_api_key` |
+| npm | `NPM_TOKEN` | `npm_token` |
+| Docker Hub | `DOCKER_TOKEN` | `docker_token` |
+| Kubernetes | `K8S_TOKEN` | `k8s_token` |
+| Talos | `TALOS_TOKEN` | `talos_token` |
+
+## Credential Priority
+
+When multiple sources define the same credential:
+
+1. **Environment variables** (highest priority)
+2. **1Password references** (if configured)
+3. **Secret files** in `~/.clauderon/secrets/` (lowest priority)
+
+## 1Password Integration
+
+Store credentials securely in 1Password and have clauderon retrieve them automatically.
+
+Configure in `~/.clauderon/proxy.toml`:
 
 ```toml
-[proxy]
-# Proxy listen port
-port = 8080
+[onepassword]
+enabled = true
+op_path = "op"  # Path to 1Password CLI
 
-# Bind address (localhost for security)
-bind = "127.0.0.1"
-
-# Auto-generate TLS certificates
-generate_certs = true
-
-# CA certificate lifetime (days)
-ca_lifetime = 365
-
-# Request timeout (seconds)
-timeout = 30
-
-[proxy.logging]
-# Log all requests (for debugging)
-log_requests = false
-
-# Log file location
-log_file = "~/.config/clauderon/proxy.log"
+[onepassword.credentials]
+github_token = "op://Private/GitHub/token"
+anthropic_oauth_token = "op://Private/Claude/oauth-token"
+openai_api_key = "op://Work/OpenAI/api-key"
 ```
 
-## Credential Configuration
+See [1Password Guide](/guides/onepassword/) for detailed setup.
 
-Define which credentials to inject:
+## Access Modes
 
-```toml
-[credentials.anthropic]
-# Header to inject
-header = "x-api-key"
+Control what HTTP methods are allowed per session:
 
-# Or Authorization header
-# auth_type = "bearer"
+### Read-Only Mode
 
-# The actual credential (use env var reference)
-value = "${ANTHROPIC_API_KEY}"
+- Allows: GET, HEAD, OPTIONS
+- Blocks: POST, PUT, DELETE, PATCH
+- Use case: Safe exploration, code review
 
-# Domain pattern to match
-domains = ["api.anthropic.com"]
+### Read-Write Mode (Default)
 
-[credentials.github]
-header = "Authorization"
-auth_type = "bearer"
-value = "${GITHUB_TOKEN}"
-domains = ["api.github.com", "github.com"]
+- Allows: All HTTP methods
+- Required for: commits, PRs, deployments
 
-# HTTP Basic Auth for git operations
-[credentials.github_basic]
-auth_type = "basic"
-username = "x-access-token"
-password = "${GITHUB_TOKEN}"
-domains = ["github.com"]
+### Changing Mode
+
+```bash
+# Restrict to read-only
+clauderon set-access-mode <session-name> read-only
+
+# Re-enable writes
+clauderon set-access-mode <session-name> read-write
 ```
 
-## Request Filtering
+Or create a session in read-only mode:
 
-Block potentially dangerous requests:
+```bash
+clauderon create --access-mode read-only \
+  --repo ~/project --prompt "Review the code"
+```
+
+See [Access Modes Guide](/guides/access-modes/) for detailed usage.
+
+## Audit Logging
+
+All proxied requests are logged to `~/.clauderon/audit.jsonl`:
+
+```json
+{
+  "timestamp": "2024-01-15T10:30:00Z",
+  "session_id": "abc123",
+  "service": "github",
+  "method": "GET",
+  "path": "/repos/owner/repo",
+  "auth_injected": true,
+  "response_code": 200,
+  "duration_ms": 150
+}
+```
+
+Configure in `~/.clauderon/proxy.toml`:
 
 ```toml
-[proxy.filters]
-# Block requests to these domains
-blocked_domains = [
-  "*.evil.com",
-  "malware.example.org"
-]
+audit_enabled = true
+audit_log_path = "~/.clauderon/audit.jsonl"
+```
 
-# Block requests matching these patterns
-blocked_patterns = [
-  "rm -rf /",
-  "DROP TABLE",
-]
+### Analyzing Audit Logs
 
-# Allow-list mode (only specified domains allowed)
-# allowlist_only = true
-# allowed_domains = ["api.anthropic.com", "api.github.com"]
+```bash
+# View recent requests
+tail -f ~/.clauderon/audit.jsonl | jq
+
+# Find all write operations
+jq 'select(.method != "GET")' ~/.clauderon/audit.jsonl
+
+# Find failed requests
+jq 'select(.response_code >= 400)' ~/.clauderon/audit.jsonl
+```
+
+## Proxy Configuration
+
+Configure the proxy in `~/.clauderon/proxy.toml`:
+
+```toml
+# Secrets directory
+secrets_dir = "~/.clauderon/secrets"
+
+# Audit logging
+audit_enabled = true
+audit_log_path = "~/.clauderon/audit.jsonl"
+
+# Talos gateway (for Kubernetes cluster access)
+talos_gateway_port = 18082
+kubectl_proxy_port = 18081
+
+# 1Password integration
+[onepassword]
+enabled = false
+op_path = "op"
+
+[onepassword.credentials]
+github_token = ""
+anthropic_oauth_token = ""
 ```
 
 ## Security Considerations
@@ -130,20 +185,20 @@ blocked_patterns = [
 ### Credential Isolation
 
 - Credentials are never exposed to the agent process
-- The proxy runs in a separate process with restricted permissions
-- Credentials are loaded at proxy startup, not stored in memory long-term
+- The proxy runs in the daemon process with restricted permissions
+- Secret files have strict permissions (0600)
 
 ### TLS Security
 
-- Each session gets unique TLS certificates
+- Each domain gets dynamically-signed certificates
 - CA private keys are stored with strict permissions (0600)
-- Certificates have limited validity periods
+- CA private key is never mounted in containers
 
 ### Network Security
 
 - Proxy binds to localhost by default
-- Sessions cannot bypass the proxy
-- Outbound traffic is logged and filterable
+- Sessions cannot bypass the proxy (no direct internet access)
+- All traffic is logged and auditable
 
 ## Troubleshooting
 
@@ -152,22 +207,42 @@ blocked_patterns = [
 If you see certificate verification errors:
 
 ```bash
-# Regenerate the CA
-rm -rf ~/.config/clauderon/ca
-clauderon proxy --regenerate-ca
+# Regenerate the CA (will require daemon restart)
+rm ~/.clauderon/proxy-ca.pem ~/.clauderon/proxy-ca-key.pem
+clauderon daemon
 ```
 
 ### Credentials Not Injecting
 
-Check the proxy logs:
+Check the audit log:
 
 ```bash
-tail -f ~/.config/clauderon/proxy.log
+tail -f ~/.clauderon/audit.jsonl | jq
 ```
 
-Verify domain patterns match:
+Verify credential files exist:
 
 ```bash
-# Test with curl through the proxy
-curl -x http://localhost:8080 https://api.anthropic.com/v1/messages
+clauderon config credentials
 ```
+
+### Proxy Not Reachable
+
+Check the daemon is running:
+
+```bash
+curl http://localhost:3030/health
+```
+
+Verify proxy is listening:
+
+```bash
+curl -x http://localhost:3030 https://api.github.com
+```
+
+## See Also
+
+- [Access Modes Guide](/guides/access-modes/) - Read-only vs read-write
+- [1Password Guide](/guides/onepassword/) - Secure credential storage
+- [Configuration Reference](/reference/configuration/) - All proxy settings
+- [Troubleshooting](/guides/troubleshooting/) - Common issues

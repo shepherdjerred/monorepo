@@ -1,7 +1,7 @@
 import type { Directory, Container, Secret } from "@dagger.io/dagger";
 import { dag } from "@dagger.io/dagger";
 
-const BUN_VERSION = "1.3.5";
+const BUN_VERSION = "1.3.6";
 const PLAYWRIGHT_VERSION = "1.57.0";
 
 /**
@@ -17,7 +17,16 @@ function getBaseVoiceContainer(): Container {
       .withMountedCache("/var/cache/apt", dag.cacheVolume(`apt-cache-bun-${BUN_VERSION}-debian`))
       .withMountedCache("/var/lib/apt", dag.cacheVolume(`apt-lib-bun-${BUN_VERSION}-debian`))
       .withExec(["apt-get", "update"])
-      .withExec(["apt-get", "install", "-y", "ffmpeg", "python3", "make", "g++", "libtool-bin"])
+      .withExec(["apt-get", "install", "-y", "ffmpeg", "python3", "make", "g++", "libtool-bin", "curl", "git"])
+      // Install GitHub CLI for PR creation
+      .withExec([
+        "sh",
+        "-c",
+        "curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg && chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg && echo 'deb [arch=amd64 signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main' | tee /etc/apt/sources.list.d/github-cli.list > /dev/null && apt-get update && apt-get install -y gh",
+      ])
+      // Install Claude Code CLI for editor feature
+      // The install script puts claude in ~/.local/bin, so we symlink to /usr/local/bin for PATH access
+      .withExec(["sh", "-c", "curl -fsSL https://claude.ai/install.sh | bash && ln -sf /root/.local/bin/claude /usr/local/bin/claude"])
       // Cache Bun packages
       .withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-cache"))
       // Cache Playwright browsers (version in key for invalidation)
@@ -63,6 +72,8 @@ function installWorkspaceDeps(workspaceSource: Directory, useMounts: boolean): C
         "/workspace/packages/eslint-config/package.json",
         workspaceSource.file("packages/eslint-config/package.json"),
       )
+      .withMountedFile("/workspace/packages/resume/package.json", workspaceSource.file("packages/resume/package.json"))
+      .withMountedFile("/workspace/packages/tools/package.json", workspaceSource.file("packages/tools/package.json"))
       // Clauderon web packages (nested workspace with own lockfile)
       .withMountedFile(
         "/workspace/packages/clauderon/web/package.json",
@@ -104,6 +115,8 @@ function installWorkspaceDeps(workspaceSource: Directory, useMounts: boolean): C
         "/workspace/packages/eslint-config/package.json",
         workspaceSource.file("packages/eslint-config/package.json"),
       )
+      .withFile("/workspace/packages/resume/package.json", workspaceSource.file("packages/resume/package.json"))
+      .withFile("/workspace/packages/tools/package.json", workspaceSource.file("packages/tools/package.json"))
       // Clauderon web packages (nested workspace with own lockfile)
       .withFile(
         "/workspace/packages/clauderon/web/package.json",
@@ -139,14 +152,16 @@ function installWorkspaceDeps(workspaceSource: Directory, useMounts: boolean): C
       .withMountedDirectory("/workspace/packages/birmel", workspaceSource.directory("packages/birmel"))
       .withMountedDirectory("/workspace/packages/bun-decompile", workspaceSource.directory("packages/bun-decompile"))
       .withMountedDirectory("/workspace/packages/dagger-utils", workspaceSource.directory("packages/dagger-utils"))
-      .withMountedDirectory("/workspace/packages/eslint-config", workspaceSource.directory("packages/eslint-config"));
+      .withMountedDirectory("/workspace/packages/eslint-config", workspaceSource.directory("packages/eslint-config"))
+      .withMountedDirectory("/workspace/packages/tools", workspaceSource.directory("packages/tools"));
   } else {
     container = container
       .withFile("/workspace/tsconfig.base.json", workspaceSource.file("tsconfig.base.json"))
       .withDirectory("/workspace/packages/birmel", workspaceSource.directory("packages/birmel"))
       .withDirectory("/workspace/packages/bun-decompile", workspaceSource.directory("packages/bun-decompile"))
       .withDirectory("/workspace/packages/dagger-utils", workspaceSource.directory("packages/dagger-utils"))
-      .withDirectory("/workspace/packages/eslint-config", workspaceSource.directory("packages/eslint-config"));
+      .withDirectory("/workspace/packages/eslint-config", workspaceSource.directory("packages/eslint-config"))
+      .withDirectory("/workspace/packages/tools", workspaceSource.directory("packages/tools"));
   }
 
   // PHASE 4: Re-run bun install to recreate workspace node_modules symlinks
@@ -181,7 +196,7 @@ export async function checkBirmel(workspaceSource: Directory): Promise<string> {
 
   const prepared = getBirmelPrepared(workspaceSource)
     .withEnvVariable("DATABASE_URL", testDbPath)
-    .withEnvVariable("OPS_DATABASE_URL", testDbPath)
+    .withEnvVariable("DATABASE_PATH", `${testDataDir}/test.db`)
     .withEnvVariable("BIRMEL_SCREENSHOTS_DIR", screenshotsDir)
     // Disable browser tests in CI - Chromium crashes in Dagger containers
     .withEnvVariable("BROWSER_ENABLED", "false")

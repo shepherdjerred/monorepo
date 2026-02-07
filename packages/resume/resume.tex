@@ -1,0 +1,156 @@
+%-------------------------
+% Resume in Latex
+% Author: Sourabh Bajaj, modified by Jerred Shepherd
+% License: MIT
+%------------------------
+
+\documentclass[letterpaper,11pt]{article}
+
+\usepackage{latexsym}
+\usepackage[empty]{fullpage}
+\usepackage{titlesec}
+\usepackage{marvosym}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{verbatim}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage[english]{babel}
+\usepackage{tabularx}
+\usepackage{xcolor}
+\usepackage{hyperref}
+
+\pagestyle{fancy}
+\fancyhf{} % clear all header and footer fields
+\fancyfoot{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% Adjust margins
+\addtolength{\oddsidemargin}{-0.5in}
+\addtolength{\evensidemargin}{-0.5in}
+\addtolength{\textwidth}{1in}
+\addtolength{\topmargin}{-.5in}
+\addtolength{\textheight}{1.0in}
+
+\urlstyle{same}
+
+\raggedbottom
+\raggedright
+\setlength{\tabcolsep}{0in}
+
+% Sections formatting
+\titleformat{\section}{
+  \vspace{-4pt}\scshape\raggedright\large
+}{}{0em}{}[\color{black}\titlerule \vspace{-5pt}]
+
+%-------------------------
+% Custom commands
+\newcommand{\resumeItem}[2]{
+  \item\small{
+    \textbf{#1}{: #2 \vspace{-2pt}}
+  }
+}
+
+\newcommand{\resumeSubheading}[4]{
+  \vspace{-1pt}\item
+    \begin{tabular*}{0.97\textwidth}[t]{l@{\extracolsep{\fill}}r}
+      \textbf{#1} & #2 \\
+      \textit{\small#3} & \textit{\small #4} \\
+    \end{tabular*}\vspace{-5pt}
+}
+
+\newcommand{\resumeSubSubheading}[2]{
+    \begin{tabular*}{0.97\textwidth}{l@{\extracolsep{\fill}}r}
+      \textit{\small#1} & \textit{\small #2} \\
+    \end{tabular*}\vspace{-5pt}
+}
+
+\newcommand{\resumeSubItem}[2]{\resumeItem{#1}{#2}\vspace{-4pt}}
+
+\renewcommand{\labelitemii}{$\circ$}
+
+\newcommand{\resumeSubHeadingListStart}{\begin{itemize}[leftmargin=*]}
+\newcommand{\resumeSubHeadingListEnd}{\end{itemize}}
+\newcommand{\resumeItemListStart}{\begin{itemize}}
+\newcommand{\resumeItemListEnd}{\end{itemize}\vspace{-5pt}}
+
+%-------------------------------------------
+%%%%%%  CV STARTS HERE  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\begin{document}
+
+%----------HEADING-----------------
+\begin{tabular*}{\textwidth}{l@{\extracolsep{\fill}}r}
+  \textbf{\Large Jerred Shepherd} & Email: \href{mailto:root@sjer.red}{root@sjer.red}\\
+  \href{https://sjer.red}{https://sjer.red} & GitHub: \href{https://github.com/shepherdjerred}{https://github.com/shepherdjerred}
+\end{tabular*}
+
+
+%-----------EDUCATION-----------------
+\section{Education}
+  \resumeSubHeadingListStart
+    \resumeSubheading
+      {Georgia Institute of Technology}{Atlanta, GA}
+      {Master of Science in Computer Science (OMSCS, Part-time)}{August 2022 -- Present}
+      \resumeItemListStart
+        \resumeItem{Coursework}{Advanced Operating Systems, Distributed Systems, Compilers}
+      \resumeItemListEnd
+    \resumeSubheading
+      {Harding University}{Searcy, AR}
+      {Bachelor of Science in Software Development}{August 2015 -- May 2019}
+  \resumeSubHeadingListEnd
+
+
+%-----------EXPERIENCE-----------------
+\section{Experience}
+  \resumeSubHeadingListStart
+
+  \resumeSubheading
+    {Pinterest}{Seattle, WA}
+    {Software Engineer II}{September 2024 - Present}
+    \resumeItemListStart
+      \resumeItem{Measurement Hub}{Led frontend development of Pinterest's advertiser measurement platform from concept to GA. Achieved 99\% report reliability (up from 50\%) by replacing synchronous APIs with async jobs, adding retry logic, and surfacing errors in UI.}
+      % TODO: add scale metric - platform has 20k+ studies over 10 years, hundreds to thousands of active advertisers
+      \resumeItem{Engineering influence}{Setting frontend patterns adopted by 15 engineers across 3 teams: strong static typing, Zod validation, type-safe data fetching, integration testing, and accessibility standards. Leading knowledge sharing on code quality and best practices.}
+      \resumeItem{Conversion Lift}{Owning end-to-end migration of Pinterest Conversion Lift as sole technical lead. Driving TypeSpec adoption for API schemas (previously untyped) and database normalization from JSON blob to relational model. Directing 3 engineers across full-stack implementation.}
+      % TODO: add scale (study count or advertiser count) when available
+    \resumeItemListEnd
+
+    \resumeSubheading
+      {Posit Software}{Remote}
+      {Software Engineer}{September 2021 - June 2024}
+      \resumeItemListStart
+        \resumeItem{Frontend}{Led rewrite of Package Manager's frontend to Vue 3 \& TypeScript. Eliminated 70\% of dependencies and reduced bundle size by 90\%. Led UI redesign improving first-use experience and accessibility.}
+        \resumeItem{Testing infrastructure}{Designed containerized testing framework enabling isolated local testing of any product component, improving team velocity and confidence.}
+        \resumeItem{macOS cross-compiler}{Created proof-of-concept cross-compiler toolchain targeting arm64 macOS using Kubernetes. Guided team to production, enabling R package builds with C/C++/Fortran/Rust.}
+        \resumeItem{Developer experience}{Shortened feedback loops by speeding up CI and improving dev environments. Set up automated linters, formatters, and dependency updates.}
+        \resumeItem{Backend}{Built Go backend APIs for authentication token generation. Migrated to portable static binary, simplifying deployment across Linux/macOS.}
+      \resumeItemListEnd
+
+    \resumeSubheading
+      {Amazon Web Services}{Seattle, WA}
+      {Software Development Engineer}{July 2019 - August 2021}
+      \resumeItemListStart
+        \resumeItem{Process automation}{Built tool to automatically root-cause issues using metrics and logs, reducing weekly manual effort from 4 hours to minutes.}
+        \resumeItem{Operations}{On-call for service managing tens of millions of EC2 instances at thousands of requests per second. Root-caused incidents and resolved customer issues.}
+        \resumeItem{Backend}{Implemented features using distributed state machine with DynamoDB, SQS, Lambda, S3. Optimized fleet configuration for 66\% reduction in server costs.}
+        \resumeItemListEnd
+
+  \resumeSubHeadingListEnd
+
+\section{Skills}
+  \textbf{Languages:} TypeScript, Go, Java, Python, SQL \\
+  \textbf{Platform:} Kubernetes, AWS, Terraform, Dagger, PostgreSQL, DynamoDB, OpenTelemetry, TypeSpec, React
+
+%-----------PROJECTS-----------------
+\section{Projects}
+  \resumeSubHeadingListStart
+    \resumeSubItem{Compiler}{Implemented a compiler from scratch for the Tiger language targeting MIPS assembly.}
+    \resumeSubItem{Paxos}{Implemented the Paxos consensus algorithm from scratch.}
+    \resumeSubItem{\href{https://github.com/shepherdjerred/castle-casters}{Game Engine}}{A cross-platform game using OpenGL.}
+    \resumeSubItem{\href{https://github.com/shepherdjerred/homelab}{Kubernetes Homelab}}{A k3s cluster running on hardware at my home. Managed with cdk8s and ArgoCD.}
+  \resumeSubHeadingListEnd
+
+%-------------------------------------------
+\end{document}

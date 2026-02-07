@@ -31,6 +31,8 @@ fn test_git_config_env_vars() {
         None,
         None, // model
         &[],
+        false, // volume_mode
+        None,  // workspace_volume
     )
     .expect("Failed to build args");
 
@@ -84,6 +86,8 @@ fn test_git_config_omitted_when_none() {
         None,
         None, // model
         &[],
+        false, // volume_mode
+        None,  // workspace_volume
     )
     .expect("Failed to build args");
 
@@ -122,6 +126,8 @@ fn test_docker_run_arg_order() {
         None,
         None, // model
         &[],
+        false, // volume_mode
+        None,  // workspace_volume
     )
     .expect("Failed to build args");
 
@@ -171,6 +177,8 @@ fn test_docker_env_vars() {
         None,
         None, // model
         &[],
+        false, // volume_mode
+        None,  // workspace_volume
     )
     .expect("Failed to build args");
 
@@ -295,6 +303,8 @@ fn test_volume_mount_format() {
         None,
         None, // model
         &[],
+        false, // volume_mode
+        None,  // workspace_volume
     )
     .expect("Failed to build args");
 
@@ -359,6 +369,8 @@ fn test_workspace_mount_destination() {
         None,
         None, // model
         &[],
+        false, // volume_mode
+        None,  // workspace_volume
     )
     .expect("Failed to build args");
 
@@ -405,6 +417,8 @@ fn test_final_command_format() {
         None,
         None, // model
         &[],
+        false, // volume_mode
+        None,  // workspace_volume
     )
     .expect("Failed to build args");
 

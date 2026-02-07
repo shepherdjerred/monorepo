@@ -54,7 +54,7 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
     } catch (err) {
       Alert.alert(
         "Error",
-        `Failed to connect: ${err instanceof Error ? err.message : "Unknown error"}`
+        `Failed to connect: ${err instanceof Error ? err.message : "Unknown error"}`,
       );
     }
   };
@@ -78,7 +78,7 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
                   { borderColor: colors.border, backgroundColor: colors.surface },
                   mode === option.value && { backgroundColor: colors.primary },
                 ]}
-                onPress={() => setMode(option.value)}
+                onPress={() => void setMode(option.value)}
               >
                 <Text
                   style={[
@@ -114,8 +114,11 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
         </View>
 
         <TouchableOpacity
-          style={[themedStyles.button, { borderColor: colors.border, backgroundColor: colors.primary }]}
-          onPress={handleSave}
+          style={[
+            themedStyles.button,
+            { borderColor: colors.border, backgroundColor: colors.primary },
+          ]}
+          onPress={() => void handleSave()}
           disabled={isSaving || !url}
         >
           <Text style={[styles.buttonText, { color: colors.textWhite }]}>
@@ -124,16 +127,24 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[themedStyles.button, { borderColor: colors.border, backgroundColor: colors.textLight }]}
-          onPress={handleTest}
+          style={[
+            themedStyles.button,
+            { borderColor: colors.border, backgroundColor: colors.textLight },
+          ]}
+          onPress={() => void handleTest()}
           disabled={!url}
         >
           <Text style={[styles.buttonText, { color: colors.textWhite }]}>Test Connection</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[themedStyles.statusButton, { borderColor: colors.border, backgroundColor: colors.surface }]}
-          onPress={() => navigation.navigate("Status")}
+          style={[
+            themedStyles.statusButton,
+            { borderColor: colors.border, backgroundColor: colors.surface },
+          ]}
+          onPress={() => {
+            navigation.navigate("Status");
+          }}
         >
           <Text style={[styles.statusButtonText, { color: colors.textDark }]}>System Status</Text>
           <Text style={[styles.statusButtonSubtext, { color: colors.textLight }]}>
@@ -143,7 +154,9 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
 
         <View style={[styles.infoSection, { borderTopColor: colors.border }]}>
           <Text style={[styles.infoTitle, { color: colors.textDark }]}>About</Text>
-          <Text style={[styles.infoText, { color: colors.textLight }]}>Clauderon Mobile v0.1.0</Text>
+          <Text style={[styles.infoText, { color: colors.textLight }]}>
+            Clauderon Mobile v0.1.0
+          </Text>
           <Text style={[styles.infoText, { color: colors.textLight }]}>
             Connect to your self-hosted Clauderon daemon
           </Text>

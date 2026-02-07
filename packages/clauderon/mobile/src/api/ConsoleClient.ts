@@ -59,10 +59,10 @@ export class ConsoleClient {
   private decoder: TextDecoder | null = null;
 
   // Error throttling to prevent performance issues
-  private errorCount: number = 0;
-  private lastErrorTime: number = 0;
+  private errorCount = 0;
+  private lastErrorTime = 0;
   private readonly MAX_ERRORS_PER_SECOND = 5;
-  private isErrorThrottled: boolean = false;
+  private isErrorThrottled = false;
 
   private listeners: {
     connected: (() => void)[];
@@ -102,8 +102,8 @@ export class ConsoleClient {
       if (!this.isErrorThrottled) {
         this.isErrorThrottled = true;
         console.error(
-          `[ConsoleClient] Error rate exceeded for session ${this.sessionId}. ` +
-          `Throttling errors to prevent performance issues. Check server logs.`
+          `[ConsoleClient] Error rate exceeded for session ${this.sessionId ?? "unknown"}. ` +
+            `Throttling errors to prevent performance issues. Check server logs.`,
         );
       }
       return false;
@@ -127,7 +127,7 @@ export class ConsoleClient {
       this.ws = new WebSocket(url);
 
       // Create decoder instance with fatal=false for graceful error handling
-      this.decoder = new TextDecoder('utf-8', { fatal: false });
+      this.decoder = new TextDecoder("utf-8", { fatal: false });
 
       this.ws.onopen = () => {
         this.emit("connected");
@@ -144,7 +144,7 @@ export class ConsoleClient {
       this.ws.onmessage = (event) => {
         try {
           const message = JSON.parse(
-            typeof event.data === "string" ? event.data : ""
+            typeof event.data === "string" ? event.data : "",
           ) as ConsoleMessage;
 
           if (message.type === "output" && typeof message.data === "string") {
@@ -158,21 +158,17 @@ export class ConsoleClient {
             if (!isValidBase64(message.data)) {
               if (this.shouldEmitError()) {
                 console.error(
-                  `[ConsoleClient] Invalid base64 format (stage: validation) for session ${this.sessionId}. ` +
-                  `Length: ${message.data.length}, ` +
-                  `First 50 chars: ${message.data.substring(0, 50)}`
+                  `[ConsoleClient] Invalid base64 format (stage: validation) for session ${this.sessionId ?? "unknown"}. ` +
+                    `Length: ${message.data.length}, ` +
+                    `First 50 chars: ${message.data.substring(0, 50)}`,
                 );
                 this.emit(
                   "error",
-                  new DecodeError(
-                    `Invalid base64 format received from server`,
-                    'validation',
-                    {
-                      sessionId: this.sessionId,
-                      dataLength: message.data.length,
-                      dataSample: message.data.substring(0, 100),
-                    }
-                  )
+                  new DecodeError(`Invalid base64 format received from server`, "validation", {
+                    sessionId: this.sessionId,
+                    dataLength: message.data.length,
+                    dataSample: message.data.substring(0, 100),
+                  }),
                 );
               }
               return;
@@ -182,15 +178,15 @@ export class ConsoleClient {
             if (message.data.length > MAX_MESSAGE_SIZE) {
               if (this.shouldEmitError()) {
                 console.error(
-                  `[ConsoleClient] Message size exceeded limit for session ${this.sessionId}. ` +
-                  `Size: ${message.data.length} bytes, Max: ${MAX_MESSAGE_SIZE} bytes`
+                  `[ConsoleClient] Message size exceeded limit for session ${this.sessionId ?? "unknown"}. ` +
+                    `Size: ${message.data.length} bytes, Max: ${MAX_MESSAGE_SIZE} bytes`,
                 );
                 this.emit(
                   "error",
                   new WebSocketError(
                     `Received message exceeds size limit (${(message.data.length / 1024).toFixed(0)}KB). ` +
-                    `Large outputs may be truncated.`
-                  )
+                      `Large outputs may be truncated.`,
+                  ),
                 );
               }
               return;
@@ -206,22 +202,22 @@ export class ConsoleClient {
               if (this.shouldEmitError()) {
                 const errorMsg = atobError instanceof Error ? atobError.message : String(atobError);
                 console.error(
-                  `[ConsoleClient] Base64 decode error (stage: atob) for session ${this.sessionId}: ${errorMsg}. ` +
-                  `Data length: ${message.data.length}, ` +
-                  `Sample: ${message.data.substring(0, 100)}`
+                  `[ConsoleClient] Base64 decode error (stage: atob) for session ${this.sessionId ?? "unknown"}: ${errorMsg}. ` +
+                    `Data length: ${message.data.length}, ` +
+                    `Sample: ${message.data.substring(0, 100)}`,
                 );
                 this.emit(
                   "error",
                   new DecodeError(
                     `Failed to decode base64: ${errorMsg}`,
-                    'base64',
+                    "base64",
                     {
                       sessionId: this.sessionId,
                       dataLength: message.data.length,
                       dataSample: message.data.substring(0, 100),
                     },
-                    atobError
-                  )
+                    atobError,
+                  ),
                 );
               }
               return;
@@ -232,32 +228,35 @@ export class ConsoleClient {
               // Use stream mode to handle incomplete UTF-8 sequences at chunk boundaries
               // fatal: false means replace invalid bytes with � instead of throwing
               // stream: true means buffer incomplete sequences for next chunk
-              const decoded = this.decoder!.decode(bytes, { stream: true });
+              if (!this.decoder) {
+                return;
+              }
+              const decoded = this.decoder.decode(bytes, { stream: true });
               this.emit("data", decoded);
             } catch (utf8Error) {
               if (this.shouldEmitError()) {
                 const errorMsg = utf8Error instanceof Error ? utf8Error.message : String(utf8Error);
                 // Include hex dump of first 32 bytes for debugging
                 const hexSample = Array.from(bytes.slice(0, 32))
-                  .map(b => '0x' + b.toString(16).padStart(2, '0'))
-                  .join(' ');
+                  .map((b) => "0x" + b.toString(16).padStart(2, "0"))
+                  .join(" ");
                 console.error(
-                  `[ConsoleClient] UTF-8 decode error (stage: utf8) for session ${this.sessionId}: ${errorMsg}. ` +
-                  `Bytes length: ${bytes.length}, ` +
-                  `Hex sample: ${hexSample}`
+                  `[ConsoleClient] UTF-8 decode error (stage: utf8) for session ${this.sessionId ?? "unknown"}: ${errorMsg}. ` +
+                    `Bytes length: ${bytes.length}, ` +
+                    `Hex sample: ${hexSample}`,
                 );
                 this.emit(
                   "error",
                   new DecodeError(
                     `Failed to decode UTF-8: ${errorMsg}`,
-                    'utf8',
+                    "utf8",
                     {
                       sessionId: this.sessionId,
                       dataLength: bytes.length,
                       dataSample: hexSample,
                     },
-                    utf8Error
-                  )
+                    utf8Error,
+                  ),
                 );
               }
               return;
@@ -267,8 +266,8 @@ export class ConsoleClient {
           this.emit(
             "error",
             new WebSocketError(
-              `Failed to parse message: ${error instanceof Error ? error.message : String(error)}`
-            )
+              `Failed to parse message: ${error instanceof Error ? error.message : String(error)}`,
+            ),
           );
         }
       };
@@ -277,8 +276,8 @@ export class ConsoleClient {
         "error",
         new WebSocketError(
           `Failed to connect: ${error instanceof Error ? error.message : String(error)}`,
-          error
-        )
+          error,
+        ),
       );
     }
   }
@@ -311,9 +310,7 @@ export class ConsoleClient {
     // Encode UTF-8 string to bytes, then to base64
     const encoder = new TextEncoder();
     const bytes = encoder.encode(data);
-    const binaryString = Array.from(bytes, (byte) =>
-      String.fromCharCode(byte)
-    ).join("");
+    const binaryString = Array.from(bytes, (byte) => String.fromCharCode(byte)).join("");
     const encoded = btoa(binaryString);
 
     const message = {
@@ -347,9 +344,7 @@ export class ConsoleClient {
   onConnected(callback: () => void): () => void {
     this.listeners.connected.push(callback);
     return () => {
-      this.listeners.connected = this.listeners.connected.filter(
-        (cb) => cb !== callback
-      );
+      this.listeners.connected = this.listeners.connected.filter((cb) => cb !== callback);
     };
   }
 
@@ -359,9 +354,7 @@ export class ConsoleClient {
   onDisconnected(callback: () => void): () => void {
     this.listeners.disconnected.push(callback);
     return () => {
-      this.listeners.disconnected = this.listeners.disconnected.filter(
-        (cb) => cb !== callback
-      );
+      this.listeners.disconnected = this.listeners.disconnected.filter((cb) => cb !== callback);
     };
   }
 
@@ -381,9 +374,7 @@ export class ConsoleClient {
   onError(callback: (error: Error) => void): () => void {
     this.listeners.error.push(callback);
     return () => {
-      this.listeners.error = this.listeners.error.filter(
-        (cb) => cb !== callback
-      );
+      this.listeners.error = this.listeners.error.filter((cb) => cb !== callback);
     };
   }
 
@@ -404,10 +395,7 @@ export class ConsoleClient {
   private emit(event: "connected" | "disconnected"): void;
   private emit(event: "data", data: string): void;
   private emit(event: "error", error: Error): void;
-  private emit(
-    event: keyof typeof this.listeners,
-    arg?: string | Error
-  ): void {
+  private emit(event: keyof typeof this.listeners, arg?: string | Error): void {
     if (event === "connected" || event === "disconnected") {
       for (const listener of this.listeners[event]) {
         listener();

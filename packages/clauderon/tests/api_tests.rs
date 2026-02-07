@@ -25,6 +25,7 @@ fn test_create_session_request_serialization() {
         agent: AgentType::ClaudeCode,
         model: None,
         dangerous_skip_checks: false,
+        dangerous_copy_creds: false,
         print_mode: false,
         plan_mode: true,
         access_mode: AccessMode::default(),
@@ -165,6 +166,7 @@ fn test_print_mode_serialization() {
         agent: AgentType::ClaudeCode,
         model: None,
         dangerous_skip_checks: true,
+        dangerous_copy_creds: false,
         print_mode: true,
         plan_mode: false,
         access_mode: AccessMode::default(),
@@ -241,6 +243,8 @@ fn test_print_mode_flows_to_docker_args() {
         None,
         None, // model
         &[],
+        false, // volume_mode
+        None,  // workspace_volume
     )
     .expect("Failed to build args");
 
@@ -356,6 +360,8 @@ fn test_interactive_mode_no_print_flag_in_docker_args() {
         None,
         None, // model
         &[],
+        false, // volume_mode
+        None,  // workspace_volume
     )
     .expect("Failed to build args");
 

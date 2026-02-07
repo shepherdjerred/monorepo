@@ -16,7 +16,7 @@ tokio = { version = "1", features = ["full"] }
 tokio-util = { version = "0.7", features = ["codec"] }
 
 # CLI
-clap = { version = "4", features = ["derive"] }
+clap = { version = "4", features = ["derive", "env"] }
 
 # TUI
 ratatui = "0.30"
@@ -46,7 +46,7 @@ anyhow = "1"
 
 # Logging
 tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
 tracing-appender = "0.2"
 
 # Error reporting
@@ -64,6 +64,7 @@ mime_guess = "2"
 dashmap = "6"
 arboard = "3.4"  # Cross-platform clipboard access
 users = "0.11"  # Safe Unix user/group info (for getuid)
+walkdir = "2"  # Recursive directory traversal (for Codex history file search)
 
 # HTTP Proxy with TLS interception
 hudsucker = { version = "0.24", default-features = false, features = ["rcgen-ca", "rustls-client", "http2"] }
@@ -108,7 +109,6 @@ webauthn-rs-proto = "0.5"
 reqwest = { version = "0.13", features = ["json", "rustls"], default-features = false }
 
 [dev-dependencies]
-cargo-husky = { version = "1", features = ["precommit-hook", "run-cargo-fmt", "run-cargo-clippy"] }
 tempfile = "3"
 proptest = "1.0"
 
@@ -128,8 +128,6 @@ pedantic = { level = "warn", priority = -1 }
 nursery = { level = "warn", priority = -1 }
 # Allow noisy lints that don't meaningfully improve code quality
 module_name_repetitions = "allow"
-missing_errors_doc = "allow"
-missing_panics_doc = "allow"
 doc_markdown = "allow"
 similar_names = "allow"
 missing_const_for_fn = "allow"
@@ -164,25 +162,13 @@ unreadable_literal = "allow"
 doc_lazy_continuation = "allow"
 # Unused self
 unused_self = "allow"
-# IP addresses
-hardcoded_ip_addresses = "allow"
-# Debug formatting
-debug_format = "allow"
 # Let if seq - complex refactoring
 useless_let_if_seq = "allow"
-# IP address literals
-ip_literal_addrs = "allow"
 # Test-related lints
 used_underscore_binding = "allow"
 used_underscore_items = "allow"
 no_effect_underscore_binding = "allow"
 ignore_without_reason = "allow"
-# Deprecated methods - will fix later
-deprecated = "allow"
-# Dead code in tests
-dead_code = "allow"
-# Unreachable patterns from refactoring
-unreachable_patterns = "allow"
 # Significant drop tightening - optimization, not correctness
 significant_drop_tightening = "allow"
 # Unnecessary wraps - API consistency
@@ -191,7 +177,43 @@ unnecessary_wraps = "allow"
 wildcard_in_or_patterns = "allow"
 # Manual let...else - style choice
 manual_let_else = "allow"
-# Cast possible truncation - common in UI code with known bounds
-cast_possible_truncation = "allow"
-# Cast sign loss - common in conversions with known bounds
-cast_sign_loss = "allow"
+
+# =============================================================================
+# Build Profiles - Optimized for compile time
+# =============================================================================
+
+[profile.dev]
+# Faster incremental builds
+incremental = true
+# Minimal debug info (faster compile, still get backtraces)
+debug = 1
+# Split debug info on macOS for faster linking
+split-debuginfo = "unpacked"
+
+[profile.dev.package."*"]
+# Optimize dependencies even in dev mode
+# This makes dependencies compile slower ONCE, but run much faster
+# Net win because deps are cached and your code changes frequently
+opt-level = 2
+
+[profile.release]
+# Use thin LTO for faster release builds (vs fat LTO)
+# ~10-20% faster compile, ~5% slower runtime (usually acceptable)
+lto = "thin"
+# Single codegen unit for better optimization (worth it for release)
+codegen-units = 1
+# Strip symbols for smaller binary
+strip = true
+
+[profile.test]
+# Faster test compilation
+incremental = true
+debug = 1
+# Light optimization for faster test execution (tests run faster)
+opt-level = 1
+# Split debug info on macOS for faster linking
+split-debuginfo = "unpacked"
+
+[profile.bench]
+# Inherit from release
+inherits = "release"

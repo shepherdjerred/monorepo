@@ -1,48 +1,273 @@
 [tools]
 rust = "latest"
 
+# =============================================================================
+# Setup Tasks (one-time setup for faster builds)
+# =============================================================================
+
+[tasks.setup-linker]
+description = "Install fast linker for your platform (mold on Linux, lld on macOS)"
+run = """
+#!/usr/bin/env bash
+set -e
+
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    echo "macOS detected - installing lld via Homebrew..."
+    if ! command -v lld &> /dev/null; then
+        brew install llvm
+        LLVM_PATH="$(brew --prefix llvm)/bin"
+        echo "lld installed. Add to your shell profile:"
+        echo "  export PATH=$LLVM_PATH:$""PATH"
+    else
+        echo "lld already installed"
+    fi
+elif [[ "$OSTYPE" == "linux"* ]]; then
+    echo "Linux detected - installing mold..."
+    if ! command -v mold &> /dev/null; then
+        if command -v apt-get &> /dev/null; then
+            sudo apt-get update && sudo apt-get install -y mold clang
+        elif command -v dnf &> /dev/null; then
+            sudo dnf install -y mold clang
+        elif command -v pacman &> /dev/null; then
+            sudo pacman -S mold clang
+        else
+            echo "Please install mold manually: https://github.com/rui314/mold"
+            exit 1
+        fi
+    else
+        echo "mold already installed"
+    fi
+fi
+echo "Done! Your builds should now link much faster."
+"""
+
+[tasks.setup-tools]
+description = "Install optional dev tools (cargo-nextest for faster tests, bacon for watching)"
+run = """
+#!/usr/bin/env bash
+set -e
+
+echo "Installing cargo-nextest (faster test runner)..."
+cargo install cargo-nextest --locked
+
+echo "Installing bacon (cargo watcher with better UX)..."
+cargo install bacon --locked
+
+echo "Installing cargo-watch (for cargo watch commands)..."
+cargo install cargo-watch --locked
+
+echo "Done! Use 'mise run test-fast' for faster tests."
+"""
+
+# =============================================================================
+# Frontend Build Tasks
+# =============================================================================
+
+[tasks.build-docs]
+description = "Build the documentation site"
+sources = ["docs/src/**/*", "docs/public/**/*", "docs/astro.config.mjs", "docs/package.json"]
+outputs = ["docs/dist/**/*"]
+run = "cd docs && bun install && bun run build"
+
+[tasks.build-web]
+description = "Build the web frontend"
+sources = ["web/shared/src/**/*", "web/client/src/**/*", "web/frontend/src/**/*", "web/*/package.json"]
+outputs = ["web/frontend/dist/**/*", "web/client/dist/**/*", "web/shared/dist/**/*"]
+run = "cd web && bun install && bun run build"
+
+[tasks.lint-web]
+description = "Lint web packages"
+run = "cd web && bun run lint"
+
+[tasks.typecheck-web]
+description = "Typecheck web packages"
+run = "cd web && bun run typecheck"
+
+[tasks.typecheck-docs]
+description = "Typecheck documentation"
+run = "cd docs && bun run typecheck"
+
+# =============================================================================
+# Mobile Tasks
+# =============================================================================
+
+[tasks.lint-mobile]
+description = "Lint mobile package"
+run = "cd mobile && bun run lint"
+
+[tasks.typecheck-mobile]
+description = "Typecheck mobile package"
+run = "cd mobile && bun run typecheck"
+
+[tasks.test-mobile]
+description = "Run mobile tests"
+run = "cd mobile && bun run test"
+
+[tasks.format-mobile]
+description = "Format mobile package"
+run = "cd mobile && bun run format"
+
+[tasks.format-check-mobile]
+description = "Check mobile formatting"
+run = "cd mobile && bun run format:check"
+
+# =============================================================================
+# Rust Build Tasks
+# =============================================================================
+
 [tasks.build]
-description = "Build the project"
+description = "Build the project (builds docs and web first)"
+depends = ["build-docs", "build-web"]
 run = "cargo build"
 
 [tasks.release]
-description = "Build in release mode"
+description = "Build in release mode (builds docs and web first)"
+depends = ["build-docs", "build-web"]
 run = "cargo build --release"
 
+[tasks.install]
+description = "Install clauderon binary (debug mode, fast build)"
+depends = ["build-docs", "build-web"]
+run = """
+cargo install --path . --debug
+pkill -f 'clauderon daemon' 2>/dev/null || true
+"""
+
+[tasks.install-release]
+description = "Install clauderon binary (release mode, optimized but slow build)"
+depends = ["build-docs", "build-web"]
+run = """
+cargo install --path .
+pkill -f 'clauderon daemon' 2>/dev/null || true
+"""
+
+# =============================================================================
+# Rust Quality Tasks
+# =============================================================================
+
 [tasks.test]
-description = "Run tests"
+description = "Run Rust tests"
+depends = ["build-docs", "build-web"]
 run = "cargo test"
+
+[tasks.test-fast]
+description = "Run Rust tests with nextest (faster, requires cargo-nextest)"
+depends = ["build-docs", "build-web"]
+run = "cargo nextest run"
+
+[tasks.test-config]
+description = "Run fast config isolation tests"
+depends = ["build-docs", "build-web"]
+run = "cargo nextest run --test config_isolation_tests"
 
 [tasks.check]
 description = "Run cargo check"
+depends = ["build-docs", "build-web"]
 run = "cargo check"
 
 [tasks.clippy]
 description = "Run clippy linter"
+depends = ["build-docs", "build-web"]
 run = "cargo clippy"
 
+[tasks.clippy-strict]
+description = "Run clippy with warnings as errors (for CI)"
+depends = ["build-docs", "build-web"]
+run = "cargo clippy -- -D warnings"
+
 [tasks.fmt]
-description = "Format code"
+description = "Format Rust code"
 run = "cargo fmt"
 
 [tasks.fmt-check]
-description = "Check formatting"
+description = "Check Rust formatting"
 run = "cargo fmt --check"
 
+# =============================================================================
+# Cleanup Tasks
+# =============================================================================
+
 [tasks.clean]
-description = "Clean build artifacts"
+description = "Clean all build artifacts"
+run = """
+cargo clean
+rm -rf docs/dist
+rm -rf web/shared/dist web/client/dist web/frontend/dist
+rm -rf web/shared/src/generated/*
+"""
+
+[tasks.clean-rust]
+description = "Clean only Rust build artifacts"
 run = "cargo clean"
 
-[tasks.install]
-description = "Install clauderon binary to ~/.cargo/bin"
-run = "cargo install --path ."
+[tasks.clean-web]
+description = "Clean only web build artifacts"
+run = "cd web && bun run clean"
+
+# =============================================================================
+# CI Tasks
+# =============================================================================
+
+[tasks.ci]
+description = "Run all CI checks (format, lint, typecheck, test, build)"
+depends = ["fmt-check", "build-docs", "build-web"]
+run = """
+cargo clippy -- -D warnings
+cd web && bun run lint
+cd docs && bun run typecheck
+cd web && bun run typecheck
+cd mobile && bun run lint
+cd mobile && bun run typecheck
+cd mobile && bun run format:check
+cd mobile && bun run test
+cargo test
+cargo build --release
+"""
+
+[tasks.ci-quick]
+description = "Quick CI check (no release build)"
+depends = ["fmt-check", "build-docs", "build-web"]
+run = """
+cargo clippy -- -D warnings
+cargo test
+cargo check
+"""
+
+# =============================================================================
+# Development Tasks
+# =============================================================================
 
 [tasks.dev]
 description = "Build and run daemon in dev mode (one-shot)"
+depends = ["install"]
+run = "CLAUDERON_DEV=1 clauderon daemon"
+
+[tasks.watch]
+description = "Watch for changes and run cargo check (requires bacon or cargo-watch)"
 run = """
-mise run install
-cd web && bun run build && cd ..
-CLAUDERON_DEV=1 clauderon daemon
+#!/usr/bin/env bash
+if command -v bacon &> /dev/null; then
+    bacon
+elif command -v cargo-watch &> /dev/null; then
+    cargo watch -x check
+else
+    echo "Please install bacon or cargo-watch: mise run setup-tools"
+    exit 1
+fi
+"""
+
+[tasks.watch-test]
+description = "Watch for changes and run tests"
+run = """
+#!/usr/bin/env bash
+if command -v bacon &> /dev/null; then
+    bacon test
+elif command -v cargo-watch &> /dev/null; then
+    cargo watch -x test
+else
+    echo "Please install bacon or cargo-watch: mise run setup-tools"
+    exit 1
+fi
 """
 
 [tasks.dev-watch]
@@ -58,7 +283,6 @@ pkill -f 'clauderon daemon' 2>/dev/null || true
 if ! command -v clauderon &> /dev/null; then
     echo "Initial build..."
     mise run install
-    cd web && bun run build && cd ..
 fi
 
 while true; do
@@ -71,11 +295,8 @@ while true; do
         echo "New commits on origin/main, pulling..."
         git pull --rebase --autostash --quiet
 
-        echo "Building Rust binary..."
+        echo "Rebuilding (docs, web, binary)..."
         mise run install
-
-        echo "Building frontend..."
-        cd web && bun run build && cd ..
 
         echo "Restarting daemon..."
         pkill -f 'clauderon daemon' 2>/dev/null || true
@@ -91,4 +312,3 @@ while true; do
     sleep 10
 done
 """
-

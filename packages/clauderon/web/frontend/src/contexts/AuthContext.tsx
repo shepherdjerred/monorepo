@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react";
 import type { AuthStatus, AuthUser } from "@clauderon/shared";
 import { useClauderonClient } from "../hooks/useClauderonClient";
 
@@ -16,7 +16,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [authStatus, setAuthStatus] = useState<AuthStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const refreshAuthStatus = async () => {
+  const refreshAuthStatus = useCallback(async () => {
     try {
       const status = await client.getAuthStatus();
       setAuthStatus(status);
@@ -34,11 +34,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [client]);
 
   useEffect(() => {
-    refreshAuthStatus();
-  }, []);
+    void refreshAuthStatus();
+  }, [refreshAuthStatus]);
 
   const currentUser = authStatus?.current_user ?? null;
 

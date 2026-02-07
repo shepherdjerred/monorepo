@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
-import type { Session, CreateSessionRequest, AccessMode } from "@clauderon/client";
+import type { Session, CreateSessionRequest, AccessMode, SessionHealthReport } from "@clauderon/client";
 import { useClauderonClient } from "../hooks/useClauderonClient";
 import { useSessionEvents } from "../hooks/useSessionEvents";
 import type { ClauderonClient } from "@clauderon/client";
@@ -18,6 +18,15 @@ type SessionContextValue = {
   updateSession: (id: string, title?: string, description?: string) => Promise<void>;
   regenerateMetadata: (id: string) => Promise<void>;
   client: ClauderonClient;
+  // Health state
+  healthReports: Map<string, SessionHealthReport>;
+  refreshHealth: () => Promise<void>;
+  getSessionHealth: (sessionId: string) => SessionHealthReport | undefined;
+  // Health actions
+  startSession: (id: string) => Promise<void>;
+  wakeSession: (id: string) => Promise<void>;
+  recreateSession: (id: string) => Promise<void>;
+  cleanupSession: (id: string) => Promise<void>;
 }
 
 const SessionContext = createContext<SessionContextValue | undefined>(undefined);
@@ -27,6 +36,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [sessions, setSessions] = useState<Map<string, Session>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [healthReports, setHealthReports] = useState<Map<string, SessionHealthReport>>(new Map());
 
   const refreshSessions = useCallback(async (showLoading = true) => {
     try {
@@ -45,6 +55,25 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       }
     }
   }, [client]);
+
+  const refreshHealth = useCallback(async () => {
+    try {
+      const health = await client.getHealth();
+      const newHealthReports = new Map(
+        health.sessions.map((report) => [report.session_id, report])
+      );
+      setHealthReports(newHealthReports);
+    } catch (err) {
+      console.error("Failed to fetch health data:", err);
+    }
+  }, [client]);
+
+  const getSessionHealth = useCallback(
+    (sessionId: string): SessionHealthReport | undefined => {
+      return healthReports.get(sessionId);
+    },
+    [healthReports]
+  );
 
   const createSession = useCallback(
     async (request: CreateSessionRequest) => {
@@ -115,6 +144,38 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     [client, refreshSessions]
   );
 
+  const startSession = useCallback(
+    async (id: string) => {
+      await client.startSession(id);
+      await Promise.all([refreshSessions(), refreshHealth()]);
+    },
+    [client, refreshSessions, refreshHealth]
+  );
+
+  const wakeSession = useCallback(
+    async (id: string) => {
+      await client.wakeSession(id);
+      await Promise.all([refreshSessions(), refreshHealth()]);
+    },
+    [client, refreshSessions, refreshHealth]
+  );
+
+  const recreateSession = useCallback(
+    async (id: string) => {
+      await client.recreateSession(id);
+      await Promise.all([refreshSessions(), refreshHealth()]);
+    },
+    [client, refreshSessions, refreshHealth]
+  );
+
+  const cleanupSession = useCallback(
+    async (id: string) => {
+      await client.cleanupSession(id);
+      await Promise.all([refreshSessions(), refreshHealth()]);
+    },
+    [client, refreshSessions, refreshHealth]
+  );
+
   // Handle real-time events
   const handleEvent = useCallback((event: { type: string; payload?: Session | { id: string } }) => {
     switch (event.type) {
@@ -122,19 +183,17 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       case "SessionUpdated": {
         // Event payload contains the full session object
         const session = event.payload as Session;
-        if (session) {
-          setSessions((prev) => {
-            const newSessions = new Map(prev);
-            newSessions.set(session.id, session);
-            return newSessions;
-          });
-        }
+        setSessions((prev) => {
+          const newSessions = new Map(prev);
+          newSessions.set(session.id, session);
+          return newSessions;
+        });
         break;
       }
       case "SessionDeleted": {
         // Event payload contains { id: string }
         const payload = event.payload as { id: string };
-        if (payload?.id) {
+        if (payload.id) {
           setSessions((prev) => {
             const newSessions = new Map(prev);
             newSessions.delete(payload.id);
@@ -151,7 +210,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   // Initial load
   useEffect(() => {
     void refreshSessions();
-  }, [refreshSessions]);
+    void refreshHealth();
+  }, [refreshSessions, refreshHealth]);
 
   return (
     <SessionContext.Provider
@@ -169,6 +229,13 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         updateSession,
         regenerateMetadata,
         client,
+        healthReports,
+        refreshHealth,
+        getSessionHealth,
+        startSession,
+        wakeSession,
+        recreateSession,
+        cleanupSession,
       }}
     >
       {children}
