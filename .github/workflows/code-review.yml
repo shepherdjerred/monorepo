@@ -15,12 +15,63 @@ permissions:
   id-token: write
 
 jobs:
+  dep-update-check:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    outputs:
+      dependency_only: ${{ steps.check.outputs.dependency_only }}
+    steps:
+      - uses: actions/github-script@v7
+        id: check
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            if (!pr) {
+              core.setOutput("dependency_only", "false");
+              return;
+            }
+
+            const files = await github.paginate(github.rest.pulls.listFiles, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number,
+              per_page: 100,
+            });
+
+            const patterns = [
+              /(^|\/)package\.json$/,
+              /(^|\/)bun\.lockb?$/,
+              /(^|\/)package-lock\.json$/,
+              /(^|\/)pnpm-lock\.yaml$/,
+              /(^|\/)yarn\.lock$/,
+              /(^|\/)Cargo\.toml$/,
+              /(^|\/)Cargo\.lock$/,
+              /(^|\/)go\.mod$/,
+              /(^|\/)go\.sum$/,
+              /(^|\/)requirements.*\.txt$/,
+              /(^|\/)pyproject\.toml$/,
+              /(^|\/)poetry\.lock$/,
+              /(^|\/)Pipfile(\.lock)?$/,
+              /(^|\/)Gemfile(\.lock)?$/,
+              /(^|\/)composer\.(json|lock)$/,
+              /(^|\/)(build|settings)\.gradle(\.kts)?$/,
+              /(^|\/)gradle\.lockfile$/,
+              /(^|\/)gradle\/libs\.versions\.toml$/,
+            ];
+
+            const isDependencyFile = (filename) => patterns.some((re) => re.test(filename));
+            const dependencyOnly = files.length > 0 && files.every((file) => isDependencyFile(file.filename));
+
+            core.setOutput("dependency_only", dependencyOnly ? "true" : "false");
+
   # Automatic review on new/updated PRs
   claude-code-review:
     # Only run for PRs from shepherdjerred on PR events (not comments)
     if: |
       github.event_name == 'pull_request' &&
-      github.event.pull_request.user.login == 'shepherdjerred'
+      github.event.pull_request.user.login == 'shepherdjerred' &&
+      needs.dep-update-check.outputs.dependency_only != 'true'
+    needs: [dep-update-check]
     runs-on: [monorepo-runner-set]
 
     steps:
