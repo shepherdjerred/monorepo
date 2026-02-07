@@ -116,11 +116,19 @@ for dirname, commit_date in subdirs_with_dates:
             cog.outl("*No description available.*")
     cog.outl()
 ]]]-->
-**7 active packages**
+**10 active packages**
 
-### [mux-site](https://github.com/shepherdjerred/monorepo/tree/main/packages/mux-site) (2026-01-04)
+### [fonts](https://github.com/shepherdjerred/monorepo/tree/main/packages/fonts) (2026-01-31)
 
-This project is a website built using Astro, leveraging the @astrojs/starlight theme for documentation and sharp for image processing. TypeScript is used for type safety during development. The source code and static files are organized under the src and public directories, respectively, while Astro's configuration and tooling manage site generation and build processes.
+This project is a Python script that customizes the Berkeley Mono font by applying patches or modifications. It uses the `fontTools` library to manipulate and update font files, enabling users to automate font customization tasks for Berkeley Mono.
+
+### [tools](https://github.com/shepherdjerred/monorepo/tree/main/packages/tools) (2026-01-31)
+
+This project is a command-line tool (tools) designed to streamline development workflows by providing CLI utilities for interacting with GitHub pull requests (PR), PagerDuty incidents, and Bugsink issues. Written in TypeScript and intended to run with Bun, it offers commands to check PR health, retrieve CI logs, and view or list incidents and issues from external services using environment variables for API access. Key technologies include Node.js utilities, TypeScript, and integration points for PagerDuty and Bugsink APIs.
+
+### [resume](https://github.com/shepherdjerred/monorepo/tree/main/packages/resume) (2026-01-27)
+
+This project is a LaTeX-based resume that is built and deployed using Dagger. The repository includes the resume source in LaTeX format, a sample HTML file, and configuration files for building and automation. It uses no JavaScript dependencies and focuses on automated, reproducible resume generation via modern DevOps tooling.
 
 ### [clauderon](https://github.com/shepherdjerred/monorepo/tree/main/packages/clauderon) (2026-01-01)
 
@@ -133,6 +141,10 @@ This project, bun-decompile, is a CLI tool designed to extract and de-minify sou
 ### [claude-plugin](https://github.com/shepherdjerred/monorepo/tree/main/packages/claude-plugin) (2025-12-23)
 
 This project implements a system for managing and utilizing AI agents. It uses Python and likely leverages frameworks such as LangChain for orchestrating agent workflows. The agents can be configured for various tasks, enabling flexible and modular AI-powered solutions.
+
+### [a2ui-poc](https://github.com/shepherdjerred/monorepo/tree/main/packages/a2ui-poc) (2025-12-20)
+
+This project, as outlined in CLAUDE.md, appears to be an AI-related application or system leveraging Anthropic's Claude model. It focuses on providing documentation, usage guidelines, or configuration help for integrating the Claude AI assistant into broader workflows or software projects. The key technology at its core is the Claude language model developed by Anthropic.
 
 ### [birmel](https://github.com/shepherdjerred/monorepo/tree/main/packages/birmel) (2025-12-20)
 

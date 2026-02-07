@@ -1,0 +1,1 @@
+This project is a LaTeX-based resume that is built and deployed using Dagger. The repository includes the resume source in LaTeX format, a sample HTML file, and configuration files for building and automation. It uses no JavaScript dependencies and focuses on automated, reproducible resume generation via modern DevOps tooling.

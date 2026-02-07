@@ -1,0 +1,1 @@
+This project is a Python script that customizes the Berkeley Mono font by applying patches or modifications. It uses the `fontTools` library to manipulate and update font files, enabling users to automate font customization tasks for Berkeley Mono.

@@ -1,0 +1,1 @@
+This project, as outlined in CLAUDE.md, appears to be an AI-related application or system leveraging Anthropic's Claude model. It focuses on providing documentation, usage guidelines, or configuration help for integrating the Claude AI assistant into broader workflows or software projects. The key technology at its core is the Claude language model developed by Anthropic.
