@@ -299,6 +299,8 @@ export interface FeatureFlags {
 	enable_usage_tracking: boolean;
 	/** Enable Kubernetes backend (experimental, disabled by default) */
 	enable_kubernetes_backend: boolean;
+	/** Enable read-only mode (experimental, security issues #424, #205) */
+	enable_readonly_mode: boolean;
 }
 
 /** Feature flags response for the frontend */

@@ -27,6 +27,9 @@ pub struct FeatureFlags {
 
     /// Enable Kubernetes backend (experimental, disabled by default)
     pub enable_kubernetes_backend: bool,
+
+    /// Enable read-only mode (experimental, security issues #424, #205)
+    pub enable_readonly_mode: bool,
 }
 
 impl Default for FeatureFlags {
@@ -38,6 +41,7 @@ impl Default for FeatureFlags {
             enable_proxy_port_reuse: false,
             enable_usage_tracking: false,
             enable_kubernetes_backend: false,
+            enable_readonly_mode: false,
         }
     }
 }
@@ -51,6 +55,8 @@ impl FeatureFlags {
     /// - enable_auto_reconcile: Automatic session reconciliation on startup
     /// - enable_proxy_port_reuse: Session proxy port reuse behavior
     /// - enable_usage_tracking: Claude usage tracking via API
+    /// - enable_kubernetes_backend: Kubernetes backend support
+    /// - enable_readonly_mode: Read-only mode access restrictions
     ///
     /// # Errors
     /// Returns an error if the TOML config file exists but cannot be parsed
@@ -113,6 +119,7 @@ impl FeatureFlags {
             enable_kubernetes_backend: parse_env_bool_option(
                 "CLAUDERON_FEATURE_ENABLE_KUBERNETES_BACKEND",
             ),
+            enable_readonly_mode: parse_env_bool_option("CLAUDERON_FEATURE_ENABLE_READONLY_MODE"),
         }
     }
 
@@ -139,6 +146,9 @@ impl FeatureFlags {
         if other.enable_kubernetes_backend != defaults.enable_kubernetes_backend {
             self.enable_kubernetes_backend = other.enable_kubernetes_backend;
         }
+        if other.enable_readonly_mode != defaults.enable_readonly_mode {
+            self.enable_readonly_mode = other.enable_readonly_mode;
+        }
     }
 
     /// Merge environment variable overrides (which are Option<bool> to distinguish "not set")
@@ -160,6 +170,9 @@ impl FeatureFlags {
         }
         if let Some(val) = env.enable_kubernetes_backend {
             self.enable_kubernetes_backend = val;
+        }
+        if let Some(val) = env.enable_readonly_mode {
+            self.enable_readonly_mode = val;
         }
     }
 
@@ -183,6 +196,9 @@ impl FeatureFlags {
         if let Some(val) = cli.enable_kubernetes_backend {
             self.enable_kubernetes_backend = val;
         }
+        if let Some(val) = cli.enable_readonly_mode {
+            self.enable_readonly_mode = val;
+        }
     }
 
     /// Log the current feature flag state (for observability)
@@ -201,6 +217,7 @@ impl FeatureFlags {
             "  enable_kubernetes_backend: {}",
             self.enable_kubernetes_backend
         );
+        tracing::info!("  enable_readonly_mode: {}", self.enable_readonly_mode);
     }
 }
 
@@ -213,6 +230,7 @@ pub struct CliFeatureFlags {
     pub enable_proxy_port_reuse: Option<bool>,
     pub enable_usage_tracking: Option<bool>,
     pub enable_kubernetes_backend: Option<bool>,
+    pub enable_readonly_mode: Option<bool>,
 }
 
 /// Environment variable feature flag overrides (returns Option<bool> to distinguish "not set")
@@ -224,6 +242,7 @@ struct EnvFeatureFlags {
     pub enable_proxy_port_reuse: Option<bool>,
     pub enable_usage_tracking: Option<bool>,
     pub enable_kubernetes_backend: Option<bool>,
+    pub enable_readonly_mode: Option<bool>,
 }
 
 /// Configuration file structure
@@ -447,6 +466,7 @@ mod tests {
         assert!(!flags.enable_proxy_port_reuse);
         assert!(!flags.enable_usage_tracking);
         assert!(!flags.enable_kubernetes_backend);
+        assert!(!flags.enable_readonly_mode);
     }
 
     #[test]
@@ -473,6 +493,7 @@ mod tests {
             enable_proxy_port_reuse: true,
             enable_usage_tracking: true,
             enable_kubernetes_backend: true,
+            enable_readonly_mode: false,
         };
 
         // Merge with defaults - should not change anything
@@ -486,6 +507,7 @@ mod tests {
         assert!(base.enable_proxy_port_reuse);
         assert!(base.enable_usage_tracking);
         assert!(base.enable_kubernetes_backend);
+        assert!(!base.enable_readonly_mode);
     }
 
     #[test]
@@ -558,5 +580,6 @@ mod tests {
         assert!(flags.enable_auto_reconcile);
         assert!(!flags.enable_proxy_port_reuse);
         assert!(!flags.enable_usage_tracking);
+        assert!(!flags.enable_readonly_mode);
     }
 }

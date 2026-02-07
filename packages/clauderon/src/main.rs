@@ -194,6 +194,11 @@ ENVIRONMENT:
         /// Env: CLAUDERON_FEATURE_ENABLE_KUBERNETES_BACKEND
         #[arg(long, help_heading = "Feature Flags")]
         enable_kubernetes_backend: Option<bool>,
+
+        /// Enable read-only mode (experimental, security issues #424, #205)
+        /// Can also be set via CLAUDERON_FEATURE_ENABLE_READONLY_MODE environment variable
+        #[arg(long, help_heading = "Feature Flags")]
+        enable_readonly_mode: Option<bool>,
     },
 
     /// Launch the terminal UI
@@ -559,6 +564,7 @@ async fn main() -> anyhow::Result<()> {
             enable_proxy_port_reuse,
             enable_usage_tracking,
             enable_kubernetes_backend,
+            enable_readonly_mode,
         } => {
             // Build CLI feature flag overrides
             let cli_flags = clauderon::feature_flags::CliFeatureFlags {
@@ -568,6 +574,7 @@ async fn main() -> anyhow::Result<()> {
                 enable_proxy_port_reuse,
                 enable_usage_tracking,
                 enable_kubernetes_backend,
+                enable_readonly_mode,
             };
 
             // Build CLI server config overrides
@@ -634,6 +641,16 @@ async fn main() -> anyhow::Result<()> {
             };
 
             let access_mode = access_mode.parse::<core::session::AccessMode>()?;
+
+            // Validate read-only mode is enabled if requested
+            if access_mode == core::session::AccessMode::ReadOnly {
+                let flags = clauderon::feature_flags::FeatureFlags::load(None)?;
+                if !flags.enable_readonly_mode {
+                    anyhow::bail!(
+                        "Read-only mode is not available. Enable with --enable-readonly-mode or CLAUDERON_FEATURE_ENABLE_READONLY_MODE=true"
+                    );
+                }
+            }
 
             let mut client = api::client::Client::connect().await?;
             let (session, warnings) = client
@@ -718,6 +735,17 @@ async fn main() -> anyhow::Result<()> {
         }
         Commands::SetAccessMode { session, mode } => {
             let access_mode = mode.parse::<core::session::AccessMode>()?;
+
+            // Validate read-only mode is enabled if requested
+            if access_mode == core::session::AccessMode::ReadOnly {
+                let flags = clauderon::feature_flags::FeatureFlags::load(None)?;
+                if !flags.enable_readonly_mode {
+                    anyhow::bail!(
+                        "Read-only mode is not available. Enable with --enable-readonly-mode or CLAUDERON_FEATURE_ENABLE_READONLY_MODE=true"
+                    );
+                }
+            }
+
             let mut client = api::client::Client::connect().await?;
             client.update_access_mode(&session, access_mode).await?;
             println!("Updated '{session}' to {access_mode}");

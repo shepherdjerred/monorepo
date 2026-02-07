@@ -319,6 +319,25 @@ impl SessionManager {
         Arc::clone(&self.console_manager)
     }
 
+    /// Validate that read-only mode is allowed if requested
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if read-only mode is requested but the feature flag is disabled.
+    fn validate_readonly_mode_allowed(
+        &self,
+        access_mode: super::session::AccessMode,
+    ) -> anyhow::Result<()> {
+        if access_mode == super::session::AccessMode::ReadOnly
+            && !self.feature_flags.enable_readonly_mode
+        {
+            anyhow::bail!(
+                "Read-only mode is not available. This feature is experimental and must be explicitly enabled."
+            );
+        }
+        Ok(())
+    }
+
     /// Get reference to Kubernetes backend
     ///
     /// Returns the Kubernetes backend for API operations like listing storage classes.
@@ -912,6 +931,9 @@ impl SessionManager {
                 self.max_sessions
             );
         }
+
+        // Validate read-only mode is enabled if requested
+        self.validate_readonly_mode_allowed(access_mode)?;
 
         // Process repositories (multi-repo mode or legacy single-repo mode)
         let repo_inputs = if let Some(repos) = repositories {
@@ -1787,6 +1809,9 @@ impl SessionManager {
                 );
             }
         }
+
+        // Validate read-only mode is enabled if requested
+        self.validate_readonly_mode_allowed(access_mode)?;
 
         // Validate and resolve git repository path
         let repo_path_buf = std::path::PathBuf::from(&repo_path);
@@ -3434,6 +3459,9 @@ impl SessionManager {
             .iter_mut()
             .find(|s| s.name == id_or_name || s.id.to_string() == id_or_name)
             .ok_or_else(|| anyhow::anyhow!("Session not found: {id_or_name}"))?;
+
+        // Validate read-only mode is enabled if requested
+        self.validate_readonly_mode_allowed(new_mode)?;
 
         let session_id = session.id;
         let backend = session.backend;
