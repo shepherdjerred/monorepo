@@ -140,36 +140,44 @@ HEAD_SHA="\${HEAD_SHA}"
 
 echo "Analyzing PR #\${PR_NUMBER}" >&2
 
-# Fetch PR data
-PR_DATA=$(gh api "repos/${REPO}/pulls/\${PR_NUMBER}")
-
-ADDITIONS=$(echo "\$PR_DATA" | jq -r '.additions')
-DELETIONS=$(echo "\$PR_DATA" | jq -r '.deletions')
-CHANGED_FILES=$(echo "\$PR_DATA" | jq -r '.changed_files')
-COMMITS=$(echo "\$PR_DATA" | jq -r '.commits')
+# Fetch PR data (use gh --jq to avoid external jq dependency)
+ADDITIONS=$(gh api "repos/${REPO}/pulls/\${PR_NUMBER}" --jq '.additions')
+DELETIONS=$(gh api "repos/${REPO}/pulls/\${PR_NUMBER}" --jq '.deletions')
+CHANGED_FILES=$(gh api "repos/${REPO}/pulls/\${PR_NUMBER}" --jq '.changed_files')
+COMMITS=$(gh api "repos/${REPO}/pulls/\${PR_NUMBER}" --jq '.commits')
 
 echo "PR Metrics: +\${ADDITIONS} -\${DELETIONS}, \${CHANGED_FILES} files, \${COMMITS} commits" >&2
 
 # Handle empty PR
 if [ "\$COMMITS" -eq 0 ]; then
   echo "PR has no commits" >&2
-  jq -n \\
-    --argjson shouldSkip true \\
-    --argjson maxTurns 35 \\
-    --arg complexity "empty" \\
-    --argjson isRereview false \\
-    --arg previousState "none" \\
-    --argjson previousWasApproved false \\
-    --argjson totalChanges 0 \\
-    --argjson changedFiles 0 \\
-    '{shouldSkip: $shouldSkip, maxTurns: $maxTurns, complexity: $complexity, isRereview: $isRereview, previousState: $previousState, previousWasApproved: $previousWasApproved, totalChanges: $totalChanges, changedFiles: $changedFiles}'
+  export SHOULD_SKIP=true MAX_TURNS=35 COMPLEXITY=empty IS_REREVIEW=false PREVIOUS_STATE=none PREVIOUS_WAS_APPROVED=false TOTAL_CHANGES=0 CHANGED_FILES=0
+  python3 - <<'PY'
+import json, os
+
+def to_bool(name: str) -> bool:
+    return os.environ[name].lower() == "true"
+
+data = {
+    "shouldSkip": to_bool("SHOULD_SKIP"),
+    "maxTurns": int(os.environ["MAX_TURNS"]),
+    "complexity": os.environ["COMPLEXITY"],
+    "isRereview": to_bool("IS_REREVIEW"),
+    "previousState": os.environ["PREVIOUS_STATE"],
+    "previousWasApproved": to_bool("PREVIOUS_WAS_APPROVED"),
+    "totalChanges": int(os.environ["TOTAL_CHANGES"]),
+    "changedFiles": int(os.environ["CHANGED_FILES"]),
+}
+
+print(json.dumps(data))
+PY
   exit 0
 fi
 
 # Detect trivial PRs (merges/rebases)
-COMMITS_DATA=$(gh api "repos/${REPO}/pulls/\${PR_NUMBER}/commits")
-MERGE_COMMIT_COUNT=$(echo "\$COMMITS_DATA" | jq '[.[] | select(.parents | length >= 2)] | length')
-TOTAL_COMMITS=$(echo "\$COMMITS_DATA" | jq 'length')
+COMMITS_URL="repos/${REPO}/pulls/\${PR_NUMBER}/commits"
+MERGE_COMMIT_COUNT=$(gh api "$COMMITS_URL" --jq '[.[] | select(.parents | length >= 2)] | length')
+TOTAL_COMMITS=$(gh api "$COMMITS_URL" --jq 'length')
 
 echo "Merge commits: \${MERGE_COMMIT_COUNT} / \${TOTAL_COMMITS}" >&2
 
@@ -224,8 +232,8 @@ fi
 echo "Complexity: \${COMPLEXITY}, max_turns: \${MAX_TURNS}" >&2
 
 # Check previous review status
-REVIEWS=$(gh api "repos/${REPO}/pulls/\${PR_NUMBER}/reviews" --jq 'sort_by(.submitted_at) | reverse')
-PREVIOUS_STATE=$(echo "\$REVIEWS" | jq -r '[.[] | select(.user.login == "github-actions[bot]")] | .[0].state // "none"')
+REVIEWS_URL="repos/${REPO}/pulls/\${PR_NUMBER}/reviews"
+PREVIOUS_STATE=$(gh api "$REVIEWS_URL" --jq 'sort_by(.submitted_at) | reverse | map(select(.user.login == "github-actions[bot]")) | .[0].state // "none"')
 PREVIOUS_WAS_APPROVED=false
 
 if [ "\$PREVIOUS_STATE" = "APPROVED" ]; then
@@ -237,7 +245,7 @@ echo "Previous state: \${PREVIOUS_STATE}" >&2
 # Check if re-review
 IS_REREVIEW=false
 if [ "\$PREVIOUS_STATE" != "none" ]; then
-  LAST_REVIEW_COMMIT=$(echo "\$REVIEWS" | jq -r '[.[] | select(.user.login == "github-actions[bot]")] | .[0].commit_id // ""')
+  LAST_REVIEW_COMMIT=$(gh api "$REVIEWS_URL" --jq 'sort_by(.submitted_at) | reverse | map(select(.user.login == "github-actions[bot]")) | .[0].commit_id // ""')
   if [ -n "\$LAST_REVIEW_COMMIT" ] && [ "\$LAST_REVIEW_COMMIT" != "null" ]; then
     if [ "\$LAST_REVIEW_COMMIT" != "\$HEAD_SHA" ]; then
       IS_REREVIEW=true
@@ -246,17 +254,27 @@ if [ "\$PREVIOUS_STATE" != "none" ]; then
   fi
 fi
 
-# Output JSON
-jq -n \\
-  --argjson shouldSkip \$SHOULD_SKIP \\
-  --argjson maxTurns \$MAX_TURNS \\
-  --arg complexity "\$COMPLEXITY" \\
-  --argjson isRereview \$IS_REREVIEW \\
-  --arg previousState "\$PREVIOUS_STATE" \\
-  --argjson previousWasApproved \$PREVIOUS_WAS_APPROVED \\
-  --argjson totalChanges \$TOTAL_CHANGES \\
-  --argjson changedFiles \$CHANGED_FILES \\
-  '{shouldSkip: $shouldSkip, maxTurns: $maxTurns, complexity: $complexity, isRereview: $isRereview, previousState: $previousState, previousWasApproved: $previousWasApproved, totalChanges: $totalChanges, changedFiles: $changedFiles}'
+# Output JSON (use python to avoid jq dependency)
+export SHOULD_SKIP MAX_TURNS COMPLEXITY IS_REREVIEW PREVIOUS_STATE PREVIOUS_WAS_APPROVED TOTAL_CHANGES CHANGED_FILES
+python3 - <<'PY'
+import json, os
+
+def to_bool(name: str) -> bool:
+    return os.environ[name].lower() == "true"
+
+data = {
+    "shouldSkip": to_bool("SHOULD_SKIP"),
+    "maxTurns": int(os.environ["MAX_TURNS"]),
+    "complexity": os.environ["COMPLEXITY"],
+    "isRereview": to_bool("IS_REREVIEW"),
+    "previousState": os.environ["PREVIOUS_STATE"],
+    "previousWasApproved": to_bool("PREVIOUS_WAS_APPROVED"),
+    "totalChanges": int(os.environ["TOTAL_CHANGES"]),
+    "changedFiles": int(os.environ["CHANGED_FILES"]),
+}
+
+print(json.dumps(data))
+PY
 `;
 
   // Run analysis in a container
