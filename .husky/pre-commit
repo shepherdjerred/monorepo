@@ -1,1 +1,10 @@
+# Run lint-staged for TypeScript/lockfile checks
 bunx lint-staged
+
+# Run Rust checks (from packages/clauderon)
+echo '+cargo test --lib'
+(cd packages/clauderon && cargo test --lib)
+echo '+cargo clippy --all-targets --all-features -- -D warnings'
+(cd packages/clauderon && cargo clippy --all-targets --all-features -- -D warnings)
+echo '+cargo fmt --all -- --check'
+(cd packages/clauderon && cargo fmt --all -- --check)

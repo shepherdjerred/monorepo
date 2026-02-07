@@ -73,6 +73,7 @@ function installWorkspaceDeps(workspaceSource: Directory, useMounts: boolean): C
         workspaceSource.file("packages/eslint-config/package.json"),
       )
       .withMountedFile("/workspace/packages/resume/package.json", workspaceSource.file("packages/resume/package.json"))
+      .withMountedFile("/workspace/packages/tools/package.json", workspaceSource.file("packages/tools/package.json"))
       // Clauderon web packages (nested workspace with own lockfile)
       .withMountedFile(
         "/workspace/packages/clauderon/web/package.json",
@@ -115,6 +116,7 @@ function installWorkspaceDeps(workspaceSource: Directory, useMounts: boolean): C
         workspaceSource.file("packages/eslint-config/package.json"),
       )
       .withFile("/workspace/packages/resume/package.json", workspaceSource.file("packages/resume/package.json"))
+      .withFile("/workspace/packages/tools/package.json", workspaceSource.file("packages/tools/package.json"))
       // Clauderon web packages (nested workspace with own lockfile)
       .withFile(
         "/workspace/packages/clauderon/web/package.json",
@@ -150,14 +152,16 @@ function installWorkspaceDeps(workspaceSource: Directory, useMounts: boolean): C
       .withMountedDirectory("/workspace/packages/birmel", workspaceSource.directory("packages/birmel"))
       .withMountedDirectory("/workspace/packages/bun-decompile", workspaceSource.directory("packages/bun-decompile"))
       .withMountedDirectory("/workspace/packages/dagger-utils", workspaceSource.directory("packages/dagger-utils"))
-      .withMountedDirectory("/workspace/packages/eslint-config", workspaceSource.directory("packages/eslint-config"));
+      .withMountedDirectory("/workspace/packages/eslint-config", workspaceSource.directory("packages/eslint-config"))
+      .withMountedDirectory("/workspace/packages/tools", workspaceSource.directory("packages/tools"));
   } else {
     container = container
       .withFile("/workspace/tsconfig.base.json", workspaceSource.file("tsconfig.base.json"))
       .withDirectory("/workspace/packages/birmel", workspaceSource.directory("packages/birmel"))
       .withDirectory("/workspace/packages/bun-decompile", workspaceSource.directory("packages/bun-decompile"))
       .withDirectory("/workspace/packages/dagger-utils", workspaceSource.directory("packages/dagger-utils"))
-      .withDirectory("/workspace/packages/eslint-config", workspaceSource.directory("packages/eslint-config"));
+      .withDirectory("/workspace/packages/eslint-config", workspaceSource.directory("packages/eslint-config"))
+      .withDirectory("/workspace/packages/tools", workspaceSource.directory("packages/tools"));
   }
 
   // PHASE 4: Re-run bun install to recreate workspace node_modules symlinks
