@@ -3,12 +3,16 @@ title: CLI Reference
 description: Complete command-line interface reference
 ---
 
+![clauderon Help](../../../assets/screenshots/cli/clauderon-help.svg)
+
 ## Global Options
 
 ```
 --help, -h       Print help
 --version, -V    Print version
 ```
+
+![clauderon Version](../../../assets/screenshots/cli/clauderon-version.svg)
 
 ## Commands
 
@@ -19,6 +23,8 @@ Start the background daemon (required for all operations).
 ```bash
 clauderon daemon [OPTIONS]
 ```
+
+![clauderon daemon Help](../../../assets/screenshots/cli/clauderon-daemon-help.svg)
 
 **Options:**
 ```
@@ -61,6 +67,8 @@ Create a new session.
 ```bash
 clauderon create --repo <PATH> --prompt <TEXT> [OPTIONS]
 ```
+
+![clauderon create Help](../../../assets/screenshots/cli/clauderon-create-help.svg)
 
 **Required:**
 ```
@@ -123,6 +131,8 @@ Launch the terminal user interface.
 clauderon tui
 ```
 
+![clauderon tui Help](../../../assets/screenshots/cli/clauderon-tui-help.svg)
+
 **Keyboard shortcuts:**
 | Key | Action |
 |-----|--------|
@@ -146,10 +156,14 @@ List all sessions.
 clauderon list [OPTIONS]
 ```
 
+![clauderon list Output](../../../assets/screenshots/cli/clauderon-list.svg)
+
 **Options:**
 ```
 --archived                   Include archived sessions
 ```
+
+![clauderon list --archived](../../../assets/screenshots/cli/clauderon-list-archived.svg)
 
 **Output columns:**
 - Name
@@ -169,6 +183,8 @@ Attach to a session's terminal.
 clauderon attach <NAME>
 ```
 
+![clauderon attach Help](../../../assets/screenshots/cli/clauderon-attach-help.svg)
+
 **Arguments:**
 - `<NAME>` - Session name
 
@@ -183,6 +199,8 @@ Archive a session (hide from default list but preserve).
 ```bash
 clauderon archive <NAME>
 ```
+
+![clauderon archive Help](../../../assets/screenshots/cli/clauderon-archive-help.svg)
 
 **Arguments:**
 - `<NAME>` - Session name
@@ -211,6 +229,8 @@ Delete a session permanently.
 ```bash
 clauderon delete [OPTIONS] <NAME>
 ```
+
+![clauderon delete Help](../../../assets/screenshots/cli/clauderon-delete-help.svg)
 
 **Arguments:**
 - `<NAME>` - Session name
