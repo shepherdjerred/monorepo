@@ -25,6 +25,6 @@ export function getSystemContainer(
       .withMountedCache("/var/cache/apt", dag.cacheVolume(`apt-cache-${platform ?? "default"}`))
       .withMountedCache("/var/lib/apt", dag.cacheVolume(`apt-lib-${platform ?? "default"}`))
       .withExec(["apt-get", "update"])
-      .withExec(["apt-get", "install", "-y", "gpg", "wget", "curl", "git", "build-essential", "python3"])
+      .withExec(["apt-get", "install", "-y", "gpg", "wget", "curl", "git", "build-essential", "python3", "jq"])
   );
 }
