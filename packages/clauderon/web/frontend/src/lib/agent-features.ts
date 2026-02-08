@@ -59,3 +59,23 @@ export function agentSupportsFeature(
   const feature = capabilities.features.find(f => f.name === featureName);
   return feature?.supported ?? false;
 }
+
+/**
+ * Get available agent types based on feature flags
+ */
+export function getAvailableAgents(enableExperimental: boolean): AgentType[] {
+  const agents = [AgentType.ClaudeCode];
+
+  if (enableExperimental) {
+    agents.push(AgentType.Codex, AgentType.Gemini);
+  }
+
+  return agents;
+}
+
+/**
+ * Check if an agent is experimental
+ */
+export function isExperimentalAgent(agentType: AgentType): boolean {
+  return agentType === AgentType.Codex || agentType === AgentType.Gemini;
+}

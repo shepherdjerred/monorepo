@@ -913,6 +913,14 @@ impl SessionManager {
             );
         }
 
+        // Validate experimental models are enabled
+        crate::core::session::validate_experimental_agent(
+            agent,
+            model.as_ref(),
+            self.feature_flags.enable_experimental_models,
+        )
+        .with_context(|| format!("Cannot create session with agent {:?}", agent))?;
+
         // Process repositories (multi-repo mode or legacy single-repo mode)
         let repo_inputs = if let Some(repos) = repositories {
             // Multi-repo mode: validate and process
