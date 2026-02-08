@@ -194,6 +194,11 @@ ENVIRONMENT:
         /// Env: CLAUDERON_FEATURE_ENABLE_KUBERNETES_BACKEND
         #[arg(long, help_heading = "Feature Flags")]
         enable_kubernetes_backend: Option<bool>,
+
+        /// [default: false] Enable experimental AI models (Codex, Gemini).
+        /// Env: CLAUDERON_FEATURE_ENABLE_EXPERIMENTAL_MODELS
+        #[arg(long, help_heading = "Feature Flags")]
+        enable_experimental_models: Option<bool>,
     },
 
     /// Launch the terminal UI
@@ -559,6 +564,7 @@ async fn main() -> anyhow::Result<()> {
             enable_proxy_port_reuse,
             enable_usage_tracking,
             enable_kubernetes_backend,
+            enable_experimental_models,
         } => {
             // Build CLI feature flag overrides
             let cli_flags = clauderon::feature_flags::CliFeatureFlags {
@@ -568,6 +574,7 @@ async fn main() -> anyhow::Result<()> {
                 enable_proxy_port_reuse,
                 enable_usage_tracking,
                 enable_kubernetes_backend,
+                enable_experimental_models,
             };
 
             // Build CLI server config overrides

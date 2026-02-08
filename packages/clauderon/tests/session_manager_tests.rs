@@ -8,6 +8,7 @@ use std::sync::Arc;
 
 use clauderon::backends::{ExecutionBackend, GitOperations, MockExecutionBackend, MockGitBackend};
 use clauderon::core::{AccessMode, AgentType, BackendType, SessionManager, SessionStatus};
+use clauderon::feature_flags::FeatureFlags;
 use clauderon::store::SqliteStore;
 use tempfile::TempDir;
 
