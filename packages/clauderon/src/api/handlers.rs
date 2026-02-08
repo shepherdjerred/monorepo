@@ -36,7 +36,7 @@ pub async fn handle_request(
 
         Request::CreateSession(req) => {
             // Validate request including experimental models check
-            if let Err(e) = req.validate(manager.feature_flags()) {
+            if let Err(e) = req.validate(&manager.feature_flags()) {
                 return Response::Error {
                     code: "INVALID_REQUEST".to_string(),
                     message: e.to_string(),
