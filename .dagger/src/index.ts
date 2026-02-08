@@ -87,9 +87,9 @@ function installWorkspaceDeps(source: Directory): Container {
     .withMountedFile("/workspace/packages/clauderon/web/shared/package.json", source.file("packages/clauderon/web/shared/package.json"))
     .withMountedFile("/workspace/packages/clauderon/web/client/package.json", source.file("packages/clauderon/web/client/package.json"))
     .withMountedFile("/workspace/packages/clauderon/web/frontend/package.json", source.file("packages/clauderon/web/frontend/package.json"))
-    // Clauderon docs package (create directory structure then mount)
+    // Clauderon docs (mount package.json only, will mount full dir in PHASE 3 after install)
     .withExec(["mkdir", "-p", "/workspace/packages/clauderon/docs"])
-    .withMountedDirectory("/workspace/packages/clauderon/docs", source.directory("packages/clauderon/docs"));
+    .withMountedFile("/workspace/packages/clauderon/docs/package.json", source.file("packages/clauderon/docs/package.json"));
 
   // PHASE 2: Install dependencies (cached if lockfile + package.jsons unchanged)
   container = container.withExec(["bun", "install", "--frozen-lockfile"]);
@@ -105,7 +105,9 @@ function installWorkspaceDeps(source: Directory): Container {
     // Clauderon web packages
     .withMountedDirectory("/workspace/packages/clauderon/web/shared", source.directory("packages/clauderon/web/shared"))
     .withMountedDirectory("/workspace/packages/clauderon/web/client", source.directory("packages/clauderon/web/client"))
-    .withMountedDirectory("/workspace/packages/clauderon/web/frontend", source.directory("packages/clauderon/web/frontend"));
+    .withMountedDirectory("/workspace/packages/clauderon/web/frontend", source.directory("packages/clauderon/web/frontend"))
+    // Clauderon docs (remount with full source including screenshots)
+    .withMountedDirectory("/workspace/packages/clauderon/docs", source.directory("packages/clauderon/docs"));
 
   // PHASE 4: Re-run bun install to recreate workspace node_modules symlinks
   // (Source mounts in Phase 3 replace the symlinks that Phase 2 created)

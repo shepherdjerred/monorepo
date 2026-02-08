@@ -8,6 +8,12 @@ dist/
 packages/birmel/data/
 packages/birmel/prisma/data/
 
+# macOS metadata
+.DS_Store
+
+# Playwright test results
+test-results/
+
 # Claude Code local session files (root level only)
 /.claude/
 !/.claude/settings.json

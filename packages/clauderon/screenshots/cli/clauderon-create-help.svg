@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1528" height="1800" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .terminal {
+      font-family: 'Berkeley Mono', 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace;
+      font-size: 14px;
+      white-space: pre;
+    }
+  </style>
+  <rect width="100%" height="100%" fill="#1E1E1E" rx="6"/>
+  <text class="terminal" y="34">
+    <tspan x="20" fill="#D4D4D4">Create a new session</tspan>  </text>
+  <text class="terminal" y="74">
+    <tspan x="20" fill="#D4D4D4">Creates an isolated git worktree and launches an AI coding agent. The session runs in the specified backend with proxy credential injection.</tspan>  </text>
+  <text class="terminal" y="114">
+    <tspan x="20" fill="#D4D4D4">Usage: clauderon create [OPTIONS] --repo &lt;REPO&gt; --prompt &lt;PROMPT&gt;</tspan>  </text>
+  <text class="terminal" y="154">
+    <tspan x="20" fill="#D4D4D4">Options:</tspan>  </text>
+  <text class="terminal" y="174">
+    <tspan x="20" fill="#D4D4D4">  -r, --repo &lt;REPO&gt;</tspan>  </text>
+  <text class="terminal" y="194">
+    <tspan x="20" fill="#D4D4D4">          Path to the git repository</tspan>  </text>
+  <text class="terminal" y="234">
+    <tspan x="20" fill="#D4D4D4">  -p, --prompt &lt;PROMPT&gt;</tspan>  </text>
+  <text class="terminal" y="254">
+    <tspan x="20" fill="#D4D4D4">          Initial prompt for the AI agent</tspan>  </text>
+  <text class="terminal" y="294">
+    <tspan x="20" fill="#D4D4D4">  -b, --backend &lt;BACKEND&gt;</tspan>  </text>
+  <text class="terminal" y="314">
+    <tspan x="20" fill="#D4D4D4">          Backend to use: &#x27;zellij&#x27; (default) or &#x27;docker&#x27;</tspan>  </text>
+  <text class="terminal" y="334">
+    <tspan x="20" fill="#D4D4D4">          </tspan>  </text>
+  <text class="terminal" y="354">
+    <tspan x="20" fill="#D4D4D4">          [default: zellij]</tspan>  </text>
+  <text class="terminal" y="374">
+    <tspan x="20" fill="#D4D4D4">          [possible values: zellij, docker]</tspan>  </text>
+  <text class="terminal" y="414">
+    <tspan x="20" fill="#D4D4D4">  -a, --agent &lt;AGENT&gt;</tspan>  </text>
+  <text class="terminal" y="434">
+    <tspan x="20" fill="#D4D4D4">          Agent to use (claude, codex, or gemini)</tspan>  </text>
+  <text class="terminal" y="454">
+    <tspan x="20" fill="#D4D4D4">          </tspan>  </text>
+  <text class="terminal" y="474">
+    <tspan x="20" fill="#D4D4D4">          [default: claude]</tspan>  </text>
+  <text class="terminal" y="514">
+    <tspan x="20" fill="#D4D4D4">      --dangerous-skip-checks</tspan>  </text>
+  <text class="terminal" y="534">
+    <tspan x="20" fill="#D4D4D4">          Skip safety checks (dangerous - bypasses dirty repo checks)</tspan>  </text>
+  <text class="terminal" y="574">
+    <tspan x="20" fill="#D4D4D4">      --dangerous-copy-creds</tspan>  </text>
+  <text class="terminal" y="594">
+    <tspan x="20" fill="#D4D4D4">          Copy real credentials to remote backends (dangerous)</tspan>  </text>
+  <text class="terminal" y="614">
+    <tspan x="20" fill="#D4D4D4">          </tspan>  </text>
+  <text class="terminal" y="634">
+    <tspan x="20" fill="#D4D4D4">          For remote backends (Sprites, Kubernetes): injects real API tokens. WARNING: This exposes your tokens to the remote environment. Only use when daemon_address is not configured.</tspan>  </text>
+  <text class="terminal" y="674">
+    <tspan x="20" fill="#D4D4D4">      --print</tspan>  </text>
+  <text class="terminal" y="694">
+    <tspan x="20" fill="#D4D4D4">          Non-interactive print mode (outputs response and exits)</tspan>  </text>
+  <text class="terminal" y="734">
+    <tspan x="20" fill="#D4D4D4">      --access-mode &lt;ACCESS_MODE&gt;</tspan>  </text>
+  <text class="terminal" y="754">
+    <tspan x="20" fill="#D4D4D4">          Access mode: &#x27;read-only&#x27; or &#x27;read-write&#x27; (default)</tspan>  </text>
+  <text class="terminal" y="774">
+    <tspan x="20" fill="#D4D4D4">          </tspan>  </text>
+  <text class="terminal" y="794">
+    <tspan x="20" fill="#D4D4D4">          [default: read-write]</tspan>  </text>
+  <text class="terminal" y="814">
+    <tspan x="20" fill="#D4D4D4">          [possible values: read-only, read-write]</tspan>  </text>
+  <text class="terminal" y="854">
+    <tspan x="20" fill="#D4D4D4">      --no-plan-mode</tspan>  </text>
+  <text class="terminal" y="874">
+    <tspan x="20" fill="#D4D4D4">          Skip plan mode (start directly in implementation mode)</tspan>  </text>
+  <text class="terminal" y="914">
+    <tspan x="20" fill="#D4D4D4">      --image &lt;IMAGE&gt;</tspan>  </text>
+  <text class="terminal" y="934">
+    <tspan x="20" fill="#D4D4D4">          Custom container image (overrides backend default)</tspan>  </text>
+  <text class="terminal" y="954">
+    <tspan x="20" fill="#D4D4D4">          </tspan>  </text>
+  <text class="terminal" y="974">
+    <tspan x="20" fill="#D4D4D4">          Format: [registry/]repository[:tag] Example: ghcr.io/user/custom-dev:latest</tspan>  </text>
+  <text class="terminal" y="994">
+    <tspan x="20" fill="#D4D4D4">          </tspan>  </text>
+  <text class="terminal" y="1014">
+    <tspan x="20" fill="#D4D4D4">          Image must include: claude/codex CLI, bash, curl, git (recommended) See docs/IMAGE_COMPATIBILITY.md for full requirements</tspan>  </text>
+  <text class="terminal" y="1054">
+    <tspan x="20" fill="#D4D4D4">      --pull-policy &lt;PULL_POLICY&gt;</tspan>  </text>
+  <text class="terminal" y="1074">
+    <tspan x="20" fill="#D4D4D4">          Image pull policy: always, if-not-present (default), never</tspan>  </text>
+  <text class="terminal" y="1094">
+    <tspan x="20" fill="#D4D4D4">          </tspan>  </text>
+  <text class="terminal" y="1114">
+    <tspan x="20" fill="#D4D4D4">          [possible values: always, if-not-present, never]</tspan>  </text>
+  <text class="terminal" y="1154">
+    <tspan x="20" fill="#D4D4D4">      --cpu-limit &lt;CPU_LIMIT&gt;</tspan>  </text>
+  <text class="terminal" y="1174">
+    <tspan x="20" fill="#D4D4D4">          CPU limit (e.g., &quot;2.0&quot; for 2 cores, &quot;500m&quot; for 0.5 cores)</tspan>  </text>
+  <text class="terminal" y="1214">
+    <tspan x="20" fill="#D4D4D4">      --memory-limit &lt;MEMORY_LIMIT&gt;</tspan>  </text>
+  <text class="terminal" y="1234">
+    <tspan x="20" fill="#D4D4D4">          Memory limit (e.g., &quot;2g&quot; for 2 gigabytes, &quot;512m&quot; for 512 megabytes)</tspan>  </text>
+  <text class="terminal" y="1274">
+    <tspan x="20" fill="#D4D4D4">  -h, --help</tspan>  </text>
+  <text class="terminal" y="1294">
+    <tspan x="20" fill="#D4D4D4">          Print help (see a summary with &#x27;-h&#x27;)</tspan>  </text>
+  <text class="terminal" y="1334">
+    <tspan x="20" fill="#D4D4D4">EXAMPLES:</tspan>  </text>
+  <text class="terminal" y="1354">
+    <tspan x="20" fill="#D4D4D4">    # Create a basic session</tspan>  </text>
+  <text class="terminal" y="1374">
+    <tspan x="20" fill="#D4D4D4">    clauderon create --repo ~/myproject --prompt &#x27;Fix the login bug&#x27;</tspan>  </text>
+  <text class="terminal" y="1414">
+    <tspan x="20" fill="#D4D4D4">    # Create with Docker backend for stronger isolation</tspan>  </text>
+  <text class="terminal" y="1434">
+    <tspan x="20" fill="#D4D4D4">    clauderon create --repo ~/myproject --prompt &#x27;Add tests&#x27; --backend docker</tspan>  </text>
+  <text class="terminal" y="1474">
+    <tspan x="20" fill="#D4D4D4">    # Create in read-only mode (safer for exploration tasks)</tspan>  </text>
+  <text class="terminal" y="1494">
+    <tspan x="20" fill="#D4D4D4">    clauderon create --repo ~/myproject --prompt &#x27;Explain this code&#x27; --access-mode read-only</tspan>  </text>
+  <text class="terminal" y="1534">
+    <tspan x="20" fill="#D4D4D4">    # Skip plan mode for quick tasks</tspan>  </text>
+  <text class="terminal" y="1554">
+    <tspan x="20" fill="#D4D4D4">    clauderon create --repo ~/myproject --prompt &#x27;Fix typo in README&#x27; --no-plan-mode</tspan>  </text>
+  <text class="terminal" y="1594">
+    <tspan x="20" fill="#D4D4D4">    # Non-interactive mode (for scripts)</tspan>  </text>
+  <text class="terminal" y="1614">
+    <tspan x="20" fill="#D4D4D4">    clauderon create --repo ~/myproject --prompt &#x27;Generate docs&#x27; --print</tspan>  </text>
+  <text class="terminal" y="1654">
+    <tspan x="20" fill="#D4D4D4">ACCESS MODES:</tspan>  </text>
+  <text class="terminal" y="1674">
+    <tspan x="20" fill="#D4D4D4">    read-only   Only GET/HEAD/OPTIONS requests allowed (safe for exploration)</tspan>  </text>
+  <text class="terminal" y="1694">
+    <tspan x="20" fill="#D4D4D4">    read-write  All HTTP methods allowed (required for commits, PRs)</tspan>  </text>
+  <text class="terminal" y="1734">
+    <tspan x="20" fill="#D4D4D4">BACKENDS:</tspan>  </text>
+  <text class="terminal" y="1754">
+    <tspan x="20" fill="#D4D4D4">    zellij      Terminal multiplexer (default, fastest startup)</tspan>  </text>
+  <text class="terminal" y="1774">
+    <tspan x="20" fill="#D4D4D4">    docker      Container-based (stronger isolation, reproducible)</tspan>  </text>
+</svg>

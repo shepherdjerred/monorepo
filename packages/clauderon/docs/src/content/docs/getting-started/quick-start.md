@@ -52,13 +52,18 @@ clauderon tui
 
 Press `n` to create a new session interactively.
 
+![TUI Create Dialog](../../../assets/screenshots/tui/create-dialog.png)
+
 **Keyboard shortcuts:**
 - `n` - Create new session
 - `Enter` - Attach to session
 - `a` - Archive session
 - `d` - Delete session
 - `j/k` - Navigate up/down
+- `?` - Show help
 - `q` - Quit
+
+![TUI Help Screen](../../../assets/screenshots/tui/help-screen.png)
 
 ## 3. Configure Credentials
 
@@ -106,6 +111,18 @@ clauderon unarchive <session-name>
 # Delete permanently
 clauderon delete <session-name>
 ```
+
+![Session List Output](../../../assets/screenshots/cli/clauderon-list.svg)
+
+![TUI Session List](../../../assets/screenshots/tui/session-list.png)
+
+When you delete a session, you'll see a confirmation dialog:
+
+![TUI Delete Confirmation](../../../assets/screenshots/tui/delete-confirmation.png)
+
+If you don't have any sessions yet, you'll see an empty state:
+
+![TUI Empty Session List](../../../assets/screenshots/tui/empty-session-list.png)
 
 ## Example Workflows
 
