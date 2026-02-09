@@ -634,7 +634,7 @@ async fn merge_pr(
         .session_manager
         .merge_pr(session_id, request.method, request.delete_branch)
         .await
-        .map_err(|e| AppError::SessionManager(e))?;
+        .map_err(AppError::SessionManager)?;
 
     // Broadcast session updated event
     if let Some(session) = state.session_manager.get_session(&id).await {

@@ -4004,8 +4004,7 @@ impl SessionManager {
             repos
                 .iter()
                 .find(|r| r.is_primary)
-                .map(|r| r.repo_path.clone())
-                .unwrap_or_else(|| session.repo_path.clone())
+                .map_or_else(|| session.repo_path.clone(), |r| r.repo_path.clone())
         } else {
             session.repo_path.clone()
         };
