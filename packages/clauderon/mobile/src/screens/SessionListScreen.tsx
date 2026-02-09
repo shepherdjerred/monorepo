@@ -20,10 +20,7 @@ import { typography } from "../styles/typography";
 
 type SessionListScreenProps = MainTabScreenProps<"Sessions">;
 
-function getFilteredSessions(
-  sessions: Map<string, Session>,
-  filter: FilterStatus,
-): Session[] {
+function getFilteredSessions(sessions: Map<string, Session>, filter: FilterStatus): Session[] {
   const sessionArray = Array.from(sessions.values());
   switch (filter) {
     case "running":
@@ -82,10 +79,7 @@ export function SessionListScreen({ navigation }: SessionListScreenProps) {
     [navigation],
   );
 
-  const filteredSessions = useMemo(
-    () => getFilteredSessions(sessions, filter),
-    [sessions, filter],
-  );
+  const filteredSessions = useMemo(() => getFilteredSessions(sessions, filter), [sessions, filter]);
 
   const handleDeleteConfirm = useCallback(async () => {
     if (!deleteTarget) return;

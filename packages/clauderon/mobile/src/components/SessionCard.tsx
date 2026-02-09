@@ -115,9 +115,7 @@ function SessionStatusIndicators({
               <Text style={getCheckStatusStyle(session.pr_check_status)}>
                 {getCheckStatusSymbol(session.pr_check_status)}
               </Text>
-              <Text
-                style={[styles.statusValue, getCheckStatusTextStyle(session.pr_check_status)]}
-              >
+              <Text style={[styles.statusValue, getCheckStatusTextStyle(session.pr_check_status)]}>
                 {session.pr_check_status}
               </Text>
             </View>
