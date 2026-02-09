@@ -2,8 +2,8 @@
 
 use async_trait::async_trait;
 
-use crate::core::Session;
 use crate::core::session::HealthCheckResult;
+use crate::core::{MergeMethod, Session};
 
 use super::protocol::CreateSessionRequest;
 use super::types::ReconcileReportDto;
@@ -72,4 +72,12 @@ pub trait ApiClient: Send + Sync {
 
     /// Cleanup a session (remove from clauderon).
     async fn cleanup_session(&mut self, id: uuid::Uuid) -> anyhow::Result<()>;
+
+    /// Merge a pull request for a session.
+    async fn merge_pr(
+        &mut self,
+        id: &str,
+        method: MergeMethod,
+        delete_branch: bool,
+    ) -> anyhow::Result<()>;
 }

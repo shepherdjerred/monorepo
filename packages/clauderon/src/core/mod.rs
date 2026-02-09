@@ -11,7 +11,7 @@ pub use health::HealthService;
 pub use manager::SessionManager;
 pub use session::{
     AccessMode, AgentType, AvailableAction, BackendType, BlockerDetails, CheckStatus,
-    ClaudeWorkingStatus, HealthCheckResult, RecreateBlockedError, RecreateResult, ResourceState,
-    ReviewDecision, Session, SessionConfig, SessionHealthReport, SessionRepository, SessionStatus,
-    WorkflowStage,
+    ClaudeWorkingStatus, HealthCheckResult, MergeMethod, PrReviewStatus, RecreateBlockedError,
+    RecreateResult, ResourceState, ReviewDecision, Session, SessionConfig, SessionHealthReport,
+    SessionRepository, SessionStatus, WorkflowStage,
 };
