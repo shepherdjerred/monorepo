@@ -33,7 +33,7 @@ function formatIncident(incident: PagerDutyIncident): string {
   const statusEmoji = getStatusEmoji(incident.status);
 
   lines.push(
-    `- ${statusEmoji} **${incident.incident_number}**: ${incident.title}${urgencyEmoji ? ` ${urgencyEmoji}` : ""}`
+    `- ${statusEmoji} **${String(incident.incident_number)}**: ${incident.title}${urgencyEmoji ? ` ${urgencyEmoji}` : ""}`
   );
   lines.push(`  - Service: ${incident.service.summary}`);
   lines.push(`  - Status: ${incident.status}`);

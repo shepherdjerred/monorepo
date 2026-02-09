@@ -6,7 +6,7 @@ export default tseslint.config(
   ...tseslint.configs.strictTypeChecked,
   ...tseslint.configs.stylisticTypeChecked,
   {
-    ignores: ["out/", "node_modules/", "eslint.config.js"],
+    ignores: ["out/", "out-claude/", "scripts/", "node_modules/", "eslint.config.js"],
   },
   {
     languageOptions: {

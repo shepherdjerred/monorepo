@@ -28,7 +28,7 @@ import type {
 } from "./types.ts";
 
 /** Batch processing status */
-export interface OpenAIBatchStatus {
+export type OpenAIBatchStatus = {
   batchId: string;
   status:
     | "validating"
@@ -45,26 +45,26 @@ export interface OpenAIBatchStatus {
 }
 
 /** Batch processing callbacks */
-export interface OpenAIBatchCallbacks {
+export type OpenAIBatchCallbacks = {
   onStatusUpdate?: (status: OpenAIBatchStatus) => void;
   onComplete?: (results: Map<string, DeminifyResult>) => void;
   onError?: (error: Error) => void;
 }
 
 /** JSONL request format for OpenAI Batch API */
-interface BatchRequest {
+type BatchRequest = {
   custom_id: string;
   method: "POST";
   url: "/v1/chat/completions";
   body: {
     model: string;
-    messages: Array<{ role: "system" | "user"; content: string }>;
+    messages: { role: "system" | "user"; content: string }[];
     max_completion_tokens?: number;
   };
 }
 
 /** JSONL response format from OpenAI Batch API */
-interface BatchResponse {
+type BatchResponse = {
   id: string;
   custom_id: string;
   response: {
@@ -75,14 +75,14 @@ interface BatchResponse {
       object: string;
       created: number;
       model: string;
-      choices: Array<{
+      choices: {
         index: number;
         message: {
           role: string;
           content: string;
         };
         finish_reason: string;
-      }>;
+      }[];
       usage: {
         prompt_tokens: number;
         completion_tokens: number;
@@ -138,7 +138,7 @@ export class OpenAIBatchClient {
     }
 
     if (this.config.verbose) {
-      console.log(`Creating batch with ${requests.length} requests...`);
+      console.log(`Creating batch with ${String(requests.length)} requests...`);
     }
 
     // Create JSONL content
@@ -256,10 +256,10 @@ export class OpenAIBatchClient {
           continue;
         }
 
-        if (entry.response && entry.response.status_code === 200) {
+        if (entry.response?.status_code === 200) {
           try {
             const responseText =
-              entry.response.body.choices[0]?.message?.content;
+              entry.response.body.choices[0]?.message.content;
             if (responseText) {
               const result = this.parseResponse(responseText, context);
               results.set(funcId, result);
@@ -322,9 +322,7 @@ export class OpenAIBatchClient {
     context: DeminifyContext
   ): DeminifyResult {
     // Extract code from markdown code blocks
-    const codeMatch = responseText.match(
-      /```(?:javascript|js)?\n?([\s\S]*?)```/
-    );
+    const codeMatch = /```(?:javascript|js)?\n?([\s\S]*?)```/.exec(responseText);
     if (!codeMatch?.[1]) {
       throw new Error("No code block found in response");
     }
@@ -344,7 +342,7 @@ export class OpenAIBatchClient {
     let localVariableNames: Record<string, string> = {};
 
     // Look for JSON after the code block
-    const jsonMatch = responseText.match(/```[\s\S]*?```\s*(\{[\s\S]*\})/);
+    const jsonMatch = /```[\s\S]*?```\s*(\{[\s\S]*\})/.exec(responseText);
     if (jsonMatch?.[1]) {
       try {
         const metadata = JSON.parse(jsonMatch[1]) as {
@@ -366,9 +364,7 @@ export class OpenAIBatchClient {
 
     // Try to infer name from the de-minified code if not provided
     if (suggestedName === "anonymousFunction") {
-      const funcNameMatch = deminifiedSource.match(
-        /(?:function|const|let|var)\s+([a-zA-Z_$][a-zA-Z0-9_$]*)/
-      );
+      const funcNameMatch = /(?:function|const|let|var)\s+([a-zA-Z_$][a-zA-Z0-9_$]*)/.exec(deminifiedSource);
       if (funcNameMatch?.[1]) {
         suggestedName = funcNameMatch[1];
       }

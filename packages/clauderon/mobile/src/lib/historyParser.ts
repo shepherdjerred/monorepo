@@ -102,6 +102,48 @@ export function parseHistoryEntry(line: string): Message | null {
 }
 
 /**
+ * Collect tool uses from a parsed message's content blocks, populating the toolUseMap
+ */
+function collectToolUses(
+  content: NonNullable<HistoryEntry["message"]>["content"],
+  toolUses: ToolUse[],
+  toolUseMap: Map<string, ToolUse>,
+): void {
+  if (!Array.isArray(content)) return;
+
+  let toolUseIndex = 0;
+  for (const block of content) {
+    if (block.type === "tool_use" && block.id) {
+      const toolUse = toolUses[toolUseIndex];
+      if (toolUse) {
+        toolUseMap.set(block.id, toolUse);
+        toolUseIndex++;
+      }
+    }
+  }
+}
+
+/**
+ * Match tool results from content blocks to their corresponding tool uses
+ */
+function matchToolResults(
+  content: NonNullable<HistoryEntry["message"]>["content"],
+  toolUseMap: Map<string, ToolUse>,
+): void {
+  if (!Array.isArray(content)) return;
+
+  for (const block of content) {
+    if (block.type === "tool_result" && block.tool_use_id) {
+      const toolUse = toolUseMap.get(block.tool_use_id);
+      if (toolUse) {
+        toolUse.result =
+          typeof block.content === "string" ? block.content : JSON.stringify(block.content);
+      }
+    }
+  }
+}
+
+/**
  * Parse multiple JSONL lines into Messages
  *
  * This function uses a two-pass approach to correctly match tool results
@@ -125,18 +167,8 @@ export function parseHistoryLines(lines: string[]): Message[] {
       const message = parseHistoryEntry(line);
 
       // Collect tool uses from assistant messages
-      if (message?.toolUses && entry.message && Array.isArray(entry.message.content)) {
-        let toolUseIndex = 0;
-        for (const block of entry.message.content) {
-          if (block.type === "tool_use" && block.id) {
-            // Match tool uses by index order (not by name, to handle multiple tools with same name)
-            const toolUse = message.toolUses[toolUseIndex];
-            if (toolUse) {
-              toolUseMap.set(block.id, toolUse);
-              toolUseIndex++;
-            }
-          }
-        }
+      if (message?.toolUses && entry.message) {
+        collectToolUses(entry.message.content, message.toolUses, toolUseMap);
       }
 
       parsedEntries.push({ entry, message });
@@ -148,16 +180,8 @@ export function parseHistoryLines(lines: string[]): Message[] {
 
   // Second pass: Match tool results to tool uses
   for (const { entry } of parsedEntries) {
-    if (entry.message && Array.isArray(entry.message.content)) {
-      for (const block of entry.message.content) {
-        if (block.type === "tool_result" && block.tool_use_id) {
-          const toolUse = toolUseMap.get(block.tool_use_id);
-          if (toolUse) {
-            toolUse.result =
-              typeof block.content === "string" ? block.content : JSON.stringify(block.content);
-          }
-        }
-      }
+    if (entry.message) {
+      matchToolResults(entry.message.content, toolUseMap);
     }
   }
 

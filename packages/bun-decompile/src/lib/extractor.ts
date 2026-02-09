@@ -136,7 +136,7 @@ export async function extractToDirectory(
     // Determine output filename
     let filename = module.name;
     if (!filename || filename === "/") {
-      filename = module.isEntryPoint ? "index" : `module_${result.modules.indexOf(module)}`;
+      filename = module.isEntryPoint ? "index" : `module_${String(result.modules.indexOf(module))}`;
     }
 
     // Add extension if missing
@@ -176,7 +176,7 @@ export function getExtractionSummary(result: DecompileResult): string {
   const lines: string[] = [];
 
   lines.push(`Bun Version: ${result.bunVersion ?? "unknown"}`);
-  lines.push(`Bundled Modules: ${result.modules.length}`);
+  lines.push(`Bundled Modules: ${String(result.modules.length)}`);
 
   const entryPoint = result.modules.find((m) => m.isEntryPoint);
   if (entryPoint) {
@@ -185,7 +185,7 @@ export function getExtractionSummary(result: DecompileResult): string {
 
   // Original sources from sourcemaps
   if (result.originalSources.length > 0) {
-    lines.push(`Original Sources: ${result.originalSources.length} (recovered from sourcemap)`);
+    lines.push(`Original Sources: ${String(result.originalSources.length)} (recovered from sourcemap)`);
     for (const source of result.originalSources) {
       lines.push(`  - ${source.name}`);
     }
@@ -195,14 +195,14 @@ export function getExtractionSummary(result: DecompileResult): string {
     (m) => m.sourcemap && m.sourcemap.length > 0,
   ).length;
   if (withSourcemaps > 0) {
-    lines.push(`With Sourcemaps: ${withSourcemaps}`);
+    lines.push(`With Sourcemaps: ${String(withSourcemaps)}`);
   }
 
   const withBytecode = result.modules.filter(
     (m) => m.bytecode && m.bytecode.length > 0,
   ).length;
   if (withBytecode > 0) {
-    lines.push(`With Bytecode: ${withBytecode}`);
+    lines.push(`With Bytecode: ${String(withBytecode)}`);
   }
 
   if (result.args.length > 0) {

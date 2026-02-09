@@ -2,7 +2,7 @@ import { validateSource } from "./ast-parser.ts";
 import type { CallGraph, DeminifyResult } from "./types.ts";
 
 /** Replacement to apply to source */
-interface Replacement {
+type Replacement = {
   start: number;
   end: number;
   originalText: string;
@@ -246,7 +246,7 @@ export function createChangeSummary(
   lines.push("# De-minification Summary\n");
 
   // Function name changes
-  const nameChanges: Array<{ original: string; suggested: string; confidence: number }> = [];
+  const nameChanges: { original: string; suggested: string; confidence: number }[] = [];
   for (const [funcId, result] of results) {
     const func = graph.functions.get(funcId);
     if (!func) continue;

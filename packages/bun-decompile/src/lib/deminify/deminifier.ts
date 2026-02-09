@@ -39,7 +39,7 @@ import type {
 export type BatchStatusCallback = (status: BatchStatus) => void;
 
 /** Options for de-minifying a file */
-export interface DeminifyFileOptions {
+export type DeminifyFileOptions = {
   /** File name (for context) */
   fileName?: string;
   /** Whether this is the entry point */
@@ -166,11 +166,11 @@ export class Deminifier {
     try {
       graph = buildCallGraph(source);
     } catch (error) {
-      throw new Error(`Failed to parse source: ${(error as Error).message}`);
+      throw new Error(`Failed to parse source: ${(error as Error).message}`, { cause: error });
     }
 
     if (this.config.verbose) {
-      console.log(`Parsed ${graph.functions.size} functions`);
+      console.log(`Parsed ${String(graph.functions.size)} functions`);
     }
 
     // Build file context
@@ -332,7 +332,7 @@ export class Deminifier {
       if (func.parentId && func.parentId !== iifeWrapperId) {
         // Check if the parent's parent is also not the wrapper (deeply nested)
         const parent = graph.functions.get(func.parentId);
-        if (parent && parent.parentId && parent.parentId !== iifeWrapperId) {
+        if (parent?.parentId && parent.parentId !== iifeWrapperId) {
           return false;
         }
       }
@@ -501,7 +501,7 @@ export class Deminifier {
 
     // Check for existing pending batch
     const existingState = await loadBatchState(this.config.cacheDir);
-    if (existingState && existingState.sourceHash === hashSource(source)) {
+    if (existingState?.sourceHash === hashSource(source)) {
       console.log("\nFound pending batch for this file:");
       console.log(formatBatchState(existingState));
       console.log(
@@ -512,7 +512,7 @@ export class Deminifier {
 
     // Build all contexts upfront (batch can't do incremental context)
     console.log(
-      `\nBuilding contexts for ${functionsToProcess.length} functions...`
+      `\nBuilding contexts for ${String(functionsToProcess.length)} functions...`
     );
     const contexts = new Map<string, DeminifyContext>();
 
@@ -533,9 +533,11 @@ export class Deminifier {
 
     let batchId: string;
     if (isOpenAI) {
-      batchId = await this.openAIBatchClient!.createBatch(contexts);
+      if (!this.openAIBatchClient) throw new Error("OpenAI batch client not initialized");
+      batchId = await this.openAIBatchClient.createBatch(contexts);
     } else {
-      batchId = await this.batchClient!.createBatch(contexts);
+      if (!this.batchClient) throw new Error("Anthropic batch client not initialized");
+      batchId = await this.batchClient.createBatch(contexts);
     }
 
     // Save state for resume (includes projectId for isolation in shared environments)
@@ -558,7 +560,8 @@ export class Deminifier {
 
     // Poll for completion using the appropriate client
     if (isOpenAI) {
-      await this.openAIBatchClient!.waitForCompletion(batchId, {
+      if (!this.openAIBatchClient) throw new Error("OpenAI batch client not initialized");
+      await this.openAIBatchClient.waitForCompletion(batchId, {
         onStatusUpdate: (status: OpenAIBatchStatus) => {
           // Convert to common format for callback
           const commonStatus: BatchStatus = {
@@ -576,13 +579,14 @@ export class Deminifier {
                 ? Math.round((status.completed / status.total) * 100)
                 : 0;
             process.stdout.write(
-              `\r  Progress: ${status.completed}/${status.total} (${pct}%) | Errors: ${status.failed}     `
+              `\r  Progress: ${String(status.completed)}/${String(status.total)} (${String(pct)}%) | Errors: ${String(status.failed)}     `
             );
           }
         },
       });
     } else {
-      await this.batchClient!.waitForCompletion(batchId, {
+      if (!this.batchClient) throw new Error("Anthropic batch client not initialized");
+      await this.batchClient.waitForCompletion(batchId, {
         onStatusUpdate: (status) => {
           options.onBatchStatus?.(status);
           if (!options.onBatchStatus) {
@@ -591,7 +595,7 @@ export class Deminifier {
                 ? Math.round((status.succeeded / status.total) * 100)
                 : 0;
             process.stdout.write(
-              `\r  Progress: ${status.succeeded}/${status.total} (${pct}%) | Errors: ${status.errored}     `
+              `\r  Progress: ${String(status.succeeded)}/${String(status.total)} (${String(pct)}%) | Errors: ${String(status.errored)}     `
             );
           }
         },
@@ -603,12 +607,14 @@ export class Deminifier {
     // Get results using the appropriate client
     let results: Map<string, DeminifyResult>;
     if (isOpenAI) {
-      results = await this.openAIBatchClient!.getResults(batchId, contexts);
+      if (!this.openAIBatchClient) throw new Error("OpenAI batch client not initialized");
+      results = await this.openAIBatchClient.getResults(batchId, contexts);
     } else {
-      results = await this.batchClient!.getResults(batchId, contexts);
+      if (!this.batchClient) throw new Error("Anthropic batch client not initialized");
+      results = await this.batchClient.getResults(batchId, contexts);
     }
 
-    console.log(`Retrieved ${results.size} results`);
+    console.log(`Retrieved ${String(results.size)} results`);
 
     // Update stats
     this.stats.functionsProcessed = results.size;
@@ -676,7 +682,8 @@ export class Deminifier {
 
     // Check batch status using appropriate client
     if (isOpenAI) {
-      const status = await this.openAIBatchClient!.getBatchStatus(batchId);
+      if (!this.openAIBatchClient) throw new Error("OpenAI batch client not initialized");
+      const status = await this.openAIBatchClient.getBatchStatus(batchId);
 
       if (
         status.status === "in_progress" ||
@@ -684,11 +691,11 @@ export class Deminifier {
         status.status === "finalizing"
       ) {
         console.log(
-          `Batch still processing: ${status.completed}/${status.total} complete`
+          `Batch still processing: ${String(status.completed)}/${String(status.total)} complete`
         );
         console.log("Waiting for completion...\n");
 
-        await this.openAIBatchClient!.waitForCompletion(batchId, {
+        await this.openAIBatchClient.waitForCompletion(batchId, {
           onStatusUpdate: (s: OpenAIBatchStatus) => {
             const commonStatus: BatchStatus = {
               batchId: s.batchId,
@@ -703,29 +710,30 @@ export class Deminifier {
               const pct =
                 s.total > 0 ? Math.round((s.completed / s.total) * 100) : 0;
               process.stdout.write(
-                `\r  Progress: ${s.completed}/${s.total} (${pct}%) | Errors: ${s.failed}     `
+                `\r  Progress: ${String(s.completed)}/${String(s.total)} (${String(pct)}%) | Errors: ${String(s.failed)}     `
               );
             }
           },
         });
       }
     } else {
-      const status = await this.batchClient!.getBatchStatus(batchId);
+      if (!this.batchClient) throw new Error("Anthropic batch client not initialized");
+      const status = await this.batchClient.getBatchStatus(batchId);
 
       if (status.status === "in_progress") {
         console.log(
-          `Batch still processing: ${status.succeeded}/${status.total} complete`
+          `Batch still processing: ${String(status.succeeded)}/${String(status.total)} complete`
         );
         console.log("Waiting for completion...\n");
 
-        await this.batchClient!.waitForCompletion(batchId, {
+        await this.batchClient.waitForCompletion(batchId, {
           onStatusUpdate: (s) => {
             options.onBatchStatus?.(s);
             if (!options.onBatchStatus) {
               const pct =
                 s.total > 0 ? Math.round((s.succeeded / s.total) * 100) : 0;
               process.stdout.write(
-                `\r  Progress: ${s.succeeded}/${s.total} (${pct}%) | Errors: ${s.errored}     `
+                `\r  Progress: ${String(s.succeeded)}/${String(s.total)} (${String(pct)}%) | Errors: ${String(s.errored)}     `
               );
             }
           },
@@ -738,12 +746,14 @@ export class Deminifier {
     // Get results using appropriate client
     let results: Map<string, DeminifyResult>;
     if (isOpenAI) {
-      results = await this.openAIBatchClient!.getResults(batchId, contexts);
+      if (!this.openAIBatchClient) throw new Error("OpenAI batch client not initialized");
+      results = await this.openAIBatchClient.getResults(batchId, contexts);
     } else {
-      results = await this.batchClient!.getResults(batchId, contexts);
+      if (!this.batchClient) throw new Error("Anthropic batch client not initialized");
+      results = await this.batchClient.getResults(batchId, contexts);
     }
 
-    console.log(`Retrieved ${results.size} results`);
+    console.log(`Retrieved ${String(results.size)} results`);
 
     // Update stats
     this.stats.functionsProcessed = results.size;
@@ -773,9 +783,9 @@ export class Deminifier {
   }
 
   /** Default cost confirmation (always returns true in non-interactive mode) */
-  private async defaultConfirmCost(_estimate: CostEstimate): Promise<boolean> {
+  private defaultConfirmCost(_estimate: CostEstimate): Promise<boolean> {
     // In CLI mode, this will be overridden with interactive confirmation
-    return true;
+    return Promise.resolve(true);
   }
 
   /** Get statistics */
@@ -841,7 +851,7 @@ export async function interactiveConfirmCost(
     process.stdout.write("Proceed with de-minification? [y/N] ");
 
     // Set up stdin for reading
-    process.stdin.setRawMode?.(false);
+    process.stdin.setRawMode(false);
     process.stdin.resume();
     process.stdin.setEncoding("utf8");
 
@@ -871,7 +881,7 @@ export function formatProgress(progress: DeminifyProgress): string {
     reassembling: "Reassembling",
   };
 
-  let msg = `[${percent}%] ${phases[progress.phase]}`;
+  let msg = `[${String(percent)}%] ${phases[progress.phase]}`;
   if (progress.currentItem) {
     msg += `: ${progress.currentItem}`;
   }
@@ -882,10 +892,10 @@ export function formatProgress(progress: DeminifyProgress): string {
 /** Format stats for display */
 export function formatStats(stats: DeminifyStats): string {
   const lines: string[] = [];
-  lines.push(`Functions processed: ${stats.functionsProcessed}`);
-  lines.push(`Cache hits: ${stats.cacheHits}`);
-  lines.push(`Cache misses: ${stats.cacheMisses}`);
-  lines.push(`Errors: ${stats.errors}`);
+  lines.push(`Functions processed: ${String(stats.functionsProcessed)}`);
+  lines.push(`Cache hits: ${String(stats.cacheHits)}`);
+  lines.push(`Cache misses: ${String(stats.cacheMisses)}`);
+  lines.push(`Errors: ${String(stats.errors)}`);
   lines.push(`Input tokens: ${stats.inputTokensUsed.toLocaleString()}`);
   lines.push(`Output tokens: ${stats.outputTokensUsed.toLocaleString()}`);
   lines.push(

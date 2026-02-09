@@ -3,7 +3,7 @@ import { join, dirname } from "node:path";
 import { hashSource } from "./cache.ts";
 
 /** Persisted batch state for resume support */
-export interface BatchState {
+export type BatchState = {
   /** Batch ID from Anthropic API */
   batchId: string;
   /** Hash of source file for verification */
@@ -94,13 +94,13 @@ export function formatBatchState(state: BatchState): string {
   const age = Date.now() - state.createdAt;
   const ageMinutes = Math.floor(age / 60000);
   const ageStr = ageMinutes < 60
-    ? `${ageMinutes}m ago`
-    : `${Math.floor(ageMinutes / 60)}h ${ageMinutes % 60}m ago`;
+    ? `${String(ageMinutes)}m ago`
+    : `${String(Math.floor(ageMinutes / 60))}h ${String(ageMinutes % 60)}m ago`;
 
   return [
     `Batch ID: ${state.batchId}`,
     `File: ${state.fileName}`,
-    `Functions: ${state.functionCount}`,
+    `Functions: ${String(state.functionCount)}`,
     `Model: ${state.model}`,
     `Created: ${ageStr}`,
     `Output: ${state.outputPath}`,

@@ -9,7 +9,7 @@ import { join } from "path";
 import type { FunctionRenameMapping } from "./babel-renamer.ts";
 
 /** Cached rename result */
-export interface CachedRenameResult {
+export type CachedRenameResult = {
   /** Hash of the function source */
   hash: string;
   /** The rename mapping */
@@ -24,7 +24,7 @@ export interface CachedRenameResult {
 export class FunctionCache {
   private cacheDir: string;
   private model: string;
-  private inMemoryCache: Map<string, CachedRenameResult> = new Map();
+  private inMemoryCache = new Map<string, CachedRenameResult>();
   private initialized = false;
 
   constructor(cacheDir: string, model: string) {

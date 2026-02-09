@@ -16,7 +16,7 @@ import type {
 } from "./types.ts";
 
 /** Token bucket for rate limiting */
-interface TokenBucket {
+type TokenBucket = {
   tokens: number;
   lastRefill: number;
   maxTokens: number;
@@ -90,7 +90,7 @@ export class OpenAIClient {
         }
 
         // Parse response
-        const content = response.choices[0]?.message?.content;
+        const content = response.choices[0]?.message.content;
         if (!content) {
           throw new Error("Empty response from OpenAI");
         }
@@ -104,7 +104,7 @@ export class OpenAIClient {
           const retryAfter = 60; // Default to 60 seconds for rate limiting
           if (this.config.verbose) {
             console.error(
-              `Rate limited, waiting ${retryAfter}s before retry...`,
+              `Rate limited, waiting ${String(retryAfter)}s before retry...`,
             );
           }
           await this.sleep(retryAfter * 1000);
@@ -128,7 +128,7 @@ export class OpenAIClient {
     context: DeminifyContext,
   ): DeminifyResult {
     // Extract code from markdown code blocks
-    const codeMatch = responseText.match(/```(?:javascript|js)?\n?([\s\S]*?)```/);
+    const codeMatch = /```(?:javascript|js)?\n?([\s\S]*?)```/.exec(responseText);
     if (!codeMatch?.[1]) {
       throw new Error("No code block found in response");
     }
@@ -147,7 +147,7 @@ export class OpenAIClient {
     let localVariableNames: Record<string, string> = {};
 
     // Look for JSON after the code block
-    const jsonMatch = responseText.match(/```[\s\S]*?```\s*(\{[\s\S]*\})/);
+    const jsonMatch = /```[\s\S]*?```\s*(\{[\s\S]*\})/.exec(responseText);
     if (jsonMatch?.[1]) {
       try {
         const metadata = JSON.parse(jsonMatch[1]) as {
@@ -167,9 +167,7 @@ export class OpenAIClient {
 
     // Try to infer name from the de-minified code if not provided
     if (suggestedName === "anonymousFunction") {
-      const funcNameMatch = deminifiedSource.match(
-        /(?:function|const|let|var)\s+([a-zA-Z_$][a-zA-Z0-9_$]*)/,
-      );
+      const funcNameMatch = /(?:function|const|let|var)\s+([a-zA-Z_$][a-zA-Z0-9_$]*)/.exec(deminifiedSource);
       if (funcNameMatch?.[1]) {
         suggestedName = funcNameMatch[1];
       }

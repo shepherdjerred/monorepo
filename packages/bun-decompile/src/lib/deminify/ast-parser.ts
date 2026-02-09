@@ -4,41 +4,41 @@ import type { Node } from "acorn";
 import type { ExtractedFunction, FunctionType, ParameterInfo } from "./types.ts";
 
 /** Extended node types for Acorn AST */
-interface FunctionNode extends Node {
+type FunctionNode = {
   id?: { name: string } | null;
   params: Node[];
   body: Node;
   async?: boolean;
   generator?: boolean;
-}
+} & Node
 
-interface CallExpressionNode extends Node {
+type CallExpressionNode = {
   callee: Node;
   arguments: Node[];
-}
+} & Node
 
-interface IdentifierNode extends Node {
+type IdentifierNode = {
   name: string;
-}
+} & Node
 
-interface MemberExpressionNode extends Node {
+type MemberExpressionNode = {
   object: Node;
   property: Node;
   computed: boolean;
-}
+} & Node
 
-interface MethodDefinitionNode extends Node {
+type MethodDefinitionNode = {
   key: Node;
   value: Node;
   kind: "constructor" | "method" | "get" | "set";
   static: boolean;
-}
+} & Node
 
-interface PatternNode extends Node {
+type PatternNode = {
   left?: Node;
   argument?: Node;
   name?: string;
-}
+} & Node
 
 /** Parse JavaScript source and extract all functions */
 export function parseAndExtractFunctions(
@@ -126,9 +126,12 @@ export function parseAndExtractFunctions(
       if (func === otherFunc) continue;
       if (otherFunc.start > func.start && otherFunc.end < func.end) {
         // otherFunc is nested inside func
+        const existingParent = otherFunc.parentId
+          ? functions.find((f) => f.id === otherFunc.parentId)
+          : undefined;
         if (
           !otherFunc.parentId ||
-          (func.start > functions.find((f) => f.id === otherFunc.parentId)!.start)
+          (existingParent && func.start > existingParent.start)
         ) {
           // func is a closer parent (more deeply nested)
           if (otherFunc.parentId) {
@@ -262,7 +265,7 @@ function generateFunctionId(
 ): string {
   const prefix = name || "anon";
   // Use start_end format to match babel-renamer.ts
-  return `${prefix}_${node.start}_${node.end}`;
+  return `${prefix}_${String(node.start)}_${String(node.end)}`;
 }
 
 /** Extract parameter information from a function node */

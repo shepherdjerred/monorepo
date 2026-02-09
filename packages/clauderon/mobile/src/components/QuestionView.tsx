@@ -59,7 +59,7 @@ export function QuestionView({ message }: QuestionViewProps) {
 
             {/* Options */}
             <View style={styles.optionsContainer}>
-              {q.options?.map((option, optIdx) => (
+              {q.options.map((option, optIdx) => (
                 <View key={optIdx} style={styles.option}>
                   <View style={styles.checkbox} />
                   <View style={styles.optionContent}>

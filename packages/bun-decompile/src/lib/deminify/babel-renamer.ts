@@ -15,15 +15,13 @@ import _generate from "@babel/generator";
 import * as t from "@babel/types";
 
 // Handle ESM/CJS interop for Babel packages
-const traverse = (
-  (_traverse as unknown as { default: typeof _traverse }).default ?? _traverse
-) as typeof _traverse;
-const generate = (
-  (_generate as unknown as { default: typeof _generate }).default ?? _generate
-) as typeof _generate;
+const traverse =
+  (_traverse as unknown as { default: typeof _traverse }).default;
+const generate =
+  (_generate as unknown as { default: typeof _generate }).default;
 
 /** Rename mapping for a single function */
-export interface FunctionRenameMapping {
+export type FunctionRenameMapping = {
   /** New name for the function itself */
   functionName?: string;
   /** Description/comment for the function */
@@ -33,12 +31,10 @@ export interface FunctionRenameMapping {
 }
 
 /** Rename mappings for multiple functions, keyed by function ID */
-export interface RenameMappings {
-  [functionId: string]: FunctionRenameMapping;
-}
+export type RenameMappings = Record<string, FunctionRenameMapping>
 
 /** Options for the renamer */
-export interface RenamerOptions {
+export type RenamerOptions = {
   /** Whether to add description comments */
   addComments?: boolean;
   /** Whether to preserve existing comments */
@@ -80,7 +76,7 @@ function getFunctionId(path: NodePath<t.Function>): string {
     }
   }
 
-  return `${name}_${start}_${end}`;
+  return `${name}_${String(start)}_${String(end)}`;
 }
 
 /**
@@ -118,20 +114,14 @@ function handleFunction(
       const oldFuncName = path.node.id.name;
       if (oldFuncName !== mapping.functionName) {
         // Rename at the scope where the function is declared
-        const parentScope = path.parentPath?.scope;
-        if (parentScope) {
-          parentScope.rename(oldFuncName, mapping.functionName);
-        }
+        path.parentPath.scope.rename(oldFuncName, mapping.functionName);
       }
     } else if (t.isVariableDeclarator(path.parent)) {
       // Arrow function or function expression assigned to variable
       if (t.isIdentifier(path.parent.id)) {
         const oldVarName = path.parent.id.name;
         if (oldVarName !== mapping.functionName) {
-          const declaratorPath = path.parentPath;
-          if (declaratorPath) {
-            declaratorPath.scope.rename(oldVarName, mapping.functionName);
-          }
+          path.parentPath.scope.rename(oldVarName, mapping.functionName);
         }
       }
     }
@@ -148,11 +138,11 @@ function handleFunction(
     let targetPath: NodePath = path;
     if (t.isVariableDeclarator(path.parent)) {
       // For arrow functions, add comment to the variable declaration
-      targetPath = path.parentPath?.parentPath ?? path;
+      targetPath = path.parentPath.parentPath ?? path;
     }
 
     // Add leading comment
-    const node = targetPath.node as t.Node;
+    const node = targetPath.node;
     node.leadingComments = node.leadingComments ?? [];
     node.leadingComments.push(comment);
   }
@@ -171,11 +161,11 @@ function handleFunction(
  * @param options - Optional configuration
  * @returns Transformed source code
  */
-export async function applyRenames(
+export function applyRenames(
   source: string,
   mappings: RenameMappings,
   options: RenamerOptions = {},
-): Promise<string> {
+): string {
   const { addComments = true, preserveComments = true } = options;
 
   // Parse the source code
@@ -229,28 +219,25 @@ export async function applyRenames(
  * Apply renames to multiple files/chunks in a single operation.
  * More efficient than calling applyRenames() multiple times.
  */
-export async function applyRenamesBatch(
-  sources: Array<{ id: string; source: string }>,
+export function applyRenamesBatch(
+  sources: { id: string; source: string }[],
   allMappings: RenameMappings,
   options: RenamerOptions = {},
-): Promise<Map<string, string>> {
+): Map<string, string> {
   const results = new Map<string, string>();
 
-  // Process in parallel
-  await Promise.all(
-    sources.map(async ({ id, source }) => {
-      // Filter mappings to only those relevant to this source
-      // For now, apply all mappings - Babel will ignore ones that don't apply
-      try {
-        const transformed = await applyRenames(source, allMappings, options);
-        results.set(id, transformed);
-      } catch (error) {
-        // On error, return original source
-        console.error(`Error transforming ${id}:`, error);
-        results.set(id, source);
-      }
-    }),
-  );
+  for (const { id, source } of sources) {
+    // Filter mappings to only those relevant to this source
+    // For now, apply all mappings - Babel will ignore ones that don't apply
+    try {
+      const transformed = applyRenames(source, allMappings, options);
+      results.set(id, transformed);
+    } catch (error) {
+      // On error, return original source
+      console.error(`Error transforming ${id}:`, error);
+      results.set(id, source);
+    }
+  }
 
   return results;
 }

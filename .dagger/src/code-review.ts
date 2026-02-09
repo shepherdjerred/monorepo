@@ -143,15 +143,15 @@ echo "Analyzing PR #\${PR_NUMBER}" >&2
 # Fetch PR data
 PR_DATA=$(gh api "repos/${REPO}/pulls/\${PR_NUMBER}")
 
-ADDITIONS=$(echo "\$PR_DATA" | jq -r '.additions')
-DELETIONS=$(echo "\$PR_DATA" | jq -r '.deletions')
-CHANGED_FILES=$(echo "\$PR_DATA" | jq -r '.changed_files')
-COMMITS=$(echo "\$PR_DATA" | jq -r '.commits')
+ADDITIONS=$(echo "$PR_DATA" | jq -r '.additions')
+DELETIONS=$(echo "$PR_DATA" | jq -r '.deletions')
+CHANGED_FILES=$(echo "$PR_DATA" | jq -r '.changed_files')
+COMMITS=$(echo "$PR_DATA" | jq -r '.commits')
 
 echo "PR Metrics: +\${ADDITIONS} -\${DELETIONS}, \${CHANGED_FILES} files, \${COMMITS} commits" >&2
 
 # Handle empty PR
-if [ "\$COMMITS" -eq 0 ]; then
+if [ "$COMMITS" -eq 0 ]; then
   echo "PR has no commits" >&2
   jq -n \\
     --argjson shouldSkip true \\
@@ -168,21 +168,21 @@ fi
 
 # Detect trivial PRs (merges/rebases)
 COMMITS_DATA=$(gh api "repos/${REPO}/pulls/\${PR_NUMBER}/commits")
-MERGE_COMMIT_COUNT=$(echo "\$COMMITS_DATA" | jq '[.[] | select(.parents | length >= 2)] | length')
-TOTAL_COMMITS=$(echo "\$COMMITS_DATA" | jq 'length')
+MERGE_COMMIT_COUNT=$(echo "$COMMITS_DATA" | jq '[.[] | select(.parents | length >= 2)] | length')
+TOTAL_COMMITS=$(echo "$COMMITS_DATA" | jq 'length')
 
 echo "Merge commits: \${MERGE_COMMIT_COUNT} / \${TOTAL_COMMITS}" >&2
 
 # Try git diff for actual changes
-ACTUAL_ADDITIONS="\$ADDITIONS"
-ACTUAL_DELETIONS="\$DELETIONS"
+ACTUAL_ADDITIONS="$ADDITIONS"
+ACTUAL_DELETIONS="$DELETIONS"
 
 git fetch origin "\${BASE_REF}" --depth=50 2>/dev/null || echo "Git fetch failed, using API stats" >&2
 
 if DIFF_OUTPUT=$(git diff --shortstat "origin/\${BASE_REF}...\${HEAD_SHA}" 2>/dev/null); then
-  if [ -n "\$DIFF_OUTPUT" ]; then
-    ACTUAL_ADDITIONS=$(echo "\$DIFF_OUTPUT" | sed -n 's/.*\\([0-9][0-9]*\\) insertion.*/\\1/p')
-    ACTUAL_DELETIONS=$(echo "\$DIFF_OUTPUT" | sed -n 's/.*\\([0-9][0-9]*\\) deletion.*/\\1/p')
+  if [ -n "$DIFF_OUTPUT" ]; then
+    ACTUAL_ADDITIONS=$(echo "$DIFF_OUTPUT" | sed -n 's/.*\\([0-9][0-9]*\\) insertion.*/\\1/p')
+    ACTUAL_DELETIONS=$(echo "$DIFF_OUTPUT" | sed -n 's/.*\\([0-9][0-9]*\\) deletion.*/\\1/p')
     ACTUAL_ADDITIONS=\${ACTUAL_ADDITIONS:-0}
     ACTUAL_DELETIONS=\${ACTUAL_DELETIONS:-0}
     echo "Actual changes: +\${ACTUAL_ADDITIONS} -\${ACTUAL_DELETIONS}" >&2
@@ -190,34 +190,34 @@ if DIFF_OUTPUT=$(git diff --shortstat "origin/\${BASE_REF}...\${HEAD_SHA}" 2>/de
 fi
 
 # Validate numeric values
-if ! [[ "\$ACTUAL_ADDITIONS" =~ ^[0-9]+$ ]]; then ACTUAL_ADDITIONS="\$ADDITIONS"; fi
-if ! [[ "\$ACTUAL_DELETIONS" =~ ^[0-9]+$ ]]; then ACTUAL_DELETIONS="\$DELETIONS"; fi
+if ! [[ "$ACTUAL_ADDITIONS" =~ ^[0-9]+$ ]]; then ACTUAL_ADDITIONS="$ADDITIONS"; fi
+if ! [[ "$ACTUAL_DELETIONS" =~ ^[0-9]+$ ]]; then ACTUAL_DELETIONS="$DELETIONS"; fi
 
-TOTAL_ACTUAL_CHANGES=\$((ACTUAL_ADDITIONS + ACTUAL_DELETIONS))
+TOTAL_ACTUAL_CHANGES=$((ACTUAL_ADDITIONS + ACTUAL_DELETIONS))
 
 # Determine if PR should be skipped
 SHOULD_SKIP=false
 
-if [ "\$MERGE_COMMIT_COUNT" -eq "\$TOTAL_COMMITS" ] && [ "\$MERGE_COMMIT_COUNT" -gt 0 ]; then
-  if [ "\$TOTAL_ACTUAL_CHANGES" -lt 50 ]; then
+if [ "$MERGE_COMMIT_COUNT" -eq "$TOTAL_COMMITS" ] && [ "$MERGE_COMMIT_COUNT" -gt 0 ]; then
+  if [ "$TOTAL_ACTUAL_CHANGES" -lt 50 ]; then
     echo "Trivial PR: Pure merge with <50 line changes" >&2
     SHOULD_SKIP=true
   fi
 fi
 
-if [ "\$ACTUAL_ADDITIONS" -eq 0 ] && [ "\$ACTUAL_DELETIONS" -eq 0 ]; then
+if [ "$ACTUAL_ADDITIONS" -eq 0 ] && [ "$ACTUAL_DELETIONS" -eq 0 ]; then
   echo "Trivial PR: Pure rebase with 0 changes" >&2
   SHOULD_SKIP=true
 fi
 
 # Calculate complexity
-TOTAL_CHANGES=\$((ADDITIONS + DELETIONS))
+TOTAL_CHANGES=$((ADDITIONS + DELETIONS))
 MAX_TURNS=35
 COMPLEXITY="complex"
 
-if [ "\$TOTAL_CHANGES" -lt 100 ] && [ "\$CHANGED_FILES" -lt 5 ]; then
+if [ "$TOTAL_CHANGES" -lt 100 ] && [ "$CHANGED_FILES" -lt 5 ]; then
   COMPLEXITY="simple"
-elif [ "\$TOTAL_CHANGES" -lt 250 ] && [ "\$CHANGED_FILES" -lt 8 ]; then
+elif [ "$TOTAL_CHANGES" -lt 250 ] && [ "$CHANGED_FILES" -lt 8 ]; then
   COMPLEXITY="medium"
 fi
 
@@ -225,10 +225,10 @@ echo "Complexity: \${COMPLEXITY}, max_turns: \${MAX_TURNS}" >&2
 
 # Check previous review status
 REVIEWS=$(gh api "repos/${REPO}/pulls/\${PR_NUMBER}/reviews" --jq 'sort_by(.submitted_at) | reverse')
-PREVIOUS_STATE=$(echo "\$REVIEWS" | jq -r '[.[] | select(.user.login == "github-actions[bot]")] | .[0].state // "none"')
+PREVIOUS_STATE=$(echo "$REVIEWS" | jq -r '[.[] | select(.user.login == "github-actions[bot]")] | .[0].state // "none"')
 PREVIOUS_WAS_APPROVED=false
 
-if [ "\$PREVIOUS_STATE" = "APPROVED" ]; then
+if [ "$PREVIOUS_STATE" = "APPROVED" ]; then
   PREVIOUS_WAS_APPROVED=true
 fi
 
@@ -236,10 +236,10 @@ echo "Previous state: \${PREVIOUS_STATE}" >&2
 
 # Check if re-review
 IS_REREVIEW=false
-if [ "\$PREVIOUS_STATE" != "none" ]; then
-  LAST_REVIEW_COMMIT=$(echo "\$REVIEWS" | jq -r '[.[] | select(.user.login == "github-actions[bot]")] | .[0].commit_id // ""')
-  if [ -n "\$LAST_REVIEW_COMMIT" ] && [ "\$LAST_REVIEW_COMMIT" != "null" ]; then
-    if [ "\$LAST_REVIEW_COMMIT" != "\$HEAD_SHA" ]; then
+if [ "$PREVIOUS_STATE" != "none" ]; then
+  LAST_REVIEW_COMMIT=$(echo "$REVIEWS" | jq -r '[.[] | select(.user.login == "github-actions[bot]")] | .[0].commit_id // ""')
+  if [ -n "$LAST_REVIEW_COMMIT" ] && [ "$LAST_REVIEW_COMMIT" != "null" ]; then
+    if [ "$LAST_REVIEW_COMMIT" != "$HEAD_SHA" ]; then
       IS_REREVIEW=true
       echo "Re-review: new commits since last review" >&2
     fi
@@ -248,14 +248,14 @@ fi
 
 # Output JSON
 jq -n \\
-  --argjson shouldSkip \$SHOULD_SKIP \\
-  --argjson maxTurns \$MAX_TURNS \\
-  --arg complexity "\$COMPLEXITY" \\
-  --argjson isRereview \$IS_REREVIEW \\
-  --arg previousState "\$PREVIOUS_STATE" \\
-  --argjson previousWasApproved \$PREVIOUS_WAS_APPROVED \\
-  --argjson totalChanges \$TOTAL_CHANGES \\
-  --argjson changedFiles \$CHANGED_FILES \\
+  --argjson shouldSkip $SHOULD_SKIP \\
+  --argjson maxTurns $MAX_TURNS \\
+  --arg complexity "$COMPLEXITY" \\
+  --argjson isRereview $IS_REREVIEW \\
+  --arg previousState "$PREVIOUS_STATE" \\
+  --argjson previousWasApproved $PREVIOUS_WAS_APPROVED \\
+  --argjson totalChanges $TOTAL_CHANGES \\
+  --argjson changedFiles $CHANGED_FILES \\
   '{shouldSkip: $shouldSkip, maxTurns: $maxTurns, complexity: $complexity, isRereview: $isRereview, previousState: $previousState, previousWasApproved: $previousWasApproved, totalChanges: $totalChanges, changedFiles: $changedFiles}'
 `;
 
@@ -273,7 +273,7 @@ jq -n \\
   const exitCode = await container.exitCode();
   if (exitCode !== 0) {
     const stderr = await container.stderr();
-    throw new Error(`PR analysis script failed (exit ${exitCode}): ${stderr.slice(0, 1000)}`);
+    throw new Error(`PR analysis script failed (exit ${String(exitCode)}): ${stderr.slice(0, 1000)}`);
   }
 
   const result = await container.stdout();
@@ -326,7 +326,7 @@ export async function reviewPr(options: ReviewPrOptions): Promise<string> {
   if (analysis.shouldSkip) {
     const skipMessage = `🤖 **Claude Code Review - Skipped**
 
-This PR appears to be a trivial merge/rebase with minimal code changes (${analysis.totalChanges} lines).
+This PR appears to be a trivial merge/rebase with minimal code changes (${String(analysis.totalChanges)} lines).
 
 Automatic review skipped to save tokens. If you believe this should be reviewed, please:
 1. Add a comment mentioning \`@claude\` to trigger interactive review, or
@@ -339,7 +339,7 @@ Automatic review skipped to save tokens. If you believe this should be reviewed,
       body: skipMessage,
     });
 
-    return `Skipped trivial PR #${prNumber} (${analysis.totalChanges} lines, ${analysis.complexity})`;
+    return `Skipped trivial PR #${String(prNumber)} (${String(analysis.totalChanges)} lines, ${analysis.complexity})`;
   }
 
   // Step 3: Build prompt with re-review prefix if applicable
@@ -395,7 +395,7 @@ Please check the workflow logs for details.`,
         notifyError instanceof Error ? notifyError.message : String(notifyError),
       );
     }
-    return `Review failed for PR #${prNumber}: ${errorMessage}`;
+    return `Review failed for PR #${String(prNumber)}: ${errorMessage}`;
   }
 
   if (execResult.exitCode !== 0) {
@@ -407,7 +407,7 @@ Please check the workflow logs for details.`,
         prNumber,
         body: `🤖 **Claude Code Review - Error**
 
-Claude exited with code ${execResult.exitCode}:
+Claude exited with code ${String(execResult.exitCode)}:
 
 \`\`\`
 ${errorDetail.slice(0, 1000)}
@@ -421,7 +421,7 @@ Please check the workflow logs for details.`,
         notifyError instanceof Error ? notifyError.message : String(notifyError),
       );
     }
-    return `Review failed for PR #${prNumber}: Claude exited with code ${execResult.exitCode}`;
+    return `Review failed for PR #${String(prNumber)}: Claude exited with code ${String(execResult.exitCode)}`;
   }
 
   const stdout = execResult.stdout;
@@ -430,7 +430,7 @@ Please check the workflow logs for details.`,
   let verdict: ReviewVerdict;
   try {
     // Find JSON in the output (Claude may include other text)
-    const jsonMatch = stdout.match(/\{[\s\S]*"should_approve"[\s\S]*\}/);
+    const jsonMatch = /\{[\s\S]*"should_approve"[\s\S]*\}/.exec(stdout);
     if (!jsonMatch) {
       throw new Error("No valid JSON found in Claude output");
     }
@@ -443,7 +443,7 @@ Please check the workflow logs for details.`,
     if (typeof verdict.confidence !== "number") {
       throw new Error("Missing or invalid confidence field");
     }
-    if (!verdict.issue_count || typeof verdict.issue_count.critical !== "number") {
+    if (typeof verdict.issue_count.critical !== "number") {
       throw new Error("Missing or invalid issue_count field");
     }
     if (typeof verdict.reasoning !== "string") {
@@ -479,7 +479,7 @@ ${stdout.slice(0, 500)}
         notifyError instanceof Error ? notifyError.message : String(notifyError),
       );
     }
-    return `Review output parsing failed for PR #${prNumber}: ${errorMessage}`;
+    return `Review output parsing failed for PR #${String(prNumber)}: ${errorMessage}`;
   }
 
   // Step 6: Post inline comments as batched review if any
@@ -503,14 +503,14 @@ ${stdout.slice(0, 500)}
   }
 
   const inlineNote = inlineCommentError
-    ? `\n\n⚠️ Failed to post ${verdict.inline_comments.length} inline comment(s): ${inlineCommentError.slice(0, 200)}`
+    ? `\n\n⚠️ Failed to post ${String(verdict.inline_comments.length)} inline comment(s): ${inlineCommentError.slice(0, 200)}`
     : "";
 
   // Step 7: Post approve/request-changes
   if (verdict.should_approve) {
     const nitpickNote =
       verdict.issue_count.nitpick > 0
-        ? `\n\n${verdict.issue_count.nitpick} nitpick(s) noted in review comments are acceptable and don't block approval.`
+        ? `\n\n${String(verdict.issue_count.nitpick)} nitpick(s) noted in review comments are acceptable and don't block approval.`
         : "";
 
     try {
@@ -521,7 +521,7 @@ ${stdout.slice(0, 500)}
         action: "approve",
         body: `✅ **Automated approval by Claude Code Review**
 
-No blocking issues found (confidence: ${verdict.confidence}%).
+No blocking issues found (confidence: ${String(verdict.confidence)}%).
 
 ${verdict.reasoning}${nitpickNote}${inlineNote}`,
       });
@@ -532,7 +532,7 @@ ${verdict.reasoning}${nitpickNote}${inlineNote}`,
           githubToken,
           repository: REPO,
           prNumber,
-          body: `🤖 **Claude Code Review - Posting Error**\n\nFailed to submit review: ${msg.slice(0, 500)}\n\n**Verdict**: Approve (confidence: ${verdict.confidence}%)\n\n${verdict.reasoning}`,
+          body: `🤖 **Claude Code Review - Posting Error**\n\nFailed to submit review: ${msg.slice(0, 500)}\n\n**Verdict**: Approve (confidence: ${String(verdict.confidence)}%)\n\n${verdict.reasoning}`,
         });
       } catch (notifyError) {
         console.error(
@@ -540,10 +540,10 @@ ${verdict.reasoning}${nitpickNote}${inlineNote}`,
           notifyError instanceof Error ? notifyError.message : String(notifyError),
         );
       }
-      return `Review posting failed for PR #${prNumber}: ${msg}`;
+      return `Review posting failed for PR #${String(prNumber)}: ${msg}`;
     }
 
-    return `Approved PR #${prNumber} (confidence: ${verdict.confidence}%)`;
+    return `Approved PR #${String(prNumber)} (confidence: ${String(verdict.confidence)}%)`;
   } else {
     const header =
       analysis.isRereview && analysis.previousWasApproved
@@ -566,9 +566,9 @@ ${verdict.reasoning}${nitpickNote}${inlineNote}`,
 ${context}
 
 **Issues found:**
-- Critical: ${verdict.issue_count.critical}
-- Major: ${verdict.issue_count.major}
-- Minor: ${verdict.issue_count.minor}
+- Critical: ${String(verdict.issue_count.critical)}
+- Major: ${String(verdict.issue_count.major)}
+- Minor: ${String(verdict.issue_count.minor)}
 
 ${verdict.reasoning}
 
@@ -581,7 +581,7 @@ Please review the inline comments and address the issues.${inlineNote}`,
           githubToken,
           repository: REPO,
           prNumber,
-          body: `🤖 **Claude Code Review - Posting Error**\n\nFailed to submit review: ${msg.slice(0, 500)}\n\n**Verdict**: Changes Requested\n\n**Issues found:**\n- Critical: ${verdict.issue_count.critical}\n- Major: ${verdict.issue_count.major}\n- Minor: ${verdict.issue_count.minor}\n\n${verdict.reasoning}`,
+          body: `🤖 **Claude Code Review - Posting Error**\n\nFailed to submit review: ${msg.slice(0, 500)}\n\n**Verdict**: Changes Requested\n\n**Issues found:**\n- Critical: ${String(verdict.issue_count.critical)}\n- Major: ${String(verdict.issue_count.major)}\n- Minor: ${String(verdict.issue_count.minor)}\n\n${verdict.reasoning}`,
         });
       } catch (notifyError) {
         console.error(
@@ -589,10 +589,10 @@ Please review the inline comments and address the issues.${inlineNote}`,
           notifyError instanceof Error ? notifyError.message : String(notifyError),
         );
       }
-      return `Review posting failed for PR #${prNumber}: ${msg}`;
+      return `Review posting failed for PR #${String(prNumber)}: ${msg}`;
     }
 
-    return `Requested changes on PR #${prNumber} (critical: ${verdict.issue_count.critical}, major: ${verdict.issue_count.major}, minor: ${verdict.issue_count.minor})`;
+    return `Requested changes on PR #${String(prNumber)} (critical: ${String(verdict.issue_count.critical)}, major: ${String(verdict.issue_count.major)}, minor: ${String(verdict.issue_count.minor)})`;
   }
 }
 
@@ -658,7 +658,7 @@ export async function handleInteractive(options: HandleInteractiveOptions): Prom
   if (eventContext?.path) {
     prompt += `\nContext: This comment is on file \`${eventContext.path}\``;
     if (eventContext.line) {
-      prompt += ` at line ${eventContext.line}`;
+      prompt += ` at line ${String(eventContext.line)}`;
     }
     if (eventContext.diffHunk) {
       prompt += `\n\nDiff context:\n\`\`\`diff\n${eventContext.diffHunk}\n\`\`\``;
@@ -693,7 +693,7 @@ export async function handleInteractive(options: HandleInteractiveOptions): Prom
           githubToken,
           repository: REPO,
           prNumber,
-          body: `🤖 **Error processing request**\n\nClaude exited with code ${execResult.exitCode}:\n\n\`\`\`\n${errorDetail.slice(0, 1000)}\n\`\`\``,
+          body: `🤖 **Error processing request**\n\nClaude exited with code ${String(execResult.exitCode)}:\n\n\`\`\`\n${errorDetail.slice(0, 1000)}\n\`\`\``,
         });
       } catch (notifyError) {
         console.error(
@@ -701,7 +701,7 @@ export async function handleInteractive(options: HandleInteractiveOptions): Prom
           notifyError instanceof Error ? notifyError.message : String(notifyError),
         );
       }
-      return `Interactive request failed for PR #${prNumber}: Claude exited with code ${execResult.exitCode}`;
+      return `Interactive request failed for PR #${String(prNumber)}: Claude exited with code ${String(execResult.exitCode)}`;
     }
 
     output = execResult.stdout;
@@ -724,7 +724,7 @@ ${errorMessage.slice(0, 1000)}
         notifyError instanceof Error ? notifyError.message : String(notifyError),
       );
     }
-    return `Interactive request failed for PR #${prNumber}: ${errorMessage}`;
+    return `Interactive request failed for PR #${String(prNumber)}: ${errorMessage}`;
   }
 
   // Step 4: Truncate if needed (GitHub comment limit is ~65536 chars)
@@ -743,8 +743,8 @@ ${errorMessage.slice(0, 1000)}
     });
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    return `Failed to post response on PR #${prNumber}: ${msg}`;
+    return `Failed to post response on PR #${String(prNumber)}: ${msg}`;
   }
 
-  return `Responded to interactive request on PR #${prNumber}`;
+  return `Responded to interactive request on PR #${String(prNumber)}`;
 }

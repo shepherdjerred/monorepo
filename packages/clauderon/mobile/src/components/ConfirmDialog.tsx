@@ -1,5 +1,7 @@
 import React from "react";
 import { View, Text, Modal, TouchableOpacity, StyleSheet, Platform } from "react-native";
+
+const OVERLAY_BACKGROUND = "rgba(0, 0, 0, 0.5)";
 import { useTheme } from "../contexts/ThemeContext";
 import { typography } from "../styles/typography";
 
@@ -68,13 +70,13 @@ export function ConfirmDialog({
 }
 
 function getThemedStyles(colors: { surface: string; border: string }) {
-  return StyleSheet.create({
+  return {
     dialog: {
       backgroundColor: colors.surface,
       borderWidth: 3,
       borderColor: colors.border,
       padding: 24,
-      width: "100%",
+      width: "100%" as const,
       maxWidth: 400,
       ...Platform.select({
         ios: {
@@ -107,13 +109,13 @@ function getThemedStyles(colors: { surface: string; border: string }) {
         },
       }),
     },
-  });
+  } as const;
 }
 
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: OVERLAY_BACKGROUND,
     justifyContent: "center",
     alignItems: "center",
     padding: 24,

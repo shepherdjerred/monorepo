@@ -113,6 +113,124 @@ export class ConsoleClient {
   }
 
   /**
+   * Handle an output message by validating and decoding base64 data
+   */
+  private handleOutputMessage(data: string): void {
+    // Handle empty data
+    if (data.length === 0) {
+      this.emit("data", "");
+      return;
+    }
+
+    // Validate base64 format before attempting decode
+    if (!isValidBase64(data)) {
+      if (this.shouldEmitError()) {
+        console.error(
+          `[ConsoleClient] Invalid base64 format (stage: validation) for session ${this.sessionId ?? "unknown"}. ` +
+            `Length: ${data.length}, ` +
+            `First 50 chars: ${data.substring(0, 50)}`,
+        );
+        this.emit(
+          "error",
+          new DecodeError(`Invalid base64 format received from server`, "validation", {
+            sessionId: this.sessionId,
+            dataLength: data.length,
+            dataSample: data.substring(0, 100),
+          }),
+        );
+      }
+      return;
+    }
+
+    // Check message size to prevent memory issues
+    if (data.length > MAX_MESSAGE_SIZE) {
+      if (this.shouldEmitError()) {
+        console.error(
+          `[ConsoleClient] Message size exceeded limit for session ${this.sessionId ?? "unknown"}. ` +
+            `Size: ${data.length} bytes, Max: ${MAX_MESSAGE_SIZE} bytes`,
+        );
+        this.emit(
+          "error",
+          new WebSocketError(
+            `Received message exceeds size limit (${(data.length / 1024).toFixed(0)}KB). ` +
+              `Large outputs may be truncated.`,
+          ),
+        );
+      }
+      return;
+    }
+
+    // Decode base64 data with staged error handling for better debugging
+    // Stage 1: Decode base64 to binary (atob)
+    let bytes: Uint8Array;
+    try {
+      const binaryString = atob(data);
+      bytes = Uint8Array.from(binaryString, (char) => char.charCodeAt(0));
+    } catch (atobError) {
+      if (this.shouldEmitError()) {
+        const errorMsg = atobError instanceof Error ? atobError.message : String(atobError);
+        console.error(
+          `[ConsoleClient] Base64 decode error (stage: atob) for session ${this.sessionId ?? "unknown"}: ${errorMsg}. ` +
+            `Data length: ${data.length}, ` +
+            `Sample: ${data.substring(0, 100)}`,
+        );
+        this.emit(
+          "error",
+          new DecodeError(
+            `Failed to decode base64: ${errorMsg}`,
+            "base64",
+            {
+              sessionId: this.sessionId,
+              dataLength: data.length,
+              dataSample: data.substring(0, 100),
+            },
+            atobError,
+          ),
+        );
+      }
+      return;
+    }
+
+    // Stage 2: Decode UTF-8 from binary
+    try {
+      // Use stream mode to handle incomplete UTF-8 sequences at chunk boundaries
+      // fatal: false means replace invalid bytes with U+FFFD instead of throwing
+      // stream: true means buffer incomplete sequences for next chunk
+      if (!this.decoder) {
+        return;
+      }
+      const decoded = this.decoder.decode(bytes, { stream: true });
+      this.emit("data", decoded);
+    } catch (utf8Error) {
+      if (this.shouldEmitError()) {
+        const errorMsg = utf8Error instanceof Error ? utf8Error.message : String(utf8Error);
+        // Include hex dump of first 32 bytes for debugging
+        const hexSample = Array.from(bytes.slice(0, 32))
+          .map((b) => "0x" + b.toString(16).padStart(2, "0"))
+          .join(" ");
+        console.error(
+          `[ConsoleClient] UTF-8 decode error (stage: utf8) for session ${this.sessionId ?? "unknown"}: ${errorMsg}. ` +
+            `Bytes length: ${bytes.length}, ` +
+            `Hex sample: ${hexSample}`,
+        );
+        this.emit(
+          "error",
+          new DecodeError(
+            `Failed to decode UTF-8: ${errorMsg}`,
+            "utf8",
+            {
+              sessionId: this.sessionId,
+              dataLength: bytes.length,
+              dataSample: hexSample,
+            },
+            utf8Error,
+          ),
+        );
+      }
+    }
+  }
+
+  /**
    * Connect to a session's console
    */
   connect(sessionId: string): void {
@@ -148,119 +266,7 @@ export class ConsoleClient {
           ) as ConsoleMessage;
 
           if (message.type === "output" && typeof message.data === "string") {
-            // Handle empty data
-            if (message.data.length === 0) {
-              this.emit("data", "");
-              return;
-            }
-
-            // Validate base64 format before attempting decode
-            if (!isValidBase64(message.data)) {
-              if (this.shouldEmitError()) {
-                console.error(
-                  `[ConsoleClient] Invalid base64 format (stage: validation) for session ${this.sessionId ?? "unknown"}. ` +
-                    `Length: ${message.data.length}, ` +
-                    `First 50 chars: ${message.data.substring(0, 50)}`,
-                );
-                this.emit(
-                  "error",
-                  new DecodeError(`Invalid base64 format received from server`, "validation", {
-                    sessionId: this.sessionId,
-                    dataLength: message.data.length,
-                    dataSample: message.data.substring(0, 100),
-                  }),
-                );
-              }
-              return;
-            }
-
-            // Check message size to prevent memory issues
-            if (message.data.length > MAX_MESSAGE_SIZE) {
-              if (this.shouldEmitError()) {
-                console.error(
-                  `[ConsoleClient] Message size exceeded limit for session ${this.sessionId ?? "unknown"}. ` +
-                    `Size: ${message.data.length} bytes, Max: ${MAX_MESSAGE_SIZE} bytes`,
-                );
-                this.emit(
-                  "error",
-                  new WebSocketError(
-                    `Received message exceeds size limit (${(message.data.length / 1024).toFixed(0)}KB). ` +
-                      `Large outputs may be truncated.`,
-                  ),
-                );
-              }
-              return;
-            }
-
-            // Decode base64 data with staged error handling for better debugging
-            // Stage 1: Decode base64 to binary (atob)
-            let bytes: Uint8Array;
-            try {
-              const binaryString = atob(message.data);
-              bytes = Uint8Array.from(binaryString, (char) => char.charCodeAt(0));
-            } catch (atobError) {
-              if (this.shouldEmitError()) {
-                const errorMsg = atobError instanceof Error ? atobError.message : String(atobError);
-                console.error(
-                  `[ConsoleClient] Base64 decode error (stage: atob) for session ${this.sessionId ?? "unknown"}: ${errorMsg}. ` +
-                    `Data length: ${message.data.length}, ` +
-                    `Sample: ${message.data.substring(0, 100)}`,
-                );
-                this.emit(
-                  "error",
-                  new DecodeError(
-                    `Failed to decode base64: ${errorMsg}`,
-                    "base64",
-                    {
-                      sessionId: this.sessionId,
-                      dataLength: message.data.length,
-                      dataSample: message.data.substring(0, 100),
-                    },
-                    atobError,
-                  ),
-                );
-              }
-              return;
-            }
-
-            // Stage 2: Decode UTF-8 from binary
-            try {
-              // Use stream mode to handle incomplete UTF-8 sequences at chunk boundaries
-              // fatal: false means replace invalid bytes with � instead of throwing
-              // stream: true means buffer incomplete sequences for next chunk
-              if (!this.decoder) {
-                return;
-              }
-              const decoded = this.decoder.decode(bytes, { stream: true });
-              this.emit("data", decoded);
-            } catch (utf8Error) {
-              if (this.shouldEmitError()) {
-                const errorMsg = utf8Error instanceof Error ? utf8Error.message : String(utf8Error);
-                // Include hex dump of first 32 bytes for debugging
-                const hexSample = Array.from(bytes.slice(0, 32))
-                  .map((b) => "0x" + b.toString(16).padStart(2, "0"))
-                  .join(" ");
-                console.error(
-                  `[ConsoleClient] UTF-8 decode error (stage: utf8) for session ${this.sessionId ?? "unknown"}: ${errorMsg}. ` +
-                    `Bytes length: ${bytes.length}, ` +
-                    `Hex sample: ${hexSample}`,
-                );
-                this.emit(
-                  "error",
-                  new DecodeError(
-                    `Failed to decode UTF-8: ${errorMsg}`,
-                    "utf8",
-                    {
-                      sessionId: this.sessionId,
-                      dataLength: bytes.length,
-                      dataSample: hexSample,
-                    },
-                    utf8Error,
-                  ),
-                );
-              }
-              return;
-            }
+            this.handleOutputMessage(message.data);
           }
         } catch (error) {
           this.emit(

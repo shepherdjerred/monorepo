@@ -29,7 +29,7 @@ export function EditSessionDialog({ session, onClose }: EditSessionDialogProps) 
     });
   }, [session.title, session.description, session.name]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
     setError(null);

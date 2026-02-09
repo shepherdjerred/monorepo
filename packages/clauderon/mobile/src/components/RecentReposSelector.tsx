@@ -15,6 +15,8 @@ import { useTheme } from "../contexts/ThemeContext";
 import { typography } from "../styles/typography";
 import { formatRelativeTime } from "../lib/utils";
 
+const OVERLAY_BACKGROUND = "rgba(0, 0, 0, 0.5)";
+
 type RecentReposSelectorProps = {
   visible: boolean;
   onSelect: (path: string) => void;
@@ -129,14 +131,14 @@ export function RecentReposSelector({ visible, onSelect, onClose }: RecentReposS
 }
 
 function getThemedStyles(colors: { surface: string; border: string }) {
-  return StyleSheet.create({
+  return {
     sheet: {
       backgroundColor: colors.surface,
       borderTopWidth: 3,
       borderLeftWidth: 3,
       borderRightWidth: 3,
       borderColor: colors.border,
-      maxHeight: "70%",
+      maxHeight: "70%" as const,
       ...Platform.select({
         ios: {
           shadowColor: colors.border,
@@ -149,13 +151,13 @@ function getThemedStyles(colors: { surface: string; border: string }) {
         },
       }),
     },
-  });
+  } as const;
 }
 
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: OVERLAY_BACKGROUND,
     justifyContent: "flex-end",
   },
   header: {

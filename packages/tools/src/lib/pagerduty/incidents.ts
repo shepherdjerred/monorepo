@@ -81,7 +81,7 @@ export async function getIncidentNotes(
 
 export async function getIncidentLogEntries(
   incidentId: string,
-  limit: number = 25
+  limit = 25
 ): Promise<PagerDutyLogEntry[]> {
   const result = await pagerDutyRequest<PagerDutyLogEntriesResponse>(
     `/incidents/${incidentId}/log_entries`,

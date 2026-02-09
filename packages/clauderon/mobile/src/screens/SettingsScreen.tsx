@@ -25,7 +25,7 @@ const THEME_OPTIONS: { value: ThemeMode; label: string }[] = [
 export function SettingsScreen({ navigation }: SettingsScreenProps) {
   const { daemonUrl, saveDaemonUrl, error } = useSettings();
   const { mode, setMode, colors } = useTheme();
-  const [url, setUrl] = useState(daemonUrl || "");
+  const [url, setUrl] = useState(daemonUrl ?? "");
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSave = async () => {
@@ -168,7 +168,7 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
 
 // Dynamic styles based on theme colors
 function getThemedStyles(colors: { border: string }) {
-  return StyleSheet.create({
+  return {
     input: {
       borderWidth: 2,
       padding: 12,
@@ -208,7 +208,7 @@ function getThemedStyles(colors: { border: string }) {
         },
       }),
     },
-  });
+  } as const;
 }
 
 const styles = StyleSheet.create({

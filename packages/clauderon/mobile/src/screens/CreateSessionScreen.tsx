@@ -99,7 +99,7 @@ export function CreateSessionScreen({ navigation }: CreateSessionScreenProps) {
   const themedStyles = getThemedStyles(colors);
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <View style={[styles.flex1, { backgroundColor: colors.background }]}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -311,7 +311,7 @@ export function CreateSessionScreen({ navigation }: CreateSessionScreenProps) {
 }
 
 function getThemedStyles(colors: { surface: string; border: string; borderLight: string }) {
-  return StyleSheet.create({
+  return {
     input: {
       backgroundColor: colors.surface,
       borderWidth: 2,
@@ -370,10 +370,13 @@ function getThemedStyles(colors: { surface: string; border: string; borderLight:
         },
       }),
     },
-  });
+  } as const;
 }
 
 const styles = StyleSheet.create({
+  flex1: {
+    flex: 1,
+  },
   scrollView: {
     flex: 1,
   },

@@ -71,6 +71,7 @@ function outer(x) {
       const result = await applyRenames(source, mappings);
 
       // The renamed code should be syntactically valid and evaluable
+      // eslint-disable-next-line @typescript-eslint/no-implied-eval
       const fn = new Function(`${result}; return sum(1, 2);`);
       expect(fn()).toBe(3);
     });
