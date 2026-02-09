@@ -93,7 +93,12 @@ function getTiktokenEncoder(model: string): ReturnType<typeof encoding_for_model
     encoderCache.set(tiktokenModel, encoding_for_model(tiktokenModel));
   }
 
-  return encoderCache.get(tiktokenModel)!;
+  // We just set the value above if it didn't exist, so it's guaranteed to be present
+  const encoder = encoderCache.get(tiktokenModel);
+  if (!encoder) {
+    throw new Error(`Failed to create encoder for model: ${tiktokenModel}`);
+  }
+  return encoder;
 }
 
 /**
@@ -173,8 +178,8 @@ export function getContextLimit(model: string): number {
  */
 export function getTargetBatchTokens(
   model: string,
-  utilizationPct: number = 0.9,
-  reserveForOutput: number = 16_384
+  utilizationPct = 0.9,
+  reserveForOutput = 16_384
 ): number {
   const contextLimit = getContextLimit(model);
 

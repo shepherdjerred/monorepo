@@ -16,7 +16,7 @@ type MessageBubbleProps = {
 
 export function MessageBubble({ message }: MessageBubbleProps) {
   // Don't render if there's no displayable content
-  const hasContent = message.content?.trim();
+  const hasContent = message.content.trim();
   const hasToolUses = message.toolUses && message.toolUses.length > 0;
   const hasCodeBlocks = message.codeBlocks && message.codeBlocks.length > 0;
 
@@ -82,12 +82,9 @@ export function MessageBubble({ message }: MessageBubbleProps) {
                 <ScrollView horizontal style={styles.codeScroll}>
                   <View style={styles.codeContent}>
                     <SyntaxHighlighter
-                      language={block.language ?? "text"}
+                      language={block.language}
                       style={atomOneDark}
-                      customStyle={{
-                        backgroundColor: colors.backgroundDark,
-                        padding: 8,
-                      }}
+                      customStyle={styles.syntaxHighlighter}
                       fontSize={typography.fontSize.sm}
                       fontFamily={typography.fontFamily.mono}
                       highlighter="hljs"
@@ -134,10 +131,9 @@ const styles = StyleSheet.create({
   assistantBubble: {
     backgroundColor: colors.surface,
   },
-  content: {
-    fontSize: typography.fontSize.base,
-    color: colors.textDark,
-    lineHeight: typography.fontSize.base * typography.lineHeight.normal,
+  syntaxHighlighter: {
+    backgroundColor: colors.backgroundDark,
+    padding: 8,
   },
   toolsContainer: {
     marginTop: 8,

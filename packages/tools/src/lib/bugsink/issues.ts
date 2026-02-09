@@ -50,7 +50,7 @@ export async function getIssue(issueId: string): Promise<BugsinkIssue | null> {
 
 export async function getIssueEvents(
   issueId: string,
-  limit: number = 10
+  limit = 10
 ): Promise<BugsinkEvent[]> {
   const result = await bugsinkRequest<BugsinkPaginatedResponse<BugsinkEvent>>(
     `/issues/${issueId}/events/`,

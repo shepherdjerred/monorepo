@@ -1,7 +1,7 @@
 import type { ExtendedProgress } from "./types.ts";
 
 /** Options for the progress display */
-export interface ProgressDisplayOptions {
+export type ProgressDisplayOptions = {
   /** Suppress all progress output */
   quiet: boolean;
   /** Show progress bar */
@@ -15,9 +15,9 @@ export interface ProgressDisplayOptions {
 /** ANSI escape codes for terminal control */
 const ANSI = {
   clearLine: "\x1b[2K",
-  cursorUp: (n: number) => `\x1b[${n}A`,
-  cursorDown: (n: number) => `\x1b[${n}B`,
-  cursorToColumn: (n: number) => `\x1b[${n}G`,
+  cursorUp: (n: number) => `\x1b[${String(n)}A`,
+  cursorDown: (n: number) => `\x1b[${String(n)}B`,
+  cursorToColumn: (n: number) => `\x1b[${String(n)}G`,
   hideCursor: "\x1b[?25l",
   showCursor: "\x1b[?25h",
   reset: "\x1b[0m",
@@ -60,8 +60,8 @@ export class ProgressDisplay {
     };
     this.startTime = Date.now();
     this.lastUpdateTime = this.startTime;
-    this.isTTY = process.stdout.isTTY ?? false;
-    this.width = options.width ?? process.stdout.columns ?? 60;
+    this.isTTY = process.stdout.isTTY;
+    this.width = options.width ?? process.stdout.columns;
 
     // Hide cursor during progress display
     if (this.isTTY && !this.options.quiet) {
@@ -79,7 +79,7 @@ export class ProgressDisplay {
     // Calculate speed (functions per second)
     if (progress.current > 0 && this.lastProgress) {
       const timeDiff = (now - this.lastUpdateTime) / 1000;
-      const funcDiff = progress.current - (this.lastProgress.current ?? 0);
+      const funcDiff = progress.current - this.lastProgress.current;
       if (timeDiff > 0 && funcDiff > 0) {
         const speed = funcDiff / timeDiff;
         this.speeds.push(speed);
@@ -147,7 +147,7 @@ export class ProgressDisplay {
 
     // Stats table
     if (this.options.showStats) {
-      lines.push(`${ANSI.clearLine}`);
+      lines.push(ANSI.clearLine);
       lines.push(...this.renderStatsTable(progress));
     }
 
@@ -174,7 +174,7 @@ export class ProgressDisplay {
       BOX.empty.repeat(empty) +
       ANSI.reset;
 
-    return `${bar} ${percent.toString().padStart(3)}% │ ${current}/${total} functions`;
+    return `${bar} ${percent.toString().padStart(3)}% │ ${String(current)}/${String(total)} functions`;
   }
 
   /** Render the stats table */
@@ -192,7 +192,7 @@ export class ProgressDisplay {
     const cacheTotal = progress.cacheHits + progress.cacheMisses;
     const cacheRate =
       cacheTotal > 0 ? Math.round((progress.cacheHits / cacheTotal) * 100) : 0;
-    const cacheLine = `Cache:     ${progress.cacheHits} hits │ ${progress.cacheMisses} misses │ ${cacheRate}%`;
+    const cacheLine = `Cache:     ${String(progress.cacheHits)} hits │ ${String(progress.cacheMisses)} misses │ ${String(cacheRate)}%`;
     lines.push(
       `${ANSI.clearLine}${ANSI.dim}${BOX.vertical}${ANSI.reset} ${cacheLine.padEnd(innerWidth - 1)}${ANSI.dim}${BOX.vertical}${ANSI.reset}`,
     );
@@ -204,7 +204,7 @@ export class ProgressDisplay {
     );
 
     // Errors line
-    const errorsLine = `Errors:    ${progress.errors}`;
+    const errorsLine = `Errors:    ${String(progress.errors)}`;
     lines.push(
       `${ANSI.clearLine}${ANSI.dim}${BOX.vertical}${ANSI.reset} ${errorsLine.padEnd(innerWidth - 1)}${ANSI.dim}${BOX.vertical}${ANSI.reset}`,
     );
@@ -226,7 +226,7 @@ export class ProgressDisplay {
   /** Render simple non-TTY output */
   private renderSimple(progress: ExtendedProgress): void {
     const percent = progress.total > 0 ? Math.round((progress.current / progress.total) * 100) : 0;
-    const line = `[${percent}%] ${progress.phase}: ${progress.current}/${progress.total} - ${progress.currentItem || ""}`;
+    const line = `[${String(percent)}%] ${progress.phase}: ${String(progress.current)}/${String(progress.total)} - ${progress.currentItem ?? ""}`;
     console.log(line);
   }
 
@@ -237,9 +237,9 @@ export class ProgressDisplay {
     const remainingSeconds = seconds % 60;
 
     if (minutes > 0) {
-      return `${minutes}m ${remainingSeconds}s`;
+      return `${String(minutes)}m ${String(remainingSeconds)}s`;
     }
-    return `${remainingSeconds}s`;
+    return `${String(remainingSeconds)}s`;
   }
 
   /** Format large numbers with commas */
@@ -279,16 +279,16 @@ export class ProgressDisplay {
       progress.current > 0 ? progress.current / (elapsed / 1000) : 0;
 
     console.log(`${ANSI.green}✓${ANSI.reset} De-minification complete`);
-    console.log(`  Functions: ${progress.current}`);
+    console.log(`  Functions: ${String(progress.current)}`);
     console.log(
-      `  Cache: ${progress.cacheHits} hits, ${progress.cacheMisses} misses`,
+      `  Cache: ${String(progress.cacheHits)} hits, ${String(progress.cacheMisses)} misses`,
     );
     console.log(
       `  Tokens: ${this.formatNumber(progress.inputTokens)} in, ${this.formatNumber(progress.outputTokens)} out`,
     );
     console.log(`  Time: ${this.formatDuration(elapsed)} (${speed.toFixed(1)} fn/s)`);
     if (progress.errors > 0) {
-      console.log(`  ${ANSI.yellow}Errors: ${progress.errors}${ANSI.reset}`);
+      console.log(`  ${ANSI.yellow}Errors: ${String(progress.errors)}${ANSI.reset}`);
     }
 
     // Show cursor
@@ -302,5 +302,5 @@ export class ProgressDisplay {
 export function createProgressCallback(
   display: ProgressDisplay,
 ): (progress: ExtendedProgress) => void {
-  return (progress) => display.update(progress);
+  return (progress) => { display.update(progress); };
 }

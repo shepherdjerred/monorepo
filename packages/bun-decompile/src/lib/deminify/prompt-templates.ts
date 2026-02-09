@@ -257,7 +257,7 @@ Example response:
 }
 
 /** Function info for batch processing */
-export interface BatchFunctionInfo {
+export type BatchFunctionInfo = {
   /** Unique function ID (name_start_end) */
   id: string;
   /** Source code of the function */

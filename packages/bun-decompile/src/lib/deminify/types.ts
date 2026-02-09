@@ -14,7 +14,7 @@ export type FunctionType =
   | "setter";
 
 /** Information about a function parameter */
-export interface ParameterInfo {
+export type ParameterInfo = {
   /** Original parameter name */
   name: string;
   /** Whether parameter has a default value */
@@ -24,7 +24,7 @@ export interface ParameterInfo {
 }
 
 /** Represents a parsed function from the minified code */
-export interface ExtractedFunction {
+export type ExtractedFunction = {
   /** Unique identifier (generated based on position) */
   id: string;
   /** Original minified name (may be single letter or empty) */
@@ -56,7 +56,7 @@ export interface ExtractedFunction {
 }
 
 /** A segment of top-level code (not inside any function) */
-export interface CodeSegment {
+export type CodeSegment = {
   /** Unique identifier */
   id: string;
   /** Start position in source */
@@ -70,7 +70,7 @@ export interface CodeSegment {
 }
 
 /** Import statement info */
-export interface ImportInfo {
+export type ImportInfo = {
   /** Module source path */
   source: string;
   /** Imported specifiers */
@@ -82,7 +82,7 @@ export interface ImportInfo {
 }
 
 /** Export statement info */
-export interface ExportInfo {
+export type ExportInfo = {
   /** Exported name */
   name: string;
   /** Local name (if different) */
@@ -94,7 +94,7 @@ export interface ExportInfo {
 }
 
 /** Call graph representing function relationships */
-export interface CallGraph {
+export type CallGraph = {
   /** All extracted functions by ID */
   functions: Map<string, ExtractedFunction>;
   /** Map from function name to function ID */
@@ -110,7 +110,7 @@ export interface CallGraph {
 }
 
 /** Context for a single function provided to Claude */
-export interface FunctionContext {
+export type FunctionContext = {
   /** Function ID */
   id: string;
   /** Original minified source */
@@ -122,7 +122,7 @@ export interface FunctionContext {
 }
 
 /** File-level context */
-export interface FileContext {
+export type FileContext = {
   /** File name */
   fileName: string;
   /** Imports */
@@ -134,7 +134,7 @@ export interface FileContext {
 }
 
 /** Full context provided to Claude for de-minification */
-export interface DeminifyContext {
+export type DeminifyContext = {
   /** The function to de-minify */
   targetFunction: ExtractedFunction;
   /** Functions that call this function */
@@ -148,7 +148,7 @@ export interface DeminifyContext {
 }
 
 /** Result of de-minifying a single function */
-export interface DeminifyResult {
+export type DeminifyResult = {
   /** Function ID */
   functionId: string;
   /** Original minified source */
@@ -166,7 +166,7 @@ export interface DeminifyResult {
 }
 
 /** Configuration for de-minification */
-export interface DeminifyConfig {
+export type DeminifyConfig = {
   /** LLM provider */
   provider: Provider;
   /** API key for the provider */
@@ -211,7 +211,7 @@ export type ProgressCallback = (progress: DeminifyProgress) => void;
 export type ExtendedProgressCallback = (progress: ExtendedProgress) => void;
 
 /** Progress information */
-export interface DeminifyProgress {
+export type DeminifyProgress = {
   /** Current phase */
   phase: "parsing" | "analyzing" | "deminifying" | "reassembling";
   /** Current item index */
@@ -223,7 +223,7 @@ export interface DeminifyProgress {
 }
 
 /** Extended progress with live statistics */
-export interface ExtendedProgress extends DeminifyProgress {
+export type ExtendedProgress = {
   /** Cache hits so far */
   cacheHits: number;
   /** Cache misses so far */
@@ -240,10 +240,10 @@ export interface ExtendedProgress extends DeminifyProgress {
   startTime: number;
   /** Elapsed time in milliseconds */
   elapsed: number;
-}
+} & DeminifyProgress
 
 /** Cost estimate for de-minification */
-export interface CostEstimate {
+export type CostEstimate = {
   /** Estimated input tokens */
   inputTokens: number;
   /** Estimated output tokens */
@@ -257,7 +257,7 @@ export interface CostEstimate {
 }
 
 /** Cache entry */
-export interface CacheEntry {
+export type CacheEntry = {
   /** Hash of function source */
   hash: string;
   /** De-minification result */
@@ -269,7 +269,7 @@ export interface CacheEntry {
 }
 
 /** Statistics from de-minification run */
-export interface DeminifyStats {
+export type DeminifyStats = {
   /** Functions processed */
   functionsProcessed: number;
   /** Total input tokens used */

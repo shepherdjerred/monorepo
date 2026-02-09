@@ -65,7 +65,7 @@ Examples:
   bun-decompile -f ./minified.js --deminify --yes          # De-minify a JS file directly
 `.trim();
 
-interface CliOptions {
+type CliOptions = {
   output: string;
   file: string | undefined;
   verbose: boolean;
@@ -82,7 +82,7 @@ interface CliOptions {
   yes: boolean;
 }
 
-interface ValidatedInput {
+type ValidatedInput = {
   binaryPath: string | undefined;
   filePath: string | undefined;
   outputPath: string;
@@ -167,7 +167,7 @@ function parseAndValidateArgs(): {
   });
 
   // Validate provider
-  const provider = values.provider ?? "openai";
+  const provider = values.provider;
   if (provider !== "openai" && provider !== "anthropic") {
     console.error(
       `Error: --provider must be 'openai' or 'anthropic', got '${provider}'`
@@ -176,7 +176,7 @@ function parseAndValidateArgs(): {
   }
 
   // Validate concurrency
-  const concurrency = parseInt(values.concurrency ?? "3", 10);
+  const concurrency = parseInt(values.concurrency, 10);
   if (isNaN(concurrency) || concurrency < 1) {
     console.error("Error: --concurrency must be a positive integer");
     process.exit(1);
@@ -189,20 +189,20 @@ function parseAndValidateArgs(): {
   return {
     binary: positionals[0],
     options: {
-      output: values.output ?? "./decompiled",
+      output: values.output,
       file: values.file,
-      verbose: values.verbose ?? false,
-      quiet: values.quiet ?? false,
-      help: values.help ?? false,
-      deminify: values.deminify ?? false,
-      provider: provider as "openai" | "anthropic",
+      verbose: values.verbose,
+      quiet: values.quiet,
+      help: values.help,
+      deminify: values.deminify,
+      provider: provider,
       apiKey: values["api-key"],
-      model: values.model ?? "gpt-5-nano",
-      batch: values.batch ?? false,
+      model: values.model,
+      batch: values.batch,
       resume: values.resume,
-      noCache: values["no-cache"] ?? false,
+      noCache: values["no-cache"],
       concurrency,
-      yes: values.yes ?? false,
+      yes: values.yes,
     },
   };
 }
@@ -362,7 +362,7 @@ async function runDeminification(
     return;
   }
 
-  console.log(`Found ${jsModules.length} JavaScript module(s) to de-minify.`);
+  console.log(`Found ${String(jsModules.length)} JavaScript module(s) to de-minify.`);
 
   // Create deminified output directory
   const deminifiedDir = join(outputPath, "deminified");
@@ -401,8 +401,8 @@ async function runDeminification(
       showStats: true,
     });
 
-    // Track last progress for finish
-    let lastProgress: ExtendedProgress | null = null;
+    // Track last progress for finish (mutable container for callback)
+    const progressState: { last: ExtendedProgress | null } = { last: null };
 
     try {
       const deminifyOptions: NonNullable<
@@ -423,7 +423,7 @@ async function runDeminification(
       // Only add progress callback for non-batch mode
       if (!options.batch) {
         deminifyOptions.onExtendedProgress = (progress) => {
-          lastProgress = progress;
+          progressState.last = progress;
           progressDisplay.update(progress);
         };
       }
@@ -431,14 +431,15 @@ async function runDeminification(
       const deminified = await deminifier.deminifyFile(source, deminifyOptions);
 
       // Show completion
-      if (lastProgress) {
-        progressDisplay.finish(lastProgress);
+      if (progressState.last) {
+        progressDisplay.finish(progressState.last);
       } else {
         progressDisplay.clear();
       }
 
       // Write de-minified output
-      let outFileName = module.name?.replace(/^\//, "") || "module.js";
+      let outFileName = module.name.replace(/^\//, "");
+      if (!outFileName) outFileName = "module.js";
       if (!outFileName.endsWith(".js")) {
         outFileName += ".js";
       }
@@ -503,7 +504,7 @@ async function runFileDeminification(
 
   // Read the file
   const source = await Bun.file(filePath).text();
-  const fileName = filePath.split("/").pop() || "unknown.js";
+  const fileName = filePath.split("/").pop() ?? "unknown.js";
 
   // Estimate cost
   const estimate = deminifier.estimateCost(source);
@@ -534,8 +535,8 @@ async function runFileDeminification(
     showStats: true,
   });
 
-  // Track last progress for finish
-  let lastProgress: ExtendedProgress | null = null;
+  // Track last progress for finish (mutable container for callback)
+  const progressState: { last: ExtendedProgress | null } = { last: null };
 
   try {
     const deminifyOptions: NonNullable<
@@ -554,7 +555,7 @@ async function runFileDeminification(
 
     if (!options.batch) {
       deminifyOptions.onExtendedProgress = (progress) => {
-        lastProgress = progress;
+        progressState.last = progress;
         progressDisplay.update(progress);
       };
     }
@@ -562,8 +563,8 @@ async function runFileDeminification(
     const deminified = await deminifier.deminifyFile(source, deminifyOptions);
 
     // Show completion
-    if (lastProgress) {
-      progressDisplay.finish(lastProgress);
+    if (progressState.last) {
+      progressDisplay.finish(progressState.last);
     } else {
       progressDisplay.clear();
     }
@@ -597,7 +598,7 @@ async function runFileDeminification(
  * Display extraction results summary.
  */
 function displayResults(result: DecompileResult, verbose: boolean): void {
-  console.log(`\nExtracted ${result.modules.length} module(s)`);
+  console.log(`\nExtracted ${String(result.modules.length)} module(s)`);
 
   if (!verbose) {
     const entryPoint = result.modules.find((m) => m.isEntryPoint);

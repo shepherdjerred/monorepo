@@ -12,7 +12,7 @@ export default tseslint.config(
   ...tseslint.configs.strictTypeChecked,
   ...tseslint.configs.stylisticTypeChecked,
   {
-    ignores: ["dist/", "node_modules/", "eslint.config.js", "postcss.config.js", "tailwind.config.js", "vite.config.ts"],
+    ignores: ["dist/", "node_modules/", "tests/", "eslint.config.js", "postcss.config.js", "tailwind.config.js", "vite.config.ts"],
   },
   {
     languageOptions: {
@@ -20,6 +20,9 @@ export default tseslint.config(
         projectService: {
           allowDefaultProject: [
             "src/components/ThemeToggle.test.tsx",
+            "src/components/RecreateBlockedModal.test.tsx",
+            "src/components/RecreateConfirmModal.test.tsx",
+            "src/components/StartupHealthModal.test.tsx",
             "src/lib/claudeParser.test.ts",
             "src/lib/codexHistoryParser.test.ts",
           ],

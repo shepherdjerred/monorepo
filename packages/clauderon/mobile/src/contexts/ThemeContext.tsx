@@ -27,8 +27,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   // Load saved theme preference
   useEffect(() => {
     const loadTheme = async () => {
-      const saved = await storage.get<ThemeMode>(THEME_STORAGE_KEY);
-      if (saved && (saved === "light" || saved === "dark" || saved === "system")) {
+      const saved = await storage.get<string>(THEME_STORAGE_KEY);
+      if (saved === "light" || saved === "dark" || saved === "system") {
         setModeState(saved);
       }
       setIsLoaded(true);

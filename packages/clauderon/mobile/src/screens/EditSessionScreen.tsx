@@ -22,8 +22,8 @@ export function EditSessionScreen({ navigation, route }: EditSessionScreenProps)
   const { client } = useSessionContext();
   const { colors } = useTheme();
 
-  const [title, setTitle] = useState(session.title || session.name);
-  const [description, setDescription] = useState(session.description || "");
+  const [title, setTitle] = useState(session.title ?? session.name);
+  const [description, setDescription] = useState(session.description ?? "");
   const [isSaving, setIsSaving] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
 
@@ -47,8 +47,8 @@ export function EditSessionScreen({ navigation, route }: EditSessionScreenProps)
     setIsRegenerating(true);
     try {
       const updatedSession = await client.regenerateMetadata(session.id);
-      setTitle(updatedSession.title || updatedSession.name);
-      setDescription(updatedSession.description || "");
+      setTitle(updatedSession.title ?? updatedSession.name);
+      setDescription(updatedSession.description ?? "");
     } catch {
       Alert.alert("Error", "Failed to regenerate metadata");
     } finally {
@@ -60,7 +60,7 @@ export function EditSessionScreen({ navigation, route }: EditSessionScreenProps)
   const themedStyles = getThemedStyles(colors);
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <View style={[styles.flex1, { backgroundColor: colors.background }]}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -149,7 +149,7 @@ export function EditSessionScreen({ navigation, route }: EditSessionScreenProps)
 }
 
 function getThemedStyles(colors: { surface: string; border: string }) {
-  return StyleSheet.create({
+  return {
     input: {
       backgroundColor: colors.surface,
       borderWidth: 2,
@@ -202,10 +202,13 @@ function getThemedStyles(colors: { surface: string; border: string }) {
         },
       }),
     },
-  });
+  } as const;
 }
 
 const styles = StyleSheet.create({
+  flex1: {
+    flex: 1,
+  },
   scrollView: {
     flex: 1,
   },

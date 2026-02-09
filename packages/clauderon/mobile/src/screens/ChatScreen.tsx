@@ -145,7 +145,7 @@ export function ChatScreen({ route, navigation }: ChatScreenProps) {
       </View>
 
       {/* Error display */}
-      {(wsError || historyError) && (
+      {(wsError ?? historyError) && (
         <View style={styles.errorContainer}>
           {wsError && <Text style={styles.errorText}>WebSocket: {wsError}</Text>}
           {historyError && <Text style={styles.errorText}>History: {historyError}</Text>}

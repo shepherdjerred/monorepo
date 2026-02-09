@@ -78,7 +78,7 @@ function extractBytes(
   const end = start + ptr.length;
   if (end > buffer.length) {
     throw new CorruptModuleGraphError(
-      `Pointer extends beyond buffer: offset=${ptr.offset}, length=${ptr.length}`,
+      `Pointer extends beyond buffer: offset=${String(ptr.offset)}, length=${String(ptr.length)}`,
     );
   }
   return buffer.slice(start, end);

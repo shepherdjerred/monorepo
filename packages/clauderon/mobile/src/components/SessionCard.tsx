@@ -97,6 +97,80 @@ function getStageLabel(stage: WorkflowStage): string {
   }
 }
 
+function SessionStatusIndicators({
+  session,
+  colors,
+}: {
+  session: Session;
+  colors: { textLight: string; error: string; warning: string };
+}) {
+  return (
+    <View style={styles.statusIndicators}>
+      {/* PR Status */}
+      {session.pr_url && (
+        <View style={styles.statusRow}>
+          <Text style={[styles.statusLabel, { color: colors.textLight }]}>PR: </Text>
+          {session.pr_check_status && (
+            <View style={styles.checkStatusContainer}>
+              <Text style={getCheckStatusStyle(session.pr_check_status)}>
+                {getCheckStatusSymbol(session.pr_check_status)}
+              </Text>
+              <Text
+                style={[styles.statusValue, getCheckStatusTextStyle(session.pr_check_status)]}
+              >
+                {session.pr_check_status}
+              </Text>
+            </View>
+          )}
+        </View>
+      )}
+
+      {/* Claude Working Status */}
+      {session.claude_status !== ClaudeWorkingStatus.Unknown && (
+        <View style={styles.statusRow}>
+          <Text style={[styles.statusLabel, { color: colors.textLight }]}>Claude: </Text>
+          <Text style={[styles.statusValue, getClaudeStatusTextStyle(session.claude_status)]}>
+            {getClaudeStatusText(session.claude_status)}
+          </Text>
+        </View>
+      )}
+
+      {/* Merge Conflict Warning */}
+      {session.merge_conflict && (
+        <View style={styles.statusRow}>
+          <Text style={[styles.conflictWarning, { color: colors.error }]}>
+            ⚠ Merge conflict with main
+          </Text>
+        </View>
+      )}
+
+      {/* Dirty Worktree Warning */}
+      {session.worktree_dirty && (
+        <View style={styles.statusRow}>
+          <Text style={[styles.dirtyWarning, { color: colors.warning }]}>
+            ● Uncommitted changes
+          </Text>
+        </View>
+      )}
+
+      {/* Reconciliation Error */}
+      {session.last_reconcile_error && (
+        <View style={[styles.reconcileError, { borderColor: colors.error }]}>
+          <Text style={[styles.reconcileErrorTitle, { color: colors.error }]}>
+            Reconcile error (attempt {session.reconcile_attempts})
+          </Text>
+          <Text
+            style={[styles.reconcileErrorMessage, { color: colors.textLight }]}
+            numberOfLines={2}
+          >
+            {session.last_reconcile_error}
+          </Text>
+        </View>
+      )}
+    </View>
+  );
+}
+
 export function SessionCard({
   session,
   onPress,
@@ -149,77 +223,14 @@ export function SessionCard({
         </Text>
       )}
 
-      {/* Status indicators */}
-      <View style={styles.statusIndicators}>
-        {/* PR Status */}
-        {session.pr_url && (
-          <View style={styles.statusRow}>
-            <Text style={[styles.statusLabel, { color: colors.textLight }]}>PR: </Text>
-            {session.pr_check_status && (
-              <View style={styles.checkStatusContainer}>
-                <Text style={getCheckStatusStyle(session.pr_check_status)}>
-                  {getCheckStatusSymbol(session.pr_check_status)}
-                </Text>
-                <Text
-                  style={[styles.statusValue, getCheckStatusTextStyle(session.pr_check_status)]}
-                >
-                  {session.pr_check_status}
-                </Text>
-              </View>
-            )}
-          </View>
-        )}
-
-        {/* Claude Working Status */}
-        {session.claude_status !== ClaudeWorkingStatus.Unknown && (
-          <View style={styles.statusRow}>
-            <Text style={[styles.statusLabel, { color: colors.textLight }]}>Claude: </Text>
-            <Text style={[styles.statusValue, getClaudeStatusTextStyle(session.claude_status)]}>
-              {getClaudeStatusText(session.claude_status)}
-            </Text>
-          </View>
-        )}
-
-        {/* Merge Conflict Warning */}
-        {session.merge_conflict && (
-          <View style={styles.statusRow}>
-            <Text style={[styles.conflictWarning, { color: colors.error }]}>
-              ⚠ Merge conflict with main
-            </Text>
-          </View>
-        )}
-
-        {/* Dirty Worktree Warning */}
-        {session.worktree_dirty && (
-          <View style={styles.statusRow}>
-            <Text style={[styles.dirtyWarning, { color: colors.warning }]}>
-              ● Uncommitted changes
-            </Text>
-          </View>
-        )}
-
-        {/* Reconciliation Error */}
-        {session.last_reconcile_error && (
-          <View style={[styles.reconcileError, { borderColor: colors.error }]}>
-            <Text style={[styles.reconcileErrorTitle, { color: colors.error }]}>
-              Reconcile error (attempt {session.reconcile_attempts})
-            </Text>
-            <Text
-              style={[styles.reconcileErrorMessage, { color: colors.textLight }]}
-              numberOfLines={2}
-            >
-              {session.last_reconcile_error}
-            </Text>
-          </View>
-        )}
-      </View>
+      <SessionStatusIndicators session={session} colors={colors} />
 
       <Text style={[styles.timestamp, { color: colors.textLight }]}>
         {formatRelativeTime(new Date(session.created_at))}
       </Text>
 
       {/* Action buttons */}
-      {(onEdit || onArchive || onUnarchive || onDelete || onRefresh) && (
+      {(onEdit ?? onArchive ?? onUnarchive ?? onDelete ?? onRefresh) && (
         <View style={[styles.actionRow, { borderTopColor: colors.borderLight }]}>
           {onRefresh && session.backend === BackendType.Docker && (
             <TouchableOpacity
@@ -383,7 +394,7 @@ function getClaudeStatusTextStyle(status: ClaudeWorkingStatus) {
 }
 
 function getThemedStyles(colors: { surface: string; border: string }) {
-  return StyleSheet.create({
+  return {
     card: {
       backgroundColor: colors.surface,
       borderWidth: 3,
@@ -410,7 +421,7 @@ function getThemedStyles(colors: { surface: string; border: string }) {
       borderColor: colors.border,
       backgroundColor: colors.surface,
     },
-  });
+  } as const;
 }
 
 const styles = StyleSheet.create({

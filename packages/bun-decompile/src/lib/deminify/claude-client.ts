@@ -16,7 +16,7 @@ import type {
 } from "./types.ts";
 
 /** Token bucket for rate limiting */
-interface TokenBucket {
+type TokenBucket = {
   tokens: number;
   lastRefill: number;
   maxTokens: number;
@@ -87,7 +87,7 @@ export class ClaudeClient {
 
         // Parse response
         const content = response.content[0];
-        if (!content || content.type !== "text") {
+        if (content?.type !== "text") {
           throw new Error("Unexpected response type");
         }
 
@@ -100,7 +100,7 @@ export class ClaudeClient {
           const retryAfter = 60; // Default to 60 seconds for rate limiting
           if (this.config.verbose) {
             console.error(
-              `Rate limited, waiting ${retryAfter}s before retry...`,
+              `Rate limited, waiting ${String(retryAfter)}s before retry...`,
             );
           }
           await this.sleep(retryAfter * 1000);
@@ -111,7 +111,7 @@ export class ClaudeClient {
         if (error instanceof Anthropic.APIError && error.status === 529) {
           const backoff = Math.pow(2, attempt) * 1000;
           if (this.config.verbose) {
-            console.error(`API overloaded, waiting ${backoff}ms before retry...`);
+            console.error(`API overloaded, waiting ${String(backoff)}ms before retry...`);
           }
           await this.sleep(backoff);
           continue;
@@ -134,7 +134,7 @@ export class ClaudeClient {
     context: DeminifyContext,
   ): DeminifyResult {
     // Extract code from markdown code blocks
-    const codeMatch = responseText.match(/```(?:javascript|js)?\n?([\s\S]*?)```/);
+    const codeMatch = /```(?:javascript|js)?\n?([\s\S]*?)```/.exec(responseText);
     if (!codeMatch?.[1]) {
       throw new Error("No code block found in response");
     }
@@ -153,7 +153,7 @@ export class ClaudeClient {
     let localVariableNames: Record<string, string> = {};
 
     // Look for JSON after the code block
-    const jsonMatch = responseText.match(/```[\s\S]*?```\s*(\{[\s\S]*\})/);
+    const jsonMatch = /```[\s\S]*?```\s*(\{[\s\S]*\})/.exec(responseText);
     if (jsonMatch?.[1]) {
       try {
         const metadata = JSON.parse(jsonMatch[1]) as {
@@ -173,9 +173,7 @@ export class ClaudeClient {
 
     // Try to infer name from the de-minified code if not provided
     if (suggestedName === "anonymousFunction") {
-      const funcNameMatch = deminifiedSource.match(
-        /(?:function|const|let|var)\s+([a-zA-Z_$][a-zA-Z0-9_$]*)/,
-      );
+      const funcNameMatch = /(?:function|const|let|var)\s+([a-zA-Z_$][a-zA-Z0-9_$]*)/.exec(deminifiedSource);
       if (funcNameMatch?.[1]) {
         suggestedName = funcNameMatch[1];
       }
@@ -282,8 +280,8 @@ export class ClaudeClient {
 /** Format cost estimate for display */
 export function formatCostEstimate(estimate: CostEstimate): string {
   const lines: string[] = [];
-  lines.push(`Functions to process: ${estimate.functionCount}`);
-  lines.push(`Estimated API requests: ${estimate.requestCount}`);
+  lines.push(`Functions to process: ${String(estimate.functionCount)}`);
+  lines.push(`Estimated API requests: ${String(estimate.requestCount)}`);
   lines.push(`Estimated input tokens: ${estimate.inputTokens.toLocaleString()}`);
   lines.push(`Estimated output tokens: ${estimate.outputTokens.toLocaleString()}`);
   lines.push(`Estimated cost: $${estimate.estimatedCost.toFixed(2)}`);

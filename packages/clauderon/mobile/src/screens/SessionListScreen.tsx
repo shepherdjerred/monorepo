@@ -20,6 +20,25 @@ import { typography } from "../styles/typography";
 
 type SessionListScreenProps = MainTabScreenProps<"Sessions">;
 
+function getFilteredSessions(
+  sessions: Map<string, Session>,
+  filter: FilterStatus,
+): Session[] {
+  const sessionArray = Array.from(sessions.values());
+  switch (filter) {
+    case "running":
+      return sessionArray.filter((s) => s.status === SessionStatus.Running);
+    case "idle":
+      return sessionArray.filter((s) => s.status === SessionStatus.Idle);
+    case "completed":
+      return sessionArray.filter((s) => s.status === SessionStatus.Completed);
+    case "archived":
+      return sessionArray.filter((s) => s.status === SessionStatus.Archived);
+    default:
+      return sessionArray.filter((s) => s.status !== SessionStatus.Archived);
+  }
+}
+
 export function SessionListScreen({ navigation }: SessionListScreenProps) {
   const {
     sessions,
@@ -63,21 +82,10 @@ export function SessionListScreen({ navigation }: SessionListScreenProps) {
     [navigation],
   );
 
-  const filteredSessions = useMemo(() => {
-    const sessionArray = Array.from(sessions.values());
-    switch (filter) {
-      case "running":
-        return sessionArray.filter((s) => s.status === SessionStatus.Running);
-      case "idle":
-        return sessionArray.filter((s) => s.status === SessionStatus.Idle);
-      case "completed":
-        return sessionArray.filter((s) => s.status === SessionStatus.Completed);
-      case "archived":
-        return sessionArray.filter((s) => s.status === SessionStatus.Archived);
-      default:
-        return sessionArray.filter((s) => s.status !== SessionStatus.Archived);
-    }
-  }, [sessions, filter]);
+  const filteredSessions = useMemo(
+    () => getFilteredSessions(sessions, filter),
+    [sessions, filter],
+  );
 
   const handleDeleteConfirm = useCallback(async () => {
     if (!deleteTarget) return;
@@ -136,7 +144,7 @@ export function SessionListScreen({ navigation }: SessionListScreenProps) {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <View style={[styles.flex1, { backgroundColor: colors.background }]}>
       <FilterTabs value={filter} onChange={setFilter} />
 
       {filteredSessions.length === 0 ? (
@@ -212,7 +220,7 @@ export function SessionListScreen({ navigation }: SessionListScreenProps) {
         }
         description={
           archiveTarget?.status === SessionStatus.Archived
-            ? `Are you sure you want to unarchive "${archiveTarget?.name ?? ""}"?`
+            ? `Are you sure you want to unarchive "${archiveTarget.name}"?`
             : `Are you sure you want to archive "${archiveTarget?.name ?? ""}"?`
         }
         confirmLabel={archiveTarget?.status === SessionStatus.Archived ? "Unarchive" : "Archive"}
@@ -242,6 +250,9 @@ export function SessionListScreen({ navigation }: SessionListScreenProps) {
 }
 
 const styles = StyleSheet.create({
+  flex1: {
+    flex: 1,
+  },
   headerButton: {
     paddingHorizontal: 12,
     paddingVertical: 6,

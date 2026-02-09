@@ -163,7 +163,7 @@ function getThemedStyles(colors: {
   background: string;
   primary: string;
 }) {
-  return StyleSheet.create({
+  return {
     container: {
       backgroundColor: colors.surface,
       borderWidth: 2,
@@ -222,7 +222,7 @@ function getThemedStyles(colors: {
       alignSelf: "flex-start" as const,
       marginTop: 4,
     },
-  });
+  } as const;
 }
 
 // Static styles (layout only, no colors)

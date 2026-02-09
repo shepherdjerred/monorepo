@@ -12,7 +12,7 @@ import type {
 } from "./types.ts";
 
 /** Batch processing status */
-export interface BatchStatus {
+export type BatchStatus = {
   batchId: string;
   status: "in_progress" | "canceling" | "ended";
   total: number;
@@ -22,7 +22,7 @@ export interface BatchStatus {
 }
 
 /** Batch processing callbacks */
-export interface BatchCallbacks {
+export type BatchCallbacks = {
   onStatusUpdate?: (status: BatchStatus) => void;
   onComplete?: (results: Map<string, DeminifyResult>) => void;
   onError?: (error: Error) => void;
@@ -65,7 +65,7 @@ export class BatchDeminifyClient {
     }
 
     if (this.config.verbose) {
-      console.log(`Creating batch with ${requests.length} requests...`);
+      console.log(`Creating batch with ${String(requests.length)} requests...`);
     }
 
     const batch = await this.client.beta.messages.batches.create({ requests });
@@ -182,18 +182,18 @@ export class BatchDeminifyClient {
 
   /** Parse a message response into a DeminifyResult */
   private parseResponse(
-    message: { content: Array<{ type: string; text?: string }> },
+    message: { content: { type: string; text?: string }[] },
     context: DeminifyContext,
   ): DeminifyResult {
     const content = message.content[0];
-    if (!content || content.type !== "text" || !content.text) {
+    if (content?.type !== "text" || !content.text) {
       throw new Error("Unexpected response type");
     }
 
     const responseText = content.text;
 
     // Extract code from markdown code blocks
-    const codeMatch = responseText.match(/```(?:javascript|js)?\n?([\s\S]*?)```/);
+    const codeMatch = /```(?:javascript|js)?\n?([\s\S]*?)```/.exec(responseText);
     if (!codeMatch?.[1]) {
       throw new Error("No code block found in response");
     }
@@ -212,7 +212,7 @@ export class BatchDeminifyClient {
     let localVariableNames: Record<string, string> = {};
 
     // Look for JSON after the code block
-    const jsonMatch = responseText.match(/```[\s\S]*?```\s*(\{[\s\S]*\})/);
+    const jsonMatch = /```[\s\S]*?```\s*(\{[\s\S]*\})/.exec(responseText);
     if (jsonMatch?.[1]) {
       try {
         const metadata = JSON.parse(jsonMatch[1]) as {
@@ -232,9 +232,7 @@ export class BatchDeminifyClient {
 
     // Try to infer name from the de-minified code if not provided
     if (suggestedName === "anonymousFunction") {
-      const funcNameMatch = deminifiedSource.match(
-        /(?:function|const|let|var)\s+([a-zA-Z_$][a-zA-Z0-9_$]*)/,
-      );
+      const funcNameMatch = /(?:function|const|let|var)\s+([a-zA-Z_$][a-zA-Z0-9_$]*)/.exec(deminifiedSource);
       if (funcNameMatch?.[1]) {
         suggestedName = funcNameMatch[1];
       }

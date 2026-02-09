@@ -46,7 +46,7 @@ function formatStacktrace(event: BugsinkEvent): string[] {
           ? `${frame.filename}:${String(frame.lineno)}`
           : frame.filename;
         const inApp = frame.in_app ? "" : " (library)";
-        lines.push(`  at ${frame.function ?? "<anonymous>"} (${location})${inApp}`);
+        lines.push(`  at ${frame.function} (${location})${inApp}`);
       }
       if (exception.stacktrace.frames.length > 10) {
         lines.push(`  ... ${String(exception.stacktrace.frames.length - 10)} more frames`);

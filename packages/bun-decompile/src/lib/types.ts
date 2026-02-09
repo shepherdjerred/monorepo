@@ -1,5 +1,5 @@
 /** Pointer to a string/buffer within the embedded data */
-export interface StringPointer {
+export type StringPointer = {
   offset: number;
   length: number;
 }
@@ -30,7 +30,7 @@ export type Loader =
 export type FileSide = "server" | "client";
 
 /** Offsets structure stored at end of binary before trailer */
-export interface Offsets {
+export type Offsets = {
   /** Total size of embedded data */
   byteCount: number;
   /** Pointer to the modules array */
@@ -44,7 +44,7 @@ export interface Offsets {
 }
 
 /** A single extracted module */
-export interface ModuleEntry {
+export type ModuleEntry = {
   /** Original file path */
   name: string;
   /** Transpiled source code */
@@ -66,7 +66,7 @@ export interface ModuleEntry {
 }
 
 /** Original source file extracted from sourcemap */
-export interface OriginalSource {
+export type OriginalSource = {
   /** Original file name (e.g., "utils.ts") */
   name: string;
   /** Original source content with types/comments */
@@ -74,7 +74,7 @@ export interface OriginalSource {
 }
 
 /** Result of decompiling a Bun binary */
-export interface DecompileResult {
+export type DecompileResult = {
   /** Bun version that compiled this binary */
   bunVersion: string | null;
   /** All extracted modules (bundled/transpiled) */
@@ -88,7 +88,7 @@ export interface DecompileResult {
 }
 
 /** Metadata written to metadata.json */
-export interface DecompileMetadata {
+export type DecompileMetadata = {
   bunVersion: string | null;
   entryPoint: string;
   args: string[];

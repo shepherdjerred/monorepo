@@ -1,4 +1,5 @@
-import { dag, object, func, Secret, Directory, Container, File } from "@dagger.io/dagger";
+import type { Secret, Directory, Container, File } from "@dagger.io/dagger";
+import { dag, object, func } from "@dagger.io/dagger";
 import { updateHomelabVersion, syncToS3 } from "@shepherdjerred/dagger-utils/containers";
 import {
   checkBirmel,
@@ -246,7 +247,7 @@ function getCrossCompileContainer(
 /**
  * Build clauderon binary for a specific target
  */
-async function buildMuxBinary(
+async function _buildMuxBinary(
   container: Container,
   target: string,
   os: string,
@@ -289,7 +290,7 @@ async function uploadReleaseAssets(
   const errors: string[] = [];
 
   // Use gh CLI to upload assets - mount the binaries directory directly
-  let container = dag
+  const container = dag
     .container()
     .from(`oven/bun:${BUN_VERSION}-debian`)
     .withMountedCache("/var/cache/apt", dag.cacheVolume(`apt-cache-bun-${BUN_VERSION}-debian`))
@@ -363,7 +364,7 @@ async function runReleasePleaseCommand(
 
   const lines = result.trim().split("\n");
   const lastLine = lines[lines.length - 1] ?? "";
-  const exitCodeMatch = lastLine.match(/EXIT_CODE:(\d+)/);
+  const exitCodeMatch = /EXIT_CODE:(\d+)/.exec(lastLine);
   const exitCode = exitCodeMatch ? parseInt(exitCodeMatch[1] ?? "1", 10) : 1;
   const output = lines.slice(0, -1).join("\n");
 
@@ -510,10 +511,10 @@ export class Monorepo {
 
       const prResult = await runReleasePleaseCommand(
         prContainer,
-        `git clone https://x-access-token:$GITHUB_TOKEN@github.com/${REPO_URL}.git . && release-please release-pr --token=\$GITHUB_TOKEN --repo-url=${REPO_URL} --target-branch=main`
+        `git clone https://x-access-token:$GITHUB_TOKEN@github.com/${REPO_URL}.git . && release-please release-pr --token=$GITHUB_TOKEN --repo-url=${REPO_URL} --target-branch=main`
       );
 
-      outputs.push(`Release PR (success=${prResult.success}):`);
+      outputs.push(`Release PR (success=${String(prResult.success)}):`);
       outputs.push(prResult.output);
 
       // Create GitHub releases using non-deprecated github-release command
@@ -522,10 +523,10 @@ export class Monorepo {
 
       const releaseResult = await runReleasePleaseCommand(
         releaseContainer,
-        `git clone https://x-access-token:$GITHUB_TOKEN@github.com/${REPO_URL}.git . && release-please github-release --token=\$GITHUB_TOKEN --repo-url=${REPO_URL} --target-branch=main`
+        `git clone https://x-access-token:$GITHUB_TOKEN@github.com/${REPO_URL}.git . && release-please github-release --token=$GITHUB_TOKEN --repo-url=${REPO_URL} --target-branch=main`
       );
 
-      outputs.push(`GitHub Release (success=${releaseResult.success}):`);
+      outputs.push(`GitHub Release (success=${String(releaseResult.success)}):`);
       outputs.push(releaseResult.output);
 
       // Check if any releases were created and publish
@@ -615,7 +616,7 @@ export class Monorepo {
       }
 
       // Check if a clauderon release was created - only if we can extract a specific version
-      const clauderonVersionMatch = releaseResult.output.match(/clauderon-v([\d.]+)/);
+      const clauderonVersionMatch = /clauderon-v([\d.]+)/.exec(releaseResult.output);
       const clauderonVersion = clauderonVersionMatch?.[1];
 
       if (clauderonVersion) {
@@ -623,7 +624,7 @@ export class Monorepo {
         outputs.push(`Detected clauderon release: v${clauderonVersion}`);
 
         try {
-          const binaries = await this.multiplexerBuild(source, s3AccessKeyId, s3SecretAccessKey);
+          const binaries = this.multiplexerBuild(source, s3AccessKeyId, s3SecretAccessKey);
 
           // Get filenames for upload
           const linuxTargets = CLAUDERON_TARGETS.filter(t => t.os === "linux");
@@ -650,9 +651,9 @@ export class Monorepo {
       // Fail CI if any release phase errors occurred
       if (releaseErrors.length > 0) {
         outputs.push(`\n--- Release Phase Failed ---`);
-        outputs.push(`${releaseErrors.length} error(s) occurred during release:`);
-        releaseErrors.forEach((err, i) => outputs.push(`  ${i + 1}. ${err}`));
-        throw new Error(`Release phase failed with ${releaseErrors.length} error(s):\n${releaseErrors.join("\n")}`);
+        outputs.push(`${String(releaseErrors.length)} error(s) occurred during release:`);
+        releaseErrors.forEach((err, i) => outputs.push(`  ${String(i + 1)}. ${err}`));
+        throw new Error(`Release phase failed with ${String(releaseErrors.length)} error(s):\n${releaseErrors.join("\n")}`);
       }
     }
 
@@ -865,11 +866,11 @@ export class Monorepo {
    * @param s3SecretAccessKey Optional S3 secret key for sccache
    */
   @func()
-  async multiplexerBuild(
+  multiplexerBuild(
     source: Directory,
     s3AccessKeyId?: Secret,
     s3SecretAccessKey?: Secret
-  ): Promise<Directory> {
+  ): Directory {
     const container = getCrossCompileContainer(source, s3AccessKeyId, s3SecretAccessKey);
 
     // Build for Linux targets only (cross-compiling to macOS requires different tooling)
@@ -951,7 +952,7 @@ retry = 3
 
     // Build binaries for Linux
     outputs.push("\n--- Building Binaries ---");
-    const binaries = await this.multiplexerBuild(source, s3AccessKeyId, s3SecretAccessKey);
+    const binaries = this.multiplexerBuild(source, s3AccessKeyId, s3SecretAccessKey);
 
     // Get filenames for upload
     const linuxTargets = CLAUDERON_TARGETS.filter(t => t.os === "linux");
@@ -967,7 +968,7 @@ retry = 3
     outputs.push(...uploadResults.outputs);
 
     if (uploadResults.errors.length > 0) {
-      throw new Error(`Failed to upload ${uploadResults.errors.length} asset(s):\n${uploadResults.errors.join("\n")}`);
+      throw new Error(`Failed to upload ${String(uploadResults.errors.length)} asset(s):\n${uploadResults.errors.join("\n")}`);
     }
 
     return outputs.join("\n");
@@ -992,7 +993,7 @@ retry = 3
    * Get the built clauderon docs as a directory
    */
   @func()
-  async muxSiteOutput(source: Directory): Promise<Directory> {
+  muxSiteOutput(source: Directory): Directory {
     const container = this.muxSiteBuild(source);
     return container.directory("/workspace/dist");
   }
@@ -1009,7 +1010,7 @@ retry = 3
     const outputs: string[] = [];
 
     // Build the site
-    const siteDir = await this.muxSiteOutput(source);
+    const siteDir = this.muxSiteOutput(source);
     outputs.push("✓ Built clauderon docs");
 
     // Deploy to SeaweedFS S3

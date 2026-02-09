@@ -15,26 +15,26 @@ import type {
 } from "./types.ts";
 
 /** Extended node types */
-interface ImportDeclarationNode extends Node {
+type ImportDeclarationNode = {
   source: { value: string };
-  specifiers: Array<{
+  specifiers: {
     type: string;
     local: { name: string };
     imported?: { name: string };
-  }>;
-}
+  }[];
+} & Node
 
-interface ExportNamedDeclarationNode extends Node {
-  declaration?: Node & { id?: { name: string }; declarations?: Array<{ id: { name: string } }> };
-  specifiers: Array<{
+type ExportNamedDeclarationNode = {
+  declaration?: Node & { id?: { name: string }; declarations?: { id: { name: string } }[] };
+  specifiers: {
     local: { name: string };
     exported: { name: string };
-  }>;
-}
+  }[];
+} & Node
 
-interface ExportDefaultDeclarationNode extends Node {
+type ExportDefaultDeclarationNode = {
   declaration: Node & { id?: { name: string }; name?: string };
-}
+} & Node
 
 /** Build a complete call graph from source code */
 export function buildCallGraph(source: string): CallGraph {
@@ -194,7 +194,7 @@ function extractTopLevelSegments(
       const segmentSource = source.slice(currentPos, func.start);
       if (segmentSource.trim().length > 0) {
         segments.push({
-          id: `segment_${segmentIndex++}`,
+          id: `segment_${String(segmentIndex++)}`,
           start: currentPos,
           end: func.start,
           source: segmentSource,
@@ -210,7 +210,7 @@ function extractTopLevelSegments(
     const segmentSource = source.slice(currentPos);
     if (segmentSource.trim().length > 0) {
       segments.push({
-        id: `segment_${segmentIndex}`,
+        id: `segment_${String(segmentIndex)}`,
         start: currentPos,
         end: source.length,
         source: segmentSource,

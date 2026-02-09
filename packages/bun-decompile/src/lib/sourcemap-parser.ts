@@ -3,7 +3,7 @@ import { basename } from "node:path";
 import type { StringPointer } from "./types.ts";
 
 /** Parsed source file from a sourcemap */
-export interface SourceFile {
+export type SourceFile = {
   /** Original file name (e.g., "utils.ts") */
   name: string;
   /** Original source content (decompressed) */
@@ -11,7 +11,7 @@ export interface SourceFile {
 }
 
 /** Parsed Bun SerializedSourceMap */
-export interface ParsedSourceMap {
+export type ParsedSourceMap = {
   /** Number of source files */
   sourceCount: number;
   /** VLQ-encoded mappings */
@@ -37,7 +37,7 @@ function readStringPointer(buffer: Uint8Array, offset: number): StringPointer {
 /** Decompress ZSTD data using the zstd CLI tool */
 async function decompressZstd(compressed: Uint8Array): Promise<string> {
   // Write compressed data to a temp file and decompress
-  const tempIn = `/tmp/bun-decompile-${Date.now()}-${Math.random().toString(36).slice(2)}.zst`;
+  const tempIn = `/tmp/bun-decompile-${String(Date.now())}-${Math.random().toString(36).slice(2)}.zst`;
   const tempOut = tempIn.replace(".zst", ".txt");
 
   try {
@@ -61,8 +61,8 @@ async function decompressZstd(compressed: Uint8Array): Promise<string> {
   } finally {
     // Cleanup temp files
     try {
-      await Bun.file(tempIn).exists() && (await Bun.write(tempIn, ""));
-      await Bun.file(tempOut).exists() && (await Bun.write(tempOut, ""));
+      if (await Bun.file(tempIn).exists()) await Bun.write(tempIn, "");
+      if (await Bun.file(tempOut).exists()) await Bun.write(tempOut, "");
     } catch {
       // Ignore cleanup errors
     }

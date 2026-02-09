@@ -15,6 +15,8 @@ import { CredentialRow } from "../components/CredentialRow";
 import { UsageProgressBar } from "../components/UsageProgressBar";
 import { typography } from "../styles/typography";
 
+const USAGE_ERROR_BACKGROUND = "#fef2f2";
+
 type StatusScreenProps = RootStackScreenProps<"Status">;
 
 export function StatusScreen(_props: StatusScreenProps) {
@@ -76,7 +78,7 @@ export function StatusScreen(_props: StatusScreenProps) {
 
   return (
     <ScrollView
-      style={{ flex: 1, backgroundColor: colors.background }}
+      style={[styles.flex1, { backgroundColor: colors.background }]}
       contentContainerStyle={styles.content}
       refreshControl={
         <RefreshControl
@@ -211,6 +213,9 @@ export function StatusScreen(_props: StatusScreenProps) {
 }
 
 const styles = StyleSheet.create({
+  flex1: {
+    flex: 1,
+  },
   centered: {
     flex: 1,
     justifyContent: "center",
@@ -244,7 +249,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   usageError: {
-    backgroundColor: "#fef2f2",
+    backgroundColor: USAGE_ERROR_BACKGROUND,
     borderWidth: 2,
     padding: 12,
   },

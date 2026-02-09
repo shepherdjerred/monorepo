@@ -45,7 +45,7 @@ export class DeminifyCache {
 
     // Check memory cache first
     const memEntry = this.memoryCache.get(key);
-    if (memEntry && memEntry.modelVersion === this.modelVersion) {
+    if (memEntry?.modelVersion === this.modelVersion) {
       return memEntry.result;
     }
 
@@ -182,7 +182,7 @@ export class DeminifyCache {
       for await (const file of glob.scan(this.cacheDir)) {
         const filePath = join(this.cacheDir, file);
         try {
-          const stat = await Bun.file(filePath).size;
+          const stat = Bun.file(filePath).size;
           if (stat > 0) fileCacheSize++;
         } catch {
           // Skip invalid files

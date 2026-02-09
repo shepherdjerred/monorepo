@@ -21,7 +21,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { appendFile, mkdir } from "fs/promises";
 import { join } from "path";
 import { applyRenames, extractIdentifiers, type RenameMappings } from "./babel-renamer.ts";
-import { FunctionCache } from "./function-cache.ts";
+import type { FunctionCache } from "./function-cache.ts";
 import {
   getBatchSystemPrompt,
   getBatchFunctionPrompt,
@@ -37,7 +37,7 @@ import type {
 } from "./types.ts";
 
 /** Result from API call with raw data */
-interface LLMCallResult {
+type LLMCallResult = {
   mappings: RenameMappings;
   rawResponse: string;
   inputTokens: number;
@@ -47,7 +47,7 @@ interface LLMCallResult {
 }
 
 /** Result from processing a batch */
-export interface BatchResult {
+export type BatchResult = {
   /** Functions processed */
   processed: number;
   /** Cache hits */
@@ -63,7 +63,7 @@ export interface BatchResult {
 }
 
 /** Options for batch processing */
-export interface BatchProcessorOptions {
+export type BatchProcessorOptions = {
   /**
    * Maximum tokens per batch.
    * If not specified, automatically computed from model's context limit (90% utilization).
@@ -183,7 +183,7 @@ export class BatchProcessor {
     const totalFunctions = functions.length;
 
     if (verbose) {
-      console.log(`Processing ${totalFunctions} functions bottom-up...`);
+      console.log(`Processing ${String(totalFunctions)} functions bottom-up...`);
     }
 
     // Track which functions have been processed
@@ -212,14 +212,14 @@ export class BatchProcessor {
       }
 
       if (verbose) {
-        console.log(`Round ${round}: ${ready.length} functions ready`);
+        console.log(`Round ${String(round)}: ${String(ready.length)} functions ready`);
       }
 
       // Create batches using ORIGINAL source (positions don't change)
       const batches = this.createBatches(ready, maxBatchTokens, source);
 
       if (verbose) {
-        console.log(`  Split into ${batches.length} batches`);
+        console.log(`  Split into ${String(batches.length)} batches`);
       }
 
       // Process each batch
@@ -278,11 +278,11 @@ export class BatchProcessor {
 
     // Apply ALL renames at once to the original source
     if (verbose) {
-      console.log(`Applying ${Object.keys(allMappings).length} rename mappings...`);
+      console.log(`Applying ${String(Object.keys(allMappings).length)} rename mappings...`);
     }
 
     try {
-      return await applyRenames(source, allMappings);
+      return applyRenames(source, allMappings);
     } catch (error) {
       if (verbose) {
         console.error("Error applying renames:", error);
@@ -301,7 +301,7 @@ export class BatchProcessor {
 
     // Calculate depth for each function (max depth of callees + 1)
     const getDepth = (id: string, visited: Set<string>): number => {
-      if (depths.has(id)) return depths.get(id)!;
+      if (depths.has(id)) return depths.get(id) ?? 0;
       if (visited.has(id)) return 0; // Circular dependency
 
       visited.add(id);
@@ -541,10 +541,10 @@ export class BatchProcessor {
 
     if (verbose) {
       console.log("\n--- LLM Request ---");
-      console.log(`Functions in batch: ${functions.length}`);
+      console.log(`Functions in batch: ${String(functions.length)}`);
       console.log(`Function IDs: ${functions.map(f => f.id).join(", ")}`);
-      console.log(`System prompt length: ${systemPrompt.length} chars`);
-      console.log(`User prompt length: ${userPrompt.length} chars`);
+      console.log(`System prompt length: ${String(systemPrompt.length)} chars`);
+      console.log(`User prompt length: ${String(userPrompt.length)} chars`);
       console.log("User prompt preview:");
       console.log(userPrompt.slice(0, 500) + (userPrompt.length > 500 ? "..." : ""));
     }
@@ -603,10 +603,10 @@ export class BatchProcessor {
 
     if (verbose) {
       console.log("\n--- LLM Response ---");
-      console.log(`Mappings received: ${Object.keys(result).length}`);
+      console.log(`Mappings received: ${String(Object.keys(result).length)}`);
       for (const [id, mapping] of Object.entries(result)) {
         const renameCount = Object.keys(mapping.renames).length;
-        console.log(`  ${id}: ${mapping.functionName ?? "(no name)"} - ${renameCount} renames`);
+        console.log(`  ${id}: ${mapping.functionName ?? "(no name)"} - ${String(renameCount)} renames`);
         if (mapping.description) {
           console.log(`    "${mapping.description}"`);
         }
@@ -634,7 +634,11 @@ export class BatchProcessor {
       response_format: { type: "json_object" as const },
     };
 
-    const response = await this.openai!.chat.completions.create(requestBody);
+    if (!this.openai) {
+      throw new Error("OpenAI client not initialized");
+    }
+
+    const response = await this.openai.chat.completions.create(requestBody);
 
     // Track token usage
     const inputTokens = response.usage?.prompt_tokens ?? 0;
@@ -642,7 +646,7 @@ export class BatchProcessor {
     this.inputTokensUsed += inputTokens;
     this.outputTokensUsed += outputTokens;
 
-    const content = response.choices[0]?.message?.content;
+    const content = response.choices[0]?.message.content;
     if (!content) {
       throw new Error("Empty response from OpenAI");
     }
@@ -671,7 +675,11 @@ export class BatchProcessor {
       messages: [{ role: "user" as const, content: userPrompt }],
     };
 
-    const response = await this.anthropic!.messages.create(requestBody);
+    if (!this.anthropic) {
+      throw new Error("Anthropic client not initialized");
+    }
+
+    const response = await this.anthropic.messages.create(requestBody);
 
     // Track token usage
     const inputTokens = response.usage.input_tokens;
@@ -680,7 +688,7 @@ export class BatchProcessor {
     this.outputTokensUsed += outputTokens;
 
     const content = response.content[0];
-    if (!content || content.type !== "text") {
+    if (content?.type !== "text") {
       throw new Error("Unexpected response type from Anthropic");
     }
 
@@ -702,25 +710,36 @@ export class BatchProcessor {
     let jsonStr = content.trim();
 
     // If wrapped in markdown code blocks, extract
-    const jsonMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
+    const jsonMatch = /```(?:json)?\s*([\s\S]*?)```/.exec(jsonStr);
     if (jsonMatch?.[1]) {
       jsonStr = jsonMatch[1].trim();
     }
 
     try {
-      const parsed = JSON.parse(jsonStr) as RenameMappings;
+      const raw = JSON.parse(jsonStr) as Record<string, unknown>;
+      const parsed: RenameMappings = {};
 
       // Validate structure
-      for (const [id, mapping] of Object.entries(parsed)) {
+      for (const [id, mapping] of Object.entries(raw)) {
         if (typeof mapping !== "object" || mapping === null) {
-          delete parsed[id];
           continue;
         }
 
+        const m = mapping as Record<string, unknown>;
+
         // Ensure renames is an object
-        if (typeof mapping.renames !== "object" || mapping.renames === null) {
-          mapping.renames = {};
+        const renames = (typeof m["renames"] === "object" && m["renames"] !== null)
+          ? m["renames"] as Record<string, string>
+          : {};
+
+        const entry: RenameMappings[string] = { renames };
+        if (typeof m["functionName"] === "string") {
+          entry.functionName = m["functionName"];
         }
+        if (typeof m["description"] === "string") {
+          entry.description = m["description"];
+        }
+        parsed[id] = entry;
       }
 
       return parsed;
