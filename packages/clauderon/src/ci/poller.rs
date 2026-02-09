@@ -4,7 +4,9 @@ use std::time::Duration;
 use tokio::time::interval;
 use uuid::Uuid;
 
-use crate::core::{CheckStatus, MergeMethod, PrReviewStatus, ReviewDecision, SessionManager, SessionStatus};
+use crate::core::{
+    CheckStatus, MergeMethod, PrReviewStatus, ReviewDecision, SessionManager, SessionStatus,
+};
 
 /// CI status poller - polls GitHub PR checks for sessions with PRs
 pub struct CIPoller {

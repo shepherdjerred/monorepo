@@ -1811,6 +1811,10 @@ impl TryFrom<SessionRow> for Session {
             initial_prompt: row.initial_prompt,
             dangerous_skip_checks: row.dangerous_skip_checks,
             dangerous_copy_creds: row.dangerous_copy_creds,
+            can_merge_pr: row.pr_url.is_some()
+                && pr_check_status == Some(crate::core::CheckStatus::Passing)
+                && pr_review_status == Some(crate::core::PrReviewStatus::Approved)
+                && !row.merge_conflict,
             pr_url: row.pr_url,
             pr_check_status,
             pr_review_decision,
@@ -1818,10 +1822,6 @@ impl TryFrom<SessionRow> for Session {
             pr_merge_methods,
             pr_default_merge_method,
             pr_delete_branch_on_merge,
-            can_merge_pr: row.pr_url.is_some()
-                && pr_check_status == Some(crate::core::CheckStatus::Passing)
-                && pr_review_status == Some(crate::core::PrReviewStatus::Approved)
-                && !row.merge_conflict,
             claude_status,
             claude_status_updated_at,
             merge_conflict: row.merge_conflict,
