@@ -20,6 +20,7 @@ import type {
   HealthCheckResult,
   SessionHealthReport,
   RecreateResult,
+  FeatureFlagsResponse,
 } from "@clauderon/shared";
 import { ApiError, NetworkError, SessionNotFoundError } from "./errors.js";
 
@@ -242,6 +243,13 @@ export class ClauderonClient {
   async getSystemStatus(): Promise<SystemStatus> {
     const response = await this.request<SystemStatus>("GET", "/api/status");
     return response;
+  }
+
+  /**
+   * Get feature flags configuration
+   */
+  async getFeatureFlags(): Promise<FeatureFlagsResponse> {
+    return await this.request<FeatureFlagsResponse>("GET", "/api/feature-flags");
   }
 
   /**

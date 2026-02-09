@@ -273,6 +273,15 @@ async fn create_session(
     // Validate model compatibility with agent and experimental models
     request.validate(&state.session_manager.feature_flags())?;
 
+    // Validate read-only mode is enabled if requested
+    if request.access_mode == crate::core::session::AccessMode::ReadOnly
+        && !state.feature_flags.enable_readonly_mode
+    {
+        return Err(AppError::BadRequest(
+            "Read-only mode is not available. This feature is experimental and must be explicitly enabled.".to_string()
+        ));
+    }
+
     // Start async creation (returns immediately with session ID)
     let session_id = state
         .session_manager
@@ -534,6 +543,16 @@ async fn update_access_mode(
     Json(request): Json<UpdateAccessModeRequest>,
 ) -> Result<StatusCode, AppError> {
     validate_session_id(&id)?;
+
+    // Validate read-only mode is enabled if requested
+    if request.access_mode == crate::core::session::AccessMode::ReadOnly
+        && !state.feature_flags.enable_readonly_mode
+    {
+        return Err(AppError::BadRequest(
+            "Read-only mode is not available. This feature is experimental and must be explicitly enabled.".to_string()
+        ));
+    }
+
     state
         .session_manager
         .update_access_mode(&id, request.access_mode)

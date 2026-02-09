@@ -301,6 +301,8 @@ export interface FeatureFlags {
 	enable_kubernetes_backend: boolean;
 	/** Enable experimental AI models (Codex, Gemini) */
 	enable_experimental_models: boolean;
+	/** Enable read-only mode (experimental, security issues #424, #205) */
+	enable_readonly_mode: boolean;
 }
 
 /** Feature flags response for the frontend */
