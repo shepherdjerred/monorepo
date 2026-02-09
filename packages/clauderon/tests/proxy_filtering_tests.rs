@@ -126,6 +126,75 @@ async fn create_test_manager_with_proxy() -> (
     (manager, proxy_manager, temp_dir, git, zellij, docker)
 }
 
+/// Create a test manager with readonly mode feature flag enabled.
+async fn create_test_manager_with_proxy_and_readonly() -> (
+    SessionManager,
+    Arc<ProxyManager>,
+    TempDir,
+    Arc<MockGitBackend>,
+    Arc<MockExecutionBackend>,
+    Arc<MockExecutionBackend>,
+) {
+    let temp_dir = TempDir::new().expect("Failed to create temp dir");
+    let db_path = temp_dir.path().join("test.db");
+    let store = Arc::new(
+        SqliteStore::new(&db_path)
+            .await
+            .expect("Failed to create store"),
+    );
+
+    let git = Arc::new(MockGitBackend::new());
+    let zellij = Arc::new(MockExecutionBackend::zellij());
+    let docker = Arc::new(MockExecutionBackend::docker());
+    let kubernetes = Arc::new(MockExecutionBackend::kubernetes());
+    #[cfg(target_os = "macos")]
+    let apple_container = Arc::new(MockExecutionBackend::apple_container());
+    let sprites = Arc::new(MockExecutionBackend::sprites());
+
+    // Helper functions to coerce Arc<Concrete> to Arc<dyn Trait>
+    fn to_git_ops(arc: Arc<MockGitBackend>) -> Arc<dyn GitOperations> {
+        arc
+    }
+    fn to_exec_backend(arc: Arc<MockExecutionBackend>) -> Arc<dyn ExecutionBackend> {
+        arc
+    }
+
+    // Create feature flags with readonly mode enabled
+    let feature_flags = Arc::new(clauderon::feature_flags::FeatureFlags {
+        enable_readonly_mode: true,
+        ..Default::default()
+    });
+
+    let mut manager = SessionManager::new(
+        store,
+        to_git_ops(Arc::clone(&git)),
+        to_exec_backend(Arc::clone(&zellij)),
+        to_exec_backend(Arc::clone(&docker)),
+        to_exec_backend(Arc::clone(&kubernetes)),
+        None,
+        #[cfg(target_os = "macos")]
+        to_exec_backend(Arc::clone(&apple_container)),
+        to_exec_backend(Arc::clone(&sprites)),
+        feature_flags,
+    )
+    .await
+    .expect("Failed to create manager");
+
+    // Create proxy manager
+    use rand::Rng;
+
+    let proxy_config = ProxyConfig::default();
+    let random_port = rand::thread_rng().gen_range(20000..21000);
+    let proxy_manager = Arc::new(
+        ProxyManager::new(proxy_config, Some(random_port)).expect("Failed to create proxy manager"),
+    );
+
+    // Wire up proxy manager
+    manager.set_proxy_manager(Arc::clone(&proxy_manager));
+
+    (manager, proxy_manager, temp_dir, git, zellij, docker)
+}
+
 /// Helper to create an HTTP client configured to use a specific proxy port.
 fn create_proxy_client(proxy_port: u16, ca_cert_path: &Path) -> anyhow::Result<reqwest::Client> {
     let proxy = reqwest::Proxy::all(format!("http://127.0.0.1:{proxy_port}"))?;
@@ -148,7 +217,7 @@ fn create_proxy_client(proxy_port: u16, ca_cert_path: &Path) -> anyhow::Result<r
 async fn test_create_session_with_read_only_mode() {
     let repo_dir = create_temp_git_repo();
     let (manager, _proxy_manager, _temp_dir, _git, _zellij, _docker) =
-        create_test_manager_with_proxy().await;
+        create_test_manager_with_proxy_and_readonly().await;
 
     let (session, _warnings) = manager
         .create_session(
@@ -220,7 +289,7 @@ async fn test_create_session_with_read_write_mode() {
 async fn test_zellij_backend_ignores_proxy_port() {
     let repo_dir = create_temp_git_repo();
     let (manager, _proxy_manager, _temp_dir, _git, _zellij, _docker) =
-        create_test_manager_with_proxy().await;
+        create_test_manager_with_proxy_and_readonly().await;
 
     let (session, _warnings) = manager
         .create_session(
@@ -256,7 +325,7 @@ async fn test_zellij_backend_ignores_proxy_port() {
 async fn test_update_access_mode_by_name() {
     let repo_dir = create_temp_git_repo();
     let (manager, _proxy_manager, _temp_dir, _git, _zellij, _docker) =
-        create_test_manager_with_proxy().await;
+        create_test_manager_with_proxy_and_readonly().await;
 
     let (session, _warnings) = manager
         .create_session(
@@ -302,7 +371,7 @@ async fn test_update_access_mode_by_name() {
 async fn test_update_access_mode_by_id() {
     let repo_dir = create_temp_git_repo();
     let (manager, _proxy_manager, _temp_dir, _git, _zellij, _docker) =
-        create_test_manager_with_proxy().await;
+        create_test_manager_with_proxy_and_readonly().await;
 
     let (session, _warnings) = manager
         .create_session(
@@ -348,7 +417,7 @@ async fn test_update_nonexistent_session_fails() {
         create_test_manager_with_proxy().await;
 
     let result = manager
-        .update_access_mode("nonexistent-session", AccessMode::ReadOnly)
+        .update_access_mode("nonexistent-session", AccessMode::ReadWrite)
         .await;
 
     assert!(result.is_err());
@@ -456,6 +525,10 @@ async fn test_access_mode_persists_across_restarts() {
             arc
         }
 
+        let feature_flags = Arc::new(clauderon::feature_flags::FeatureFlags {
+            enable_readonly_mode: true,
+            ..Default::default()
+        });
         let manager = SessionManager::new(
             store,
             to_git_ops(git),
@@ -466,7 +539,7 @@ async fn test_access_mode_persists_across_restarts() {
             #[cfg(target_os = "macos")]
             to_exec_backend(apple_container),
             to_exec_backend(sprites),
-            Arc::new(FeatureFlags::default()),
+            feature_flags,
         )
         .await
         .expect("Failed to create manager");
@@ -519,6 +592,10 @@ async fn test_access_mode_persists_across_restarts() {
             arc
         }
 
+        let feature_flags = Arc::new(clauderon::feature_flags::FeatureFlags {
+            enable_readonly_mode: true,
+            ..Default::default()
+        });
         let manager = SessionManager::new(
             store,
             to_git_ops(git),
@@ -529,7 +606,7 @@ async fn test_access_mode_persists_across_restarts() {
             #[cfg(target_os = "macos")]
             to_exec_backend(apple_container),
             to_exec_backend(sprites),
-            Arc::new(FeatureFlags::default()),
+            feature_flags,
         )
         .await
         .expect("Failed to create manager");
@@ -616,7 +693,7 @@ async fn test_proxy_port_persists_in_database() {
 async fn test_delete_session_cleans_up_proxy() {
     let repo_dir = create_temp_git_repo();
     let (manager, _proxy_manager, _temp_dir, _git, _zellij, _docker) =
-        create_test_manager_with_proxy().await;
+        create_test_manager_with_proxy_and_readonly().await;
 
     let (session, _warnings) = manager
         .create_session(
