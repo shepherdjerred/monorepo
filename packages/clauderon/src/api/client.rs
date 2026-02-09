@@ -521,6 +521,34 @@ impl Client {
             _ => anyhow::bail!("Unexpected response"),
         }
     }
+
+    /// Merge a pull request for a session
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the session is not found or the merge fails.
+    pub async fn merge_pr(
+        &mut self,
+        id: &str,
+        method: crate::core::MergeMethod,
+        delete_branch: bool,
+    ) -> anyhow::Result<()> {
+        let response = self
+            .send_request(Request::MergePr {
+                id: id.to_string(),
+                method,
+                delete_branch,
+            })
+            .await?;
+
+        match response {
+            Response::Ok => Ok(()),
+            Response::Error { code, message } => {
+                anyhow::bail!("[{code}] {message}")
+            }
+            _ => anyhow::bail!("Unexpected response"),
+        }
+    }
 }
 
 #[async_trait]
@@ -616,5 +644,14 @@ impl ApiClient for Client {
         {
             Self::cleanup_session(self, id).await
         }
+    }
+
+    async fn merge_pr(
+        &mut self,
+        id: &str,
+        method: crate::core::MergeMethod,
+        delete_branch: bool,
+    ) -> anyhow::Result<()> {
+        Self::merge_pr(self, id, method, delete_branch).await
     }
 }

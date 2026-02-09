@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import type { Session, SessionHealthReport } from "@clauderon/client";
 import { SessionStatus } from "@clauderon/shared";
+import type { MergeMethod } from "@clauderon/shared";
 import { SessionCard } from "./SessionCard";
 import { ThemeToggle } from "./ThemeToggle";
 import { ConfirmDialog } from "./ConfirmDialog";
@@ -36,6 +37,7 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
     unarchiveSession,
     refreshSession,
     deleteSession,
+    mergePr,
     getSessionHealth,
     refreshHealth,
     healthReports,
@@ -181,6 +183,14 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
       // Fallback to legacy refresh dialog if no health report
       setConfirmDialog({ type: "refresh", session });
     }
+  };
+
+  const handleMergePr = (session: Session, method: MergeMethod, deleteBranch: boolean) => {
+    void mergePr(session.id, method, deleteBranch).then(() => {
+      toast.success(`Pull request for "${session.name}" merged successfully`);
+    }).catch((err) => {
+      toast.error(`Failed to merge PR: ${err instanceof Error ? err.message : String(err)}`);
+    });
   };
 
   const handleConfirm = () => {
@@ -366,6 +376,7 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
                   onUnarchive={handleUnarchive}
                   onRefresh={handleRefresh}
                   onDelete={handleDelete}
+                  onMergePr={handleMergePr}
                 />
               );
             })}

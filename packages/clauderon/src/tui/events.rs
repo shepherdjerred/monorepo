@@ -175,7 +175,8 @@ pub async fn handle_paste_event(app: &mut App, text: &str) -> anyhow::Result<()>
         | AppMode::SignalMenu
         | AppMode::StartupHealthModal
         | AppMode::RecreateConfirm
-        | AppMode::RecreateBlocked => {
+        | AppMode::RecreateBlocked
+        | AppMode::ConfirmMerge => {
             // Ignore paste events in these modes
         }
     }
@@ -206,6 +207,7 @@ pub async fn handle_key_event(app: &mut App, key: KeyEvent) -> anyhow::Result<()
         AppMode::SessionList => handle_session_list_key(app, key).await?,
         AppMode::CreateDialog => handle_create_dialog_key(app, key).await?,
         AppMode::ConfirmDelete => handle_confirm_delete_key(app, key),
+        AppMode::ConfirmMerge => handle_confirm_merge_key(app, key).await?,
         AppMode::Help => handle_help_key(app, key),
         AppMode::Attached => handle_attached_key(app, key).await?,
         AppMode::CopyMode => handle_copy_mode_key(app, key).await?,
@@ -235,6 +237,9 @@ async fn handle_session_list_key(app: &mut App, key: KeyEvent) -> anyhow::Result
             if let Err(e) = app.unarchive_selected().await {
                 app.status_message = Some(format!("Unarchive failed: {e}"));
             }
+        }
+        KeyCode::Char('m') => {
+            app.open_merge_confirm();
         }
         KeyCode::Char('f') => {
             if let Err(e) = app.refresh_selected().await {
@@ -910,6 +915,42 @@ fn handle_confirm_delete_key(app: &mut App, key: KeyEvent) {
         }
         _ => {}
     }
+}
+
+async fn handle_confirm_merge_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
+    match key.code {
+        // Confirm merge with Enter or 'y'
+        KeyCode::Enter | KeyCode::Char('y' | 'Y') => {
+            if let Err(e) = app.confirm_merge().await {
+                app.status_message = Some(format!("Merge failed: {e}"));
+                app.cancel_merge();
+            }
+        }
+        // Cancel with Esc or 'n'
+        KeyCode::Esc | KeyCode::Char('n' | 'N') => {
+            app.cancel_merge();
+        }
+        // Tab or Right Arrow to cycle merge methods
+        KeyCode::Tab | KeyCode::Right => {
+            if let Some(merge_state) = &mut app.confirm_merge {
+                merge_state.select_next_method();
+            }
+        }
+        // Left Arrow to cycle merge methods backwards
+        KeyCode::Left => {
+            if let Some(merge_state) = &mut app.confirm_merge {
+                merge_state.select_previous_method();
+            }
+        }
+        // Space to toggle delete branch
+        KeyCode::Char(' ') => {
+            if let Some(merge_state) = &mut app.confirm_merge {
+                merge_state.toggle_delete_branch();
+            }
+        }
+        _ => {}
+    }
+    Ok(())
 }
 
 fn handle_help_key(app: &mut App, key: KeyEvent) {

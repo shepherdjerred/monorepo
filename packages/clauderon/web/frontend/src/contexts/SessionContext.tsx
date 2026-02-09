@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
 import type { Session, CreateSessionRequest, AccessMode, SessionHealthReport } from "@clauderon/client";
+import type { MergeMethod } from "@clauderon/shared";
 import { useClauderonClient } from "../hooks/useClauderonClient";
 import { useSessionEvents } from "../hooks/useSessionEvents";
 import type { ClauderonClient } from "@clauderon/client";
@@ -17,6 +18,7 @@ type SessionContextValue = {
   updateAccessMode: (id: string, mode: AccessMode) => Promise<void>;
   updateSession: (id: string, title?: string, description?: string) => Promise<void>;
   regenerateMetadata: (id: string) => Promise<void>;
+  mergePr: (id: string, method: MergeMethod, deleteBranch: boolean) => Promise<void>;
   client: ClauderonClient;
   // Health state
   healthReports: Map<string, SessionHealthReport>;
@@ -176,6 +178,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     [client, refreshSessions, refreshHealth]
   );
 
+  const mergePr = useCallback(
+    async (id: string, method: MergeMethod, deleteBranch: boolean) => {
+      await client.mergePr(id, method, deleteBranch);
+      await refreshSessions();
+    },
+    [client, refreshSessions]
+  );
+
   // Handle real-time events
   const handleEvent = useCallback((event: { type: string; payload?: Session | { id: string } }) => {
     switch (event.type) {
@@ -228,6 +238,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         updateAccessMode,
         updateSession,
         regenerateMetadata,
+        mergePr,
         client,
         healthReports,
         refreshHealth,

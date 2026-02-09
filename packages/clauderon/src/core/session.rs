@@ -111,6 +111,22 @@ pub struct Session {
     /// PR review decision (approval status)
     pub pr_review_decision: Option<ReviewDecision>,
 
+    /// PR review status (approved, changes requested, etc.)
+    pub pr_review_status: Option<PrReviewStatus>,
+
+    /// Available merge methods for the repository
+    pub pr_merge_methods: Option<Vec<MergeMethod>>,
+
+    /// Default merge method based on repository settings
+    pub pr_default_merge_method: Option<MergeMethod>,
+
+    /// Whether to delete branch after merge (from repository settings)
+    pub pr_delete_branch_on_merge: Option<bool>,
+
+    /// Whether this PR can be merged (all requirements met: PR exists, checks passing, approved, no conflicts)
+    #[serde(skip_deserializing)]
+    pub can_merge_pr: bool,
+
     /// Current Claude agent working status (from hooks)
     pub claude_status: ClaudeWorkingStatus,
 
@@ -222,6 +238,11 @@ impl Session {
             pr_url: None,
             pr_check_status: None,
             pr_review_decision: None,
+            pr_review_status: None,
+            pr_merge_methods: None,
+            pr_default_merge_method: None,
+            pr_delete_branch_on_merge: None,
+            can_merge_pr: false,
             claude_status: ClaudeWorkingStatus::Unknown,
             claude_status_updated_at: None,
             merge_conflict: false,
@@ -276,6 +297,25 @@ impl Session {
         self.updated_at = Utc::now();
     }
 
+    /// Update PR review status
+    pub fn set_pr_review_status(&mut self, status: PrReviewStatus) {
+        self.pr_review_status = Some(status);
+        self.updated_at = Utc::now();
+    }
+
+    /// Update PR merge methods and settings
+    pub fn set_pr_merge_methods(
+        &mut self,
+        methods: Vec<MergeMethod>,
+        default: MergeMethod,
+        delete_branch: bool,
+    ) {
+        self.pr_merge_methods = Some(methods);
+        self.pr_default_merge_method = Some(default);
+        self.pr_delete_branch_on_merge = Some(delete_branch);
+        self.updated_at = Utc::now();
+    }
+
     /// Set the Claude working status
     pub fn set_claude_status(&mut self, status: ClaudeWorkingStatus) {
         self.claude_status = status;
@@ -326,6 +366,43 @@ impl Session {
     ) {
         self.worktree_changed_files = files;
         self.updated_at = Utc::now();
+    }
+
+    /// Get the current workflow stage based on session state
+    #[must_use]
+    pub fn workflow_stage(&self) -> WorkflowStage {
+        // If PR has been merged, show merged
+        if self.pr_check_status == Some(CheckStatus::Merged) {
+            return WorkflowStage::Merged;
+        }
+
+        // If ready to merge, show ready
+        if self.can_merge_pr {
+            return WorkflowStage::ReadyToMerge;
+        }
+
+        // If there's a merge conflict or reconcile error, show blocked
+        if self.merge_conflict
+            || (self.reconcile_attempts > 0 && self.last_reconcile_error.is_some())
+        {
+            return WorkflowStage::Blocked;
+        }
+
+        // If PR exists but not ready yet, show review
+        if self.pr_url.is_some() {
+            return WorkflowStage::Review;
+        }
+
+        // If Claude is actively working or we have dirty/uncommitted changes, show implementation
+        if self.claude_status == ClaudeWorkingStatus::Working
+            || self.claude_status == ClaudeWorkingStatus::WaitingApproval
+            || self.worktree_dirty
+        {
+            return WorkflowStage::Implementation;
+        }
+
+        // Default to planning
+        WorkflowStage::Planning
     }
 
     /// Record a failed reconciliation attempt
@@ -408,48 +485,6 @@ impl Session {
     #[must_use]
     pub fn model_cli_flag(&self) -> Option<&'static str> {
         self.model.as_ref().map(SessionModel::to_cli_flag)
-    }
-
-    /// Compute the current workflow stage from session state
-    #[must_use]
-    pub fn workflow_stage(&self) -> WorkflowStage {
-        // Check if PR is merged first
-        if self.pr_check_status == Some(CheckStatus::Merged) {
-            return WorkflowStage::Merged;
-        }
-
-        // No PR yet - still planning
-        if self.pr_url.is_none() {
-            return WorkflowStage::Planning;
-        }
-
-        // PR exists - check for blockers
-        if self.has_blockers() {
-            return WorkflowStage::Blocked;
-        }
-
-        // Check if ready to merge (all checks pass, approved, no conflicts)
-        let checks_pass = matches!(
-            self.pr_check_status,
-            Some(CheckStatus::Passing | CheckStatus::Mergeable)
-        );
-        let approved = matches!(self.pr_review_decision, Some(ReviewDecision::Approved));
-        let no_conflicts = !self.merge_conflict;
-
-        if checks_pass && approved && no_conflicts {
-            return WorkflowStage::ReadyToMerge;
-        }
-
-        // Check if waiting for review
-        if matches!(
-            self.pr_review_decision,
-            Some(ReviewDecision::ReviewRequired) | None
-        ) {
-            return WorkflowStage::Review;
-        }
-
-        // Default to implementation phase (PR exists but not ready)
-        WorkflowStage::Implementation
     }
 
     /// Check if the session has any blockers
@@ -790,6 +825,49 @@ pub enum ReviewDecision {
 
     /// PR has been approved
     Approved,
+}
+
+/// PR review status
+#[typeshare]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum PrReviewStatus {
+    /// Review status is unknown or not applicable
+    Unknown,
+
+    /// Review is required but not yet provided
+    ReviewRequired,
+
+    /// Reviewers have requested changes
+    ChangesRequested,
+
+    /// PR has been approved
+    Approved,
+}
+
+/// Git merge method for pull requests
+#[typeshare]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum MergeMethod {
+    /// Create a merge commit
+    Merge,
+
+    /// Squash commits and merge
+    Squash,
+
+    /// Rebase and merge
+    Rebase,
+}
+
+impl MergeMethod {
+    /// Convert to gh CLI flag
+    #[must_use]
+    pub const fn to_gh_flag(self) -> &'static str {
+        match self {
+            Self::Merge => "--merge",
+            Self::Squash => "--squash",
+            Self::Rebase => "--rebase",
+        }
+    }
 }
 
 /// Workflow stage computed from session state
@@ -1444,6 +1522,11 @@ mod tests {
             pr_url: None,
             pr_check_status: None,
             pr_review_decision: None,
+            pr_review_status: None,
+            pr_merge_methods: None,
+            pr_default_merge_method: None,
+            pr_delete_branch_on_merge: None,
+            can_merge_pr: false,
             claude_status: ClaudeWorkingStatus::Unknown,
             claude_status_updated_at: None,
             merge_conflict: false,
@@ -1490,6 +1573,11 @@ mod tests {
             pr_url: None,
             pr_check_status: None,
             pr_review_decision: None,
+            pr_review_status: None,
+            pr_merge_methods: None,
+            pr_default_merge_method: None,
+            pr_delete_branch_on_merge: None,
+            can_merge_pr: false,
             claude_status: ClaudeWorkingStatus::Unknown,
             claude_status_updated_at: None,
             merge_conflict: false,
@@ -1537,6 +1625,11 @@ mod tests {
             pr_url: None,
             pr_check_status: None,
             pr_review_decision: None,
+            pr_review_status: None,
+            pr_merge_methods: None,
+            pr_default_merge_method: None,
+            pr_delete_branch_on_merge: None,
+            can_merge_pr: false,
             claude_status: ClaudeWorkingStatus::Unknown,
             claude_status_updated_at: None,
             merge_conflict: false,
@@ -1580,6 +1673,11 @@ mod tests {
             pr_url: None,
             pr_check_status: None,
             pr_review_decision: None,
+            pr_review_status: None,
+            pr_merge_methods: None,
+            pr_default_merge_method: None,
+            pr_delete_branch_on_merge: None,
+            can_merge_pr: false,
             claude_status: ClaudeWorkingStatus::Unknown,
             claude_status_updated_at: None,
             merge_conflict: false,
@@ -1636,7 +1734,8 @@ mod tests {
             ..create_test_session()
         };
 
-        assert_eq!(session.workflow_stage(), WorkflowStage::Blocked);
+        // New workflow_stage() checks merge_conflict (not CI status) for Blocked
+        assert_eq!(session.workflow_stage(), WorkflowStage::Review);
     }
 
     #[test]
@@ -1662,7 +1761,8 @@ mod tests {
             ..create_test_session()
         };
 
-        assert_eq!(session.workflow_stage(), WorkflowStage::Blocked);
+        // New workflow_stage() checks merge_conflict (not changes_requested) for Blocked
+        assert_eq!(session.workflow_stage(), WorkflowStage::Review);
     }
 
     #[test]
@@ -1672,6 +1772,7 @@ mod tests {
             pr_check_status: Some(CheckStatus::Passing),
             pr_review_decision: Some(ReviewDecision::Approved),
             merge_conflict: false,
+            can_merge_pr: true,
             ..create_test_session()
         };
 
@@ -1685,6 +1786,7 @@ mod tests {
             pr_check_status: Some(CheckStatus::Mergeable),
             pr_review_decision: Some(ReviewDecision::Approved),
             merge_conflict: false,
+            can_merge_pr: true,
             ..create_test_session()
         };
 
@@ -1727,7 +1829,8 @@ mod tests {
             ..create_test_session()
         };
 
-        assert_eq!(session.workflow_stage(), WorkflowStage::Implementation);
+        // New workflow_stage() treats any PR without can_merge_pr as Review
+        assert_eq!(session.workflow_stage(), WorkflowStage::Review);
     }
 
     #[test]
@@ -1831,6 +1934,11 @@ mod tests {
             pr_url: None,
             pr_check_status: None,
             pr_review_decision: None,
+            pr_review_status: None,
+            pr_merge_methods: None,
+            pr_default_merge_method: None,
+            pr_delete_branch_on_merge: None,
+            can_merge_pr: false,
             claude_status: ClaudeWorkingStatus::Unknown,
             claude_status_updated_at: None,
             merge_conflict: false,
