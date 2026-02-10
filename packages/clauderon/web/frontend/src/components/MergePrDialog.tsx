@@ -5,7 +5,7 @@ import { CheckCircle } from "lucide-react";
 import { useState } from "react";
 import type { Session, MergeMethod } from "@clauderon/shared";
 
-interface MergePrDialogProps {
+type MergePrDialogProps = {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: (method: MergeMethod, deleteBranch: boolean) => void;
@@ -57,8 +57,8 @@ export function MergePrDialog({ isOpen, onClose, onConfirm, session }: MergePrDi
           <div className="space-y-2">
             <label className="text-sm font-medium">Merge method</label>
             <Select
-              value={selectedMethod || ""}
-              onValueChange={(v) => setSelectedMethod(v as MergeMethod)}
+              value={selectedMethod ?? ""}
+              onValueChange={(v) => { setSelectedMethod(v as MergeMethod); }}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select merge method" />
@@ -85,7 +85,7 @@ export function MergePrDialog({ isOpen, onClose, onConfirm, session }: MergePrDi
               id="delete-branch"
               type="checkbox"
               checked={deleteBranch}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDeleteBranch(e.target.checked)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => { setDeleteBranch(e.target.checked); }}
               className="w-4 h-4 rounded border-gray-300"
             />
             <label htmlFor="delete-branch" className="text-sm cursor-pointer">

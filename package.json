@@ -7,6 +7,7 @@
     "build": "bun run --filter='./packages/**' build",
     "test": "bun run --filter='./packages/**' test",
     "typecheck": "bun run --filter='./packages/**' typecheck",
+    "lint": "bun run --filter='./packages/**' lint",
     "docs:dev": "bun run --filter='./packages/clauderon/docs' dev",
     "docs:build": "bun run --filter='./packages/clauderon/docs' build",
     "docs:preview": "bun run --filter='./packages/clauderon/docs' preview",

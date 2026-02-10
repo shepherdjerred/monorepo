@@ -5,7 +5,7 @@ export type BugsinkClientResult<T> = {
 };
 
 function getBaseUrl(): string {
-  const baseUrl = process.env["BUGSINK_URL"];
+  const baseUrl = Bun.env["BUGSINK_URL"];
   if (!baseUrl) {
     throw new Error("BUGSINK_URL environment variable is not set");
   }
@@ -13,7 +13,7 @@ function getBaseUrl(): string {
 }
 
 function getAuthToken(): string {
-  const authToken = process.env["BUGSINK_TOKEN"];
+  const authToken = Bun.env["BUGSINK_TOKEN"];
   if (!authToken) {
     throw new Error("BUGSINK_TOKEN environment variable is not set");
   }

@@ -46,14 +46,14 @@ export const manageMemberTool = createTool({
         { value: ctx.memberId, fieldName: "memberId" },
         { value: ctx.roleId, fieldName: "roleId" },
       ]);
-      if (idError) return { success: false, message: idError };
+      if (idError) {return { success: false, message: idError };}
 
       const client = getDiscordClient();
       const guild = await client.guilds.fetch(ctx.guildId);
 
       switch (ctx.action) {
         case "get": {
-          if (!ctx.memberId) return { success: false, message: "memberId is required for get" };
+          if (!ctx.memberId) {return { success: false, message: "memberId is required for get" };}
           const member = await guild.members.fetch(ctx.memberId);
           return {
             success: true,
@@ -70,7 +70,7 @@ export const manageMemberTool = createTool({
         }
 
         case "search": {
-          if (!ctx.query) return { success: false, message: "query is required for search" };
+          if (!ctx.query) {return { success: false, message: "query is required for search" };}
           const members = await guild.members.search({ query: ctx.query, limit: ctx.limit ?? 10 });
           const list = members.map((m) => ({ id: m.id, username: m.user.username, displayName: m.displayName }));
           return { success: true, message: `Found ${String(list.length)} members`, data: list };
@@ -88,8 +88,8 @@ export const manageMemberTool = createTool({
         }
 
         case "modify": {
-          if (!ctx.memberId) return { success: false, message: "memberId is required for modify" };
-          if (ctx.nickname === undefined) return { success: false, message: "nickname is required for modify" };
+          if (!ctx.memberId) {return { success: false, message: "memberId is required for modify" };}
+          if (ctx.nickname === undefined) {return { success: false, message: "nickname is required for modify" };}
           // Prevent the bot from modifying its own nickname
           if (ctx.memberId === client.user?.id) {
             return { success: false, message: "Cannot modify bot's own nickname. Nickname changes happen via election only." };
@@ -100,19 +100,19 @@ export const manageMemberTool = createTool({
         }
 
         case "add-role": {
-          if (!ctx.memberId || !ctx.roleId) return { success: false, message: "memberId and roleId are required for add-role" };
+          if (!ctx.memberId || !ctx.roleId) {return { success: false, message: "memberId and roleId are required for add-role" };}
           const member = await guild.members.fetch(ctx.memberId);
           const role = await guild.roles.fetch(ctx.roleId);
-          if (!role) return { success: false, message: "Role not found" };
+          if (!role) {return { success: false, message: "Role not found" };}
           await member.roles.add(role, ctx.reason);
           return { success: true, message: `Added role @${role.name} to ${member.user.username}` };
         }
 
         case "remove-role": {
-          if (!ctx.memberId || !ctx.roleId) return { success: false, message: "memberId and roleId are required for remove-role" };
+          if (!ctx.memberId || !ctx.roleId) {return { success: false, message: "memberId and roleId are required for remove-role" };}
           const member = await guild.members.fetch(ctx.memberId);
           const role = await guild.roles.fetch(ctx.roleId);
-          if (!role) return { success: false, message: "Role not found" };
+          if (!role) {return { success: false, message: "Role not found" };}
           await member.roles.remove(role, ctx.reason);
           return { success: true, message: `Removed role @${role.name} from ${member.user.username}` };
         }

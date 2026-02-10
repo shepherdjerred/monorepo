@@ -53,7 +53,7 @@ export const SentryConfigSchema = z.object({
     .enum(["development", "staging", "production"])
     .default("development"),
   release: z.string().optional(),
-  sampleRate: z.number().min(0).max(1).default(1.0),
+  sampleRate: z.number().min(0).max(1).default(1),
   tracesSampleRate: z.number().min(0).max(1).default(0.1),
 });
 
@@ -84,8 +84,8 @@ export const ActivityTrackingConfigSchema = z.object({
 
 export const ShellConfigSchema = z.object({
   enabled: z.boolean().default(true),
-  defaultTimeout: z.number().default(30000),
-  maxTimeout: z.number().default(300000),
+  defaultTimeout: z.number().default(30_000),
+  maxTimeout: z.number().default(300_000),
 });
 
 export const SchedulerConfigSchema = z.object({
@@ -100,7 +100,7 @@ export const BrowserConfigSchema = z.object({
   viewportWidth: z.number().default(1280),
   viewportHeight: z.number().default(720),
   maxSessions: z.number().default(5),
-  sessionTimeoutMs: z.number().default(300000),
+  sessionTimeoutMs: z.number().default(300_000),
   userAgent: z.string().optional(),
 });
 
@@ -123,7 +123,7 @@ export const EditorRepoConfigSchema = z.object({
 export const EditorConfigSchema = z.object({
   enabled: z.boolean().default(false),
   allowedRepos: z.array(EditorRepoConfigSchema).default([]),
-  maxSessionDurationMs: z.number().default(1800000), // 30 minutes
+  maxSessionDurationMs: z.number().default(1_800_000), // 30 minutes
   maxSessionsPerUser: z.number().default(1),
   oauthPort: z.number().default(4112),
   oauthHost: z.string().default("0.0.0.0"),

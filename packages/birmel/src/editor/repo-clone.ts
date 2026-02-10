@@ -1,6 +1,6 @@
-import { spawn } from "child_process";
-import { rm, mkdir } from "fs/promises";
-import { join } from "path";
+import { spawn } from "node:child_process";
+import { rm, mkdir } from "node:fs/promises";
+import { join } from "node:path";
 import { loggers } from "../utils/index.js";
 
 const logger = loggers.editor.child("repo-clone");
@@ -90,10 +90,10 @@ async function runGitCommand(cwd: string, args: string[]): Promise<string> {
     });
 
     proc.on("close", (code) => {
-      if (code !== 0) {
-        reject(new Error(`git ${args.join(" ")} failed: ${stderr}`));
-      } else {
+      if (code === 0) {
         resolve(stdout.trim());
+      } else {
+        reject(new Error(`git ${args.join(" ")} failed: ${stderr}`));
       }
     });
 

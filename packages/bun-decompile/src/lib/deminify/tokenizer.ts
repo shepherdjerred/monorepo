@@ -201,7 +201,7 @@ export function getModelInfo(model: string): {
   return {
     contextLimit: getContextLimit(model),
     targetBatchTokens: getTargetBatchTokens(model),
-    provider: isClaudeModel(model) ? "anthropic" : isOpenAIModel(model) ? "openai" : "unknown",
+    provider: isClaudeModel(model) ? "anthropic" : (isOpenAIModel(model) ? "openai" : "unknown"),
   };
 }
 

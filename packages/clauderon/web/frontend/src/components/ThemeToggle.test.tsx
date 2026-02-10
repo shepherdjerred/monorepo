@@ -1,5 +1,4 @@
-import { describe, expect, test, beforeEach, afterEach, mock } from "bun:test";
-import { ThemeToggle } from "./ThemeToggle";
+import { describe, expect, test, beforeEach } from "bun:test";
 
 // Mock localStorage
 const mockLocalStorage = (() => {

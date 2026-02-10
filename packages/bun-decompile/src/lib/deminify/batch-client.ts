@@ -30,8 +30,8 @@ export type BatchCallbacks = {
 
 /** Client for batch de-minification using Anthropic's Message Batches API */
 export class BatchDeminifyClient {
-  private client: Anthropic;
-  private config: DeminifyConfig;
+  private readonly client: Anthropic;
+  private readonly config: DeminifyConfig;
 
   constructor(config: DeminifyConfig) {
     this.config = config;
@@ -81,7 +81,7 @@ export class BatchDeminifyClient {
   async waitForCompletion(
     batchId: string,
     callbacks?: BatchCallbacks,
-    pollIntervalMs = 30000,
+    pollIntervalMs = 30_000,
   ): Promise<void> {
     let batch = await this.client.beta.messages.batches.retrieve(batchId);
 
@@ -151,11 +151,9 @@ export class BatchDeminifyClient {
             console.error(`Failed to parse result for ${funcId}: ${(error as Error).message}`);
           }
         }
-      } else if (entry.result.type === "errored") {
-        if (this.config.verbose) {
+      } else if (entry.result.type === "errored" && this.config.verbose) {
           console.error(`Batch error for ${funcId}: ${JSON.stringify(entry.result.error)}`);
         }
-      }
     }
 
     return results;
@@ -221,10 +219,10 @@ export class BatchDeminifyClient {
           parameterNames?: Record<string, string>;
           localVariableNames?: Record<string, string>;
         };
-        if (metadata.suggestedName) suggestedName = metadata.suggestedName;
-        if (typeof metadata.confidence === "number") confidence = metadata.confidence;
-        if (metadata.parameterNames) parameterNames = metadata.parameterNames;
-        if (metadata.localVariableNames) localVariableNames = metadata.localVariableNames;
+        if (metadata.suggestedName) {suggestedName = metadata.suggestedName;}
+        if (typeof metadata.confidence === "number") {confidence = metadata.confidence;}
+        if (metadata.parameterNames) {parameterNames = metadata.parameterNames;}
+        if (metadata.localVariableNames) {localVariableNames = metadata.localVariableNames;}
       } catch {
         // JSON parsing failed, use defaults
       }
@@ -232,7 +230,7 @@ export class BatchDeminifyClient {
 
     // Try to infer name from the de-minified code if not provided
     if (suggestedName === "anonymousFunction") {
-      const funcNameMatch = /(?:function|const|let|var)\s+([a-zA-Z_$][a-zA-Z0-9_$]*)/.exec(deminifiedSource);
+      const funcNameMatch = /(?:function|const|let|var)\s+([a-zA-Z_$][\w$]*)/.exec(deminifiedSource);
       if (funcNameMatch?.[1]) {
         suggestedName = funcNameMatch[1];
       }

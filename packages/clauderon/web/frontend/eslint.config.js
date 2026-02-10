@@ -1,69 +1,91 @@
-import eslint from "@eslint/js";
-import tseslint from "typescript-eslint";
-import reactHooks from "eslint-plugin-react-hooks";
+import { recommended, accessibilityConfig } from "@shepherdjerred/eslint-config";
+import react from "eslint-plugin-react";
 
-/**
- * ESLint configuration for @clauderon/frontend
- * Follows patterns from @shepherdjerred/eslint-config but standalone
- * due to nested workspace limitations
- */
-export default tseslint.config(
-  eslint.configs.recommended,
-  ...tseslint.configs.strictTypeChecked,
-  ...tseslint.configs.stylisticTypeChecked,
+export default [
+  ...recommended({
+    tsconfigRootDir: import.meta.dirname,
+    react: true,
+    accessibility: false,
+    naming: false,
+    projectService: {
+      allowDefaultProject: [
+        "src/components/ThemeToggle.test.tsx",
+        "src/components/RecreateBlockedModal.test.tsx",
+        "src/components/RecreateConfirmModal.test.tsx",
+        "src/components/StartupHealthModal.test.tsx",
+        "src/lib/claudeParser.test.ts",
+        "src/lib/codexHistoryParser.test.ts",
+      ],
+    },
+    ignores: [
+      "**/generated/**/*",
+      "**/dist/**/*",
+      "**/build/**/*",
+      "**/.cache/**/*",
+      "**/node_modules/**/*",
+      "**/.astro/**/*",
+      "**/*.md",
+      "**/*.mdx",
+      "**/*.mjs",
+      "**/*.js",
+      "**/*.cjs",
+      "tests/",
+      "postcss.config.js",
+      "tailwind.config.js",
+      "vite.config.ts",
+    ],
+    customRules: {
+      zod: false,
+      bun: true,
+      codeOrganization: false,
+      typeSafety: false,
+      promiseStyle: false,
+    },
+  }),
+  ...accessibilityConfig(),
   {
-    ignores: ["dist/", "node_modules/", "tests/", "eslint.config.js", "postcss.config.js", "tailwind.config.js", "vite.config.ts"],
-  },
-  {
-    languageOptions: {
-      parserOptions: {
-        projectService: {
-          allowDefaultProject: [
-            "src/components/ThemeToggle.test.tsx",
-            "src/components/RecreateBlockedModal.test.tsx",
-            "src/components/RecreateConfirmModal.test.tsx",
-            "src/components/StartupHealthModal.test.tsx",
-            "src/lib/claudeParser.test.ts",
-            "src/lib/codexHistoryParser.test.ts",
-          ],
-        },
-        tsconfigRootDir: import.meta.dirname,
-      },
+    files: ["**/*.tsx", "**/*.jsx", "**/*.astro"],
+    rules: {
+      "jsx-a11y/no-static-element-interactions": "warn",
+      "jsx-a11y/label-has-associated-control": "warn",
     },
   },
   {
+    files: ["**/*.tsx", "**/*.jsx"],
     plugins: {
-      "react-hooks": reactHooks,
+      react,
     },
     rules: {
-      "@typescript-eslint/consistent-type-definitions": ["error", "type"],
-      "@typescript-eslint/consistent-type-imports": [
-        "error",
-        {
-          prefer: "type-imports",
-          disallowTypeAnnotations: true,
-        },
-      ],
-      "@typescript-eslint/no-unused-vars": [
-        "error",
-        {
-          argsIgnorePattern: "^_",
-          varsIgnorePattern: "^_",
-          caughtErrorsIgnorePattern: "^_",
-        },
-      ],
-      // React hooks rules
-      "react-hooks/rules-of-hooks": "error",
-      "react-hooks/exhaustive-deps": "warn",
+      "react/no-unescaped-entities": "warn",
     },
   },
   {
-    files: ["**/*.test.ts", "**/*.test.tsx"],
     rules: {
-      "@typescript-eslint/no-empty-function": "off",
-      "@typescript-eslint/no-unused-vars": "off",
-      "@typescript-eslint/ban-ts-comment": "off",
-      "@typescript-eslint/no-dynamic-delete": "off",
+      "unicorn/filename-case": "off",
+      "unicorn/catch-error-name": "off",
+      "unicorn/prefer-global-this": "off",
+      "unicorn/no-nested-ternary": "off",
+      "unicorn/consistent-function-scoping": "warn",
+      "unicorn/prefer-math-trunc": "off",
+      "@typescript-eslint/ban-ts-comment": "warn",
+      "@typescript-eslint/no-empty-function": "warn",
+      "@typescript-eslint/switch-exhaustiveness-check": "warn",
+      "@typescript-eslint/no-shadow": "warn",
+      "@typescript-eslint/no-unsafe-assignment": "warn",
+      "@typescript-eslint/no-unsafe-member-access": "warn",
+      "@typescript-eslint/no-unsafe-call": "warn",
+      "@typescript-eslint/no-unsafe-return": "warn",
+      "@typescript-eslint/no-unsafe-argument": "warn",
+      "@typescript-eslint/no-dynamic-delete": "warn",
+      "@typescript-eslint/no-redundant-type-constituents": "off",
+      "no-control-regex": "off",
+      "unicorn/prefer-string-replace-all": "off",
+      "regexp/no-unused-capturing-group": "warn",
+      "eslint-comments/require-description": "warn",
+      "max-lines": ["warn", { max: 700, skipBlankLines: false, skipComments: false }],
+      "max-lines-per-function": ["warn", { max: 500, skipBlankLines: true, skipComments: true }],
+      "max-depth": ["warn", { max: 5 }],
+      complexity: ["warn", { max: 25 }],
     },
   },
-);
+];

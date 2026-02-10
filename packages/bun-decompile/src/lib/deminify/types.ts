@@ -195,12 +195,12 @@ export type DeminifyConfig = {
 export const DEFAULT_CONFIG: Omit<DeminifyConfig, "apiKey" | "cacheDir"> = {
   provider: "openai",
   model: "gpt-5-nano",
-  maxTokens: 16384, // GPT-5 nano uses reasoning tokens, needs more headroom
+  maxTokens: 16_384, // GPT-5 nano uses reasoning tokens, needs more headroom
   cacheEnabled: true,
   concurrency: 3,
   rateLimit: 50,
   verbose: false,
-  maxFunctionSize: 50000,
+  maxFunctionSize: 50_000,
   minFunctionSize: 5, // Process almost all functions
 };
 

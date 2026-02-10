@@ -112,7 +112,7 @@ export const manageMemoryTool = createTool({
         }
 
         case "update": {
-          if (!ctx.memory) return { success: false, message: "memory is required for update" };
+          if (!ctx.memory) {return { success: false, message: "memory is required for update" };}
           // Limit memory size to avoid token bloat
           if (ctx.memory.length > MAX_MEMORY_SIZE) {
             return {

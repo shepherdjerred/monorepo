@@ -44,8 +44,7 @@ export function useSessionHistory(
         // Fetch new lines since last poll
         const response = await client.getSessionHistory(
           sessionId,
-          lastLineRef.current,
-          undefined // no limit
+          lastLineRef.current // no limit
         );
 
         if (!isActive) {

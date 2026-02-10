@@ -50,15 +50,15 @@ function formatLogEntry(
 }
 
 export type Logger = {
-  debug(message: string, meta?: Record<string, unknown>): void;
-  info(message: string, meta?: Record<string, unknown>): void;
-  warn(message: string, meta?: Record<string, unknown>): void;
-  error(
+  debug: (message: string, meta?: Record<string, unknown>) => void;
+  info: (message: string, meta?: Record<string, unknown>) => void;
+  warn: (message: string, meta?: Record<string, unknown>) => void;
+  error: (
     message: string,
     error?: unknown,
     meta?: Record<string, unknown>,
-  ): void;
-  child(module: string): Logger;
+  ) => void;
+  child: (module: string) => Logger;
 }
 
 function createLogger(moduleName?: string): Logger {
@@ -96,9 +96,9 @@ function createLogger(moduleName?: string): Logger {
                   stack: error.stack,
                 },
               }
-            : error !== undefined
-              ? { error }
-              : {};
+            : (error === undefined
+              ? {}
+              : { error });
         console.error(
           formatLogEntry("error", message, { ...meta, ...errorMeta }, moduleName),
         );

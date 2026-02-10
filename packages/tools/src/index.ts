@@ -262,7 +262,7 @@ async function handlePagerDutyIncidentsCommand(args: string[]): Promise<void> {
   const statuses = values.status as
     | ("triggered" | "acknowledged" | "resolved")[]
     | undefined;
-  const limit = values.limit ? parseInt(values.limit, 10) : undefined;
+  const limit = values.limit ? Number.parseInt(values.limit, 10) : undefined;
 
   await incidentsCommand({
     json: values.json,
@@ -303,7 +303,7 @@ async function handleBugsinkIssuesCommand(args: string[]): Promise<void> {
     allowPositionals: true,
   });
 
-  const limit = values.limit ? parseInt(values.limit, 10) : undefined;
+  const limit = values.limit ? Number.parseInt(values.limit, 10) : undefined;
 
   await issuesCommand({
     json: values.json,

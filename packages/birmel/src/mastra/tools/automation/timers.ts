@@ -151,7 +151,7 @@ export const manageTaskTool = createTool({
 
           return {
             success: true,
-            message: `Found ${String(tasks.length)} task${tasks.length !== 1 ? "s" : ""}`,
+            message: `Found ${String(tasks.length)} task${tasks.length === 1 ? "" : "s"}`,
             data: {
               tasks: tasks.map((task) => ({
                 id: task.id,
@@ -178,9 +178,9 @@ export const manageTaskTool = createTool({
             where: { id: ctx.taskId, guildId: ctx.guildId },
           });
 
-          if (!task) return { success: false, message: "Task not found" };
-          if (task.executedAt) return { success: false, message: "Cannot cancel an executed task" };
-          if (task.userId !== ctx.userId) return { success: false, message: "Only the task creator can cancel it" };
+          if (!task) {return { success: false, message: "Task not found" };}
+          if (task.executedAt) {return { success: false, message: "Cannot cancel an executed task" };}
+          if (task.userId !== ctx.userId) {return { success: false, message: "Only the task creator can cancel it" };}
 
           await prisma.scheduledTask.update({
             where: { id: ctx.taskId },
@@ -225,7 +225,7 @@ export const manageTaskTool = createTool({
               naturalDesc: ctx.when,
               toolId: "send-message",
               toolInput: JSON.stringify({ channelId: ctx.channelId, content: reminderMessage }),
-              name: `Reminder: ${ctx.reminderAction.substring(0, 50)}`,
+              name: `Reminder: ${ctx.reminderAction.slice(0, 50)}`,
               description: ctx.reminderAction,
               enabled: true,
             },

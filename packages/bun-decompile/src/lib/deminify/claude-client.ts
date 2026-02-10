@@ -25,9 +25,9 @@ type TokenBucket = {
 
 /** Claude API client with rate limiting and retry */
 export class ClaudeClient {
-  private client: Anthropic;
-  private config: DeminifyConfig;
-  private bucket: TokenBucket;
+  private readonly client: Anthropic;
+  private readonly config: DeminifyConfig;
+  private readonly bucket: TokenBucket;
   private requestCount = 0;
   private inputTokensUsed = 0;
   private outputTokensUsed = 0;
@@ -162,10 +162,10 @@ export class ClaudeClient {
           parameterNames?: Record<string, string>;
           localVariableNames?: Record<string, string>;
         };
-        if (metadata.suggestedName) suggestedName = metadata.suggestedName;
-        if (typeof metadata.confidence === "number") confidence = metadata.confidence;
-        if (metadata.parameterNames) parameterNames = metadata.parameterNames;
-        if (metadata.localVariableNames) localVariableNames = metadata.localVariableNames;
+        if (metadata.suggestedName) {suggestedName = metadata.suggestedName;}
+        if (typeof metadata.confidence === "number") {confidence = metadata.confidence;}
+        if (metadata.parameterNames) {parameterNames = metadata.parameterNames;}
+        if (metadata.localVariableNames) {localVariableNames = metadata.localVariableNames;}
       } catch {
         // JSON parsing failed, use defaults
       }
@@ -173,7 +173,7 @@ export class ClaudeClient {
 
     // Try to infer name from the de-minified code if not provided
     if (suggestedName === "anonymousFunction") {
-      const funcNameMatch = /(?:function|const|let|var)\s+([a-zA-Z_$][a-zA-Z0-9_$]*)/.exec(deminifiedSource);
+      const funcNameMatch = /(?:function|const|let|var)\s+([a-zA-Z_$][\w$]*)/.exec(deminifiedSource);
       if (funcNameMatch?.[1]) {
         suggestedName = funcNameMatch[1];
       }

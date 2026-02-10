@@ -1,7 +1,7 @@
 /**
  * Import/export linting configuration
  */
-import * as importPlugin from "eslint-plugin-import";
+import importPlugin from "eslint-plugin-import";
 import type { TSESLint } from "@typescript-eslint/utils";
 
 export type ImportsConfigOptions = {

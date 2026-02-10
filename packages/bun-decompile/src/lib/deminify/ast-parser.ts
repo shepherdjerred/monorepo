@@ -123,7 +123,7 @@ export function parseAndExtractFunctions(
   // Establish parent-child relationships
   for (const func of functions) {
     for (const otherFunc of functions) {
-      if (func === otherFunc) continue;
+      if (func === otherFunc) {continue;}
       if (otherFunc.start > func.start && otherFunc.end < func.end) {
         // otherFunc is nested inside func
         const existingParent = otherFunc.parentId
@@ -167,7 +167,7 @@ function extractFunction(
   let parentId: string | null = null;
   for (let i = ancestors.length - 2; i >= 0; i--) {
     const ancestor = ancestors[i];
-    if (!ancestor) continue;
+    if (!ancestor) {continue;}
     const parentFunc = nodeToFunction.get(ancestor);
     if (parentFunc) {
       parentId = parentFunc.id;
@@ -201,7 +201,7 @@ function getFunctionName(node: FunctionNode, ancestors: Node[]): string {
   }
 
   // Check if assigned to a variable: const foo = function() {}
-  const parent = ancestors[ancestors.length - 2];
+  const parent = ancestors.at(-2);
   if (parent?.type === "VariableDeclarator") {
     const varDecl = parent as Node & { id?: { name?: string } };
     if (varDecl.id?.name) {
@@ -326,7 +326,7 @@ export function extractCallees(node: Node, _source: string): string[] {
     },
   });
 
-  return Array.from(callees);
+  return [...callees];
 }
 
 /** Get the name of a callee from a CallExpression */

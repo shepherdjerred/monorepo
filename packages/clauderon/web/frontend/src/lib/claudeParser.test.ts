@@ -10,12 +10,12 @@ import {
 
 describe("stripAnsi", () => {
   test("removes ANSI color codes", () => {
-    const input = "\x1b[32mgreen text\x1b[0m";
+    const input = "\u001B[32mgreen text\u001B[0m";
     expect(stripAnsi(input)).toBe("green text");
   });
 
   test("removes multiple ANSI codes", () => {
-    const input = "\x1b[1m\x1b[31mBold Red\x1b[0m normal";
+    const input = "\u001B[1m\u001B[31mBold Red\u001B[0m normal";
     expect(stripAnsi(input)).toBe("Bold Red normal");
   });
 
@@ -231,7 +231,7 @@ describe("parseMessages", () => {
   });
 
   test("strips ANSI codes before parsing", () => {
-    const input = "\x1b[32m> Hello\x1b[0m";
+    const input = "\u001B[32m> Hello\u001B[0m";
     const messages = parseMessages(input);
     expect(messages).toHaveLength(1);
     expect(messages[0]?.content).toBe("Hello");

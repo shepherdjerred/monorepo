@@ -167,9 +167,9 @@ export function formatScheduleTime(date: Date): string {
     const minutes = Math.floor((diff % (60 * 60 * 1000)) / (60 * 1000));
 
     if (hours === 0) {
-      return `in ${String(minutes)} minute${minutes !== 1 ? "s" : ""}`;
+      return `in ${String(minutes)} minute${minutes === 1 ? "" : "s"}`;
     }
-    return `in ${String(hours)} hour${hours !== 1 ? "s" : ""} and ${String(minutes)} minute${minutes !== 1 ? "s" : ""}`;
+    return `in ${String(hours)} hour${hours === 1 ? "" : "s"} and ${String(minutes)} minute${minutes === 1 ? "" : "s"}`;
   }
 
   // Otherwise show date and time

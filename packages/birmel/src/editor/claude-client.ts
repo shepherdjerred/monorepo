@@ -1,4 +1,4 @@
-import { spawn } from "child_process";
+import { spawn } from "node:child_process";
 import { loggers } from "../utils/index.js";
 import type { EditResult, FileChange } from "./types.js";
 
@@ -87,7 +87,7 @@ export async function executeEdit(
       stdout = lines.pop() ?? ""; // Keep incomplete line
 
       for (const line of lines) {
-        if (!line.trim()) continue;
+        if (!line.trim()) {continue;}
         try {
           const msg = JSON.parse(line) as ClaudeMessage;
           processMessage(msg, {
@@ -99,10 +99,10 @@ export async function executeEdit(
               const existing = changes.findIndex(
                 (c) => c.filePath === change.filePath,
               );
-              if (existing >= 0) {
-                changes[existing] = change;
-              } else {
+              if (existing === -1) {
                 changes.push(change);
+              } else {
+                changes[existing] = change;
               }
             },
             setSummary: (s) => {
@@ -184,7 +184,7 @@ function processMessage(msg: ClaudeMessage, handlers: MessageHandlers): void {
   // Capture file writes/edits
   if (msg.type === "tool_use") {
     const input = msg.tool_input;
-    if (!input?.file_path) return;
+    if (!input?.file_path) {return;}
 
     if (msg.tool_name === "Write" && input.content !== undefined) {
       handlers.addChange({
@@ -218,7 +218,7 @@ function extractFinalSummary(output: string): string {
   const lines = output.split("\n");
   for (let i = lines.length - 1; i >= 0; i--) {
     const line = lines[i];
-    if (!line?.trim()) continue;
+    if (!line?.trim()) {continue;}
     try {
       const msg = JSON.parse(line) as ClaudeMessage;
       if (msg.type === "assistant" && msg.content) {

@@ -90,10 +90,10 @@ export function createOAuthRoutes(): Hono {
       logger.info("GitHub OAuth successful", { userId: state });
 
       return c.html(renderSuccessPage());
-    } catch (err) {
-      logger.error("Failed to exchange OAuth code", err);
+    } catch (error_) {
+      logger.error("Failed to exchange OAuth code", error_);
       return c.html(
-        renderErrorPage("token_exchange_failed", (err as Error).message),
+        renderErrorPage("token_exchange_failed", (error_ as Error).message),
       );
     }
   });

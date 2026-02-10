@@ -1,4 +1,4 @@
-import type { EditorSession, GitHubAuth } from "@prisma/client";
+
 
 /**
  * Represents a file change captured from Claude Agent SDK
@@ -56,4 +56,6 @@ export type SessionStateType = (typeof SessionState)[keyof typeof SessionState];
 /**
  * Re-export Prisma types for convenience
  */
-export type { EditorSession, GitHubAuth };
+
+
+export {type EditorSession, type GitHubAuth} from "@prisma/client";

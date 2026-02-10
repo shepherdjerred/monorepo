@@ -38,7 +38,7 @@ export function RepositoryPathSelector({ value, onChange, required }: Repository
   // Extract repository name from full path
   const extractRepoName = (fullPath: string): string => {
     const parts = fullPath.split('/');
-    return parts[parts.length - 1] ?? fullPath;
+    return parts.at(-1) ?? fullPath;
   };
 
   // Format display with subdirectory
@@ -76,14 +76,14 @@ export function RepositoryPathSelector({ value, onChange, required }: Repository
     const date = new Date(isoTimestamp);
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
+    const diffMins = Math.floor(diffMs / 60_000);
     const diffHours = Math.floor(diffMins / 60);
     const diffDays = Math.floor(diffHours / 24);
 
-    if (diffMins < 1) return "just now";
-    if (diffMins < 60) return `${String(diffMins)}m ago`;
-    if (diffHours < 24) return `${String(diffHours)}h ago`;
-    if (diffDays < 7) return `${String(diffDays)}d ago`;
+    if (diffMins < 1) {return "just now";}
+    if (diffMins < 60) {return `${String(diffMins)}m ago`;}
+    if (diffHours < 24) {return `${String(diffHours)}h ago`;}
+    if (diffDays < 7) {return `${String(diffDays)}d ago`;}
     return date.toLocaleDateString();
   };
 

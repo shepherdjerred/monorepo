@@ -25,7 +25,10 @@
     "isolatedModules": true,
     "declaration": true,
     "declarationMap": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "noUncheckedSideEffectImports": true,
+    "strictBuiltinIteratorReturn": true,
+    "noErrorTruncation": true
   },
   "exclude": ["node_modules", "dist"]
 }

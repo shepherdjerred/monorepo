@@ -61,8 +61,8 @@ async function decompressZstd(compressed: Uint8Array): Promise<string> {
   } finally {
     // Cleanup temp files
     try {
-      if (await Bun.file(tempIn).exists()) await Bun.write(tempIn, "");
-      if (await Bun.file(tempOut).exists()) await Bun.write(tempOut, "");
+      if (await Bun.file(tempIn).exists()) {await Bun.write(tempIn, "");}
+      if (await Bun.file(tempOut).exists()) {await Bun.write(tempOut, "");}
     } catch {
       // Ignore cleanup errors
     }
@@ -92,7 +92,7 @@ export async function parseSourceMap(
     const mappingsLength = readU32(data, 4);
 
     // Sanity checks
-    if (sourceCount === 0 || sourceCount > 10000) {
+    if (sourceCount === 0 || sourceCount > 10_000) {
       return null;
     }
     if (mappingsLength === 0 || mappingsLength > data.length) {
@@ -152,9 +152,9 @@ export async function parseSourceMap(
       if (
         compressed.length < 4 ||
         compressed[0] !== 0x28 ||
-        compressed[1] !== 0xb5 ||
-        compressed[2] !== 0x2f ||
-        compressed[3] !== 0xfd
+        compressed[1] !== 0xB5 ||
+        compressed[2] !== 0x2F ||
+        compressed[3] !== 0xFD
       ) {
         // Not ZSTD compressed, try as plain text
         sources.push({

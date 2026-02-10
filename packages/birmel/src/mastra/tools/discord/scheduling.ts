@@ -51,7 +51,7 @@ export const manageScheduledMessageTool = createTool({
           { value: ctx.channelId, fieldName: "channelId" },
           { value: ctx.createdBy, fieldName: "createdBy" },
         ]);
-        if (idError) return { success: false, message: idError };
+        if (idError) {return { success: false, message: idError };}
 
         switch (ctx.action) {
           case "schedule": {

@@ -10,9 +10,9 @@ import { isDiscordAPIError, formatDiscordAPIError } from "./error-utils.js";
 const logger = loggers.tools.child("discord.channels");
 
 const normalizePermissionName = (perm: string): string => {
-  if (perm in PermissionFlagsBits) return perm;
+  if (perm in PermissionFlagsBits) {return perm;}
   const pascalCase = perm.toLowerCase().split("_").map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join("");
-  if (pascalCase in PermissionFlagsBits) return pascalCase;
+  if (pascalCase in PermissionFlagsBits) {return pascalCase;}
   logger.warn(`Unknown permission name: ${perm}`);
   return perm;
 };
@@ -55,13 +55,13 @@ export const manageChannelTool = createTool({
           { value: ctx.parentId ?? undefined, fieldName: "parentId" },
           { value: ctx.targetId, fieldName: "targetId" },
         ]);
-        if (idError) return { success: false, message: idError };
+        if (idError) {return { success: false, message: idError };}
 
         // Validate channel IDs in positions array
         if (ctx.positions) {
           for (const pos of ctx.positions) {
             const posError = validateSnowflakes([{ value: pos.channelId, fieldName: "positions.channelId" }]);
-            if (posError) return { success: false, message: posError };
+            if (posError) {return { success: false, message: posError };}
           }
         }
 
@@ -69,22 +69,22 @@ export const manageChannelTool = createTool({
 
         switch (ctx.action) {
           case "list": {
-            if (!ctx.guildId) return { success: false, message: "guildId is required for list" };
+            if (!ctx.guildId) {return { success: false, message: "guildId is required for list" };}
             const guild = await client.guilds.fetch(ctx.guildId);
             const channels = await guild.channels.fetch();
             const list = channels.map((ch) => ({
               id: ch?.id ?? "",
               name: ch?.name ?? "",
-              type: ch?.type !== undefined ? ChannelType[ch.type] : "Unknown",
+              type: ch?.type === undefined ? "Unknown" : ChannelType[ch.type],
               parentId: ch?.parentId ?? null,
             }));
             return { success: true, message: `Found ${String(list.length)} channels`, data: list };
           }
 
           case "get": {
-            if (!ctx.channelId) return { success: false, message: "channelId is required for get" };
+            if (!ctx.channelId) {return { success: false, message: "channelId is required for get" };}
             const channel = await client.channels.fetch(ctx.channelId);
-            if (!channel) return { success: false, message: "Channel not found" };
+            if (!channel) {return { success: false, message: "Channel not found" };}
             return {
               success: true,
               message: "Retrieved channel information",
@@ -100,7 +100,7 @@ export const manageChannelTool = createTool({
           }
 
           case "create": {
-            if (!ctx.guildId || !ctx.name || !ctx.type) return { success: false, message: "guildId, name, and type are required for create" };
+            if (!ctx.guildId || !ctx.name || !ctx.type) {return { success: false, message: "guildId, name, and type are required for create" };}
             const guild = await client.guilds.fetch(ctx.guildId);
             // Safety: limit channel creation to avoid hitting Discord's 500 channel limit
             const existingChannels = await guild.channels.fetch();
@@ -121,40 +121,40 @@ export const manageChannelTool = createTool({
           }
 
           case "modify": {
-            if (!ctx.channelId) return { success: false, message: "channelId is required for modify" };
+            if (!ctx.channelId) {return { success: false, message: "channelId is required for modify" };}
             const channel = await client.channels.fetch(ctx.channelId);
-            if (!channel || !("edit" in channel)) return { success: false, message: "Channel not found or cannot be edited" };
+            if (!channel || !("edit" in channel)) {return { success: false, message: "Channel not found or cannot be edited" };}
             const opts: GuildChannelEditOptions = {};
-            if (ctx.name !== undefined) opts.name = ctx.name;
-            if (ctx.topic !== undefined) opts.topic = ctx.topic;
-            if (ctx.position !== undefined) opts.position = ctx.position;
-            if (ctx.parentId !== undefined) opts.parent = ctx.parentId;
+            if (ctx.name !== undefined) {opts.name = ctx.name;}
+            if (ctx.topic !== undefined) {opts.topic = ctx.topic;}
+            if (ctx.position !== undefined) {opts.position = ctx.position;}
+            if (ctx.parentId !== undefined) {opts.parent = ctx.parentId;}
             await channel.edit(opts as Parameters<typeof channel.edit>[0]);
             return { success: true, message: "Channel updated successfully" };
           }
 
           case "delete": {
-            if (!ctx.channelId) return { success: false, message: "channelId is required for delete" };
+            if (!ctx.channelId) {return { success: false, message: "channelId is required for delete" };}
             const channel = await client.channels.fetch(ctx.channelId);
-            if (!channel || !("delete" in channel)) return { success: false, message: "Channel not found or cannot be deleted" };
+            if (!channel || !("delete" in channel)) {return { success: false, message: "Channel not found or cannot be deleted" };}
             await channel.delete(ctx.reason);
             return { success: true, message: "Channel deleted successfully" };
           }
 
           case "reorder": {
-            if (!ctx.guildId || !ctx.positions?.length) return { success: false, message: "guildId and positions are required for reorder" };
+            if (!ctx.guildId || !ctx.positions?.length) {return { success: false, message: "guildId and positions are required for reorder" };}
             const guild = await client.guilds.fetch(ctx.guildId);
             await guild.channels.setPositions(ctx.positions.map((p) => ({ channel: p.channelId, position: p.position })));
             return { success: true, message: `Reordered ${String(ctx.positions.length)} channels` };
           }
 
           case "set-permissions": {
-            if (!ctx.channelId || !ctx.targetId) return { success: false, message: "channelId and targetId are required for set-permissions" };
+            if (!ctx.channelId || !ctx.targetId) {return { success: false, message: "channelId and targetId are required for set-permissions" };}
             const channel = await client.channels.fetch(ctx.channelId);
-            if (!channel || !("permissionOverwrites" in channel)) return { success: false, message: "Channel not found or does not support permissions" };
+            if (!channel || !("permissionOverwrites" in channel)) {return { success: false, message: "Channel not found or does not support permissions" };}
             await channel.permissionOverwrites.edit(ctx.targetId, {
-              ...(ctx.allow?.reduce((acc: Record<string, boolean>, perm: string) => ({ ...acc, [normalizePermissionName(perm)]: true }), {}) ?? {}),
-              ...(ctx.deny?.reduce((acc: Record<string, boolean>, perm: string) => ({ ...acc, [normalizePermissionName(perm)]: false }), {}) ?? {}),
+              ...ctx.allow?.reduce((acc: Record<string, boolean>, perm: string) => ({ ...acc, [normalizePermissionName(perm)]: true }), {}),
+              ...ctx.deny?.reduce((acc: Record<string, boolean>, perm: string) => ({ ...acc, [normalizePermissionName(perm)]: false }), {}),
             });
             return { success: true, message: "Channel permissions updated successfully" };
           }

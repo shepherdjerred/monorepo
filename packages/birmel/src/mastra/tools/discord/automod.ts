@@ -63,13 +63,13 @@ export const manageAutomodRuleTool = createTool({
         { value: ctx.guildId, fieldName: "guildId" },
         { value: ctx.ruleId, fieldName: "ruleId" },
       ]);
-      if (idError) return { success: false, message: idError };
+      if (idError) {return { success: false, message: idError };}
 
       const rolesError = validateSnowflakeArray(ctx.exemptRoles, "exemptRoles");
-      if (rolesError) return { success: false, message: rolesError };
+      if (rolesError) {return { success: false, message: rolesError };}
 
       const channelsError = validateSnowflakeArray(ctx.exemptChannels, "exemptChannels");
-      if (channelsError) return { success: false, message: channelsError };
+      if (channelsError) {return { success: false, message: channelsError };}
 
       const client = getDiscordClient();
       const guild = await client.guilds.fetch(ctx.guildId);
@@ -172,7 +172,7 @@ export const manageAutomodRuleTool = createTool({
           }
           const rule = await guild.autoModerationRules.fetch(ctx.ruleId);
           const editOptions: Parameters<typeof rule.edit>[0] = {};
-          if (ctx.name !== undefined) editOptions.name = ctx.name;
+          if (ctx.name !== undefined) {editOptions.name = ctx.name;}
           if (ctx.keywords !== undefined) {
             editOptions.triggerMetadata = { keywordFilter: ctx.keywords };
           }
@@ -182,9 +182,9 @@ export const manageAutomodRuleTool = createTool({
               mentionTotalLimit: ctx.mentionLimit,
             };
           }
-          if (ctx.exemptRoles !== undefined) editOptions.exemptRoles = ctx.exemptRoles;
-          if (ctx.exemptChannels !== undefined) editOptions.exemptChannels = ctx.exemptChannels;
-          if (ctx.reason !== undefined) editOptions.reason = ctx.reason;
+          if (ctx.exemptRoles !== undefined) {editOptions.exemptRoles = ctx.exemptRoles;}
+          if (ctx.exemptChannels !== undefined) {editOptions.exemptChannels = ctx.exemptChannels;}
+          if (ctx.reason !== undefined) {editOptions.reason = ctx.reason;}
           const hasChanges =
             ctx.name !== undefined ||
             ctx.keywords !== undefined ||

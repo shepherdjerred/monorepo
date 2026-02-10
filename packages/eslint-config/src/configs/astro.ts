@@ -1,7 +1,7 @@
 /**
  * Astro-specific linting configuration
  */
-import * as astroPlugin from "eslint-plugin-astro";
+import astroPlugin from "eslint-plugin-astro";
 import type { TSESLint } from "@typescript-eslint/utils";
 
 /**

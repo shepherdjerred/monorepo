@@ -56,7 +56,7 @@ export const manageScheduledEventTool = createTool({
         { value: ctx.eventId, fieldName: "eventId" },
         { value: ctx.channelId, fieldName: "channelId" },
       ]);
-      if (idError) return { success: false, message: idError };
+      if (idError) {return { success: false, message: idError };}
 
       const client = getDiscordClient();
       const guild = await client.guilds.fetch(ctx.guildId);
@@ -125,13 +125,13 @@ export const manageScheduledEventTool = createTool({
           }
           const event = await guild.scheduledEvents.fetch(ctx.eventId);
           const editOptions: Parameters<typeof event.edit>[0] = {};
-          if (ctx.name !== undefined) editOptions.name = ctx.name;
-          if (ctx.description !== undefined) editOptions.description = ctx.description;
+          if (ctx.name !== undefined) {editOptions.name = ctx.name;}
+          if (ctx.description !== undefined) {editOptions.description = ctx.description;}
           if (ctx.scheduledStartTime !== undefined)
-            editOptions.scheduledStartTime = new Date(ctx.scheduledStartTime);
+            {editOptions.scheduledStartTime = new Date(ctx.scheduledStartTime);}
           if (ctx.scheduledEndTime !== undefined)
-            editOptions.scheduledEndTime = new Date(ctx.scheduledEndTime);
-          if (ctx.location !== undefined) editOptions.entityMetadata = { location: ctx.location };
+            {editOptions.scheduledEndTime = new Date(ctx.scheduledEndTime);}
+          if (ctx.location !== undefined) {editOptions.entityMetadata = { location: ctx.location };}
           const hasChanges =
             ctx.name !== undefined ||
             ctx.description !== undefined ||

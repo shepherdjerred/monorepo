@@ -374,6 +374,182 @@ async function runReleasePleaseCommand(
   };
 }
 
+/**
+ * Verify that non-exempt packages have required config files and scripts.
+ * Runs as an inline shell script inside a container to check the source directory.
+ */
+function complianceCheck(source: Directory): Container {
+  const script = `#!/bin/sh
+set -e
+ERRORS=0
+for dir in /workspace/packages/*/; do
+  PKG=$(basename "$dir")
+  # Skip exempt packages
+  case "$PKG" in
+    resume|eslint-config|clauderon|claude-plugin|a2ui-poc|discord-claude|fonts) continue ;;
+  esac
+
+  echo "Checking $PKG..."
+
+  # Check for eslint config
+  if ! ls "$dir"eslint.config.* >/dev/null 2>&1; then
+    echo "  FAIL: $PKG missing eslint.config.*"
+    ERRORS=$((ERRORS+1))
+  fi
+
+  # Check for lint script in package.json
+  if ! grep -q '"lint"' "$dir/package.json" 2>/dev/null; then
+    echo "  FAIL: $PKG missing lint script"
+    ERRORS=$((ERRORS+1))
+  fi
+
+  # Check for typecheck script in package.json
+  if ! grep -q '"typecheck"' "$dir/package.json" 2>/dev/null; then
+    echo "  FAIL: $PKG missing typecheck script"
+    ERRORS=$((ERRORS+1))
+  fi
+
+  # Check for tsconfig.json
+  if [ ! -f "$dir/tsconfig.json" ]; then
+    echo "  FAIL: $PKG missing tsconfig.json"
+    ERRORS=$((ERRORS+1))
+  fi
+done
+
+if [ "$ERRORS" -gt 0 ]; then
+  echo "Compliance check failed with $ERRORS error(s)"
+  exit 1
+fi
+echo "All packages compliant"
+`;
+
+  return dag
+    .container()
+    .from("alpine:latest")
+    .withMountedDirectory("/workspace", source)
+    .withWorkdir("/workspace")
+    .withNewFile("/tmp/compliance.sh", script)
+    .withExec(["sh", "/tmp/compliance.sh"]);
+}
+
+/**
+ * Count lint/type suppressions and fail if they exceed the baseline.
+ * Prevents suppression count from increasing over time (ratchet effect).
+ */
+function qualityRatchet(source: Directory): Container {
+  const script = `#!/bin/sh
+set -e
+
+# Read baseline
+BASELINE_ESLINT=$(grep -o '"eslint-disable": [0-9]*' /workspace/.quality-baseline.json | grep -o '[0-9]*')
+BASELINE_TS=$(grep -o '"ts-suppressions": [0-9]*' /workspace/.quality-baseline.json | grep -o '[0-9]*')
+BASELINE_RUST=$(grep -o '"rust-allow": [0-9]*' /workspace/.quality-baseline.json | grep -o '[0-9]*')
+BASELINE_PRETTIER=$(grep -o '"prettier-ignore": [0-9]*' /workspace/.quality-baseline.json | grep -o '[0-9]*')
+
+# Count current suppressions (excluding node_modules, dist, archive)
+CURRENT_ESLINT=$(grep -r "eslint-disable" /workspace/packages/ /workspace/.dagger/ --include="*.ts" --include="*.tsx" 2>/dev/null | grep -v node_modules | grep -v dist | grep -v archive | wc -l | tr -d ' ')
+CURRENT_TS=$(grep -r "@ts-expect-error\\|@ts-ignore\\|@ts-nocheck" /workspace/packages/ /workspace/.dagger/ --include="*.ts" --include="*.tsx" 2>/dev/null | grep -v node_modules | grep -v dist | grep -v archive | wc -l | tr -d ' ')
+CURRENT_RUST=$(grep -r '#\\[allow(' /workspace/packages/clauderon/src/ --include="*.rs" 2>/dev/null | wc -l | tr -d ' ')
+CURRENT_PRETTIER=$(grep -r "prettier-ignore" /workspace/packages/ /workspace/.dagger/ --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" --include="*.css" --include="*.json" 2>/dev/null | grep -v node_modules | grep -v dist | grep -v archive | wc -l | tr -d ' ')
+
+echo "Suppression counts (current / baseline):"
+echo "  eslint-disable: $CURRENT_ESLINT / $BASELINE_ESLINT"
+echo "  ts-suppressions: $CURRENT_TS / $BASELINE_TS"
+echo "  rust-allow: $CURRENT_RUST / $BASELINE_RUST"
+echo "  prettier-ignore: $CURRENT_PRETTIER / $BASELINE_PRETTIER"
+
+FAILED=0
+if [ "$CURRENT_ESLINT" -gt "$BASELINE_ESLINT" ]; then
+  echo "FAIL: eslint-disable count increased ($CURRENT_ESLINT > $BASELINE_ESLINT)"
+  FAILED=1
+fi
+if [ "$CURRENT_TS" -gt "$BASELINE_TS" ]; then
+  echo "FAIL: ts-suppressions count increased ($CURRENT_TS > $BASELINE_TS)"
+  FAILED=1
+fi
+if [ "$CURRENT_RUST" -gt "$BASELINE_RUST" ]; then
+  echo "FAIL: rust-allow count increased ($CURRENT_RUST > $BASELINE_RUST)"
+  FAILED=1
+fi
+if [ "$CURRENT_PRETTIER" -gt "$BASELINE_PRETTIER" ]; then
+  echo "FAIL: prettier-ignore count increased ($CURRENT_PRETTIER > $BASELINE_PRETTIER)"
+  FAILED=1
+fi
+
+if [ "$FAILED" -eq 1 ]; then
+  echo "Quality ratchet failed. Update .quality-baseline.json if suppressions were intentionally added."
+  exit 1
+fi
+echo "Quality ratchet passed"
+`;
+
+  return dag
+    .container()
+    .from("alpine:latest")
+    .withMountedDirectory("/workspace", source)
+    .withWorkdir("/workspace")
+    .withNewFile("/tmp/ratchet.sh", script)
+    .withExec(["sh", "/tmp/ratchet.sh"]);
+}
+
+/**
+ * Run shellcheck on all .sh files under packages/ and scripts/
+ */
+function shellcheckStep(source: Directory): Container {
+  return dag
+    .container()
+    .from("koalaman/shellcheck:stable")
+    .withMountedDirectory("/workspace", source)
+    .withWorkdir("/workspace")
+    .withExec([
+      "sh", "-c",
+      "find /workspace/packages/ /workspace/scripts/ -name '*.sh' -not -path '*/node_modules/*' -print0 | xargs -0 -r shellcheck --severity=warning"
+    ]);
+}
+
+/**
+ * Run actionlint on GitHub Actions workflow files
+ */
+function actionlintStep(source: Directory): Container {
+  return dag
+    .container()
+    .from("rhysd/actionlint:latest")
+    .withMountedDirectory("/workspace", source)
+    .withWorkdir("/workspace")
+    .withExec(["/actionlint", "-color"]);
+}
+
+/**
+ * Run knip for dead code detection
+ */
+function knipCheck(container: Container): Container {
+  return container.withExec(["bunx", "knip"]);
+}
+
+/**
+ * Run Trivy filesystem scan for HIGH/CRITICAL vulnerabilities
+ */
+function trivyScan(source: Directory): Container {
+  return dag
+    .container()
+    .from("aquasec/trivy:latest")
+    .withMountedDirectory("/workspace", source)
+    .withWorkdir("/workspace")
+    .withExec(["trivy", "fs", "--severity", "HIGH,CRITICAL", "--exit-code", "1", "."]);
+}
+
+/**
+ * Run Semgrep security scan
+ */
+function semgrepScan(source: Directory): Container {
+  return dag
+    .container()
+    .from("semgrep/semgrep:latest")
+    .withMountedDirectory("/workspace", source)
+    .withWorkdir("/workspace")
+    .withExec(["semgrep", "scan", "--config=auto", "--error"]);
+}
+
 @object()
 export class Monorepo {
   /**
@@ -406,6 +582,10 @@ export class Monorepo {
     // ============================================
     // VALIDATION PHASE (always runs - PRs + main)
     // ============================================
+
+    // Compliance check (runs before install - uses lightweight alpine container)
+    await complianceCheck(source).sync();
+    outputs.push("✓ Compliance check");
 
     // Install dependencies with optimized layer ordering
     let container = installWorkspaceDeps(source);
@@ -496,6 +676,57 @@ export class Monorepo {
 
     // Birmel smoke test (validates the built image starts correctly)
     outputs.push(await smokeTestBirmelImageWithContainer(birmelImage));
+
+    // Quality & security checks
+    outputs.push("\n--- Quality & Security Checks ---");
+
+    // Quality ratchet (fail if suppression counts increased)
+    await qualityRatchet(source).sync();
+    outputs.push("✓ Quality ratchet");
+
+    // Shellcheck
+    try {
+      await shellcheckStep(source).sync();
+      outputs.push("✓ Shellcheck");
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      outputs.push(`⚠ Shellcheck (non-blocking): ${msg}`);
+    }
+
+    // Actionlint
+    try {
+      await actionlintStep(source).sync();
+      outputs.push("✓ Actionlint");
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      outputs.push(`⚠ Actionlint (non-blocking): ${msg}`);
+    }
+
+    // Knip dead code detection
+    try {
+      await knipCheck(container).sync();
+      outputs.push("✓ Knip");
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      outputs.push(`⚠ Knip (non-blocking): ${msg}`);
+    }
+
+    // Security scans (non-blocking initially to establish baselines)
+    try {
+      await trivyScan(source).sync();
+      outputs.push("✓ Trivy");
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      outputs.push(`⚠ Trivy (non-blocking): ${msg}`);
+    }
+
+    try {
+      await semgrepScan(source).sync();
+      outputs.push("✓ Semgrep");
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      outputs.push(`⚠ Semgrep (non-blocking): ${msg}`);
+    }
 
     // ============================================
     // RELEASE PHASE (main only)
@@ -840,6 +1071,18 @@ export class Monorepo {
     await container.sync();
     outputs.push("✓ Clippy passed");
 
+    // cargo deny (license/advisory/ban checks)
+    try {
+      await container
+        .withExec(["cargo", "install", "cargo-deny", "--locked"])
+        .withExec(["cargo", "deny", "check"])
+        .sync();
+      outputs.push("✓ cargo deny passed");
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      outputs.push(`⚠ cargo deny (non-blocking): ${msg}`);
+    }
+
     // Compile tests without running (catches test compile issues)
     container = container.withExec(["cargo", "test", "--no-run"]);
     await container.sync();
@@ -849,6 +1092,18 @@ export class Monorepo {
     container = container.withExec(["cargo", "test"]);
     await container.sync();
     outputs.push("✓ Tests passed");
+
+    // Coverage via cargo-llvm-cov
+    try {
+      await container
+        .withExec(["cargo", "install", "cargo-llvm-cov", "--locked"])
+        .withExec(["cargo", "llvm-cov", "--fail-under-lines", "40"])
+        .sync();
+      outputs.push("✓ Coverage threshold met");
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      outputs.push(`⚠ Coverage (non-blocking): ${msg}`);
+    }
 
     // Release build
     container = container.withExec(["cargo", "build", "--release"]);

@@ -21,11 +21,11 @@ export function reassemble(
 
   for (const [funcId, result] of results) {
     const func = graph.functions.get(funcId);
-    if (!func) continue;
+    if (!func) {continue;}
 
     // Only replace top-level functions (not nested)
     // Nested functions are already included in their parent's de-minified output
-    if (func.parentId) continue;
+    if (func.parentId) {continue;}
 
     replacements.push({
       start: func.start,
@@ -69,7 +69,7 @@ function buildNameMap(
 
   for (const [funcId, result] of results) {
     const func = graph.functions.get(funcId);
-    if (!func) continue;
+    if (!func) {continue;}
 
     // Map function name
     if (func.originalName && result.suggestedName !== func.originalName) {
@@ -100,7 +100,7 @@ function updateReferences(
   nameMap: Map<string, string>,
   replacements: Replacement[],
 ): string {
-  if (nameMap.size === 0) return source;
+  if (nameMap.size === 0) {return source;}
 
   // Get positions that were already replaced (don't double-process)
   const replacedRanges = replacements.map((r) => ({
@@ -109,17 +109,17 @@ function updateReferences(
   }));
 
   // Sort names by length (longest first) to avoid partial replacements
-  const sortedNames = Array.from(nameMap.entries()).sort(
+  const sortedNames = [...nameMap.entries()].sort(
     (a, b) => b[0].length - a[0].length,
   );
 
   // For each name, find and replace occurrences outside replaced ranges
   for (const [original, suggested] of sortedNames) {
     // Skip single-character names to avoid too many false positives
-    if (original.length === 1) continue;
+    if (original.length === 1) {continue;}
 
     // Create regex that matches whole words only
-    const regex = new RegExp(`\\b${escapeRegex(original)}\\b`, "g");
+    const regex = new RegExp(String.raw`\b${escapeRegex(original)}\b`, "g");
 
     let match: RegExpExecArray | null;
     const newParts: string[] = [];
@@ -159,7 +159,7 @@ function updateReferences(
 
 /** Escape special regex characters */
 function escapeRegex(str: string): string {
-  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return str.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
 }
 
 /** Format the final output with consistent style */
@@ -178,7 +178,7 @@ export function formatOutput(source: string): string {
   // Simple formatting: ensure consistent line endings
   let formatted = source
     // Normalize line endings
-    .replace(/\r\n/g, "\n")
+    .replaceAll('\r\n', "\n")
     // Remove trailing whitespace
     .split("\n")
     .map((line) => line.trimEnd())
@@ -187,16 +187,16 @@ export function formatOutput(source: string): string {
     .trimEnd() + "\n";
 
   // Add blank line between top-level functions/declarations
-  formatted = formatted.replace(
-    /(\n})\n((?:export\s+)?(?:async\s+)?function\s+)/g,
+  formatted = formatted.replaceAll(
+    /(\n\})\n((?:export\s+)?(?:async\s+)?function\s+)/g,
     "$1\n\n$2",
   );
-  formatted = formatted.replace(
-    /(\n})\n((?:export\s+)?(?:const|let|var)\s+)/g,
+  formatted = formatted.replaceAll(
+    /(\n\})\n((?:export\s+)?(?:const|let|var)\s+)/g,
     "$1\n\n$2",
   );
-  formatted = formatted.replace(
-    /(\n})\n((?:export\s+)?class\s+)/g,
+  formatted = formatted.replaceAll(
+    /(\n\})\n((?:export\s+)?class\s+)/g,
     "$1\n\n$2",
   );
 
@@ -222,7 +222,7 @@ export function getReassemblyStats(
 } {
   let namesUpdated = 0;
   for (const result of results.values()) {
-    if (result.suggestedName) namesUpdated++;
+    if (result.suggestedName) {namesUpdated++;}
     namesUpdated += Object.keys(result.parameterNames).length;
     namesUpdated += Object.keys(result.localVariableNames).length;
   }
@@ -249,7 +249,7 @@ export function createChangeSummary(
   const nameChanges: { original: string; suggested: string; confidence: number }[] = [];
   for (const [funcId, result] of results) {
     const func = graph.functions.get(funcId);
-    if (!func) continue;
+    if (!func) {continue;}
 
     if (func.originalName && result.suggestedName !== func.originalName) {
       nameChanges.push({
@@ -273,7 +273,7 @@ export function createChangeSummary(
   }
 
   // Confidence distribution
-  const confidences = Array.from(results.values()).map((r) => r.confidence);
+  const confidences = [...results.values()].map((r) => r.confidence);
   if (confidences.length > 0) {
     const avg = confidences.reduce((a, b) => a + b, 0) / confidences.length;
     const min = Math.min(...confidences);

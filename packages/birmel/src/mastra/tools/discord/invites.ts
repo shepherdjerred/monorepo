@@ -52,7 +52,7 @@ export const manageInviteTool = createTool({
         { value: ctx.guildId, fieldName: "guildId" },
         { value: ctx.channelId, fieldName: "channelId" },
       ]);
-      if (idError) return { success: false, message: idError };
+      if (idError) {return { success: false, message: idError };}
 
       const client = getDiscordClient();
 

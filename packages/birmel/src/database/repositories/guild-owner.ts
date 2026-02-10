@@ -11,7 +11,7 @@ export async function getOrCreateGuildOwner(
 	guildId: string,
 ): Promise<GuildOwner> {
 	const existing = await getGuildOwner(guildId);
-	if (existing) return existing;
+	if (existing) {return existing;}
 
 	return prisma.guildOwner.create({
 		data: {

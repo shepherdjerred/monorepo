@@ -31,8 +31,7 @@ export type Message = {
  * Strip ANSI escape codes from terminal output
  */
 export function stripAnsi(text: string): string {
-  // eslint-disable-next-line no-control-regex
-  return text.replace(/\x1b\[[0-9;]*[a-zA-Z]/g, "");
+  return text.replace(/\u001B\[[0-9;]*[a-z]/gi, "");
 }
 
 /**
@@ -64,13 +63,13 @@ export function extractFilePath(text: string): string | undefined {
   }
 
   // Match patterns like: Reading /path/to/file
-  const readingMatch = /Reading\s+([^\s]+)/i.exec(text);
+  const readingMatch = /Reading\s+(\S+)/i.exec(text);
   if (readingMatch) {
     return readingMatch[1];
   }
 
   // Match patterns like: Writing to /path/to/file
-  const writingMatch = /Writing\s+(?:to\s+)?([^\s]+)/i.exec(text);
+  const writingMatch = /Writing\s+(?:to\s+)?(\S+)/i.exec(text);
   if (writingMatch) {
     return writingMatch[1];
   }

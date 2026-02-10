@@ -98,8 +98,8 @@ type BatchResponse = {
 
 /** Client for batch de-minification using OpenAI's Batch API */
 export class OpenAIBatchClient {
-  private client: OpenAI;
-  private config: DeminifyConfig;
+  private readonly client: OpenAI;
+  private readonly config: DeminifyConfig;
 
   constructor(config: DeminifyConfig) {
     this.config = config;
@@ -177,7 +177,7 @@ export class OpenAIBatchClient {
   async waitForCompletion(
     batchId: string,
     callbacks?: OpenAIBatchCallbacks,
-    pollIntervalMs = 30000
+    pollIntervalMs = 30_000
   ): Promise<void> {
     let batch = await this.client.batches.retrieve(batchId);
 
@@ -242,7 +242,7 @@ export class OpenAIBatchClient {
     const lines = fileContent.trim().split("\n");
 
     for (const line of lines) {
-      if (!line.trim()) continue;
+      if (!line.trim()) {continue;}
 
       try {
         const entry = JSON.parse(line) as BatchResponse;
@@ -273,13 +273,11 @@ export class OpenAIBatchClient {
               );
             }
           }
-        } else if (entry.error) {
-          if (this.config.verbose) {
+        } else if (entry.error && this.config.verbose) {
             console.error(
               `Batch error for ${funcId}: ${entry.error.code} - ${entry.error.message}`
             );
           }
-        }
       } catch (error) {
         if (this.config.verbose) {
           console.error(
@@ -351,12 +349,12 @@ export class OpenAIBatchClient {
           parameterNames?: Record<string, string>;
           localVariableNames?: Record<string, string>;
         };
-        if (metadata.suggestedName) suggestedName = metadata.suggestedName;
+        if (metadata.suggestedName) {suggestedName = metadata.suggestedName;}
         if (typeof metadata.confidence === "number")
-          confidence = metadata.confidence;
-        if (metadata.parameterNames) parameterNames = metadata.parameterNames;
+          {confidence = metadata.confidence;}
+        if (metadata.parameterNames) {parameterNames = metadata.parameterNames;}
         if (metadata.localVariableNames)
-          localVariableNames = metadata.localVariableNames;
+          {localVariableNames = metadata.localVariableNames;}
       } catch {
         // JSON parsing failed, use defaults
       }
@@ -364,7 +362,7 @@ export class OpenAIBatchClient {
 
     // Try to infer name from the de-minified code if not provided
     if (suggestedName === "anonymousFunction") {
-      const funcNameMatch = /(?:function|const|let|var)\s+([a-zA-Z_$][a-zA-Z0-9_$]*)/.exec(deminifiedSource);
+      const funcNameMatch = /(?:function|const|let|var)\s+([a-zA-Z_$][\w$]*)/.exec(deminifiedSource);
       if (funcNameMatch?.[1]) {
         suggestedName = funcNameMatch[1];
       }

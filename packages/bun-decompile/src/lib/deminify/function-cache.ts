@@ -3,9 +3,9 @@
  * Stores results by hash of function source to avoid re-processing.
  */
 
-import { createHash } from "crypto";
-import { mkdir, readFile, writeFile, readdir } from "fs/promises";
-import { join } from "path";
+import { createHash } from "node:crypto";
+import { mkdir, readFile, writeFile, readdir } from "node:fs/promises";
+import { join } from "node:path";
 import type { FunctionRenameMapping } from "./babel-renamer.ts";
 
 /** Cached rename result */
@@ -22,9 +22,9 @@ export type CachedRenameResult = {
 
 /** Function cache for rename mappings */
 export class FunctionCache {
-  private cacheDir: string;
-  private model: string;
-  private inMemoryCache = new Map<string, CachedRenameResult>();
+  private readonly cacheDir: string;
+  private readonly model: string;
+  private readonly inMemoryCache = new Map<string, CachedRenameResult>();
   private initialized = false;
 
   constructor(cacheDir: string, model: string) {
@@ -34,7 +34,7 @@ export class FunctionCache {
 
   /** Initialize the cache directory */
   async init(): Promise<void> {
-    if (this.initialized) return;
+    if (this.initialized) {return;}
 
     try {
       await mkdir(this.cacheDir, { recursive: true });
@@ -48,7 +48,7 @@ export class FunctionCache {
   /** Hash function source to generate cache key */
   hashFunction(source: string): string {
     // Normalize whitespace before hashing so formatting changes don't invalidate cache
-    const normalized = source.replace(/\s+/g, " ").trim();
+    const normalized = source.replaceAll(/\s+/g, " ").trim();
     return createHash("sha256").update(normalized).digest("hex").slice(0, 16);
   }
 
@@ -136,7 +136,7 @@ export class FunctionCache {
     mappings: Map<string, FunctionRenameMapping>,
   ): Promise<void> {
     await Promise.all(
-      Array.from(mappings.entries()).map(([hash, mapping]) =>
+      [...mappings.entries()].map(([hash, mapping]) =>
         this.set(hash, mapping),
       ),
     );

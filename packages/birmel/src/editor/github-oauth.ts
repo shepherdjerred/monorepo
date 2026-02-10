@@ -132,7 +132,7 @@ export async function getAuth(userId: string): Promise<GitHubAuth | null> {
  */
 export async function hasValidAuth(userId: string): Promise<boolean> {
   const auth = await getAuth(userId);
-  if (!auth) return false;
+  if (!auth) {return false;}
 
   // Check if token is expired
   if (auth.expiresAt && auth.expiresAt < new Date()) {

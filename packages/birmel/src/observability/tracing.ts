@@ -73,7 +73,7 @@ export async function shutdownTracing(): Promise<void> {
  */
 export function getTraceContext(): { traceId?: string; spanId?: string } {
   const span = trace.getActiveSpan();
-  if (!span) return {};
+  if (!span) {return {};}
 
   const spanContext = span.spanContext();
   return {

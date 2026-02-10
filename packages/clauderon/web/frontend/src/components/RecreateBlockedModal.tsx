@@ -29,10 +29,10 @@ export function RecreateBlockedModal({
       document.addEventListener('keydown', handleEscape);
       return () => { document.removeEventListener('keydown', handleEscape); };
     }
-    return undefined;
+    return;
   }, [open, onOpenChange]);
 
-  if (!open) return null;
+  if (!open) {return null;}
 
   return (
     <>

@@ -1,4 +1,4 @@
-import { spawn } from "child_process";
+import { spawn } from "node:child_process";
 import { loggers } from "../utils/index.js";
 import { getAuth } from "./github-oauth.js";
 import type { FileChange } from "./types.js";
@@ -108,10 +108,10 @@ async function runGitCommand(cwd: string, args: string[]): Promise<string> {
     });
 
     proc.on("close", (code) => {
-      if (code !== 0) {
-        reject(new Error(`git ${args.join(" ")} failed: ${stderr}`));
-      } else {
+      if (code === 0) {
         resolve(stdout.trim());
+      } else {
+        reject(new Error(`git ${args.join(" ")} failed: ${stderr}`));
       }
     });
 
@@ -133,8 +133,8 @@ function injectToken(url: string, token: string): string {
 }
 
 async function applyChange(cwd: string, change: FileChange): Promise<void> {
-  const fsPromises = await import("fs/promises");
-  const pathModule = await import("path");
+  const fsPromises = await import("node:fs/promises");
+  const pathModule = await import("node:path");
 
   const fullPath = pathModule.join(cwd, change.filePath);
 
@@ -201,11 +201,11 @@ async function createPRWithGh(opts: CreatePRWithGhOptions): Promise<string> {
     });
 
     proc.on("close", (code) => {
-      if (code !== 0) {
-        reject(new Error(`gh pr create failed: ${stderr}`));
-      } else {
+      if (code === 0) {
         // gh pr create outputs the PR URL
         resolve(stdout.trim());
+      } else {
+        reject(new Error(`gh pr create failed: ${stderr}`));
       }
     });
 
@@ -220,9 +220,9 @@ export function generateBranchName(summary: string): string {
   const timestamp = Date.now();
   const slug = summary
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
+    .replaceAll(/[^a-z0-9]+/g, "-")
     .slice(0, 30)
-    .replace(/^-|-$/g, "");
+    .replaceAll(/^-|-$/g, "");
 
   return `discord-edit/${slug || "changes"}-${String(timestamp)}`;
 }
@@ -231,7 +231,7 @@ export function generateBranchName(summary: string): string {
  * Generate PR title from summary
  */
 export function generatePRTitle(summary: string): string {
-  const cleaned = summary.replace(/\n/g, " ").trim();
+  const cleaned = summary.replaceAll('\n', " ").trim();
   if (cleaned.length <= 72) {
     return cleaned;
   }
@@ -248,7 +248,7 @@ export function generatePRBody(
 ): string {
   const fileList = changes
     .map((c) => {
-      const icon = c.changeType === "create" ? "+" : c.changeType === "delete" ? "-" : "~";
+      const icon = c.changeType === "create" ? "+" : (c.changeType === "delete" ? "-" : "~");
       return `- ${icon} \`${c.filePath}\``;
     })
     .join("\n");

@@ -7,8 +7,8 @@ import { BatchProcessor } from "./batch-processor.ts";
 import { FunctionCache } from "./function-cache.ts";
 import { buildCallGraph } from "./call-graph.ts";
 import type { DeminifyConfig } from "./types.ts";
-import { tmpdir } from "os";
-import { join } from "path";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 // Sample minified code with call dependencies
 const sampleSource = `
@@ -46,7 +46,7 @@ describe("BatchProcessor integration", () => {
       concurrency: 1,
       rateLimit: 10,
       verbose: false,
-      maxFunctionSize: 50000,
+      maxFunctionSize: 50_000,
       minFunctionSize: 10,
     };
 
@@ -80,12 +80,12 @@ describe("BatchProcessor integration", () => {
     expect(graph.functions.size).toBeGreaterThanOrEqual(4);
 
     // Find functions by name
-    const calculate = Array.from(graph.functions.values()).find(f => f.originalName === "calculate");
+    const calculate = [...graph.functions.values()].find(f => f.originalName === "calculate");
     expect(calculate).toBeDefined();
     expect(calculate?.callees).toContain("add");
     expect(calculate?.callees).toContain("multiply");
 
-    const main = Array.from(graph.functions.values()).find(f => f.originalName === "main");
+    const main = [...graph.functions.values()].find(f => f.originalName === "main");
     expect(main).toBeDefined();
     expect(main?.callees).toContain("calculate");
   });
@@ -101,7 +101,7 @@ describe("BatchProcessor integration", () => {
       concurrency: 1,
       rateLimit: 10,
       verbose: false,
-      maxFunctionSize: 50000,
+      maxFunctionSize: 50_000,
       minFunctionSize: 10,
     };
 
@@ -110,7 +110,7 @@ describe("BatchProcessor integration", () => {
 
     const processor = new BatchProcessor(config, cache);
     const graph = buildCallGraph(sampleSource);
-    const functions = Array.from(graph.functions.values());
+    const functions = [...graph.functions.values()];
 
     // Access private method for testing
     const createBatches = (processor as unknown as {
@@ -122,7 +122,7 @@ describe("BatchProcessor integration", () => {
     expect(smallBatches.length).toBeGreaterThanOrEqual(1);
 
     // With a large token budget, all functions should fit in one batch
-    const largeBatches = createBatches.call(processor, functions, 100000, sampleSource);
+    const largeBatches = createBatches.call(processor, functions, 100_000, sampleSource);
     expect(largeBatches.length).toBe(1);
   });
 });

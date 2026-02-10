@@ -24,24 +24,24 @@ export async function startOAuthServer(): Promise<void> {
 
   // Check prerequisites and warn if missing
   const claudeCheck = await checkClaudePrerequisites();
-  if (!claudeCheck.installed) {
-    logger.warn("Claude Code CLI not installed - editor feature will not work", {
-      installCmd: "curl -fsSL https://claude.ai/install.sh | bash",
-    });
-  } else {
+  if (claudeCheck.installed) {
     logger.info("Claude Code CLI found", { version: claudeCheck.version });
     if (!claudeCheck.hasApiKey) {
       logger.warn("ANTHROPIC_API_KEY not set - run 'claude login' or set the env var");
     }
+  } else {
+    logger.warn("Claude Code CLI not installed - editor feature will not work", {
+      installCmd: "curl -fsSL https://claude.ai/install.sh | bash",
+    });
   }
 
   const ghCheck = await checkGhPrerequisites();
-  if (!ghCheck.installed) {
+  if (ghCheck.installed) {
+    logger.info("GitHub CLI found (per-user OAuth tokens used for auth)");
+  } else {
     logger.warn("GitHub CLI (gh) not installed - PR creation will not work", {
       installCmd: "brew install gh",
     });
-  } else {
-    logger.info("GitHub CLI found (per-user OAuth tokens used for auth)");
   }
 
   if (!config.editor.github) {

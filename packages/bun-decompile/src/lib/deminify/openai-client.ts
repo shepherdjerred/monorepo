@@ -25,9 +25,9 @@ type TokenBucket = {
 
 /** OpenAI API client with rate limiting and retry */
 export class OpenAIClient {
-  private client: OpenAI;
-  private config: DeminifyConfig;
-  private bucket: TokenBucket;
+  private readonly client: OpenAI;
+  private readonly config: DeminifyConfig;
+  private readonly bucket: TokenBucket;
   private requestCount = 0;
   private inputTokensUsed = 0;
   private outputTokensUsed = 0;
@@ -156,10 +156,10 @@ export class OpenAIClient {
           parameterNames?: Record<string, string>;
           localVariableNames?: Record<string, string>;
         };
-        if (metadata.suggestedName) suggestedName = metadata.suggestedName;
-        if (typeof metadata.confidence === "number") confidence = metadata.confidence;
-        if (metadata.parameterNames) parameterNames = metadata.parameterNames;
-        if (metadata.localVariableNames) localVariableNames = metadata.localVariableNames;
+        if (metadata.suggestedName) {suggestedName = metadata.suggestedName;}
+        if (typeof metadata.confidence === "number") {confidence = metadata.confidence;}
+        if (metadata.parameterNames) {parameterNames = metadata.parameterNames;}
+        if (metadata.localVariableNames) {localVariableNames = metadata.localVariableNames;}
       } catch {
         // JSON parsing failed, use defaults
       }
@@ -167,7 +167,7 @@ export class OpenAIClient {
 
     // Try to infer name from the de-minified code if not provided
     if (suggestedName === "anonymousFunction") {
-      const funcNameMatch = /(?:function|const|let|var)\s+([a-zA-Z_$][a-zA-Z0-9_$]*)/.exec(deminifiedSource);
+      const funcNameMatch = /(?:function|const|let|var)\s+([a-zA-Z_$][\w$]*)/.exec(deminifiedSource);
       if (funcNameMatch?.[1]) {
         suggestedName = funcNameMatch[1];
       }
@@ -266,25 +266,25 @@ export class OpenAIClient {
 
     // GPT-5 pricing (per million tokens)
     if (model.includes("gpt-5-nano")) {
-      return { inputCostPerMillion: 0.05, outputCostPerMillion: 0.40 };
+      return { inputCostPerMillion: 0.05, outputCostPerMillion: 0.4 };
     }
     if (model.includes("gpt-5-mini")) {
-      return { inputCostPerMillion: 0.25, outputCostPerMillion: 2.00 };
+      return { inputCostPerMillion: 0.25, outputCostPerMillion: 2 };
     }
     if (model.includes("gpt-5")) {
-      return { inputCostPerMillion: 1.25, outputCostPerMillion: 10.00 };
+      return { inputCostPerMillion: 1.25, outputCostPerMillion: 10 };
     }
 
     // GPT-4o pricing
     if (model.includes("gpt-4o-mini")) {
-      return { inputCostPerMillion: 0.15, outputCostPerMillion: 0.60 };
+      return { inputCostPerMillion: 0.15, outputCostPerMillion: 0.6 };
     }
     if (model.includes("gpt-4o")) {
-      return { inputCostPerMillion: 2.50, outputCostPerMillion: 10.00 };
+      return { inputCostPerMillion: 2.5, outputCostPerMillion: 10 };
     }
 
     // Default to GPT-5 Nano pricing
-    return { inputCostPerMillion: 0.05, outputCostPerMillion: 0.40 };
+    return { inputCostPerMillion: 0.05, outputCostPerMillion: 0.4 };
   }
 
   /** Get usage statistics */

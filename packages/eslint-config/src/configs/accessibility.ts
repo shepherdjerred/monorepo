@@ -1,7 +1,7 @@
 /**
  * JSX Accessibility (a11y) linting configuration
  */
-import * as jsxA11y from "eslint-plugin-jsx-a11y";
+import jsxA11y from "eslint-plugin-jsx-a11y";
 import type { TSESLint } from "@typescript-eslint/utils";
 
 /**

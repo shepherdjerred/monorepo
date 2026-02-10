@@ -51,7 +51,7 @@ export const manageGuildTool = createTool({
       const idError = validateSnowflakes([
         { value: ctx.guildId, fieldName: "guildId" },
       ]);
-      if (idError) return { success: false, message: idError };
+      if (idError) {return { success: false, message: idError };}
 
       const client = getDiscordClient();
       const guild = await client.guilds.fetch(ctx.guildId);
@@ -90,8 +90,8 @@ export const manageGuildTool = createTool({
 
         case "modify": {
           const updates: { name?: string; description?: string } = {};
-          if (ctx.name) updates.name = ctx.name;
-          if (ctx.description) updates.description = ctx.description;
+          if (ctx.name) {updates.name = ctx.name;}
+          if (ctx.description) {updates.description = ctx.description;}
           if (Object.keys(updates).length === 0) {
             return { success: false, message: "No changes specified" };
           }
@@ -100,13 +100,13 @@ export const manageGuildTool = createTool({
         }
 
         case "set-icon": {
-          if (!ctx.iconUrl) return { success: false, message: "iconUrl is required" };
+          if (!ctx.iconUrl) {return { success: false, message: "iconUrl is required" };}
           await guild.setIcon(ctx.iconUrl);
           return { success: true, message: "Server icon updated successfully" };
         }
 
         case "set-banner": {
-          if (!ctx.bannerUrl) return { success: false, message: "bannerUrl is required" };
+          if (!ctx.bannerUrl) {return { success: false, message: "bannerUrl is required" };}
           await guild.setBanner(ctx.bannerUrl);
           return { success: true, message: "Server banner updated successfully" };
         }

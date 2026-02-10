@@ -52,13 +52,13 @@ function getCurrentTimeInTimezone(timezone: string): { hours: number; minutes: n
 
 function isElectionStartTime(): boolean {
 	const config = getConfig();
-	if (!config.elections.enabled) return false;
+	if (!config.elections.enabled) {return false;}
 
 	const [targetHour, targetMinute] = config.elections.startTime.split(":").map(Number);
 	const current = getCurrentTimeInTimezone(config.elections.timezone);
 
 	// Check if it's the configured day of the week (default: Wednesday = 3)
-	if (current.dayOfWeek !== config.elections.dayOfWeek) return false;
+	if (current.dayOfWeek !== config.elections.dayOfWeek) {return false;}
 
 	// Allow a 5-minute window for the scheduler
 	const currentMinutes = current.hours * 60 + current.minutes;
@@ -205,7 +205,7 @@ export async function checkAndEndElections(): Promise<void> {
 		});
 
 		for (const election of elections) {
-			if (!election.messageId) continue;
+			if (!election.messageId) {continue;}
 
 			try {
 				await endPoll(election.channelId, election.messageId);
@@ -238,7 +238,7 @@ export async function processElectionResults(): Promise<void> {
 		});
 
 		for (const election of elections) {
-			if (!election.messageId) continue;
+			if (!election.messageId) {continue;}
 
 			try {
 				// Check if poll is finalized
@@ -247,7 +247,7 @@ export async function processElectionResults(): Promise<void> {
 					election.messageId,
 				);
 
-				if (!pollResults.success || !pollResults.data?.isFinalized) continue;
+				if (!pollResults.success || !pollResults.data?.isFinalized) {continue;}
 
 				const results = determineWinner(pollResults.data.answers);
 

@@ -77,7 +77,7 @@ export async function listPendingAnnouncements(
 
   return announcements.map((a: { id: number; message: string; scheduledAt: Date; channelId: string }) => ({
     id: a.id,
-    message: a.message.substring(0, 100) + (a.message.length > 100 ? "..." : ""),
+    message: a.message.slice(0, 100) + (a.message.length > 100 ? "..." : ""),
     scheduledAt: a.scheduledAt,
     channelId: a.channelId,
   }));

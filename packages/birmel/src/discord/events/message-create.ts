@@ -34,7 +34,7 @@ function markMessageProcessed(messageId: string): boolean {
   return true; // Successfully marked as processing
 }
 
-export type { ImageAttachment };
+
 
 export type MessageContext = {
   message: Message;
@@ -86,7 +86,7 @@ async function shouldRespond(
   guildId: string
 ): Promise<boolean> {
   // Ignore messages from bots
-  if (message.author.bot) return false;
+  if (message.author.bot) {return false;}
 
   // Only respond to messages from allowed users
   if (!ALLOWED_USER_IDS.has(message.author.id)) {
@@ -107,7 +107,7 @@ async function shouldRespond(
   // e.g., if owner is "aaron", wake word is "baron"; if "virmel", it's "birmel"
   const guildOwner = await getOrCreateGuildOwner(guildId);
   const wakeWord = generateWakeWord(guildOwner.currentOwner);
-  const wakeWordPattern = new RegExp(`\\b${wakeWord}\\b`, "i");
+  const wakeWordPattern = new RegExp(String.raw`\b${wakeWord}\b`, "i");
 
   if (wakeWordPattern.test(message.content)) {
     logger.debug("Responding: dynamic wake word", { wakeWord, owner: guildOwner.currentOwner });
@@ -214,3 +214,5 @@ export function setupMessageCreateHandler(client: Client): void {
     })();
   });
 }
+
+export {type ImageAttachment} from "../../utils/image.js";

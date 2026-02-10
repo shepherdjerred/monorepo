@@ -1,10 +1,221 @@
-# Run lint-staged for TypeScript/lockfile checks
+#!/usr/bin/env bash
+
+# ============================================
+# TIER 1: Fast checks (always run)
+# ============================================
+
+# Check for new suppressions in staged diff
+bun scripts/check-suppressions.ts
+
+# File-scoped lint/format via lint-staged (only staged files)
 bunx lint-staged
 
-# Run Rust checks (from packages/clauderon)
-echo '+cargo test --lib'
-(cd packages/clauderon && cargo test --lib)
-echo '+cargo clippy --all-targets --all-features -- -D warnings'
-(cd packages/clauderon && cargo clippy --all-targets --all-features -- -D warnings)
-echo '+cargo fmt --all -- --check'
-(cd packages/clauderon && cargo fmt --all -- --check)
+# ============================================
+# TIER 2: Conditional checks (only if relevant files changed)
+# ============================================
+# Each check is gated on staged file patterns.
+# If no staged files match any pattern, Tier 2 is a complete no-op.
+
+STAGED=$(git diff --cached --name-only --diff-filter=ACMR)
+
+# Helper: check if any staged file matches a pattern
+has_changes() {
+  echo "$STAGED" | grep -qE "$1"
+}
+
+# Helper: run a check in the background, tracking its PID
+PIDS=""
+NAMES=""
+FAILURES=""
+
+run_check() {
+  local name="$1"
+  shift
+  "$@" &
+  local pid=$!
+  PIDS="$PIDS $pid"
+  NAMES="$NAMES|$name"
+}
+
+# --- Rust checks (when .rs files or Cargo files change) ---
+if has_changes '\.rs$|Cargo\.(toml|lock)$'; then
+  # cargo clippy
+  run_check "cargo clippy" sh -c 'cd packages/clauderon && cargo clippy --all-targets --all-features -- -D warnings'
+
+  # cargo test
+  run_check "cargo test" sh -c 'cd packages/clauderon && cargo test'
+
+  # cargo deny (graceful skip if not installed)
+  if command -v cargo-deny >/dev/null 2>&1 || cargo deny --version >/dev/null 2>&1; then
+    run_check "cargo deny" sh -c 'cd packages/clauderon && cargo deny check'
+  fi
+fi
+
+# --- Per-package TypeScript typecheck ---
+if has_changes '^packages/birmel/.*\.(ts|tsx)$'; then
+  run_check "birmel typecheck" sh -c 'cd packages/birmel && bun run typecheck'
+  run_check "birmel test" sh -c 'cd packages/birmel && bunx prisma generate && bun run test'
+fi
+
+if has_changes '^packages/bun-decompile/.*\.(ts|tsx)$'; then
+  run_check "bun-decompile typecheck" bun run --filter='./packages/bun-decompile' typecheck
+fi
+
+if has_changes '^packages/dagger-utils/.*\.(ts|tsx)$'; then
+  run_check "dagger-utils typecheck" bun run --filter='./packages/dagger-utils' typecheck
+fi
+
+if has_changes '^packages/eslint-config/.*\.(ts|tsx)$'; then
+  run_check "eslint-config typecheck" bun run --filter='./packages/eslint-config' typecheck
+fi
+
+if has_changes '^packages/tools/.*\.(ts|tsx)$'; then
+  run_check "tools typecheck" bun run --filter='./packages/tools' typecheck
+fi
+
+# --- Clauderon web packages ---
+if has_changes '^packages/clauderon/web/shared/.*\.(ts|tsx)$'; then
+  run_check "web/shared typecheck" sh -c 'cd packages/clauderon/web/shared && bun run typecheck'
+fi
+
+if has_changes '^packages/clauderon/web/client/.*\.(ts|tsx)$'; then
+  run_check "web/client typecheck" sh -c 'cd packages/clauderon/web/client && bun run typecheck'
+fi
+
+if has_changes '^packages/clauderon/web/frontend/.*\.(ts|tsx)$'; then
+  run_check "web/frontend typecheck" sh -c 'cd packages/clauderon/web/frontend && bun run typecheck'
+fi
+
+# --- Clauderon mobile ---
+if has_changes '^packages/clauderon/mobile/.*\.(ts|tsx)$'; then
+  run_check "mobile typecheck" sh -c 'cd packages/clauderon/mobile && bun run typecheck'
+  run_check "mobile format:check" sh -c 'cd packages/clauderon/mobile && bun run format:check'
+  run_check "mobile test" sh -c 'cd packages/clauderon/mobile && bun run test'
+fi
+
+# --- Full typecheck when base tsconfig changes (affects all packages) ---
+if has_changes '^tsconfig\.base\.json$'; then
+  run_check "full typecheck" bun run typecheck
+fi
+
+# --- Actionlint (when GitHub Actions workflows change) ---
+if has_changes '^\.github/workflows/.*\.yml$'; then
+  if command -v actionlint >/dev/null 2>&1; then
+    run_check "actionlint" actionlint
+  fi
+fi
+
+# --- Knip (when package.json or knip.json changes) ---
+if has_changes '(^|/)package\.json$|knip\.json$'; then
+  run_check "knip" bunx knip
+fi
+
+# --- Compliance check (when package configs change) ---
+if has_changes '^packages/.*/package\.json$|^packages/.*/eslint\.config\.|^packages/.*/tsconfig\.json$'; then
+  run_check "compliance check" sh -c '
+    ERRORS=0
+    for dir in packages/*/; do
+      PKG=$(basename "$dir")
+      case "$PKG" in
+        resume|eslint-config|clauderon|claude-plugin|a2ui-poc|discord-claude|fonts) continue ;;
+      esac
+
+      # Check for eslint config
+      if ! ls "$dir"eslint.config.* >/dev/null 2>&1; then
+        echo "  FAIL: $PKG missing eslint.config.*"
+        ERRORS=$((ERRORS+1))
+      fi
+
+      # Check for lint script
+      if ! grep -q "\"lint\"" "$dir/package.json" 2>/dev/null; then
+        echo "  FAIL: $PKG missing lint script"
+        ERRORS=$((ERRORS+1))
+      fi
+
+      # Check for typecheck script
+      if ! grep -q "\"typecheck\"" "$dir/package.json" 2>/dev/null; then
+        echo "  FAIL: $PKG missing typecheck script"
+        ERRORS=$((ERRORS+1))
+      fi
+
+      # Check for tsconfig.json
+      if [ ! -f "$dir/tsconfig.json" ]; then
+        echo "  FAIL: $PKG missing tsconfig.json"
+        ERRORS=$((ERRORS+1))
+      fi
+    done
+
+    if [ "$ERRORS" -gt 0 ]; then
+      echo "Compliance check failed with $ERRORS error(s)"
+      exit 1
+    fi
+    echo "All packages compliant"
+  '
+fi
+
+# --- Quality ratchet (when source files change) ---
+if has_changes '\.(ts|tsx|rs)$'; then
+  run_check "quality ratchet" sh -c '
+    BASELINE_ESLINT=$(grep -o "\"eslint-disable\": [0-9]*" .quality-baseline.json | grep -o "[0-9]*")
+    BASELINE_TS=$(grep -o "\"ts-suppressions\": [0-9]*" .quality-baseline.json | grep -o "[0-9]*")
+    BASELINE_RUST=$(grep -o "\"rust-allow\": [0-9]*" .quality-baseline.json | grep -o "[0-9]*")
+    BASELINE_PRETTIER=$(grep -o "\"prettier-ignore\": [0-9]*" .quality-baseline.json | grep -o "[0-9]*")
+
+    CURRENT_ESLINT=$(grep -r "eslint-disable" packages/ .dagger/ --include="*.ts" --include="*.tsx" 2>/dev/null | grep -v node_modules | grep -v dist | grep -v archive | wc -l | tr -d " ")
+    CURRENT_TS=$(grep -r "@ts-expect-error\|@ts-ignore\|@ts-nocheck" packages/ .dagger/ --include="*.ts" --include="*.tsx" 2>/dev/null | grep -v node_modules | grep -v dist | grep -v archive | wc -l | tr -d " ")
+    CURRENT_RUST=$(grep -r "#\[allow(" packages/clauderon/src/ --include="*.rs" 2>/dev/null | wc -l | tr -d " ")
+    CURRENT_PRETTIER=$(grep -r "prettier-ignore" packages/ .dagger/ --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" --include="*.css" --include="*.json" 2>/dev/null | grep -v node_modules | grep -v dist | grep -v archive | wc -l | tr -d " ")
+
+    echo "Suppression counts (current / baseline):"
+    echo "  eslint-disable: $CURRENT_ESLINT / $BASELINE_ESLINT"
+    echo "  ts-suppressions: $CURRENT_TS / $BASELINE_TS"
+    echo "  rust-allow: $CURRENT_RUST / $BASELINE_RUST"
+    echo "  prettier-ignore: $CURRENT_PRETTIER / $BASELINE_PRETTIER"
+
+    FAILED=0
+    if [ "$CURRENT_ESLINT" -gt "$BASELINE_ESLINT" ]; then
+      echo "FAIL: eslint-disable count increased ($CURRENT_ESLINT > $BASELINE_ESLINT)"
+      FAILED=1
+    fi
+    if [ "$CURRENT_TS" -gt "$BASELINE_TS" ]; then
+      echo "FAIL: ts-suppressions count increased ($CURRENT_TS > $BASELINE_TS)"
+      FAILED=1
+    fi
+    if [ "$CURRENT_RUST" -gt "$BASELINE_RUST" ]; then
+      echo "FAIL: rust-allow count increased ($CURRENT_RUST > $BASELINE_RUST)"
+      FAILED=1
+    fi
+    if [ "$CURRENT_PRETTIER" -gt "$BASELINE_PRETTIER" ]; then
+      echo "FAIL: prettier-ignore count increased ($CURRENT_PRETTIER > $BASELINE_PRETTIER)"
+      FAILED=1
+    fi
+
+    if [ "$FAILED" -eq 1 ]; then
+      echo "Quality ratchet failed. Update .quality-baseline.json if suppressions were intentionally added."
+      exit 1
+    fi
+    echo "Quality ratchet passed"
+  '
+fi
+
+# ============================================
+# Wait for all background checks to complete
+# ============================================
+if [ -n "$PIDS" ]; then
+  # Convert pipe-delimited names to array-like access
+  IDX=0
+  for pid in $PIDS; do
+    IDX=$((IDX + 1))
+    NAME=$(echo "$NAMES" | cut -d'|' -f$((IDX + 1)))
+    if ! wait "$pid"; then
+      FAILURES="$FAILURES\n  - $NAME (PID $pid)"
+    fi
+  done
+
+  if [ -n "$FAILURES" ]; then
+    echo ""
+    echo "Pre-commit checks FAILED:"
+    printf "$FAILURES\n"
+    exit 1
+  fi
+fi

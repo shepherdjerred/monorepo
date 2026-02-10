@@ -35,7 +35,7 @@ export const musicQueueTool = createTool({
 
       switch (ctx.action) {
         case "get": {
-          if (!queue) return { success: false, message: "No active queue" };
+          if (!queue) {return { success: false, message: "No active queue" };}
           const currentTrack = queue.currentTrack
             ? { title: queue.currentTrack.title, duration: queue.currentTrack.duration }
             : null;
@@ -52,12 +52,12 @@ export const musicQueueTool = createTool({
         }
 
         case "add": {
-          if (!ctx.query) return { success: false, message: "query is required for add" };
-          if (!queue) return { success: false, message: "No active queue. Use play to start first." };
+          if (!ctx.query) {return { success: false, message: "query is required for add" };}
+          if (!queue) {return { success: false, message: "No active queue. Use play to start first." };}
           const result = await player.search(ctx.query);
-          if (!result.hasTracks()) return { success: false, message: "No tracks found" };
+          if (!result.hasTracks()) {return { success: false, message: "No tracks found" };}
           const track = result.tracks[0];
-          if (!track) return { success: false, message: "No tracks found" };
+          if (!track) {return { success: false, message: "No tracks found" };}
           queue.addTrack(track);
           return {
             success: true,
@@ -67,23 +67,23 @@ export const musicQueueTool = createTool({
         }
 
         case "remove": {
-          if (ctx.position === undefined) return { success: false, message: "position is required for remove" };
-          if (!queue) return { success: false, message: "No active queue" };
+          if (ctx.position === undefined) {return { success: false, message: "position is required for remove" };}
+          if (!queue) {return { success: false, message: "No active queue" };}
           const index = ctx.position - 1;
-          if (index < 0 || index >= queue.tracks.size) return { success: false, message: "Invalid position" };
+          if (index < 0 || index >= queue.tracks.size) {return { success: false, message: "Invalid position" };}
           const track = queue.tracks.toArray()[index];
           queue.removeTrack(index);
           return { success: true, message: `Removed: ${track?.title ?? "Unknown"}` };
         }
 
         case "shuffle": {
-          if (!queue || queue.tracks.size === 0) return { success: false, message: "No tracks to shuffle" };
+          if (!queue || queue.tracks.size === 0) {return { success: false, message: "No tracks to shuffle" };}
           queue.tracks.shuffle();
           return { success: true, message: "Queue shuffled" };
         }
 
         case "clear": {
-          if (!queue) return { success: false, message: "No active queue" };
+          if (!queue) {return { success: false, message: "No active queue" };}
           queue.tracks.clear();
           return { success: true, message: "Queue cleared" };
         }

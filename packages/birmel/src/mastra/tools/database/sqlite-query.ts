@@ -26,7 +26,7 @@ export const manageDatabaseTool = createTool({
       try {
         switch (input.action) {
           case "query": {
-            if (!input.query) return { success: false, message: "query is required for query action" };
+            if (!input.query) {return { success: false, message: "query is required for query action" };}
             const trimmedQuery = input.query.trim().toUpperCase();
             if (!trimmedQuery.startsWith("SELECT")) {
               return { success: false, message: "Only SELECT queries are allowed for safety" };

@@ -41,7 +41,7 @@ export const manageEmojiTool = createTool({
         { value: ctx.guildId, fieldName: "guildId" },
         { value: ctx.emojiId, fieldName: "emojiId" },
       ]);
-      if (idError) return { success: false, message: idError };
+      if (idError) {return { success: false, message: idError };}
 
       const client = getDiscordClient();
       const guild = await client.guilds.fetch(ctx.guildId);
@@ -95,7 +95,7 @@ export const manageEmojiTool = createTool({
           }
           const emoji = await guild.emojis.fetch(ctx.emojiId);
           const editOptions: Parameters<typeof emoji.edit>[0] = { name: ctx.name };
-          if (ctx.reason !== undefined) editOptions.reason = ctx.reason;
+          if (ctx.reason !== undefined) {editOptions.reason = ctx.reason;}
           await emoji.edit(editOptions);
           return {
             success: true,
@@ -169,7 +169,7 @@ export const manageStickerTool = createTool({
         { value: ctx.guildId, fieldName: "guildId" },
         { value: ctx.stickerId, fieldName: "stickerId" },
       ]);
-      if (idError) return { success: false, message: idError };
+      if (idError) {return { success: false, message: idError };}
 
       const client = getDiscordClient();
       const guild = await client.guilds.fetch(ctx.guildId);
@@ -204,7 +204,7 @@ export const manageStickerTool = createTool({
             tags: ctx.tags,
             description: ctx.description,
           };
-          if (ctx.reason !== undefined) createOptions.reason = ctx.reason;
+          if (ctx.reason !== undefined) {createOptions.reason = ctx.reason;}
           const sticker = await guild.stickers.create(createOptions);
           return {
             success: true,

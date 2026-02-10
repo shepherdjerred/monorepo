@@ -58,7 +58,7 @@ export const manageThreadTool = createTool({
           { value: ctx.userId, fieldName: "userId" },
           { value: ctx.before, fieldName: "before" },
         ]);
-        if (idError) return { success: false, message: idError };
+        if (idError) {return { success: false, message: idError };}
 
         const client = getDiscordClient();
 
@@ -80,7 +80,7 @@ export const manageThreadTool = createTool({
             const message = await channel.messages.fetch(ctx.messageId);
             const thread = await message.startThread({
               name: ctx.name,
-              autoArchiveDuration: ctx.autoArchiveDuration ? parseInt(ctx.autoArchiveDuration) as 60 | 1440 | 4320 | 10080 : 1440,
+              autoArchiveDuration: ctx.autoArchiveDuration ? Number.parseInt(ctx.autoArchiveDuration) as 60 | 1440 | 4320 | 10_080 : 1440,
             });
             logger.info("Thread created from message", { threadId: thread.id });
             return {
@@ -105,7 +105,7 @@ export const manageThreadTool = createTool({
               };
             }
             const autoArchiveDuration = ctx.autoArchiveDuration
-              ? parseInt(ctx.autoArchiveDuration) as 60 | 1440 | 4320 | 10080
+              ? Number.parseInt(ctx.autoArchiveDuration) as 60 | 1440 | 4320 | 10_080
               : 1440;
             const threadType = ctx.type === "private" ? ChannelType.PrivateThread : ChannelType.PublicThread;
             const thread = await channel.threads.create({
@@ -141,13 +141,13 @@ export const manageThreadTool = createTool({
               name?: string;
               archived?: boolean;
               locked?: boolean;
-              autoArchiveDuration?: 60 | 1440 | 4320 | 10080;
+              autoArchiveDuration?: 60 | 1440 | 4320 | 10_080;
             } = {};
-            if (ctx.name !== undefined) updates.name = ctx.name;
-            if (ctx.archived !== undefined) updates.archived = ctx.archived;
-            if (ctx.locked !== undefined) updates.locked = ctx.locked;
+            if (ctx.name !== undefined) {updates.name = ctx.name;}
+            if (ctx.archived !== undefined) {updates.archived = ctx.archived;}
+            if (ctx.locked !== undefined) {updates.locked = ctx.locked;}
             if (ctx.autoArchiveDuration !== undefined) {
-              updates.autoArchiveDuration = parseInt(ctx.autoArchiveDuration) as 60 | 1440 | 4320 | 10080;
+              updates.autoArchiveDuration = Number.parseInt(ctx.autoArchiveDuration) as 60 | 1440 | 4320 | 10_080;
             }
             if (Object.keys(updates).length === 0) {
               return {
@@ -206,7 +206,7 @@ export const manageThreadTool = createTool({
               fetchOptions.before = ctx.before;
             }
             const messages = await thread.messages.fetch(fetchOptions);
-            const formattedMessages = Array.from(messages.values()).map(msg => ({
+            const formattedMessages = [...messages.values()].map(msg => ({
               id: msg.id,
               authorId: msg.author.id,
               authorName: msg.author.username,
