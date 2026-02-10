@@ -11,7 +11,7 @@ export type RetryOptions = {
 const DEFAULT_OPTIONS: Required<RetryOptions> = {
   maxAttempts: 3,
   initialDelayMs: 1000,
-  maxDelayMs: 30000,
+  maxDelayMs: 30_000,
   backoffMultiplier: 2,
   shouldRetry: () => true,
 };
@@ -60,19 +60,19 @@ export async function retry<T>(
 export function isRetryableError(error: unknown): boolean {
   if (error instanceof Error) {
     // Network errors
-    if (error.message.includes("ECONNRESET")) return true;
-    if (error.message.includes("ETIMEDOUT")) return true;
-    if (error.message.includes("ECONNREFUSED")) return true;
+    if (error.message.includes("ECONNRESET")) {return true;}
+    if (error.message.includes("ETIMEDOUT")) {return true;}
+    if (error.message.includes("ECONNREFUSED")) {return true;}
 
     // Rate limit errors
-    if (error.message.includes("rate limit")) return true;
-    if (error.message.includes("429")) return true;
+    if (error.message.includes("rate limit")) {return true;}
+    if (error.message.includes("429")) {return true;}
 
     // Temporary server errors
-    if (error.message.includes("500")) return true;
-    if (error.message.includes("502")) return true;
-    if (error.message.includes("503")) return true;
-    if (error.message.includes("504")) return true;
+    if (error.message.includes("500")) {return true;}
+    if (error.message.includes("502")) {return true;}
+    if (error.message.includes("503")) {return true;}
+    if (error.message.includes("504")) {return true;}
   }
 
   return false;

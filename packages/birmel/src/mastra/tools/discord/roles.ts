@@ -65,13 +65,13 @@ export const manageRoleTool = createTool({
         { value: ctx.guildId, fieldName: "guildId" },
         { value: ctx.roleId, fieldName: "roleId" },
       ]);
-      if (idError) return { success: false, message: idError };
+      if (idError) {return { success: false, message: idError };}
 
       // Validate role IDs in positions array
       if (ctx.positions) {
         for (const pos of ctx.positions) {
           const posError = validateSnowflakes([{ value: pos.roleId, fieldName: "positions.roleId" }]);
-          if (posError) return { success: false, message: posError };
+          if (posError) {return { success: false, message: posError };}
         }
       }
 

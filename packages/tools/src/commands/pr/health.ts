@@ -196,7 +196,7 @@ async function checkCIHealth(
     };
   }
 
-  details.push(`${String(passed.length)} check${passed.length !== 1 ? "s" : ""} passed`);
+  details.push(`${String(passed.length)} check${passed.length === 1 ? "" : "s"} passed`);
 
   return {
     name: "CI Status",

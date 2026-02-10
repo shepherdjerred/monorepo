@@ -283,9 +283,9 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
     }
 
     // Check for reserved names
-    const reserved = ['workspace', 'clauderon', 'repos', 'primary'];
+    const reserved = new Set(['workspace', 'clauderon', 'repos', 'primary']);
     for (const repo of repositories) {
-      if (reserved.includes(repo.mount_name.toLowerCase())) {
+      if (reserved.has(repo.mount_name.toLowerCase())) {
         return `Mount name "${repo.mount_name}" is reserved`;
       }
     }
@@ -772,7 +772,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
               multiple
               onChange={(e) => {
                 if (e.target.files) {
-                  setSelectedFiles(Array.from(e.target.files));
+                  setSelectedFiles([...e.target.files]);
                 }
               }}
               className="block w-full text-sm border-2 rounded file:mr-4 file:py-2 file:px-4 file:border-0 file:font-semibold"

@@ -14,18 +14,18 @@ export type ProgressDisplayOptions = {
 
 /** ANSI escape codes for terminal control */
 const ANSI = {
-  clearLine: "\x1b[2K",
-  cursorUp: (n: number) => `\x1b[${String(n)}A`,
-  cursorDown: (n: number) => `\x1b[${String(n)}B`,
-  cursorToColumn: (n: number) => `\x1b[${String(n)}G`,
-  hideCursor: "\x1b[?25l",
-  showCursor: "\x1b[?25h",
-  reset: "\x1b[0m",
-  dim: "\x1b[2m",
-  bold: "\x1b[1m",
-  green: "\x1b[32m",
-  yellow: "\x1b[33m",
-  cyan: "\x1b[36m",
+  clearLine: "\u001B[2K",
+  cursorUp: (n: number) => `\u001B[${String(n)}A`,
+  cursorDown: (n: number) => `\u001B[${String(n)}B`,
+  cursorToColumn: (n: number) => `\u001B[${String(n)}G`,
+  hideCursor: "\u001B[?25l",
+  showCursor: "\u001B[?25h",
+  reset: "\u001B[0m",
+  dim: "\u001B[2m",
+  bold: "\u001B[1m",
+  green: "\u001B[32m",
+  yellow: "\u001B[33m",
+  cyan: "\u001B[36m",
 };
 
 /** Box drawing characters */
@@ -42,13 +42,13 @@ const BOX = {
 
 /** Progress display class for rich terminal output */
 export class ProgressDisplay {
-  private options: ProgressDisplayOptions;
-  private startTime: number;
+  private readonly options: ProgressDisplayOptions;
+  private readonly startTime: number;
   private lastUpdateTime: number;
-  private speeds: number[] = [];
+  private readonly speeds: number[] = [];
   private linesWritten = 0;
-  private isTTY: boolean;
-  private width: number;
+  private readonly isTTY: boolean;
+  private readonly width: number;
   private lastProgress: ExtendedProgress | null = null;
 
   constructor(options: Partial<ProgressDisplayOptions> = {}) {
@@ -71,7 +71,7 @@ export class ProgressDisplay {
 
   /** Update the progress display */
   update(progress: ExtendedProgress): void {
-    if (this.options.quiet) return;
+    if (this.options.quiet) {return;}
 
     const now = Date.now();
     const elapsed = now - this.startTime;
@@ -249,7 +249,7 @@ export class ProgressDisplay {
 
   /** Clear the progress display and show cursor */
   clear(): void {
-    if (this.options.quiet) return;
+    if (this.options.quiet) {return;}
 
     if (this.isTTY) {
       // Show cursor again
@@ -270,7 +270,7 @@ export class ProgressDisplay {
 
   /** Finalize and print final stats */
   finish(progress: ExtendedProgress): void {
-    if (this.options.quiet) return;
+    if (this.options.quiet) {return;}
 
     this.clear();
 

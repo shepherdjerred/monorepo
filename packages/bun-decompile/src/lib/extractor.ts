@@ -33,7 +33,7 @@ function getSourceExtension(module: ModuleEntry): string {
 /** Ensure the output path is safe (no path traversal) */
 function sanitizePath(basePath: string, relativePath: string): string {
   // Normalize: remove leading slashes and convert backslashes to forward slashes
-  const normalized = relativePath.replace(/^\/+/, "").replace(/\\/g, "/");
+  const normalized = relativePath.replace(/^\/+/, "").replaceAll('\\', "/");
 
   // Resolve both paths to absolute paths and verify the result stays within basePath
   const resolved = resolve(basePath, normalized);
@@ -148,11 +148,7 @@ export async function extractToDirectory(
     if (module.contents.length > 0) {
       const srcPath = sanitizePath(bundledDir, filename);
       const contents = decodeContents(module);
-      if (typeof contents === "string") {
-        await writeFile(srcPath, new TextEncoder().encode(contents));
-      } else {
-        await writeFile(srcPath, contents);
-      }
+      await (typeof contents === "string" ? writeFile(srcPath, new TextEncoder().encode(contents)) : writeFile(srcPath, contents));
     }
 
     // Write sourcemap if present

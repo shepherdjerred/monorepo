@@ -245,7 +245,7 @@ export function getProcessingOrder(graph: CallGraph): string[] {
 
   // Topological sort with cycle detection
   function visit(id: string): void {
-    if (visited.has(id)) return;
+    if (visited.has(id)) {return;}
     if (visiting.has(id)) {
       // Cycle detected, just add to order
       if (!visited.has(id)) {
@@ -272,7 +272,7 @@ export function getProcessingOrder(graph: CallGraph): string[] {
   }
 
   // Start from functions with no callers (entry points)
-  const roots = Array.from(graph.functions.values()).filter(
+  const roots = [...graph.functions.values()].filter(
     (f) => f.callers.length === 0,
   );
   for (const root of roots) {
@@ -303,7 +303,7 @@ export function findCycles(graph: CallGraph): string[][] {
     if (func) {
       for (const calleeName of func.callees) {
         const calleeId = graph.nameToId.get(calleeName);
-        if (!calleeId || !graph.functions.has(calleeId)) continue;
+        if (!calleeId || !graph.functions.has(calleeId)) {continue;}
 
         if (!visited.has(calleeId)) {
           strongConnect(calleeId);
@@ -349,7 +349,7 @@ export function getFunctionContext(
   const callers: FunctionContext[] = func.callers
     .map((callerId) => {
       const caller = graph.functions.get(callerId);
-      if (!caller) return null;
+      if (!caller) {return null;}
       const result = deminifiedResults.get(callerId);
       return {
         id: callerId,
@@ -365,9 +365,9 @@ export function getFunctionContext(
   const callees: FunctionContext[] = func.callees
     .map((calleeName) => {
       const calleeId = graph.nameToId.get(calleeName);
-      if (!calleeId) return null;
+      if (!calleeId) {return null;}
       const callee = graph.functions.get(calleeId);
-      if (!callee) return null;
+      if (!callee) {return null;}
       const result = deminifiedResults.get(calleeId);
       return {
         id: calleeId,
@@ -421,7 +421,7 @@ export function getGraphStats(graph: CallGraph): {
   maxCallees: number;
   cycleCount: number;
 } {
-  const functions = Array.from(graph.functions.values());
+  const functions = [...graph.functions.values()];
   const topLevel = functions.filter((f) => !f.parentId);
   const nested = functions.filter((f) => f.parentId);
   const callees = functions.map((f) => f.callees.length);

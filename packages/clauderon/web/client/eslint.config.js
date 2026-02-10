@@ -1,60 +1,43 @@
-import eslint from "@eslint/js";
-import tseslint from "typescript-eslint";
+import { recommended } from "@shepherdjerred/eslint-config";
 
-/**
- * ESLint configuration for @clauderon/client
- * Follows patterns from @shepherdjerred/eslint-config but standalone
- * due to nested workspace limitations
- */
-export default tseslint.config(
-  eslint.configs.recommended,
-  ...tseslint.configs.strictTypeChecked,
-  ...tseslint.configs.stylisticTypeChecked,
-  {
-    ignores: ["dist/", "node_modules/", "eslint.config.js"],
-  },
-  {
-    languageOptions: {
-      parserOptions: {
-        projectService: {
-          allowDefaultProject: [
-            "src/ClauderonClient.test.ts",
-            "src/ConsoleClient.test.ts",
-            "src/EventsClient.test.ts",
-          ],
-        },
-        tsconfigRootDir: import.meta.dirname,
-      },
-    },
-  },
-  {
-    rules: {
-      "@typescript-eslint/consistent-type-definitions": ["error", "type"],
-      "@typescript-eslint/consistent-type-imports": [
-        "error",
-        {
-          prefer: "type-imports",
-          disallowTypeAnnotations: true,
-        },
-      ],
-      "@typescript-eslint/no-unused-vars": [
-        "error",
-        {
-          argsIgnorePattern: "^_",
-          varsIgnorePattern: "^_",
-          caughtErrorsIgnorePattern: "^_",
-        },
+export default [
+  ...recommended({
+    tsconfigRootDir: import.meta.dirname,
+    projectService: {
+      allowDefaultProject: [
+        "src/ClauderonClient.test.ts",
+        "src/ConsoleClient.test.ts",
+        "src/EventsClient.test.ts",
       ],
     },
-  },
+    naming: false,
+    customRules: {
+      zod: false,
+      bun: true,
+      codeOrganization: false,
+      typeSafety: false,
+      promiseStyle: true,
+    },
+  }),
   {
-    files: ["**/*.test.ts"],
     rules: {
-      "@typescript-eslint/no-empty-function": "off",
-      "@typescript-eslint/no-non-null-assertion": "off",
-      "@typescript-eslint/require-await": "off",
-      "@typescript-eslint/await-thenable": "off",
-      "@typescript-eslint/no-confusing-void-expression": "off",
+      "no-console": "warn",
+      "unicorn/prefer-add-event-listener": "off",
+      "unicorn/prefer-code-point": "off",
+      "unicorn/filename-case": "off",
+      "unicorn/no-useless-spread": "warn",
+      "unicorn/prefer-global-this": "warn",
+      "unicorn/prefer-string-slice": "warn",
+      "unicorn/prefer-spread": "warn",
+      "unicorn/escape-case": "warn",
+      "unicorn/no-hex-escape": "warn",
+      "unicorn/numeric-separators-style": "warn",
+      "regexp/use-ignore-case": "warn",
+      "@typescript-eslint/no-empty-function": "warn",
+      "@typescript-eslint/no-unnecessary-condition": "warn",
+      "@typescript-eslint/no-unsafe-assignment": "warn",
+      "@typescript-eslint/prefer-readonly": "warn",
+      "max-lines-per-function": ["error", { max: 500, skipBlankLines: true, skipComments: true }],
     },
   },
-);
+];

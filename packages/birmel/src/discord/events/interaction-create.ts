@@ -27,10 +27,10 @@ const logger = loggers.discord.child("interaction-create");
 export function setupInteractionHandler(client: Client): void {
   client.on("interactionCreate", (interaction) => {
     void (async () => {
-    if (!interaction.isButton()) return;
+    if (!interaction.isButton()) {return;}
 
     // Only handle editor-related buttons
-    if (!interaction.customId.startsWith("editor:")) return;
+    if (!interaction.customId.startsWith("editor:")) {return;}
 
     try {
       await handleEditorButton(interaction);
@@ -44,11 +44,7 @@ export function setupInteractionHandler(client: Client): void {
       // Try to respond with error
       try {
         const errorMessage = `An error occurred: ${(error as Error).message}`;
-        if (interaction.replied || interaction.deferred) {
-          await interaction.followUp({ content: errorMessage, flags: 64 });
-        } else {
-          await interaction.reply({ content: errorMessage, flags: 64 });
-        }
+        await (interaction.replied || interaction.deferred ? interaction.followUp({ content: errorMessage, flags: 64 }) : interaction.reply({ content: errorMessage, flags: 64 }));
       } catch {
         // Ignore if we can't respond
       }
@@ -207,7 +203,7 @@ async function handleApprove(
         { name: "Status", value: "PR Created", inline: true },
         { name: "PR URL", value: result.prUrl ?? "N/A" },
       )
-      .setColor(0x57f287)
+      .setColor(0x57_F2_87)
       .setFooter({ text: `Approved by ${interaction.user.username}` });
 
     await message.edit({
@@ -241,7 +237,7 @@ async function handleReject(
     const embed = new EmbedBuilder()
       .setTitle("Changes Rejected")
       .setDescription(existingEmbed?.description ?? "Changes were rejected")
-      .setColor(0xed4245)
+      .setColor(0xED_42_45)
       .setFooter({ text: `Rejected by ${interaction.user.username}` });
 
     await message.edit({

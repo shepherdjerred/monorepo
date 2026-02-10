@@ -51,7 +51,7 @@ export const manageWebhookTool = createTool({
         { value: ctx.channelId, fieldName: "channelId" },
         { value: ctx.webhookId, fieldName: "webhookId" },
       ]);
-      if (idError) return { success: false, message: idError };
+      if (idError) {return { success: false, message: idError };}
 
       const client = getDiscordClient();
 
@@ -135,10 +135,10 @@ export const manageWebhookTool = createTool({
             };
           }
           const editOptions: Parameters<typeof webhook.edit>[0] = {};
-          if (ctx.name !== undefined) editOptions.name = ctx.name;
-          if (ctx.avatarUrl !== undefined) editOptions.avatar = ctx.avatarUrl;
-          if (ctx.channelId !== undefined) editOptions.channel = ctx.channelId;
-          if (ctx.reason !== undefined) editOptions.reason = ctx.reason;
+          if (ctx.name !== undefined) {editOptions.name = ctx.name;}
+          if (ctx.avatarUrl !== undefined) {editOptions.avatar = ctx.avatarUrl;}
+          if (ctx.channelId !== undefined) {editOptions.channel = ctx.channelId;}
+          if (ctx.reason !== undefined) {editOptions.reason = ctx.reason;}
           await webhook.edit(editOptions);
           return {
             success: true,

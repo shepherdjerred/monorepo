@@ -48,7 +48,7 @@ export async function updateBotProfile(personaName: string): Promise<void> {
 
 async function updateBotAvatar(avatarUrl: string): Promise<void> {
 	const client = getDiscordClient();
-	if (!client.user) return;
+	if (!client.user) {return;}
 
 	try {
 		// Fetch the avatar image
@@ -70,7 +70,7 @@ async function updateBotAvatar(avatarUrl: string): Promise<void> {
 
 async function updateBotBio(winnerDiscordId: string): Promise<void> {
 	const client = getDiscordClient();
-	if (!client.user) return;
+	if (!client.user) {return;}
 
 	try {
 		// Fetch the winner's profile to get their bio
@@ -91,7 +91,7 @@ async function updateBotBio(winnerDiscordId: string): Promise<void> {
 
 async function updateBotUsername(personaName: string): Promise<void> {
 	const client = getDiscordClient();
-	if (!client.user) return;
+	if (!client.user) {return;}
 
 	try {
 		// Generate username using the same pattern as nickname (e.g., "aaron" -> "Bvaron")

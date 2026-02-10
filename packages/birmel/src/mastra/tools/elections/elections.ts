@@ -28,9 +28,9 @@ export const manageElectionTool = createTool({
       try {
         switch (ctx.action) {
           case "get-owner": {
-            if (!ctx.guildId) return { success: false, message: "guildId is required" };
+            if (!ctx.guildId) {return { success: false, message: "guildId is required" };}
             const owner = await getGuildOwner(ctx.guildId);
-            if (!owner) return { success: false, message: `No owner record found for guild ${ctx.guildId}` };
+            if (!owner) {return { success: false, message: `No owner record found for guild ${ctx.guildId}` };}
             return {
               success: true,
               message: `Current owner: ${owner.currentOwner} (${owner.nickname})`,
@@ -43,7 +43,7 @@ export const manageElectionTool = createTool({
           }
 
           case "get-history": {
-            if (!ctx.guildId) return { success: false, message: "guildId is required" };
+            if (!ctx.guildId) {return { success: false, message: "guildId is required" };}
             const elections = await prisma.electionPoll.findMany({
               where: { guildId: ctx.guildId },
               orderBy: { scheduledStart: "desc" },
@@ -64,12 +64,12 @@ export const manageElectionTool = createTool({
           }
 
           case "get-current": {
-            if (!ctx.guildId) return { success: false, message: "guildId is required" };
+            if (!ctx.guildId) {return { success: false, message: "guildId is required" };}
             const election = await prisma.electionPoll.findFirst({
               where: { guildId: ctx.guildId, status: { in: ["scheduled", "active"] } },
               orderBy: { scheduledStart: "desc" },
             });
-            if (!election) return { success: false, message: "No active or scheduled election" };
+            if (!election) {return { success: false, message: "No active or scheduled election" };}
             return {
               success: true,
               message: `Found ${election.status} ${election.pollType}`,
@@ -87,7 +87,7 @@ export const manageElectionTool = createTool({
           }
 
           case "get-stats": {
-            if (!ctx.guildId) return { success: false, message: "guildId is required" };
+            if (!ctx.guildId) {return { success: false, message: "guildId is required" };}
             const elections = await prisma.electionPoll.findMany({
               where: { guildId: ctx.guildId, status: "completed" },
               orderBy: { actualEnd: "desc" },
@@ -97,10 +97,10 @@ export const manageElectionTool = createTool({
             const winsByCandidate: Record<string, number> = {};
             let totalVotesCast = 0;
             for (const e of elections) {
-              if (e.winner) winsByCandidate[e.winner] = (winsByCandidate[e.winner] ?? 0) + 1;
+              if (e.winner) {winsByCandidate[e.winner] = (winsByCandidate[e.winner] ?? 0) + 1;}
               if (e.voteCounts) {
                 const votes = JSON.parse(e.voteCounts) as Record<string, number>;
-                for (const count of Object.values(votes)) totalVotesCast += count;
+                for (const count of Object.values(votes)) {totalVotesCast += count;}
               }
             }
             return {
@@ -123,9 +123,9 @@ export const manageElectionTool = createTool({
           }
 
           case "get-by-id": {
-            if (!ctx.electionId) return { success: false, message: "electionId is required" };
+            if (!ctx.electionId) {return { success: false, message: "electionId is required" };}
             const election = await prisma.electionPoll.findUnique({ where: { id: ctx.electionId } });
-            if (!election) return { success: false, message: `Election ${ctx.electionId.toString()} not found` };
+            if (!election) {return { success: false, message: `Election ${ctx.electionId.toString()} not found` };}
             return {
               success: true,
               message: `Found ${election.pollType} (${election.status})`,
@@ -148,7 +148,7 @@ export const manageElectionTool = createTool({
           }
 
           case "get-candidate-stats": {
-            if (!ctx.guildId || !ctx.candidateName) return { success: false, message: "guildId and candidateName are required" };
+            if (!ctx.guildId || !ctx.candidateName) {return { success: false, message: "guildId and candidateName are required" };}
             const elections = await prisma.electionPoll.findMany({
               where: { guildId: ctx.guildId, status: "completed" },
               orderBy: { actualEnd: "desc" },
@@ -160,15 +160,15 @@ export const manageElectionTool = createTool({
               const candidates = (JSON.parse(e.candidates) as string[]).map((c) => c.toLowerCase());
               if (candidates.includes(candidateLower)) {
                 totalElectionsParticipated++;
-                if (!lastElectionDate && e.actualEnd) lastElectionDate = e.actualEnd.toISOString();
+                if (!lastElectionDate && e.actualEnd) {lastElectionDate = e.actualEnd.toISOString();}
                 if (e.winner?.toLowerCase() === candidateLower) {
                   wins++;
-                  if (!lastWinDate && e.actualEnd) lastWinDate = e.actualEnd.toISOString();
+                  if (!lastWinDate && e.actualEnd) {lastWinDate = e.actualEnd.toISOString();}
                 }
                 if (e.voteCounts) {
                   const votes = JSON.parse(e.voteCounts) as Record<string, number>;
                   for (const [name, count] of Object.entries(votes)) {
-                    if (name.toLowerCase() === candidateLower) totalVotesReceived += count;
+                    if (name.toLowerCase() === candidateLower) {totalVotesReceived += count;}
                   }
                 }
               }

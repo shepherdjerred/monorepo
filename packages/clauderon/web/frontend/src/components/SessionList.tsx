@@ -80,7 +80,7 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
   const [startupHealthCheckDone, setStartupHealthCheckDone] = useState(false);
 
   const filteredSessions = useMemo(() => {
-    const sessionArray = Array.from(sessions.values());
+    const sessionArray = [...sessions.values()];
 
     switch (filter) {
       case "running":
@@ -126,9 +126,9 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
 
   // Startup health check - show modal if there are unhealthy sessions
   useEffect(() => {
-    if (startupHealthCheckDone || isLoading || healthReports.size === 0) return;
+    if (startupHealthCheckDone || isLoading || healthReports.size === 0) {return;}
 
-    const unhealthySessions = Array.from(healthReports.values()).filter(
+    const unhealthySessions = [...healthReports.values()].filter(
       (report) => report.state.type !== "Healthy"
     );
 
@@ -140,7 +140,7 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
 
   // Compute unhealthy sessions for the startup modal
   const unhealthySessions = useMemo(() => {
-    return Array.from(healthReports.values()).filter(
+    return [...healthReports.values()].filter(
       (report) => report.state.type !== "Healthy"
     );
   }, [healthReports]);
@@ -148,8 +148,8 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
   // Format last refresh time for display
   const getTimeSinceRefresh = (): string => {
     const seconds = Math.floor((Date.now() - lastRefreshTime.getTime()) / 1000);
-    if (seconds < 5) return "just now";
-    if (seconds < 60) return `${String(seconds)}s ago`;
+    if (seconds < 5) {return "just now";}
+    if (seconds < 60) {return `${String(seconds)}s ago`;}
     const minutes = Math.floor(seconds / 60);
     return `${String(minutes)}m ago`;
   };
@@ -188,38 +188,49 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
   const handleMergePr = (session: Session, method: MergeMethod, deleteBranch: boolean) => {
     void mergePr(session.id, method, deleteBranch).then(() => {
       toast.success(`Pull request for "${session.name}" merged successfully`);
-    }).catch((err) => {
+    }).catch((err: unknown) => {
       toast.error(`Failed to merge PR: ${err instanceof Error ? err.message : String(err)}`);
     });
   };
 
   const handleConfirm = () => {
-    if (!confirmDialog) return;
+    if (!confirmDialog) {return;}
 
-    if (confirmDialog.type === "archive") {
+    switch (confirmDialog.type) {
+    case "archive": {
       void archiveSession(confirmDialog.session.id).then(() => {
         toast.success(`Session "${confirmDialog.session.name}" archived`);
       }).catch((err: unknown) => {
         toast.error(`Failed to archive: ${err instanceof Error ? err.message : String(err)}`);
       });
-    } else if (confirmDialog.type === "unarchive") {
+    
+    break;
+    }
+    case "unarchive": {
       void unarchiveSession(confirmDialog.session.id).then(() => {
         toast.success(`Session "${confirmDialog.session.name}" restored from archive`);
       }).catch((err: unknown) => {
         toast.error(`Failed to unarchive: ${err instanceof Error ? err.message : String(err)}`);
       });
-    } else if (confirmDialog.type === "refresh") {
+    
+    break;
+    }
+    case "refresh": {
       void refreshSession(confirmDialog.session.id).then(() => {
         toast.success(`Session "${confirmDialog.session.name}" is being refreshed`);
       }).catch((err: unknown) => {
         toast.error(`Failed to refresh: ${err instanceof Error ? err.message : String(err)}`);
       });
-    } else {
+    
+    break;
+    }
+    default: {
       void deleteSession(confirmDialog.session.id).then(() => {
         toast.info(`Deleting session "${confirmDialog.session.name}"...`);
       }).catch((err: unknown) => {
         toast.error(`Failed to delete: ${err instanceof Error ? err.message : String(err)}`);
       });
+    }
     }
   };
 
@@ -369,7 +380,7 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
                 <SessionCard
                   key={session.id}
                   session={session}
-                  {...(healthReport !== undefined ? { healthReport } : {})}
+                  {...(healthReport === undefined ? {} : { healthReport })}
                   onAttach={onAttach}
                   onEdit={handleEdit}
                   onArchive={handleArchive}

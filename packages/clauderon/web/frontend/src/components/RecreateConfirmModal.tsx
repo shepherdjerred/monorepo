@@ -119,10 +119,10 @@ export function RecreateConfirmModal({
       document.addEventListener('keydown', handleEscape);
       return () => { document.removeEventListener('keydown', handleEscape); };
     }
-    return undefined;
+    return;
   }, [open, onOpenChange]);
 
-  if (!open) return null;
+  if (!open) {return null;}
 
   const stateDisplay = getStateDisplay(healthReport.state);
   const actions = healthReport.available_actions;

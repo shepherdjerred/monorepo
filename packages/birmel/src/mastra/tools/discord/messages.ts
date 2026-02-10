@@ -62,10 +62,10 @@ export const manageMessageTool = createTool({
           { value: ctx.messageId, fieldName: "messageId" },
           { value: ctx.before, fieldName: "before" },
         ]);
-        if (idError) return { success: false, message: idError };
+        if (idError) {return { success: false, message: idError };}
 
         const arrayError = validateSnowflakeArray(ctx.messageIds, "messageIds");
-        if (arrayError) return { success: false, message: arrayError };
+        if (arrayError) {return { success: false, message: arrayError };}
 
         const client = getDiscordClient();
 
@@ -229,11 +229,7 @@ export const manageMessageTool = createTool({
             if (!reaction) {
               return { success: false, message: "Reaction not found" };
             }
-            if (ctx.userId) {
-              await reaction.users.remove(ctx.userId);
-            } else {
-              await reaction.users.remove();
-            }
+            await (ctx.userId ? reaction.users.remove(ctx.userId) : reaction.users.remove());
             logger.info("Reaction removed", { channelId: ctx.channelId, messageId: ctx.messageId, emoji: ctx.emoji });
             return { success: true, message: "Reaction removed successfully" };
           }

@@ -45,7 +45,7 @@ export async function checkMergeConflicts(
 
         return {
           hasConflicts: true,
-          conflictingFiles: Array.from(files),
+          conflictingFiles: [...files],
           baseBranch: targetBranch,
         };
       }

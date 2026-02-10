@@ -176,7 +176,7 @@ function parseAndValidateArgs(): {
   }
 
   // Validate concurrency
-  const concurrency = parseInt(values.concurrency, 10);
+  const concurrency = Number.parseInt(values.concurrency, 10);
   if (isNaN(concurrency) || concurrency < 1) {
     console.error("Error: --concurrency must be a positive integer");
     process.exit(1);
@@ -331,7 +331,7 @@ async function runDeminification(
   const envKey =
     options.provider === "openai" ? "OPENAI_API_KEY" : "ANTHROPIC_API_KEY";
   const apiKey = validateApiKey(
-    options.apiKey ?? process.env[envKey],
+    options.apiKey ?? Bun.env[envKey],
     options.provider
   );
 
@@ -369,7 +369,7 @@ async function runDeminification(
   await mkdir(deminifiedDir, { recursive: true });
 
   for (const module of jsModules) {
-    if (module.contents.length === 0) continue;
+    if (module.contents.length === 0) {continue;}
 
     const source = new TextDecoder().decode(module.contents);
     const fileName = module.name || "unknown.js";
@@ -439,7 +439,7 @@ async function runDeminification(
 
       // Write de-minified output
       let outFileName = module.name.replace(/^\//, "");
-      if (!outFileName) outFileName = "module.js";
+      if (!outFileName) {outFileName = "module.js";}
       if (!outFileName.endsWith(".js")) {
         outFileName += ".js";
       }
@@ -485,7 +485,7 @@ async function runFileDeminification(
   const envKey =
     options.provider === "openai" ? "OPENAI_API_KEY" : "ANTHROPIC_API_KEY";
   const apiKey = validateApiKey(
-    options.apiKey ?? process.env[envKey],
+    options.apiKey ?? Bun.env[envKey],
     options.provider
   );
 
@@ -653,7 +653,7 @@ main().catch((error: unknown) => {
     console.error(`Error: ${error.message}`);
   } else if (error instanceof Error) {
     console.error(`Unexpected error: ${error.message}`);
-    if (process.env["DEBUG"]) {
+    if (Bun.env["DEBUG"]) {
       console.error(error.stack);
     }
   } else {

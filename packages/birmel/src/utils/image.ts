@@ -10,16 +10,16 @@ export type ImageAttachment = {
   height: number | null;
 };
 
-const SUPPORTED_IMAGE_TYPES = [
+const SUPPORTED_IMAGE_TYPES = new Set([
   "image/png",
   "image/jpeg",
   "image/jpg",
   "image/gif",
   "image/webp",
-];
+]);
 
 const MAX_IMAGE_SIZE = 20 * 1024 * 1024; // 20MB
-const DOWNLOAD_TIMEOUT_MS = 10000; // 10 seconds
+const DOWNLOAD_TIMEOUT_MS = 10_000; // 10 seconds
 
 /**
  * Check if an attachment is a supported image type
@@ -28,7 +28,7 @@ export function isImageAttachment(attachment: Attachment): boolean {
   if (!attachment.contentType) {
     return false;
   }
-  return SUPPORTED_IMAGE_TYPES.includes(attachment.contentType.toLowerCase());
+  return SUPPORTED_IMAGE_TYPES.has(attachment.contentType.toLowerCase());
 }
 
 /**
@@ -72,9 +72,9 @@ export async function downloadImage(url: string): Promise<Buffer> {
     }
 
     const contentLength = response.headers.get("content-length");
-    if (contentLength && parseInt(contentLength) > MAX_IMAGE_SIZE) {
+    if (contentLength && Number.parseInt(contentLength) > MAX_IMAGE_SIZE) {
       throw new Error(
-        `Image too large: ${String(parseInt(contentLength))} bytes (max ${String(MAX_IMAGE_SIZE)})`,
+        `Image too large: ${String(Number.parseInt(contentLength))} bytes (max ${String(MAX_IMAGE_SIZE)})`,
       );
     }
 

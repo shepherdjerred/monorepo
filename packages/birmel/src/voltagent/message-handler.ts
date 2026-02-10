@@ -17,7 +17,7 @@ import {
 import { logger } from "../utils/index.js";
 
 // Typing cursor for progressive updates
-const TYPING_CURSOR = " \u258c";
+const TYPING_CURSOR = " \u258C";
 
 // Minimum interval between Discord message edits (ms) to avoid rate limits
 const EDIT_INTERVAL_MS = 1500;

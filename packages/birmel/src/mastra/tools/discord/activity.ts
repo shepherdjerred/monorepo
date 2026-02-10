@@ -169,7 +169,7 @@ export const getActivityStatsTool = createTool({
                     activityCount: user.activityCount,
                     rank: user.rank,
                   };
-                } catch (_error) {
+                } catch {
                   logger.warn("Could not fetch username for user", { userId: user.userId });
                   return {
                     userId: user.userId,

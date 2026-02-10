@@ -43,6 +43,7 @@
     "build": "true",
     "test": "bun test",
     "typecheck": "tsc --noEmit",
+    "lint": "bunx eslint .",
     "prepublishOnly": "bun run typecheck"
   },
   "dependencies": {
@@ -61,10 +62,12 @@
     "tiktoken": "^1.0.22"
   },
   "devDependencies": {
+    "@shepherdjerred/eslint-config": "workspace:*",
     "@types/babel__core": "^7.20.5",
     "@types/babel__generator": "^7.27.0",
     "@types/babel__traverse": "^7.28.0",
     "bun-types": "^1.3.5",
+    "eslint": "^9.39.2",
     "typescript": "^5.7.2"
   }
 }

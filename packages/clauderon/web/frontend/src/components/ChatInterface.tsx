@@ -54,9 +54,9 @@ export function ChatInterface({
           // Host: /Users/name/.clauderon/uploads/... → Container: /workspace/.clauderon/uploads/...
           const prefix = '/.clauderon/uploads/';
           const idx = response.path.indexOf(prefix);
-          const containerPath = idx !== -1
-            ? '/workspace/.clauderon/uploads/' + response.path.slice(idx + prefix.length)
-            : response.path;
+          const containerPath = idx === -1
+            ? response.path
+            : '/workspace/.clauderon/uploads/' + response.path.slice(idx + prefix.length);
 
           // Send the container path to Claude Code via console (like drag-and-drop)
           client.write(containerPath + "\r");
@@ -192,7 +192,7 @@ export function ChatInterface({
             onChange={(e) => {
               const files = e.target.files;
               if (files) {
-                setAttachedImages(prev => [...prev, ...Array.from(files)]);
+                setAttachedImages(prev => [...prev, ...files]);
               }
             }}
           />

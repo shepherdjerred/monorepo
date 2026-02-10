@@ -7,9 +7,9 @@ const globalForPrisma = globalThis as unknown as {
 
 const databasePath = process.env["DATABASE_PATH"];
 const datasourceUrl = databasePath
-  ? databasePath.startsWith("file:")
+  ? (databasePath.startsWith("file:")
     ? databasePath
-    : `file:${databasePath}`
+    : `file:${databasePath}`)
   : undefined;
 
 export const prisma =

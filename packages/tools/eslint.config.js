@@ -1,39 +1,22 @@
-import eslint from "@eslint/js";
-import tseslint from "typescript-eslint";
+import { recommended } from "@shepherdjerred/eslint-config";
 
-export default tseslint.config(
-  eslint.configs.recommended,
-  ...tseslint.configs.strictTypeChecked,
-  ...tseslint.configs.stylisticTypeChecked,
-  {
-    ignores: ["dist/", "node_modules/", "eslint.config.js"],
-  },
-  {
-    languageOptions: {
-      parserOptions: {
-        projectService: true,
-        tsconfigRootDir: import.meta.dirname,
-      },
+export default [
+  ...recommended({
+    tsconfigRootDir: import.meta.dirname,
+    customRules: {
+      zod: false,
+      bun: true,
+      codeOrganization: false,
+      typeSafety: false,
+      promiseStyle: false,
     },
-  },
+  }),
   {
     rules: {
-      "@typescript-eslint/consistent-type-definitions": ["error", "type"],
-      "@typescript-eslint/consistent-type-imports": [
-        "error",
-        {
-          prefer: "type-imports",
-          disallowTypeAnnotations: true,
-        },
-      ],
-      "@typescript-eslint/no-unused-vars": [
-        "error",
-        {
-          argsIgnorePattern: "^_",
-          varsIgnorePattern: "^_",
-          caughtErrorsIgnorePattern: "^_",
-        },
-      ],
+      "no-console": "off",
+      "unicorn/no-array-sort": "off",
+      "regexp/no-unused-capturing-group": "warn",
+      "max-depth": ["error", { max: 6 }],
     },
   },
-);
+];

@@ -18,8 +18,8 @@
 
 import OpenAI from "openai";
 import Anthropic from "@anthropic-ai/sdk";
-import { appendFile, mkdir } from "fs/promises";
-import { join } from "path";
+import { appendFile, mkdir } from "node:fs/promises";
+import { join } from "node:path";
 import { applyRenames, extractIdentifiers, type RenameMappings } from "./babel-renamer.ts";
 import type { FunctionCache } from "./function-cache.ts";
 import {
@@ -79,10 +79,10 @@ export type BatchProcessorOptions = {
  * Batch processor for bottom-up de-minification.
  */
 export class BatchProcessor {
-  private config: DeminifyConfig;
-  private cache: FunctionCache;
-  private openai: OpenAI | null = null;
-  private anthropic: Anthropic | null = null;
+  private readonly config: DeminifyConfig;
+  private readonly cache: FunctionCache;
+  private readonly openai: OpenAI | null = null;
+  private readonly anthropic: Anthropic | null = null;
   private logFile: string | null = null;
   private requestCount = 0;
 
@@ -132,7 +132,7 @@ export class BatchProcessor {
     outputTokens?: number;
     error?: string;
   }): Promise<void> {
-    if (!this.logFile) return;
+    if (!this.logFile) {return;}
 
     try {
       const logDir = join(this.logFile, "..");
@@ -296,13 +296,13 @@ export class BatchProcessor {
    * Sort functions by depth in call graph (leaves first).
    */
   private sortByDepth(graph: CallGraph): ExtractedFunction[] {
-    const functions = Array.from(graph.functions.values());
+    const functions = [...graph.functions.values()];
     const depths = new Map<string, number>();
 
     // Calculate depth for each function (max depth of callees + 1)
     const getDepth = (id: string, visited: Set<string>): number => {
-      if (depths.has(id)) return depths.get(id) ?? 0;
-      if (visited.has(id)) return 0; // Circular dependency
+      if (depths.has(id)) {return depths.get(id) ?? 0;}
+      if (visited.has(id)) {return 0;} // Circular dependency
 
       visited.add(id);
 
@@ -346,7 +346,7 @@ export class BatchProcessor {
     processed: Set<string>,
   ): ExtractedFunction[] {
     return functions.filter((fn) => {
-      if (processed.has(fn.id)) return false;
+      if (processed.has(fn.id)) {return false;}
 
       // Check if all callees are processed
       for (const calleeName of fn.callees) {
@@ -435,12 +435,12 @@ export class BatchProcessor {
     for (const [original, renamed] of knownNames) {
       // Validate that original and renamed are safe identifiers (alphanumeric + underscore)
       // This prevents injection if source contains crafted strings
-      if (!/^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(original)) continue;
-      if (!/^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(renamed)) continue;
+      if (!/^[a-z_$][\w$]*$/i.test(original)) {continue;}
+      if (!/^[a-z_$][\w$]*$/i.test(renamed)) {continue;}
 
       // Check if this identifier is called in the source (as a function call)
       // Match patterns like: original(, original), original.
-      const callPattern = new RegExp(`\\b${original}\\s*\\(`);
+      const callPattern = new RegExp(String.raw`\b${original}\s*\(`);
       if (callPattern.test(source)) {
         relevantRenames.push(`${original}→${renamed}`);
       }

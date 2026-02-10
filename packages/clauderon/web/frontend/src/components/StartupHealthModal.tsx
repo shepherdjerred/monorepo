@@ -74,10 +74,10 @@ export function StartupHealthModal({
       document.addEventListener('keydown', handleEscape);
       return () => { document.removeEventListener('keydown', handleEscape); };
     }
-    return undefined;
+    return;
   }, [open, onOpenChange]);
 
-  if (!open || unhealthySessions.length === 0) return null;
+  if (!open || unhealthySessions.length === 0) {return null;}
 
   return (
     <>

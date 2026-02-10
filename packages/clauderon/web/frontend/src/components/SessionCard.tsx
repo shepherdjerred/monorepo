@@ -28,13 +28,13 @@ type SessionCardProps = {
 function getStatusLabel(status: string): string {
   // Git status --porcelain format uses 2-char codes
   const code = status.trim();
-  if (code.startsWith('M')) return 'Modified';
-  if (code.startsWith('A')) return 'Added';
-  if (code.startsWith('D')) return 'Deleted';
-  if (code.startsWith('R')) return 'Renamed';
-  if (code.startsWith('C')) return 'Copied';
-  if (code.startsWith('U')) return 'Unmerged';
-  if (code.startsWith('?')) return 'Untracked';
+  if (code.startsWith('M')) {return 'Modified';}
+  if (code.startsWith('A')) {return 'Added';}
+  if (code.startsWith('D')) {return 'Deleted';}
+  if (code.startsWith('R')) {return 'Renamed';}
+  if (code.startsWith('C')) {return 'Copied';}
+  if (code.startsWith('U')) {return 'Unmerged';}
+  if (code.startsWith('?')) {return 'Untracked';}
   return 'Changed';
 }
 
@@ -648,7 +648,7 @@ export function SessionCard({ session, healthReport, onAttach, onEdit, onArchive
 
       <MergePrDialog
         isOpen={mergePrDialogOpen}
-        onClose={() => setMergePrDialogOpen(false)}
+        onClose={() => { setMergePrDialogOpen(false); }}
         onConfirm={handleMergePr}
         session={session}
       />

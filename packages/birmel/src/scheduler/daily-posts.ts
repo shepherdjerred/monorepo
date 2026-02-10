@@ -17,8 +17,8 @@ function getCurrentTimeInTimezone(timezone: string): { hours: number; minutes: n
   });
 
   const parts = formatter.formatToParts(now);
-  const hours = parseInt(parts.find((p) => p.type === "hour")?.value ?? "0", 10);
-  const minutes = parseInt(parts.find((p) => p.type === "minute")?.value ?? "0", 10);
+  const hours = Number.parseInt(parts.find((p) => p.type === "hour")?.value ?? "0", 10);
+  const minutes = Number.parseInt(parts.find((p) => p.type === "minute")?.value ?? "0", 10);
 
   return { hours, minutes };
 }
@@ -39,8 +39,8 @@ function shouldPostNow(config: DailyPostConfig): boolean {
 
   // Check if current time matches post time
   const timeParts = config.postTime.split(":");
-  const postHour = parseInt(timeParts[0] ?? "0", 10);
-  const postMinute = parseInt(timeParts[1] ?? "0", 10);
+  const postHour = Number.parseInt(timeParts[0] ?? "0", 10);
+  const postMinute = Number.parseInt(timeParts[1] ?? "0", 10);
   const current = getCurrentTimeInTimezone(config.timezone);
 
   // Allow a 5-minute window for the scheduler

@@ -15,7 +15,7 @@ export function getMusicPlayer(): Player {
 }
 
 export async function initializeMusicPlayer(): Promise<void> {
-  if (initialized) return;
+  if (initialized) {return;}
 
   const playerInstance = getMusicPlayer();
   await registerExtractors(playerInstance);

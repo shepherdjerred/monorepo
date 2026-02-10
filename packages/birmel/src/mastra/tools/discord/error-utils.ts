@@ -17,7 +17,7 @@ export type DiscordAPIErrorLike = {
  * Check if an error looks like a DiscordAPIError based on its properties.
  */
 export function isDiscordAPIError(error: unknown): error is DiscordAPIErrorLike {
-  if (!error || typeof error !== "object") return false;
+  if (!error || typeof error !== "object") {return false;}
   const e = error as Record<string, unknown>;
   return (
     typeof e["code"] === "number" &&

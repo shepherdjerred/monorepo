@@ -24,7 +24,7 @@ export function ThemeToggle() {
 
   // Apply theme to document
   useEffect(() => {
-    if (!mounted) return;
+    if (!mounted) {return;}
 
     const root = window.document.documentElement;
     root.classList.remove('light', 'dark');

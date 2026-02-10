@@ -92,7 +92,7 @@ describe("Phase 2: Timer/Scheduler Tools", () => {
   // When running with an in-memory database, migrations must be applied first
 
   test("schedules a one-time task with ISO date", async () => {
-    const futureDate = new Date(Date.now() + 60000).toISOString();
+    const futureDate = new Date(Date.now() + 60_000).toISOString();
 
     const result = await (manageTaskTool as any).execute({
       action: "schedule",

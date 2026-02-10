@@ -142,10 +142,10 @@ export const browserAutomationTool = createTool({
     try {
       switch (ctx.action) {
         case "navigate": {
-          if (!ctx.url) return { success: false, message: "url is required for navigate" };
+          if (!ctx.url) {return { success: false, message: "url is required for navigate" };}
           const page = await getPage();
           resetSessionTimeout();
-          await page.goto(ctx.url, { waitUntil: ctx.waitUntil ?? "load", timeout: 30000 });
+          await page.goto(ctx.url, { waitUntil: ctx.waitUntil ?? "load", timeout: 30_000 });
           const title = await page.title();
           logger.info("Navigated to URL", { url: ctx.url, title });
           return { success: true, message: `Navigated to: ${title}`, data: { url: page.url(), title } };
@@ -168,20 +168,20 @@ export const browserAutomationTool = createTool({
         }
 
         case "click": {
-          if (!ctx.selector) return { success: false, message: "selector is required for click" };
+          if (!ctx.selector) {return { success: false, message: "selector is required for click" };}
           const page = await getPage();
           resetSessionTimeout();
-          await page.click(ctx.selector, { timeout: ctx.timeout ?? 30000 });
+          await page.click(ctx.selector, { timeout: ctx.timeout ?? 30_000 });
           logger.info("Clicked element", { selector: ctx.selector });
           return { success: true, message: `Clicked: ${ctx.selector}` };
         }
 
         case "type": {
-          if (!ctx.selector || !ctx.text) return { success: false, message: "selector and text are required for type" };
+          if (!ctx.selector || !ctx.text) {return { success: false, message: "selector and text are required for type" };}
           const page = await getPage();
           resetSessionTimeout();
-          await page.fill(ctx.selector, ctx.text, { timeout: ctx.timeout ?? 30000 });
-          if (ctx.pressEnter) await page.press(ctx.selector, "Enter");
+          await page.fill(ctx.selector, ctx.text, { timeout: ctx.timeout ?? 30_000 });
+          if (ctx.pressEnter) {await page.press(ctx.selector, "Enter");}
           logger.info("Typed text", { selector: ctx.selector, length: ctx.text.length });
           return { success: true, message: `Typed into: ${ctx.selector}` };
         }
@@ -191,7 +191,7 @@ export const browserAutomationTool = createTool({
           resetSessionTimeout();
           let text: string;
           if (ctx.selector) {
-            const element = await page.waitForSelector(ctx.selector, { timeout: ctx.timeout ?? 30000 });
+            const element = await page.waitForSelector(ctx.selector, { timeout: ctx.timeout ?? 30_000 });
             text = (await element.textContent()) ?? "";
           } else {
             text = await page.textContent("body") ?? "";

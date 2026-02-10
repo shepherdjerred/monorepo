@@ -4,18 +4,18 @@ function parseBoolean(
   value: string | undefined,
   defaultValue: boolean,
 ): boolean {
-  if (value === undefined) return defaultValue;
+  if (value === undefined) {return defaultValue;}
   return value.toLowerCase() === "true";
 }
 
 function parseNumber(value: string | undefined, defaultValue: number): number {
-  if (value === undefined) return defaultValue;
+  if (value === undefined) {return defaultValue;}
   const parsed = Number(value);
   return Number.isNaN(parsed) ? defaultValue : parsed;
 }
 
 function parseJSON<T>(value: string | undefined, defaultValue: T): T {
-  if (value === undefined) return defaultValue;
+  if (value === undefined) {return defaultValue;}
   try {
     return JSON.parse(value) as T;
   } catch {
@@ -70,7 +70,7 @@ function loadConfigFromEnv(): Config {
       dsn: process.env["SENTRY_DSN"],
       environment: process.env["SENTRY_ENVIRONMENT"] ?? "development",
       release: process.env["SENTRY_RELEASE"] ?? process.env["GIT_SHA"],
-      sampleRate: parseNumber(process.env["SENTRY_SAMPLE_RATE"], 1.0),
+      sampleRate: parseNumber(process.env["SENTRY_SAMPLE_RATE"], 1),
       tracesSampleRate: parseNumber(process.env["SENTRY_TRACES_SAMPLE_RATE"], 0.1),
     },
     persona: {
@@ -80,8 +80,8 @@ function loadConfigFromEnv(): Config {
     },
     shell: {
       enabled: parseBoolean(process.env["SHELL_ENABLED"], true),
-      defaultTimeout: parseNumber(process.env["SHELL_DEFAULT_TIMEOUT"], 30000),
-      maxTimeout: parseNumber(process.env["SHELL_MAX_TIMEOUT"], 300000),
+      defaultTimeout: parseNumber(process.env["SHELL_DEFAULT_TIMEOUT"], 30_000),
+      maxTimeout: parseNumber(process.env["SHELL_MAX_TIMEOUT"], 300_000),
     },
     scheduler: {
       enabled: parseBoolean(process.env["SCHEDULER_ENABLED"], true),
@@ -94,7 +94,7 @@ function loadConfigFromEnv(): Config {
       viewportWidth: parseNumber(process.env["BROWSER_VIEWPORT_WIDTH"], 1280),
       viewportHeight: parseNumber(process.env["BROWSER_VIEWPORT_HEIGHT"], 720),
       maxSessions: parseNumber(process.env["BROWSER_MAX_SESSIONS"], 5),
-      sessionTimeoutMs: parseNumber(process.env["BROWSER_SESSION_TIMEOUT_MS"], 300000),
+      sessionTimeoutMs: parseNumber(process.env["BROWSER_SESSION_TIMEOUT_MS"], 300_000),
       userAgent: process.env["BROWSER_USER_AGENT"],
     },
     birthdays: {
@@ -124,7 +124,7 @@ function loadConfigFromEnv(): Config {
       >(process.env["EDITOR_ALLOWED_REPOS"], []),
       maxSessionDurationMs: parseNumber(
         process.env["EDITOR_MAX_SESSION_DURATION_MS"],
-        1800000,
+        1_800_000,
       ),
       maxSessionsPerUser: parseNumber(
         process.env["EDITOR_MAX_SESSIONS_PER_USER"],

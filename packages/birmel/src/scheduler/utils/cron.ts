@@ -54,20 +54,16 @@ export function describeCron(pattern: string): string {
     const dayOfWeek = parts[4] ?? "";
 
     // Simple descriptions for common patterns
-    if (pattern === "* * * * *") return "Every minute";
-    if (pattern === "0 * * * *") return "Every hour";
-    if (pattern === "0 0 * * *") return "Daily at midnight";
-    if (pattern === "0 9 * * *") return "Daily at 9 AM";
-    if (pattern === "0 0 * * 0") return "Weekly on Sunday at midnight";
-    if (pattern === "0 0 1 * *") return "Monthly on the 1st at midnight";
+    if (pattern === "* * * * *") {return "Every minute";}
+    if (pattern === "0 * * * *") {return "Every hour";}
+    if (pattern === "0 0 * * *") {return "Daily at midnight";}
+    if (pattern === "0 9 * * *") {return "Daily at 9 AM";}
+    if (pattern === "0 0 * * 0") {return "Weekly on Sunday at midnight";}
+    if (pattern === "0 0 1 * *") {return "Monthly on the 1st at midnight";}
 
     // Generic description
     let desc = "At";
-    if (minute === "*") {
-      desc += " every minute";
-    } else {
-      desc += ` minute ${minute}`;
-    }
+    desc += minute === "*" ? " every minute" : ` minute ${minute}`;
 
     if (hour !== "*") {
       desc += ` of hour ${hour}`;

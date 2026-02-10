@@ -1,8 +1,8 @@
 import { openai } from "@ai-sdk/openai";
 import { generateText } from "ai";
-import { readFileSync, existsSync } from "fs";
-import { join, dirname } from "path";
-import { fileURLToPath } from "url";
+import { readFileSync, existsSync } from "node:fs";
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import { getConfig } from "../config/index.js";
 import { logger } from "../utils/index.js";
 

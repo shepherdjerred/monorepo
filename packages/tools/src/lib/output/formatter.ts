@@ -5,9 +5,9 @@ function getStatusEmoji(status: HealthStatus): string {
     case "HEALTHY":
       return "\u2705";
     case "UNHEALTHY":
-      return "\u274c";
+      return "\u274C";
     case "PENDING":
-      return "\u23f3";
+      return "\u23F3";
   }
 }
 

@@ -10,7 +10,7 @@ const SNOWFLAKE_REGEX = /^\d{17,20}$/;
  * Returns an error message if invalid, or null if valid.
  */
 export function validateSnowflake(value: string | null | undefined, fieldName: string): string | null {
-  if (!value) return null; // Let required field checks handle missing values (null and undefined are ok)
+  if (!value) {return null;} // Let required field checks handle missing values (null and undefined are ok)
 
   if (value === "@me") {
     return `Invalid ${fieldName}. Use the numeric Discord ID from the message context (e.g., '123456789012345678'), not '@me'.`;
@@ -32,7 +32,7 @@ export function validateSnowflakes(
 ): string | null {
   for (const { value, fieldName } of values) {
     const error = validateSnowflake(value, fieldName);
-    if (error) return error;
+    if (error) {return error;}
   }
   return null;
 }
@@ -42,11 +42,11 @@ export function validateSnowflakes(
  * Returns an error message if any ID is invalid, or null if all are valid.
  */
 export function validateSnowflakeArray(values: string[] | null | undefined, fieldName: string): string | null {
-  if (!values) return null;
+  if (!values) {return null;}
 
-  for (let i = 0; i < values.length; i++) {
-    const error = validateSnowflake(values[i], `${fieldName}[${String(i)}]`);
-    if (error) return error;
+  for (const [i, value] of values.entries()) {
+    const error = validateSnowflake(value, `${fieldName}[${String(i)}]`);
+    if (error) {return error;}
   }
 
   return null;

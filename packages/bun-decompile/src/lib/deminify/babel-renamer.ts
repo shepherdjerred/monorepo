@@ -70,11 +70,9 @@ function getFunctionId(path: NodePath<t.Function>): string {
     } else if (t.isObjectProperty(parent) && t.isIdentifier(parent.key)) {
       name = parent.key.name;
     }
-  } else if (t.isObjectMethod(node) || t.isClassMethod(node)) {
-    if (t.isIdentifier(node.key)) {
+  } else if ((t.isObjectMethod(node) || t.isClassMethod(node)) && t.isIdentifier(node.key)) {
       name = node.key.name;
     }
-  }
 
   return `${name}_${String(start)}_${String(end)}`;
 }
@@ -98,7 +96,7 @@ function handleFunction(
 
   // Apply identifier renames within this function's scope
   for (const [oldName, newName] of Object.entries(mapping.renames)) {
-    if (oldName === newName) continue;
+    if (oldName === newName) {continue;}
 
     // Check if this binding exists in this scope
     const binding = path.scope.getBinding(oldName);
@@ -116,15 +114,13 @@ function handleFunction(
         // Rename at the scope where the function is declared
         path.parentPath.scope.rename(oldFuncName, mapping.functionName);
       }
-    } else if (t.isVariableDeclarator(path.parent)) {
-      // Arrow function or function expression assigned to variable
-      if (t.isIdentifier(path.parent.id)) {
+    } else if (t.isVariableDeclarator(path.parent) && // Arrow function or function expression assigned to variable
+      t.isIdentifier(path.parent.id)) {
         const oldVarName = path.parent.id.name;
         if (oldVarName !== mapping.functionName) {
           path.parentPath.scope.rename(oldVarName, mapping.functionName);
         }
       }
-    }
   }
 
   // Add description comment if provided
@@ -258,7 +254,7 @@ export function extractIdentifiers(source: string): string[] {
       ],
     });
 
-    if (!ast) return [];
+    if (!ast) {return [];}
 
     traverse(ast, {
       Identifier(path) {
@@ -287,5 +283,5 @@ export function extractIdentifiers(source: string): string[] {
     // Parse error - return empty
   }
 
-  return Array.from(identifiers);
+  return [...identifiers];
 }

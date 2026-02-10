@@ -173,7 +173,7 @@ export function DirectoryBrowserDialog({ onClose, onSelect, initialPath }: Direc
                   entries.map((entry) => (
                     <button
                       key={entry.path}
-                      onClick={() => { if (entry.is_accessible) handleNavigateToDirectory(entry.path); }}
+                      onClick={() => { if (entry.is_accessible) {handleNavigateToDirectory(entry.path);} }}
                       disabled={!entry.is_accessible}
                       className={`w-full text-left p-3 border-2 font-mono flex items-center gap-2 transition-all duration-200 ${
                         entry.is_accessible

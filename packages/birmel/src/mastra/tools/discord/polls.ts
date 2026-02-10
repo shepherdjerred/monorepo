@@ -55,7 +55,7 @@ export const managePollTool = createTool({
           { value: ctx.channelId, fieldName: "channelId" },
           { value: ctx.messageId, fieldName: "messageId" },
         ]);
-        if (idError) return { success: false, message: idError };
+        if (idError) {return { success: false, message: idError };}
 
         const client = getDiscordClient();
         const channel = await client.channels.fetch(ctx.channelId);
@@ -89,7 +89,7 @@ export const managePollTool = createTool({
                   createdBy: client.user.id,
                   expiresAt,
                 },
-              }).catch((e: unknown) => { logger.error("Failed to store poll", e); });
+              }).catch((error: unknown) => { logger.error("Failed to store poll", error); });
             }
             logger.info("Poll created", { messageId: message.id });
             return {
@@ -100,9 +100,9 @@ export const managePollTool = createTool({
           }
 
           case "get-results": {
-            if (!ctx.messageId) return { success: false, message: "messageId is required for get-results" };
+            if (!ctx.messageId) {return { success: false, message: "messageId is required for get-results" };}
             const message = await channel.messages.fetch(ctx.messageId);
-            if (!message.poll) return { success: false, message: "Message does not contain a poll" };
+            if (!message.poll) {return { success: false, message: "Message does not contain a poll" };}
             const poll = message.poll;
             let totalVotes = 0;
             const answers = [];
@@ -129,10 +129,10 @@ export const managePollTool = createTool({
           }
 
           case "end": {
-            if (!ctx.messageId) return { success: false, message: "messageId is required for end" };
+            if (!ctx.messageId) {return { success: false, message: "messageId is required for end" };}
             const message = await channel.messages.fetch(ctx.messageId);
-            if (!message.poll) return { success: false, message: "Message does not contain a poll" };
-            if (message.poll.resultsFinalized) return { success: false, message: "Poll already finalized" };
+            if (!message.poll) {return { success: false, message: "Message does not contain a poll" };}
+            if (message.poll.resultsFinalized) {return { success: false, message: "Poll already finalized" };}
             await message.poll.end();
             logger.info("Poll ended", { messageId: ctx.messageId });
             return { success: true, message: "Poll ended and results finalized" };

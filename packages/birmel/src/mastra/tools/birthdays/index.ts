@@ -83,9 +83,9 @@ export const manageBirthdayTool = createTool({
           }
 
           case "get": {
-            if (!ctx.userId) return { success: false, message: "userId is required for get" };
+            if (!ctx.userId) {return { success: false, message: "userId is required for get" };}
             const birthday = await getBirthday(ctx.userId, ctx.guildId);
-            if (!birthday) return { success: false, message: "No birthday found for this user" };
+            if (!birthday) {return { success: false, message: "No birthday found for this user" };}
             return {
               success: true,
               message: `Birthday is ${birthday.birthMonth.toString()}/${birthday.birthDay.toString()}${birthday.birthYear ? `/${birthday.birthYear.toString()}` : ""}`,
@@ -100,7 +100,7 @@ export const manageBirthdayTool = createTool({
           }
 
           case "update": {
-            if (!ctx.userId) return { success: false, message: "userId is required for update" };
+            if (!ctx.userId) {return { success: false, message: "userId is required for update" };}
             const birthday = await updateBirthday(ctx.userId, ctx.guildId, {
               ...(ctx.birthMonth !== undefined && { birthMonth: ctx.birthMonth }),
               ...(ctx.birthDay !== undefined && { birthDay: ctx.birthDay }),
@@ -122,9 +122,9 @@ export const manageBirthdayTool = createTool({
           }
 
           case "delete": {
-            if (!ctx.userId) return { success: false, message: "userId is required for delete" };
+            if (!ctx.userId) {return { success: false, message: "userId is required for delete" };}
             const deleted = await deleteBirthday(ctx.userId, ctx.guildId);
-            if (!deleted) return { success: false, message: "No birthday found for this user" };
+            if (!deleted) {return { success: false, message: "No birthday found for this user" };}
             logger.info("Birthday deleted", { guildId: ctx.guildId, userId: ctx.userId });
             return { success: true, message: "Birthday deleted successfully" };
           }
@@ -155,7 +155,7 @@ export const manageBirthdayTool = createTool({
           }
 
           case "by-month": {
-            if (!ctx.month) return { success: false, message: "month is required for by-month" };
+            if (!ctx.month) {return { success: false, message: "month is required for by-month" };}
             const birthdays = await getBirthdaysByMonth(ctx.guildId, ctx.month);
             const data = birthdays.map((b) => ({
               userId: b.userId,

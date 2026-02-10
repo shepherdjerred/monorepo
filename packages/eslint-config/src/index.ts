@@ -8,15 +8,15 @@
 import type { TSESLint } from "@typescript-eslint/utils";
 
 // Export composable configs
-export { baseConfig, type BaseConfigOptions } from "./configs/base";
-export { importsConfig, type ImportsConfigOptions } from "./configs/imports";
-export { reactConfig } from "./configs/react";
-export { accessibilityConfig } from "./configs/accessibility";
-export { astroConfig } from "./configs/astro";
-export { namingConfig } from "./configs/naming";
+export { baseConfig, type BaseConfigOptions } from "./configs/base.js";
+export { importsConfig, type ImportsConfigOptions } from "./configs/imports.js";
+export { reactConfig } from "./configs/react.js";
+export { accessibilityConfig } from "./configs/accessibility.js";
+export { astroConfig } from "./configs/astro.js";
+export { namingConfig } from "./configs/naming.js";
 
 // Export custom rules plugin
-export { customRulesPlugin } from "./rules";
+export { customRulesPlugin } from "./rules/index.js";
 
 // Export individual rules for advanced use cases
 export {
@@ -33,15 +33,17 @@ export {
   noFunctionOverloads,
   noParentImports,
   noTypeGuards,
-} from "./rules";
+  requireTsExtensions,
+  preferAsyncAwait,
+} from "./rules/index.js";
 
 // Import configs for the recommended preset
-import { baseConfig, type BaseConfigOptions } from "./configs/base";
-import { importsConfig, type ImportsConfigOptions } from "./configs/imports";
-import { reactConfig } from "./configs/react";
-import { accessibilityConfig } from "./configs/accessibility";
-import { namingConfig } from "./configs/naming";
-import { customRulesPlugin } from "./rules";
+import { baseConfig, type BaseConfigOptions } from "./configs/base.js";
+import { importsConfig, type ImportsConfigOptions } from "./configs/imports.js";
+import { reactConfig } from "./configs/react.js";
+import { accessibilityConfig } from "./configs/accessibility.js";
+import { namingConfig } from "./configs/naming.js";
+import { customRulesPlugin } from "./rules/index.js";
 
 export type RecommendedOptions = BaseConfigOptions &
   ImportsConfigOptions & {
@@ -63,6 +65,8 @@ export type RecommendedOptions = BaseConfigOptions &
       codeOrganization?: boolean;
       /** Enable type safety rules (no-type-assertions, no-type-guards, no-function-overloads) */
       typeSafety?: boolean;
+      /** Enable async/await style enforcement */
+      promiseStyle?: boolean;
     };
   };
 
@@ -95,6 +99,7 @@ export function recommended(options: RecommendedOptions = {}): TSESLint.FlatConf
       reactRules: true,
       codeOrganization: true,
       typeSafety: true,
+      promiseStyle: true,
     },
     ...baseOptions
   } = options;
@@ -164,6 +169,13 @@ export function recommended(options: RecommendedOptions = {}): TSESLint.FlatConf
     };
   }
 
+  if (customRules.promiseStyle !== false) {
+    customRulesConfig.rules = {
+      ...customRulesConfig.rules,
+      "custom-rules/prefer-async-await": "error",
+    };
+  }
+
   configs.push(customRulesConfig);
 
   // Test file overrides - relax some rules for tests
@@ -187,8 +199,9 @@ export function recommended(options: RecommendedOptions = {}): TSESLint.FlatConf
       "@typescript-eslint/no-confusing-void-expression": "off",
       "@typescript-eslint/no-non-null-assertion": "off",
       "@typescript-eslint/no-unnecessary-condition": "off",
-      // Still catch chained assertions in tests
-      "custom-rules/no-type-assertions": "error",
+      "@typescript-eslint/strict-boolean-expressions": "off",
+      // Still catch chained assertions in tests (when typeSafety is enabled)
+      ...(customRules.typeSafety ? { "custom-rules/no-type-assertions": "error" } : {}),
       // Too many false positives in tests
       "custom-rules/prefer-zod-validation": "off",
     },

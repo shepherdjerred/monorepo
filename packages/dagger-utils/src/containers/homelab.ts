@@ -39,11 +39,11 @@ export type UpdateHomelabVersionOptions = {
  */
 export async function updateHomelabVersion(options: UpdateHomelabVersionOptions): Promise<string> {
   const { ghToken, appName, version } = options;
-  const branchPrefix = options.branchPrefix ?? appName.replace(/\//g, "-");
+  const branchPrefix = options.branchPrefix ?? appName.replaceAll('/', "-");
   const branchName = `${branchPrefix}/${version}`;
 
   // Escape slashes in appName for sed
-  const escapedAppName = appName.replace(/\//g, "\\/");
+  const escapedAppName = appName.replaceAll('/', "\\/");
 
   const result = await getGitHubContainer()
     .withSecretVariable("GH_TOKEN", ghToken)

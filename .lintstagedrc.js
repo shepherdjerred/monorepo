@@ -34,11 +34,57 @@ export default {
   "packages/clauderon/mobile/src/**/*.{ts,tsx}": (filenames) => {
     const mobileDir = "packages/clauderon/mobile";
     const relativeFiles = filenames.map(f => path.relative(mobileDir, f)).join(" ");
-    return [`cd ${mobileDir} && bunx eslint --fix ${relativeFiles}`];
+    return [
+      `cd ${mobileDir} && bunx eslint --fix ${relativeFiles}`,
+      `cd ${mobileDir} && bunx prettier --check ${relativeFiles}`,
+    ];
+  },
+  // Clauderon web packages - nested workspace
+  "packages/clauderon/web/*/src/**/*.{ts,tsx}": (filenames) => {
+    const packageMap = new Map();
+
+    for (const filename of filenames) {
+      const match = filename.match(/^packages\/clauderon\/web\/([^/]+)\//);
+      if (match) {
+        const packageName = match[1];
+        if (!packageMap.has(packageName)) {
+          packageMap.set(packageName, []);
+        }
+        packageMap.get(packageName).push(filename);
+      }
+    }
+
+    const commands = [];
+    for (const [packageName, files] of packageMap) {
+      const packageDir = `packages/clauderon/web/${packageName}`;
+      const relativeFiles = files.map(f => path.relative(packageDir, f)).join(" ");
+      commands.push(`cd ${packageDir} && bunx eslint --fix ${relativeFiles}`);
+    }
+
+    return commands;
+  },
+  // Clauderon docs
+  "packages/clauderon/docs/src/**/*.{ts,tsx}": (filenames) => {
+    const docsDir = "packages/clauderon/docs";
+    const relativeFiles = filenames.map(f => path.relative(docsDir, f)).join(" ");
+    return [`cd ${docsDir} && bunx eslint --fix ${relativeFiles}`];
+  },
+  // .dagger CI pipeline
+  ".dagger/src/**/*.ts": (filenames) => {
+    const daggerDir = ".dagger";
+    const relativeFiles = filenames.map(f => path.relative(daggerDir, f)).join(" ");
+    return [`cd ${daggerDir} && bunx eslint --fix ${relativeFiles}`];
   },
   "packages/clauderon/**/*.rs": (filenames) => {
-    // Only run fmt check - clippy and test are too heavy for pre-commit
-    // and should be run in CI instead
+    // Format only in lint-staged (clippy/test run in Tier 2 of pre-commit hook)
     return [`sh -c 'cd packages/clauderon && cargo fmt'`];
+  },
+  "**/*.sh": (filenames) => {
+    const filtered = filenames.filter(
+      (f) => !f.includes("node_modules") && !f.includes("Pods"),
+    );
+    return filtered.length > 0
+      ? [`shellcheck --severity=warning ${filtered.join(" ")}`]
+      : [];
   },
 };

@@ -92,7 +92,7 @@ export function verifyBatchState(
 /** Format batch state for display */
 export function formatBatchState(state: BatchState): string {
   const age = Date.now() - state.createdAt;
-  const ageMinutes = Math.floor(age / 60000);
+  const ageMinutes = Math.floor(age / 60_000);
   const ageStr = ageMinutes < 60
     ? `${String(ageMinutes)}m ago`
     : `${String(Math.floor(ageMinutes / 60))}h ${String(ageMinutes % 60)}m ago`;

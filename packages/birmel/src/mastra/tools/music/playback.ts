@@ -56,9 +56,9 @@ export const musicPlaybackTool = createTool({
             nodeOptions: {
               metadata: channel,
               leaveOnEmpty: true,
-              leaveOnEmptyCooldown: 60000,
+              leaveOnEmptyCooldown: 60_000,
               leaveOnEnd: false,
-              leaveOnEndCooldown: 60000,
+              leaveOnEndCooldown: 60_000,
             },
           });
           const track = result.track;
@@ -71,50 +71,50 @@ export const musicPlaybackTool = createTool({
         }
 
         case "pause": {
-          if (!queue?.isPlaying()) return { success: false, message: "Nothing is playing" };
+          if (!queue?.isPlaying()) {return { success: false, message: "Nothing is playing" };}
           queue.node.pause();
           return { success: true, message: "Paused playback" };
         }
 
         case "resume": {
-          if (!queue) return { success: false, message: "No active queue" };
+          if (!queue) {return { success: false, message: "No active queue" };}
           queue.node.resume();
           return { success: true, message: "Resumed playback" };
         }
 
         case "skip": {
-          if (!queue?.isPlaying()) return { success: false, message: "Nothing is playing" };
+          if (!queue?.isPlaying()) {return { success: false, message: "Nothing is playing" };}
           const track = queue.currentTrack;
           queue.node.skip();
           return { success: true, message: `Skipped: ${track?.title ?? "Unknown"}` };
         }
 
         case "stop": {
-          if (!queue) return { success: false, message: "No active queue" };
+          if (!queue) {return { success: false, message: "No active queue" };}
           queue.delete();
           return { success: true, message: "Stopped playback and cleared queue" };
         }
 
         case "seek": {
-          if (ctx.seconds === undefined) return { success: false, message: "seconds is required for seek" };
-          if (!queue?.isPlaying()) return { success: false, message: "Nothing is playing" };
+          if (ctx.seconds === undefined) {return { success: false, message: "seconds is required for seek" };}
+          if (!queue?.isPlaying()) {return { success: false, message: "Nothing is playing" };}
           const success = await queue.node.seek(ctx.seconds * 1000);
-          if (!success) return { success: false, message: "Failed to seek" };
+          if (!success) {return { success: false, message: "Failed to seek" };}
           const mins = Math.floor(ctx.seconds / 60);
           const secs = ctx.seconds % 60;
           return { success: true, message: `Seeked to ${String(mins)}:${String(secs).padStart(2, "0")}` };
         }
 
         case "set-volume": {
-          if (ctx.volume === undefined) return { success: false, message: "volume is required for set-volume" };
-          if (!queue) return { success: false, message: "No active queue" };
+          if (ctx.volume === undefined) {return { success: false, message: "volume is required for set-volume" };}
+          if (!queue) {return { success: false, message: "No active queue" };}
           queue.node.setVolume(ctx.volume);
           return { success: true, message: `Volume set to ${String(ctx.volume)}%` };
         }
 
         case "set-loop": {
-          if (!ctx.loopMode) return { success: false, message: "loopMode is required for set-loop" };
-          if (!queue) return { success: false, message: "No active queue" };
+          if (!ctx.loopMode) {return { success: false, message: "loopMode is required for set-loop" };}
+          if (!queue) {return { success: false, message: "No active queue" };}
           const modeMap = {
             off: QueueRepeatMode.OFF,
             track: QueueRepeatMode.TRACK,

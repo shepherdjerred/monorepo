@@ -1,57 +1,50 @@
-import eslint from "@eslint/js";
-import tseslint from "typescript-eslint";
+import { recommended } from "@shepherdjerred/eslint-config";
 
-export default tseslint.config(
-  eslint.configs.recommended,
-  ...tseslint.configs.strictTypeChecked,
-  ...tseslint.configs.stylisticTypeChecked,
-  {
-    ignores: ["out/", "out-claude/", "scripts/", "node_modules/", "eslint.config.js"],
-  },
-  {
-    languageOptions: {
-      parserOptions: {
-        projectService: true,
-        tsconfigRootDir: import.meta.dirname,
-      },
+export default [
+  ...recommended({
+    tsconfigRootDir: import.meta.dirname,
+    ignores: [
+      "**/generated/**/*",
+      "**/dist/**/*",
+      "**/build/**/*",
+      "**/.cache/**/*",
+      "**/node_modules/**/*",
+      "**/.astro/**/*",
+      "**/*.md",
+      "**/*.mdx",
+      "**/*.mjs",
+      "**/*.js",
+      "**/*.cjs",
+      "out/",
+      "out-claude/",
+      "scripts/",
+    ],
+    naming: false,
+    customRules: {
+      zod: false,
+      bun: true,
+      codeOrganization: false,
+      typeSafety: false,
+      promiseStyle: false,
     },
-  },
+  }),
   {
     rules: {
-      "@typescript-eslint/consistent-type-definitions": ["error", "type"],
-      "@typescript-eslint/consistent-type-imports": [
-        "error",
-        {
-          prefer: "type-imports",
-          disallowTypeAnnotations: true,
-        },
-      ],
-      "@typescript-eslint/no-unused-vars": [
-        "error",
-        {
-          argsIgnorePattern: "^_",
-          varsIgnorePattern: "^_",
-          caughtErrorsIgnorePattern: "^_",
-        },
-      ],
+      "no-console": "off",
+      "no-restricted-imports": "off",
+      "max-depth": ["error", { max: 6 }],
+      "max-lines": ["error", { max: 1000, skipBlankLines: false, skipComments: false }],
+      "max-params": ["error", { max: 7 }],
+      complexity: ["warn", { max: 25 }],
+      "unicorn/import-style": "off",
+      "unicorn/no-array-sort": "off",
+      "unicorn/text-encoding-identifier-case": "off",
+      "unicorn/prefer-number-properties": "off",
+      "unicorn/prefer-default-parameters": "warn",
+      "regexp/no-super-linear-backtracking": "warn",
+      "@typescript-eslint/switch-exhaustiveness-check": "warn",
+      "eslint-comments/require-description": "warn",
+      "@typescript-eslint/no-shadow": "warn",
     },
   },
-  // Relax rules for test files
-  {
-    files: ["**/*.test.ts", "**/*.integration.test.ts"],
-    rules: {
-      "@typescript-eslint/no-floating-promises": "off",
-      "@typescript-eslint/require-await": "off",
-      "@typescript-eslint/no-empty-function": "off",
-      "@typescript-eslint/await-thenable": "off",
-      "@typescript-eslint/no-confusing-void-expression": "off",
-      "@typescript-eslint/prefer-for-of": "off",
-      "@typescript-eslint/no-explicit-any": "off",
-      "@typescript-eslint/no-unsafe-assignment": "off",
-      "@typescript-eslint/no-unsafe-call": "off",
-      "@typescript-eslint/no-unsafe-member-access": "off",
-      "@typescript-eslint/no-unsafe-argument": "off",
-      "@typescript-eslint/no-non-null-assertion": "off",
-    },
-  }
-);
+];

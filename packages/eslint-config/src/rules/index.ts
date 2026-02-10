@@ -1,16 +1,18 @@
-import { zodSchemaNaming } from "./zod-schema-naming";
-import { noRedundantZodParse } from "./no-redundant-zod-parse";
-import { satoriBestPractices } from "./satori-best-practices";
-import { prismaClientDisconnect } from "./prisma-client-disconnect";
-import { noTypeAssertions } from "./no-type-assertions";
-import { preferZodValidation } from "./prefer-zod-validation";
-import { preferBunApis } from "./prefer-bun-apis";
-import { noReExports } from "./no-re-exports";
-import { noUseEffect } from "./no-use-effect";
-import { preferDateFns } from "./prefer-date-fns";
-import { noFunctionOverloads } from "./no-function-overloads";
-import { noParentImports } from "./no-parent-imports";
-import { noTypeGuards } from "./no-type-guards";
+import { zodSchemaNaming } from "./zod-schema-naming.js";
+import { noRedundantZodParse } from "./no-redundant-zod-parse.js";
+import { satoriBestPractices } from "./satori-best-practices.js";
+import { prismaClientDisconnect } from "./prisma-client-disconnect.js";
+import { noTypeAssertions } from "./no-type-assertions.js";
+import { preferZodValidation } from "./prefer-zod-validation.js";
+import { preferBunApis } from "./prefer-bun-apis.js";
+import { noReExports } from "./no-re-exports.js";
+import { noUseEffect } from "./no-use-effect.js";
+import { preferDateFns } from "./prefer-date-fns.js";
+import { noFunctionOverloads } from "./no-function-overloads.js";
+import { noParentImports } from "./no-parent-imports.js";
+import { noTypeGuards } from "./no-type-guards.js";
+import { requireTsExtensions } from "./require-ts-extensions.js";
+import { preferAsyncAwait } from "./prefer-async-await.js";
 
 /**
  * Custom ESLint plugin with all rules
@@ -30,6 +32,8 @@ export const customRulesPlugin = {
     "no-function-overloads": noFunctionOverloads,
     "no-parent-imports": noParentImports,
     "no-type-guards": noTypeGuards,
+    "require-ts-extensions": requireTsExtensions,
+    "prefer-async-await": preferAsyncAwait,
   },
 };
 
@@ -48,4 +52,6 @@ export {
   noFunctionOverloads,
   noParentImports,
   noTypeGuards,
+  requireTsExtensions,
+  preferAsyncAwait,
 };

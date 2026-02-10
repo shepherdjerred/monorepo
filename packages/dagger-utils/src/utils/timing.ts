@@ -2,7 +2,7 @@
  * Timing and logging utilities for CI/CD pipelines
  */
 
-/* eslint-disable no-console */
+ 
 
 /**
  * Log a message with timestamp prefix

@@ -147,11 +147,11 @@ export function Console({ sessionId, sessionName, onClose, onSwitchToChat }: Con
 
     void (async () => {
       const container = terminalRef.current;
-      if (!container) return;
+      if (!container) {return;}
 
       // Clear any existing canvases in the container
       while (container.firstChild) {
-        container.removeChild(container.firstChild);
+        container.firstChild.remove();
       }
 
       // Initialize ghostty WASM
@@ -163,7 +163,7 @@ export function Console({ sessionId, sessionName, onClose, onSwitchToChat }: Con
         fontSize: 14,
         fontFamily: '"Berkeley Mono", Menlo, Monaco, "Courier New", monospace',
         theme: terminalThemes[currentTheme],
-        scrollback: 10000,
+        scrollback: 10_000,
         smoothScrollDuration: 0,  // Disable smooth scrolling
         rows: 24,  // Set explicit initial size
         cols: 80,
@@ -299,7 +299,7 @@ export function Console({ sessionId, sessionName, onClose, onSwitchToChat }: Con
       // Auto-dismiss error after 10 seconds to prevent UI clutter
       errorTimeoutRef.current = setTimeout(() => {
         setError(null);
-      }, 10000);
+      }, 10_000);
     });
 
     return () => {

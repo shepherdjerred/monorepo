@@ -99,7 +99,7 @@ export function getFunctionPrompt(context: DeminifyContext): string {
   if (context.knownNames.size > 0) {
     parts.push("## Known name mappings");
     parts.push("These identifiers have already been renamed:");
-    const entries = Array.from(context.knownNames.entries()).slice(0, 20);
+    const entries = [...context.knownNames.entries()].slice(0, 20);
     for (const [original, suggested] of entries) {
       parts.push(`- \`${original}\` -> \`${suggested}\``);
     }
@@ -131,18 +131,18 @@ export function getFunctionPrompt(context: DeminifyContext): string {
   const func = context.targetFunction;
   const hints: string[] = [];
 
-  if (func.isAsync) hints.push("async function");
-  if (func.isGenerator) hints.push("generator function");
-  if (func.type === "arrow-function") hints.push("arrow function");
-  if (func.type === "method") hints.push("class method");
-  if (func.type === "constructor") hints.push("constructor");
-  if (func.type === "getter") hints.push("getter");
-  if (func.type === "setter") hints.push("setter");
+  if (func.isAsync) {hints.push("async function");}
+  if (func.isGenerator) {hints.push("generator function");}
+  if (func.type === "arrow-function") {hints.push("arrow function");}
+  if (func.type === "method") {hints.push("class method");}
+  if (func.type === "constructor") {hints.push("constructor");}
+  if (func.type === "getter") {hints.push("getter");}
+  if (func.type === "setter") {hints.push("setter");}
   if (func.params.length > 0) {
     const paramHints = func.params.map((p) => {
       let h = p.name || "[destructured]";
-      if (p.isRest) h = `...${h}`;
-      if (p.hasDefault) h = `${h}=default`;
+      if (p.isRest) {h = `...${h}`;}
+      if (p.hasDefault) {h = `${h}=default`;}
       return h;
     });
     hints.push(`parameters: (${paramHints.join(", ")})`);
@@ -173,7 +173,7 @@ export function getTopLevelPrompt(
   if (knownNames.size > 0) {
     parts.push("## Known name mappings");
     parts.push("These identifiers have already been renamed:");
-    const entries = Array.from(knownNames.entries()).slice(0, 30);
+    const entries = [...knownNames.entries()].slice(0, 30);
     for (const [original, suggested] of entries) {
       parts.push(`- \`${original}\` -> \`${suggested}\``);
     }
@@ -280,7 +280,7 @@ export function getBatchFunctionPrompt(
   if (knownNames && knownNames.size > 0) {
     parts.push("## Already renamed identifiers (for context)");
     parts.push("These names have been applied to the codebase:");
-    const entries = Array.from(knownNames.entries()).slice(0, 30);
+    const entries = [...knownNames.entries()].slice(0, 30);
     for (const [original, suggested] of entries) {
       parts.push(`- \`${original}\` → \`${suggested}\``);
     }

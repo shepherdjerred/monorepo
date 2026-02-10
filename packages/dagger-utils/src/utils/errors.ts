@@ -5,12 +5,13 @@
  * avoiding the vague "GraphQL request error" messages that Dagger throws by default.
  */
 
-import { Container, ReturnType } from "@dagger.io/dagger";
+import type { Container} from "@dagger.io/dagger";
+import { ReturnType } from "@dagger.io/dagger";
 
 /**
  * Result of executing a command that captures stdout, stderr, and exit code.
  */
-export interface ExecResult {
+export type ExecResult = {
   stdout: string;
   stderr: string;
   exitCode: number;

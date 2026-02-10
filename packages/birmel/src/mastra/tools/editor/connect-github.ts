@@ -79,7 +79,7 @@ export const connectGitHubTool = createTool({
       const embed = new EmbedBuilder()
         .setTitle("Connect GitHub Account")
         .setDescription("Click the button below to connect your GitHub account. This allows the bot to create pull requests on your behalf.")
-        .setColor(0x5865f2);
+        .setColor(0x58_65_F2);
 
       const row = new ActionRowBuilder<ButtonBuilderType>().addComponents(
         new ButtonBuilder()

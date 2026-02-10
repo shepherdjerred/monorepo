@@ -76,11 +76,11 @@ export type DeminifyFileOptions = {
 
 /** Main de-minification orchestrator */
 export class Deminifier {
-  private config: DeminifyConfig;
-  private client: ClaudeClient | OpenAIClient;
-  private batchClient: BatchDeminifyClient | null;
-  private openAIBatchClient: OpenAIBatchClient | null;
-  private cache: DeminifyCache | null;
+  private readonly config: DeminifyConfig;
+  private readonly client: ClaudeClient | OpenAIClient;
+  private readonly batchClient: BatchDeminifyClient | null;
+  private readonly openAIBatchClient: OpenAIBatchClient | null;
+  private readonly cache: DeminifyCache | null;
   private stats: DeminifyStats;
 
   constructor(config: DeminifyConfig) {
@@ -243,10 +243,10 @@ export class Deminifier {
     // Process functions in dependency order
     for (const funcId of processingOrder) {
       const func = graph.functions.get(funcId);
-      if (!func) continue;
+      if (!func) {continue;}
 
       // Skip if not in our filtered list
-      if (!functionsToProcess.some((f) => f.id === funcId)) continue;
+      if (!functionsToProcess.some((f) => f.id === funcId)) {continue;}
 
       emitProgress({
         phase: "deminifying",
@@ -282,11 +282,9 @@ export class Deminifier {
     const reassembled = reassemble(source, graph, results);
 
     // Verify result
-    if (!verifyReassembly(reassembled)) {
-      if (this.config.verbose) {
+    if (!verifyReassembly(reassembled) && this.config.verbose) {
         console.warn("Warning: Reassembled code may have syntax errors");
       }
-    }
 
     // Update final stats
     const clientStats = this.client.getStats();
@@ -315,7 +313,7 @@ export class Deminifier {
     // Find the IIFE wrapper if it exists (CommonJS pattern)
     // It's typically a function-expression that starts near position 0 and spans most of the source
     const sourceLength = graph.source.length;
-    const iifeWrapper = Array.from(graph.functions.values()).find((f) => {
+    const iifeWrapper = [...graph.functions.values()].find((f) => {
       return (
         f.type === "function-expression" &&
         f.start < 50 && // Starts near beginning
@@ -324,9 +322,9 @@ export class Deminifier {
     });
     const iifeWrapperId = iifeWrapper?.id;
 
-    return Array.from(graph.functions.values()).filter((func) => {
+    return [...graph.functions.values()].filter((func) => {
       // Skip the IIFE wrapper itself
-      if (func.id === iifeWrapperId) return false;
+      if (func.id === iifeWrapperId) {return false;}
 
       // Skip deeply nested functions (nested inside a non-wrapper parent)
       if (func.parentId && func.parentId !== iifeWrapperId) {
@@ -338,8 +336,8 @@ export class Deminifier {
       }
 
       // Skip by size
-      if (func.source.length < this.config.minFunctionSize) return false;
-      if (func.source.length > this.config.maxFunctionSize) return false;
+      if (func.source.length < this.config.minFunctionSize) {return false;}
+      if (func.source.length > this.config.maxFunctionSize) {return false;}
 
       return true;
     });
@@ -423,7 +421,7 @@ export class Deminifier {
 
     const result = await processor.processAll(source, graph, {
       // maxBatchTokens: computed from model context limit if not specified
-      ...(options?.maxBatchTokens !== undefined ? { maxBatchTokens: options.maxBatchTokens } : {}),
+      ...(options?.maxBatchTokens === undefined ? {} : { maxBatchTokens: options.maxBatchTokens }),
       verbose: this.config.verbose,
       onProgress: (progress) => {
         const progressUpdate: DeminifyProgress = {
@@ -533,10 +531,10 @@ export class Deminifier {
 
     let batchId: string;
     if (isOpenAI) {
-      if (!this.openAIBatchClient) throw new Error("OpenAI batch client not initialized");
+      if (!this.openAIBatchClient) {throw new Error("OpenAI batch client not initialized");}
       batchId = await this.openAIBatchClient.createBatch(contexts);
     } else {
-      if (!this.batchClient) throw new Error("Anthropic batch client not initialized");
+      if (!this.batchClient) {throw new Error("Anthropic batch client not initialized");}
       batchId = await this.batchClient.createBatch(contexts);
     }
 
@@ -560,7 +558,7 @@ export class Deminifier {
 
     // Poll for completion using the appropriate client
     if (isOpenAI) {
-      if (!this.openAIBatchClient) throw new Error("OpenAI batch client not initialized");
+      if (!this.openAIBatchClient) {throw new Error("OpenAI batch client not initialized");}
       await this.openAIBatchClient.waitForCompletion(batchId, {
         onStatusUpdate: (status: OpenAIBatchStatus) => {
           // Convert to common format for callback
@@ -585,7 +583,7 @@ export class Deminifier {
         },
       });
     } else {
-      if (!this.batchClient) throw new Error("Anthropic batch client not initialized");
+      if (!this.batchClient) {throw new Error("Anthropic batch client not initialized");}
       await this.batchClient.waitForCompletion(batchId, {
         onStatusUpdate: (status) => {
           options.onBatchStatus?.(status);
@@ -607,10 +605,10 @@ export class Deminifier {
     // Get results using the appropriate client
     let results: Map<string, DeminifyResult>;
     if (isOpenAI) {
-      if (!this.openAIBatchClient) throw new Error("OpenAI batch client not initialized");
+      if (!this.openAIBatchClient) {throw new Error("OpenAI batch client not initialized");}
       results = await this.openAIBatchClient.getResults(batchId, contexts);
     } else {
-      if (!this.batchClient) throw new Error("Anthropic batch client not initialized");
+      if (!this.batchClient) {throw new Error("Anthropic batch client not initialized");}
       results = await this.batchClient.getResults(batchId, contexts);
     }
 
@@ -682,7 +680,7 @@ export class Deminifier {
 
     // Check batch status using appropriate client
     if (isOpenAI) {
-      if (!this.openAIBatchClient) throw new Error("OpenAI batch client not initialized");
+      if (!this.openAIBatchClient) {throw new Error("OpenAI batch client not initialized");}
       const status = await this.openAIBatchClient.getBatchStatus(batchId);
 
       if (
@@ -717,7 +715,7 @@ export class Deminifier {
         });
       }
     } else {
-      if (!this.batchClient) throw new Error("Anthropic batch client not initialized");
+      if (!this.batchClient) {throw new Error("Anthropic batch client not initialized");}
       const status = await this.batchClient.getBatchStatus(batchId);
 
       if (status.status === "in_progress") {
@@ -746,10 +744,10 @@ export class Deminifier {
     // Get results using appropriate client
     let results: Map<string, DeminifyResult>;
     if (isOpenAI) {
-      if (!this.openAIBatchClient) throw new Error("OpenAI batch client not initialized");
+      if (!this.openAIBatchClient) {throw new Error("OpenAI batch client not initialized");}
       results = await this.openAIBatchClient.getResults(batchId, contexts);
     } else {
-      if (!this.batchClient) throw new Error("Anthropic batch client not initialized");
+      if (!this.batchClient) {throw new Error("Anthropic batch client not initialized");}
       results = await this.batchClient.getResults(batchId, contexts);
     }
 
@@ -822,13 +820,13 @@ export function createConfig(
   const defaults: Omit<DeminifyConfig, "apiKey"> = {
     provider: "openai",
     model: "gpt-5-nano",
-    maxTokens: 16384, // GPT-5 nano uses reasoning tokens, needs more headroom
+    maxTokens: 16_384, // GPT-5 nano uses reasoning tokens, needs more headroom
     cacheEnabled: true,
     cacheDir,
     concurrency: 3,
     rateLimit: 50,
     verbose: false,
-    maxFunctionSize: 50000,
+    maxFunctionSize: 50_000,
     minFunctionSize: 5, // Process almost all functions
   };
 

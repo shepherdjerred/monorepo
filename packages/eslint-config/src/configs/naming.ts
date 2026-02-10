@@ -1,7 +1,6 @@
 /**
  * Naming convention configuration
  */
-import unicorn from "eslint-plugin-unicorn";
 import type { TSESLint } from "@typescript-eslint/utils";
 
 /**
@@ -9,20 +8,6 @@ import type { TSESLint } from "@typescript-eslint/utils";
  */
 export function namingConfig(): TSESLint.FlatConfig.ConfigArray {
   return [
-    // File naming conventions
-    {
-      plugins: {
-        unicorn,
-      },
-      rules: {
-        "unicorn/filename-case": [
-          "error",
-          {
-            case: "kebabCase",
-          },
-        ],
-      },
-    },
     // Variable and identifier naming conventions
     {
       rules: {

@@ -31,11 +31,11 @@ const defaultVersions = {
 
 // Extract version numbers without SHA for tools
 const bunVersion = defaultVersions["oven/bun"].split("@")[0];
-if (bunVersion === undefined) throw new Error("Failed to parse bun version");
+if (bunVersion === undefined) {throw new Error("Failed to parse bun version");}
 defaultVersions.bun = bunVersion;
 
 const helmVersion = defaultVersions["alpine/helm"].split("@")[0];
-if (helmVersion === undefined) throw new Error("Failed to parse helm version");
+if (helmVersion === undefined) {throw new Error("Failed to parse helm version");}
 defaultVersions.helm = helmVersion;
 
 export type Versions = typeof defaultVersions;
