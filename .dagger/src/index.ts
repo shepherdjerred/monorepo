@@ -629,14 +629,9 @@ export class Monorepo {
     await container.sync();
     outputs.push("✓ Types copied to workspace");
 
-    // Step 3: Install dependencies for web workspace
+    // Web workspace dependencies are already installed by the root bun install
+    // (root package.json includes packages/clauderon/web/* as workspace members)
     outputs.push("\n--- Clauderon Web Packages ---");
-    container = container
-      .withWorkdir("/workspace/packages/clauderon/web")
-      .withExec(["bun", "install", "--frozen-lockfile"])
-      .withWorkdir("/workspace");
-    await container.sync();
-    outputs.push("✓ Web workspace dependencies installed");
 
     // Step 4: Build web packages in dependency order (now that types and deps exist)
     container = container
