@@ -1,0 +1,52 @@
+{
+  "name": "better-skill-capped",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "vite serve --host",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit",
+    "lint": "bunx eslint ."
+  },
+  "dependencies": {
+    "@fortawesome/fontawesome-free": "^7.1.0",
+    "@fortawesome/fontawesome-svg-core": "^7.1.0",
+    "@fortawesome/free-solid-svg-icons": "^7.1.0",
+    "@fortawesome/react-fontawesome": "^3.1.1",
+    "@sentry/react": "^10.29.0",
+    "axios": "^1.13.2",
+    "bulma": "^1.0.4",
+    "classnames": "^2.5.1",
+    "fuse.js": "^7.1.0",
+    "react": "^19.2.1",
+    "react-dom": "^19.2.1",
+    "react-highlight-words": "^0.21.0",
+    "react-redux": "^9.2.0",
+    "react-router-dom": "^7.10.1",
+    "typescript": "^5.9.3"
+  },
+  "devDependencies": {
+    "@shepherdjerred/eslint-config": "workspace:*",
+    "@types/node": "^25.0.0",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "@types/react-highlight-words": "^0.20.0",
+    "@types/react-router-dom": "^5.3.3",
+    "@vitejs/plugin-react": "^5.1.1",
+    "sass": "^1.94.2",
+    "vite": "^7.2.6"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}

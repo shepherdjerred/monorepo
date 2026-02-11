@@ -1,0 +1,8 @@
+---
+import Footer from "./Footer.astro";
+---
+
+<div class:list={`min-h-screen flex flex-col bg-gray-100 dark:bg-black`}>
+  <div class:list={`flex-1`}><slot /></div>
+  <Footer />
+</div>

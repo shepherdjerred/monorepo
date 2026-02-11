@@ -1,0 +1,350 @@
+---
+title: Writing TypeScript with AI
+description: TODO
+date: 2025-11-19Z-0700
+hackerNews: https://news.ycombinator.com/item?id=TODO
+starred: true
+isDraft: true
+---
+
+I've had a great experience using [Cursor](https://cursor.com/), so I wanted to share how I use it.
+
+Here's how I tend to use AI in my TypeScript projects. For reference, here are a few projects I've worked on with AI recently:
+
+- [Scout for League of Legends](https://github.com/shepherdjerred/scout-for-lol)
+- [Homelab](https://github.com/shepherdjerred/homelab)
+- [sjer.red](https://github.com/shepherdjerred/sjer.red)
+
+## Background
+
+Go over the type of projects I work on. Introduce what a few examples of what I've built with AI recently.
+
+## Approach
+
+Explain what I do to use AI effectively
+
+### Larger Features
+
+Having AIs plan out tasks is essential for larger chunks of work. This has become much easier in Cursor with the introduction of [plan]() mode. Previously I would have the AI write a Markdown document explaining every piece of work it wanted to do. I'd then have it split that document into smaller chunks. Then I'd give it one file at a time until the entire feature was implemented.
+
+I also have the AI identify what commands it might need to run, e.g. to lint, build, or run tests. I put this into the context when building the larger features so it can easily iterate and run the tools that it needs to make progress.
+
+Examples:
+
+- https://github.com/shepherdjerred/scout-for-lol/tree/080824b790e6f62e2579a727dc1611c3ad849e0f/ai_dev_log/competition/tasks
+- https://github.com/shepherdjerred/scout-for-lol/blob/main/ai_dev_log/competition/DEVELOPMENT_CHEATSHEET.md
+
+### Guardrails
+
+#### Cursor Rules
+
+Cursors [rules](https://cursor.com/docs/context/rules) are very effective at steering the AI towards your style.
+
+More examples:
+
+- https://github.com/shepherdjerred/scout-for-lol/tree/080824b790e6f62e2579a727dc1611c3ad849e0f/.cursor/rules
+
+#### Static Analysis
+
+I've always been a fan of statically typed languages. There are so many kinds of bugs that a compiler can catch. With AI, statically typed languages get another benefit: both you and the AI can have a better understanding of the correctness of generated code.
+
+In practice this means I make sure my tsc and eslint configs are strict. I enable [linting with type information](https://typescript-eslint.io/getting-started/typed-linting) so the deeper analysis can be done.
+
+tsconfig.json
+
+```json
+{
+  "compilerOptions": {
+    "strict": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
+    "exactOptionalPropertyTypes": false,
+    "noImplicitReturns": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "useUnknownInCatchVariables": true,
+    "noUncheckedSideEffectImports": true,
+    "noEmitOnError": true,
+    "forceConsistentCasingInFileNames": true
+  }
+}
+```
+
+eslint.config.ts:
+
+```typescript
+import eslint from "@eslint/js";
+import { defineConfig } from "eslint/config";
+import tseslint from "typescript-eslint";
+// @errors: 2345 1005
+export default defineConfig(
+  eslint.configs.recommended,
+  tseslint.configs.strictTypeChecked,
+  tseslint.configs.stylisticTypeChecked,
+  {
+    languageOptions: {
+      parserOptions: {
+        projectService: true,
+      },
+    },
+  },
+);
+```
+
+##### Custom Eslint Rules
+
+In addition to enable the strict default config for eslint, I also write plenty of eslint rules. This is incredibly easy with AI. I can use eslint as an automatic feedback mechanism to force the AI to take a particular approach, avoid certain behaviors, etc.
+
+As an example, I really dislike doing deep nested checks in TypeScript. I much rather use Zod. I have a rule to prevent AI from doing these kinds of checks.
+
+Example:
+
+```typescript
+const a: unknown = {
+  x: {
+    y: "some_value",
+  },
+};
+
+// I dislike this
+if (
+  typeof a === "object" &&
+  a !== null &&
+  "x" in a &&
+  typeof a.x === "object" &&
+  a.x !== null &&
+  "y" in a.x &&
+  typeof a.x.y === "string"
+) {
+  console.log(a.x.y); // Finally can access it safely
+}
+
+// I prefer this
+import { z } from "zod";
+
+const schema = z.object({
+  x: z.object({
+    y: z.string(),
+  }),
+});
+
+const result = schema.safeParse(a);
+if (result.success) {
+  console.log(result.data.x.y);
+} else {
+  // didn't match
+}
+```
+
+Here's an example of this rule in my `eslint.config.ts`:
+
+TODO: we probably need a complete example here
+
+```typescript
+// @errors: 2695 2552 1005 1109
+{
+  selector: "UnaryExpression[operator='typeof']:not([argument.name='Bun'])",
+  message: "Prefer Zod schema validation over typeof operator. Use z.string(), z.number(), etc. instead.",
+}
+```
+
+You can also write more complicated eslint rules. For example I noticed the AI occasionally using Zod to typecheck when the types already matched. AI can write these custom rules very effectively, too.
+
+TODO: collapse this
+
+```typescript
+import { AST_NODE_TYPES, ESLintUtils, type TSESTree } from "@typescript-eslint/utils";
+
+const createRule = ESLintUtils.RuleCreator(
+  (name) => `https://github.com/shepherdjerred/homelab/blob/main/eslint-rules/${name}.ts`,
+);
+
+export const noRedundantZodParse = createRule({
+  name: "no-redundant-zod-parse",
+  meta: {
+    type: "problem",
+    docs: {
+      description: "Disallow parsing values with Zod when the type is already known and matches the schema output",
+    },
+    messages: {
+      redundantParse:
+        "Redundant Zod parse: the value '{{valueName}}' already has type '{{valueType}}' which matches the schema output. Zod validation is for unknown/untrusted data.",
+    },
+    schema: [],
+    hasSuggestions: false,
+  },
+  defaultOptions: [],
+  create(context) {
+    const services = ESLintUtils.getParserServices(context);
+    const checker = services.program.getTypeChecker();
+
+    function isZodSchema(node: TSESTree.Node): boolean {
+      try {
+        const tsNode = services.esTreeNodeToTSNodeMap.get(node);
+        const type = checker.getTypeAtLocation(tsNode);
+        const typeString = checker.typeToString(type);
+
+        return (
+          typeString.includes("Zod") ||
+          typeString.includes("ZodType") ||
+          typeString.includes("ZodString") ||
+          typeString.includes("ZodNumber") ||
+          typeString.includes("ZodBoolean") ||
+          typeString.includes("ZodArray") ||
+          typeString.includes("ZodObject") ||
+          typeString.includes("ZodRecord") ||
+          typeString.includes("ZodUnion") ||
+          typeString.includes("ZodLazy") ||
+          typeString.includes("ZodLiteral") ||
+          typeString.includes("ZodEnum") ||
+          typeString.includes("ZodNativeEnum")
+        );
+      } catch {
+        return false;
+      }
+    }
+
+    function getValueName(node: TSESTree.Node): string {
+      if (node.type === AST_NODE_TYPES.Identifier) {
+        return node.name;
+      }
+      return context.sourceCode.getText(node);
+    }
+
+    function isUnknownOrAny(typeString: string): boolean {
+      return typeString === "unknown" || typeString === "any";
+    }
+
+    function isInSafeParseConditional(
+      parseCallNode: TSESTree.CallExpression,
+      schemaNode: TSESTree.Node,
+      argument: TSESTree.Node,
+    ): boolean {
+      // Check if this parse call is inside a conditional that checks safeParse().success
+      // Pattern: safeParse(x).success ? [parse(x)] : []
+
+      let parent: TSESTree.Node | undefined = parseCallNode.parent;
+
+      // Look up the tree to find a ConditionalExpression
+      while (parent !== undefined) {
+        if (parent.type === AST_NODE_TYPES.ConditionalExpression) {
+          const test = parent.test;
+
+          // Check if the test is a .success member access
+          if (
+            test.type === AST_NODE_TYPES.MemberExpression &&
+            test.property.type === AST_NODE_TYPES.Identifier &&
+            test.property.name === "success"
+          ) {
+            // Check if the object is a safeParse call
+            if (
+              test.object.type === AST_NODE_TYPES.CallExpression &&
+              test.object.callee.type === AST_NODE_TYPES.MemberExpression &&
+              test.object.callee.property.type === AST_NODE_TYPES.Identifier &&
+              test.object.callee.property.name === "safeParse"
+            ) {
+              // Check if it's the same schema
+              const safeParseSchema = test.object.callee.object;
+              const safeParseArg = test.object.arguments[0];
+
+              // Compare schema and argument
+              const isSameSchema =
+                context.sourceCode.getText(safeParseSchema) === context.sourceCode.getText(schemaNode);
+              const isSameArg =
+                safeParseArg !== undefined &&
+                context.sourceCode.getText(safeParseArg) === context.sourceCode.getText(argument);
+
+              if (isSameSchema && isSameArg) {
+                return true;
+              }
+            }
+          }
+        }
+        parent = parent.parent;
+      }
+
+      return false;
+    }
+
+    return {
+      CallExpression(node) {
+        // Check if this is a .parse() or .safeParse() call
+        if (
+          node.callee.type === AST_NODE_TYPES.MemberExpression &&
+          node.callee.property.type === AST_NODE_TYPES.Identifier &&
+          (node.callee.property.name === "parse" || node.callee.property.name === "safeParse") &&
+          node.arguments.length > 0
+        ) {
+          const schemaNode = node.callee.object;
+          const argument = node.arguments[0];
+
+          // TypeScript guard - argument should exist due to length check above
+          if (!argument) {
+            return;
+          }
+
+          // Check if the callee is a Zod schema
+          if (!isZodSchema(schemaNode)) {
+            return;
+          }
+
+          // Skip if this is only a safeParse call (we only want to check parse calls)
+          if (node.callee.property.name === "safeParse") {
+            return;
+          }
+
+          try {
+            // Get the input argument's type
+            const argTsNode = services.esTreeNodeToTSNodeMap.get(argument);
+            const argType = checker.getTypeAtLocation(argTsNode);
+            const argTypeString = checker.typeToString(argType);
+
+            // Skip if the argument is unknown or any - those SHOULD be validated
+            if (isUnknownOrAny(argTypeString)) {
+              return;
+            }
+
+            // Get the return type of the entire parse() call expression
+            const parseCallTsNode = services.esTreeNodeToTSNodeMap.get(node);
+            const parseReturnType = checker.getTypeAtLocation(parseCallTsNode);
+            const parseReturnTypeString = checker.typeToString(parseReturnType);
+
+            // If the argument type already matches the parse return type, it's redundant
+            // This works for both primitive types and branded types
+            if (argTypeString === parseReturnTypeString) {
+              // Don't flag if this parse is part of a safeParse check pattern
+              // Pattern: safeParse(x).success ? [parse(x)] : []
+              if (isInSafeParseConditional(node, schemaNode, argument)) {
+                return;
+              }
+
+              context.report({
+                node: node.callee.property,
+                messageId: "redundantParse",
+                data: {
+                  valueName: getValueName(argument),
+                  valueType: argTypeString,
+                },
+              });
+            }
+          } catch {
+            // If we can't analyze the types, don't report
+            return;
+          }
+        }
+      },
+    };
+  },
+});
+```
+
+More examples:
+
+- https://github.com/shepherdjerred/scout-for-lol/blob/080824b790e6f62e2579a727dc1611c3ad849e0f/eslint.config.ts
+- https://github.com/shepherdjerred/scout-for-lol/tree/080824b790e6f62e2579a727dc1611c3ad849e0f/eslint-rules
+
+### Unit and Integration Tests

@@ -1,0 +1,269 @@
+---
+title: "Constraining TypeScript function parameters"
+date: 2024-12-20Z-0700
+---
+
+Recently I was working on a generic table component. I wanted to allow developers to use it for any data type. I also wanted to handle common concerns like sorting and filtering contents of the table.
+
+This got tricky to do in a type-safe way. Not all columns should be considered sortable, so the type system would need some way to differentiate column types. Data can be sorted in many ways, so I also needed to allow the user to define how sorts should occur, and the user should define this for every sortable column. I wouldn't want to the user to forget to provide a sort function for a column that is sortable.
+
+This is a complex problem. How do we make sure that:
+
+- The user can pass in arbitrary rows
+- The user can define columns for those rows
+- The user can define which columns are sortable
+- The user provides a sort function for each sortable column
+
+My original approach was something like this:
+
+```typescript
+type Direction = "asc" | "desc";
+
+type Sort = {
+  key: string;
+  direction: Direction;
+};
+
+type Column = {
+  key: string;
+  title: string;
+  sortable?: boolean;
+};
+
+type Props = {
+  rows: object[];
+  columns: Column[];
+  sort: Sort;
+  onSort: (newSort: Sort) => void;
+};
+
+export function Table(props: Props) {
+  // omitted for brevity
+}
+```
+
+This would work, but it's easy to pass in the wrong types. For example:
+
+```typescript
+type Direction = "asc" | "desc";
+
+type Sort = {
+  key: string;
+  direction: Direction;
+};
+
+type Column = {
+  key: string;
+  title: string;
+  sortable?: boolean;
+};
+
+type Props = {
+  rows: object[];
+  columns: Column[];
+  sort: Sort;
+  onSort: (newSort: Sort) => void;
+};
+
+export function Table(props: Props) {
+  // omitted for brevity
+}
+
+// ---cut---
+
+const rows = [{ name: "John", birthday: "04/12/1997" }];
+const columns = [
+  { key: "name", title: "Name", sortable: true },
+  { key: "gender", title: "Gender" },
+];
+const sort: Sort = {
+  key: "birthday",
+  direction: "asc",
+};
+const onSort = (sort: Sort) => {
+  if (sort.key === "birthday") {
+    // sort
+  }
+};
+
+// pretend this is a React component and not a function call
+Table({ rows, columns, onSort, sort });
+```
+
+In the above example the user added a column that doesn't exist on the data and didn't pass in a function to handle sorting names. It's really easy to make a mistake and misuse this component.
+
+How can we make this better? Here's what I came up with:
+
+```typescript
+type Column<K extends string> = {
+  key: K;
+  title: string;
+  sortable: boolean;
+};
+
+type Direction = "asc" | "desc";
+
+type Sort<K extends string> = {
+  key: K;
+  direction: Direction;
+};
+
+// determine which columns are sortable
+type Sortable<T> = Extract<T, { sortable: true }>;
+
+type Props<R extends object, C extends Column<Extract<keyof R, string>>, SortableKey extends Sortable<C>["key"]> = {
+  rows: R[];
+  cols: C[];
+  sort: Sort<SortableKey>;
+  onSort: (newSort: Sort<SortableKey>) => void;
+};
+
+// enforce that the passed in sort's `key` allows all _sortable_ columns
+function Table<R extends object, C extends Column<Extract<keyof R, string>>, SortableKey extends Sortable<C>["key"]>({
+  rows,
+  cols,
+  sort,
+  onSort,
+}: Props<R, C, SortableKey>) {
+  // omitted for brevity
+}
+
+const rows = [
+  {
+    name: "John",
+    birthday: "04/12/1997",
+  },
+];
+
+const cols = [
+  {
+    key: "name",
+    title: "Name",
+    sortable: false,
+  },
+  {
+    key: "birthday",
+    title: "Birthday",
+    sortable: true,
+  },
+] satisfies Column<Extract<keyof (typeof rows)[number], string>>[];
+```
+
+Here's what it looks like in action:
+
+```typescript
+type Column<K extends string> = {
+  key: K;
+  title: string;
+  sortable: boolean;
+};
+
+type Direction = "asc" | "desc";
+
+type Sort<K extends string> = {
+  key: K;
+  direction: Direction;
+};
+
+// determine which columns are sortable
+type Sortable<T> = Extract<T, { sortable: true }>;
+
+type Props<R extends object, C extends Column<Extract<keyof R, string>>, SortableKey extends Sortable<C>["key"]> = {
+  rows: R[];
+  cols: C[];
+  sort: Sort<SortableKey>;
+  onSort: (newSort: Sort<SortableKey>) => void;
+};
+
+// enforce that the passed in sort's `key` allows all _sortable_ columns
+function Table<R extends object, C extends Column<Extract<keyof R, string>>, SortableKey extends Sortable<C>["key"]>({
+  rows,
+  cols,
+  sort,
+  onSort,
+}: Props<R, C, SortableKey>) {
+  // omitted for brevity
+}
+
+const rows = [
+  {
+    name: "John",
+    birthday: "04/12/1997",
+  },
+];
+
+const cols = [
+  {
+    key: "name",
+    title: "Name",
+    sortable: false,
+  },
+  {
+    key: "birthday",
+    title: "Birthday",
+    sortable: true,
+  },
+] satisfies Column<Extract<keyof (typeof rows)[number], string>>[];
+
+// ---cut---
+// this should work
+Table({
+  rows,
+  cols,
+  sort: { key: "birthday", direction: "desc" },
+  onSort: (key) => {},
+});
+
+// @errors: 2322
+// should not work -- trying to sort on a column that isn't sortable
+Table({
+  rows,
+  cols,
+  sort: {
+    key: "name",
+    direction: "desc",
+  },
+  onSort: (sort: Sort<"birthday">) => {
+    // do sort
+  },
+});
+
+// should not work -- not providing a sort function for all sortable columns
+Table({
+  rows,
+  cols,
+  sort: {
+    key: "birthday",
+    direction: "desc",
+  },
+  onSort: (sort: Sort<"name">) => {
+    // do sort
+  },
+});
+
+// should not work -- trying to create a column that doesn't exist on the rows
+Table({
+  rows,
+  cols: [
+    ...cols,
+    {
+      key: "gender",
+      title: "Gender",
+      sortable: false,
+    },
+  ],
+  sort: {
+    key: "birthday",
+    direction: "desc",
+  },
+  onSort: (sort: Sort<"name">) => {
+    // do sort
+  },
+});
+```
+
+It handles all of the cases I was concerned about. You can't pass in an invalid sorting configuration, column configuration, and the user must handle all of the sorting cases that they claim to support.
+
+This was one of the more complex TypeScript types that I've written. I've found TypeScript to be incredibly flexible, though it requires quite a bit of time to understand how to effectively use the type system.
+
+If you're interesting in learning more I'd highly suggest checking out [Type-Level TypeScript](https://type-level-typescript.com/) and/or [Total TypeScript](https://www.totaltypescript.com/).

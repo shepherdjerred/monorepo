@@ -1,0 +1,8 @@
+{
+  "config": {
+    "line-length": {
+      "line_length": "disabled",
+    },
+  },
+  "ignores": ["test-results/**"],
+}

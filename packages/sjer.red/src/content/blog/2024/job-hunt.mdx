@@ -1,0 +1,430 @@
+---
+title: My 2024 Job Hunt
+description: Finding a software job in 2024
+date: 2024-09-16Z-0700
+hackerNews: https://news.ycombinator.com/item?id=41564241
+starred: true
+---
+
+import { Image } from "astro:assets";
+import todoistLight from "./job-hunt/todoist-light.png";
+import todoistDark from "./job-hunt/todoist-dark.png";
+
+I lost my job at [Posit](https://posit.co/) rather suddenly in June. This ended up being rather convenient since I had already been looking for a new job and it's significantly easier to grind LeetCode while you're unemployed. After about ~2 months of studying, applying, and interviewing I found a great spot at Pinterest.
+
+The main goal of this post is to share my experience and help others who are preparing a job search of their own. I was extremely lucky with my circumstances so this advice won't directly map to anyone's experience. Hopefully it can serve as a good starting point.
+
+## tl;dr
+
+- Look at the [Tech Interview Handbook](https://www.techinterviewhandbook.org/).
+- Start applying _now_, today, way before you're ready to interview.
+- You won't hear anything back for the first 2-4 weeks. It sucks. Be patient.
+- Track your applications using [Todoist](https://todoist.com/) or a spreadsheet.
+- Pay for LeetCode Premium. The editorials are worth every penny.
+- When LeetCoding, focus on one type of problem, e.g. backtracking. Master that technique and move on to the next.
+- LeetCode is a lot of work and it isn't easy. Ideally you would sacrifice a 4-6 hours a day for a month so that you have a much better job during the next few years.
+
+## Table of Contents
+
+## Stats
+
+Here's what my job search looked like:
+
+```mermaid
+---
+config:
+  sankey:
+    showValues: true
+---
+sankey-beta
+
+%% Identified: I was interested in this company/position
+%% Applied: I applied for a specific position at a company
+Identified, Applied, 103
+%% Backlog: This company was on my list on where to apply next
+Identified, Backlog, 45
+%% Skipped: This company didn't have relevant positions
+%% or it didn't match my criteria, e.g. pay, location, interest, etc.
+Identified, Skipped, 38
+
+%% Rejected: I applied an received an explicit rejectino
+Applied, Rejected, 41
+%% Screener: I applied, heard back, and received at least an assessment, recruiter call, etc.
+Applied, Screener, 11
+%% Ghosted: I applied and didn't hear back
+Applied, Ghosted, 51
+
+%% Rejected: I received at least a screener interview/assessment and didn't pass or there were no relevant positinos
+%% Palantir: passed, no relevant positions
+%% Anthropic: passed, no relevant positions
+%% Google: passed, no relevant positions
+%% Efficient: not enough experience
+%% Sonic Infra: went with another candidate
+Screener, Rejected, 5
+
+%% Ghosted: interviewed in some capacity and never heard back
+%% Momentic: chatted with founder, completed technical assessment, never heard back
+%% Strac: chatted with founder, completed take home project, never heard back
+Screener, Ghosted, 2
+
+%% Interviewing: I made it past the screening interview, initial assement, recruiter call, etc.
+%% Another way to think of it: I had at least two interviews/real interactions with this company/position
+%% Pinterest
+%% Adobe
+%% TerraPower
+%% AllSpice
+Screener, Interviewing, 4
+
+%% Ghosted: I was interviewing and the company didn't get back to me about next steps
+%% AllSpice: passed interviews, asked for $215k, was then ghosted
+Interviewing, Ghosted, 1
+
+%% Offer: I received an offer, or I expected to receive one
+%% Pinterest: I received a formal offer
+%% Adobe: did well in interviews, but I received an offer from Pinterest
+%% TerraPower: interviews were going well, decided the company was too old school
+Interviewing, Offer, 3
+
+%% Accepted:
+%% Pinterest :)
+Offer, Accepted, 1
+```
+
+Key:
+
+- **Identified**: This includes every position/company that I found interesting or who reached out to me.
+- **Backlog**: Companies that I was applying to next.
+- **Skipped**: Companies that I considered, but who didn't have any open positions that met my search criteria, e.g. location or compensation.
+- **Applied**: Specific positions that I applied to.
+- **Rejected**: Positions that I received an explicit rejection.
+- **Ghosted**: Positions where the company didn't reply to me after applying, interviewing, etc.
+- **Screener**: Positions where I received at least a recruiter call, online asssement, etc.
+- **Interviewing**: Positions where I made it past a screener.
+- **Offer**: Positions that I received an offer.
+- **Accepted**: The only offer I said yes to (Pinterest).
+
+I applied to a _lot_ of positions. On average, it seemed to take 2-4 weeks to hear back for a given application whether it be a rejection or not. During those first four weeks I figured there must be something fundamentally wrong with my applications or résumés. Eventually, though, you start to hear back and get emails from recruiters.
+
+I didn't hear back at all for nearly half of my applications. Rejections seemed to be almost instant or delayed by a month (or even 2-3 months in some cases).
+
+Interviews for any given company took around a month from first contact to receive an offer.
+
+One interesting aspect of my search is that I would've accepted (relatively) low-paying offers had I received an offer sooner. I was intimidated by LeetCode interviews at the start of my job search. I would have taken a low offer due to my lack of confidence. As I studied I started to realize that I could pass difficult interviews. As a result, I changed my goal from "find a job that pays 10%-20% more than my previous one" to "find a job that doubles my compensation". Of course, those weren't my only criteria, but I knew what to shoot for.
+
+## My Strategy
+
+### Applying
+
+I started applying for jobs before I did anything else, including updating my résumé (aside from quick edits) or studying/LeetCoding. I wanted the pressure of interviews to be present. I think this is an especially great strategy if you are currently working. It's too easy to let interview prep fall to the wayside and as a result end up stuck. Having interviews gives you external motivation to continue studying.
+
+Applications are soul-sucking. You upload your résumé and the site happily fills in the HTML form incorrectly. some services are better than others (shout out to [Ashby](https://www.ashbyhq.com/)).
+
+I ended up keeping a text document open with things I frequently copy-paste into applications, e.g. my job descriptions. I also kept track of answers I wrote for questions like "why do you want to work here", so that I could re-use answers for applications at the same company, or to tweak answers for other companies.
+
+The majority of jobs that I applied for were done online. I'd search for the company and head to their careers page. I also asked for my friends at companies to refer me.
+
+Here are some places to find companies to apply to:
+
+- My [company list](#company-list) at the end of this post
+- The GitHub [Hiring Without Whiteboards](https://github.com/poteto/hiring-without-whiteboards) list
+- [Wellfound](https://wellfound.com/)
+- Hacker News
+  - The monthly HN who's hiring thread
+  - The monthly HN who wants to be hired thread
+    - I received several good leads, one of which led to an offer
+  - [hnhiring.com](https://hnhiring.com/) makes it easy to browse through the openings
+- [Work at a Startup](https://www.workatastartup.com)
+  - I really can't reccommend this site. I heard responses from two companies. Both had me do an asssement or take-home project, etc. and then ghosted me. In one case, they had me record and upload a video, and then didn't even watch it (I know because Loom has a view counter).
+
+Some people reccommend using LinkedIn to find and apply to jobs. I didn't take this approach since I don't have a LinkedIn.
+
+### Tracking Applications
+
+I used [Todoist](https://todoist.com/) to track my applications. It's very useful to know at a glance what you're doing and where you want to apply next. In a few interviews I found it useful to remember what I had applied to at a particular company. I had columns for each status that I wanted to track. I'd update the status of these notes as I received interviews, rejection emails, etc.
+
+<Image src={todoistLight} class="dark:hidden" alt="My Todoist job search board" />
+<Image src={todoistDark} class="hidden dark:block" alt="My Todoist job search board" />
+
+I started by thinking of companies whose products I liked and added them to the backlog. Next, I would go company-by-company and apply to 3-4 open jobs, creating a new note for each job I applied to with the date of my application and a link to the opening.
+
+I don't think Todoist is necessarily the perfect tool for this, but it was easier to organize (for me) than a spreadsheet. I've also seen services like [huntr](https://huntr.co/) that help with this.
+
+### Résumé
+
+I don't have any special insight about résumés; I don't even think that [my résumé](https://github.com/shepherdjerred/resume/) is very good. All I'd suggest is that you update your résumé and ask a friend, preferably someone in software, to review it.
+
+Here are some resources that I found:
+
+- [How one company evaluates résumés](https://huyenchip.com/2023/01/24/what-we-look-for-in-a-candidate.html)
+- [Résumé advice](https://stackoverflow.blog/2020/11/25/how-to-write-an-effective-developer-resume-advice-from-a-hiring-manager/)
+- [Service from levels.fyi (I didn't use this, but it looks interesting)](https://www.levels.fyi/services/resume)
+
+## Preparing for Interviews
+
+There are three types of interviews to prepare for:
+
+- Data Structures and Algorithms
+- System Design
+- Behavioral
+
+### Data Structures and Algorithms
+
+#### LeetCode
+
+This is by far where I spent most of my time. Technical interviews I had ranged from being asked to implement topological sort to "how would you get out of guarded room with a gun and one bullet?".
+
+I've struggled for years with LeetCode. I was asked very easy questions when interviewing for my AWS internship, and I received a return offer so I never _really_ had passed a LeetCode interview. My only experience with LeetCode interviews was with Google in 2018, and it did not go well (at all).
+
+What helped this time was drastically changing how I studied. Here's what I did:
+
+1. Buy LeetCode Premium. The editorials are how I did most of my learning. I found out that I didn't really understand many concepts like backtracking or sliding window. There are community answers, but the editorials are of much higher quality and are more consistent.
+1. Start by completing easy questions. Yes, you will be asked medium/hard questions in interviews. Easy questions will help build your confidence and introduce you to core concepts. I used [this list of questions](https://leetcode.com/explore/interview/card/top-interview-questions-easy/) to start out with, though I skipped most of the "Math" and "Others".
+1. Move on to studying particular data strutures, algorithms, and patterns. My list of topics is below.
+1. Study specific questions that have been asked recently at the company you're interviewing at. You can find these on LeetCode (especially in the company discussion), Blind, Glassdoor, etc.
+   - I wasn't asked any company questions, but studying them did make me feel more confident and prepared.
+
+<details class="border border-black dark:border-white p-2">
+  <summary>Click to expand</summary>
+
+I know that this is an absurd amount to cover. You can skip some areas based on where you're applying (e.g. many compaines don't ask dynamic programming questions), but I feel that most of these topics can be useful and having a mastery over all of these topics will make you feel extremely confident in your preparation.
+
+Additionally, all of these techniques are something that you'll only need to learn once and can quickly refresh on during your next job hunt.
+
+- Array
+- Backtracking
+- Strings
+- Hash Table
+- Recursion
+- Sorting
+  - Counting Sort
+  - Cyclic Sort
+- Searching
+  - Binary Search
+- Matrix
+- Linked List
+- Queue
+- Two pointers
+- Divide and conquer
+- Sliding Window
+- Stack
+- Tree
+  - DFS
+    - Iterative and Recursive
+  - BFS
+    - Iterative and Recursive
+- Graph
+  - DFS
+    - Iterative
+  - BFS
+    - Bidirectional
+- Topological Sort
+- Heap
+  - Two heaps
+  - K-way-merge
+  - Top K elements
+- Trie
+- Intervals
+- Dynamic Programming
+  - Top down
+  - Bottom up
+  - Recursion
+  - Iterative
+- Shortest path algorithm
+- Monotonic Stack
+- Prefix sum
+- Union find/disjoint union
+- Greedy algorithms
+- Binary
+  - XOR
+- Spanning tree/minimal spanning tree
+
+You can see the full list of questions that I studied [here](/leetcode/)
+
+</details>
+
+My goal was to complete 150 questions. I only [finished ~115](/leetcode/), but that's still enough that I felt fairly confident going into my technical interviews at the end.
+
+#### Anki
+
+I used Anki to memorize common algorithms, Java APIs, or other information I might need to know during an interview. I used [algodeck](https://github.com/teivah/algodeck) as a starting point while adding my own cards for anything additional that I needed to know. [This repository](https://github.com/shepherdjerred/anki/blob/main/interview.md) has the extra cards that I created.
+
+#### More Resources
+
+Here are some additional resources that might be helpful. There are some more structured courses/sites below that might work well if you have plenty of time to prepare.
+
+- [LeetCode patterns](https://seanprashad.com/leetcode-patterns/)
+- [Grid 75](https://www.techinterviewhandbook.org/grind75)
+- [Flowchart to determine approach](https://algo.monster/flowchart)
+- [Educative's course](https://www.educative.io/)
+- [Neetcode's course](https://neetcode.io/)
+- [AlgoMonster's course](https://algo.monster/)
+
+### System Design
+
+I had never done a system design interview, so I was a bit nervous. I did have a pratical understanding of distributed systems from my time at AWS and I studied the theory in my [distributed computing course](https://omscs.gatech.edu/cs-7210-distributed-computing) at Georgia Tech. I ended up not doing much prep for these interviews since I was focusing so much on LeetCode.
+
+I did read some of the [System Design Interview](https://www.amazon.com/System-Design-Interview-insiders-Second/dp/B08CMF2CQF/) book which was useful to solve some common problems and understand what interviewers might be looking for. I also did a couple of mock interviews with a friend which was extremely useful. Lastly, I also used Anki to study the [designdeck](https://github.com/teivah/designdeck) which helped me learn new concepts and refresh on ones I'd previously learned.
+
+### Behavioral
+
+I did even less to prep for behavioral interviews. I didn't feel the need to prepare common questions/answers. I feel like I'm a reasonable enough person, so just being myself is best. I did come up with a list of questions to ask my interviewer so that I could get more insight into the company.
+
+## Negotiating an Offer
+
+I'd never really negotiated an offer before, and honestly I didn't do a very good job or follow any of this advice that I read. Again, I don't think I have useful advice here, so I'll link some of the resources I found:
+
+- [Salary negotiation tips](https://www.kalzumeus.com/2012/01/23/salary-negotiation/)
+- [Understanding equity (useful for startup offers)](https://github.com/jlevy/og-equity-compensation)
+
+## More Resources
+
+Here are some interesting resources that I found useful during these last couple months that aren't necessarily directly relevant to the above sections.
+
+- [The dynamics of interviews](https://ludic.mataroa.blog/blog/the-complex-problem-of-lying-for-jobs/)
+- [General studying advice](https://cse.buffalo.edu/~rapaport/howtostudy.html)
+- [Understanding your value in a business as an engineer](https://www.kalzumeus.com/2011/10/28/dont-call-yourself-a-programmer/)
+- [Advice for recruiters](https://www.joelonsoftware.com/category/reading-lists/recruiter/)
+- [A blog that makes me feel better about the industry](https://ludic.mataroa.blog/)
+
+### Company List
+
+Here's a list of the companies that I considered, about half of which I applied to. They range from startups to big tech. They might be useful for someone looking for companies to apply to.
+
+<details class="border border-black dark:border-white p-2">
+<summary>Click to expand</summary>
+
+- Adobe
+- Affinity
+- AIM
+- Airbnb
+- Aircover
+- AllSpice
+- Amazon
+- Anarchy Labs
+- Anthropic
+- Antithesis
+- Apple
+- Archera
+- Ashby
+- Atlassian
+- Atomic Jar
+- Aurelian
+- Blue Origin
+- Brinc
+- Bun
+- Canonical
+- Carta
+- Cisco
+- Cloudflare
+- Code
+- Coinbase
+- Continua
+- Databricks
+- Datadog
+- Deno
+- Digital Ocean
+- Discord
+- Disney
+- Docker
+- DoorDash
+- Duolingo
+- Duranta
+- Flexport
+- FlowDeploy
+- Fly.io
+- Full context
+- Galvanick
+- GitHub
+- GitLab
+- GitStart
+- GoodRX
+- Google
+- Gordian Software
+- Grafana
+- Hudson River Trading
+- IMC
+- Instacart
+- Intel
+- Intuit
+- Kagi
+- Kanary
+- LangChain/LangSmith
+- Linear
+- Lithos Carbon
+- Loom
+- Lyft
+- Mark43
+- Meta
+- Microsoft
+- Microsoft DevDiv
+- Mixpanel
+- Mojang
+- Momentic
+- Mozilla
+- NanoNets
+- Netflix
+- Netlify
+- Nintendo
+- Notion
+- Obsidian
+- Okta
+- OpenAI
+- OpenPipe
+- Oracle
+- OrbStack
+- Oxide
+- Palantir
+- Panic
+- Patreon
+- PayPal
+- Pinterest
+- Plaid
+- Posthog
+- PostHog
+- Protect AI
+- Pulumi
+- Quindar
+- Radical
+- Range
+- Recurse Center
+- Red Hat
+- REI
+- Rinse
+- Robinhood
+- Roche
+- Salesforce
+- Scale AI
+- Scholarly
+- Sentry
+- Sketch
+- Slack
+- Snapchat
+- Snowflake
+- SoFi
+- Sonic Infra
+- SpaceX
+- Splunk
+- Strac
+- Stripe
+- Substack
+- T-Mobile
+- Tableau
+- Tailscale
+- TerraPower
+- Tesla
+- Toast
+- Todoist
+- Twitch
+- Twitter/X
+- Uber
+- Valve
+- Vercel
+- VMWare
+- Warp
+- Waymo
+- Wheel
+- xAI
+- Yelp
+- Zoom
+
+</details>

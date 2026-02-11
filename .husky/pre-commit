@@ -81,6 +81,18 @@ if has_changes '^packages/astro-opengraph-images/.*\.(ts|tsx)$'; then
   run_check "astro-opengraph-images typecheck" bun run --filter='./packages/astro-opengraph-images' typecheck
 fi
 
+if has_changes '^packages/better-skill-capped/.*\.(ts|tsx)$'; then
+  run_check "better-skill-capped typecheck" bun run --filter='./packages/better-skill-capped' typecheck
+fi
+
+if has_changes '^packages/starlight-karma-bot/.*\.(ts|tsx)$'; then
+  run_check "starlight-karma-bot typecheck" bun run --filter='./packages/starlight-karma-bot' typecheck
+fi
+
+if has_changes '^packages/sjer.red/.*\.(ts|tsx)$'; then
+  run_check "sjer.red typecheck" bun run --filter='./packages/sjer.red' typecheck
+fi
+
 # --- Clauderon web packages ---
 if has_changes '^packages/clauderon/web/shared/.*\.(ts|tsx)$'; then
   run_check "web/shared typecheck" sh -c 'cd packages/clauderon/web/shared && bun run typecheck'

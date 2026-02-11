@@ -1,0 +1,32 @@
+---
+title: Software Testing
+description: Integration tests deserve the most attention
+date: 2023-08-18Z-0700
+hackerNews: https://news.ycombinator.com/item?id=37364394
+---
+
+You should verify every desired behavior of your project.
+
+Tests exist to verify some behavior of the object being tested. Some tests can be manual, such as manually executing a program and verifying that the program works as you'd expect. When performing manual testing, the project requirements live in your head and aren't particularly durable. If you return to a project months later, you might not know the desired behavior. Additionally, manual testing requires valuable time and effort to perform. Manual testing does not scale. As you add more functionality, you will need more time, discipline, and the ability to test your project's behavior manually.
+
+Automated tests help by explicitly defining the expected behavior, and it provides a way to run tests with near-zero manual effort. If the automated tests are easy to run, then you can quickly make a change, run the tests, and verify that your change worked as expected. If your automated tests have low coverage, you will have less confidence and resort to manual testing.
+
+Your tests will essentially become the "source of truth" for the expected behavior of your project.
+
+There are many forms of automated testing, to name a few: unit, integration, and end-to-end.
+
+What kind of tests you should write largely depends on what type of software you're testing. The classic testing pyramid would suggest that you write many unit tests. I think that this is entirely wrong.
+
+> Unit tests can be great if the project is well-architected and if the project is in a language that lends itself well to unit testing. I've had a great experience with unit testing in Java and absolutely terrible experiences with JavaScript.
+
+Testing is essential, but that doesn't mean you should dump unlimited time into it. You'll catch the most bugs by running tests in an environment that is as close to production as possible. These are usually called integration tests or end-to-end tests.
+
+The tradeoff is that being "closer to production" usually means "really hard or slow to run".
+
+So, what kind of tests should you write?
+
+If the primary purpose of your project is to provide an API, you should write tests that check that your API contract is followed to the letter. You might want to have performance tests to ensure that it can have the desired response time.
+
+If you're writing a software library, you'll want many unit tests to verify the behavior of the methods you expose. You might want some integration tests, but you might be able to get away without any.
+
+For web applications, you should skip unit tests. Your application depends on the browser, so do your testing in a _real_ browser. Communicate with _real_ APIs and not mocks. You might want unit tests only for parts of your application that are not dependent on the browser or particularly tricky behavior.

@@ -1,0 +1,51 @@
+---
+title: Learning TypeScript
+description: How to become a better TypeScript programmer
+date: 2025-03-30Z-0700
+hackerNews: https://news.ycombinator.com/item?id=43526027
+---
+
+TypeScript is one of my favorite languages. It is fast, portable, has a great ecosystem, and the language itself is pleasant to work with. It has flaws, but I cannot think of a more versatile language. With TypeScript (and JavaScript), you can write:
+
+- Web applications
+- iOS/Android mobile apps
+- macOS/Windows/Linux desktop apps
+- Scripts
+- Backends
+- Games
+
+I can't think of another language so omni-present today. In a way, it's like C. JavaScript, like C, can run anywhere since every platform has a web browser.
+
+I've spent a lot of time becoming better at TypeScript, so I thought I'd compile and share some resources that have helped me over the years.
+
+Unfortunately, TypeScript is complex. First, since it compiles to JavaScript, you need to learn that first. If you're planning on writing frontend applications you'll need to also learn HTML/CSS and Browser/DOM APIs. For backend you'll need to understand NodeJS (or [Bun](https://bun.sh/)/[Deno](https://deno.com/)).
+
+Learning JavaScript is a pretty difficult task, even if you're an experienced programmer. It has a strange inheritance model, it's single-threaded, and the ecosystem evolves very quickly. I found the following to help me gain a better understanding of JavaScript:
+
+- [You Don't Know JS](https://github.com/getify/You-Dont-Know-JS): A series of books covering the language in-depth
+- [MDN docs](https://developer.mozilla.org/en-US/docs/Web/JavaScript): Mozilla's JavaScript documentation
+  - Specifically, I found this article on the [JavaScript execution model](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Execution_model) to be critical to understanding the quirks of JavaScript
+
+Now, onto TypeScript! There are two things to look at: programming with TypeScript, and writing type-level TypeScript.
+
+Reading through the [TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/intro.html) helped me understand the core features of the language.
+
+The more difficult part is type-level TypeScript. This refers to writing programs in the type system to generate other types. This is where the strenght of TypeScript lies, since it allows you to precisely express the types of your program. Type-level TypeScript is also a large part of what made the language successful, since it allowed complex, dynamic, JavaScript types to be represented accurately.
+
+The TypeScript Handbook has a section on [type-level programming](https://www.typescriptlang.org/docs/handbook/2/types-from-types.html). This is a great reference, but I found the [Type-Level TypeScript](https://type-level-typescript.com/) course to be the best resource. Matt Pocock, who is well-known in the TypeScript world, also has a series called [Total TypeScript](https://www.totaltypescript.com/). I'm sure it's execellent, but it costs hundreds of dollars, so it's hard for me to recommend.
+
+For additional challenges I've found [Type Challenges](https://github.com/type-challenges/type-challenges) to be excellent, especially with the [VS Code extension](https://marketplace.visualstudio.com/items?itemName=YRM.type-challenges).
+
+## Additional Resources
+
+- [TypeScript on Exercism](https://exercism.org/tracks/typescript)
+- [Effective TypeScript](https://effectivetypescript.com/)
+- Runtimes:
+  - [Deno](https://deno.com/): Run TypeScript without compiling!
+  - [Bun](https://bun.sh/): Similar to Deno. Also excellent.
+- Cool libraries:
+  - [Zod](https://zod.dev/): Validate TypeScript types at runtime
+  - [ts-pattern](https://github.com/gvergnaud/ts-pattern): Pattern-matching for TypeScript
+  - [Astro](https://astro.build/): Tool that excells at static site generation with amazing TypeScript support
+  - [Remeda](https://remedajs.com/): Lodash for TypeScript
+  - [XState](https://stately.ai/docs/xstate): Over-complicated state machines in TypeScript

@@ -1,0 +1,130 @@
+---
+title: XState
+description: State Machines reduce edge cases
+date: 2023-09-14Z-0700
+hackerNews: https://news.ycombinator.com/item?id=37512717
+---
+
+import { Image } from "astro:assets";
+import channel from "./xstate/channel.png";
+import game from "./xstate/game.png";
+import diagram from "./xstate/diagram.png";
+import simulation from "./xstate/simulation.mp4";
+
+My current side project, [Discord Plays Pokémon](https://github.com/shepherdjerred/discord-plays-pokemon), has a lot of dependencies. The application streams video with Discord, which presents a challenge. Discord does not provide APIs for streaming video, and I didn't want to have to reverse-engineer the client. I chose to automate interactions with Discord's web application using Selenium, which has yielded great results. It can programmatically stream video to a specific voice channel. This has worked very well so far -- users are able to play real-time games of Pokémon with each other just using Discord's text chat!
+
+<figure>
+  <Image src={channel} alt="A screenshot of Discord text chat with two users inputting commands" height="100px" />
+  <figcaption>
+    Two users can input commands at the same time. `D` means to simulate a down-button press once, and `10r` means to
+    simulate a right-button press ten times.
+
+    If the command is valid, the bot will react to the message with a 👍 once
+    the command is applied to the game.
+
+  </figcaption>
+</figure>
+
+I brute-forced a lot of this code to get the bot working quickly. While it works well, adding new features was not easy. I wanted only to have the bot stream if a user was in the voice chat. This requires tracking the state of the bot. Was the bot able to log in to Discord? Is the bot streaming or not? Has there been any error? How do I switch between browser tabs since there is one tab for Discord and another for the [browser-based emulator](https://www.emulatorjs.com/)?
+
+Switching between tabs was an easy problem to fix. I created two instances of Firefox -- one for the stream and another for the video. This eliminated a whole class of errors at a slight performance cost.
+
+<figure>
+  <Image src={game} alt="A screenshot of Discord streaming Pokémon" />
+  <figcaption>Video is streamed in real-time with instant feedback for the applied inputs.</figcaption>
+</figure>
+
+Tracking the state, however, was not something I wanted to do. There are a lot of subtle edge cases that I didn't want to deal with. I felt state machines would be applicable, but I had never used them in TypeScript.
+
+I found the [XState](https://xstate.js.org/) project and immediately fell in love. The project is incredibly polished and has excellent support for VS Code and TypeScript. I ported over my old code to a state machine, although understanding the concepts that XState introduced took some time.
+
+<figure>
+  <Image
+    src={diagram}
+    alt="A screenshot of VS Code with a code pane to the left and a state machine diagram to the right."
+  />
+  <figcaption>XState integrates well with VS Code.</figcaption>
+</figure>
+
+I was surprised at how helpful the XState VS Code plugin was. It allows me to see a diagram of my state machine. You can simulate state transitions to understand what your state machine will do.
+
+<figure>
+  <video controls>
+    <source src={simulation} type="video/mp4" />
+  </video>
+  <figcaption>The XState VS Code extension lets you step through your state transitions.</figcaption>
+</figure>
+
+Aside from the coolness of the extension, the library itself is quite polished and well-documented. Porting over my old code was simple because of how well XState integrates with promises.
+
+Here's an example of the state machine's state for starting a Discord video stream. The method in `src` is invoked when the `starting_stream` state is reached. Once the promise is complete, `onDone` is called, which transitions the machine to the `streaming` state.
+
+<figure>
+```typescript
+// @noErrors
+starting_stream: {
+    invoke: {
+    src: async ({ driver }, _event) => {
+        await joinVoiceChat(driver);
+        return await shareScreen(driver);
+    },
+    onDone: {
+        target: "streaming",
+    },
+    onError: {
+        target: "is_error",
+        actions: (_context, event) => {
+            console.error(event);
+        },
+      },
+    },
+},
+```
+  <figcaption>The state for starting a Discord stream.</figcaption>
+</figure>
+
+I even wrote some quick unit tests to ensure it works properly. This test was much easier to write than tests without a state machine.
+
+<figure>
+```typescript
+// @noErrors
+test("able to reach the streaming state", (done) => {
+  const actor = interpret(streamMachine)
+    .onTransition((state) => {
+      if (state.matches("is_ready")) {
+        actor.send({ type: "start_stream" });
+      }
+      if (state.matches("is_streaming")) {
+        done();
+      }
+    });
+  actor.start();
+});
+```
+  <figcaption>Unit testing a state machine is straightforward. This would've been a _lot_ more code without XState!</figcaption>
+</figure>
+
+Hooking the entire thing up to the application wasn't hard, either. This allows the bot to enter the voice channel and stream only when people are in the channel.
+
+<figure>
+
+```typescript
+// @noErrors
+const stream = interpret(streamMachine);
+
+stream.start();
+
+handleChannelUpdate(async (channel_count) => {
+    if (channel_count > 0) {
+        stream.send({ type: "start_stream" });
+    } else {
+        stream.send({ type: "end_stream" });
+    }
+}
+
+```
+
+  <figcaption>A complex set of interactions become so easy.</figcaption>
+</figure>
+
+Overall, using XState feels like a huge win. I can be more confident about how I interact with Selenium and Discord. I hope to move more of my application to XState, which will significantly help when implementing new input methods and notification systems.

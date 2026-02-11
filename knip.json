@@ -28,6 +28,18 @@
     "packages/astro-opengraph-images": {
       "entry": ["src/index.ts"],
       "project": ["src/**/*.{ts,tsx}"]
+    },
+    "packages/better-skill-capped": {
+      "entry": ["src/index.tsx"],
+      "project": ["src/**/*.{ts,tsx}"]
+    },
+    "packages/starlight-karma-bot": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/sjer.red": {
+      "entry": ["src/**/*.astro", "src/**/*.ts", "src/**/*.tsx"],
+      "project": ["src/**/*.{ts,tsx,astro}"]
     }
   },
   "ignore": ["**/generated/**", "**/dist/**", "archive/**"]

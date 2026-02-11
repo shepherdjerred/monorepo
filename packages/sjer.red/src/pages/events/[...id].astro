@@ -1,0 +1,70 @@
+---
+import FormattedDate from "@components/FormattedDate.astro";
+import RSVP from "@components/events/RSVP.astro";
+import Base from "@layouts/BaseLayout.astro";
+import { getCollection, render } from "astro:content";
+import type { CollectionEntry } from "astro:content";
+import { EventSchema } from "src/content/schemas/event";
+
+type Props = {
+  entry: CollectionEntry<"event">;
+};
+
+export async function getStaticPaths() {
+  const eventEntries = await getCollection("event");
+  return eventEntries.map((entry) => ({
+    params: { id: entry.id },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { title, description, date, cost, location, rsvp } = EventSchema.parse(entry.data);
+const { Content } = await render(entry);
+---
+
+<Base title={title} description={description ?? title} openGraphType="article">
+  <div class="flex place-content-center bg-neutral-100 text-black dark:bg-black dark:text-white">
+    <article class="prose mt-10 mb-10 ml-8 mr-8 dark:prose-invert">
+      <hgroup>
+        <h1 class="m-0">{title}</h1>
+        <FormattedDate date={date} showTime />
+        <p>
+          {description}
+        </p>
+      </hgroup>
+      <div class="bg-white sm:rounded-lg dark:bg-gray-900 mt-10 mb-10 p-2">
+        <div class="px-4 py-5 sm:p-6">
+          <h3 class="m-0 text-base">Where: <a href={location.url} target="_blank">{location.text}</a></h3>
+          <p class="m-0 mt-4">
+            {location.parking}
+          </p>
+        </div>
+      </div>
+      {
+        cost && (
+          <h2>
+            <span>Cost: {"$" + cost.toString()}</span>
+            <span class="text-sm">
+              (Venmo <a href="https://account.venmo.com/u/shepherdjerred">@shepherdjerred</a>)
+            </span>
+          </h2>
+        )
+      }
+      <Content />
+      {rsvp && <RSVP />}
+    </article>
+  </div>
+</Base>
+
+<style>
+  body {
+    background-color: rgb(243 244 246);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    body {
+      background-color: black;
+    }
+  }
+</style>

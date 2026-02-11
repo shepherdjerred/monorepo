@@ -1,5 +1,5 @@
 {
-  "eslint-disable": 20,
+  "eslint-disable": 26,
   "ts-suppressions": 49,
   "rust-allow": 52,
   "prettier-ignore": 3,
