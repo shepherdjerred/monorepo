@@ -38,7 +38,7 @@ run_check() {
 }
 
 # --- Rust checks (when .rs files or Cargo files change) ---
-if has_changes '\.rs$|Cargo\.(toml|lock)$'; then
+if has_changes '^packages/clauderon/.*\.(rs)$|^packages/clauderon/.*Cargo\.(toml|lock)$'; then
   # cargo clippy
   run_check "cargo clippy" sh -c 'cd packages/clauderon && cargo clippy --all-targets --all-features -- -D warnings'
 
@@ -49,6 +49,11 @@ if has_changes '\.rs$|Cargo\.(toml|lock)$'; then
   if command -v cargo-deny >/dev/null 2>&1 || cargo deny --version >/dev/null 2>&1; then
     run_check "cargo deny" sh -c 'cd packages/clauderon && cargo deny check'
   fi
+fi
+
+if has_changes '^packages/scout/desktop/src-tauri/.*\.(rs)$|^packages/scout/desktop/src-tauri/.*Cargo\.(toml|lock)$'; then
+  run_check "scout cargo clippy" sh -c 'cd packages/scout/desktop/src-tauri && cargo clippy --all-targets --all-features -- -D warnings'
+  run_check "scout cargo fmt" sh -c 'cd packages/scout/desktop/src-tauri && cargo fmt -- --check'
 fi
 
 # --- Per-package TypeScript typecheck ---
@@ -97,6 +102,14 @@ if has_changes '^packages/dpp/.*\.(ts|tsx)$'; then
   run_check "dpp typecheck" sh -c 'for pkg in common backend frontend; do bun run --filter="./packages/dpp/$pkg" typecheck; done'
 fi
 
+if has_changes '^packages/homelab/.*\.(ts|tsx)$'; then
+  run_check "homelab typecheck" sh -c 'for pkg in cdk8s ha deps-email helm-types; do bun run --filter="./packages/homelab/$pkg" typecheck; done'
+fi
+
+if has_changes '^packages/scout/.*\.(ts|tsx)$'; then
+  run_check "scout typecheck" sh -c 'for pkg in backend data report frontend desktop ui; do bun run --filter="./packages/scout/$pkg" typecheck; done'
+fi
+
 # --- Clauderon web packages ---
 if has_changes '^packages/clauderon/web/shared/.*\.(ts|tsx)$'; then
   run_check "web/shared typecheck" sh -c 'cd packages/clauderon/web/shared && bun run typecheck'
@@ -141,7 +154,7 @@ if has_changes '^packages/.*/package\.json$|^packages/.*/eslint\.config\.|^packa
     for dir in packages/*/; do
       PKG=$(basename "$dir")
       case "$PKG" in
-        resume|eslint-config|clauderon|claude-plugin|a2ui-poc|discord-claude|fonts|anki|castle-casters|macos-cross-compiler|dpp) continue ;;
+        resume|eslint-config|clauderon|claude-plugin|a2ui-poc|discord-claude|fonts|anki|castle-casters|macos-cross-compiler|dpp|homelab|scout) continue ;;
       esac
 
       # Check for eslint config
@@ -185,10 +198,10 @@ if has_changes '\.(ts|tsx|rs)$'; then
     BASELINE_RUST=$(grep -o "\"rust-allow\": [0-9]*" .quality-baseline.json | grep -o "[0-9]*")
     BASELINE_PRETTIER=$(grep -o "\"prettier-ignore\": [0-9]*" .quality-baseline.json | grep -o "[0-9]*")
 
-    CURRENT_ESLINT=$(grep -r "eslint-disable" packages/ .dagger/ --include="*.ts" --include="*.tsx" 2>/dev/null | grep -v node_modules | grep -v dist | grep -v archive | wc -l | tr -d " ")
-    CURRENT_TS=$(grep -r "@ts-expect-error\|@ts-ignore\|@ts-nocheck" packages/ .dagger/ --include="*.ts" --include="*.tsx" 2>/dev/null | grep -v node_modules | grep -v dist | grep -v archive | wc -l | tr -d " ")
+    CURRENT_ESLINT=$(grep -r "eslint-disable" packages/ .dagger/ --include="*.ts" --include="*.tsx" 2>/dev/null | grep -v node_modules | grep -v dist | grep -v archive | grep -v generated | wc -l | tr -d " ")
+    CURRENT_TS=$(grep -r "@ts-expect-error\|@ts-ignore\|@ts-nocheck" packages/ .dagger/ --include="*.ts" --include="*.tsx" 2>/dev/null | grep -v node_modules | grep -v dist | grep -v archive | grep -v generated | wc -l | tr -d " ")
     CURRENT_RUST=$(grep -r "#\[allow(" packages/clauderon/src/ --include="*.rs" 2>/dev/null | wc -l | tr -d " ")
-    CURRENT_PRETTIER=$(grep -r "prettier-ignore" packages/ .dagger/ --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" --include="*.css" --include="*.json" 2>/dev/null | grep -v node_modules | grep -v dist | grep -v archive | wc -l | tr -d " ")
+    CURRENT_PRETTIER=$(grep -r "prettier-ignore" packages/ .dagger/ --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" --include="*.css" --include="*.json" 2>/dev/null | grep -v node_modules | grep -v dist | grep -v archive | grep -v generated | wc -l | tr -d " ")
 
     echo "Suppression counts (current / baseline):"
     echo "  eslint-disable: $CURRENT_ESLINT / $BASELINE_ESLINT"

@@ -1,0 +1,57 @@
+---
+description: Project overview, technology stack, core principles, and development environment setup for this homelab infrastructure project using TypeScript and Kubernetes.
+---
+# Project Context & Tech Stack
+
+## Project Overview
+This is a homelab infrastructure project managing Kubernetes resources using cdk8s and TypeScript. The project uses Bun as runtime, Talos Linux for Kubernetes, and follows infrastructure-as-code principles.
+
+## Core Technologies
+
+### Runtime & Package Management
+- **Runtime**: Bun (prefer Bun over Node.js for all operations)
+- **Package Manager**: Bun (use `bun install`, `bun run`, etc.)
+- **Language**: TypeScript with strict typing
+
+### Infrastructure Stack
+- **Infrastructure as Code**: cdk8s for Kubernetes manifests
+- **Kubernetes Distribution**: Talos Linux
+- **GitOps**: ArgoCD for deployment automation
+- **CI/CD**: Dagger for containerized workflows
+- **Secret Management**: 1Password integration
+
+### Project Structure
+The project uses a workspace-based architecture:
+- [src/cdk8s/](mdc:src/cdk8s) - Kubernetes infrastructure definitions
+- [src/ha/](mdc:src/ha) - Home Assistant application code
+- [package.json](mdc:package.json) - Root workspace configuration
+- [dagger.json](mdc:dagger.json) - Dagger CI/CD configuration
+
+## Key Principles
+- **Infrastructure as Code**: All Kubernetes resources defined in TypeScript
+- **GitOps**: Automated deployments through ArgoCD
+- **Security First**: Proper RBAC, secrets management, and security contexts
+- **Reproducible Builds**: Pinned versions and deterministic deployments
+- **Observability**: Comprehensive monitoring and logging
+
+## Development Environment
+- Use [mise.toml](mdc:mise.toml) for tool version management
+- Use [renovate.json](mdc:renovate.json) for automated dependency updates
+- Reference [.commitlintrc.json](mdc:.commitlintrc.json) for commit message format
+
+## Quality Assurance
+- Kubernetes manifest linting with [.kube-linter.yaml](mdc:.kube-linter.yaml)
+- TypeScript strict mode enforcement
+- Automated testing in CI/CD pipelines
+
+## File Organization
+- Configuration files in workspace roots
+- Kubernetes manifests generated in `dist/` directories
+- Docker configurations respect [.dockerignore](mdc:.dockerignore)
+- Git settings follow [.gitattributes](mdc:.gitattributes) and [.gitignore](mdc:.gitignore)
+
+## Dependency Management
+- Lock files: [bun.lock](mdc:bun.lock) for root, individual workspace lock files
+- Node modules in [node_modules/](mdc:node_modules) directory
+- Automated updates via Renovate bot
+- Version pinning for production dependencies

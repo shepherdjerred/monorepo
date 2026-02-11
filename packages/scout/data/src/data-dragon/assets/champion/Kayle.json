@@ -1,0 +1,388 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Kayle": {
+      "id": "Kayle",
+      "key": "10",
+      "name": "Kayle",
+      "title": "the Righteous",
+      "image": {
+        "full": "Kayle.png",
+        "sprite": "champion2.png",
+        "group": "champion",
+        "x": 48,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "10000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "10001",
+          "num": 1,
+          "name": "Silver Kayle",
+          "chromas": false
+        },
+        {
+          "id": "10002",
+          "num": 2,
+          "name": "Viridian Kayle",
+          "chromas": true
+        },
+        {
+          "id": "10003",
+          "num": 3,
+          "name": "Transcended Kayle",
+          "chromas": false
+        },
+        {
+          "id": "10004",
+          "num": 4,
+          "name": "Battleborn Kayle",
+          "chromas": false
+        },
+        {
+          "id": "10005",
+          "num": 5,
+          "name": "Judgment Kayle",
+          "chromas": false
+        },
+        {
+          "id": "10006",
+          "num": 6,
+          "name": "Aether Wing Kayle",
+          "chromas": true
+        },
+        {
+          "id": "10007",
+          "num": 7,
+          "name": "Riot Kayle",
+          "chromas": false
+        },
+        {
+          "id": "10008",
+          "num": 8,
+          "name": "Iron Inquisitor Kayle",
+          "chromas": false
+        },
+        {
+          "id": "10009",
+          "num": 9,
+          "name": "Pentakill Kayle",
+          "chromas": false
+        },
+        {
+          "id": "10015",
+          "num": 15,
+          "name": "PsyOps Kayle",
+          "chromas": true
+        },
+        {
+          "id": "10024",
+          "num": 24,
+          "name": "Dragonslayer Kayle",
+          "chromas": true
+        },
+        {
+          "id": "10033",
+          "num": 33,
+          "name": "Pentakill III: Lost Chapter Kayle",
+          "chromas": true
+        },
+        {
+          "id": "10042",
+          "num": 42,
+          "name": "Sun-Eater Kayle",
+          "chromas": true
+        },
+        {
+          "id": "10057",
+          "num": 57,
+          "name": "Immortal Journey Kayle",
+          "chromas": true
+        },
+        {
+          "id": "10066",
+          "num": 66,
+          "name": "Empyrean Kayle",
+          "chromas": true
+        },
+        {
+          "id": "10067",
+          "num": 67,
+          "name": "Prestige Empyrean Kayle",
+          "chromas": false
+        },
+        {
+          "id": "10078",
+          "num": 78,
+          "name": "Spirit Blossom Kayle",
+          "chromas": true
+        }
+      ],
+      "lore": "Born to a Targonian Aspect at the height of the Rune Wars, Kayle honored her mother's legacy by fighting for justice on wings of divine flame. She and her twin sister Morgana were the protectors of Demacia for many years—until Kayle became disillusioned with the repeated failings of mortals, and abandoned this realm altogether. Still, legends are told of her punishing the unjust with her fiery swords, and many hope that she will one day return…",
+      "blurb": "Born to a Targonian Aspect at the height of the Rune Wars, Kayle honored her mother's legacy by fighting for justice on wings of divine flame. She and her twin sister Morgana were the protectors of Demacia for many years—until Kayle became disillusioned...",
+      "allytips": [
+        "Using Divine Judgment on a high-DPS ally can turn the tides of battle by giving your ally free reign to attack. ",
+        "Kayle's attacks become incredibly powerful once she gains attack range from Divine Ascent. Play safe until then. ",
+        "Kayle benefits greatly from Attack Damage and Ability Power, making hybrid items like Nashor's Tooth and Hextech Gunblade very effective on her."
+      ],
+      "enemytips": [
+        "Divine Judgment only grants Kayle or her allies immunity to damage. Slows and stuns can still be applied, so trap them if they're being overzealous.",
+        "Kayle is usually a fragile target. If you see her ultimate cast on an ally, switch to attacking her.",
+        "Kayle starts the game as a weaker melee champion. Try to put her behind before she ascends to her ranged form."
+      ],
+      "tags": ["Mage", "Marksman"],
+      "partype": "Mana",
+      "info": {
+        "attack": 6,
+        "defense": 6,
+        "magic": 7,
+        "difficulty": 7
+      },
+      "stats": {
+        "hp": 670,
+        "hpperlevel": 92,
+        "mp": 330,
+        "mpperlevel": 50,
+        "movespeed": 335,
+        "armor": 26,
+        "armorperlevel": 4.2,
+        "spellblock": 22,
+        "spellblockperlevel": 1.3,
+        "attackrange": 175,
+        "hpregen": 5,
+        "hpregenperlevel": 0.5,
+        "mpregen": 8,
+        "mpregenperlevel": 0.8,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 50,
+        "attackdamageperlevel": 2.5,
+        "attackspeedperlevel": 1.5,
+        "attackspeed": 0.625
+      },
+      "spells": [
+        {
+          "id": "KayleQ",
+          "name": "Radiant Blast",
+          "description": "Kayle conjures a portal, summoning a celestial sword that pierces through enemies, slowing, damaging, and reducing the resistances of all hit.",
+          "tooltip": "Kayle fires a celestial sword that stops on the first enemy hit, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>, <status>Slowing</status> by {{ slowpercent }}% for {{ slowduration }} seconds, and removing <scaleArmor>{{ shredpercent }}% Armor</scaleArmor> and <scaleMR>Magic Resist</scaleMR> for {{ shredduration }} seconds from the target and enemies behind them.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Slow", "Cooldown", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ damage }} -> {{ damageNL }}",
+              "{{ slowpercent }}% -> {{ slowpercentNL }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [12, 11, 10, 9, 8],
+          "cooldownBurn": "12/11/10/9/8",
+          "cost": [60, 70, 80, 90, 100],
+          "costBurn": "60/70/80/90/100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [900, 900, 900, 900, 900],
+          "rangeBurn": "900",
+          "image": {
+            "full": "KayleQ.png",
+            "sprite": "spell6.png",
+            "group": "spell",
+            "x": 96,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "KayleW",
+          "name": "Celestial Blessing",
+          "description": "Blessed by the divine, Kayle heals and grants Move Speed to herself and the nearest ally.",
+          "tooltip": "Kayle infuses herself and an allied champion with light, restoring <healing>{{ totalheal }} Health</healing> and granting <speed>{{ totalhaste }} Move Speed</speed> for {{ hasteduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Healing", "Move Speed", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ heal }} -> {{ healNL }}",
+              "{{ haste*100.000000 }}% -> {{ hastenl*100.000000 }}%",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [15, 15, 15, 15, 15],
+          "cooldownBurn": "15",
+          "cost": [70, 75, 80, 85, 90],
+          "costBurn": "70/75/80/85/90",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [900, 900, 900, 900, 900],
+          "rangeBurn": "900",
+          "image": {
+            "full": "KayleW.png",
+            "sprite": "spell6.png",
+            "group": "spell",
+            "x": 144,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "KayleE",
+          "name": "Starfire Spellblade",
+          "description": "Passive: Kayle's celestial sword, Virtue, deals bonus magic damage to enemies she attacks.<br><br>Active: Kayle's next attack smites her target with celestial fire, dealing bonus damage proportionate to their missing health.",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Attacks deal an additional <magicDamage>{{ epassivetotaldamage }} magic damage</magicDamage>.<br /><br /><spellActive>Active:</spellActive> Kayle's next attack becomes ranged and deals an additional <magicDamage>{{ activetotalexecutedamage }} missing Health magic damage</magicDamage>. This attack upgrades when Kayle reaches <scaleLevel>Level {{ spell.kaylepassive:levelforpassiverank2 }}</scaleLevel>, causing it to explode when it hits the target, dealing damage to nearby enemies.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Passive Damage", "Missing Health Damage", "Cooldown"],
+            "effect": [
+              "{{ passivedamage }} -> {{ passivedamageNL }}",
+              "{{ activeexecutepercent }}% -> {{ activeexecutepercentNL }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [8, 7.5, 7, 6.5, 6],
+          "cooldownBurn": "8/7.5/7/6.5/6",
+          "cost": [0, 0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [550, 550, 550, 550, 550],
+          "rangeBurn": "550",
+          "image": {
+            "full": "KayleE.png",
+            "sprite": "spell6.png",
+            "group": "spell",
+            "x": 192,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        },
+        {
+          "id": "KayleR",
+          "name": "Divine Judgment",
+          "description": "Kayle makes an ally invulnerable and calls upon former Aspects of Justice to purify the area around her target with a holy rain of swords.",
+          "tooltip": "Kayle makes an allied champion Invulnerable for {{ invulnduration }} seconds and then purifies the area around them, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to nearby enemies.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Area Size", "Cooldown", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ damage }} -> {{ damageNL }}",
+              "{{ aoeradius }} -> {{ aoeradiusNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [160, 120, 80],
+          "cooldownBurn": "160/120/80",
+          "cost": [100, 50, 0],
+          "costBurn": "100/50/0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [900, 900, 900],
+          "rangeBurn": "900",
+          "image": {
+            "full": "KayleR.png",
+            "sprite": "spell6.png",
+            "group": "spell",
+            "x": 240,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Divine Ascent",
+        "description": "Kayle's attacks are empowered by the heavens as she levels up and spends skill points. Her wings are lit aflame as she progressively gains Attack Speed, Move Speed, Attack Range, and waves of fire on her attacks.",
+        "image": {
+          "full": "Kayle_P.png",
+          "sprite": "passive2.png",
+          "group": "passive",
+          "x": 48,
+          "y": 0,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

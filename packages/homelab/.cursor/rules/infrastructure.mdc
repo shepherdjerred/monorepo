@@ -1,0 +1,48 @@
+---
+description: Infrastructure as code guidelines using CDK8s, Kubernetes resource management, version control, and configuration best practices for homelab deployment.
+---
+# Infrastructure & Kubernetes Guidelines
+
+## CDK8s Best Practices
+- All Kubernetes resources should be defined using cdk8s constructs
+- Follow the existing pattern for version management in [versions.ts](mdc:src/cdk8s/src/versions.ts)
+- Use the cdk8s configuration from [cdk8s.yaml](mdc:src/cdk8s/cdk8s.yaml)
+- Generate manifests in the [dist/](mdc:src/cdk8s/dist) directory
+
+## Version Management
+- Pin dependency versions (Docker images, Helm charts, etc.) with SHA hashes when possible
+- Use Renovate configuration from [renovate.json](mdc:renovate.json) for automated dependency updates
+- Follow semantic versioning for application releases
+
+## Kubernetes Resources
+- Use proper Kubernetes labels and annotations
+- Implement proper resource requests and limits
+- Consider security contexts and pod security standards
+- Follow the existing patterns in the [src/cdk8s/src/](mdc:src/cdk8s/src) directory
+
+## Resource Configuration
+- **CPU/Memory**: Always set resource requests and limits
+- **Probes**: Implement startup, readiness, and liveness probes
+- **Security**: Use non-root containers and proper security contexts
+- **Networking**: Implement network policies where appropriate
+
+## Helm Charts
+- Store Helm configurations in [src/cdk8s/helm/](mdc:src/cdk8s/helm)
+- Use the Dagger helm-build and helm-publish targets for chart management
+- Pin chart versions and application versions
+
+## Configuration Management
+- Store configuration in [src/cdk8s/config/](mdc:src/cdk8s/config)
+- Use Kubernetes ConfigMaps and Secrets appropriately
+- Never hardcode sensitive values in manifests
+
+## Talos Linux Considerations
+- Store Talos-specific configurations in [src/cdk8s/talos/](mdc:src/cdk8s/talos)
+- Follow Talos Linux best practices for node configuration
+- Consider Talos-specific features like machine configurations
+
+## Performance & Reliability
+- Implement proper health checks for all services
+- Consider failure scenarios in infrastructure design
+- Optimize resource usage and implement proper caching strategies
+- Monitor resource utilization and implement alerting

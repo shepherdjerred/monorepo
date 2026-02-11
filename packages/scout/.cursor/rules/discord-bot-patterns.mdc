@@ -1,0 +1,248 @@
+---
+description: Discord bot development patterns and best practices
+globs: "src/discord/**/*.ts,packages/backend/src/discord/**/*.ts"
+alwaysApply: false
+---
+
+# Discord.js Integration Patterns
+
+## Type-Safe Discord.js Object Validation
+
+Discord.js objects often have complex types. **Always validate with Zod before type assertions.**
+
+### ❌ WRONG: Direct type assertion
+
+```typescript
+const member = interaction.member;
+const isAdmin = (member as GuildMember).permissions.has(PermissionFlagsBits.Administrator);
+```
+
+**Problems**:
+
+- Violates `no-restricted-syntax` lint rule
+- No runtime validation
+- Fails if `member` is null or has wrong shape
+
+### ✅ CORRECT: Zod validation + approved type assertion
+
+```typescript
+const GuildMemberSchema = z.object({
+  permissions: z.object({
+    has: z.function(),
+  }),
+});
+
+const memberResult = GuildMemberSchema.safeParse(interaction.member);
+let isAdmin = false;
+if (memberResult.success && interaction.member) {
+  const permissions = (interaction.member as unknown as {
+    permissions: { has: (perm: bigint) => boolean }
+  }).permissions;
+  isAdmin = permissions.has(PermissionFlagsBits.Administrator);
+}
+```
+
+**Key Points**:
+
+- ✅ Zod validates structure first
+- ✅ Uses `as unknown as Type` (two-step cast) - approved pattern
+- ✅ Null check before accessing
+- ✅ Passes lint rules
+
+## Channel Fetching and Validation
+
+### Pattern for Text Channel Operations
+
+```typescript
+const TextChannelSchema = z.object({
+  isTextBased: z.function(),
+  send: z.function(),
+});
+
+try {
+  const channel = await interaction.client.channels.fetch(channelId);
+  const channelResult = TextChannelSchema.safeParse(channel);
+
+  if (channelResult.success && channel) {
+    const textChannel = channel as unknown as {
+      isTextBased: () => boolean;
+      send: (content: string) => Promise<unknown>;
+    };
+
+    if (textChannel.isTextBased()) {
+      await textChannel.send("Message");
+    }
+  }
+} catch (error) {
+  // Use getErrorMessage from utils/errors.js
+  console.error(getErrorMessage(error));
+}
+```
+
+## Permission Checking Pattern
+
+### Owner or Admin Check
+
+```typescript
+const userId = interaction.user.id;
+const isOwner = resource.ownerId === userId;
+
+// Validate GuildMember structure
+const GuildMemberSchema = z.object({
+  permissions: z.object({
+    has: z.function(),
+  }),
+});
+
+const memberResult = GuildMemberSchema.safeParse(interaction.member);
+let isAdmin = false;
+if (memberResult.success && interaction.member) {
+  const member = interaction.member as unknown as {
+    permissions: { has: (perm: bigint) => boolean };
+  };
+  isAdmin = member.permissions.has(PermissionFlagsBits.Administrator);
+}
+
+if (!isOwner && !isAdmin) {
+  await interaction.reply({
+    content: "Permission denied",
+    flags: MessageFlags.Ephemeral,
+  });
+  return;
+}
+```
+
+## Error Handling in Commands
+
+Use `getErrorMessage` utility from `utils/errors.js`:
+
+```typescript
+import { getErrorMessage } from "../utils/errors.ts";
+
+catch (error) {
+  await interaction.reply({
+    content: `Error: ${getErrorMessage(error)}`,
+    flags: MessageFlags.Ephemeral,
+  });
+}
+```
+
+**See:** `error-handling-patterns.mdc` for error handling patterns.
+
+## Ephemeral Replies
+
+### Use MessageFlags for Private Responses
+
+```typescript
+// ✅ CORRECT
+await interaction.reply({
+  content: "This is private",
+  flags: MessageFlags.Ephemeral,
+});
+
+// ❌ WRONG
+await interaction.reply({
+  content: "This is private",
+  ephemeral: true,  // Old API, use flags instead
+});
+```
+
+## Command Structure Pattern
+
+### Consistent Step-by-Step Pipeline
+
+Structure command handlers with clear steps:
+
+```typescript
+export async function executeMyCommand(
+  interaction: ChatInputCommandInteraction,
+): Promise<void> {
+  // ========================================================================
+  // Step 1: Extract and validate input
+  // ========================================================================
+
+  const input = interaction.options.getString("param", true);
+
+  // ========================================================================
+  // Step 2: Permission check
+  // ========================================================================
+
+  // Check permissions...
+
+  // ========================================================================
+  // Step 3: Business logic validation
+  // ========================================================================
+
+  // Validate against business rules...
+
+  // ========================================================================
+  // Step 4: Database operation
+  // ========================================================================
+
+  try {
+    await databaseOperation();
+  } catch (error) {
+    await interaction.reply({
+      content: `Error: ${getErrorMessage(error)}`,
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
+  // ========================================================================
+  // Step 5: Success response
+  // ========================================================================
+
+  await interaction.reply({
+    content: "Success!",
+    flags: MessageFlags.Ephemeral,
+  });
+
+  // ========================================================================
+  // Step 6: Optional channel notification
+  // ========================================================================
+
+  try {
+    // Post public message...
+  } catch (error) {
+    // Non-critical - log but don't fail
+    console.error(getErrorMessage(error));
+  }
+}
+```
+
+## Testing Discord Commands
+
+**See:** `testing-patterns.mdc` for integration test database setup patterns.
+
+## Common Mistakes
+
+- **Don't use `instanceof`** with Discord.js objects (violates lint rules)
+- **Don't use `typeof`** for object checking (use Zod validation)
+- **Don't create duplicate utilities** (use `getErrorMessage` from `utils/errors.js`)
+- **Don't use old Discord.js API** (use `flags: MessageFlags.Ephemeral`, not `ephemeral: true`)
+
+## Checklist for Discord Commands
+
+Before submitting a Discord command implementation:
+
+- [ ] All Discord.js objects validated with Zod
+- [ ] Type assertions use `as unknown as Type` pattern
+- [ ] Error handling uses `getErrorMessage` from utils
+- [ ] Permission checks include both owner and admin
+- [ ] Ephemeral replies use `MessageFlags.Ephemeral`
+- [ ] Clear step-by-step structure with comments
+- [ ] Non-critical errors (like channel notifications) don't fail command
+- [ ] Integration tests use `bun run db:push` pattern
+- [ ] All async operations have try-catch blocks
+
+## Quick Reference
+
+| Task | Pattern | Module |
+|------|---------|--------|
+| Error messages | `getErrorMessage(error)` | `utils/errors.js` |
+| Discord validation | Zod + `as unknown as Type` | `zod` |
+| Type assertions | Two-step cast only | - |
+| Ephemeral replies | `MessageFlags.Ephemeral` | `discord.js` |
+| Test DB setup | `bun run db:push` | - |
+| Permission check | Owner OR admin | - |

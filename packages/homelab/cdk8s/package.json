@@ -1,0 +1,37 @@
+{
+  "name": "@shepherdjerred/homelab-cdk8s",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "bun run src/app.ts && bun run scripts/patch.ts",
+    "lint": "bunx eslint .",
+    "typecheck": "bunx tsc --noEmit",
+    "test": "bun test && bun run test:gpu-resources",
+    "test:gpu-resources": "bun run scripts/test-gpu-resources.ts",
+    "clear": "rm -rf dist/",
+    "build-app": "bun run src/app.ts",
+    "patch": "bun run scripts/patch.ts",
+    "update-imports": "bun run scripts/update-imports.ts",
+    "generate-helm-types": "bun run scripts/generate-helm-types.ts",
+    "up": "bun run build && kubectl apply -f dist",
+    "diff": "KUBECTL_EXTERNAL_DIFF=delta DELTA_PAGER=bat BAT_PAGER=/opt/homebrew/bin/less kubectl diff -f dist/media.k8s.yaml"
+  },
+  "dependencies": {
+    "cdk8s": "^2.69.60",
+    "cdk8s-plus-31": "^2.2.4",
+    "constructs": "^10.4.2",
+    "cron-parser": "^5.4.0",
+    "lodash": "^4.17.21",
+    "remeda": "^2.22.5",
+    "ts-pattern": "^5.7.1",
+    "zod": "^4.1.11",
+    "@shepherdjerred/helm-types": "workspace:*",
+    "@grafana/grafana-foundation-sdk": "11.6.0-cogv0.0.x.1759917919"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.2.18",
+    "@types/lodash": "^4.17.17",
+    "type-fest": "^5.0.0",
+    "yaml": "^2.8.1"
+  }
+}

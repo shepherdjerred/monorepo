@@ -25,6 +25,10 @@
     "packages/astro-opengraph-images": {
       "release-type": "node",
       "package-name": "astro-opengraph-images"
+    },
+    "packages/homelab/helm-types": {
+      "release-type": "node",
+      "package-name": "@shepherdjerred/helm-types"
     }
   }
 }

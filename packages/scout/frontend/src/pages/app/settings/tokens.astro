@@ -1,0 +1,350 @@
+---
+import AppLayout from "../../../layouts/app/AppLayout.astro";
+---
+
+<AppLayout title="API Tokens">
+  <div class="p-8">
+    <!-- Header -->
+    <div class="mb-8 flex items-center justify-between">
+      <div>
+        <div class="flex items-center gap-3">
+          <a href="/app/settings" class="text-slate-400 hover:text-slate-300">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+          </a>
+          <h1 class="text-3xl font-bold text-white">API Tokens</h1>
+        </div>
+        <p class="mt-2 text-slate-400">Create and manage API tokens for the desktop client</p>
+      </div>
+      <button
+        id="create-token-btn"
+        class="flex items-center gap-2 rounded-lg bg-indigo-500 px-4 py-2 font-medium text-white transition-colors hover:bg-indigo-600"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+        Create Token
+      </button>
+    </div>
+
+    <!-- Instructions -->
+    <div class="mb-8 rounded-xl border border-slate-800 bg-slate-900/50 p-6">
+      <h2 class="mb-4 font-semibold text-white">How to use API tokens</h2>
+      <ol class="list-inside list-decimal space-y-2 text-sm text-slate-400">
+        <li>Create a new API token with a descriptive name</li>
+        <li>Copy the token immediately - it will only be shown once</li>
+        <li>Open the Scout desktop app and go to "Backend Connection"</li>
+        <li>Paste the token and backend URL into the configuration</li>
+        <li>Click "Save Configuration" to connect</li>
+      </ol>
+    </div>
+
+    <!-- New Token Form (Hidden by default) -->
+    <div id="create-token-form" class="mb-8 hidden rounded-xl border border-indigo-500/30 bg-indigo-500/5 p-6">
+      <h2 class="mb-4 font-semibold text-white">Create New Token</h2>
+      <div class="space-y-4">
+        <div>
+          <label for="token-name" class="mb-2 block text-sm font-medium text-slate-300">Token Name</label>
+          <input
+            type="text"
+            id="token-name"
+            placeholder="e.g., My Gaming PC"
+            class="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          />
+        </div>
+        <div>
+          <label for="token-expiry" class="mb-2 block text-sm font-medium text-slate-300">Expiration</label>
+          <select
+            id="token-expiry"
+            class="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          >
+            <option value="">Never expires</option>
+            <option value="30">30 days</option>
+            <option value="90">90 days</option>
+            <option value="365">1 year</option>
+          </select>
+        </div>
+        <div class="flex gap-3">
+          <button
+            id="submit-token-btn"
+            class="rounded-lg bg-indigo-500 px-4 py-2 font-medium text-white transition-colors hover:bg-indigo-600"
+          >
+            Create Token
+          </button>
+          <button
+            id="cancel-token-btn"
+            class="rounded-lg border border-slate-700 px-4 py-2 font-medium text-slate-300 transition-colors hover:bg-slate-800"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- New Token Display (Hidden by default) -->
+    <div id="new-token-display" class="mb-8 hidden rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-6">
+      <div class="flex items-start gap-4">
+        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-500/20">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <div class="flex-1">
+          <h3 class="font-semibold text-emerald-400">Token Created Successfully</h3>
+          <p class="mt-1 text-sm text-slate-400">Copy this token now - it won't be shown again!</p>
+          <div class="mt-4 flex items-center gap-2">
+            <input
+              type="text"
+              id="new-token-value"
+              readonly
+              class="flex-1 rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 font-mono text-sm text-white"
+            />
+            <button
+              id="copy-token-btn"
+              class="flex items-center gap-2 rounded-lg bg-slate-700 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-600"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+              Copy
+            </button>
+          </div>
+          <button
+            id="dismiss-new-token-btn"
+            class="mt-4 text-sm text-slate-400 hover:text-slate-300"
+          >
+            I've copied the token
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tokens List -->
+    <div>
+      <h2 class="mb-4 text-lg font-semibold text-white">Your Tokens</h2>
+
+      <div id="tokens-loading" class="flex items-center justify-center rounded-xl border border-slate-800 bg-slate-900/50 p-8">
+        <svg class="h-5 w-5 animate-spin text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+      </div>
+
+      <div id="tokens-empty" class="hidden rounded-xl border border-slate-800 bg-slate-900/50 p-8 text-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+        </svg>
+        <p class="mt-4 text-slate-400">No API tokens yet</p>
+        <p class="text-sm text-slate-500">Create a token to connect the desktop client</p>
+      </div>
+
+      <div id="tokens-list" class="hidden space-y-3">
+        <!-- Token items will be inserted here -->
+      </div>
+    </div>
+  </div>
+</AppLayout>
+
+<script>
+import { getApiClient } from "../../../lib/trpc";
+
+interface Token {
+  id: number;
+  name: string;
+  scopes: string;
+  lastUsedAt: string | null;
+  expiresAt: string | null;
+  createdAt: string;
+}
+
+let tokens: Token[] = [];
+
+async function loadTokens() {
+  const tokensLoading = document.getElementById("tokens-loading");
+  const tokensEmpty = document.getElementById("tokens-empty");
+  const tokensList = document.getElementById("tokens-list");
+
+  try {
+    const client = getApiClient();
+    tokens = await client.auth.listApiTokens.query();
+
+    tokensLoading?.classList.add("hidden");
+
+    if (tokens.length === 0) {
+      tokensEmpty?.classList.remove("hidden");
+    } else {
+      tokensList?.classList.remove("hidden");
+      renderTokens();
+    }
+  } catch (error) {
+    console.error("Failed to load tokens:", error);
+    tokensLoading?.classList.add("hidden");
+    tokensEmpty?.classList.remove("hidden");
+  }
+}
+
+function renderTokens() {
+  const tokensList = document.getElementById("tokens-list");
+  if (!tokensList) return;
+
+  tokensList.innerHTML = tokens
+    .map(
+      (token) => `
+    <div class="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-900/50 p-6">
+      <div class="flex items-center gap-4">
+        <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/20">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+          </svg>
+        </div>
+        <div>
+          <p class="font-medium text-white">${escapeHtml(token.name)}</p>
+          <div class="flex items-center gap-4 text-sm text-slate-400">
+            <span>Created ${formatDate(token.createdAt)}</span>
+            ${token.lastUsedAt ? `<span>Last used ${formatDate(token.lastUsedAt)}</span>` : "<span>Never used</span>"}
+            ${token.expiresAt ? `<span>Expires ${formatDate(token.expiresAt)}</span>` : ""}
+          </div>
+        </div>
+      </div>
+      <button
+        class="revoke-token-btn rounded-lg border border-red-500/50 px-4 py-2 text-sm font-medium text-red-400 transition-colors hover:bg-red-500/10"
+        data-token-id="${token.id}"
+      >
+        Revoke
+      </button>
+    </div>
+  `
+    )
+    .join("");
+
+  // Add event listeners for revoke buttons
+  document.querySelectorAll(".revoke-token-btn").forEach((btn) => {
+    btn.addEventListener("click", async (e) => {
+      const tokenId = parseInt((e.target as HTMLElement).dataset["tokenId"] ?? "0", 10);
+      if (tokenId && confirm("Are you sure you want to revoke this token?")) {
+        await revokeToken(tokenId);
+      }
+    });
+  });
+}
+
+async function revokeToken(tokenId: number) {
+  try {
+    const client = getApiClient();
+    await client.auth.revokeApiToken.mutate({ tokenId });
+    tokens = tokens.filter((t) => t.id !== tokenId);
+
+    const tokensEmpty = document.getElementById("tokens-empty");
+    const tokensList = document.getElementById("tokens-list");
+
+    if (tokens.length === 0) {
+      tokensList?.classList.add("hidden");
+      tokensEmpty?.classList.remove("hidden");
+    } else {
+      renderTokens();
+    }
+  } catch (error) {
+    console.error("Failed to revoke token:", error);
+    alert("Failed to revoke token");
+  }
+}
+
+async function createToken(name: string, expiresInDays?: number) {
+  try {
+    const client = getApiClient();
+    const result = await client.auth.createApiToken.mutate({
+      name,
+      expiresInDays,
+    });
+
+    // Show the new token
+    const newTokenDisplay = document.getElementById("new-token-display");
+    const newTokenValue = document.getElementById("new-token-value") as HTMLInputElement;
+    const createTokenForm = document.getElementById("create-token-form");
+
+    createTokenForm?.classList.add("hidden");
+    newTokenDisplay?.classList.remove("hidden");
+    if (newTokenValue) {
+      newTokenValue.value = result.token;
+    }
+
+    // Reload tokens list
+    await loadTokens();
+  } catch (error) {
+    console.error("Failed to create token:", error);
+    alert("Failed to create token");
+  }
+}
+
+function formatDate(date: Date | string): string {
+  return new Date(date).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function escapeHtml(str: string): string {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// Event listeners
+const createTokenBtn = document.getElementById("create-token-btn");
+const createTokenForm = document.getElementById("create-token-form");
+const cancelTokenBtn = document.getElementById("cancel-token-btn");
+const submitTokenBtn = document.getElementById("submit-token-btn");
+const copyTokenBtn = document.getElementById("copy-token-btn");
+const dismissNewTokenBtn = document.getElementById("dismiss-new-token-btn");
+const newTokenDisplay = document.getElementById("new-token-display");
+
+createTokenBtn?.addEventListener("click", () => {
+  createTokenForm?.classList.remove("hidden");
+  createTokenBtn?.classList.add("hidden");
+});
+
+cancelTokenBtn?.addEventListener("click", () => {
+  createTokenForm?.classList.add("hidden");
+  createTokenBtn?.classList.remove("hidden");
+});
+
+submitTokenBtn?.addEventListener("click", async () => {
+  const tokenName = (document.getElementById("token-name") as HTMLInputElement)?.value;
+  const tokenExpiry = (document.getElementById("token-expiry") as HTMLSelectElement)?.value;
+
+  if (!tokenName) {
+    alert("Please enter a token name");
+    return;
+  }
+
+  await createToken(tokenName, tokenExpiry ? parseInt(tokenExpiry, 10) : undefined);
+});
+
+copyTokenBtn?.addEventListener("click", async () => {
+  const newTokenValue = document.getElementById("new-token-value") as HTMLInputElement;
+  if (newTokenValue) {
+    await navigator.clipboard.writeText(newTokenValue.value);
+    if (copyTokenBtn) {
+      copyTokenBtn.textContent = "Copied!";
+      setTimeout(() => {
+        copyTokenBtn.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+          </svg>
+          Copy
+        `;
+      }, 2000);
+    }
+  }
+});
+
+dismissNewTokenBtn?.addEventListener("click", () => {
+  newTokenDisplay?.classList.add("hidden");
+  createTokenBtn?.classList.remove("hidden");
+});
+
+// Load tokens on page load
+loadTokens();
+</script>

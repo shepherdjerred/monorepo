@@ -1,0 +1,290 @@
+---
+description: Error handling patterns using Zod validation
+globs: "*.ts,*.tsx"
+alwaysApply: false
+---
+
+# Error Handling Patterns
+
+## Core Rule: Use Zod for Error Validation
+
+**NEVER** use `instanceof Error` or custom type guards. Always use Zod schemas.
+
+## Error Variables Are `unknown`
+
+```typescript
+// ✅ CORRECT
+let error: unknown = null;
+try {
+  await operation();
+} catch (e) {
+  error = e;
+}
+
+const ErrorSchema = z.object({ message: z.string() });
+const result = ErrorSchema.safeParse(error);
+if (result.success) {
+  console.error(result.data.message);
+}
+
+// ❌ WRONG
+let error: Error | null = null;
+try {
+  await operation();
+} catch (e) {
+  error = e as Error;  // Type assertion!
+}
+```
+
+## Helper Pattern for Error Messages
+
+Reusable helper for extracting error messages:
+
+```typescript
+import { z } from "zod";
+
+const ErrorSchema = z.object({ message: z.string() });
+
+export function getErrorMessage(error: unknown): string {
+  const result = ErrorSchema.safeParse(error);
+  return result.success ? result.data.message : String(error);
+}
+
+// Usage
+catch (error) {
+  throw new Error(`Operation failed: ${getErrorMessage(error)}`);
+}
+```
+
+## Practical Examples
+
+### Example 1: Async Error Handling
+
+```typescript
+async function fetchUserData(id: string): Promise<User> {
+  try {
+    const response = await fetch(`/api/users/${id}`);
+    const json: unknown = await response.json();
+    return UserSchema.parse(json);
+  } catch (error) {
+    throw new Error(`Failed to fetch user: ${getErrorMessage(error)}`);
+  }
+}
+```
+
+### Example 2: Discord Command Error Handling
+
+```typescript
+import { MessageFlags } from "discord.js";
+import { getErrorMessage } from "../utils/errors.ts";
+
+async function executeCommand(interaction: ChatInputCommandInteraction) {
+  try {
+    await performOperation();
+    await interaction.reply({ content: "Success!" });
+  } catch (error) {
+    await interaction.reply({
+      content: `Error: ${getErrorMessage(error)}`,
+      flags: MessageFlags.Ephemeral,
+    });
+  }
+}
+```
+
+### Example 3: Database Operation Error Handling
+
+```typescript
+async function createCompetition(data: CompetitionInput) {
+  let error: unknown = null;
+
+  try {
+    return await prisma.competition.create({ data });
+  } catch (e) {
+    error = e;
+  }
+
+  // Prisma errors have specific structure
+  const PrismaErrorSchema = z.object({
+    code: z.string(),
+    message: z.string(),
+  });
+
+  const result = PrismaErrorSchema.safeParse(error);
+  if (result.success && result.data.code === "P2002") {
+    throw new Error("Competition already exists");
+  }
+
+  throw new Error(`Database error: ${getErrorMessage(error)}`);
+}
+```
+
+### Example 4: Validation Error Handling
+
+```typescript
+import { fromError } from "zod-validation-error";
+
+function processInput(rawInput: unknown) {
+  try {
+    return InputSchema.parse(rawInput);
+  } catch (error) {
+    const validationError = fromError(error);
+    throw new Error(`Invalid input: ${validationError.message}`);
+  }
+}
+```
+
+### Example 5: Retry with Error Handling
+
+```typescript
+async function fetchWithRetry<T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 3
+): Promise<T> {
+  let lastError: unknown = null;
+
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+      await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+    }
+  }
+
+  throw new Error(`Failed after ${maxRetries} attempts: ${getErrorMessage(lastError)}`);
+}
+```
+
+### Example 6: Multiple Error Types
+
+```typescript
+const ApiErrorSchema = z.object({
+  status: z.number(),
+  message: z.string(),
+});
+
+const NetworkErrorSchema = z.object({
+  code: z.string(),
+  message: z.string(),
+});
+
+async function apiCall(): Promise<Data> {
+  try {
+    const response = await fetch(url);
+    const json: unknown = await response.json();
+    return DataSchema.parse(json);
+  } catch (error) {
+    // Try API error format
+    const apiError = ApiErrorSchema.safeParse(error);
+    if (apiError.success) {
+      throw new Error(`API error ${apiError.data.status}: ${apiError.data.message}`);
+    }
+
+    // Try network error format
+    const networkError = NetworkErrorSchema.safeParse(error);
+    if (networkError.success) {
+      throw new Error(`Network error: ${networkError.data.message}`);
+    }
+
+    // Fallback
+    throw new Error(`Unknown error: ${getErrorMessage(error)}`);
+  }
+}
+```
+
+### Example 7: Production Error Logging
+
+```typescript
+import { getErrorMessage } from "./utils/errors.ts";
+
+async function logError(error: unknown, context: string): Promise<void> {
+  const message = getErrorMessage(error);
+
+  // Log to console
+  console.error(`[${context}]`, message);
+
+  // Send to error tracking service (e.g., Sentry)
+  if (process.env.SENTRY_DSN) {
+    const ErrorSchema = z.object({
+      message: z.string(),
+      stack: z.string().optional(),
+    });
+    const result = ErrorSchema.safeParse(error);
+
+    if (result.success) {
+      // Send structured error to Sentry
+      // captureException(result.data);
+    }
+  }
+}
+
+// Usage
+catch (error) {
+  await logError(error, "createCompetition");
+  throw error;
+}
+```
+
+### Example 8: Graceful Degradation
+
+```typescript
+async function getFeatureFlag(flagName: string): Promise<boolean> {
+  try {
+    const response = await fetch(`/api/flags/${flagName}`);
+    const json: unknown = await response.json();
+    const result = z.object({ enabled: z.boolean() }).parse(json);
+    return result.enabled;
+  } catch (error) {
+    // Log error but don't fail
+    console.warn(`Feature flag error (defaulting to false): ${getErrorMessage(error)}`);
+    return false;  // Safe default
+  }
+}
+```
+
+## Testing Error Handling
+
+```typescript
+import { expect, test } from "bun:test";
+import { z } from "zod";
+
+test("handles error correctly", async () => {
+  let error: unknown = null;
+
+  try {
+    await functionThatThrows();
+  } catch (e) {
+    error = e;
+  }
+
+  expect(error).not.toBeNull();
+
+  const ErrorSchema = z.object({ message: z.string() });
+  const result = ErrorSchema.safeParse(error);
+
+  if (result.success) {
+    expect(result.data.message).toContain("expected error text");
+  } else {
+    throw new Error("Error did not match expected schema");
+  }
+});
+```
+
+**See:** `testing-patterns.mdc` for comprehensive testing patterns.
+
+## Key Principles
+
+1. **Always use `unknown`** for error variables
+2. **Always validate with Zod** before using error properties
+3. **Create reusable helpers** like `getErrorMessage`
+4. **Provide context** in error messages
+5. **Log errors** appropriately (console, Sentry, etc.)
+6. **Graceful degradation** where appropriate
+7. **Test error handling** explicitly
+
+## Related Documentation
+
+- **Type Safety:** `type-safety-strategy.mdc` - Overall validation strategy
+- **Zod Patterns:** `zod-validation-patterns.mdc` - Schema patterns
+- **Testing:** `testing-patterns.mdc` - Test error handling
+- **Discord:** `discord-bot-patterns.mdc` - Discord-specific errors

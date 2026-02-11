@@ -1,0 +1,28 @@
+{
+  "name": "@shepherdjerred/scout-data",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "test": "bun test",
+    "test:watch": "bun test --watch",
+    "test:coverage": "bun test --coverage",
+    "test:ci": "bun test --bail --coverage --reporter=junit --reporter-outfile=./junit.xml",
+    "lint": "bunx eslint src",
+    "format": "bunx prettier --check src",
+    "format:write": "bunx prettier --write src",
+    "typecheck": "bunx tsc --noEmit",
+    "update-data-dragon": "bun run scripts/update-data-dragon.ts"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.0",
+    "date-fns": "^4.1.0",
+    "remeda": "^2.21.2",
+    "ts-pattern": "^5.7.0",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "bun-types": "latest",
+    "typescript": "^5.9.3"
+  }
+}

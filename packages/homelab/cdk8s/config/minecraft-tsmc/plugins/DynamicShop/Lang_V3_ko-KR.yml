@@ -1,0 +1,509 @@
+START_PAGE:
+  EDITOR_TITLE: §3아이콘 편집
+  EDIT_NAME: §f이름 바꾸기
+  EDIT_LORE: §f설명 바꾸기
+  EDIT_ICON: §f아이콘 바꾸기
+  EDIT_ACTION: §f실행 명령어 바꾸기
+  SHOP_SHORTCUT: §f상점으로 가는 버튼 만들기
+  CREATE_DECO: §f장식 버튼 만들기
+  ENTER_SHOP_NAME: 상점 이름을 입력하세요.
+  DEFAULT_SHOP_LORE: "§f§n클릭: 상점으로 가기"
+  ITEM_MOVE_LORE: "§e우클릭: 이동"
+  ITEM_COPY_LORE: "§e우클릭: 복사"
+  ITEM_REMOVE_LORE: "§eShift 좌클릭: 삭제"
+  ITEM_EDIT_LORE: "§eShift우클릭: 편집"
+  REMOVE: §f제거
+  REMOVE_LORE: §f이 버튼을 시작페이지에서 제거합니다.
+  ENTER_NAME: 버튼의 새 이름을 입력하세요.
+  ENTER_LORE: 버튼의 새 설명을 입력하세요.
+  ENTER_ICON: 버튼의 아이콘으로 사용할 아이탬 이름을 입력하세요. (영문. 대소문자 구분없음)
+  ENTER_ACTION: 명령어를 '/' 제외하고 입력하세요. 버튼을 눌렀을때 이 명령어가 실행됩니다.
+  ENTER_COLOR: 장식 버튼의 색상을 입력하세요. (영문)
+  SHOP_LIST_TITLE: §3상점 목록
+  SHOP_LIST:
+    PAGE_TITLE: §f{curPage}/{maxPage} 페이지
+    PAGE_LORE: |-
+      §e좌클릭: 이전 페이지
+      §e우클릭: 다음 페이지
+COLOR_PICKER_TITLE: §3색상 선택
+SHOP:
+  TRADE_LORE: "§f§n클릭: 거래"
+  BUY_PRICE: "§f구매: {num}"
+  SELL_PRICE: "§f판매: {num}"
+  BUY_PRICE_DISCOUNTED: "§f구매: §8§m{num}§r §a{num2}"
+  SELL_PRICE_DISCOUNTED: "§f판매: §8§m{num}§r §c{num2}"
+  BUY_PRICE_PP: "§f구매: {num}PP"
+  SELL_PRICE_PP: "§f판매: {num}PP"
+  BUY_PRICE_EXP: "§f구매: {num}Exp"
+  SELL_PRICE_EXP: "§f판매: {num}Exp"
+  BUY_PRICE_DISCOUNTED_EXP: "§f구매: §8§m{num}Exp§r §a{num2}Exp"
+  SELL_PRICE_DISCOUNTED_EXP: "§f판매: §8§m{num}Exp§r §c{num2}Exp"
+  BUY_PRICE_DISCOUNTED_PP: "§f구매: §8§m{num}PP§r §a{num2}PP"
+  SELL_PRICE_DISCOUNTED_PP: "§f판매: §8§m{num}PP§r §c{num2}PP"
+  BUY_PRICE_JP: "§f구매: {num}JP"
+  SELL_PRICE_JP: "§f판매: {num}JP"
+  BUY_PRICE_DISCOUNTED_JP: "§f구매: §8§m{num}JP§r §a{num2}JP"
+  SELL_PRICE_DISCOUNTED_JP: "§f판매: §8§m{num}JP§r §c{num2}JP"
+  STOCK: "§8재고: {num}"
+  STOCK_2: "§8재고: {stock}/{max_stock}"
+  INF_STOCK: §8무한
+  STATIC_PRICE: §8[고정 가격]
+  STACKS: §8{num} 스택
+  ITEM_MOVE_LORE: "§e우클릭: 이동"
+  ITEM_COPY_LORE: "§e우클릭: 복사"
+  ITEM_EDIT_LORE: "§eShift우클릭: 편집"
+  DECO_DELETE_LORE: "§eShift우클릭: 삭제"
+  PAGE_TITLE: §f{curPage}/{maxPage} 페이지
+  PAGE_LORE_V2: "§f§n좌클릭: 이전 페이지\n§f§n우클릭: 다음 페이지\n§7인벤토리에서 아이템을 클릭하면 \n§7그 아이템이 있\
+    는 페이지로 이동합니다."
+  GO_TO_PAGE_EDITOR: "§eShift+우: 페이지 에디터"
+  ITEM_MOVE_SELECTED: 아이탬 선택됨. 비어있는 칸을 우클릭하면 이동합니다.
+  PERMISSION: "§f퍼미션:"
+  PERMISSION_ITEM: §7 - {permission}
+  FLAGS: "§e플래그:"
+  FLAGS_ITEM: §e - {flag}
+  SHOP_BAL_INF: §f상점 계좌 무제한
+  SHOP_BAL: §f상점 계좌 잔액
+  SHOP_LOCATION: "§f상점 위치: x {x}, y {y}, z {z}"
+  SHOP_LOCATION_B: "§f상점 위치: "
+  SHOP_INFO_DASH: "§7 - "
+  DISABLED: §c비활성§8|§f
+  INCOMPLETE_DATA: 불완전한 데이터
+  INCOMPLETE_DATA_Lore: "이 아이템은 어드민이 아닌\n유저에게는 보이지 않습니다.\nIndex: "
+  TRADE_LIMIT_BUY: "§a구매량 제한 : {num} 남음"
+  TRADE_LIMIT_SELL: "§a판매량 제한 : {num} 남음"
+  TRADE_LIMIT_TIMER: "§a다음 리셋: {time}"
+  CLICK_TO_ADD: "§e클릭: 추가"
+SHOP_SETTING_TITLE: §3상점 설정
+SHOP_SETTING:
+  LOG_TOGGLE_LORE: "§e우클릭: 로그 뷰어"
+  LOG_PRINT_CONSOLE: §f로그를 콘솔에 출력
+  LOG_PRINT_ADMIN: §f로그를 어드민에게 출력
+  MAX_PAGE: §f최대 페이지
+  MAX_PAGE_LORE: §f상점의 최대 페이지를 설정합니다
+  BACKGROUND: §f배경 색상
+  BACKGROUND_LORE: "§e클릭: 변경"
+  L_R_SHIFT: "§e좌: -1 우: +1 Shift: x5"
+  FLAG: §f플래그
+  SHOP_SETTINGS_LORE: "§e우클릭: 상점 편집"
+  SIGN_SHOP_LORE: §f표지판을 통해서만 접근할 수 있습니다.
+  LOCAL_SHOP_LORE: |-
+    §f실제 상점 위치를 방문해야 합니다.
+    §f상점의 위치를 설정해야만 합니다.
+  DELIVERY_CHARGE_LORE: §f배달비를 지불하고 localshop에서 원격으로 거래합니다.
+  SELECTED: §2선택됨
+  CURRENCY: "§f화폐 유형: "
+  VAULT_LORE: §f기본값 입니다.
+  EXP_LORE: §f플레이어의 경험치로 거래합니다.
+  JOB_POINT_LORE: §fJobs 플러그인의 job point로 거래합니다.
+  PLAYER_POINT_LORE: §fPlayerPoint 플러그인의 point로 거래합니다.
+  SHOW_VALUE_CHANGE_LORE: §f가격 변화량을 표시합니다.
+  HIDE_STOCK: §f재고 수량 표시를 숨깁니다.
+  HIDE_PRICING_TYPE: §f가격 유형 표기를 숨깁니다.
+  HIDE_SHOP_BALANCE: §f상점 계좌 잔액을 숨깁니다.
+  SHOW_MAX_STOCK: §f재고 상한을 표시합니다.
+  HIDDEN_IN_COMMAND: §f명령어 자동완성시 이 상점을 표시하지 않습니다.
+  INTEGER_ONLY: |-
+    §f구매 가격이 올림 처리됩니다.
+    §f판매 가격은 내림 처리됩니다.
+  PERMISSION: §f퍼미션
+  STATE: §f상태
+  STATE_ENABLE: §a활성
+  STATE_DISABLE: §c비활성
+  ROTATION_EDITOR: "§f로테이션: "
+  ROTATION_EDITOR_LORE: "§e클릭: 로테이션 에디터"
+  COMMAND_TOGGLE: §f커맨드 실행
+  COMMAND_TOGGLE_LORE: §f상점 거래 발생시 서버 명령어를 실행합니다.
+  COMMAND_SELL: §f판매시 명령어
+  COMMAND_BUY: §f구매시 명령어
+  COMMAND_LORE1: "§e좌클릭: 설정"
+  COMMAND_LORE3: "§e씨프트 우클릭: 마지막 항목 삭제"
+ROTATION_EDITOR_TITLE: §3로테이션 에디터
+ROTATION_EDITOR:
+  ENABLED: §a로테이션 켜짐
+  DISABLED: §c로테이션 꺼짐
+  CLICK_TO_ENABLE: "§e좌클릭: 로테이션 켜기"
+  CLICK_TO_DISABLE: "§e좌클릭: 로테이션 끄기"
+  CURRENT_TIME: "§f현재 시간: "
+  CURRENTLY_IN_USE: §a[현재 적용중]
+  NEXT_ROTATION: "§f다음 로테이션: "
+  PERIOD: §f로테이션 주기
+  PERIOD_LORE_V2: "§e좌클릭: -1시간, 우클릭: +1시간, 씨프트: x10"
+  TIMER: §f타이머 조정
+  TIMER_LORE_V2: "§e좌클릭: -10분, 우클릭: +10분, 씨프트: x6"
+  HOUR: §f{0}시간
+  UNSAVED_CHANGES: §c§o저장되지 않은 변경사항 있음
+  APPLY_CHANGES: §f변경사항 적용
+  APPLY_CHANGES_LORE: |-
+    §e좌클릭: 변경사항 적용
+    §e우클릭: 변경사항 초기화
+  APPLY_ROTATION: "§e좌클릭: 지금 적용"
+  OPEN: "§e좌클릭: 열기"
+  CREATE: "§e좌클릭: 빈 로테이션 만들기"
+  COPY_AS_NEW: "§e우클릭: 현재 상점 복사하여 만들기"
+  DELETE: "§e씨프트 우클릭: §c삭제"
+  REAPPLY: "§e씨프트 좌클릭: 재적용"
+  MOVE: "§e우클릭: 이동"
+ITEM_SETTING_TITLE: §3아이탬 셋팅
+ITEM_SETTING:
+  VALUE_BUY: "§f구매가치: "
+  VALUE_SELL: "§f판매가치: "
+  PRICE: "§f구매: "
+  SELL_PRICE: "§f판매: "
+  PRICE_MIN: "§f최소 가격: "
+  PRICE_MAX: "§f최대 가격: "
+  MEDIAN: "§f중앙값: "
+  STOCK: "§f재고: "
+  MAX_STOCK: "§f재고 상한: "
+  MAX_STOCK_LORE: |-
+    §f재고량이 이보다 많아지면
+    §f더이상 상점에 판매할 수 없게됩니다.
+  INF_STOCK: 무한 재고
+  STATIC_PRICE: 고정 가격
+  UNLIMITED: 무제한
+  MEDIAN_HELP: §f중앙값이 작을수록 가격이 급격이 변화합니다.
+  TAX_IGNORED: 판매세 설정이 무시됩니다.
+  RECOMMEND: §f추천 값 적용
+  DISCOUNT: §f할인
+  DISCOUNT_LORE: |-
+    §f할인율: {num}%
+    §e좌클릭: +10, 우클릭: -10
+  DISCOUNT_LORE_2: |-
+    §f할인율: {num}%
+    §e좌클릭: -10, 우클릭: +10
+  DONE: §f완료
+  DONE_LORE: §f완료!
+  ROUND_DOWN: §f내림
+  SET_TO_MEDIAN: §f중앙값에 맞춤
+  SET_TO_STOCK: §f재고에 맞춤
+  SET_TO_VALUE: §f가격에 맞춤
+  CLOSE: §f닫기
+  CLOSE_LORE: "§f§n클릭: 닫기"
+  REMOVE: §c제거
+  REMOVE_LORE: §f이 아이템을 상점에서 제거합니다.
+  BUY: "§3§l구매: {num}"
+  SELL: "§3§l판매: {num}"
+  TRADE_LIMIT_SELL: §f플레이어 당 판매량 제한
+  TRADE_LIMIT_SELL_LORE: |-
+    §f{num}
+    §eLMB: -1, RMB: +1, Shift = x10
+  TRADE_LIMIT_BUY: §f플레이어 당 구매량 제한
+  TRADE_LIMIT_BUY_LORE: |-
+    §f{num}
+    §eLMB: -1, RMB: +1, Shift = x10
+  TRADE_LIMIT_INTERVAL: §f거래량 제한 리셋 주기
+  TRADE_LIMIT_INTERVAL_LORE: |-
+    §f주기: {interval}
+    §f다음 리셋: {time}
+    §e좌클릭: -1시간, 우클릭: +1시간, 씨프트 = x12
+  TRADE_LIMIT_TIMER: §f타이머 조정
+  TRADE_LIMIT_TIMER_LORE: |-
+    §f{num}
+    §f다음 리셋: {time}
+    §e좌클릭: -1시간, 우클릭: +1시간, 씨프트 = x12
+TRADE_TITLE: §3아이템 거래
+TRADE:
+  TOGGLE_SELLABLE: "§e클릭: 판매전용 토글"
+  TOGGLE_BUYABLE: "§e클릭: 구매전용 토글"
+  BUY_ONLY_LORE: §f구매만 가능한 아이템
+  SELL_ONLY_LORE: §f판매만 가능한 아이템
+  BALANCE: §3내 잔액
+  PRICE: "§f구매: {num}"
+  SELL_PRICE: "§f판매: {num}"
+  PRICE_DISCOUNTED: "§f구매: §8§m{num}§r §a{num2}"
+  SELL_PRICE_DISCOUNTED: "§f판매: §8§m{num}§r §c{num2}"
+  PRICE_EXP: "§f구매: {num}EXP"
+  SELL_PRICE_EXP: "§f판매: {num}EXP"
+  PRICE_DISCOUNTED_EXP: "§f구매: §8§m{num}EXP§r §a{num2}EXP"
+  SELL_PRICE_DISCOUNTED_EXP: "§f판매: §8§m{num}EXP§r §c{num2}EXP"
+  PRICE_PP: "§f구매: {num}PP"
+  SELL_PRICE_PP: "§f판매: {num}PP"
+  PRICE_DISCOUNTED_PP: "§f구매: §8§m{num}PP§r §a{num2}PP"
+  SELL_PRICE_DISCOUNTED_PP: "§f판매: §8§m{num}PP§r §c{num2}PP"
+  PRICE_JP: "§f구매: {num}JP"
+  SELL_PRICE_JP: "§f판매: {num}JP"
+  PRICE_DISCOUNTED_JP: "§f구매: §8§m{num}JP§r §a{num2}JP"
+  SELL_PRICE_DISCOUNTED_JP: "§f판매: §8§m{num}JP§r §c{num2}JP"
+  BUY: §c구매
+  SELL: §2판매
+  STOCK: "§8재고: "
+  STACKS: §8{num} 스택
+  INF_STOCK: §8무한 재고
+  SHOP_BAL_INF: §f상점 계좌 무제한
+  SHOP_BAL: "§3상점 계좌 잔액 \n§f{num}"
+  CLICK_TO_BUY: "§c§n클릭: {amount}개 구매"
+  CLICK_TO_SELL: "§2§n클릭: {amount}개 판매"
+  PURCHASE_LIMIT_PER_PLAYER: |-
+    §a구매량 제한 : {num} 남음
+    §a다음 리셋: {time}
+  SALES_LIMIT_PER_PLAYER: |-
+    §a판매량 제한 : {num} 남음
+    §a다음 리셋: {time}
+PAGE_EDITOR_TITLE: §3페이지 편집
+PAGE_EDITOR:
+  PREV: §f<<
+  NEXT: §f>>
+  PAGE_SWAP_SUCCESS: §f페이지가 교체 되었습니다.
+  PAGE_SWAP_FAIL: §f페이지 교체 실패.
+  PAGE_SWAP_SELECTED: §f페이지 선택되었습니다. 서로 교체 할 다른 페이지를 우클릭 하세요.
+  PAGE_LORE_PREMIUM: |-
+    §e좌클릭: 페이지 이동
+    §e우클릭: 페이지 교체(스왑)
+    §eShift+좌: 페이지 삽입
+    §eShift+우: 페이지 삭제
+  PRICE: "§f구매: {num}"
+  SELL_PRICE: "§f판매: {num}"
+  STOCK: "§8재고: {num}"
+  STACKS: §8{num} 스택
+  STATIC_PRICE: §8[고정 가격]
+  EMPTY: §8(비어있음)
+  EMPTY_SLOT_LORE: |-
+    §e좌,우클릭: 밀기
+    §e+씨프트: 당기기
+LOG_VIEWER_TITLE: §3로그 뷰어
+LOG_VIEWER:
+  DATE: "§f날짜: "
+  TIME: "§f시간: "
+  CURRENCY: "§f화폐 유형: "
+  PRICE: "§f가격: "
+  EXPAND: §f펼치기
+  COLLAPSE: §f접기
+  PAGE_TITLE: §f{curPage}/{maxPage} 페이지
+  PAGE_LORE: |-
+    §e좌클릭: 이전 페이지
+    §e우클릭: 다음 페이지
+  FILE_LORE: |-
+    §e좌클릭: 열기
+    §eShift+우: §c삭제
+LOG:
+  LOG: §f로그
+  CLEAR: §f로그 삭제됨
+  SAVE: §f로그 저장됨
+  DELETE: §4로그 삭제
+  SELL: §f{player}(이)가 {shop}에 {item} {amount}개를 판매함
+  BUY: §f{player}(이)가 {shop}에서 {item} {amount}개를 구매함
+STOCK_SIMULATOR_TITLE: §3재고 시뮬레이터
+STOCK_SIMULATOR:
+  CHANGE_SAMPLE_LORE: "§e좌, 우클릭: 아이템 변경"
+  SIMULATOR_BUTTON_LORE: "§e우클릭: 시뮬레이터"
+  RUN_TITLE: §f실행
+  RUN_LORE: |-
+    §e좌클릭: 시뮬레이션 실행
+    §e우클릭: 설정값을 상점에 적용합니다
+    §f아이템은 영향받지 않습니다.
+  REAL_TIME: §a(실제 시간)
+  AFTER_S: §a{0}초 후
+  AFTER_M: §a{0}분 후
+  AFTER_H: §a{0}시간 후
+  AFTER_D: §a{0}일 후
+  L_R_SHIFT: "§e좌: -1 우: +1 Shift: x5"
+  PRICE: "§f구매: {num}"
+  MEDIAN: "§f중앙값: {num}"
+  STOCK: "§f재고: {num}"
+PALETTE_TITLE: §3판매할 아이템 선택
+PALETTE_TITLE2: §3아이템 선택
+PALETTE:
+  LORE_PREMIUM: |-
+    §e좌클릭: 추가
+    §e씨프트 좌클릭: 설정 후 추가
+    §e우클릭: 장식으로 추가
+    §e씨프트 우클릭: '{item}' 를 검색
+  LORE2: |-
+    §e좌클릭: 선택
+    §e씨프트 우클릭: '{item}' 를 검색
+  SEARCH: §f찾기
+  ADD_ALL: §f모두 추가
+  ADD_ALL_LORE_LOCKED: |-
+    §e좌클릭: 모두 추가
+    §7씨프트 좌클릭: 모두 추가하고 권장 값 적용
+  PAGE_TITLE: §f{curPage}/{maxPage} 페이지
+  PAGE_LORE: |-
+    §f§n좌클릭: 이전 페이지
+    §f§n우클릭: 다음 페이지
+  FILTER_APPLIED: "§f필터 적용됨 : "
+  FILTER_LORE: |-
+    §f좌클릭: 검색
+    §f우클릭: 필터 초기화
+
+    §7"BLUE_WOOL"을 찾으려는 경우:
+    §7 b w
+    §7 wool
+    §7 blue wool
+QUICK_SELL_TITLE: §3빠른 판매
+QUICK_SELL:
+  GUIDE_TITLE: §3§l빠른 판매 도움말
+  GUIDE_LORE: |-
+    §a판매할 아이템을 좌클릭 하세요.
+    §a씨프트 좌클릭으로 같은 유형의 아이템을 모두 팝니다.
+    §a우클릭으로 해당 아이템 상점으로 이동합니다.
+ARROW:
+  UP: §a⬆
+  DOWN: §c⬇
+  UP_2: §c⬆
+  DOWN_2: §a⬇
+TIME:
+  OPEN: Open
+  CLOSE: Close
+  OPEN_LORE: §f문 여는 시간 설정
+  CLOSE_LORE: §f문 닫는 시간 설정
+  SHOPHOURS: §f영업시간
+  OPEN24: 24시간 오픈
+  SHOP_IS_CLOSED: "§f상점이 문을 닫았습니다. 개점: {time}시. 현재시간: {curTime}시"
+  SET_SHOPHOURS: 영업시간 설정
+  CUR: "§f현재 시간: {time}시"
+STOCK_STABILIZING:
+  SS: §f재고 안정화
+  L_R_SHIFT: "§e좌클릭: -0.1 우클릭: +0.1 Shift: x5"
+  STRENGTH_LORE_A: §f중앙값(median)의 n%
+  STRENGTH_LORE_B: §f중앙값(median)과의 격차의 n%
+FLUCTUATION:
+  FLUCTUATION: §f무작위 재고 변동
+  INTERVAL: §f변화 간격
+  INTERVAL_LORE: §f1h = 1000틱 = 현실시간 50초
+  STRENGTH: §f변화 강도
+  STRENGTH_LORE: §f중앙값(median)의 n%
+TAX:
+  SALES_TAX: §f판매세
+  USE_GLOBAL: 전역설정 사용 ({tax}%)
+  USE_LOCAL: 별도 설정
+MESSAGE:
+  SEARCH_ITEM: §f찾으려는 아이템의 이름을 입력하세요.
+  SEARCH_CANCELED: §f검색 취소됨.
+  INPUT_CANCELED: §f입력 취소됨.
+  DELETE_CONFIRM: §f정말로 페이지를 삭제할까요? 'delete' 를 입력하면 삭제합니다.
+  CANT_DELETE_LAST_PAGE: §f마지막 남은 페이지를 삭제할 수 없습니다.
+  SHOP_BAL_LOW: §f상점이 돈을 충분히 가지고 있지 않습니다.
+  SHOP_CREATED: §f상점 생성됨!
+  SHOP_DELETED: §f상점 제거됨!
+  OUT_OF_STOCK: §f재고 없음!
+  BUY_SUCCESS: "§f{item} {amount}개를 {price}에 구매함. 잔액: {bal}"
+  SELL_SUCCESS: "§f{item} {amount}개를 {price}에 판매함. 잔액: {bal}"
+  BUY_SUCCESS_EXP: "§f{item} {amount}개를 {price}경험치 포인트에 구매함. 잔액: {bal}"
+  SELL_SUCCESS_EXP: "§f{item} {amount}개를 {price}경험치 포인트에 판매함. 잔액: {bal}"
+  BUY_SUCCESS_JP: "§f{item} {amount}개를 {price}포인트에 구매함. 남은포인트: {bal}"
+  SELL_SUCCESS_JP: "§f{item} {amount}개를 {price}포인트에 판매함. 남은포인트: {bal}"
+  BUY_SUCCESS_PP: "§f{item} {amount}개를 {price}포인트에 구매함. 남은포인트: {bal}"
+  SELL_SUCCESS_PP: "§f{item} {amount}개를 {price}포인트에 판매함. 남은포인트: {bal}"
+  QSELL_NA: §f해당 아이템을 취급하는 상점이 없습니다.
+  DELIVERY_CHARGE: "§f배달비: {fee}"
+  DELIVERY_CHARGE_NA: §f다른 월드로 배달할 수 없습니다.
+  NOT_ENOUGH_MONEY: "§f돈이 부족합니다. 잔액: {bal}"
+  NOT_ENOUGH_POINT: "§f포인트가 부족합니다. 잔액: {bal}"
+  NOT_ENOUGH_PLAYER_POINT: "§f플레이어 포인트가 부족합니다. 잔액: {bal}"
+  NOT_ENOUGH_EXP_POINT: "§f경험치 포인트가 부족합니다. 잔액: {bal}"
+  NO_ITEM_TO_SELL: §f판매 할 아이템이 없습니다.
+  NO_ITEM_TO_SELL_2: §f판매 가능 한 아이템이 없습니다.
+  INVENTORY_FULL: §4인벤토리에 빈 공간이 없습니다!
+  IRREVERSIBLE: §f이 행동은 되돌릴 수 없습니다!
+  ITEM_ADDED: 아이템 추가됨!
+  ITEM_UPDATED: 아이템 수정됨!
+  ITEM_DELETED: 아이템 제거됨!
+  CHANGES_APPLIED: "변경사항 적용됨. 새로운 값: "
+  CHANGES_APPLIED_2: 변경사항 적용됨
+  RECOMMEND_APPLIED: 추천 값 적용됨. {playerNum}명 기준입니다. config파일에서 이 값을 바꿀 수 있습니다.
+  TRANSFER_SUCCESS: 송금 완료
+  PURCHASE_REJECTED: 상점에 이 아이템이 너무 많습니다. 지금은 팔 수 없습니다.
+  CLICK_YOUR_ITEM_START_PAGE: |-
+    인벤토리의 아이템을 클릭하면 가장 좋은 조건의 상점으로 이동합니다.
+    좌클릭: 구매   우클릭: 판매
+  MOVE_TO_BEST_SHOP_BUY: "{item}을 가장 저렴하게 살 수 있는 상점으로 이동했습니다."
+  MOVE_TO_BEST_SHOP_SELL: "{item}을 가장 비싸게 팔 수 있는 상점으로 이동했습니다."
+  SHOP_IS_CLOSED_BY_ADMIN: 이 상점은 서버 관리자에 의해 닫혔습니다.
+  SHOP_DISABLED: 이 상점은 비황성화된 상태입니다. 어드민이 아닌 유저는 접근할 수 없습니다. 상점 설정에서 활성화 할 수 있습니다.
+  ROTATION_SHARED_DATA_MISSING: §e[ ! ]§f'{0}/SharedData.yml' 에서 {1} 개의 아이템에 대한 정보를
+    찾을 수 없었습니다. 이 아이템들은 장식으로 추가되었습니다.
+  ENTER_COMMAND: 명령어를 '/' 제외하고 입력하세요.
+  ENTER_COMMAND_2: "'인덱스/명령어' 형태로 입력하세요."
+  SELL_COMMAND_CUR: "현재 적용중인 판매 명령어:"
+  BUY_COMMAND_CUR: "현재 적용중인 구매 명령어:"
+  Q_SEARCH_FAIL_CURRENCY: 해당 아이템은 여러 종류의 재화로 거래 중 입니다.
+  SIGN_SHOP_CREATED: §a표지판 상점 생성!
+HELP:
+  TITLE: "§f도움말: {command} --------------------"
+  SHOP: 상점을 엽니다.
+  CMD: 명령어 도움말 표시 토글.
+  CREATE_SHOP: 상점을 새로 만듭니다.
+  CREATE_SHOP_2: |-
+    퍼미션(나중에 바꿀 수 있습니다.)
+       true: dshop.user.shop.상점이름
+       false: 아무나 접근가능(기본값)
+       임의 입력: 해당 퍼미션 필요
+  DELETE_SHOP: 기존의 상점을 제거합니다.
+  SHOP_ADD_HAND: 손에 들고 있는 아이템을 상점에 추가합니다.
+  SHOP_ADD_ITEM: 상점에 아이템을 추가합니다.
+  SHOP_EDIT: 상점에 있는 아이템을 수정합니다.
+  PRICE: "§7가격은 다음과 같이 계산됩니다: median*value/stock"
+  INF_STATIC: §7median<0 == 고정가격     stock<0 == 무한재고
+  EDIT_ALL: 상점의 모든 아이템을 한번에 수정합니다.
+  RELOAD: 플러그인을 재시작 합니다.
+  RELOADED: 플러그인 리로드됨!
+  USAGE: 사용법
+  ITEM_ALREADY_EXIST: |-
+    §7§o{item}(은)는 이미 판매중임.
+       {info}
+       명령어를 입력하면 값이 수정됩니다.
+  ITEM_INFO: |-
+    §7§o{item}의 현재 설정:
+       {info}
+  REMOVE_ITEM: §f인자를 0으로 입력하면 이 아이템을 상점에서 §4제거§f합니다.
+  QSELL: §f빠르게 아이템을 판매합니다.
+  DELETE_OLD_USER: 장기간 접속하지 않은 유저의 데이터를 삭제합니다.
+  ACCOUNT: 상점의 계좌 잔액을 설정합니다. -1 = 무제한
+  SET_TO_REC_ALL: §e상점의 모든 아이템 설정값을 권장값으로 §c초기화§e합니다.
+  SHOP_ENABLE: 상점을 활성화 또는 비활성화 합니다.
+  ITEMINFO_USAGE: §f아이템 정보를 보려면 손에 아이템을 들고 있어야 합니다.
+  ITEMINFO_REALNAME: "§7실제 이름: §3{item_realname}"
+  ITEMINFO_SIGN_NAME: "§7표지판용 이름: §3{item_signname}"
+ERR:
+  NO_USER_ID: §6플레이어 uuid를 찾을 수 없습니다. 상점 이용 불가능.
+  ITEM_NOT_EXIST: 상점에 해당 아이템이 존재하지 않습니다.
+  ITEM_FORBIDDEN: 사용할 수 없는 아이템 입니다.
+  NO_PERMISSION: §e권한이 없습니다.
+  WRONG_USAGE: 잘못된 명령어 사용법. 도움말을 확인하세요.
+  NO_EMPTY_SLOT: 상점에 빈 공간이 없습니다.
+  WRONG_DATATYPE: 인자의 유형이 잘못 입력되었습니다.
+  VALUE_ZERO: 인자값이 0보다 커야 합니다.
+  WRONG_ITEM_NAME: 유효하지 않은 아이템 이름입니다.
+  HAND_EMPTY: 아이템을 손에 들고 있어야 합니다.
+  HAND_EMPTY2: §c§o아이템을 손에 들고 있어야 합니다!
+  SHOP_NOT_FOUND: §f해당 상점을 찾을 수 없습니다.
+  SHOP_EXIST: 해당 이름을 가진 상점이 이미 존재합니다.
+  SHOP_NOT_EXIST: 그런 이름을 가진 상점이 없습니다.
+  SIGN_SHOP_REMOTE_ACCESS: 해당 상점은 표지판을 통해서만 접근할 수 있습니다.
+  LOCAL_SHOP_REMOTE_ACCESS: 해당 상점은 직접 방문해야만 사용할 수 있습니다.
+  MAX_LOWER_THAN_MIN: 최대 가격은 최소 가격보다 커야합니다.
+  DEFAULT_VALUE_OUT_OF_RANGE: 기본 가격은 최소 가격과 최대 가격 사이의 값이어야 합니다.
+  NO_RECOMMEND_DATA: Worth.yml 파일에 이 아이템의 정보가 없습니다.
+  JOBS_REBORN_NOT_FOUND: Jobs reborn 플러그인을 찾을 수 없습니다.
+  PLAYER_POINTS_NOT_FOUND: Player points 플러그인을 찾을 수 없습니다.
+  SHOP_HAS_INF_BAL: "{shop} 상점은 무한계좌 상점입니다."
+  SHOP_DIFF_CURRENCY: 두 상점이 서로 다른 통화를 사용합니다.
+  PLAYER_NOT_EXIST: 해당 플레이어를 찾을 수 없습니다.
+  SHOP_LINK_FAIL: 상점 둘 중 하나는 실제 계좌이어야 합니다.
+  SHOP_LINK_TARGET_ERR: 목표 상점은 실제 계좌를 가지고 있어야 합니다.
+  NESTED_STRUCTURE: 계층 구조를 이루는것은 금지되어 있습니다. (ex. aa-bb, bb-cc)
+  CREATIVE: §eCreative mode 에서 이 명령어를 사용할 수 없습니다. 권한이 없습니다.
+  FILE_CREATE_FAIL: §e파일 생성에 실패했습니다.
+  INVALID_TRANSACTION: 이 거래는 더이상 유효하지 않습니다. 문제가 반복되면 서버 관리자에게 문의하세요.
+  SIGN_WALL: 상점 표지판이 벽에 설치되야 합니다.
+  SHOP_NULL: §e상점 이름이 지정되지 않았습니다.
+  ITEMINFO_HAND_EMPTY: 아이템을 들고 있어야 합니다.
+  SIGN_ITEM_INVALID: 아이템 이름이 잘못되었습니다. /ds iteminfo 를 사용하여 아이템 이름을 확인해 보세요.
+  SIGN_ITEM_NOT_FOR_SALE: 상점에 없는 아이템 입니다.
+"ON": 켜짐
+"OFF": 꺼짐
+SET: 설정
+UNSET: 설정해제
+NULL(OPEN): 없음 (모두에게 열려있음)
+CUR_STATE: 현재상태
+CLICK: 클릭
+LMB: 좌클릭
+RMB: 우클릭
+CLOSE: §f닫기
+CLOSE_LORE: "§f§n클릭: 닫기"
+EXP_POINTS: Exp
+JOB_POINTS: Job Points
+PLAYER_POINTS: Player Points
+PAID_VERSION:
+  DESC: "§f유료 버전에서 사용할 수 있습니다. "
+  GET_PREMIUM: 구매하기

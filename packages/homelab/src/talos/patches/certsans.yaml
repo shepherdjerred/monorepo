@@ -1,0 +1,6 @@
+machine:
+  certSANs:
+    - torvalds
+    - torvalds.tailnet-1a49.ts.net
+    - 100.102.88.89
+    - 192.168.1.81

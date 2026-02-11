@@ -1,0 +1,8 @@
+apiVersion: v2
+name: kyverno-policies
+description: Kyverno ClusterPolicies for automatic resource labeling
+
+type: application
+
+version: "$version"
+appVersion: "$appVersion"

@@ -1,0 +1,326 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Rengar": {
+      "id": "Rengar",
+      "key": "107",
+      "name": "Rengar",
+      "title": "the Pridestalker",
+      "image": {
+        "full": "Rengar.png",
+        "sprite": "champion3.png",
+        "group": "champion",
+        "x": 0,
+        "y": 96,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "107000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "107001",
+          "num": 1,
+          "name": "Headhunter Rengar",
+          "chromas": true
+        },
+        {
+          "id": "107002",
+          "num": 2,
+          "name": "Night Hunter Rengar",
+          "chromas": false
+        },
+        {
+          "id": "107003",
+          "num": 3,
+          "name": "SSW Rengar",
+          "chromas": false
+        },
+        {
+          "id": "107008",
+          "num": 8,
+          "name": "Mecha Rengar",
+          "chromas": true
+        },
+        {
+          "id": "107015",
+          "num": 15,
+          "name": "Pretty Kitty Rengar",
+          "chromas": true
+        },
+        {
+          "id": "107023",
+          "num": 23,
+          "name": "Guardian of the Sands Rengar",
+          "chromas": true
+        },
+        {
+          "id": "107030",
+          "num": 30,
+          "name": "Sentinel Rengar",
+          "chromas": true
+        },
+        {
+          "id": "107040",
+          "num": 40,
+          "name": "Street Demons Rengar",
+          "chromas": true
+        }
+      ],
+      "lore": "Rengar is a ferocious vastayan trophy hunter who lives for the thrill of tracking down and killing dangerous creatures. He scours the world for the most fearsome beasts he can find, especially seeking any trace of Kha'Zix, the void creature who scratched out his eye. Rengar stalks his prey neither for food nor glory, but for the sheer beauty of the pursuit.",
+      "blurb": "Rengar is a ferocious vastayan trophy hunter who lives for the thrill of tracking down and killing dangerous creatures. He scours the world for the most fearsome beasts he can find, especially seeking any trace of Kha'Zix, the void creature who...",
+      "allytips": [
+        "Use Rengar's ultimate to find and assassinate high priority targets in team fights and skirmishes.",
+        "A lot of Rengar's power comes from empowered abilities he uses at the right moment - choose wisely!",
+        "Make sure to take paths through brush when chasing opponents to take advantage of Rengar's passive."
+      ],
+      "enemytips": [
+        "Rengar gains an empowered ability when his resource bar is full. Try to confront him when it's low.",
+        "Rengar's passive enables him to leap out of brush, so avoid fighting him when near bushes.",
+        "Rengar puts an indicator over the nearest enemy champion when he is camouflaged during his ultimate."
+      ],
+      "tags": ["Assassin", "Fighter"],
+      "partype": "Ferocity",
+      "info": {
+        "attack": 7,
+        "defense": 4,
+        "magic": 2,
+        "difficulty": 8
+      },
+      "stats": {
+        "hp": 590,
+        "hpperlevel": 104,
+        "mp": 4,
+        "mpperlevel": 0,
+        "movespeed": 345,
+        "armor": 34,
+        "armorperlevel": 4.2,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
+        "attackrange": 125,
+        "hpregen": 6,
+        "hpregenperlevel": 0.5,
+        "mpregen": 0,
+        "mpregenperlevel": 0,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 68,
+        "attackdamageperlevel": 3,
+        "attackspeedperlevel": 3,
+        "attackspeed": 0.667
+      },
+      "spells": [
+        {
+          "id": "RengarQ",
+          "name": "Savagery",
+          "description": "Rengar's next Attack brutally stabs his target for bonus damage.<br><br>Ferocity effect: deals increased damage and grants Attack Speed.",
+          "tooltip": "Rengar's next 2 Attacks gain <attackSpeed>{{ asbonus }}% Attack Speed</attackSpeed>. The first Attack deals <physicalDamage>{{ qtotaldamage }} physical damage</physicalDamage>.<br /><br /><keywordMajor>Max Ferocity:</keywordMajor> The first Attack deals <physicalDamage>{{ empoweredqtotaldamage }} physical damage</physicalDamage> and grants Rengar <attackSpeed>{{ empoweredqas }} Attack Speed</attackSpeed> for {{ asduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Bonus AD Ratio", "Cooldown"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ baseadratio*100.000000 }}% -> {{ baseadrationl*100.000000 }}%",
+              "{{ ammorechargetime }} -> {{ ammorechargetimeNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [0.25, 0.25, 0.25, 0.25, 0.25],
+          "cooldownBurn": "0.25",
+          "cost": [0, 0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "Generates 1 Ferocity",
+          "maxammo": "1",
+          "range": [450, 450, 450, 450, 450],
+          "rangeBurn": "450",
+          "image": {
+            "full": "RengarQ.png",
+            "sprite": "spell11.png",
+            "group": "spell",
+            "x": 384,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "Generates 1 Ferocity"
+        },
+        {
+          "id": "RengarW",
+          "name": "Battle Roar",
+          "description": "Rengar lets out a battle roar, damaging enemies and healing for some of the recent damage he has taken.<br><br>Ferocity effect: additionally breaks crowd control effects.",
+          "tooltip": "Rengar roars, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to nearby enemies and restoring <healing>{{ damagepercentagehealed }}%</healing> of the damage taken in the last {{ healingwindow }} seconds as Health.<br /><br /><keywordMajor>Max Ferocity:</keywordMajor> Deals <magicDamage>{{ totaldamageempowered }} magic damage</magicDamage> and additionally cleanses Rengar of crowd control.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Cooldown"],
+            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ ammorechargetime }} -> {{ ammorechargetimeNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [0.25, 0.25, 0.25, 0.25, 0.25],
+          "cooldownBurn": "0.25",
+          "cost": [0, 0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "Generates 1 Ferocity",
+          "maxammo": "1",
+          "range": [450, 450, 450, 450, 450],
+          "rangeBurn": "450",
+          "image": {
+            "full": "RengarW.png",
+            "sprite": "spell11.png",
+            "group": "spell",
+            "x": 432,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "Generates 1 Ferocity"
+        },
+        {
+          "id": "RengarE",
+          "name": "Bola Strike",
+          "description": "Rengar throws a bola, slowing the first target hit for a short duration.<br><br>Ferocity effect: roots the target.",
+          "tooltip": "Rengar throws a bola, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> to the first enemy hit, revealing and <status>Slowing</status> them by {{ slowamount }}% for {{ ccduration }} seconds.<br /><br /><keywordMajor>Max Ferocity:</keywordMajor> Deals <physicalDamage>{{ totalempowereddamage }} physical damage</physicalDamage> and <status>Roots</status> for {{ ccduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Slow"],
+            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ slowamount }}% -> {{ slowamountNL }}%"]
+          },
+          "maxrank": 5,
+          "cooldown": [0.25, 0.25, 0.25, 0.25, 0.25],
+          "cooldownBurn": "0.25",
+          "cost": [0, 0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "Generates 1 Ferocity",
+          "maxammo": "1",
+          "range": [1000, 1000, 1000, 1000, 1000],
+          "rangeBurn": "1000",
+          "image": {
+            "full": "RengarE.png",
+            "sprite": "spell11.png",
+            "group": "spell",
+            "x": 0,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "Generates 1 Ferocity"
+        },
+        {
+          "id": "RengarR",
+          "name": "Thrill of the Hunt",
+          "description": "Rengar's predatory instincts take over, <font color='#cd90ee'>Camouflaging</font> him and revealing the nearest enemy champion in a large radius around him. During Thrill of the Hunt, Rengar gains Move Speed and he can leap to the tracked enemy without being in brush, reducing their armor.",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Rengar will also leap Attack when <keywordStealth>Camouflaged</keywordStealth>.<br /><br /><spellActive>Active:</spellActive> Rengar gains <speed>{{ stealthms }}% Move Speed</speed> and <keywordStealth>True Sight</keywordStealth> in a small area around the nearest enemy champion for {{ stealthduration }} seconds.<br /><br />After {{ fadetime }} seconds, Rengar becomes <keywordStealth>Camouflaged</keywordStealth> and can leap without being in Brush. Leaping to the nearest champion deals an additional <physicalDamage>{{ bonusdamage }} physical damage</physicalDamage>, shreds <scaleArmor>{{ armorshred }} Armor</scaleArmor> for {{ armorshredduration }} seconds, and ends this Ability.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Armor Reduction", "Duration", "Move Speed", "Tracking Range", "Cooldown"],
+            "effect": [
+              "{{ armorshred }} -> {{ armorshredNL }}",
+              "{{ stealthduration }} -> {{ stealthdurationNL }}",
+              "{{ stealthms }}% -> {{ stealthmsNL }}%",
+              "{{ selfvisionrange }} -> {{ selfvisionrangeNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [100, 90, 80],
+          "cooldownBurn": "100/90/80",
+          "cost": [0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [2500, 3000, 3500],
+          "rangeBurn": "2500/3000/3500",
+          "image": {
+            "full": "RengarR.png",
+            "sprite": "spell11.png",
+            "group": "spell",
+            "x": 48,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        }
+      ],
+      "passive": {
+        "name": "Unseen Predator",
+        "description": "While in Brush, Rengar leaps at his target with his basic attack.<br><br>Rengar generates Ferocity whenever he casts an ability. At Max Ferocity, his next ability is empowered.<br><br>Killing enemy champions awards trophies on Rengar's <font color='#BBFFFF'>Bonetooth Necklace</font>, granting bonus attack damage.",
+        "image": {
+          "full": "Rengar_P.png",
+          "sprite": "passive3.png",
+          "group": "passive",
+          "x": 0,
+          "y": 96,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

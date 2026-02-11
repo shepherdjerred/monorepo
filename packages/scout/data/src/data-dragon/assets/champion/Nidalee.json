@@ -1,0 +1,408 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Nidalee": {
+      "id": "Nidalee",
+      "key": "76",
+      "name": "Nidalee",
+      "title": "the Bestial Huntress",
+      "image": {
+        "full": "Nidalee.png",
+        "sprite": "champion3.png",
+        "group": "champion",
+        "x": 96,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "76000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "76001",
+          "num": 1,
+          "name": "Snow Bunny Nidalee",
+          "chromas": false
+        },
+        {
+          "id": "76002",
+          "num": 2,
+          "name": "Leopard Nidalee",
+          "chromas": false
+        },
+        {
+          "id": "76003",
+          "num": 3,
+          "name": "French Maid Nidalee",
+          "chromas": false
+        },
+        {
+          "id": "76004",
+          "num": 4,
+          "name": "Pharaoh Nidalee",
+          "chromas": false
+        },
+        {
+          "id": "76005",
+          "num": 5,
+          "name": "Bewitching Nidalee",
+          "chromas": false
+        },
+        {
+          "id": "76006",
+          "num": 6,
+          "name": "Headhunter Nidalee",
+          "chromas": false
+        },
+        {
+          "id": "76007",
+          "num": 7,
+          "name": "Warring Kingdoms Nidalee",
+          "chromas": false
+        },
+        {
+          "id": "76008",
+          "num": 8,
+          "name": "Challenger Nidalee",
+          "chromas": true
+        },
+        {
+          "id": "76009",
+          "num": 9,
+          "name": "Super Galaxy Nidalee",
+          "chromas": false
+        },
+        {
+          "id": "76011",
+          "num": 11,
+          "name": "Dawnbringer Nidalee",
+          "chromas": true
+        },
+        {
+          "id": "76018",
+          "num": 18,
+          "name": "Cosmic Huntress Nidalee",
+          "chromas": true
+        },
+        {
+          "id": "76027",
+          "num": 27,
+          "name": "DWG Nidalee",
+          "chromas": true
+        },
+        {
+          "id": "76029",
+          "num": 29,
+          "name": "Ocean Song Nidalee",
+          "chromas": true
+        },
+        {
+          "id": "76039",
+          "num": 39,
+          "name": "Kittalee",
+          "chromas": false
+        },
+        {
+          "id": "76048",
+          "num": 48,
+          "name": "La Ilusión Nidalee",
+          "chromas": false
+        },
+        {
+          "id": "76058",
+          "num": 58,
+          "name": "Spirit Blossom Nidalee",
+          "chromas": false
+        }
+      ],
+      "lore": "Raised in the deepest jungle, Nidalee is a master tracker who can shapeshift into a ferocious cougar at will. Neither wholly woman nor beast, she viciously defends her territory from any and all trespassers, with carefully placed traps and deft spear throws. She cripples her quarry before pouncing on them in feline form—the lucky few who survive tell tales of a wild woman with razor-sharp instincts, and even sharper claws...",
+      "blurb": "Raised in the deepest jungle, Nidalee is a master tracker who can shapeshift into a ferocious cougar at will. Neither wholly woman nor beast, she viciously defends her territory from any and all trespassers, with carefully placed traps and deft spear...",
+      "allytips": [
+        "Use brush to your advantage! Moving in and out of brush can heavily alter your effectiveness in battle.",
+        "Start team fights by harassing with your Javelin Toss, and then switch to cougar form to chase down Hunted targets.",
+        "Bushwhack traps deal damage based on their victim's current Health. Set them up in your team's backline before fights break out during sieges to help your team deal damage to the enemy frontline."
+      ],
+      "enemytips": [
+        "Nidalee's Hunt debuff is only applied with Javelin Toss and Bushwhack. Avoiding being hit by these abilities will impair her ability to deal follow-up damage.",
+        "Nidalee's Javelin Toss deals more damage the farther she is. If she is far away, it's imperative to dodge it.",
+        "Nidalee's Takedown deals extreme damage to Hunted targets, but she has to get close to use it. Save your crowd control or defensive abilities for when she goes in for the kill."
+      ],
+      "tags": ["Assassin", "Mage"],
+      "partype": "Mana",
+      "info": {
+        "attack": 5,
+        "defense": 4,
+        "magic": 7,
+        "difficulty": 8
+      },
+      "stats": {
+        "hp": 610,
+        "hpperlevel": 109,
+        "mp": 295,
+        "mpperlevel": 45,
+        "movespeed": 335,
+        "armor": 32,
+        "armorperlevel": 5,
+        "spellblock": 30,
+        "spellblockperlevel": 1.45,
+        "attackrange": 525,
+        "hpregen": 6,
+        "hpregenperlevel": 0.6,
+        "mpregen": 6,
+        "mpregenperlevel": 0.8,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 58,
+        "attackdamageperlevel": 3.5,
+        "attackspeedperlevel": 3.22,
+        "attackspeed": 0.638
+      },
+      "spells": [
+        {
+          "id": "JavelinToss",
+          "name": "Javelin Toss / Takedown",
+          "description": "In human form, Nidalee throws a spiked javelin at her target that gains damage as it flies.  As a cougar, her next attack will attempt to fatally wound her target, dealing more damage the less life they have.",
+          "tooltip": "<keywordMajor>Human Form:</keywordMajor> Nidalee throws her javelin, dealing <magicDamage>{{ humanminimumdamage }} magic damage</magicDamage>, increased up to <magicDamage>{{ humanmaximumdamage }} magic damage</magicDamage> based on distance flown.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Javelin Minimum Damage", "Javelin Maximum Damage", "Javelin Mana Cost"],
+            "effect": [
+              "{{ spearminimumdamage }} -> {{ spearminimumdamageNL }}",
+              "{{ spearmaximumdamage }} -> {{ spearmaximumdamageNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [6, 6, 6, 6, 6],
+          "cooldownBurn": "6",
+          "cost": [50, 55, 60, 65, 70],
+          "costBurn": "50/55/60/65/70",
+          "datavalues": {},
+          "effect": [
+            null,
+            [70, 90, 110, 130, 150],
+            [227.5, 292.5, 357.5, 422.5, 487.5],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0.4, 0.4, 0.4, 0.4, 0.4],
+            [1.2, 1.2, 1.2, 1.2, 1.2],
+            [525, 525, 525, 525, 525],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [
+            null,
+            "70/90/110/130/150",
+            "227.5/292.5/357.5/422.5/487.5",
+            "0",
+            "0",
+            "0.4",
+            "1.2",
+            "525",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [1500, 1500, 1500, 1500, 1500],
+          "rangeBurn": "1500",
+          "image": {
+            "full": "JavelinToss.png",
+            "sprite": "spell9.png",
+            "group": "spell",
+            "x": 288,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Bushwhack",
+          "name": "Bushwhack / Pounce",
+          "description": "In human form, Nidalee lays a trap for unwary opponents that, when sprung, damages and reveals its target. As a cougar, she jumps in a direction, dealing damage in an area where she lands.",
+          "tooltip": "<keywordMajor>Human Form:</keywordMajor> Nidalee places an invisible trap for 2 minutes. When an enemy walks over it, they are dealt <magicDamage>{{ damagepersecond }} magic damage</magicDamage> per second for {{ e3 }} seconds.<br /><br />{{ maxtraps }} traps may be active at once.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Trap Damage", "Trap Cooldown", "Trap Mana Cost"],
+            "effect": ["{{ e7 }} -> {{ e7NL }}", "{{ cooldown }} -> {{ cooldownNL }}", "{{ cost }} -> {{ costNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [13, 12, 11, 10, 9],
+          "cooldownBurn": "13/12/11/10/9",
+          "cost": [30, 35, 40, 45, 50],
+          "costBurn": "30/35/40/45/50",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [4, 4, 4, 4, 4],
+            [13, 12, 11, 10, 9],
+            [10, 20, 30, 40, 50],
+            [120, 120, 120, 120, 120],
+            [40, 80, 120, 160, 200],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "4",
+            "13/12/11/10/9",
+            "10/20/30/40/50",
+            "120",
+            "40/80/120/160/200",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "0",
+          "range": [900, 900, 900, 900, 900],
+          "rangeBurn": "900",
+          "image": {
+            "full": "Bushwhack.png",
+            "sprite": "spell9.png",
+            "group": "spell",
+            "x": 336,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "PrimalSurge",
+          "name": "Primal Surge / Swipe",
+          "description": "In human form, Nidalee channels the spirit of the cougar to heal her allies and imbue them with Attack Speed for a short duration. As a cougar, she claws in a direction, dealing damage to enemies in front of her.",
+          "tooltip": "<keywordMajor>Human Form:</keywordMajor> Nidalee restores <healing>{{ totalhealing }} Health</healing> increased up to <healing>{{ maxhealing }}</healing> based on missing Health and grants them <attackSpeed>{{ bonusas*100 }}% Attack Speed</attackSpeed> for {{ asduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Primal Surge Heal", "Primal Surge Attack Speed", "Primal Surge Mana Cost"],
+            "effect": [
+              "{{ baseheal }} -> {{ basehealNL }}",
+              "{{ bonusas*100.000000 }}% -> {{ bonusasnl*100.000000 }}%",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [12, 12, 12, 12, 12],
+          "cooldownBurn": "12",
+          "cost": [50, 55, 60, 65, 70],
+          "costBurn": "50/55/60/65/70",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [900, 900, 900, 900, 900],
+          "rangeBurn": "900",
+          "image": {
+            "full": "PrimalSurge.png",
+            "sprite": "spell9.png",
+            "group": "spell",
+            "x": 384,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "AspectOfTheCougar",
+          "name": "Aspect Of The Cougar",
+          "description": "Nidalee transforms into a cougar, gaining new abilities.",
+          "tooltip": "<spellPassive>Passive:</spellPassive> While in <keywordMajor>Human Form</keywordMajor>, applying <keywordMajor>Hunted</keywordMajor> refreshes this Ability's Cooldown.<br /><br /><keywordMajor>Human Form:</keywordMajor> Nidalee transforms into <keywordMajor>Cougar Form</keywordMajor>, gaining melee Attacks and replacing her Active Abilities.<br /><br /><keywordMajor>Cougar Form:</keywordMajor> Nidalee transforms into <keywordMajor>Human Form</keywordMajor>, gaining ranged Attacks and replacing her Active Abilities.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Takedown Damage",
+              "Takedown Damage Amp",
+              "Pounce Damage",
+              "Swipe Damage",
+              "Enhanced Pounce Cooldown"
+            ],
+            "effect": [
+              "{{ takedownbasedamage }} -> {{ takedownbasedamageNL }}",
+              "{{ takedowndamageamp*100.000000 }}% -> {{ takedowndamageampnl*100.000000 }}%",
+              "{{ pouncedamage }} -> {{ pouncedamageNL }}",
+              "{{ swipedamage }} -> {{ swipedamageNL }}",
+              "{{ pouncecooldown }} -> {{ pouncecooldownNL }}"
+            ]
+          },
+          "maxrank": 4,
+          "cooldown": [3, 3, 3, 3],
+          "cooldownBurn": "3",
+          "cost": [0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [6, 6, 6, 6],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "6", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [20, 20, 20, 20],
+          "rangeBurn": "20",
+          "image": {
+            "full": "AspectOfTheCougar.png",
+            "sprite": "spell9.png",
+            "group": "spell",
+            "x": 432,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        }
+      ],
+      "passive": {
+        "name": "Prowl",
+        "description": "Moving through brush increases Nidalee's Move Speed by 10% for 2 seconds, increased to 30% toward visible enemy champions within 1400 range.<br><br>Hitting champions or monsters with Javelin Toss or Bushwhack triggers a <font color='#FFF673'>Hunt</font>, granting <font color='#ee91d7'>True Sight</font> of them for 4 seconds. During this time, Nidalee gains 10% Move Speed (increased to 30% toward the <font color='#FFF673'>Hunted</font> target) and her Takedown and Pounce are enhanced against them.",
+        "image": {
+          "full": "Nidalee_Passive.png",
+          "sprite": "passive3.png",
+          "group": "passive",
+          "x": 96,
+          "y": 0,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

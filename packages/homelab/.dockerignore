@@ -1,0 +1,13 @@
+node_modules/
+.dagger/
+dist/
+build/
+.next/
+target/
+vendor/
+.git/
+.vscode/
+*.log
+.env
+.DS_Store
+bun.lock

@@ -1,0 +1,876 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Navbar from "../components/Navbar.astro";
+import Footer from "../components/Footer.astro";
+import Header from "../components/Header.astro";
+import InfoBox from "../components/InfoBox.astro";
+import CommandBox from "../components/CommandBox.astro";
+import FAQItem from "../components/FAQItem.astro";
+---
+
+<Layout>
+  <div class="bg-white dark:bg-gray-900">
+    <Navbar activePage="docs" />
+
+    <!-- Main Content -->
+    <div class="relative px-6 pt-14 lg:px-8">
+      <div class="mx-auto max-w-4xl py-32 sm:py-48 lg:py-56">
+        <Header
+          variant="page"
+          title="Documentation"
+          subtitle="Complete reference for all Scout commands, features, and configuration options."
+        >
+          <div class="mt-6">
+            <a
+              href="/getting-started"
+              class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 font-semibold"
+              >New to Scout? Check out the Getting Started guide →</a
+            >
+          </div>
+        </Header>
+
+        <!-- Table of Contents -->
+        <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-6 mb-12">
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Table of Contents</h2>
+          <nav class="space-y-2">
+            <a
+              href="#commands"
+              class="block text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300"
+              >Bot Commands</a
+            >
+            <a
+              href="#data-model"
+              class="block text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300"
+              >Understanding Players & Accounts</a
+            >
+            <a
+              href="#advanced-features"
+              class="block text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300"
+              >Advanced Features</a
+            >
+            <a
+              href="#permissions"
+              class="block text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300"
+              >Required Permissions</a
+            >
+            <a
+              href="#regions"
+              class="block text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300"
+              >Supported Regions</a
+            >
+            <a
+              href="#troubleshooting"
+              class="block text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300"
+              >Troubleshooting</a
+            >
+            <a
+              href="#faq"
+              class="block text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300">FAQ</a
+            >
+          </nav>
+        </div>
+
+        <!-- Commands -->
+        <section id="commands" class="mb-16">
+          <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-6">Bot Commands</h2>
+
+          <div class="space-y-8">
+            <!-- Subscription Add Command -->
+            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+              <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">/subscription add</h3>
+              <p class="text-gray-600 dark:text-gray-300 mb-4">
+                Subscribe to notifications for a League of Legends player.
+              </p>
+
+              <CommandBox
+                command="/subscription add channel:[#channel] region:[region] riot-id:[name#tag] alias:[nickname] user:[@user]"
+              />
+
+              <h4 class="font-medium text-gray-900 dark:text-white mb-2">Required Parameters:</h4>
+              <ul class="list-disc list-inside text-sm text-gray-600 dark:text-gray-300 mb-4 space-y-1">
+                <li>
+                  <strong>channel:</strong> Discord channel for notifications
+                </li>
+                <li><strong>region:</strong> Player's League region</li>
+                <li><strong>riot-id:</strong> Riot ID (GameName#TagLine)</li>
+                <li><strong>alias:</strong> Display name for notifications</li>
+              </ul>
+
+              <h4 class="font-medium text-gray-900 dark:text-white mb-2">Optional Parameters:</h4>
+              <ul class="list-disc list-inside text-sm text-gray-600 dark:text-gray-300">
+                <li><strong>user:</strong> Associated Discord user</li>
+              </ul>
+            </div>
+
+            <!-- Subscription Delete Command -->
+            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+              <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">/subscription delete</h3>
+              <p class="text-gray-600 dark:text-gray-300 mb-4">Remove a player subscription from your server.</p>
+
+              <CommandBox command="/subscription delete alias:[nickname]" />
+            </div>
+
+            <!-- Subscription List Command -->
+            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+              <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">/subscription list</h3>
+              <p class="text-gray-600 dark:text-gray-300 mb-4">View all active player subscriptions in your server.</p>
+
+              <CommandBox command="/subscription list" />
+            </div>
+
+            <!-- Competition Commands -->
+            <div
+              class="border border-indigo-300 dark:border-indigo-700 rounded-lg p-6 bg-indigo-50 dark:bg-indigo-900/30"
+            >
+              <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">/competition</h3>
+              <p class="text-gray-600 dark:text-gray-300 mb-4">Manage competitions and leaderboards for your server.</p>
+
+              <div class="space-y-4">
+                <div>
+                  <h4 class="font-medium text-gray-900 dark:text-white mb-2">/competition create</h4>
+                  <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                    Create a new competition with custom criteria, dates, and settings. You can use fixed dates or
+                    select a League season.
+                  </p>
+                  <CommandBox
+                    command="/competition create title:[name] description:[desc] criteria-type:[type] channel:[#channel] season:[season]"
+                    variant="light"
+                  />
+                  <p class="text-xs text-gray-500 dark:text-gray-400 italic mt-2">
+                    Examples: Most Games Played, Highest Rank, Most Rank Climb, Most Wins (Player/Champion), Highest Win
+                    Rate
+                  </p>
+                </div>
+
+                <div>
+                  <h4 class="font-medium text-gray-900 dark:text-white mb-2">
+                    /competition edit
+                  </h4>
+                  <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                    Edit an existing competition. You can always change title, description, and channel. Other settings
+                    can only be changed before the competition starts.
+                  </p>
+                  <CommandBox
+                    command="/competition edit competition-id:[id] title:[new-title]"
+                    variant="light"
+                  />
+                </div>
+
+                <div>
+                  <h4 class="font-medium text-gray-900 dark:text-white mb-2">
+                    /competition list
+                  </h4>
+                  <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                    View all competitions in your server, with optional filters.
+                  </p>
+                  <CommandBox
+                    command="/competition list active-only:[true] my-competitions:[true]"
+                    variant="light"
+                  />
+                </div>
+
+                <div>
+                  <h4 class="font-medium text-gray-900 dark:text-white mb-2">/competition view</h4>
+                  <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                    View competition details and current leaderboard standings.
+                  </p>
+                </div>
+
+                <div>
+                  <h4 class="font-medium text-gray-900 dark:text-white mb-2">/competition join</h4>
+                  <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                    Join an open competition to compete on the leaderboard.
+                  </p>
+                </div>
+
+                <div>
+                  <h4 class="font-medium text-gray-900 dark:text-white mb-2">/competition leave</h4>
+                  <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">Leave a competition you've joined.</p>
+                </div>
+
+                <div>
+                  <h4 class="font-medium text-gray-900 dark:text-white mb-2">/competition cancel</h4>
+                  <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                    Cancel a competition (competition owner only).
+                  </p>
+                </div>
+
+                <div>
+                  <h4 class="font-medium text-gray-900 dark:text-white mb-2">/competition grant-permission</h4>
+                  <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                    Grant permission to create competitions to another user (admin only).
+                  </p>
+                </div>
+
+                <div>
+                  <h4 class="font-medium text-gray-900 dark:text-white mb-2">/competition invite</h4>
+                  <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                    Invite a user to join your invite-only competition.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Admin Commands -->
+            <div class="border border-red-300 dark:border-red-700 rounded-lg p-6 bg-red-50 dark:bg-red-900/20">
+              <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">
+                /admin
+              </h3>
+              <p class="text-gray-600 dark:text-gray-300 mb-4">
+                Advanced player and account management commands for server administrators.
+              </p>
+
+              <InfoBox variant="warning" title="⚠️ Administrator Only">
+                <p>
+                  These commands require Discord Administrator permissions and should
+                  be used carefully as some actions cannot be undone.
+                </p>
+              </InfoBox>
+
+              <div class="space-y-4 mt-4">
+                <div>
+                  <h4 class="font-medium text-gray-900 dark:text-white mb-2">/admin player-edit</h4>
+                  <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                    Change a player's display alias in your server.
+                  </p>
+                  <CommandBox
+                    command="/admin player-edit current-alias:[old] new-alias:[new]"
+                    variant="light"
+                  />
+                </div>
+
+                <div>
+                  <h4 class="font-medium text-gray-900 dark:text-white mb-2">/admin account-delete</h4>
+                  <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                    Remove a specific Riot account from a player. Useful when someone changes their main account or a
+                    smurf is no longer used.
+                  </p>
+                  <CommandBox
+                    command="/admin account-delete riot-id:[name#tag] region:[region]"
+                    variant="light"
+                  />
+                </div>
+
+                <div>
+                  <h4 class="font-medium text-gray-900 dark:text-white mb-2">/admin account-transfer</h4>
+                  <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                    Transfer an account from one player to another. Perfect for when an account was added to the wrong
+                    player.
+                  </p>
+                  <CommandBox
+                    command="/admin account-transfer riot-id:[name#tag] region:[region] to-player-alias:[alias]"
+                    variant="light"
+                  />
+                </div>
+
+                <div>
+                  <h4 class="font-medium text-gray-900 dark:text-white mb-2">/admin player-merge</h4>
+                  <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                    Merge two players into one, combining all their accounts and subscriptions. Useful for consolidating
+                    duplicate players.
+                  </p>
+                  <CommandBox
+                    command="/admin player-merge source-alias:[from] target-alias:[to]"
+                    variant="light"
+                  />
+                </div>
+
+                <div>
+                  <h4 class="font-medium text-gray-900 dark:text-white mb-2">/admin player-delete</h4>
+                  <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                    Permanently delete a player and all their accounts and subscriptions.
+                    <strong class="text-red-600 dark:text-red-400">This action cannot be undone!</strong>
+                  </p>
+                  <CommandBox
+                    command="/admin player-delete alias:[alias] confirm:[true]"
+                    variant="light"
+                  />
+                </div>
+
+                <div>
+                  <h4 class="font-medium text-gray-900 dark:text-white mb-2">/admin player-link-discord</h4>
+                  <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">Link a Discord user to a player profile.</p>
+                  <CommandBox
+                    command="/admin player-link-discord player-alias:[alias] discord-user:[@user]"
+                    variant="light"
+                  />
+                </div>
+
+                <div>
+                  <h4 class="font-medium text-gray-900 dark:text-white mb-2">/admin player-unlink-discord</h4>
+                  <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                    Unlink a Discord user from a player profile.
+                  </p>
+                  <CommandBox
+                    command="/admin player-unlink-discord player-alias:[alias]"
+                    variant="light"
+                  />
+                </div>
+
+                <div>
+                  <h4 class="font-medium text-gray-900 dark:text-white mb-2">/admin player-view</h4>
+                  <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                    View detailed information about a player including accounts, subscriptions, and competitions.
+                  </p>
+                  <CommandBox command="/admin player-view alias:[alias]" variant="light" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Data Model -->
+        <section id="data-model" class="mb-16">
+          <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-6">
+            Understanding Players, Accounts & Subscriptions
+          </h2>
+
+          <InfoBox variant="info">
+            <p>
+              Scout organizes data around <strong>Players</strong>, <strong>Accounts</strong>, and <strong
+                >Subscriptions</strong
+              >. Understanding how these work together will help you manage your server's setup effectively.
+            </p>
+          </InfoBox>
+
+          <div class="space-y-8 mt-8">
+            <!-- Data Model Explanation -->
+            <div>
+              <h3 class="text-2xl font-semibold text-gray-900 dark:text-white mb-4">How It Works</h3>
+
+              <div class="space-y-6">
+                <div
+                  class="border-l-4 border-indigo-400 dark:border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 pl-6 py-4"
+                >
+                  <h4 class="font-semibold text-gray-900 dark:text-white mb-2">👤 Players</h4>
+                  <p class="text-gray-700 dark:text-gray-300 mb-3">
+                    A <strong>Player</strong> represents a person in your Discord server. Players have:
+                  </p>
+                  <ul class="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-1 ml-4">
+                    <li><strong>An alias:</strong> A display name used throughout Scout (e.g., "ToxicTopLaner")</li>
+                    <li>
+                      <strong>Multiple League accounts:</strong> Players can have multiple League accounts tracked (mains,
+                      smurfs, etc.)
+                    </li>
+                    <li>
+                      <strong>A Discord account (optional):</strong> Link a Discord user to help identify who is who in your
+                      server
+                    </li>
+                  </ul>
+                </div>
+
+                <div
+                  class="border-l-4 border-purple-400 dark:border-purple-500 bg-purple-50 dark:bg-purple-900/30 pl-6 py-4"
+                >
+                  <h4 class="font-semibold text-gray-900 dark:text-white mb-2">🎮 Accounts</h4>
+                  <p class="text-gray-700 dark:text-gray-300 mb-3">
+                    An <strong>Account</strong> is an individual League of Legends account. Each account:
+                  </p>
+                  <ul class="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-1 ml-4">
+                    <li>Has a Riot ID (GameName#TagLine) and region</li>
+                    <li>Belongs to exactly one Player</li>
+                    <li>Is tracked independently for matches</li>
+                  </ul>
+                  <p class="text-gray-700 dark:text-gray-300 mt-3">
+                    <strong>Example:</strong> If "ToxicTopLaner" has both a main account and a smurf, both accounts belong
+                    to the same Player and their matches appear under the same alias.
+                  </p>
+                </div>
+
+                <div
+                  class="border-l-4 border-green-400 dark:border-green-600 bg-green-50 dark:bg-green-900/30 pl-6 py-4"
+                >
+                  <h4 class="font-semibold text-gray-900 dark:text-white mb-2">📢 Subscriptions</h4>
+                  <p class="text-gray-700 dark:text-gray-300 mb-3">
+                    A <strong>Subscription</strong> links a Player to a Discord channel. Subscriptions:
+                  </p>
+                  <ul class="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-1 ml-4">
+                    <li>Determine where match notifications are posted</li>
+                    <li>Can send notifications for a Player to multiple channels</li>
+                    <li>Trigger reports for ALL accounts belonging to that Player</li>
+                  </ul>
+                  <p class="text-gray-700 dark:text-gray-300 mt-3">
+                    <strong>Example:</strong> Subscribe "ToxicTopLaner" to #ranked-games, and all matches from all their
+                    accounts will post there.
+                  </p>
+                </div>
+
+                <div
+                  class="border-l-4 border-amber-400 dark:border-amber-500 bg-amber-50 dark:bg-amber-900/30 pl-6 py-4"
+                >
+                  <h4 class="font-semibold text-gray-900 dark:text-white mb-2">🏷️ Aliases</h4>
+                  <p class="text-gray-700 dark:text-gray-300">
+                    An <strong>Alias</strong> is simply the Player's display name. It's used in all notifications and must
+                    be unique within your server. You can change a player's alias using
+                    <code
+                      class="bg-amber-100 dark:bg-amber-900/30 px-2 py-1 rounded text-sm text-gray-900 dark:text-gray-100"
+                      >/admin player-edit</code
+                    >.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Visual Example -->
+            <div class="bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg p-6">
+              <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">📊 Complete Example</h3>
+              <div class="space-y-3 text-sm">
+                <div class="bg-white dark:bg-gray-700 rounded p-3 border-l-4 border-indigo-400 dark:border-indigo-500">
+                  <p class="font-semibold text-gray-900 dark:text-white">Player: "ToxicTopLaner"</p>
+                  <p class="text-gray-600 dark:text-gray-300 ml-4">├─ Discord: @JohnDoe</p>
+                  <p class="text-gray-600 dark:text-gray-300 ml-4">├─ Account 1: TopMain#NA1 (na1)</p>
+                  <p class="text-gray-600 dark:text-gray-300 ml-4">├─ Account 2: Smurf420#NA1 (na1)</p>
+                  <p class="text-gray-600 dark:text-gray-300 ml-4">└─ Subscriptions: #ranked-games, #all-games</p>
+                </div>
+                <p class="text-gray-700 dark:text-gray-300">
+                  When either TopMain#NA1 or Smurf420#NA1 plays a game, a report will be posted to both #ranked-games
+                  and #all-games with the alias "ToxicTopLaner". The Discord link helps you identify that this player is
+                  @JohnDoe.
+                </p>
+              </div>
+            </div>
+
+            <!-- Tips -->
+            <InfoBox variant="warning" title="💡 Tips & Best Practices">
+              <ul class="space-y-2">
+                <li class="flex items-start gap-2">
+                  <span class="text-yellow-600 dark:text-yellow-400 font-bold">•</span>
+                  <span
+                    ><strong>Use consistent aliases:</strong> Keep player aliases simple and recognizable (e.g., Discord
+                    username or in-game name)</span
+                  >
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="text-yellow-600 dark:text-yellow-400 font-bold">•</span>
+                  <span
+                    ><strong>Link Discord accounts:</strong> Linking helps you identify which Discord user corresponds to
+                    each player in Scout</span
+                  >
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="text-yellow-600 dark:text-yellow-400 font-bold">•</span>
+                  <span
+                    ><strong>Multiple accounts work automatically:</strong> Once you add multiple accounts to a player, all
+                    their matches appear under the same alias</span
+                  >
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="text-yellow-600 dark:text-yellow-400 font-bold">•</span>
+                  <span
+                    ><strong>View before deleting:</strong> Use
+                    <code
+                      class="bg-yellow-100 dark:bg-yellow-800/50 px-1 py-0.5 rounded text-sm text-gray-900 dark:text-gray-100"
+                      >/admin player-view</code
+                    > to see all accounts before making changes</span
+                  >
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="text-yellow-600 dark:text-yellow-400 font-bold">•</span>
+                  <span
+                    ><strong>Subscriptions are flexible:</strong> You can subscribe the same player to multiple channels
+                    for different notification setups</span
+                  >
+                </li>
+              </ul>
+            </InfoBox>
+          </div>
+        </section>
+
+        <!-- Advanced Features -->
+        <section id="advanced-features" class="mb-16">
+          <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-6">Advanced Features</h2>
+
+          <div class="space-y-12">
+            <!-- Arena Support -->
+            <div>
+              <div class="flex items-center gap-3 mb-4">
+                <div class="bg-purple-100 dark:bg-purple-900/30 rounded-lg p-2 flex items-center justify-center">
+                  <svg
+                    class="h-6 w-6 text-purple-600 dark:text-purple-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="1.5"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"></path>
+                  </svg>
+                </div>
+                <h3 class="text-2xl font-semibold text-gray-900 dark:text-white">Arena Support</h3>
+              </div>
+
+              <div
+                class="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700 rounded-lg p-6"
+              >
+                <p class="text-gray-700 dark:text-gray-300 mb-4">
+                  Scout now fully supports <strong>League of Legends Arena mode</strong> - the fast-paced 16 player game
+                  mode! Get notifications and detailed reports for Arena matches just like any other queue.
+                </p>
+
+                <h4 class="font-semibold text-gray-900 dark:text-white mb-3">What's Tracked in Arena:</h4>
+                <ul class="list-disc list-inside space-y-2 text-gray-700 dark:text-gray-300 mb-4">
+                  <li>Complete post-match reports with placement and stats</li>
+                  <li>Team compositions for all 8 duos</li>
+                  <li>Damage dealt, damage taken, and eliminations</li>
+                  <li>Augments selected throughout the match</li>
+                  <li>Final placement (1st through 8th place)</li>
+                </ul>
+
+                <InfoBox variant="note">
+                  <p>
+                    <strong>Note:</strong> Arena matches are automatically detected when you subscribe to a player - no special
+                    configuration needed!
+                  </p>
+                </InfoBox>
+              </div>
+            </div>
+
+            <!-- Competitions -->
+            <div>
+              <div class="flex items-center gap-3 mb-4">
+                <div class="bg-amber-100 dark:bg-amber-900/30 rounded-lg p-2 flex items-center justify-center">
+                  <svg
+                    class="h-6 w-6 text-amber-600 dark:text-amber-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="1.5"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M16.5 18.75h-9m9 0a3 3 0 0 1 3 3h-15a3 3 0 0 1 3-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 0 1-.982-3.172M9.497 14.25a7.454 7.454 0 0 0 .981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 0 0 7.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M7.73 9.728a6.726 6.726 0 0 0 2.748 1.35m8.272-6.842V4.5c0 2.108-.966 3.99-2.48 5.228m2.48-5.492a46.32 46.32 0 0 1 2.916.52 6.003 6.003 0 0 1-5.395 4.972m0 0a6.726 6.726 0 0 1-2.749 1.35m0 0a6.772 6.772 0 0 1-3.044 0"
+                    ></path>
+                  </svg>
+                </div>
+                <h3 class="text-2xl font-semibold text-gray-900 dark:text-white">Competitions & Leaderboards</h3>
+              </div>
+
+              <div
+                class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg p-6"
+              >
+                <p class="text-gray-700 dark:text-gray-300 mb-4">
+                  Create custom competitions with configurable criteria and track your server's performance on dynamic
+                  leaderboards! Perfect for friendly tournaments, ranked grinds, or skill challenges.
+                </p>
+
+                <h4 class="font-semibold text-gray-900 dark:text-white mb-3">Competition Features:</h4>
+                <ul class="list-disc list-inside space-y-2 text-gray-700 dark:text-gray-300 mb-6">
+                  <li>
+                    <strong>Season Support:</strong> Align competitions with League seasons (e.g., Season 2025 Split 1) or
+                    use custom dates
+                  </li>
+                  <li>
+                    <strong>Edit Competitions:</strong> Update title, description, and channel anytime. Edit criteria and
+                    dates before competition starts.
+                  </li>
+                  <li>
+                    <strong>Multiple Criteria:</strong> Choose from Most Games Played, Highest Rank, Most Rank Climb, Most
+                    Wins (Player/Champion), or Highest Win Rate
+                  </li>
+                  <li>
+                    <strong>Queue Filtering:</strong> Track specific queues like Solo Queue, Flex, Arena, ARAM, or all games
+                  </li>
+                  <li>
+                    <strong>Visibility Options:</strong> Open competitions for anyone, invite-only, or server-wide automatic
+                    enrollment
+                  </li>
+                  <li>
+                    <strong>Leaderboards:</strong> Automatically updated after each match with daily summary posts
+                  </li>
+                  <li>
+                    <strong>Champion-Specific Competitions:</strong> Create competitions for specific champions (e.g., "Best
+                    Yasuo Player")
+                  </li>
+                  <li>Automatic lifecycle management with winner announcements</li>
+                </ul>
+
+                <h4 class="font-semibold text-gray-900 dark:text-white mb-3">Quick Start Examples:</h4>
+                <div class="space-y-3 mb-6">
+                  <CommandBox
+                    command='/competition create title:"Season Grind" description:"Climb the highest!" criteria-type:HIGHEST_RANK queue:SOLO season:2025-SPLIT-1 channel:#leaderboard'
+                    description="Create a ranked climb competition that lasts the entire split"
+                  />
+
+                  <CommandBox
+                    command='/competition create title:"Arena Champions" criteria-type:MOST_WINS_PLAYER queue:ARENA start-date:2025-01-01 end-date:2025-01-31 channel:#arena'
+                    description="Track who wins the most Arena games in January"
+                  />
+
+                  <CommandBox
+                    command="/competition list active-only:true"
+                    description="View all currently running competitions"
+                  />
+
+                  <CommandBox
+                    command='/competition edit competition-id:5 title:"New Title" description:"Updated!"'
+                    description="Update competition details (works anytime)"
+                  />
+                </div>
+
+                <InfoBox variant="info" title="💡 Pro Tip">
+                  <p>
+                    Competitions automatically track matches for participants in your server.
+                    Use seasons to avoid manually setting dates, and edit competitions if you need to make changes!
+                  </p>
+                </InfoBox>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Permissions -->
+        <section id="permissions" class="mb-16">
+          <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-6">Required Permissions</h2>
+
+          <div class="prose max-w-none text-gray-700 dark:text-gray-300">
+            <p class="mb-6">
+              Scout requires the following Discord permissions to function properly:
+            </p>
+
+            <InfoBox variant="warning" title="⚠️ Important">
+              <p>
+                Only users with Administrator permissions can use the <code
+                  class="bg-yellow-100 dark:bg-yellow-800/50 px-1 rounded">/subscription add</code
+                > and <code class="bg-yellow-100 dark:bg-yellow-800/50 px-1 rounded">/subscription delete</code> commands.
+              </p>
+            </InfoBox>
+
+            <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-4 mt-6">Bot Permissions</h3>
+            <ul class="list-disc list-inside space-y-2 mb-6">
+              <li>
+                <strong>Send Messages:</strong> Post match notifications and reports
+              </li>
+              <li>
+                <strong>Use Slash Commands:</strong> Register and respond to slash commands
+              </li>
+              <li>
+                <strong>Embed Links:</strong> Create rich embeds for match reports
+              </li>
+              <li>
+                <strong>Attach Files:</strong> Upload post-match report images
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        <!-- Regions -->
+        <section id="regions" class="mb-16">
+          <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-6">Supported Regions</h2>
+
+          <p class="mb-6 text-gray-700 dark:text-gray-300">Scout supports all official League of Legends regions:</p>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+              <h3 class="font-semibold text-gray-900 dark:text-white mb-3">Americas</h3>
+              <ul class="space-y-1 text-sm text-gray-600 dark:text-gray-300">
+                <li><strong>na1:</strong> North America</li>
+                <li><strong>br1:</strong> Brazil</li>
+                <li><strong>la1:</strong> Latin America North</li>
+                <li><strong>la2:</strong> Latin America South</li>
+              </ul>
+            </div>
+
+            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+              <h3 class="font-semibold text-gray-900 dark:text-white mb-3">Europe</h3>
+              <ul class="space-y-1 text-sm text-gray-600 dark:text-gray-300">
+                <li><strong>euw1:</strong> Europe West</li>
+                <li><strong>eune1:</strong> Europe Nordic & East</li>
+                <li><strong>tr1:</strong> Turkey</li>
+                <li><strong>ru1:</strong> Russia</li>
+              </ul>
+            </div>
+
+            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+              <h3 class="font-semibold text-gray-900 dark:text-white mb-3">Asia Pacific</h3>
+              <ul class="space-y-1 text-sm text-gray-600 dark:text-gray-300">
+                <li><strong>kr:</strong> Korea</li>
+                <li><strong>jp1:</strong> Japan</li>
+                <li><strong>oc1:</strong> Oceania</li>
+                <li><strong>ph2:</strong> Philippines</li>
+                <li><strong>sg2:</strong> Singapore</li>
+                <li><strong>th2:</strong> Thailand</li>
+                <li><strong>tw2:</strong> Taiwan</li>
+                <li><strong>vn2:</strong> Vietnam</li>
+              </ul>
+            </div>
+
+            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+              <h3 class="font-semibold text-gray-900 dark:text-white mb-3">Middle East & Africa</h3>
+              <ul class="space-y-1 text-sm text-gray-600 dark:text-gray-300">
+                <li><strong>me1:</strong> Middle East</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- Troubleshooting -->
+        <section id="troubleshooting" class="mb-16">
+          <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-6">Troubleshooting</h2>
+
+          <div class="space-y-8">
+            <div>
+              <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Common Issues</h3>
+
+              <div class="space-y-6">
+                <div class="border-l-4 border-red-400 dark:border-red-500 pl-4">
+                  <h4 class="font-medium text-gray-900 dark:text-white mb-2">Bot not responding to commands</h4>
+                  <ul class="list-disc list-inside text-sm text-gray-600 dark:text-gray-300 space-y-1">
+                    <li>Ensure Scout has the necessary permissions in your server</li>
+                    <li>Check that you're using slash commands (/) not text commands</li>
+                    <li>Verify Scout is online and has the green status indicator</li>
+                  </ul>
+                </div>
+
+                <div class="border-l-4 border-yellow-400 dark:border-yellow-500 pl-4">
+                  <h4 class="font-medium text-gray-900 dark:text-white mb-2">Player not found or invalid Riot ID</h4>
+                  <ul class="list-disc list-inside text-sm text-gray-600 dark:text-gray-300 space-y-1">
+                    <li>Double-check the Riot ID format: GameName#TagLine</li>
+                    <li>Ensure you're using the correct region for the player</li>
+                    <li>Verify the player exists and has played recently</li>
+                  </ul>
+                </div>
+
+                <div class="border-l-4 border-blue-400 dark:border-blue-500 pl-4">
+                  <h4 class="font-medium text-gray-900 dark:text-white mb-2">Missing match notifications</h4>
+                  <ul class="list-disc list-inside text-sm text-gray-600 dark:text-gray-300 space-y-1">
+                    <li>Scout checks for matches every minute</li>
+                    <li>Custom games and practice tool matches are not tracked</li>
+                    <li>Very short games might not generate reports</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Getting Help</h3>
+              <p class="text-gray-600 dark:text-gray-300 mb-4">If you're still having issues, you can:</p>
+              <ul class="list-disc list-inside text-gray-600 dark:text-gray-300 space-y-2">
+                <li>Review your server's audit log for permission issues</li>
+                <li>Check Scout's status on our status page (if available)</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- FAQ -->
+        <section id="faq" class="mb-16">
+          <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-6">Frequently Asked Questions</h2>
+
+          <div class="space-y-6">
+            <FAQItem question="How often does Scout check for new matches?">
+              <p class="mb-3">
+                Scout uses intelligent dynamic polling that adjusts based on player activity:
+              </p>
+              <ul class="list-disc list-inside text-sm space-y-1 mb-3">
+                <li><strong>Active players</strong> (played within the last hour): Checked every 1 minute</li>
+                <li><strong>Recently active</strong> (6-12 hours): Checked every 5-10 minutes</li>
+                <li><strong>Inactive players</strong> (30+ days): Checked every 60 minutes</li>
+              </ul>
+              <p>
+                This means you'll get notifications within 1-2 minutes for players who are actively gaming, while
+                reducing unnecessary API calls for inactive accounts.
+              </p>
+            </FAQItem>
+
+            <FAQItem question="What types of matches are tracked?">
+              <p>
+                Scout tracks all ranked and normal games on Summoner's Rift, ARAM, Arena, and other matchmade queues.
+                Custom games, practice tool, and tutorial matches are not tracked.
+              </p>
+            </FAQItem>
+
+            <FAQItem question="How do competitions work?">
+              <p>
+                Competitions allow you to create time-limited challenges for your server members. You can set custom
+                criteria (wins, rank climb, win rate, etc.) and Scout will automatically track performance and update
+                leaderboards. You can use League seasons or custom dates, and even edit competitions before they start.
+                Use <code class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-sm">/competition create</code> to get started!
+              </p>
+            </FAQItem>
+
+            <FAQItem question="Can I edit a competition after creating it?">
+              <p>
+                Yes! You can always edit the title, description, and channel using
+                <code class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-sm">/competition edit</code>. Before a competition starts, you can also change the criteria, dates, visibility settings, and other
+                parameters. Once a competition is active, core settings like criteria and dates are locked to ensure
+                fairness.
+              </p>
+            </FAQItem>
+
+            <FAQItem question="What are the admin commands for?">
+              <p>
+                The <code class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-sm">/admin</code>
+                commands help server administrators manage players and accounts. You can rename players, remove accounts,
+                transfer accounts between players, merge duplicate players, and delete players entirely. These are advanced
+                commands that require Administrator permissions in Discord.
+              </p>
+            </FAQItem>
+
+            <FAQItem question="Can I track players from different regions in the same server?">
+              <p>
+                Yes! You can subscribe to players from any supported League of Legends region. Just make sure to specify
+                the correct region when subscribing.
+              </p>
+            </FAQItem>
+
+            <FAQItem question="How many players can I track?">
+              <p class="mb-3">
+                By default, each server can track up to <strong>75 players</strong> with a maximum of
+                <strong>50 League accounts</strong> total. This helps ensure reliable service for all users.
+              </p>
+              <p>
+                If you need to track more players, you can remove existing subscriptions using
+                <code class="bg-gray-100 dark:bg-gray-700 px-1 rounded text-sm">/subscription delete</code>. Contact us if your community requires a higher limit.
+              </p>
+            </FAQItem>
+
+            <FAQItem question="Why am I not getting post-match reports?">
+              <p class="mb-3">
+                Post-match reports are generated after games end. The timing depends on when Scout detects the match is
+                complete:
+              </p>
+              <ul class="list-disc list-inside text-sm space-y-1 mb-3">
+                <li>
+                  For <strong>active players</strong> (played within the last hour): Checked every 1 minute
+                </li>
+                <li>
+                  For <strong>less active players</strong>: May take 5-15 minutes depending on their polling interval
+                </li>
+                <li>Very short games (under 5 minutes) or remakes might not generate reports</li>
+              </ul>
+              <p>
+                The dynamic polling system prioritizes active players, so if someone is playing regularly, their reports
+                will appear faster than someone who plays occasionally.
+              </p>
+            </FAQItem>
+
+            <FAQItem question="Is my data safe?">
+              <p>
+                Scout only stores the minimum data necessary to provide notifications: Riot IDs, aliases, and Discord
+                channel information. We don't store personal information or match history beyond what's needed for
+                reports.
+              </p>
+            </FAQItem>
+          </div>
+        </section>
+
+        <!-- Support CTA -->
+        <div class="bg-indigo-50 dark:bg-indigo-900/30 rounded-lg p-8 text-center">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Need More Help?</h2>
+          <p class="text-gray-600 dark:text-gray-300 mb-6">Can't find what you're looking for? We're here to help!</p>
+          <a
+            href="https://discord.com/oauth2/authorize?client_id=1182800769188110366"
+            class="inline-flex items-center rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+          >
+            Add Scout to Discord
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <Footer variant="homepage" />
+  </div>
+</Layout>

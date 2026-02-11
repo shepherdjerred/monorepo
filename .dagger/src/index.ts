@@ -9,7 +9,7 @@ import {
 } from "./birmel.js";
 import { reviewPr, handleInteractive } from "./code-review.js";
 
-const PACKAGES = ["eslint-config", "dagger-utils", "bun-decompile", "webring", "astro-opengraph-images"] as const;
+const PACKAGES = ["eslint-config", "dagger-utils", "bun-decompile", "webring", "astro-opengraph-images", "homelab/helm-types"] as const;
 const REPO_URL = "shepherdjerred/monorepo";
 
 const BUN_VERSION = "1.3.6";
@@ -95,6 +95,22 @@ function installWorkspaceDeps(source: Directory): Container {
     .withMountedFile("/workspace/packages/dpp/common/package.json", source.file("packages/dpp/common/package.json"))
     .withMountedFile("/workspace/packages/dpp/backend/package.json", source.file("packages/dpp/backend/package.json"))
     .withMountedFile("/workspace/packages/dpp/frontend/package.json", source.file("packages/dpp/frontend/package.json"))
+    // Homelab sub-packages
+    .withExec(["mkdir", "-p", "/workspace/packages/homelab"])
+    .withMountedFile("/workspace/packages/homelab/package.json", source.file("packages/homelab/package.json"))
+    .withMountedFile("/workspace/packages/homelab/cdk8s/package.json", source.file("packages/homelab/cdk8s/package.json"))
+    .withMountedFile("/workspace/packages/homelab/ha/package.json", source.file("packages/homelab/ha/package.json"))
+    .withMountedFile("/workspace/packages/homelab/deps-email/package.json", source.file("packages/homelab/deps-email/package.json"))
+    .withMountedFile("/workspace/packages/homelab/helm-types/package.json", source.file("packages/homelab/helm-types/package.json"))
+    // Scout sub-packages
+    .withExec(["mkdir", "-p", "/workspace/packages/scout"])
+    .withMountedFile("/workspace/packages/scout/package.json", source.file("packages/scout/package.json"))
+    .withMountedFile("/workspace/packages/scout/backend/package.json", source.file("packages/scout/backend/package.json"))
+    .withMountedFile("/workspace/packages/scout/data/package.json", source.file("packages/scout/data/package.json"))
+    .withMountedFile("/workspace/packages/scout/report/package.json", source.file("packages/scout/report/package.json"))
+    .withMountedFile("/workspace/packages/scout/frontend/package.json", source.file("packages/scout/frontend/package.json"))
+    .withMountedFile("/workspace/packages/scout/desktop/package.json", source.file("packages/scout/desktop/package.json"))
+    .withMountedFile("/workspace/packages/scout/ui/package.json", source.file("packages/scout/ui/package.json"))
     // Clauderon web packages (nested workspace with own lockfile)
     .withMountedFile("/workspace/packages/clauderon/web/package.json", source.file("packages/clauderon/web/package.json"))
     .withMountedFile("/workspace/packages/clauderon/web/bun.lock", source.file("packages/clauderon/web/bun.lock"))
@@ -103,7 +119,9 @@ function installWorkspaceDeps(source: Directory): Container {
     .withMountedFile("/workspace/packages/clauderon/web/frontend/package.json", source.file("packages/clauderon/web/frontend/package.json"))
     // Clauderon docs (mount package.json only, will mount full dir in PHASE 3 after install)
     .withExec(["mkdir", "-p", "/workspace/packages/clauderon/docs"])
-    .withMountedFile("/workspace/packages/clauderon/docs/package.json", source.file("packages/clauderon/docs/package.json"));
+    .withMountedFile("/workspace/packages/clauderon/docs/package.json", source.file("packages/clauderon/docs/package.json"))
+    // Patch files (needed by bun install for patchedDependencies)
+    .withMountedDirectory("/workspace/patches", source.directory("patches"));
 
   // PHASE 2: Install dependencies (cached if lockfile + package.jsons unchanged)
   container = container.withExec(["bun", "install", "--frozen-lockfile"]);
@@ -125,6 +143,25 @@ function installWorkspaceDeps(source: Directory): Container {
     .withMountedDirectory("/workspace/packages/dpp/common", source.directory("packages/dpp/common"))
     .withMountedDirectory("/workspace/packages/dpp/backend", source.directory("packages/dpp/backend"))
     .withMountedDirectory("/workspace/packages/dpp/frontend", source.directory("packages/dpp/frontend"))
+    // Homelab sub-packages
+    .withMountedDirectory("/workspace/packages/homelab/cdk8s", source.directory("packages/homelab/cdk8s"))
+    .withMountedDirectory("/workspace/packages/homelab/ha", source.directory("packages/homelab/ha"))
+    .withMountedDirectory("/workspace/packages/homelab/deps-email", source.directory("packages/homelab/deps-email"))
+    .withMountedDirectory("/workspace/packages/homelab/helm-types", source.directory("packages/homelab/helm-types"))
+    .withMountedFile("/workspace/packages/homelab/tsconfig.base.json", source.file("packages/homelab/tsconfig.base.json"))
+    .withMountedFile("/workspace/packages/homelab/eslint.config.ts", source.file("packages/homelab/eslint.config.ts"))
+    .withMountedDirectory("/workspace/packages/homelab/eslint-rules", source.directory("packages/homelab/eslint-rules"))
+    // Scout sub-packages
+    .withMountedDirectory("/workspace/packages/scout/backend", source.directory("packages/scout/backend"))
+    .withMountedDirectory("/workspace/packages/scout/data", source.directory("packages/scout/data"))
+    .withMountedDirectory("/workspace/packages/scout/report", source.directory("packages/scout/report"))
+    .withMountedDirectory("/workspace/packages/scout/frontend", source.directory("packages/scout/frontend"))
+    .withMountedDirectory("/workspace/packages/scout/desktop", source.directory("packages/scout/desktop"))
+    .withMountedDirectory("/workspace/packages/scout/ui", source.directory("packages/scout/ui"))
+    .withMountedFile("/workspace/packages/scout/tsconfig.base.json", source.file("packages/scout/tsconfig.base.json"))
+    .withMountedFile("/workspace/packages/scout/eslint.config.ts", source.file("packages/scout/eslint.config.ts"))
+    .withMountedDirectory("/workspace/packages/scout/eslint-rules", source.directory("packages/scout/eslint-rules"))
+    .withMountedDirectory("/workspace/packages/scout/types", source.directory("packages/scout/types"))
     // Clauderon web packages
     .withMountedDirectory("/workspace/packages/clauderon/web/shared", source.directory("packages/clauderon/web/shared"))
     .withMountedDirectory("/workspace/packages/clauderon/web/client", source.directory("packages/clauderon/web/client"))
@@ -408,7 +445,7 @@ for dir in /workspace/packages/*/; do
   PKG=$(basename "$dir")
   # Skip exempt packages
   case "$PKG" in
-    resume|eslint-config|clauderon|claude-plugin|a2ui-poc|discord-claude|fonts|anki|castle-casters|macos-cross-compiler|dpp) continue ;;
+    resume|eslint-config|clauderon|claude-plugin|a2ui-poc|discord-claude|fonts|anki|castle-casters|macos-cross-compiler|dpp|homelab|scout) continue ;;
   esac
 
   echo "Checking $PKG..."
@@ -469,10 +506,10 @@ BASELINE_RUST=$(grep -o '"rust-allow": [0-9]*' /workspace/.quality-baseline.json
 BASELINE_PRETTIER=$(grep -o '"prettier-ignore": [0-9]*' /workspace/.quality-baseline.json | grep -o '[0-9]*')
 
 # Count current suppressions (excluding node_modules, dist, archive)
-CURRENT_ESLINT=$(grep -r "eslint-disable" /workspace/packages/ /workspace/.dagger/ --include="*.ts" --include="*.tsx" 2>/dev/null | grep -v node_modules | grep -v dist | grep -v archive | wc -l | tr -d ' ')
-CURRENT_TS=$(grep -r "@ts-expect-error\\|@ts-ignore\\|@ts-nocheck" /workspace/packages/ /workspace/.dagger/ --include="*.ts" --include="*.tsx" 2>/dev/null | grep -v node_modules | grep -v dist | grep -v archive | wc -l | tr -d ' ')
-CURRENT_RUST=$(grep -r '#\\[allow(' /workspace/packages/clauderon/src/ --include="*.rs" 2>/dev/null | wc -l | tr -d ' ')
-CURRENT_PRETTIER=$(grep -r "prettier-ignore" /workspace/packages/ /workspace/.dagger/ --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" --include="*.css" --include="*.json" 2>/dev/null | grep -v node_modules | grep -v dist | grep -v archive | wc -l | tr -d ' ')
+CURRENT_ESLINT=$(grep -r "eslint-disable" /workspace/packages/ /workspace/.dagger/ --include="*.ts" --include="*.tsx" 2>/dev/null | grep -v node_modules | grep -v dist | grep -v archive | grep -v generated | wc -l | tr -d ' ')
+CURRENT_TS=$(grep -r "@ts-expect-error\\|@ts-ignore\\|@ts-nocheck" /workspace/packages/ /workspace/.dagger/ --include="*.ts" --include="*.tsx" 2>/dev/null | grep -v node_modules | grep -v dist | grep -v archive | grep -v generated | wc -l | tr -d ' ')
+CURRENT_RUST=$(grep -r '#\\[allow(' /workspace/packages/clauderon/src/ /workspace/packages/scout/desktop/src-tauri/src/ --include="*.rs" 2>/dev/null | wc -l | tr -d ' ')
+CURRENT_PRETTIER=$(grep -r "prettier-ignore" /workspace/packages/ /workspace/.dagger/ --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" --include="*.css" --include="*.json" 2>/dev/null | grep -v node_modules | grep -v dist | grep -v archive | grep -v generated | wc -l | tr -d ' ')
 
 echo "Suppression counts (current / baseline):"
 echo "  eslint-disable: $CURRENT_ESLINT / $BASELINE_ESLINT"

@@ -1,0 +1,373 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Teemo": {
+      "id": "Teemo",
+      "key": "17",
+      "name": "Teemo",
+      "title": "the Swift Scout",
+      "image": {
+        "full": "Teemo.png",
+        "sprite": "champion4.png",
+        "group": "champion",
+        "x": 288,
+        "y": 48,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "17000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "17001",
+          "num": 1,
+          "name": "Happy Elf Teemo",
+          "chromas": false
+        },
+        {
+          "id": "17002",
+          "num": 2,
+          "name": "Recon Teemo",
+          "chromas": false
+        },
+        {
+          "id": "17003",
+          "num": 3,
+          "name": "Badger Teemo",
+          "chromas": false
+        },
+        {
+          "id": "17004",
+          "num": 4,
+          "name": "Astronaut Teemo",
+          "chromas": true
+        },
+        {
+          "id": "17005",
+          "num": 5,
+          "name": "Cottontail Teemo",
+          "chromas": true
+        },
+        {
+          "id": "17006",
+          "num": 6,
+          "name": "Super Teemo",
+          "chromas": false
+        },
+        {
+          "id": "17007",
+          "num": 7,
+          "name": "Panda Teemo",
+          "chromas": false
+        },
+        {
+          "id": "17008",
+          "num": 8,
+          "name": "Omega Squad Teemo",
+          "chromas": true
+        },
+        {
+          "id": "17014",
+          "num": 14,
+          "name": "Little Devil Teemo",
+          "chromas": true
+        },
+        {
+          "id": "17018",
+          "num": 18,
+          "name": "Beemo",
+          "chromas": true
+        },
+        {
+          "id": "17025",
+          "num": 25,
+          "name": "Spirit Blossom Teemo",
+          "chromas": false
+        },
+        {
+          "id": "17027",
+          "num": 27,
+          "name": "Prestige Spirit Blossom Teemo",
+          "chromas": false
+        },
+        {
+          "id": "17037",
+          "num": 37,
+          "name": "Firecracker Teemo",
+          "chromas": true
+        },
+        {
+          "id": "17047",
+          "num": 47,
+          "name": "Space Groove Teemo",
+          "chromas": true
+        },
+        {
+          "id": "17054",
+          "num": 54,
+          "name": "Spirit Blossom Springs Teemo",
+          "chromas": true
+        }
+      ],
+      "lore": "Undeterred by even the most dangerous and threatening of obstacles, Teemo scouts the world with boundless enthusiasm and a cheerful spirit. A yordle with an unwavering sense of morality, he takes pride in following the Bandle Scout's Code, sometimes with such eagerness that he is unaware of the broader consequences of his actions. Though some say the existence of the Scouts is questionable, one thing is for certain: Teemo's conviction is nothing to be trifled with.",
+      "blurb": "Undeterred by even the most dangerous and threatening of obstacles, Teemo scouts the world with boundless enthusiasm and a cheerful spirit. A yordle with an unwavering sense of morality, he takes pride in following the Bandle Scout's Code, sometimes...",
+      "allytips": [
+        "Teemo's mushrooms can be used to farm creep waves very effectively.",
+        "Place your mushrooms at key locations on the map, such as by the Dragon or Baron Nashor, to reveal when your enemies might be attempting to kill them."
+      ],
+      "enemytips": [
+        "Teemo's Toxic Shot punishes players who get hit and back out, so stay at a safe range until you're ready to commit.",
+        "It can be valuable to use Oracle's Lens(Trinket) to destroy mushrooms around key locations."
+      ],
+      "tags": ["Marksman", "Mage"],
+      "partype": "Mana",
+      "info": {
+        "attack": 5,
+        "defense": 3,
+        "magic": 7,
+        "difficulty": 6
+      },
+      "stats": {
+        "hp": 615,
+        "hpperlevel": 104,
+        "mp": 334,
+        "mpperlevel": 25,
+        "movespeed": 330,
+        "armor": 24,
+        "armorperlevel": 4.95,
+        "spellblock": 30,
+        "spellblockperlevel": 1.3,
+        "attackrange": 500,
+        "hpregen": 5.5,
+        "hpregenperlevel": 0.65,
+        "mpregen": 9.6,
+        "mpregenperlevel": 0.45,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 54,
+        "attackdamageperlevel": 3,
+        "attackspeedperlevel": 3.38,
+        "attackspeed": 0.69
+      },
+      "spells": [
+        {
+          "id": "TeemoQ",
+          "name": "Blinding Dart",
+          "description": "Obscures an enemy's vision with a powerful venom, dealing damage to the target unit and blinding it for the duration.",
+          "tooltip": "Teemo fires a dart, <status>Blinding</status> the target for {{ blindduration }} seconds and dealing <magicDamage>{{ calculateddamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["@AbilityResourceName@ Cost", "Duration", "Damage"],
+            "effect": [
+              "{{ cost }} -> {{ costNL }}",
+              "{{ blindduration }} -> {{ blinddurationNL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [7, 7, 7, 7, 7],
+          "cooldownBurn": "7",
+          "cost": [70, 75, 80, 85, 90],
+          "costBurn": "70/75/80/85/90",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [680, 680, 680, 680, 680],
+          "rangeBurn": "680",
+          "image": {
+            "full": "TeemoQ.png",
+            "sprite": "spell14.png",
+            "group": "spell",
+            "x": 96,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "TeemoW",
+          "name": "Move Quick",
+          "description": "Teemo scampers around, passively increasing his Move Speed until he is struck by an enemy champion or turret. Teemo can sprint to gain bonus Move Speed that isn't stopped by being struck for a short time.",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Teemo gains <speed>{{ passivemovespeedbonus*100 }}% Move Speed</speed> while he hasn't been damaged by a champion or turret in the last {{ passivecooldownondamagetaken }} seconds.<br /><br /><spellActive>Active:</spellActive> Teemo sprints, gaining <speed>{{ activemovespeedbonus*100 }}% Move Speed</speed> that is not lost when struck for {{ activemovespeedbuffduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Passive Move Speed", "Active Move Speed"],
+            "effect": [
+              "{{ passivemovespeedbonus*100.000000 }}% -> {{ passivemovespeedbonusnl*100.000000 }}%",
+              "{{ activemovespeedbonus*100.000000 }}% -> {{ activemovespeedbonusnl*100.000000 }}%"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [14, 14, 14, 14, 14],
+          "cooldownBurn": "14",
+          "cost": [40, 40, 40, 40, 40],
+          "costBurn": "40",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [20, 20, 20, 20, 20],
+          "rangeBurn": "20",
+          "image": {
+            "full": "TeemoW.png",
+            "sprite": "spell14.png",
+            "group": "spell",
+            "x": 144,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "TeemoE",
+          "name": "Toxic Shot",
+          "description": "Each of Teemo's attacks will poison the target, dealing damage on impact and each second after for 4 seconds.",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Teemo's Attacks apply poison, dealing an additional <magicDamage>{{ impactcalculateddamage }} magic damage</magicDamage> plus <magicDamage>{{ totaldotdamage }} magic damage</magicDamage> over {{ poisonduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Impact Damage", "Damage Per Second"],
+            "effect": [
+              "{{ impactbasedamage }} -> {{ impactbasedamageNL }}",
+              "{{ tickbasedamage }} -> {{ tickbasedamageNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [0, 0, 0, 0, 0],
+          "cooldownBurn": "0",
+          "cost": [0, 0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "Passive",
+          "maxammo": "-1",
+          "range": [680, 680, 680, 680, 680],
+          "rangeBurn": "680",
+          "image": {
+            "full": "TeemoE.png",
+            "sprite": "spell14.png",
+            "group": "spell",
+            "x": 192,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "Passive"
+        },
+        {
+          "id": "TeemoR",
+          "name": "Noxious Trap",
+          "description": "Teemo throws an explosive poisonous trap using one of the mushrooms stored in his pack. If an enemy steps on the trap, it will release a poisonous cloud, slowing enemies and damaging them over time. If Teemo throws a mushroom onto another mushroom it will bounce, gaining additional range.",
+          "tooltip": "Teemo tosses a mushroom trap that detonates when stepped on. The traps <status>Slow</status> by {{ slowamount }}% and deal <magicDamage>{{ totaldamage }} magic damage</magicDamage> over {{ debuffduration }} seconds. Enemies are revealed for the same duration.<br /><br />Traps last {{ mushroomduration }} minutes and are stealthed. A mushroom tossed onto another mushroom bounces before landing at its position. This Ability has {{ maxammo }} charges ({{ ammorechargetime }} second refresh).<br />{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Slow", "Toss Range", "Maximum Bounce Distance", "Maximum Traps", "Mana Cost"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ slowamount }}% -> {{ slowamountNL }}%",
+              "{{ castrange }} -> {{ castrangeNL }}",
+              "{{ maxbouncedistance }} -> {{ maxbouncedistanceNL }}",
+              "{{ maxammo }} -> {{ maxammoNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [0.25, 0.25, 0.25],
+          "cooldownBurn": "0.25",
+          "cost": [75, 55, 35],
+          "costBurn": "75/55/35",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "3",
+          "range": [600, 750, 900],
+          "rangeBurn": "600/750/900",
+          "image": {
+            "full": "TeemoR.png",
+            "sprite": "spell14.png",
+            "group": "spell",
+            "x": 240,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Guerrilla Warfare",
+        "description": "If Teemo stands still and takes no actions for a short duration, he becomes Invisible indefinitely. If he's in brush, Teemo can enter and maintain his Invisibility while moving. After leaving Invisibility, Teemo gains the Element of Surprise, increasing his Attack Speed for a few seconds.",
+        "image": {
+          "full": "TeemoPassive.ASU_Teemo.png",
+          "sprite": "passive4.png",
+          "group": "passive",
+          "x": 288,
+          "y": 48,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

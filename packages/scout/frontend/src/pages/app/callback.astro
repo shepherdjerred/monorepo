@@ -1,0 +1,125 @@
+---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout>
+  <div class="flex min-h-screen items-center justify-center bg-slate-950">
+    <div class="w-full max-w-md space-y-8 px-4 text-center">
+      <!-- Logo -->
+      <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-amber-500 shadow-lg">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+        </svg>
+      </div>
+
+      <!-- Loading State -->
+      <div id="loading-state">
+        <div class="flex items-center justify-center gap-3">
+          <svg class="h-5 w-5 animate-spin text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span class="text-slate-400">Completing sign in...</span>
+        </div>
+      </div>
+
+      <!-- Success State -->
+      <div id="success-state" class="hidden">
+        <div class="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-6">
+          <svg class="mx-auto h-12 w-12 text-emerald-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg>
+          <p class="mt-4 text-lg font-semibold text-emerald-400">Welcome!</p>
+          <p class="mt-2 text-slate-400">Redirecting to dashboard...</p>
+        </div>
+      </div>
+
+      <!-- Error State -->
+      <div id="error-state" class="hidden">
+        <div class="rounded-xl border border-red-500/30 bg-red-500/10 p-6">
+          <svg class="mx-auto h-12 w-12 text-red-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+          <p class="mt-4 text-lg font-semibold text-red-400">Sign in failed</p>
+          <p class="mt-2 text-slate-400" id="error-message">An error occurred during sign in</p>
+          <a
+            href="/app/login"
+            class="mt-4 inline-block rounded-lg bg-slate-800 px-6 py-2 text-sm font-medium text-slate-300 hover:bg-slate-700"
+          >
+            Try again
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<script>
+import { createApiClient, setSessionToken, getRedirectUri } from "../../lib/trpc";
+
+async function handleCallback() {
+  const loadingState = document.getElementById("loading-state");
+  const successState = document.getElementById("success-state");
+  const errorState = document.getElementById("error-state");
+  const errorMessage = document.getElementById("error-message");
+
+  try {
+    // Get code and state from URL
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
+    const state = params.get("state");
+    const error = params.get("error");
+    const errorDescription = params.get("error_description");
+
+    // Check for OAuth error
+    if (error) {
+      throw new Error(errorDescription ?? `OAuth error: ${error}`);
+    }
+
+    // Check for code
+    if (!code) {
+      throw new Error("No authorization code received");
+    }
+
+    // Verify state (CSRF protection)
+    const savedState = sessionStorage.getItem("oauth_state");
+    if (state && savedState && state !== savedState) {
+      throw new Error("Invalid state parameter");
+    }
+    sessionStorage.removeItem("oauth_state");
+
+    // Exchange code for session
+    const client = createApiClient();
+    const result = await client.auth.exchangeCode.mutate({
+      code,
+      redirectUri: getRedirectUri(),
+    });
+
+    // Store session token
+    setSessionToken(result.sessionToken);
+
+    // Show success state
+    loadingState?.classList.add("hidden");
+    successState?.classList.remove("hidden");
+
+    // Store user info for display
+    localStorage.setItem("scout_user", JSON.stringify(result.user));
+
+    // Redirect to dashboard after a short delay
+    setTimeout(() => {
+      window.location.href = "/app";
+    }, 1500);
+  } catch (error) {
+    console.error("Callback error:", error);
+
+    // Show error state
+    loadingState?.classList.add("hidden");
+    errorState?.classList.remove("hidden");
+    if (errorMessage) {
+      errorMessage.textContent = error instanceof Error ? error.message : "An error occurred";
+    }
+  }
+}
+
+handleCallback();
+</script>

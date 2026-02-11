@@ -1,0 +1,7 @@
+machine:
+  network:
+    nameservers:
+      - 100.100.100.100
+      - 192.168.1.1
+    searchDomains:
+      - tailnet-1a49.ts.net

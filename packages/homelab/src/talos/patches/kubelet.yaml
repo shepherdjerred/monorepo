@@ -1,0 +1,4 @@
+machine:
+  kubelet:
+    extraArgs:
+      max-pods: "300"

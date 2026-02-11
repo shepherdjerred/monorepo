@@ -1,0 +1,365 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Jinx": {
+      "id": "Jinx",
+      "key": "222",
+      "name": "Jinx",
+      "title": "the Loose Cannon",
+      "image": {
+        "full": "Jinx.png",
+        "sprite": "champion1.png",
+        "group": "champion",
+        "x": 192,
+        "y": 96,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "222000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "222001",
+          "num": 1,
+          "name": "Crime City Jinx",
+          "chromas": false
+        },
+        {
+          "id": "222002",
+          "num": 2,
+          "name": "Firecracker Jinx",
+          "chromas": true
+        },
+        {
+          "id": "222003",
+          "num": 3,
+          "name": "Zombie Slayer Jinx",
+          "chromas": true
+        },
+        {
+          "id": "222004",
+          "num": 4,
+          "name": "Star Guardian Jinx",
+          "chromas": true
+        },
+        {
+          "id": "222012",
+          "num": 12,
+          "name": "Ambitious Elf Jinx",
+          "chromas": false
+        },
+        {
+          "id": "222013",
+          "num": 13,
+          "name": "Odyssey Jinx",
+          "chromas": true
+        },
+        {
+          "id": "222020",
+          "num": 20,
+          "name": "PROJECT: Jinx",
+          "chromas": true
+        },
+        {
+          "id": "222029",
+          "num": 29,
+          "name": "Heartseeker Jinx",
+          "chromas": true
+        },
+        {
+          "id": "222037",
+          "num": 37,
+          "name": "Arcane Enemy Jinx",
+          "chromas": false
+        },
+        {
+          "id": "222038",
+          "num": 38,
+          "name": "Battle Cat Jinx",
+          "chromas": true
+        },
+        {
+          "id": "222040",
+          "num": 40,
+          "name": "Prestige Battle Cat Jinx",
+          "chromas": false
+        },
+        {
+          "id": "222051",
+          "num": 51,
+          "name": "Cafe Cuties Jinx",
+          "chromas": true
+        },
+        {
+          "id": "222060",
+          "num": 60,
+          "name": "Arcane Fractured Jinx",
+          "chromas": false
+        },
+        {
+          "id": "222062",
+          "num": 62,
+          "name": "T1 Jinx",
+          "chromas": false
+        }
+      ],
+      "lore": "An unhinged and impulsive criminal from the undercity, Jinx is haunted by the consequences of her past—but that doesn't stop her from bringing her own chaotic brand of pandemonium to Piltover and Zaun. She uses her arsenal of DIY weapons to devastating effect, unleashing torrents of colorful explosions and gunfire, inspiring the disenfranchised to rebellion and resistance with the mayhem she leaves in her wake.",
+      "blurb": "An unhinged and impulsive criminal from the undercity, Jinx is haunted by the consequences of her past—but that doesn't stop her from bringing her own chaotic brand of pandemonium to Piltover and Zaun. She uses her arsenal of DIY weapons to devastating...",
+      "allytips": [
+        "Rockets aren't always the best choice! Jinx's minigun is incredibly powerful when fully ramped up. Switch to it whenever an enemy champion gets too close.",
+        "Jinx's rockets deal full damage to all enemies in the explosion. Use them on minions in lane to hit nearby enemy champions without drawing minion aggro.",
+        "When a fight starts try to stay on the edge of fray by poking with rockets and Zap!. Do not run in and unload with the minigun until you feel it is safe."
+      ],
+      "enemytips": [
+        "Jinx's minigun takes time to ramp up. If you see her poking with rockets try to jump on her and burst her down.",
+        "Jinx's ultimate does less damage the closer you are to her.",
+        "Jinx's snare grenades have a long cooldown and are her primary means of protecting herself. If she misses with them she will have a hard time escaping if engaged upon. "
+      ],
+      "tags": ["Marksman"],
+      "partype": "Mana",
+      "info": {
+        "attack": 9,
+        "defense": 2,
+        "magic": 4,
+        "difficulty": 6
+      },
+      "stats": {
+        "hp": 630,
+        "hpperlevel": 105,
+        "mp": 260,
+        "mpperlevel": 50,
+        "movespeed": 325,
+        "armor": 26,
+        "armorperlevel": 4.7,
+        "spellblock": 30,
+        "spellblockperlevel": 1.3,
+        "attackrange": 525,
+        "hpregen": 3.75,
+        "hpregenperlevel": 0.5,
+        "mpregen": 6.7,
+        "mpregenperlevel": 1,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 59,
+        "attackdamageperlevel": 3.25,
+        "attackspeedperlevel": 1,
+        "attackspeed": 0.625
+      },
+      "spells": [
+        {
+          "id": "JinxQ",
+          "name": "Switcheroo!",
+          "description": "Jinx modifies her basic attacks by swapping between Pow-Pow, her minigun and Fishbones, her rocket launcher. Attacks with Pow-Pow grant Attack Speed, while attacks with Fishbones deal area of effect damage, gain increased range, but drain Mana and attack slower.",
+          "tooltip": "Jinx swaps weapons between Fishbones the rocket launcher and Pow-Pow the minigun.<br /><br />While using the rocket launcher, Jinx's Attacks deal <physicalDamage>{{ rocketdamage }} physical damage</physicalDamage> to the target and nearby enemies, gain {{ rocketbonusrange }} range, cost Mana, and scale {{ rocketaspdpenalty*100 }}% less with bonus Attack Speed.<br /><br />While using the minigun, Jinx's Attacks grant <attackSpeed>Attack Speed</attackSpeed> for {{ minigunattackspeedduration }} seconds, stacking up to {{ minigunattackspeedstacks }} times (<attackSpeed>+{{ minigunattackspeedmax }}% %i:scaleAS% max</attackSpeed>).{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Rocket Bonus Range", "Minigun Total Attack Speed"],
+            "effect": [
+              "{{ rocketbonusrange }} -> {{ rocketbonusrangeNL }}",
+              "{{ minigunattackspeedmax }}% -> {{ minigunattackspeedmaxNL }}%"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [0.9, 0.9, 0.9, 0.9, 0.9],
+          "cooldownBurn": "0.9",
+          "cost": [20, 20, 20, 20, 20],
+          "costBurn": "20",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " Mana Per Rocket",
+          "maxammo": "-1",
+          "range": [600, 600, 600, 600, 600],
+          "rangeBurn": "600",
+          "image": {
+            "full": "JinxQ.png",
+            "sprite": "spell5.png",
+            "group": "spell",
+            "x": 192,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} Mana Per Rocket"
+        },
+        {
+          "id": "JinxW",
+          "name": "Zap!",
+          "description": "Jinx uses Zapper, her shock pistol, to fire a blast that deals damage to the first enemy hit, slowing and revealing it.",
+          "tooltip": "Jinx fires a shock blast that deals <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> to the first enemy hit, <status>Slows</status> them by {{ slowpercent }}%, and reveals them for {{ slowduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Slow", "Cooldown", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ damage }} -> {{ damageNL }}",
+              "{{ slowpercent }}% -> {{ slowpercentNL }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [8, 7, 6, 5, 4],
+          "cooldownBurn": "8/7/6/5/4",
+          "cost": [40, 45, 50, 55, 60],
+          "costBurn": "40/45/50/55/60",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [1450, 1450, 1450, 1450, 1450],
+          "rangeBurn": "1450",
+          "image": {
+            "full": "JinxW.png",
+            "sprite": "spell5.png",
+            "group": "spell",
+            "x": 240,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "JinxE",
+          "name": "Flame Chompers!",
+          "description": "Jinx throws out a line of snare grenades that explode after 5 seconds, lighting enemies on fire. Flame Chompers will bite enemy champions who walk over them, rooting them in place.",
+          "tooltip": "Jinx tosses out 3 chompers that last for {{ grenadeduration }} seconds. They explode on contact with enemy champions, <status>Rooting</status> them for {{ rootduration }} seconds and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to nearby enemies.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Cooldown"],
+            "effect": ["{{ damage }} -> {{ damageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [24, 20.5, 17, 13.5, 10],
+          "cooldownBurn": "24/20.5/17/13.5/10",
+          "cost": [90, 90, 90, 90, 90],
+          "costBurn": "90",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [925, 925, 925, 925, 925],
+          "rangeBurn": "925",
+          "image": {
+            "full": "JinxE.png",
+            "sprite": "spell5.png",
+            "group": "spell",
+            "x": 288,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "JinxR",
+          "name": "Super Mega Death Rocket!",
+          "description": "Jinx fires a super rocket across the map that gains damage as it travels. The rocket will explode upon colliding with an enemy champion, dealing damage to it and surrounding enemies based on their missing Health.",
+          "tooltip": "Jinx fires a rocket that explodes on the first enemy champion hit, dealing <physicalDamage>{{ damagefloor }} to {{ damagemax }} + {{ percentdamage }}% missing Health physical damage</physicalDamage>, gaining damage over the first second of travel time. Nearby enemies take {{ aoedamagemult*100 }}% Damage.<br /><br /><rules>Missing Health damage cannot exceed {{ monsterexecutemax }} against Monsters.</rules>{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Minimum Damage", "Maximum Damage", "Percent Missing Health Damage", "Cooldown"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ maxdamage }} -> {{ maxdamageNL }}",
+              "{{ percentdamage }}% -> {{ percentdamageNL }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [85, 65, 45],
+          "cooldownBurn": "85/65/45",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [25000, 25000, 25000],
+          "rangeBurn": "25000",
+          "image": {
+            "full": "JinxR.png",
+            "sprite": "spell5.png",
+            "group": "spell",
+            "x": 336,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Get Excited!",
+        "description": "Jinx receives massively increased Move Speed and Attack Speed whenever she helps kill or destroy an enemy champions epic jungle monster, or structure.",
+        "image": {
+          "full": "Jinx_Passive.png",
+          "sprite": "passive1.png",
+          "group": "passive",
+          "x": 192,
+          "y": 96,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

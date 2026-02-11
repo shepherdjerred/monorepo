@@ -1,0 +1,9 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { App } from "../../components/report-ui/app";
+import "../../lib/report-ui/fonts.css";
+---
+
+<Layout>
+  <App client:only="react" />
+</Layout>

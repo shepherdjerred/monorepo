@@ -1,0 +1,59 @@
+---
+import Badge from "./Badge.astro";
+import { Icon } from "astro-icon/components";
+import type { ColorVariant } from "../lib/colors";
+
+interface Props {
+  title: string;
+  description: string;
+  imageSrc: string;
+  imageAlt: string;
+  badge?:
+    | {
+        text: string;
+        icon?: string | undefined;
+        color?: ColorVariant | undefined;
+      }
+    | undefined;
+  checklist?: string[] | undefined;
+  imagePosition?: "left" | "right" | undefined;
+}
+
+const { title, description, imageSrc, imageAlt, badge, checklist = [], imagePosition = "left" } = Astro.props;
+---
+
+<div class="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-12 items-center">
+  <div class={imagePosition === "right" ? "order-2 lg:order-1" : "order-2 lg:order-2"}>
+    <img
+      src={imageSrc}
+      alt={imageAlt}
+      class="w-full rounded-xl shadow-xl ring-1 ring-gray-400/10 dark:ring-gray-600"
+      loading="lazy"
+    />
+  </div>
+  <div class={imagePosition === "right" ? "order-1 lg:order-2" : "order-1 lg:order-1"}>
+    {
+      badge && (
+        <div class="mb-4">
+          <Badge text={badge.text} {...(badge.icon ? { icon: badge.icon } : {})} color={badge.color || "purple"} />
+        </div>
+      )
+    }
+    <h3 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">{title}</h3>
+    <p class="text-lg text-gray-600 dark:text-gray-300 mb-4">
+      {description}
+    </p>
+    {
+      checklist.length > 0 && (
+        <ul class="space-y-2 text-gray-600 dark:text-gray-300">
+          {checklist.map((item) => (
+            <li class="flex items-start">
+              <Icon name="heroicons:check-circle" class="h-6 w-6 text-indigo-600 dark:text-indigo-400 mr-2 shrink-0" />
+              <span>{item}</span>
+            </li>
+          ))}
+        </ul>
+      )
+    }
+  </div>
+</div>

@@ -1,0 +1,391 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "JarvanIV": {
+      "id": "JarvanIV",
+      "key": "59",
+      "name": "Jarvan IV",
+      "title": "the Exemplar of Demacia",
+      "image": {
+        "full": "JarvanIV.png",
+        "sprite": "champion1.png",
+        "group": "champion",
+        "x": 0,
+        "y": 96,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "59000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "59001",
+          "num": 1,
+          "name": "Commando Jarvan IV",
+          "chromas": false
+        },
+        {
+          "id": "59002",
+          "num": 2,
+          "name": "Dragonslayer Jarvan IV",
+          "chromas": false
+        },
+        {
+          "id": "59003",
+          "num": 3,
+          "name": "Darkforge Jarvan IV",
+          "chromas": false
+        },
+        {
+          "id": "59004",
+          "num": 4,
+          "name": "Victorious Jarvan IV",
+          "chromas": false
+        },
+        {
+          "id": "59005",
+          "num": 5,
+          "name": "Warring Kingdoms Jarvan IV",
+          "chromas": true
+        },
+        {
+          "id": "59006",
+          "num": 6,
+          "name": "Fnatic Jarvan IV",
+          "chromas": false
+        },
+        {
+          "id": "59007",
+          "num": 7,
+          "name": "Dark Star Jarvan IV",
+          "chromas": true
+        },
+        {
+          "id": "59008",
+          "num": 8,
+          "name": "SSG Jarvan IV",
+          "chromas": true
+        },
+        {
+          "id": "59009",
+          "num": 9,
+          "name": "Hextech Jarvan IV",
+          "chromas": false
+        },
+        {
+          "id": "59011",
+          "num": 11,
+          "name": "Pool Party Jarvan IV",
+          "chromas": true
+        },
+        {
+          "id": "59021",
+          "num": 21,
+          "name": "Lunar Beast Jarvan IV",
+          "chromas": true
+        },
+        {
+          "id": "59030",
+          "num": 30,
+          "name": "Worlds 2021 Jarvan IV",
+          "chromas": false
+        },
+        {
+          "id": "59035",
+          "num": 35,
+          "name": "Nightbringer Jarvan IV",
+          "chromas": false
+        },
+        {
+          "id": "59044",
+          "num": 44,
+          "name": "Mythmaker Jarvan IV",
+          "chromas": false
+        },
+        {
+          "id": "59054",
+          "num": 54,
+          "name": "Prestige Visions of the Fallen Jarvan IV",
+          "chromas": false
+        }
+      ],
+      "lore": "Prince Jarvan, scion of the Lightshield dynasty, is heir apparent to the throne of Demacia. Raised to be a paragon of his nation's greatest virtues, he is forced to balance the heavy expectations placed upon him with his own desire to fight on the front lines. Jarvan inspires his troops with his fearsome courage and selfless determination, raising his family's colors high and revealing his true strength as a future leader of his people.",
+      "blurb": "Prince Jarvan, scion of the Lightshield dynasty, is heir apparent to the throne of Demacia. Raised to be a paragon of his nation's greatest virtues, he is forced to balance the heavy expectations placed upon him with his own desire to fight on the front...",
+      "allytips": [
+        "You can use the Dragon Strike / Demacian Standard combo to get out of your own Cataclysm arenas.",
+        "Split your basic attacks on different champions at the beginning of fights to maximize damage.",
+        "Use Demacian Standard as a scouting tool when worried about incoming enemies."
+      ],
+      "enemytips": [
+        "Keep out of the path between Jarvan IV and his Demacian Standard to avoid being knocked up in the air.",
+        "Cataclysm's terrain is a frightening force to fight against, but movement abilities can go through it."
+      ],
+      "tags": ["Fighter", "Tank"],
+      "partype": "Mana",
+      "info": {
+        "attack": 6,
+        "defense": 8,
+        "magic": 3,
+        "difficulty": 5
+      },
+      "stats": {
+        "hp": 640,
+        "hpperlevel": 104,
+        "mp": 300,
+        "mpperlevel": 55,
+        "movespeed": 340,
+        "armor": 36,
+        "armorperlevel": 4.6,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
+        "attackrange": 175,
+        "hpregen": 8,
+        "hpregenperlevel": 0.7,
+        "mpregen": 6.5,
+        "mpregenperlevel": 0.45,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 64,
+        "attackdamageperlevel": 3,
+        "attackspeedperlevel": 2.5,
+        "attackspeed": 0.658
+      },
+      "spells": [
+        {
+          "id": "JarvanIVDragonStrike",
+          "name": "Dragon Strike",
+          "description": "Jarvan IV extends his lance, dealing physical damage and lowering the Armor of enemies in its path. Additionally, this will pull Jarvan to his Demacian Standard, knocking up enemies in his path.",
+          "tooltip": "Jarvan extends his lance, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and removing <scaleArmor>{{ e2 }}% Armor</scaleArmor> for {{ e3 }} seconds.<br /><br />If the lance connects with <spellName>Demacian Standard</spellName>, Jarvan will pull himself to it, <status>Knocking Up</status> those in his path for 0.75 seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Armor Reduction", "Cooldown", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ e2 }}% -> {{ e2NL }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [10, 9, 8, 7, 6],
+          "cooldownBurn": "10/9/8/7/6",
+          "cost": [45, 50, 55, 60, 65],
+          "costBurn": "45/50/55/60/65",
+          "datavalues": {},
+          "effect": [
+            null,
+            [80, 120, 160, 200, 240],
+            [10, 14, 18, 22, 26],
+            [3, 3, 3, 3, 3],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "80/120/160/200/240", "10/14/18/22/26", "3", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [770, 770, 770, 770, 770],
+          "rangeBurn": "770",
+          "image": {
+            "full": "JarvanIVDragonStrike.png",
+            "sprite": "spell5.png",
+            "group": "spell",
+            "x": 384,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "JarvanIVGoldenAegis",
+          "name": "Golden Aegis",
+          "description": "Jarvan IV calls upon the ancient kings of Demacia to shield him from harm and slow surrounding enemies.",
+          "tooltip": "Jarvan summons an aegis, <status>Slowing</status> nearby enemies by {{ e2 }}% for {{ e5 }} seconds and granting him a <shield>{{ baseshield }} Shield</shield>, increased by <shield>{{ bonusshield }}</shield> for each enemy champion hit.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Shield Amount", "Slow"],
+            "effect": ["{{ e1 }} -> {{ e1NL }}", "{{ e2 }}% -> {{ e2NL }}%"]
+          },
+          "maxrank": 5,
+          "cooldown": [9, 9, 9, 9, 9],
+          "cooldownBurn": "9",
+          "cost": [30, 30, 30, 30, 30],
+          "costBurn": "30",
+          "datavalues": {},
+          "effect": [
+            null,
+            [60, 80, 100, 120, 140],
+            [15, 20, 25, 30, 35],
+            [10, 20, 30, 40, 50],
+            [4, 4, 4, 4, 4],
+            [2, 2, 2, 2, 2],
+            [0.013, 0.013, 0.013, 0.013, 0.013],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [
+            null,
+            "60/80/100/120/140",
+            "15/20/25/30/35",
+            "10/20/30/40/50",
+            "4",
+            "2",
+            "0.01",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [625, 625, 625, 625, 625],
+          "rangeBurn": "625",
+          "image": {
+            "full": "JarvanIVGoldenAegis.png",
+            "sprite": "spell5.png",
+            "group": "spell",
+            "x": 432,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "JarvanIVDemacianStandard",
+          "name": "Demacian Standard",
+          "description": "Jarvan IV carries the pride of Demacia, passively granting him bonus Attack Speed. Activating Demacian Standard allows Jarvan IV to place a Demacian flag that deals magic damage on impact and grants Attack Speed to nearby allied champions.",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Jarvan gains <attackSpeed>{{ permanentattackspeed*100 }}% Attack Speed</attackSpeed>.<br /><br /><spellActive>Active:</spellActive> Jarvan throws a standard into the ground, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> and granting allies near the standard <attackSpeed>{{ e3 }}% Attack Speed</attackSpeed> for {{ e4 }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Passive Attack Speed", "Active Attack Speed", "Cooldown"],
+            "effect": [
+              "{{ e2 }} -> {{ e2NL }}",
+              "{{ permanentattackspeed*100.000000 }}% -> {{ permanentattackspeednl*100.000000 }}%",
+              "{{ effect3amount*100.000000 }}% -> {{ effect3amountnl*100.000000 }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [12, 11.5, 11, 10.5, 10],
+          "cooldownBurn": "12/11.5/11/10.5/10",
+          "cost": [55, 55, 55, 55, 55],
+          "costBurn": "55",
+          "datavalues": {},
+          "effect": [
+            null,
+            [10, 13, 16, 19, 22],
+            [80, 120, 160, 200, 240],
+            [20, 22.5, 25, 27.5, 30],
+            [8, 8, 8, 8, 8],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [
+            null,
+            "10/13/16/19/22",
+            "80/120/160/200/240",
+            "20/22.5/25/27.5/30",
+            "8",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [860, 860, 860, 860, 860],
+          "rangeBurn": "860",
+          "image": {
+            "full": "JarvanIVDemacianStandard.png",
+            "sprite": "spell5.png",
+            "group": "spell",
+            "x": 0,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "JarvanIVCataclysm",
+          "name": "Cataclysm",
+          "description": "Jarvan IV heroically leaps into battle at a target with such force that he terraforms the surrounding area to create an arena around them. Nearby enemies are damaged at the moment of impact.",
+          "tooltip": "Jarvan heroically leaps to an enemy Champion, dealing <physicalDamage>{{ damagecalc }} physical damage</physicalDamage> to them and surrounding enemies and creating an arena of impassable terrain around them for {{ wallduration }} seconds.<br /><br />Jarvan can <recast>Recast</recast> to collapse the terrain.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Cooldown"],
+            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 3,
+          "cooldown": [120, 105, 90],
+          "cooldownBurn": "120/105/90",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [650, 650, 650],
+          "rangeBurn": "650",
+          "image": {
+            "full": "JarvanIVCataclysm.png",
+            "sprite": "spell5.png",
+            "group": "spell",
+            "x": 48,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Martial Cadence",
+        "description": "Jarvan's first basic attack on an enemy deals bonus physical damage based on their current Health. This effect cannot occur again on the same enemy for a few seconds.",
+        "image": {
+          "full": "JarvanIVP.png",
+          "sprite": "passive1.png",
+          "group": "passive",
+          "x": 0,
+          "y": 96,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

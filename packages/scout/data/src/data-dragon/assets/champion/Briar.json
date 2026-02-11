@@ -1,0 +1,298 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Briar": {
+      "id": "Briar",
+      "key": "233",
+      "name": "Briar",
+      "title": "the Restrained Hunger",
+      "image": {
+        "full": "Briar.png",
+        "sprite": "champion0.png",
+        "group": "champion",
+        "x": 432,
+        "y": 48,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "233000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "233001",
+          "num": 1,
+          "name": "Street Demons Briar",
+          "chromas": true
+        },
+        {
+          "id": "233010",
+          "num": 10,
+          "name": "Primordian Briar",
+          "chromas": true
+        },
+        {
+          "id": "233020",
+          "num": 20,
+          "name": "Battle Academia Briar",
+          "chromas": true
+        }
+      ],
+      "lore": "A failed experiment by the Black Rose, Briar's uncontrollable bloodlust required a special pillory to focus her frenzied mind. After years of confinement, this living weapon broke free from her restraints and unleashed herself into the world. Now she's controlled by no one—following only her hunger for knowledge and blood—and relishes the opportunities to let loose, even if reining back the frenzy isn't easy.",
+      "blurb": "A failed experiment by the Black Rose, Briar's uncontrollable bloodlust required a special pillory to focus her frenzied mind. After years of confinement, this living weapon broke free from her restraints and unleashed herself into the world. Now she's...",
+      "allytips": [],
+      "enemytips": [],
+      "tags": ["Fighter", "Assassin"],
+      "partype": "Fury",
+      "info": {
+        "attack": 9,
+        "defense": 5,
+        "magic": 3,
+        "difficulty": 3
+      },
+      "stats": {
+        "hp": 625,
+        "hpperlevel": 100,
+        "mp": 0,
+        "mpperlevel": 0,
+        "movespeed": 340,
+        "armor": 30,
+        "armorperlevel": 4.5,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
+        "attackrange": 125,
+        "hpregen": 0,
+        "hpregenperlevel": 0,
+        "mpregen": 0,
+        "mpregenperlevel": 0,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 60,
+        "attackdamageperlevel": 2.5,
+        "attackspeedperlevel": 2,
+        "attackspeed": 0.644
+      },
+      "spells": [
+        {
+          "id": "BriarQ",
+          "name": "Head Rush",
+          "description": "Briar leaps to a unit and hits enemies with The Heel Wheel (of Pain), stunning them and breaking their Armor.",
+          "tooltip": "Briar leaps to a target, <status>Stunning</status> it for {{ stunduration }} seconds, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and reducing {{ shredpercent*100 }}% <scaleArmor>Armor</scaleArmor> and <scaleMR>Magic Resist</scaleMR> for {{ shredduration }} seconds.<br /><br /><rules>Briar will stop prioritizing champions if she casts this Ability on a minion or monster during <keywordMajor>Blood Frenzy</keywordMajor>.</rules>{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Armor and Magic Resist Shred", "Cooldown"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ shredpercent*100.000000 }}% -> {{ shredpercentnl*100.000000 }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [13, 12, 11, 10, 9],
+          "cooldownBurn": "13/12/11/10/9",
+          "cost": [0, 0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "% of current Health",
+          "maxammo": "-1",
+          "range": [475, 475, 475, 475, 475],
+          "rangeBurn": "475",
+          "image": {
+            "full": "BriarQ.png",
+            "sprite": "spell2.png",
+            "group": "spell",
+            "x": 192,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ spell.briarp:currenthealthpercentcost*100 }}% of current Health"
+        },
+        {
+          "id": "BriarW",
+          "name": "Blood Frenzy / Snack Attack",
+          "description": "Briar leaps forward and shatters her pillory, entering a Blood Frenzy that causes her to relentlessly pursue the nearest enemy (prioritizing champions). While frenzied, she gains increased Attack Speed and Move Speed, and her attacks deal damage in an area around her target.<br><br>Briar can reactivate this ability while frenzied to take a CHOMP out of her target on her next attack, dealing additional damage based on their missing Health, and healing Briar based on the damage she deals.",
+          "tooltip": "Briar leaps and enters a <keywordMajor>Blood Frenzy</keywordMajor>, self-taunting to the nearest enemy for {{ berserkduration }} seconds, prioritizing Champions. While in <keywordMajor>Blood Frenzy</keywordMajor> she gains <attackSpeed>{{ berserkas*100 }}% Attack Speed</attackSpeed> and <speed>{{ berserkms*100 }}% Move Speed</speed>, and her Attacks deal <physicalDamage>{{ totalaoedamage }} physical damage</physicalDamage> to enemies surrounding her target.<br /><br />Briar can <recast>Recast</recast> this Ability to empower her next Attack. It deals <physicalDamage>{{ totalattackbonusdamage }} + {{ totalattackpercentmissinghealth }}% missing Health physical damage</physicalDamage> and <healing>heals Briar for {{ attackmaxhpheal }} + {{ attackhealpercent*100 }}% of the damage dealt</healing>.<br />{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Attack Speed", "Move Speed", "Area Damage AD Ratio", "Damage", "Healing", "Cooldown"],
+            "effect": [
+              "{{ berserkas*100.000000 }}% -> {{ berserkasnl*100.000000 }}%",
+              "{{ berserkms*100.000000 }}% -> {{ berserkmsnl*100.000000 }}%",
+              "{{ aoeattackdamagepercent*100.000000 }}% -> {{ aoeattackdamagepercentnl*100.000000 }}%",
+              "{{ attackbonusdamage }} -> {{ attackbonusdamageNL }}",
+              "{{ attackhealpercent*100.000000 }}% -> {{ attackhealpercentnl*100.000000 }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [14, 13, 12, 11, 10],
+          "cooldownBurn": "14/13/12/11/10",
+          "cost": [0, 0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "% of current Health",
+          "maxammo": "-1",
+          "range": [350, 350, 350, 350, 350],
+          "rangeBurn": "350",
+          "image": {
+            "full": "BriarW.png",
+            "sprite": "spell2.png",
+            "group": "spell",
+            "x": 240,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ spell.briarp:currenthealthpercentcost*100 }}% of current Health"
+        },
+        {
+          "id": "BriarE",
+          "name": "Chilling Scream",
+          "description": "Briar refocuses her mind, removing Blood Frenzy and channeling energy into a powerful scream that damages and slows enemies. While charging, she takes reduced damage and heals for a portion of her max Health. A fully charged scream knocks foes back, dealing additional damage and stunning those who collide with a wall.",
+          "tooltip": "<charge>Begin Charging:</charge> Briar removes <keywordMajor>Blood Frenzy</keywordMajor> and gathers energy, gaining {{ drpercent }}% damage reduction and restoring <healing>{{ percentmaxhpheal }} Health</healing> over 1 second.<br /><br /><release>Release:</release> Briar unleashes a scream that deals up to <magicDamage>{{ damage }} magic damage</magicDamage> based on time charged, and <status>Slows</status> by {{ slowpercent*100 }}% for {{ slowduration }} seconds. When fully charged, the scream <status>Knocks Back</status> enemies, dealing <magicDamage>{{ wallhitdamage }} magic damage</magicDamage> to those who hit a wall and <status>Stunning</status> them for {{ wallstunduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Additional Damage", "Heal Ratio"],
+            "effect": [
+              "{{ maxbasedamage }} -> {{ maxbasedamageNL }}",
+              "{{ wallhitbasedamage }} -> {{ wallhitbasedamageNL }}",
+              "{{ healhppercent*100.000000 }}% -> {{ healhppercentnl*100.000000 }}%"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [16, 16, 16, 16, 16],
+          "cooldownBurn": "16",
+          "cost": [0, 0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "% of current Health",
+          "maxammo": "-1",
+          "range": [400, 400, 400, 400, 400],
+          "rangeBurn": "400",
+          "image": {
+            "full": "BriarE.png",
+            "sprite": "spell2.png",
+            "group": "spell",
+            "x": 288,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ spell.briarp:currenthealthpercentcost*100 }}% of current Health"
+        },
+        {
+          "id": "BriarR",
+          "name": "Certain Death",
+          "description": "Briar kicks her pillory's hemolith gemstone, marking the first champion it hits as her prey. She then beelines straight to them, fearing other surrounding enemies upon arriving at her target, and enters a state of complete hemomania. She will pursue her prey until death, gaining the benefits of Blood Frenzy as well as additional Armor, Magic Resistance, Life Steal, and Move Speed.",
+          "tooltip": "Briar kicks her pillory's hemolith gemstone and flies to the location of the first champion it hits, marking them as her prey. On landing, she deals <magicDamage>{{ damage }} magic damage</magicDamage> to everything nearby and causes enemies who are not her prey to <status>Flee</status> for {{ fearduration }} seconds. She then enters an empowered <keywordMajor>Blood Frenzy</keywordMajor> and will pursue her prey until death. During this time, she gains {{ totalresists }} <scaleArmor>Armor</scaleArmor> and <scaleMR>Magic Resist</scaleMR>, {{ lifestealpercent*100 }}% Lifesteal, and an additional <speed>{{ extramovespeedpercent*100 }}% Move Speed</speed>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Life Steal", "Move Speed", "Cooldown"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ lifestealpercent*100.000000 }}% -> {{ lifestealpercentnl*100.000000 }}%",
+              "{{ extramovespeedpercent*100.000000 }}% -> {{ extramovespeedpercentnl*100.000000 }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [120, 100, 80],
+          "cooldownBurn": "120/100/80",
+          "cost": [0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "% of current Health",
+          "maxammo": "-1",
+          "range": [12000, 12000, 12000],
+          "rangeBurn": "12000",
+          "image": {
+            "full": "BriarR.png",
+            "sprite": "spell2.png",
+            "group": "spell",
+            "x": 336,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ spell.briarp:currenthealthpercentcost*100 }}% of current Health"
+        }
+      ],
+      "passive": {
+        "name": "Crimson Curse",
+        "description": "Briar's attacks and abilities apply a stacking bleed that heals her for a portion of the damage it deals. Perpetually hungry, she gains increased healing based on her missing Health, but lacks innate Health Regeneration.",
+        "image": {
+          "full": "BriarP.png",
+          "sprite": "passive0.png",
+          "group": "passive",
+          "x": 432,
+          "y": 48,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

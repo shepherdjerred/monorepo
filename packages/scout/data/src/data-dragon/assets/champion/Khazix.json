@@ -1,0 +1,315 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Khazix": {
+      "id": "Khazix",
+      "key": "121",
+      "name": "Kha'Zix",
+      "title": "the Voidreaver",
+      "image": {
+        "full": "Khazix.png",
+        "sprite": "champion2.png",
+        "group": "champion",
+        "x": 192,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "121000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "121001",
+          "num": 1,
+          "name": "Mecha Kha'Zix",
+          "chromas": true
+        },
+        {
+          "id": "121002",
+          "num": 2,
+          "name": "Guardian of the Sands Kha'Zix",
+          "chromas": false
+        },
+        {
+          "id": "121003",
+          "num": 3,
+          "name": "Death Blossom Kha'Zix",
+          "chromas": false
+        },
+        {
+          "id": "121004",
+          "num": 4,
+          "name": "Dark Star Kha'Zix",
+          "chromas": false
+        },
+        {
+          "id": "121011",
+          "num": 11,
+          "name": "Worlds 2018 Kha'Zix",
+          "chromas": true
+        },
+        {
+          "id": "121060",
+          "num": 60,
+          "name": "Odyssey Kha'Zix",
+          "chromas": false
+        },
+        {
+          "id": "121069",
+          "num": 69,
+          "name": "Lunar Guardian Kha'Zix",
+          "chromas": false
+        },
+        {
+          "id": "121079",
+          "num": 79,
+          "name": "Crystalis Indomitus Kha'Zix",
+          "chromas": false
+        }
+      ],
+      "lore": "The Void grows, and the Void adapts—in none of its myriad spawn are these truths more apparent than Kha'Zix. Evolution drives the core of this mutating horror, born to survive and to slay the strong. Where it struggles to do so, it grows new, more effective ways to counter and kill its prey. Initially a mindless beast, Kha'Zix's intelligence has developed as much as its form. Now, the creature plans out its hunts, and even utilizes the visceral terror it engenders in its victims.",
+      "blurb": "The Void grows, and the Void adapts—in none of its myriad spawn are these truths more apparent than Kha'Zix. Evolution drives the core of this mutating horror, born to survive and to slay the strong. Where it struggles to do so, it grows new, more...",
+      "allytips": [
+        "Enemies are considered isolated if they have no allies within a short distance. The damage of Taste Their Fear is massively increased against these targets.",
+        "Unseen Threat activates when Kha'Zix cannot be seen by the enemy team. Reactivate by using brush or Void Assault. Don't forget to apply Unseen Threat by autoattacking enemy champions.",
+        "Kha'Zix has a great deal of freedom to choose where and when to fight. Pick your battles carefully to succeed."
+      ],
+      "enemytips": [
+        "Taste Their Fear deals bonus damage to targets that are isolated. Gain an advantage by fighting near allied minions, champions, or turrets.",
+        "Leap and Void Assault have long cooldowns. Kha'Zix is very vulnerable when these are not available."
+      ],
+      "tags": ["Assassin"],
+      "partype": "Mana",
+      "info": {
+        "attack": 9,
+        "defense": 4,
+        "magic": 3,
+        "difficulty": 6
+      },
+      "stats": {
+        "hp": 643,
+        "hpperlevel": 99,
+        "mp": 327,
+        "mpperlevel": 40,
+        "movespeed": 350,
+        "armor": 32,
+        "armorperlevel": 4.2,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
+        "attackrange": 125,
+        "hpregen": 7.5,
+        "hpregenperlevel": 0.75,
+        "mpregen": 7.59,
+        "mpregenperlevel": 0.5,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 60,
+        "attackdamageperlevel": 3.1,
+        "attackspeedperlevel": 2.7,
+        "attackspeed": 0.668
+      },
+      "spells": [
+        {
+          "id": "KhazixQ",
+          "name": "Taste Their Fear",
+          "description": "Deals physical damage to the target. Damage increased on <font color='#FFF673'>Isolated</font> targets. If he chooses to <font color='#00DD33'>Evolve Reaper Claws</font>, this refunds a percent of it's cooldown against <font color='#FFF673'>Isolated</font> targets. Kha'Zix also gains increased range on his basic attacks and Taste Their Fear.",
+          "tooltip": "Kha'Zix slashes a nearby enemy, dealing <physicalDamage>{{ spell.khazixq:basedamage }} physical damage</physicalDamage>. This deals <physicalDamage>{{ spell.khazixq:isodamage }} damage</physicalDamage> instead to enemies <keywordMajor>Isolated</keywordMajor> from their allies. {{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage"],
+            "effect": ["{{ e1 }} -> {{ e1NL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [4, 4, 4, 4, 4],
+          "cooldownBurn": "4",
+          "cost": [20, 20, 20, 20, 20],
+          "costBurn": "20",
+          "datavalues": {},
+          "effect": [
+            null,
+            [80, 105, 130, 155, 180],
+            [110, 110, 110, 110, 110],
+            [50, 50, 50, 50, 50],
+            [45, 45, 45, 45, 45],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "80/105/130/155/180", "110", "50", "45", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [325, 325, 325, 325, 325],
+          "rangeBurn": "325",
+          "image": {
+            "full": "KhazixQ.png",
+            "sprite": "spell6.png",
+            "group": "spell",
+            "x": 192,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "KhazixW",
+          "name": "Void Spike",
+          "description": "Kha'Zix fires exploding spikes that deal physical damage to enemies hit. Kha'Zix is healed if he is also within the explosion radius. If he chooses to <font color='#00DD33'>Evolve Spike Racks</font>, Void Spike now fires three spikes in a cone, slow enemies hit, and reveals enemy champions hit for 2 seconds. <font color='#FFF673'>Isolated</font> targets are slowed for extra.",
+          "tooltip": "Kha'Zix fires a spike dealing <physicalDamage>{{ basedamage }} physical damage</physicalDamage> to the first enemy hit in a small area. If Kha'Zix is inside the area, he restores <healing>{{ healamount }} Health</healing>{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Healing", "@AbilityResourceName@ Cost"],
+            "effect": ["{{ e1 }} -> {{ e1NL }}", "{{ baseheal }} -> {{ basehealNL }}", "{{ cost }} -> {{ costNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [9, 9, 9, 9, 9],
+          "cooldownBurn": "9",
+          "cost": [55, 60, 65, 70, 75],
+          "costBurn": "55/60/65/70/75",
+          "datavalues": {},
+          "effect": [
+            null,
+            [75, 105, 135, 165, 195],
+            [55, 75, 95, 115, 135],
+            [40, 40, 40, 40, 40],
+            [2, 2, 2, 2, 2],
+            [0, 0, 0, 0, 0],
+            [2, 2, 2, 2, 2],
+            [60, 60, 60, 60, 60],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "75/105/135/165/195", "55/75/95/115/135", "40", "2", "0", "2", "60", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [1000, 1000, 1000, 1000, 1000],
+          "rangeBurn": "1000",
+          "image": {
+            "full": "KhazixW.png",
+            "sprite": "spell6.png",
+            "group": "spell",
+            "x": 240,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "KhazixE",
+          "name": "Leap",
+          "description": "Kha'Zix leaps to an area, dealing physical damage upon landing. If he chooses to <font color='#00DD33'>Evolve Wings</font>, Leap's range increases by 200 and the cooldown resets on champion kill or assist.",
+          "tooltip": "Kha'Zix leaps, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> upon landing.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Cooldown"],
+            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [20, 18, 16, 14, 12],
+          "cooldownBurn": "20/18/16/14/12",
+          "cost": [50, 50, 50, 50, 50],
+          "costBurn": "50",
+          "datavalues": {},
+          "effect": [
+            null,
+            [65, 100, 135, 170, 205],
+            [30, 35, 40, 45, 50],
+            [10, 10, 10, 10, 10],
+            [2.5, 2.5, 2.5, 2.5, 2.5],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "65/100/135/170/205", "30/35/40/45/50", "10", "2.5", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [700, 700, 700, 700, 700],
+          "rangeBurn": "700",
+          "image": {
+            "full": "KhazixE.png",
+            "sprite": "spell6.png",
+            "group": "spell",
+            "x": 288,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "KhazixR",
+          "name": "Void Assault",
+          "description": "Each rank allows Kha'Zix to evolve one of his abilities, giving it a unique additional effect. When activated, Kha'Zix becomes <font color='#91d7ee'>Invisible</font>, triggering Unseen Threat and increasing Move Speed. If he chooses to <font color='#00DD33'>Evolve Adaptive Cloaking</font>, Void Assault gains increased <font color='#91d7ee'>Invisibility</font> duration, and an additional use.",
+          "tooltip": "<spellActive>Active:</spellActive> Kha'Zix becomes <keywordStealth>Invisible</keywordStealth> for {{ stealthduration }} seconds and gains <speed>{{ bonusmovementspeedpercent*100 }}% Move Speed</speed>. Kha'zix may <recast>Recast</recast> this Ability once within {{ recastwindow }} seconds.<br /><br /><spellPassive>Passive:</spellPassive> Leveling up this Ability allows Kha'zix to <evolve>Evolve</evolve> one of his Abilities, granting it additional effects.<li><spellName>Taste Their Fear:</spellName> Gain Ability range, Attack range, and lowers Cooldown by {{ spell.khazixq:effect4amount }}% against <keywordMajor>Isolated</keywordMajor> targets.<li><spellName>Void Spike:</spellName> Fires 3 spikes and <status>Slows</status> by {{ spell.khazixw:effect3amount }}%, increased against <keywordMajor>Isolated</keywordMajor> targets.<li><spellName>Leap:</spellName> Increased range and refreshes Cooldown on champion takedown.<li><spellName>Void Assault:</spellName> <keywordStealth>Invisibility</keywordStealth> duration lasts {{ evolvedstealthduration }} seconds and gains second <recast>Recast</recast>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Evolutions Available", "Cooldown"],
+            "effect": ["{{ evolutionsavailable }} -> {{ evolutionsavailableNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 3,
+          "cooldown": [100, 85, 70],
+          "cooldownBurn": "100/85/70",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [25000, 25000, 25000],
+          "rangeBurn": "25000",
+          "image": {
+            "full": "KhazixR.png",
+            "sprite": "spell6.png",
+            "group": "spell",
+            "x": 336,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Unseen Threat",
+        "description": "Nearby enemies that are <font color='#FFF673'>Isolated</font> from their allies are marked. Kha'Zix's abilities have interactions with <font color='#FFF673'>Isolated</font> targets.<br><br>When Kha'Zix is not visible to the enemy team, he gains Unseen Threat, causing his next basic attack against an enemy champion to deal bonus magic damage and slow them for a few seconds.",
+        "image": {
+          "full": "Khazix_P.png",
+          "sprite": "passive2.png",
+          "group": "passive",
+          "x": 192,
+          "y": 0,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

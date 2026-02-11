@@ -1,0 +1,8 @@
+checks:
+  exclude:
+    # not useful - most containers don't set explicit CPU requests
+    - "unset-cpu-requirements"
+    # not useful - most containers don't set explicit memory limits
+    - "unset-memory-requirements"
+    # versions are pinned by versions.ts
+    - "latest-tag"

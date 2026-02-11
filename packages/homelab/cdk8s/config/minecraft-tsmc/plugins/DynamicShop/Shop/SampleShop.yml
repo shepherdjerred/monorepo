@@ -1,0 +1,18 @@
+# Shop name can not contain formatting codes, '/' and ' '
+
+Options:
+  title: Sample Shop
+  lore: This is sample shop
+  permission: ""
+  page: 2
+  currency: Vault
+"0":
+  mat: DIRT
+  value: 1
+  median: 10000
+  stock: 10000
+"1":
+  mat: COBBLESTONE
+  value: 1.5
+  median: 10000
+  stock: 10000

@@ -1,0 +1,22 @@
+{
+  "name": "@shepherdjerred/homelab-deps-email",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "bun run src/main.ts",
+    "typecheck": "bunx tsc --noEmit",
+    "lint": "bunx eslint .",
+    "lint:fix": "bunx eslint . --fix",
+    "test": "echo 'No tests configured'"
+  },
+  "dependencies": {
+    "openai": "^6.10.0",
+    "simple-git": "^3.30.0",
+    "yaml": "^2.8.1",
+    "zod": "^4.1.11"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.2.18"
+  }
+}

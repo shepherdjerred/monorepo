@@ -1,0 +1,347 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Nautilus": {
+      "id": "Nautilus",
+      "key": "111",
+      "name": "Nautilus",
+      "title": "the Titan of the Depths",
+      "image": {
+        "full": "Nautilus.png",
+        "sprite": "champion3.png",
+        "group": "champion",
+        "x": 0,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "111000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "111001",
+          "num": 1,
+          "name": "Abyssal Nautilus",
+          "chromas": false
+        },
+        {
+          "id": "111002",
+          "num": 2,
+          "name": "Subterranean Nautilus",
+          "chromas": false
+        },
+        {
+          "id": "111003",
+          "num": 3,
+          "name": "AstroNautilus",
+          "chromas": true
+        },
+        {
+          "id": "111004",
+          "num": 4,
+          "name": "Warden Nautilus",
+          "chromas": false
+        },
+        {
+          "id": "111005",
+          "num": 5,
+          "name": "Worldbreaker Nautilus",
+          "chromas": false
+        },
+        {
+          "id": "111006",
+          "num": 6,
+          "name": "Conqueror Nautilus",
+          "chromas": false
+        },
+        {
+          "id": "111009",
+          "num": 9,
+          "name": "Shan Hai Scrolls Nautilus",
+          "chromas": false
+        },
+        {
+          "id": "111018",
+          "num": 18,
+          "name": "Fright Night Nautilus",
+          "chromas": false
+        },
+        {
+          "id": "111027",
+          "num": 27,
+          "name": "Cosmic Paladin Nautilus",
+          "chromas": false
+        },
+        {
+          "id": "111036",
+          "num": 36,
+          "name": "Crystalis Indomitus Nautilus",
+          "chromas": false
+        },
+        {
+          "id": "111039",
+          "num": 39,
+          "name": "Petricite Nautilus",
+          "chromas": false
+        }
+      ],
+      "lore": "A lonely legend as old as the first piers sunk in Bilgewater, the armored goliath known as Nautilus roams the dark waters off the coast of the Blue Flame Isles. Driven by a forgotten betrayal, he strikes without warning, swinging his enormous anchor to save the wretched, and drag the greedy to their doom. It is said he comes for those who forget to pay the “Bilgewater tithe”, pulling them down beneath the waves with him—an iron-clad reminder that none can escape the depths.",
+      "blurb": "A lonely legend as old as the first piers sunk in Bilgewater, the armored goliath known as Nautilus roams the dark waters off the coast of the Blue Flame Isles. Driven by a forgotten betrayal, he strikes without warning, swinging his enormous anchor to...",
+      "allytips": [
+        "While ganking, consider aiming Dredge Line at nearby terrain and following it up with Riptide for a higher hit rate.",
+        "Riptide has a delayed blast timing on activation - you can use this while running away or when enemies are incoming to serve as a deterrent."
+      ],
+      "enemytips": [
+        "If Nautilus uses Riptide right next to you, hold in place until the ripple effect finishes before running. Running early will run straight into the secondary explosions, causing you to take additional damage and slow.",
+        "While Nautilus is shielded, he is capable of dealing large amounts of area of effect damage with his basic attacks - consider taking down the shield if you have time."
+      ],
+      "tags": ["Tank", "Support"],
+      "partype": "Mana",
+      "info": {
+        "attack": 4,
+        "defense": 6,
+        "magic": 6,
+        "difficulty": 6
+      },
+      "stats": {
+        "hp": 646,
+        "hpperlevel": 100,
+        "mp": 400,
+        "mpperlevel": 47,
+        "movespeed": 325,
+        "armor": 39,
+        "armorperlevel": 4.95,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
+        "attackrange": 175,
+        "hpregen": 8.5,
+        "hpregenperlevel": 0.55,
+        "mpregen": 8.65,
+        "mpregenperlevel": 0.5,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 61,
+        "attackdamageperlevel": 3.3,
+        "attackspeedperlevel": 1,
+        "attackspeed": 0.706
+      },
+      "spells": [
+        {
+          "id": "NautilusAnchorDrag",
+          "name": "Dredge Line",
+          "description": "Nautilus hurls his anchor forward.  Colliding with an enemy pulls them and Nautilus together, dealing magic damage.  Colliding with terrain pulls Nautilus towards it.",
+          "tooltip": "Nautilus hurls his anchor forward. If it hits an enemy, Nautilus drags himself and the target together, dealing <magicDamage>{{ qdamagecalc }} magic damage</magicDamage> and <status>Stunning</status> them briefly. If the anchor hits terrain, Nautilus will drag himself towards it.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Cooldown", "Damage"],
+            "effect": ["{{ cooldown }} -> {{ cooldownNL }}", "{{ basedamage }} -> {{ basedamageNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [14, 13, 12, 11, 10],
+          "cooldownBurn": "14/13/12/11/10",
+          "cost": [60, 60, 60, 60, 60],
+          "costBurn": "60",
+          "datavalues": {},
+          "effect": [
+            null,
+            [70, 115, 160, 205, 250],
+            [0, 0, 0, 0, 0],
+            [0.5, 0.5, 0.5, 0.5, 0.5],
+            [0.5, 0.5, 0.5, 0.5, 0.5],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "70/115/160/205/250", "0", "0.5", "0.5", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [1150, 1150, 1150, 1150, 1150],
+          "rangeBurn": "1150",
+          "image": {
+            "full": "NautilusAnchorDrag.png",
+            "sprite": "spell9.png",
+            "group": "spell",
+            "x": 384,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "NautilusPiercingGaze",
+          "name": "Titan's Wrath",
+          "description": "Nautilus gains a temporary Shield.  While it persists, his Attacks deal damage over time to his target and surrounding enemies.",
+          "tooltip": "Nautilus gains a <shield>{{ shieldcalc }} Shield</shield> for {{ shieldduration }} seconds. While the <shield>Shield</shield> persists, Nautilus' Attacks deal an additional <magicDamage>{{ dotdamagecalc }} magic damage</magicDamage> over 2 seconds to his target and all surrounding enemies.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Shield Amount", "Magic Damage", "% Max Health"],
+            "effect": [
+              "{{ shieldbase }} -> {{ shieldbaseNL }}",
+              "{{ dotdamagebase }} -> {{ dotdamagebaseNL }}",
+              "{{ shieldhealthratio*100.000000 }}% -> {{ shieldhealthrationl*100.000000 }}%"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [12, 12, 12, 12, 12],
+          "cooldownBurn": "12",
+          "cost": [60, 60, 60, 60, 60],
+          "costBurn": "60",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [350, 350, 350, 350, 350],
+          "rangeBurn": "350",
+          "image": {
+            "full": "NautilusPiercingGaze.png",
+            "sprite": "spell9.png",
+            "group": "spell",
+            "x": 432,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "NautilusSplashZone",
+          "name": "Riptide",
+          "description": "Nautilus creates three exploding waves around himself. Each explosion damages and slows enemies.",
+          "tooltip": "Nautilus creates three exploding waves around himself, each dealing <magicDamage>{{ damagecalc }} magic damage</magicDamage> to enemies in the area and <status>Slows</status> them by {{ slowpercent*100 }}% decaying over {{ slowduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Cooldown", "@AbilityResourceName@ Cost", "Damage", "Monster Damage", "Slow"],
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}",
+              "{{ damagebase }} -> {{ damagebaseNL }}",
+              "{{ monsterbonusdamage }} -> {{ monsterbonusdamageNL }}",
+              "{{ slowpercent*100.000000 }}% -> {{ slowpercentnl*100.000000 }}%"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [7, 6.5, 6, 5.5, 5],
+          "cooldownBurn": "7/6.5/6/5.5/5",
+          "cost": [50, 60, 70, 80, 90],
+          "costBurn": "50/60/70/80/90",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [600, 600, 600, 600, 600],
+          "rangeBurn": "600",
+          "image": {
+            "full": "NautilusSplashZone.png",
+            "sprite": "spell9.png",
+            "group": "spell",
+            "x": 0,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "NautilusGrandLine",
+          "name": "Depth Charge",
+          "description": "Nautilus fires a shockwave into the earth that chases an opponent. This shockwave rips up the earth above it, knocking enemies into the air. When it reaches the opponent, the shockwave erupts, knocking his target into the air and stunning them.",
+          "tooltip": "Nautilus fires a shockwave that chases an enemy champion, dealing <magicDamage>{{ primarytargetdamage }} magic damage</magicDamage>, <status>Knocking</status> them <status>Up</status> and <status>Stunning</status> them for {{ stunduration }} seconds. Other enemies hit by the shockwave are also <status>Knocked Up</status> and <status>Stunned</status> and take <magicDamage>{{ secondarytargetdamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Cooldown", "Pass Through Damage", "Stun Duration:", "Explosion Damage"],
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ primarydamage }} -> {{ primarydamageNL }}",
+              "{{ stunduration }} -> {{ stundurationNL }}",
+              "{{ secondarydamage }} -> {{ secondarydamageNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [120, 100, 80],
+          "cooldownBurn": "120/100/80",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [825, 825, 825],
+          "rangeBurn": "825",
+          "image": {
+            "full": "NautilusGrandLine.png",
+            "sprite": "spell9.png",
+            "group": "spell",
+            "x": 48,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Staggering Blow",
+        "description": "Nautilus' first Attack against a target deals increased physical damage and roots them briefly.",
+        "image": {
+          "full": "Nautilus_StaggeringBlow.png",
+          "sprite": "passive3.png",
+          "group": "passive",
+          "x": 0,
+          "y": 0,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

@@ -1,0 +1,27 @@
+# ChunkyBorder Configuration
+# https://github.com/pop4959/ChunkyBorder/wiki/Configuration
+
+version: 1
+border-options:
+  check-interval: 20
+  message: "&cYou have reached the edge of this world."
+  use-action-bar: true
+  effect: ender_signal
+  sound: entity_enderman_teleport
+  prevent-mob-spawns: false
+  prevent-enderpearl: false
+  prevent-chorus-fruit: false
+  visualizer-enabled: false
+  visualizer-range: 8
+  visualizer-color: 20A0FF
+map-options:
+  enable:
+    pl3xmap: true
+    bluemap: true
+    dynmap: true
+    squaremap: true
+  label: Edge of the World
+  hide-by-default: false
+  color: FF0000
+  weight: 3
+  priority: 0

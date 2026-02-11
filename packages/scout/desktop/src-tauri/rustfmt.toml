@@ -1,0 +1,7 @@
+# Rustfmt configuration for stable channel
+edition = "2021"
+max_width = 100
+hard_tabs = false
+tab_spaces = 4
+newline_style = "Auto"
+use_small_heuristics = "Default"

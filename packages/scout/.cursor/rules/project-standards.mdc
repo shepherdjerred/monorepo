@@ -1,0 +1,233 @@
+---
+alwaysApply: true
+---
+
+# Scout for LoL Project Standards & Development Guide
+
+## Project Structure
+
+This is a monorepo using **Bun workspaces** with packages:
+
+- `packages/backend` - Discord bot backend service
+- `packages/data` - Shared data models and utilities
+- `packages/report` - Report generation components
+- `packages/frontend` - Web frontend (Astro)
+
+## Core Tools & Technologies
+
+### Runtime & Package Manager
+
+- **Bun** - Primary runtime and package manager
+- **TypeScript** - Strict typing with `noEmit` checks
+- **ESLint** - Code linting with TypeScript rules
+- **Prettier** - Code formatting
+
+### Infrastructure & CI/CD
+
+- **Mise** - Primary task runner for local development (fast checks)
+- **Dagger** - CI/CD pipelines and containerization (CI debugging)
+- **Prisma** - Database ORM and migrations
+- **Docker** - Container deployment
+
+### Application Stack
+
+- **Discord.js** - Discord bot framework
+- **Zod** - Runtime validation and type safety
+- **React** - UI components (for report generation)
+- **Astro** - Frontend framework
+
+## Development Commands
+
+### Quick Code Verification
+
+```bash
+mise check          # All 6 checks in parallel (60-90s)
+dagger call check   # CI debugging only (2-5min)
+```
+
+**mise check includes:** TypeScript, ESLint, Prettier, Tests, Knip, JSCPD
+
+**Strategy:** Use `mise check` for 95% of development. Use `dagger call check` only when debugging CI failures.
+
+**See:** `mise-and-dagger-usage.mdc` for complete guide.
+
+### Pre-Commit Hooks (Lint-Staged)
+
+Husky runs lint-staged on every commit, checking only changed files:
+
+**Runs automatically:**
+
+- Prettier auto-format on all files
+- Markdown linting on .md files
+- Per-package typecheck for changed TypeScript files
+- ESLint with auto-fix for changed files
+- Relevant tests for changed files
+- Suppression checks for eslint-disable comments
+
+**Example workflow:**
+
+```bash
+# Edit file
+vim packages/backend/src/user.ts
+
+# Stage and commit (hooks run automatically)
+git add packages/backend/src/user.ts
+git commit -m "update user logic"
+# → Prettier formats
+# → cd packages/backend && bun run typecheck
+# → cd packages/backend && bunx eslint --cache --fix
+# → bun ./scripts/run-relevant-tests.ts packages/backend
+```
+
+**See:** `package.json` lint-staged section for configuration.
+
+### Root Level Commands
+
+```bash
+# Code quality (runs in all packages via --filter='*')
+bun run typecheck        # Type check all packages
+bun run lint             # Lint all packages
+bun run format           # Check formatting all packages
+bun run test             # eslint-rules tests + all packages tests
+
+# Code analysis
+bun run test:eslint-rules # Test custom ESLint rules only
+bun run knip             # Find unused code (Knip)
+bun run duplication-check # Find duplicate code (JSCPD)
+
+# Generation & maintenance
+bun run generate         # Generate code in all packages
+bun run clean            # Remove all node_modules
+bun run prepare          # Husky setup (auto-runs on install)
+```
+
+**Note:** Root scripts use `bun run --filter='*'` to run across all workspace packages.
+
+### Package-Specific Commands
+
+```bash
+# Backend development
+cd packages/backend
+bun run dev              # Start with hot reload
+bun run build           # Build for production
+bun run db:generate     # Generate Prisma client
+bun run db:push         # Push schema to database
+bun run db:migrate      # Run migrations
+bun run db:studio       # Open Prisma Studio
+
+# Each package supports: dev, build, test, lint, format, typecheck
+```
+
+## Verification Systems
+
+**Mise** - Fast parallel checks (~30-60s):
+
+```bash
+mise check          # All checks
+mise run typecheck  # Type check only
+mise run lint       # Lint only
+```
+
+**Dagger** - CI environment checks (~2-5min):
+
+```bash
+dagger call check   # When debugging CI failures
+dagger functions    # List available targets
+```
+
+**See:** `mise-and-dagger-usage.mdc` for detailed comparison and usage.
+
+## Code Quality Standards
+
+### TypeScript Standards
+
+- **NO `any` types** - Always use proper typing
+- **Avoid type casting** - Use type guards and proper validation instead
+- **Prefer advanced types** - Use mapped types, conditional types, template literals over workarounds
+- **Strict null checks** - Handle undefined/null explicitly
+- **Exhaustive pattern matching** - Use `ts-pattern` for complex branching
+
+### Validation & Data Handling
+
+- **Zod for all unknown input** - Network requests, user input, environment variables
+- **Runtime validation** - Don't trust external data
+- **Proper error handling** - Use `zod-validation-error` for user-friendly messages
+
+### Code Organization
+
+- **Functional approach** - Use `remeda` for data transformations
+- **Modular design** - Each package has clear responsibilities
+- **Proper dependency injection** - Avoid global state
+- **Consistent naming** - Use TypeScript naming conventions
+
+## Database & Prisma
+
+- **Schema-first approach** - Define models in `schema.prisma`
+- **Migration strategy** - Use `prisma migrate` for production
+- **Type safety** - Generated client provides full type safety
+- **Connection management** - Proper connection pooling and cleanup
+
+## Testing Strategy
+
+- **Unit tests** - Test individual functions and components
+- **Integration tests** - Test package interactions
+- **Snapshot testing** - For report generation output
+- **Type testing** - Ensure type safety in complex scenarios
+
+## Development Best Practices
+
+### Error Handling
+
+```typescript
+// Use Result patterns or proper error boundaries
+// Validate with Zod before processing
+const result = UserSchema.safeParse(unknownInput);
+if (!result.success) {
+  // Handle validation errors properly
+}
+```
+
+### Type Safety
+
+```typescript
+// Instead of casting, use proper type guards
+function isString(value: unknown): value is string {
+  return typeof value === 'string';
+}
+
+// Use advanced types for complex scenarios
+type DeepReadonly<T> = {
+  readonly [P in keyof T]: T[P] extends object ? DeepReadonly<T[P]> : T[P];
+};
+```
+
+### Async Patterns
+
+```typescript
+// Use proper async/await patterns
+// Handle errors at appropriate levels
+// Use proper cancellation for long-running operations
+```
+
+## Environment & Configuration
+
+- **Environment variables** - Use `env-var` for type-safe config
+- **Secrets management** - Use Dagger secrets for sensitive data
+- **Configuration validation** - Validate all config with Zod schemas
+
+## Performance Considerations
+
+- **Lazy loading** - Load heavy dependencies only when needed
+- **Proper caching** - Cache expensive operations appropriately
+- **Memory management** - Clean up resources and connections
+- **Bundle optimization** - Use proper bundling strategies
+
+## Recommended Workflow
+
+**Daily:** Edit → `mise check` → Fix → Commit
+
+**CI Debugging:** `mise check` passes but CI fails? → `dagger call check` → Compare → Fix
+
+**See:** `mise-and-dagger-usage.mdc`, `code-quality-checklist.mdc` for detailed workflows.
+
+This project maintains high standards for code quality, type safety, and maintainability. Always prefer explicit, type-safe approaches over quick hacks or workarounds.

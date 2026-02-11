@@ -1,0 +1,77 @@
+{
+  "name": "@shepherdjerred/scout-desktop",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "bunx @tauri-apps/cli dev",
+    "dev:frontend": "bunx vite",
+    "build": "bunx @tauri-apps/cli build",
+    "build:macos": "bunx @tauri-apps/cli build --target universal-apple-darwin",
+    "build:macos:arm": "bunx @tauri-apps/cli build --target aarch64-apple-darwin",
+    "build:macos:intel": "bunx @tauri-apps/cli build --target x86_64-apple-darwin",
+    "build:linux": "bunx @tauri-apps/cli build",
+    "build:windows": "bunx @tauri-apps/cli build --target x86_64-pc-windows-gnu",
+    "build:windows:arm": "bunx @tauri-apps/cli build --target aarch64-pc-windows-msvc",
+    "build:frontend": "bunx vite build",
+    "preview": "bunx vite preview",
+    "test": "echo 'Desktop tests not yet implemented'",
+    "test:watch": "bun test --watch",
+    "test:coverage": "bun test --coverage",
+    "test:ci": "bun test --bail --reporter=junit --reporter-outfile=./junit.xml",
+    "lint": "bunx eslint src",
+    "format": "bunx prettier --check src",
+    "format:write": "bunx prettier --write src",
+    "typecheck": "bunx tsc --noEmit"
+  },
+  "dependencies": {
+    "@sentry/react": "^10.0.0",
+    "@radix-ui/react-label": "^2.1.8",
+    "@radix-ui/react-slot": "^1.2.4",
+    "@shepherdjerred/scout-data": "workspace:*",
+    "@shepherdjerred/scout-ui": "workspace:*",
+    "@tauri-apps/api": "^2.4.0",
+    "@tauri-apps/plugin-dialog": "^2.2.0",
+    "@tauri-apps/plugin-fs": "^2.2.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.563.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "tailwind-merge": "^3.4.0",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.17",
+    "@tauri-apps/cli": "^2.4.0",
+    "@types/node": "^25.0.0",
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
+    "@vitejs/plugin-react": "^5.0.0",
+    "autoprefixer": "^10.4.22",
+    "bun-types": "latest",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.17",
+    "typescript": "^5.9.3",
+    "vite": "^7.0.0",
+    "vite-tsconfig-paths": "^6.0.0"
+  },
+  "description": "Desktop client for Scout for League of Legends live game updates",
+  "keywords": [
+    "tauri",
+    "desktop",
+    "league-of-legends",
+    "discord",
+    "typescript",
+    "react"
+  ],
+  "license": "GPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shepherdjerred/scout-for-lol.git"
+  },
+  "homepage": "https://github.com/shepherdjerred/scout-for-lol",
+  "bugs": {
+    "url": "https://github.com/shepherdjerred/scout-for-lol/issues"
+  }
+}

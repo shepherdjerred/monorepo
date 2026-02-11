@@ -1,0 +1,395 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "TwistedFate": {
+      "id": "TwistedFate",
+      "key": "4",
+      "name": "Twisted Fate",
+      "title": "the Card Master",
+      "image": {
+        "full": "TwistedFate.png",
+        "sprite": "champion4.png",
+        "group": "champion",
+        "x": 48,
+        "y": 96,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "4000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "4001",
+          "num": 1,
+          "name": "PAX Twisted Fate",
+          "chromas": false
+        },
+        {
+          "id": "4002",
+          "num": 2,
+          "name": "Jack of Hearts Twisted Fate",
+          "chromas": false
+        },
+        {
+          "id": "4003",
+          "num": 3,
+          "name": "The Magnificent Twisted Fate",
+          "chromas": false
+        },
+        {
+          "id": "4004",
+          "num": 4,
+          "name": "Tango Twisted Fate",
+          "chromas": false
+        },
+        {
+          "id": "4005",
+          "num": 5,
+          "name": "High Noon Twisted Fate",
+          "chromas": false
+        },
+        {
+          "id": "4006",
+          "num": 6,
+          "name": "Musketeer Twisted Fate",
+          "chromas": false
+        },
+        {
+          "id": "4007",
+          "num": 7,
+          "name": "Underworld Twisted Fate",
+          "chromas": false
+        },
+        {
+          "id": "4008",
+          "num": 8,
+          "name": "Red Card Twisted Fate",
+          "chromas": false
+        },
+        {
+          "id": "4009",
+          "num": 9,
+          "name": "Cutpurse Twisted Fate",
+          "chromas": false
+        },
+        {
+          "id": "4010",
+          "num": 10,
+          "name": "Blood Moon Twisted Fate",
+          "chromas": false
+        },
+        {
+          "id": "4011",
+          "num": 11,
+          "name": "Pulsefire Twisted Fate",
+          "chromas": true
+        },
+        {
+          "id": "4013",
+          "num": 13,
+          "name": "Odyssey Twisted Fate",
+          "chromas": true
+        },
+        {
+          "id": "4023",
+          "num": 23,
+          "name": "DWG Twisted Fate",
+          "chromas": true
+        },
+        {
+          "id": "4025",
+          "num": 25,
+          "name": "Crime City Nightmare Twisted Fate",
+          "chromas": true
+        },
+        {
+          "id": "4036",
+          "num": 36,
+          "name": "Space Groove Twisted Fate",
+          "chromas": false
+        },
+        {
+          "id": "4045",
+          "num": 45,
+          "name": "Victorious Twisted Fate",
+          "chromas": false
+        }
+      ],
+      "lore": "Twisted Fate is an infamous cardsharp and swindler who has gambled and charmed his way across much of the known world, earning the enmity and admiration of the rich and foolish alike. He rarely takes things seriously, greeting each day with a mocking smile and an insouciant swagger. In every possible way, Twisted Fate always has an ace up his sleeve.",
+      "blurb": "Twisted Fate is an infamous cardsharp and swindler who has gambled and charmed his way across much of the known world, earning the enmity and admiration of the rich and foolish alike. He rarely takes things seriously, greeting each day with a mocking...",
+      "allytips": [
+        "Coordinate with your allies for the best time to use Destiny to ambush enemies.",
+        "Stealth characters often escape a battle with very low hit points. Take advantage of Destiny's ability to reveal stealthed units to finish them off.",
+        "Twisted Fate is viable as an Attack Damage or Ability Power character, letting him fit on many different team compositions."
+      ],
+      "enemytips": [
+        "Focus on dodging Wild Cards early when your champion doesn't have the hit points to afford getting hit.",
+        "If you have low Health, use Destiny as an indicator to run to safety. It will give you a head start in escaping any possible ganks."
+      ],
+      "tags": ["Mage", "Marksman"],
+      "partype": "Mana",
+      "info": {
+        "attack": 6,
+        "defense": 2,
+        "magic": 6,
+        "difficulty": 9
+      },
+      "stats": {
+        "hp": 604,
+        "hpperlevel": 108,
+        "mp": 333,
+        "mpperlevel": 39,
+        "movespeed": 330,
+        "armor": 24,
+        "armorperlevel": 4.35,
+        "spellblock": 30,
+        "spellblockperlevel": 1.3,
+        "attackrange": 525,
+        "hpregen": 5.5,
+        "hpregenperlevel": 0.6,
+        "mpregen": 8,
+        "mpregenperlevel": 0.8,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 52,
+        "attackdamageperlevel": 2.5,
+        "attackspeedperlevel": 2.5,
+        "attackspeed": 0.625
+      },
+      "spells": [
+        {
+          "id": "WildCards",
+          "name": "Wild Cards",
+          "description": "Twisted Fate throws three cards, dealing damage to each enemy unit they pass through.",
+          "tooltip": "Twisted Fate throws three cards that deal <magicDamage>{{ totaldamage }} magic damage</magicDamage> each.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [6, 5.75, 5.5, 5.25, 5],
+          "cooldownBurn": "6/5.75/5.5/5.25/5",
+          "cost": [60, 70, 80, 90, 100],
+          "costBurn": "60/70/80/90/100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [10000, 10000, 10000, 10000, 10000],
+          "rangeBurn": "10000",
+          "image": {
+            "full": "WildCards.png",
+            "sprite": "spell14.png",
+            "group": "spell",
+            "x": 96,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "PickACard",
+          "name": "Pick a Card",
+          "description": "Twisted Fate chooses a magic card from his deck, and uses that for his next attack, causing bonus effects.",
+          "tooltip": "Twisted Fate begins shuffling his deck, allowing him to <recast>Recast</recast> to lock in one of three cards and enhance his next Attack.<br /><li>The Blue Card deals <magicDamage>{{ bluedamage }} magic damage</magicDamage> and restores <scaleMana>{{ e6 }} Mana</scaleMana>.<li>The Red Card deals <magicDamage>{{ reddamage }}</magicDamage> to nearby enemies and <status>Slows</status> by {{ e2 }}% for 2.5 seconds.<li>The Gold Card deals <magicDamage>{{ golddamage }}</magicDamage> and <status>Stuns</status> for {{ e3 }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Blue Card Damage",
+              "Blue Card Mana Restore",
+              "Red Card Damage",
+              "Red Card Slow %",
+              "Gold Card Damage",
+              "Gold Card Stun Duration",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ e1 }} -> {{ e1NL }}",
+              "{{ e6 }} -> {{ e6NL }}",
+              "{{ e4 }} -> {{ e4NL }}",
+              "{{ e2 }}% -> {{ e2NL }}%",
+              "{{ e5 }} -> {{ e5NL }}",
+              "{{ e3 }} -> {{ e3NL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [6, 6, 6, 6, 6],
+          "cooldownBurn": "6",
+          "cost": [50, 55, 60, 65, 70],
+          "costBurn": "50/55/60/65/70",
+          "datavalues": {},
+          "effect": [
+            null,
+            [40, 60, 80, 100, 120],
+            [30, 35, 40, 45, 50],
+            [1, 1.25, 1.5, 1.75, 2],
+            [30, 45, 60, 75, 90],
+            [15, 22.5, 30, 37.5, 45],
+            [70, 90, 110, 130, 150],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [
+            null,
+            "40/60/80/100/120",
+            "30/35/40/45/50",
+            "1/1.25/1.5/1.75/2",
+            "30/45/60/75/90",
+            "15/22.5/30/37.5/45",
+            "70/90/110/130/150",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [200, 200, 200, 200, 200],
+          "rangeBurn": "200",
+          "image": {
+            "full": "PickACard.png",
+            "sprite": "spell14.png",
+            "group": "spell",
+            "x": 144,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "CardmasterStack",
+          "name": "Stacked Deck",
+          "description": "Every 4 attacks, Twisted Fate deals bonus damage. In addition, his Attack Speed is increased.",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Twisted Fate gains <attackSpeed>{{ attackspeedbonus }}% Attack Speed</attackSpeed> and every 4th Attack deals an additional <magicDamage>{{ bonusdamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Bonus Damage:", "Attack Speed"],
+            "effect": ["{{ damage }} -> {{ damageNL }}", "{{ attackspeedbonus }}% -> {{ attackspeedbonusNL }}%"]
+          },
+          "maxrank": 5,
+          "cooldown": [0, 0, 0, 0, 0],
+          "cooldownBurn": "0",
+          "cost": [0, 0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [4, 4, 4, 4, 4],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "4", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "Passive",
+          "maxammo": "-1",
+          "range": [0, 0, 0, 0, 0],
+          "rangeBurn": "0",
+          "image": {
+            "full": "CardmasterStack.png",
+            "sprite": "spell14.png",
+            "group": "spell",
+            "x": 192,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "Passive"
+        },
+        {
+          "id": "Destiny",
+          "name": "Destiny",
+          "description": "Twisted Fate predicts the fortunes of his foes, revealing all enemy champions and enabling the use of Gate, which teleports Twisted Fate to any target location in 1.5 seconds.",
+          "tooltip": "Twisted Fate focuses on his cards, granting <keywordStealth>True Sight</keywordStealth> of all enemy champions on the map for {{ e1 }} seconds and allowing him to <recast>Recast</recast>.<br /><br /><recast>Recast</recast>: Twisted Fate teleports up to {{ e4 }} units away.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Duration", "Cooldown"],
+            "effect": ["{{ recastduration }} -> {{ recastdurationNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 3,
+          "cooldown": [170, 140, 110],
+          "cooldownBurn": "170/140/110",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [6, 8, 10],
+            [0, 0, 0],
+            [0, 0, 0],
+            [5500, 5500, 5500],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "6/8/10", "0", "0", "5500", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [5500, 5500, 5500],
+          "rangeBurn": "5500",
+          "image": {
+            "full": "Destiny.png",
+            "sprite": "spell14.png",
+            "group": "spell",
+            "x": 240,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Loaded Dice",
+        "description": "Upon killing a unit, Twisted Fate rolls his 'lucky' dice receiving 1 to 6 bonus gold.",
+        "image": {
+          "full": "Cardmaster_SealFate.png",
+          "sprite": "passive4.png",
+          "group": "passive",
+          "x": 48,
+          "y": 96,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

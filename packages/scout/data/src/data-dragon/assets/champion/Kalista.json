@@ -1,0 +1,327 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Kalista": {
+      "id": "Kalista",
+      "key": "429",
+      "name": "Kalista",
+      "title": "the Spear of Vengeance",
+      "image": {
+        "full": "Kalista.png",
+        "sprite": "champion1.png",
+        "group": "champion",
+        "x": 288,
+        "y": 96,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "429000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "429001",
+          "num": 1,
+          "name": "Blood Moon Kalista",
+          "chromas": false
+        },
+        {
+          "id": "429002",
+          "num": 2,
+          "name": "Worlds 2015 Kalista",
+          "chromas": true
+        },
+        {
+          "id": "429003",
+          "num": 3,
+          "name": "SKT T1 Kalista",
+          "chromas": false
+        },
+        {
+          "id": "429005",
+          "num": 5,
+          "name": "Marauder Kalista",
+          "chromas": true
+        },
+        {
+          "id": "429014",
+          "num": 14,
+          "name": "Faerie Court Kalista",
+          "chromas": true
+        },
+        {
+          "id": "429024",
+          "num": 24,
+          "name": "Dawnbringer Kalista",
+          "chromas": true
+        }
+      ],
+      "lore": "A specter of wrath and retribution, Kalista is the undying spirit of vengeance, an armored nightmare summoned from the Shadow Isles to hunt deceivers and traitors. The betrayed may cry out in blood to be avenged, but Kalista only answers those willing to pay with their very souls. Those who become the focus of Kalista's wrath should make their final peace, for any pact sealed with this grim hunter can only end with the cold, piercing fire of her soul-spears.",
+      "blurb": "A specter of wrath and retribution, Kalista is the undying spirit of vengeance, an armored nightmare summoned from the Shadow Isles to hunt deceivers and traitors. The betrayed may cry out in blood to be avenged, but Kalista only answers those willing...",
+      "allytips": [
+        "Rend is a valuable last hitting aid, since its cooldown resets if it kills a target. ",
+        "Entering a move order once to trigger Martial Poise will not clear Kalista's basic attack target.",
+        "Due to her passive, Kalista's Move Speed is effectively increased by Attack Speed."
+      ],
+      "enemytips": [
+        "Kalista's mobility is dependent upon attacking. This means it is low when she is outside of her attack range and that Attack Speed slows reduce the amount of distance she can cover in an engagement.",
+        "Kalista cannot cancel her basic attack wind up. While she is very mobile, this offers a window to land spells on her if you anticipate when she will begin attacking.",
+        "If you can break line of sight from Kalista, including through brush, her basic attacks will miss you, falling harmlessly to the ground."
+      ],
+      "tags": ["Marksman"],
+      "partype": "Mana",
+      "info": {
+        "attack": 8,
+        "defense": 2,
+        "magic": 4,
+        "difficulty": 7
+      },
+      "stats": {
+        "hp": 560,
+        "hpperlevel": 114,
+        "mp": 300,
+        "mpperlevel": 45,
+        "movespeed": 330,
+        "armor": 24,
+        "armorperlevel": 5.2,
+        "spellblock": 30,
+        "spellblockperlevel": 1.3,
+        "attackrange": 525,
+        "hpregen": 4,
+        "hpregenperlevel": 0.75,
+        "mpregen": 6.3,
+        "mpregenperlevel": 0.8,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 57,
+        "attackdamageperlevel": 4.75,
+        "attackspeedperlevel": 4.5,
+        "attackspeed": 0.694
+      },
+      "spells": [
+        {
+          "id": "KalistaMysticShot",
+          "name": "Pierce",
+          "description": "Throw a fast moving spear that passes through enemies it kills.",
+          "tooltip": "Kalista hurls a spear, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> to the first target hit. If this kills the target, the spear continues onward, carrying any <spellName>Rend</spellName> stacks to the next target hit.<br /><br />Kalista can dash after using this Ability using <spellName>Martial Poise</spellName>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["@AbilityResourceName@ Cost", "Damage"],
+            "effect": ["{{ cost }} -> {{ costNL }}", "{{ basedamage }} -> {{ basedamageNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [9, 9, 9, 9, 9],
+          "cooldownBurn": "9",
+          "cost": [60, 65, 70, 75, 80],
+          "costBurn": "60/65/70/75/80",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [1150, 1150, 1150, 1150, 1150],
+          "rangeBurn": "1150",
+          "image": {
+            "full": "KalistaMysticShot.png",
+            "sprite": "spell6.png",
+            "group": "spell",
+            "x": 96,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "KalistaW",
+          "name": "Sentinel",
+          "description": "Gain bonus damage when Kalista and her Oathsworn strike the same target. <br><br>Activate to send a soul to scout out the path, revealing the area in front of it.",
+          "tooltip": "<spellPassive>Passive:</spellPassive> When Kalista and her <keywordMajor>Oathsworn</keywordMajor> both Attack the same target, she deals <magicDamage>{{ maxhealthdamage*100 }}% max Health magic damage</magicDamage>. This effect has a {{ pertargetcooldown }} second Cooldown per target and a cap of {{ maximummonsterdamage }} to non-champions.<br /><br /><spellPassive>Active: </spellPassive>Kalista sends a ghost to patrol an area for three laps. Champions spotted are revealed for 4 seconds. This ability has 2 charges ({{ ammorechargetooltip }} second refresh).{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Maximum Health Damage", "Ammo Recharge", "Monster Damage Cap"],
+            "effect": [
+              "{{ maxhealthdamage*100.000000 }}% -> {{ maxhealthdamagenl*100.000000 }}%",
+              "{{ ammorechargetooltip }} -> {{ ammorechargetooltipNL }}",
+              "{{ maximummonsterdamage }} -> {{ maximummonsterdamageNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [30, 30, 30, 30, 30],
+          "cooldownBurn": "30",
+          "cost": [0, 0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [80, 80, 80, 80, 80],
+            [0, 0, 0, 0, 0],
+            [125, 150, 175, 200, 225],
+            [90, 80, 70, 60, 50],
+            [0, 0, 0, 0, 0],
+            [75, 100, 125, 150, 175],
+            [10, 10, 10, 10, 10],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [
+            null,
+            "80",
+            "0",
+            "125/150/175/200/225",
+            "90/80/70/60/50",
+            "0",
+            "75/100/125/150/175",
+            "10",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "2",
+          "range": [5000, 5000, 5000, 5000, 5000],
+          "rangeBurn": "5000",
+          "image": {
+            "full": "KalistaW.png",
+            "sprite": "spell6.png",
+            "group": "spell",
+            "x": 144,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        },
+        {
+          "id": "KalistaExpungeWrapper",
+          "name": "Rend",
+          "description": "Attacks impale their targets with spears. Activate to rip the spears out, slowing and dealing escalating damage.",
+          "tooltip": "<spellPassive>Passive: </spellPassive>Kalista's spears linger in their target for 4 seconds, stacking any number of times.<br /><br /><spellActive>Active:</spellActive> Kalista rips the spears from nearby enemies, dealing <physicalDamage>{{ normaldamage }}</physicalDamage> plus <physicalDamage>{{ additionaldamage }} physical damage</physicalDamage> per spear beyond the first. <status>Slows</status> enemies hit by <attention>{{ totalslowamount }}</attention> for {{ slowduration }} seconds.<br /><br />If this Ability kills at least one target, its Cooldown is refreshed and it refunds <scaleMana>{{ manarefund }} Mana</scaleMana>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Damage per Stack", "AD Ratio per Stack", "Move Speed Slow", "Mana Refund", "Cooldown"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ additionalbasedamage }} -> {{ additionalbasedamageNL }}",
+              "{{ additionaladratio*100.000000 }}% -> {{ additionaladrationl*100.000000 }}%",
+              "{{ slowamount*100.000000 }}% -> {{ slowamountnl*100.000000 }}%",
+              "{{ manarefund }} -> {{ manarefundNL }}",
+              "{{ fakedcooldown }} -> {{ fakedcooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [0, 0, 0, 0, 0],
+          "cooldownBurn": "0",
+          "cost": [30, 30, 30, 30, 30],
+          "costBurn": "30",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [2, 2, 2, 2, 2],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "2", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [1000, 1000, 1000, 1000, 1000],
+          "rangeBurn": "1000",
+          "image": {
+            "full": "KalistaExpungeWrapper.png",
+            "sprite": "spell6.png",
+            "group": "spell",
+            "x": 192,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "KalistaRx",
+          "name": "Fate's Call",
+          "description": "Kalista teleports the Oathsworn ally to herself. They gain the ability to dash toward a position, knocking enemy champions back.",
+          "tooltip": "Kalista puts her <keywordMajor>Oathsworn</keywordMajor> into Stasis and draws them to herself for up to 4 seconds. The <keywordMajor>Oathsworn</keywordMajor> can click to launch themselves, stopping at the first champion hit and <status>Knocking Back</status> all nearby enemies. If the <keywordMajor>Oathsworn</keywordMajor> hits a champion, they are placed at their maximum attack range from it.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Cooldown", "Knockup Duration"],
+            "effect": ["{{ cooldown }} -> {{ cooldownNL }}", "{{ e2 }} -> {{ e2NL }}"]
+          },
+          "maxrank": 3,
+          "cooldown": [160, 140, 120],
+          "cooldownBurn": "160/140/120",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [1, 1.5, 2],
+            [40, 60, 80],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "1/1.5/2", "40/60/80", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [1000, 1000, 1000],
+          "rangeBurn": "1000",
+          "image": {
+            "full": "KalistaRx.png",
+            "sprite": "spell6.png",
+            "group": "spell",
+            "x": 240,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Martial Poise",
+        "description": "Enter a movement command while winding up Kalista's basic attack or Pierce to lunge a short distance when she launches her attack.",
+        "image": {
+          "full": "Kalista_Passive.png",
+          "sprite": "passive1.png",
+          "group": "passive",
+          "x": 288,
+          "y": 96,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

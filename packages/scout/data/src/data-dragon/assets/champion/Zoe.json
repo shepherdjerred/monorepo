@@ -1,0 +1,358 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Zoe": {
+      "id": "Zoe",
+      "key": "142",
+      "name": "Zoe",
+      "title": "the Aspect of Twilight",
+      "image": {
+        "full": "Zoe.png",
+        "sprite": "champion5.png",
+        "group": "champion",
+        "x": 0,
+        "y": 96,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "142000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "142001",
+          "num": 1,
+          "name": "Cyber Pop Zoe",
+          "chromas": false
+        },
+        {
+          "id": "142002",
+          "num": 2,
+          "name": "Pool Party Zoe",
+          "chromas": true
+        },
+        {
+          "id": "142009",
+          "num": 9,
+          "name": "Star Guardian Zoe",
+          "chromas": true
+        },
+        {
+          "id": "142018",
+          "num": 18,
+          "name": "Arcanist Zoe",
+          "chromas": false
+        },
+        {
+          "id": "142019",
+          "num": 19,
+          "name": "Prestige Arcanist Zoe",
+          "chromas": false
+        },
+        {
+          "id": "142020",
+          "num": 20,
+          "name": "EDG Zoe",
+          "chromas": true
+        },
+        {
+          "id": "142022",
+          "num": 22,
+          "name": "Winterblessed Zoe",
+          "chromas": true
+        },
+        {
+          "id": "142033",
+          "num": 33,
+          "name": "Dark Star Zoe",
+          "chromas": true
+        },
+        {
+          "id": "142043",
+          "num": 43,
+          "name": "Prestige Eternal Aspect Zoe",
+          "chromas": true
+        }
+      ],
+      "lore": "As the embodiment of mischief, imagination, and change, Zoe acts as the cosmic messenger of Targon, heralding major events that reshape worlds. Her mere presence warps the arcane mathematics governing realities, sometimes causing cataclysms without conscious effort or malice. This perhaps explains the breezy nonchalance with which Zoe approaches her duties, giving her plenty of time to focus on playing games, tricking mortals, or otherwise amusing herself. An encounter with Zoe can be joyous and life affirming, but it is always more than it appears and often extremely dangerous.",
+      "blurb": "As the embodiment of mischief, imagination, and change, Zoe acts as the cosmic messenger of Targon, heralding major events that reshape worlds. Her mere presence warps the arcane mathematics governing realities, sometimes causing cataclysms without...",
+      "allytips": [
+        "Paddle Star deals more damage the further it has flown. Casting it behind yourself before redirecting can deal tons of damage.",
+        "Break Sleep with your biggest damage source, since enemies who are asleep take double damage.",
+        "Sleepy Trouble Bubble travels further over walls. Find a hiding spot to set up for a long distance kill."
+      ],
+      "enemytips": [
+        "Zoe's Paddle Star deals more damage the further it has flown.",
+        "Zoe must return to her starting point after casting Portal Jump, making her vulnerable to a counterattack.",
+        "Sleepy Trouble Bubble travels further over walls. Stop Zoe from hiding in fog of war to prevent her from setting the spell up."
+      ],
+      "tags": ["Mage"],
+      "partype": "Mana",
+      "info": {
+        "attack": 1,
+        "defense": 7,
+        "magic": 8,
+        "difficulty": 5
+      },
+      "stats": {
+        "hp": 630,
+        "hpperlevel": 106,
+        "mp": 425,
+        "mpperlevel": 25,
+        "movespeed": 340,
+        "armor": 21,
+        "armorperlevel": 4.7,
+        "spellblock": 30,
+        "spellblockperlevel": 1.3,
+        "attackrange": 550,
+        "hpregen": 7.5,
+        "hpregenperlevel": 0.6,
+        "mpregen": 8,
+        "mpregenperlevel": 0.65,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 58,
+        "attackdamageperlevel": 3.3,
+        "attackspeedperlevel": 2.5,
+        "attackspeed": 0.658
+      },
+      "spells": [
+        {
+          "id": "ZoeQ",
+          "name": "Paddle Star!",
+          "description": "Zoe fires a missile that she can redirect in flight. Deals more damage the longer it flies in a straight line.",
+          "tooltip": "Zoe fires a star that deals increasing damage the further it travels to the first enemy hit and surrounding enemies -- between <magicDamage>{{ totaldamagetooltip }} to {{ maxdamagetooltip }} magic damage</magicDamage>.<br /><br />Zoe can <recast>Recast</recast> this Ability to redirect the missile to a new position near Zoe.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Base Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [8.5, 8, 7.5, 7, 6.5],
+          "cooldownBurn": "8.5/8/7.5/7/6.5",
+          "cost": [40, 45, 50, 55, 60],
+          "costBurn": "40/45/50/55/60",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [800, 800, 800, 800, 800],
+          "rangeBurn": "800",
+          "image": {
+            "full": "ZoeQ.png",
+            "sprite": "spell17.png",
+            "group": "spell",
+            "x": 384,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "ZoeW",
+          "name": "Spell Thief",
+          "description": "Zoe can pick up the remnants of enemy summoner spell and active item casts and cast them once herself. Whenever she casts a summoner spell, she gains 3 missiles that fire at the nearest target.",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Enemies drop spell shards when casting a Summoner Spell or using an Active Item. Specific minions also drop a spell shard when Zoe or a nearby ally kills them. Zoe can pick up this shard to cast that ability once.<br /><br /><spellPassive>Passive:</spellPassive> When Zoe casts this Ability or any Summoner Spell, she gains <speed>{{ e9 }}% Move Speed</speed> for {{ e0 }} seconds and tosses 3 missiles at the target she Attacked most recently. These missiles deal <magicDamage>{{ missiledamagetooltip }} magic damage</magicDamage> each.<br /><br /><spellActive>Active:</spellActive> Cast the Ability from a spell shard Zoe has picked up.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Total Damage", "Move Speed", "Speed Duration"],
+            "effect": [
+              "{{ totalbasedamage*3.000000 }} -> {{ totalbasedamagenl*3.000000 }}",
+              "{{ movespeedmod*100.000000 }}% -> {{ movespeedmodnl*100.000000 }}%",
+              "{{ movespeedduration }} -> {{ movespeeddurationNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [0.25, 0.25, 0.25, 0.25, 0.25],
+          "cooldownBurn": "0.25",
+          "cost": [0, 0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [3000, 4500, 6000, 0, 0],
+            [0.1, 0.1, 0.1, 0.1, 0.1],
+            [2500, 2500, 2500, 2500, 2500],
+            [60, 60, 60, 60, 60],
+            [20, 50, 80, 110, 140],
+            [0.2, 0.2, 0.2, 0.2, 0.2],
+            [0, 0, 0, 0, 0],
+            [30, 40, 50, 60, 70],
+            [2, 2.25, 2.5, 2.75, 3]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "3000/4500/6000/0/0",
+            "0.1",
+            "2500",
+            "60",
+            "20/50/80/110/140",
+            "0.2",
+            "0",
+            "30/40/50/60/70",
+            "2/2.25/2.5/2.75/3"
+          ],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [3000, 4500, 6000, 3000, 3000],
+          "rangeBurn": "3000/4500/6000/3000/3000",
+          "image": {
+            "full": "ZoeW.png",
+            "sprite": "spell17.png",
+            "group": "spell",
+            "x": 432,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        },
+        {
+          "id": "ZoeE",
+          "name": "Sleepy Trouble Bubble",
+          "description": "Causes the target to become drowsy, then fall asleep. While asleep, the target's Magic Resist is reduced. The first source of damage that breaks the sleep is doubled, up to a cap.",
+          "tooltip": "Zoe dropkicks a bubble that deals <magicDamage>{{ totaldamagetooltip }} magic damage</magicDamage>, lingering as a trap if it hits nothing. The bubble's range is extended when flying over terrain.<br /><br />After a delay, the victim falls <status>Asleep</status> and have their <scaleMR>Magic Resist</scaleMR> reduced by {{ percentpen*100 }}% for 2 seconds. Attacks and Ability hits wake them up but deal double damage, up to <trueDamage>{{ breakdamagetooltip }} true damage</trueDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Bonus Damage Cap", "Cooldown"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [16, 15, 14, 13, 12],
+          "cooldownBurn": "16/15/14/13/12",
+          "cost": [80, 80, 80, 80, 80],
+          "costBurn": "80",
+          "datavalues": {},
+          "effect": [
+            null,
+            [70, 110, 150, 190, 230],
+            [0.1, 0.15, 0.2, 0.25, 0.3],
+            [5, 15, 25, 35, 45],
+            [5, 5, 5, 5, 5],
+            [0.1, 0.15, 0.2, 0.25, 0.3],
+            [70, 110, 150, 190, 230],
+            [0.45, 0.45, 0.45, 0.45, 0.45],
+            [1.4, 1.4, 1.4, 1.4, 1.4],
+            [2.25, 2.25, 2.25, 2.25, 2.25],
+            [1, 1, 1, 1, 1]
+          ],
+          "effectBurn": [
+            null,
+            "70/110/150/190/230",
+            "0.1/0.15/0.2/0.25/0.3",
+            "5/15/25/35/45",
+            "5",
+            "0.1/0.15/0.2/0.25/0.3",
+            "70/110/150/190/230",
+            "0.45",
+            "1.4",
+            "2.25",
+            "1"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [800, 800, 800, 800, 800],
+          "rangeBurn": "800",
+          "image": {
+            "full": "ZoeE.png",
+            "sprite": "spell17.png",
+            "group": "spell",
+            "x": 0,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "ZoeR",
+          "name": "Portal Jump",
+          "description": "Blink to a nearby position for 1 second. Then blink back.",
+          "tooltip": "Zoe teleports to a nearby position for 1 second. Afterwards, she teleports back. Zoe can use Abilities and Attack, but can't move during this time.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Cooldown"],
+            "effect": ["{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 3,
+          "cooldown": [11, 8, 5],
+          "cooldownBurn": "11/8/5",
+          "cost": [40, 40, 40],
+          "costBurn": "40",
+          "datavalues": {},
+          "effect": [
+            null,
+            [-0.3, -0.4, -0.5],
+            [1.5, 2, 2.5],
+            [4, 4, 4],
+            [0.5, 0.5, 0.5],
+            [3, 3, 3],
+            [100, 200, 300],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "-0.3/-0.4/-0.5", "1.5/2/2.5", "4", "0.5", "3", "100/200/300", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [575, 575, 575],
+          "rangeBurn": "575",
+          "image": {
+            "full": "ZoeR.png",
+            "sprite": "spell17.png",
+            "group": "spell",
+            "x": 48,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "More Sparkles!",
+        "description": "Zoe's next basic attack after casting a spell deals bonus magic damage.",
+        "image": {
+          "full": "Zoe_P.png",
+          "sprite": "passive5.png",
+          "group": "passive",
+          "x": 0,
+          "y": 96,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

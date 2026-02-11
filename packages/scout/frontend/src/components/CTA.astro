@@ -1,0 +1,47 @@
+---
+import Button from './Button.astro';
+
+interface Props {
+  title: string;
+  description?: string;
+  variant?: 'indigo' | 'default';
+  buttons?: Array<{
+    text: string;
+    href: string;
+    variant?: 'primary' | 'secondary';
+  }>;
+}
+
+const { title, description, variant = 'indigo', buttons = [] } = Astro.props;
+const bgClass = variant === 'indigo' ? 'bg-indigo-600 dark:bg-indigo-700' : 'bg-white dark:bg-gray-900';
+const titleClass = variant === 'indigo' ? 'text-white' : 'text-gray-900 dark:text-white';
+const descClass = variant === 'indigo' ? 'text-indigo-200 dark:text-indigo-100' : 'text-gray-600 dark:text-gray-300';
+---
+
+<div class={bgClass}>
+  <div class="px-6 py-24 sm:px-6 sm:py-32 lg:px-8">
+    <div class="mx-auto max-w-2xl text-center">
+      <h2 class={`text-balance text-4xl font-semibold tracking-tight ${titleClass} sm:text-5xl`}>
+        {title}
+      </h2>
+      {description && (
+        <p class={`mx-auto mt-6 max-w-xl text-lg/8 ${descClass}`}>
+          {description}
+        </p>
+      )}
+      {buttons.length > 0 && (
+        <div class="mt-10 flex items-center justify-center gap-x-6">
+          {buttons.map((button) => (
+            <Button
+              href={button.href}
+              variant={button.variant === 'secondary' ? 'text' : 'primary'}
+              color={variant === 'indigo' ? 'white' : 'indigo'}
+            >
+              {button.text}
+            </Button>
+          ))}
+        </div>
+      )}
+    </div>
+  </div>
+</div>

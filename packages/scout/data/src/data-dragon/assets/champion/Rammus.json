@@ -1,0 +1,346 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Rammus": {
+      "id": "Rammus",
+      "key": "33",
+      "name": "Rammus",
+      "title": "the Armordillo",
+      "image": {
+        "full": "Rammus.png",
+        "sprite": "champion3.png",
+        "group": "champion",
+        "x": 240,
+        "y": 48,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "33000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "33001",
+          "num": 1,
+          "name": "King Rammus",
+          "chromas": false
+        },
+        {
+          "id": "33002",
+          "num": 2,
+          "name": "Chrome Rammus",
+          "chromas": false
+        },
+        {
+          "id": "33003",
+          "num": 3,
+          "name": "Molten Rammus",
+          "chromas": false
+        },
+        {
+          "id": "33004",
+          "num": 4,
+          "name": "Freljord Rammus",
+          "chromas": false
+        },
+        {
+          "id": "33005",
+          "num": 5,
+          "name": "Ninja Rammus",
+          "chromas": false
+        },
+        {
+          "id": "33006",
+          "num": 6,
+          "name": "Full Metal Rammus",
+          "chromas": false
+        },
+        {
+          "id": "33007",
+          "num": 7,
+          "name": "Guardian of the Sands Rammus",
+          "chromas": false
+        },
+        {
+          "id": "33008",
+          "num": 8,
+          "name": "Sweeper Rammus",
+          "chromas": true
+        },
+        {
+          "id": "33016",
+          "num": 16,
+          "name": "Hextech Rammus",
+          "chromas": false
+        },
+        {
+          "id": "33017",
+          "num": 17,
+          "name": "Astronaut Rammus",
+          "chromas": true
+        },
+        {
+          "id": "33026",
+          "num": 26,
+          "name": "Durian Defender Rammus",
+          "chromas": true
+        }
+      ],
+      "lore": "Idolized by many, dismissed by some, mystifying to all, the curious being Rammus is an enigma. Protected by a spiked shell, he inspires increasingly disparate theories on his origin wherever he goes—from demigod, to sacred oracle, to a mere beast transformed by magic. Whatever the truth may be, Rammus keeps his own counsel and stops for no one as he roams the Shuriman desert.",
+      "blurb": "Idolized by many, dismissed by some, mystifying to all, the curious being Rammus is an enigma. Protected by a spiked shell, he inspires increasingly disparate theories on his origin wherever he goes—from demigod, to sacred oracle, to a mere beast...",
+      "allytips": [
+        "Powerball can be used as an effective escape mechanism.",
+        "Using taunt on a champion by your tower can cause the tower to attack your enemy.",
+        "Tremors and Defensive Ball Curl can be used late in the game to obliterate towers. If you're bogged down in a team fight, it is often valuable to break off and attack the buildings."
+      ],
+      "enemytips": [
+        "Pay particular attention to when his Defensive Ball Curl is off. Rammus has much lower stats than a normal tank when he's out of the stance.",
+        "Rammus often stacks high Armor, leaving him especially vulnerable to caster damage while not in Defensive Ball Curl."
+      ],
+      "tags": ["Tank"],
+      "partype": "Mana",
+      "info": {
+        "attack": 4,
+        "defense": 10,
+        "magic": 5,
+        "difficulty": 5
+      },
+      "stats": {
+        "hp": 645,
+        "hpperlevel": 100,
+        "mp": 310,
+        "mpperlevel": 33,
+        "movespeed": 335,
+        "armor": 35,
+        "armorperlevel": 4.5,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
+        "attackrange": 125,
+        "hpregen": 8,
+        "hpregenperlevel": 0.55,
+        "mpregen": 7.85,
+        "mpregenperlevel": 0.5,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 65,
+        "attackdamageperlevel": 2.75,
+        "attackspeedperlevel": 2.215,
+        "attackspeed": 0.7
+      },
+      "spells": [
+        {
+          "id": "PowerBall",
+          "name": "Powerball",
+          "description": "Rammus accelerates in a ball towards his enemies, dealing damage and slowing targets affected by the impact.",
+          "tooltip": "Rammus curls into a ball, gaining <speed>{{ minimummovespeed }} Move Speed</speed>, accelerating up to <speed>{{ maximummovespeed }} Move Speed</speed> over {{ rollduration }} seconds. Rammus stops after colliding with an enemy, dealing <magicDamage>{{ powerballdamage }} magic damage</magicDamage>, <status>Knocking Back</status>, and <status>Slowing</status> nearby enemies by {{ slowpercent }}% for {{ slowduration }} second.<br /><br /><recast>Recast</recast>: Rammus ends this Ability early.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Slow", "Cooldown"],
+            "effect": [
+              "{{ qbasedamage }} -> {{ qbasedamageNL }}",
+              "{{ slowpercent }}% -> {{ slowpercentNL }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [12, 10.5, 9, 7.5, 6],
+          "cooldownBurn": "12/10.5/9/7.5/6",
+          "cost": [60, 60, 60, 60, 60],
+          "costBurn": "60",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [1000, 1000, 1000, 1000, 1000]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "1000"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [300, 300, 300, 300, 300],
+          "rangeBurn": "300",
+          "image": {
+            "full": "PowerBall.png",
+            "sprite": "spell10.png",
+            "group": "spell",
+            "x": 384,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "DefensiveBallCurl",
+          "name": "Defensive Ball Curl",
+          "description": "Rammus goes into a defensive formation, vastly increasing his Armor and Magic Resistance, and returning damage to enemies that attack him.",
+          "tooltip": "Rammus enters a defensive formation for {{ buffduration }} seconds, gaining <scaleArmor>{{ bonusarmortooltip }} Armor</scaleArmor> and <scaleMR>{{ bonusmrtooltip }} Magic Resist</scaleMR> and dealing <magicDamage>{{ returndamagecalc }} magic damage</magicDamage> to enemies that Attack him.<br /><br /><recast>Recast</recast>: Rammus ends this Ability early.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Armor Bonus", "Magic Resist Bonus", "Percent Armor Bonus", "Percent Magic Resist Bonus"],
+            "effect": [
+              "{{ flatbonusarmor }} -> {{ flatbonusarmorNL }}",
+              "{{ flatbonusmr }} -> {{ flatbonusmrNL }}",
+              "{{ bonusarmorpercent*100.000000 }}% -> {{ bonusarmorpercentnl*100.000000 }}%",
+              "{{ bonusmrpercent*100.000000 }}% -> {{ bonusmrpercentnl*100.000000 }}%"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [7, 7, 7, 7, 7],
+          "cooldownBurn": "7",
+          "cost": [40, 40, 40, 40, 40],
+          "costBurn": "40",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [300, 300, 300, 300, 300],
+          "rangeBurn": "300",
+          "image": {
+            "full": "DefensiveBallCurl.png",
+            "sprite": "spell10.png",
+            "group": "spell",
+            "x": 432,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "PuncturingTaunt",
+          "name": "Frenzying Taunt",
+          "description": "Rammus taunts an enemy champion or monster into a reckless assault against him.",
+          "tooltip": "Rammus <status>Taunts</status> an enemy champion or monster for {{ duration }} seconds. Monsters are dealt <magicDamage>{{ monsterdamagecalc }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Duration", "Monster Damage"],
+            "effect": ["{{ duration }} -> {{ durationNL }}", "{{ monsterdamage }} -> {{ monsterdamageNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [12, 12, 12, 12, 12],
+          "cooldownBurn": "12",
+          "cost": [50, 50, 50, 50, 50],
+          "costBurn": "50",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [325, 325, 325, 325, 325],
+          "rangeBurn": "325",
+          "image": {
+            "full": "PuncturingTaunt.png",
+            "sprite": "spell11.png",
+            "group": "spell",
+            "x": 0,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Tremors2",
+          "name": "Soaring Slam",
+          "description": "Rammus hops into the air and slams down at a target area, dealing magic damage and slowing enemies. If cast while Rammus is in Powerball, Rammus knocks up enemies near the center as well.",
+          "tooltip": "Rammus hops into the air and slams down in an area, dealing <magicDamage>{{ initialdamagecalc }} magic damage</magicDamage> and <status>Slowing</status> by {{ slowamount*100 }}% for {{ slowduration }} seconds. If used during <spellName>Powerball</spellName>, enemies in the center take an additional <magicDamage>{{ spell.powerball:powerballdamage }} magic damage</magicDamage> and are <status>Knocked Up</status> for {{ knockupduration }} seconds.<br /><br />Rammus then creates {{ numberofpulses }} aftershocks in the area over {{ buffduration }} seconds, repeating the <status>Slow</status>.<br /><br />The range of this Ability is increased by Rammus's <speed>Move Speed</speed>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Slow", "Cooldown"],
+            "effect": [
+              "{{ initialdamage }} -> {{ initialdamageNL }}",
+              "{{ slowamount*100.000000 }}% -> {{ slowamountnl*100.000000 }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [120, 105, 90],
+          "cooldownBurn": "120/105/90",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [25000, 25000, 25000],
+          "rangeBurn": "25000",
+          "image": {
+            "full": "Tremors2.png",
+            "sprite": "spell11.png",
+            "group": "spell",
+            "x": 48,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Spiked Shell",
+        "description": "Rammus gains bonus Attack Damage scaling with his Armor and Magic Resistance.",
+        "image": {
+          "full": "Armordillo_ScavengeArmor.png",
+          "sprite": "passive3.png",
+          "group": "passive",
+          "x": 240,
+          "y": 48,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

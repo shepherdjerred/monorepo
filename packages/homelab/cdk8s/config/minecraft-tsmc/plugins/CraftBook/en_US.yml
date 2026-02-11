@@ -1,0 +1,153 @@
+mech:
+  gate:
+    create: Gate Created!
+    toggle: Gate Toggled!
+    not-found: Failed to find a gate!
+    valid-item: Line 1 needs to be a valid block id.
+  cauldron:
+    permissions: You dont have permission to cook this recipe.
+    leaky: Cauldron has a leak!
+    create: Cauldron Created!
+    legacy-not-a-recipe: Hmm, this doesn't make anything...
+    cook: "You have cooked the recipe:"
+    stir: You stir the cauldron but nothing happens.
+    legacy-not-in-group: Doesn't seem as if you have the ability...
+    too-small: Cauldron is too small!
+    no-lava: Cauldron lacks lava!
+    legacy-create: In a poof of smoke, you've made
+  area:
+    create: Toggle Area Created!
+    missing: The area or namespace does not exist.
+  bridge:
+    end-create: Bridge End Created!
+    other-sign: Bridge sign required on other side (or it was too far away).
+    create: Bridge Created!
+    material: Bridge must be made entirely out of the same material!
+    unusable: Material not usable for a bridge!
+    toggle: Bridge Toggled!
+  door:
+    unusable: Material not usable for a door!
+    material: Door must be made entirely out of the same material!
+    other-sign: Door sign required on other side (or it was too far away).
+    create: Door Created!
+    toggle: Door Toggled!
+  map:
+    create: Map Changer Created!
+    invalid: Invalid Map ID!
+  chairs:
+    sit: You are now sitting!
+    stand: You are no longer sitting!
+    floating: This chair has nothing below it!
+    obstructed: This chair is obstructed!
+    in-use: This chair is in use!
+    too-far: This chair is too far away!
+  hiddenswitch:
+    toggle: You hear the muffled click of a switch!
+    key: The key did not fit!
+  painting:
+    editing: You are now editing this painting!
+    used: This painting is already being edited by
+    range: You are too far away from the painting!
+    stop: You are no longer editing this painting!
+  pay:
+    create: Pay Created!
+    success: "Payment Successful! You paid: "
+    failed-to-pay: Payment Failed! The money failed to be exchanged.
+    not-enough-money: Payment Failed! You don't have enough money.
+  pistons:
+    supersticky:
+      created: Piston Super-Sticky Mechanic Created!
+    superpush:
+      created: Piston Super-Push Mechanic Created!
+    bounce:
+      created: Piston Bounce Mechanic Created!
+    crush:
+      created: Piston Crush Mechanic Created!
+  group: You are not in the required group!
+  bounceblocks:
+    create: BounceBlock Created!
+    invalid-velocity: You need to enter a valid velocity on the 3rd line!
+  command:
+    create: Command Sign Created!
+  command-items:
+    out-of-sync: Inventory became out of sync during usage of command-items!
+    need: You need %item% to use this command!
+    wait: You have to wait %time% seconds to use this again!
+  teleport:
+    create: Teleporter Created!
+    alert: You Teleported!
+    invalidcoords: The entered coordinates are invalid!
+    sign: There is no Sign at your Destination!
+    obstruct: Your destination is obstructed!
+    arriveonly: You can only arrive at this teleporter!
+    range: Out of Range!
+  lightswitch:
+    create: Light Switch Created!
+  bookcase:
+    read-line: You pick up a book...
+    fail-file: Failed to read the books file.
+    fail-line: Failed to fetch a line from the books file.
+  cook:
+    create: Cooking Pot Created!
+    ouch: Ouch! That was hot!
+    add-fuel: You put fuel into the cooking pot, and watch as the fire roars!
+  restock: Mechanism Restocked!
+  lift:
+    no-depart: Cannot depart from this lift (can only arrive).
+    leave: You have left the elevator!
+    floor: Floor
+    obstruct: Your destination is obstructed!
+    up: You went up a floor!
+    busy: Elevator Busy!
+    up-sign-created: Elevator up sign created.
+    target-sign-created: Elevator target sign created.
+    no-floor: There is no floor at your destination!
+    no-destination: This lift has no destination.
+    down-sign-created: Elevator down sign created.
+    down: You went down a floor!
+  anchor:
+    create: Chunk Anchor Created!
+    already-anchored: This chunk is already anchored!
+  headdrops:
+    click-message: This is the dismembered head of..
+    break-permission: You don't have permission to break heads!
+  xp-storer:
+    bottle: You need a bottle to perform this mechanic!
+    not-enough-xp: You do not have enough experience to fill a bottle!
+    success: You package your experience into a bottle!
+    create: XP Storer Created!
+  signcopy:
+    paste: You have pasted the sign!
+    copy: You have copied the sign!
+  use-permission: You don't have permission to use this mechanic.
+  ic:
+    create: You've created
+  lightstone:
+    lightstone: "LightStone:"
+  create-permission: You don't have permission to create this mechanic.
+  dgate:
+    create: Small Gate Created!
+  not-enough-blocks: Not enough blocks to trigger mechanic!
+  restock-permission: You don't have permission to restock this mechanic.
+  ammeter:
+    ammeter: Ammeter
+  custom-crafting:
+    recipe-permission: You do not have permission to craft this recipe.
+worldedit:
+  ic:
+    unsupported: WorldEdit selection type currently unsupported for IC's!
+    notfound: WorldEdit not found!
+    noselection: No selection was found!
+variable:
+  missing: This variable is missing!
+  use-permissions: You don't have permission to use that variable!
+area:
+  break-permissions: You don't have permissions to break that in this area!
+  permissions: You don't have permissions to do that in this area!
+  use-permissions: You don't have permissions to use that in this area!
+circuits:
+  pipes:
+    create: Pipe created!
+    pipe-not-found: Failed to find pipe!
+vehicles:
+  create-permission: You don't have permissions to create this vehicle mechanic!

@@ -4,5 +4,6 @@
   "packages/eslint-config": "0.2.0",
   "packages/clauderon": "0.1.0",
   "packages/webring": "1.5.0",
-  "packages/astro-opengraph-images": "1.14.2"
+  "packages/astro-opengraph-images": "1.14.2",
+  "packages/homelab/helm-types": "1.1.0"
 }

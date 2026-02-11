@@ -1,0 +1,157 @@
+---
+description: Comprehensive guide for optimizing Dagger pipeline performance through layered container architecture, cache strategies, and Docker layer caching best practices.
+---
+# Dagger Pipeline Optimization Guide
+
+## Overview
+
+The Dagger pipeline in [.dagger/](mdc:.dagger) has been optimized for maximum caching efficiency using Docker's layered architecture. This rule provides guidelines for maintaining and improving the pipeline performance.
+
+## 🏗️ Layered Container Architecture
+
+The pipeline follows a strict layered caching approach defined in [.dagger/src/base.ts](mdc:.dagger/src/base.ts):
+
+1. **System Layer** (`getSystemContainer()`) - Ubuntu + OS packages
+2. **Runtime Layer** (`getMiseRuntimeContainer()`) - Mise tools (bun, node, python)
+3. **Dependency Layer** (`getWorkspaceContainer()`) - Package dependencies
+4. **Source Layer** - Application source code
+
+**Critical Rule**: Never mix layers or copy source code before installing dependencies, as this breaks Docker's layer caching.
+
+## 📦 Cache Volume Strategy
+
+### Current Cache Volumes
+
+- `apt-cache-{platform}` - OS package cache (system layer)
+- `apt-lib-{platform}` - APT library cache (system layer)
+- `mise-tools` - Development tools cache (runtime layer)
+- `pip-cache` - Python package cache (runtime layer)
+- `bun-cache-{platform}` - Bun dependency cache (dependency layer)
+- `typescript-cache` - TypeScript compilation cache (application layer)
+- `binary-downloads` - Downloaded binaries (kube-linter, etc.)
+
+### Cache Naming Convention
+
+- Use **platform-based** cache names (e.g., `bun-cache-{platform}`)
+- Avoid overly specific version-based names
+- Let Docker layer invalidation handle version changes naturally
+
+## 🔧 Workspace-Specific Handling
+
+### HA Workspace ([.dagger/src/ha.ts](mdc:.dagger/src/ha.ts))
+- Has `bun.lock` file - copy before dependency installation
+- Uses `bun` commands directly (mise tools are pre-installed)
+- Cache key: `bun-cache-{platform}`
+
+### CDK8s Workspace ([.dagger/src/cdk8s.ts](mdc:.dagger/src/cdk8s.ts))
+- No `bun.lock` file - only copy `package.json`
+- Uses `bun` commands directly (mise tools are pre-installed)
+- Additional TypeScript compilation cache
+
+## ✅ Best Practices for Optimization
+
+### When Modifying Containers
+
+1. **Always preserve layer order**:
+   ```typescript
+   // ✅ Correct order
+   .withFile("package.json", ...)     // Dependency files first
+   .withFile("bun.lock", ...)         // Lock files next
+   .withExec(["bun", "install"])      // Install dependencies
+   .withDirectory(".", source)        // Source code last
+   ```
+
+2. **Use appropriate cache volumes**:
+   ```typescript
+   .withMountedCache("/root/.bun/install/cache",
+     dag.cacheVolume(`bun-cache-${platform || "default"}`))
+   ```
+
+3. **Keep commands simple** - mise tools are pre-installed, use `bun` directly
+
+### When Adding New Workspaces
+
+1. Check if workspace has lock files (bun.lock, package-lock.json, etc.)
+2. Add workspace-specific handling in `getWorkspaceContainer()` if needed
+3. Use existing cache volumes when possible
+4. Follow the dependency-first, source-last pattern
+
+### When Updating Versions
+
+- Update [.dagger/src/versions.ts](mdc:.dagger/src/versions.ts)
+- Docker will automatically invalidate relevant layers
+- No need to change cache volume names
+
+## 🚨 Anti-Patterns to Avoid
+
+### ❌ Don't Do This
+
+```typescript
+// Breaks caching - source copied before dependencies
+.withDirectory(".", source)
+.withExec(["bun", "install"])
+
+// Overly specific cache names
+dag.cacheVolume(`bun-cache-${workspace}-${version}-${hash}`)
+
+// Custom shell scripts for dependency detection
+.withExec(["sh", "-c", "if [ -f package.json ]; then bun install; fi"])
+
+// Using mise exec when tools are already in PATH
+.withExec(["bun", "install"])
+```
+
+### ✅ Do This Instead
+
+```typescript
+// Proper layer caching
+.withFile("package.json", ...)
+.withExec(["bun", "install"])
+.withDirectory(".", source)
+
+// Simple cache names
+dag.cacheVolume(`bun-cache-${platform || "default"}`)
+
+// Use tools directly
+.withExec(["bun", "install"])
+```
+
+## 📊 Performance Monitoring
+
+### Expected Cache Performance
+
+When pipeline is optimized, you should see:
+- System packages: `CACHED` (unless OS version changes)
+- Mise tools: `CACHED` (unless tool versions change)
+- Dependencies: `CACHED` (unless package.json changes)
+- Source operations: Fast execution
+
+### Debug Cache Issues
+
+```bash
+# List cache volumes
+dagger cache list
+
+# Clear specific cache if needed
+dagger cache prune --filter="bun-cache-*"
+
+# Check for cache hits in output
+dagger call build-ha | grep CACHED
+```
+
+## 🔄 Future Optimization Opportunities
+
+1. **Multi-stage builds** for production images
+2. **Parallel workspace builds** with isolated caches
+3. **Build artifact caching** for compiled outputs
+4. **Registry caching** for container images
+
+## 📚 Related Files
+
+- [.dagger/src/base.ts](mdc:.dagger/src/base.ts) - Core container functions
+- [.dagger/src/ha.ts](mdc:.dagger/src/ha.ts) - Home Assistant pipeline
+- [.dagger/src/cdk8s.ts](mdc:.dagger/src/cdk8s.ts) - CDK8s pipeline
+- [.dagger/src/versions.ts](mdc:.dagger/src/versions.ts) - Version management
+- [.dagger/OPTIMIZATION_GUIDE.md](mdc:.dagger/OPTIMIZATION_GUIDE.md) - Detailed optimization guide
+
+**Remember**: The goal is 90% faster builds for source-only changes by leveraging Docker's proven layer caching mechanisms.

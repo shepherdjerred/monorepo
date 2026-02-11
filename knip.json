@@ -52,6 +52,46 @@
     "packages/dpp/frontend": {
       "entry": ["src/main.tsx"],
       "project": ["src/**/*.{ts,tsx}"]
+    },
+    "packages/homelab/cdk8s": {
+      "entry": ["src/app.ts"],
+      "project": ["src/**/*.{ts,tsx}"]
+    },
+    "packages/homelab/ha": {
+      "entry": ["src/main.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/homelab/deps-email": {
+      "entry": ["src/main.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/homelab/helm-types": {
+      "entry": ["src/index.ts", "src/cli.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/scout/backend": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/scout/data": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/scout/report": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.{ts,tsx}"]
+    },
+    "packages/scout/frontend": {
+      "entry": ["src/**/*.astro", "src/**/*.ts", "src/**/*.tsx"],
+      "project": ["src/**/*.{ts,tsx,astro}"]
+    },
+    "packages/scout/desktop": {
+      "entry": ["src/main.tsx"],
+      "project": ["src/**/*.{ts,tsx}"]
+    },
+    "packages/scout/ui": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.{ts,tsx}"]
     }
   },
   "ignore": ["**/generated/**", "**/dist/**", "archive/**"]

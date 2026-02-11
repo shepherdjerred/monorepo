@@ -1,0 +1,332 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Yone": {
+      "id": "Yone",
+      "key": "777",
+      "name": "Yone",
+      "title": "the Unforgotten",
+      "image": {
+        "full": "Yone.png",
+        "sprite": "champion5.png",
+        "group": "champion",
+        "x": 0,
+        "y": 48,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "777000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "777001",
+          "num": 1,
+          "name": "Spirit Blossom Yone",
+          "chromas": true
+        },
+        {
+          "id": "777010",
+          "num": 10,
+          "name": "Battle Academia Yone",
+          "chromas": true
+        },
+        {
+          "id": "777019",
+          "num": 19,
+          "name": "Dawnbringer Yone",
+          "chromas": true
+        },
+        {
+          "id": "777026",
+          "num": 26,
+          "name": "Ocean Song Yone",
+          "chromas": true
+        },
+        {
+          "id": "777035",
+          "num": 35,
+          "name": "Inkshadow Yone",
+          "chromas": true
+        },
+        {
+          "id": "777045",
+          "num": 45,
+          "name": "HEARTSTEEL Yone",
+          "chromas": true
+        },
+        {
+          "id": "777046",
+          "num": 46,
+          "name": "Prestige HEARTSTEEL Yone",
+          "chromas": false
+        },
+        {
+          "id": "777055",
+          "num": 55,
+          "name": "High Noon Yone",
+          "chromas": true
+        },
+        {
+          "id": "777058",
+          "num": 58,
+          "name": "Peacemaker High Noon Yone",
+          "chromas": false
+        },
+        {
+          "id": "777065",
+          "num": 65,
+          "name": "Masked Justice Yone",
+          "chromas": false
+        },
+        {
+          "id": "777074",
+          "num": 74,
+          "name": "T1 Yone",
+          "chromas": false
+        }
+      ],
+      "lore": "In life, he was Yone—half-brother of Yasuo, and renowned student of his village's sword school. But upon his death at the hands of his brother, he found himself hunted by a malevolent entity of the spirit realm, and was forced to slay it with its own sword. Now, cursed to wear its demonic mask upon his face, Yone tirelessly hunts all such creatures in order to understand what he has become.",
+      "blurb": "In life, he was Yone—half-brother of Yasuo, and renowned student of his village's sword school. But upon his death at the hands of his brother, he found himself hunted by a malevolent entity of the spirit realm, and was forced to slay it with its own...",
+      "allytips": [],
+      "enemytips": [],
+      "tags": ["Fighter", "Assassin"],
+      "partype": "Flow",
+      "info": {
+        "attack": 8,
+        "defense": 4,
+        "magic": 4,
+        "difficulty": 8
+      },
+      "stats": {
+        "hp": 620,
+        "hpperlevel": 105,
+        "mp": 500,
+        "mpperlevel": 0,
+        "movespeed": 345,
+        "armor": 33,
+        "armorperlevel": 4.6,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
+        "attackrange": 175,
+        "hpregen": 7.5,
+        "hpregenperlevel": 0.75,
+        "mpregen": 0,
+        "mpregenperlevel": 0,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 62,
+        "attackdamageperlevel": 2,
+        "attackspeedperlevel": 3.5,
+        "attackspeed": 0.625
+      },
+      "spells": [
+        {
+          "id": "YoneQ",
+          "name": "Mortal Steel",
+          "description": "Thrusts forward, damaging all enemies in a line.<br><br>On hit, grants a stack of Gathering Storm for a few seconds. At 2 stacks, Mortal Steel dashes Yone forward with a gust of wind knocking enemies <status>Airborne</status>.",
+          "tooltip": "Yone thrusts forward, dealing <physicalDamage>{{ qdamage }} physical damage</physicalDamage>.<br /><br />On hit, grants a stack for {{ buffduration }} seconds. At 2 stacks, this ability causes Yone to dash forward with a wave of wind that <status>Knocks Up</status> for {{ q3knockupduration }} seconds and deals <physicalDamage>{{ qdamage }} physical damage</physicalDamage>. {{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Base Damage"],
+            "effect": ["{{ basedamage }} -> {{ basedamageNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [4, 4, 4, 4, 4],
+          "cooldownBurn": "4",
+          "cost": [0, 0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [450, 450, 450, 450, 450],
+          "rangeBurn": "450",
+          "image": {
+            "full": "YoneQ.png",
+            "sprite": "spell16.png",
+            "group": "spell",
+            "x": 384,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        },
+        {
+          "id": "YoneW",
+          "name": "Spirit Cleave",
+          "description": "Cleaves forward, damaging all enemies in a cone. Grants a shield to Yone, the value is increased by the number of champions hit by the swipe.<br><br>Spirit Cleave's cooldown and cast time scale with attack speed.",
+          "tooltip": "Yone cleaves forward, dealing <physicalDamage>{{ basedamage*0.5 }} + {{ maxhealthdamage*50 }}% max Health physical damage</physicalDamage> and <magicDamage>{{ basedamage*0.5 }} + {{ maxhealthdamage*50 }}% max Health magic damage</magicDamage>.<br /><br />If Yone hits, he gains <shield>{{ wshield }} Shield</shield> for {{ shieldduration }} seconds. The amount of <shield>Shield</shield> increases for each champion struck. {{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Base Damage", "Total Max Health Damage"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ maxhealthdamage*100.000000 }}% -> {{ maxhealthdamagenl*100.000000 }}%"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [14, 14, 14, 14, 14],
+          "cooldownBurn": "14",
+          "cost": [0, 0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [700, 700, 700, 700, 700],
+          "rangeBurn": "700",
+          "image": {
+            "full": "YoneW.png",
+            "sprite": "spell16.png",
+            "group": "spell",
+            "x": 432,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        },
+        {
+          "id": "YoneE",
+          "name": "Soul Unbound",
+          "description": "Yone's spirit leaves his body behind, gaining Move Speed. When this ability ends, Yone's spirit is forced back to his body and he repeats a portion of the damage he dealt as a spirit.",
+          "tooltip": "Yone enters a spirit form for {{ returntimer }} seconds, leaving his body behind for the duration and gaining <speed>{{ startingms*100 }}%</speed> to <speed>{{ movementspeed*100 }}% ramping Move Speed</speed>. <br /><br />When the spirit form ends, Yone snaps back to his body and repeats {{ deathmarkpercent*100 }}% of all Attack and Ability damage he dealt to champions during this time. You may <recast>Recast</recast> this ability during spirit form.<br /><br /><recast>Recast: </recast>End spirit form early.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Repeated Damage", "Cooldown"],
+            "effect": [
+              "{{ deathmarkpercent*100.000000 }}% -> {{ deathmarkpercentnl*100.000000 }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [22, 19, 16, 13, 10],
+          "cooldownBurn": "22/19/16/13/10",
+          "cost": [0, 0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [25000, 25000, 25000, 25000, 25000],
+          "rangeBurn": "25000",
+          "image": {
+            "full": "YoneE.png",
+            "sprite": "spell16.png",
+            "group": "spell",
+            "x": 0,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        },
+        {
+          "id": "YoneR",
+          "name": "Fate Sealed",
+          "description": "Yone blinks behind the last champion in a line with a slash so powerful it pulls all enemies hit towards him.",
+          "tooltip": "Yone strikes all enemies along a path for <physicalDamage>{{ tooltipdamage }} physical damage</physicalDamage> and <magicDamage>{{ tooltipdamage }} magic damage</magicDamage>, teleporting behind the last champion hit and <status>Knocking Up</status> victims towards Yone.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Base Damage", "Cooldown"],
+            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 3,
+          "cooldown": [120, 100, 80],
+          "cooldownBurn": "120/100/80",
+          "cost": [0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [1000, 1000, 1000],
+          "rangeBurn": "1000",
+          "image": {
+            "full": "YoneR.png",
+            "sprite": "spell16.png",
+            "group": "spell",
+            "x": 48,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        }
+      ],
+      "passive": {
+        "name": "Way of the Hunter",
+        "description": "Yone deals magic damage with every second Attack. In addition, his critical strike chance is increased.",
+        "image": {
+          "full": "YonePassive.png",
+          "sprite": "passive5.png",
+          "group": "passive",
+          "x": 0,
+          "y": 48,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

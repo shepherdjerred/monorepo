@@ -1,0 +1,6 @@
+apiVersion: v2
+name: media
+description: Media stack - Plex, Sonarr, Radarr, etc.
+type: application
+version: "$version"
+appVersion: "$appVersion"

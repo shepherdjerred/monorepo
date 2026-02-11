@@ -1,0 +1,349 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Jhin": {
+      "id": "Jhin",
+      "key": "202",
+      "name": "Jhin",
+      "title": "the Virtuoso",
+      "image": {
+        "full": "Jhin.png",
+        "sprite": "champion1.png",
+        "group": "champion",
+        "x": 144,
+        "y": 96,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "202000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "202001",
+          "num": 1,
+          "name": "High Noon Jhin",
+          "chromas": true
+        },
+        {
+          "id": "202002",
+          "num": 2,
+          "name": "Blood Moon Jhin",
+          "chromas": false
+        },
+        {
+          "id": "202003",
+          "num": 3,
+          "name": "SKT T1 Jhin",
+          "chromas": false
+        },
+        {
+          "id": "202004",
+          "num": 4,
+          "name": "PROJECT: Jhin",
+          "chromas": false
+        },
+        {
+          "id": "202005",
+          "num": 5,
+          "name": "Dark Cosmic Jhin",
+          "chromas": false
+        },
+        {
+          "id": "202014",
+          "num": 14,
+          "name": "Shan Hai Scrolls Jhin",
+          "chromas": true
+        },
+        {
+          "id": "202023",
+          "num": 23,
+          "name": "DWG Jhin",
+          "chromas": true
+        },
+        {
+          "id": "202025",
+          "num": 25,
+          "name": "Empyrean Jhin",
+          "chromas": true
+        },
+        {
+          "id": "202036",
+          "num": 36,
+          "name": "Soul Fighter Jhin",
+          "chromas": false
+        },
+        {
+          "id": "202037",
+          "num": 37,
+          "name": "Dark Cosmic Erasure Jhin",
+          "chromas": true
+        },
+        {
+          "id": "202047",
+          "num": 47,
+          "name": "Mythmaker Jhin",
+          "chromas": false
+        },
+        {
+          "id": "202055",
+          "num": 55,
+          "name": "Arcana Jhin",
+          "chromas": false
+        }
+      ],
+      "lore": "Jhin is a meticulous criminal psychopath who believes murder is art. Once an Ionian prisoner, but freed by shadowy elements within Ionia's ruling council, the serial killer now works as their cabal's assassin. Using his gun as his paintbrush, Jhin creates works of artistic brutality, horrifying victims and onlookers. He gains a cruel pleasure from putting on his gruesome theater, making him the ideal choice to send the most powerful of messages: terror.",
+      "blurb": "Jhin is a meticulous criminal psychopath who believes murder is art. Once an Ionian prisoner, but freed by shadowy elements within Ionia's ruling council, the serial killer now works as their cabal's assassin. Using his gun as his paintbrush, Jhin...",
+      "allytips": [
+        "Deadly Flourish has incredible range. When approaching a fight be sure to look ahead for enemies that could be rooted.",
+        "Your ultimate deals significantly less damage to enemies with full health. Look to pick off weakened targets as they run away.",
+        "You can still cast your spells while reloading. Use them to fill the down time."
+      ],
+      "enemytips": [
+        "Deadly Flourish only roots those hit by one of Jhin's basic attacks, traps, or allies within the last 4 seconds.",
+        "Jhin places invisible traps around the map. Watch where you step!",
+        "Jhin's attacks are quite potent, but he runs out of ammo after the 4th shot. Use this window to jump him and burst him down."
+      ],
+      "tags": ["Marksman", "Mage"],
+      "partype": "Mana",
+      "info": {
+        "attack": 10,
+        "defense": 2,
+        "magic": 6,
+        "difficulty": 6
+      },
+      "stats": {
+        "hp": 655,
+        "hpperlevel": 107,
+        "mp": 300,
+        "mpperlevel": 50,
+        "movespeed": 330,
+        "armor": 24,
+        "armorperlevel": 4.7,
+        "spellblock": 30,
+        "spellblockperlevel": 1.3,
+        "attackrange": 550,
+        "hpregen": 3.75,
+        "hpregenperlevel": 0.55,
+        "mpregen": 6,
+        "mpregenperlevel": 0.8,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 61,
+        "attackdamageperlevel": 4.4,
+        "attackspeedperlevel": 0,
+        "attackspeed": 0.625
+      },
+      "spells": [
+        {
+          "id": "JhinQ",
+          "name": "Dancing Grenade",
+          "description": "Jhin launches a magical cartridge at an enemy. It can hit up to four targets and gains damage each time it kills.",
+          "tooltip": "Jhin launches a cartridge that deals <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> before bouncing to a nearby enemy that has not been hit yet.<br /><br />The cartridge can hit a maximum of {{ tooltipmaxtargetshit }} times. Enemies that die shortly after being hit increase the damage of subsequent hits by {{ percentamponkill*100 }}%.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Total AD Ratio", "Cooldown", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ adratio*100.000000 }}% -> {{ adrationl*100.000000 }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [7, 6.5, 6, 5.5, 5],
+          "cooldownBurn": "7/6.5/6/5.5/5",
+          "cost": [40, 45, 50, 55, 60],
+          "costBurn": "40/45/50/55/60",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [550, 550, 550, 550, 550],
+          "rangeBurn": "550",
+          "image": {
+            "full": "JhinQ.png",
+            "sprite": "spell5.png",
+            "group": "spell",
+            "x": 0,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "JhinW",
+          "name": "Deadly Flourish",
+          "description": "Jhin brandishes his cane, firing a single shot with incredible range. It pierces through minions and monsters, but stops on the first champion hit. If the target was recently struck by Jhin's allies, lotus traps, or damaged by Jhin, they are rooted.",
+          "tooltip": "Jhin fires a long range shot dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> to the first champion hit and other enemies along the way.<br /><br />If this skill strikes a champion that has been damaged by an allied champion within the last {{ spottingduration }} seconds, it will <status>Root</status> them for {{ rootduration }} seconds and grant Jhin <spellName>Whisper</spellName>'s Move Speed.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Root Duration", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ rootduration }} -> {{ rootdurationNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [12, 12, 12, 12, 12],
+          "cooldownBurn": "12",
+          "cost": [50, 55, 60, 65, 70],
+          "costBurn": "50/55/60/65/70",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [3000, 3000, 3000, 3000, 3000],
+          "rangeBurn": "3000",
+          "image": {
+            "full": "JhinW.png",
+            "sprite": "spell5.png",
+            "group": "spell",
+            "x": 48,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "JhinE",
+          "name": "Captive Audience",
+          "description": "Jhin places an invisible lotus trap that blooms when walked over. It slows nearby enemies before dealing damage with an explosion of serrated petals. <br><br><font color='#FFFFFF'>Beauty in Death -</font> When Jhin kills an enemy champion, a lotus trap will bloom near their corpse.",
+          "tooltip": "<passive>Passive:</passive> Champions Jhin kills will create and detonate a Lotus Trap at their location.<br /><br /><active>Active:</active> Jhin places an invisible Lotus Trap for {{ trapduration }} minutes that creates a zone that <status>Slows</status> by {{ trapslowamount*100 }}% when stepped on by an enemy. After {{ trapdetonationtime }} seconds, the trap detonates, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>.<br /><br />This ability has 2 charges ({{ ammorechargeratetooltip }} second refresh).{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Recharge Time"],
+            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ ammorechargetime }} -> {{ ammorechargetimeNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [2, 2, 2, 2, 2],
+          "cooldownBurn": "2",
+          "cost": [30, 30, 30, 30, 30],
+          "costBurn": "30",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "2",
+          "range": [750, 750, 750, 750, 750],
+          "rangeBurn": "750",
+          "image": {
+            "full": "JhinE.png",
+            "sprite": "spell5.png",
+            "group": "spell",
+            "x": 96,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "JhinR",
+          "name": "Curtain Call",
+          "description": "Jhin channels, transforming Whisper into a shoulder-mounted mega-cannon. It is able to fire 4 super shots at extreme range that pierce through minions and monsters, but stop on the first champion impacted. Whisper cripples enemies hit, which slows them and deals execute damage. The 4th shot is perfectly crafted, epically powerful, and guaranteed to critically strike.",
+          "tooltip": "Jhin sets up and channels, enabling him to fire 4 super shots, each dealing between <physicalDamage>{{ damagecalc }}</physicalDamage> and <physicalDamage>{{ maxincreasecalc }} physical damage</physicalDamage> to the first champion hit based on their percentage missing health and <status>Slowing</status> them by {{ slowpercent*100 }}% for {{ slowduration }} seconds. The fourth shot critically strikes for {{ fourthshotmultiplier*100 }}% damage.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Cooldown"],
+            "effect": ["{{ damage }} -> {{ damageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 3,
+          "cooldown": [120, 105, 90],
+          "cooldownBurn": "120/105/90",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [25000, 25000, 25000],
+          "rangeBurn": "25000",
+          "image": {
+            "full": "JhinR.png",
+            "sprite": "spell5.png",
+            "group": "spell",
+            "x": 144,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Whisper",
+        "description": "Jhin's hand cannon, Whisper, is a precise instrument designed to deal superior damage. It fires at a fixed rate and carries only four shots. Jhin imbues the final bullet with dark magics to critically strike and deal bonus execute damage. Whenever Whisper crits, it inspires Jhin with a burst of Move Speed.",
+        "image": {
+          "full": "Jhin_P.png",
+          "sprite": "passive1.png",
+          "group": "passive",
+          "x": 144,
+          "y": 96,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

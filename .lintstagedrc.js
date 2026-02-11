@@ -93,6 +93,54 @@ export default {
 
     return commands;
   },
+  // Homelab sub-packages
+  "packages/homelab/*/src/**/*.{ts,tsx,js,jsx}": (filenames) => {
+    const packageMap = new Map();
+
+    for (const filename of filenames) {
+      const match = filename.match(/^packages\/homelab\/([^/]+)\//);
+      if (match) {
+        const packageName = match[1];
+        if (!packageMap.has(packageName)) {
+          packageMap.set(packageName, []);
+        }
+        packageMap.get(packageName).push(filename);
+      }
+    }
+
+    const commands = [];
+    for (const [packageName, files] of packageMap) {
+      const packageDir = `packages/homelab/${packageName}`;
+      const relativeFiles = files.map(f => path.relative(packageDir, f)).join(" ");
+      commands.push(`cd ${packageDir} && bunx eslint --fix ${relativeFiles}`);
+    }
+
+    return commands;
+  },
+  // Scout sub-packages
+  "packages/scout/*/src/**/*.{ts,tsx,js,jsx}": (filenames) => {
+    const packageMap = new Map();
+
+    for (const filename of filenames) {
+      const match = filename.match(/^packages\/scout\/([^/]+)\//);
+      if (match) {
+        const packageName = match[1];
+        if (!packageMap.has(packageName)) {
+          packageMap.set(packageName, []);
+        }
+        packageMap.get(packageName).push(filename);
+      }
+    }
+
+    const commands = [];
+    for (const [packageName, files] of packageMap) {
+      const packageDir = `packages/scout/${packageName}`;
+      const relativeFiles = files.map(f => path.relative(packageDir, f)).join(" ");
+      commands.push(`cd ${packageDir} && bunx eslint --fix ${relativeFiles}`);
+    }
+
+    return commands;
+  },
   // .dagger CI pipeline
   ".dagger/src/**/*.ts": (filenames) => {
     const daggerDir = ".dagger";

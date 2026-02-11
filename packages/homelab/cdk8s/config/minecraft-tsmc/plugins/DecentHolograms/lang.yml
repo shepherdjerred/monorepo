@@ -1,0 +1,89 @@
+prefix: "&8[&3DecentHolograms&8]: &7"
+no_perm: "{prefix}&cYou are not allowed to use this."
+only_player: "{prefix}&cThis action can only be executed by player."
+reloaded: "{prefix}&aSuccessfully reloaded in %1$d ms!"
+command:
+  use_help: "{prefix}Use &b/holograms help&7 to view possible commands."
+  usage: "{prefix}Usage: &b%1$s"
+  unknown_sub_command: "{prefix}Unknown sub command."
+hologram:
+  does_not_exist: "{prefix}&cHologram with that name doesn't exist."
+  already_exists: "{prefix}&cHologram with that name already exists."
+  invalid_name: "{prefix}&cInvalid name '%1$s', only use alphanumerical characters,
+    underscore and dash."
+  created: "{prefix}Hologram has been created!"
+  cloned: "{prefix}Hologram has been cloned!"
+  deleted: "{prefix}Hologram has been deleted!"
+  updated: "{prefix}Hologram has been updated!"
+  renamed: "{prefix}Hologram has been renamed! &7(&b%1$s&7 -> &b%2$s&7)"
+  teleported: "{prefix}Teleported!"
+  moved: "{prefix}Hologram has been moved!"
+  aligned: "{prefix}Hologram has been aligned!"
+  align_self: "{prefix}Cannot align a Hologram to itself!"
+  align_axis: "{prefix}That axis does not exist!"
+  down_origin_set: "{prefix}Origin has been set to &b'%1$s'&7!"
+  down_origin_does_not_exist: "{prefix}Down origin value must be either true or false!"
+  always_face_player_set: "{prefix}Always Face Player has been set to &b'%1$s'&7!"
+  always_face_player_does_not_exist: "{prefix}Always Face Player value must be either
+    true or false!"
+  facing_set: "{prefix}Facing has been set!"
+  flag_add: '{prefix}Flag &b"%1$s"&7 has been added!'
+  flag_remove: '{prefix}Flag &b"%1$s"&7 has been removed!'
+  permission_set: "{prefix}Permission has been set!"
+  permission_removed: "{prefix}Permission has been removed!"
+  display_range_set: "{prefix}Display range has been set!"
+  update_range_set: "{prefix}Update range has been set!"
+  update_interval_set: "{prefix}Update interval has been set!"
+  disabled: "{prefix}Hologram has been disabled!"
+  already_disabled: "{prefix}Hologram is already disabled!"
+  enabled: "{prefix}Hologram has been enabled!"
+  already_enabled: "{prefix}Hologram is already enabled!"
+  save_failed: "{prefix}&cHologram could not be saved. Check the console for errors!"
+page:
+  added: "{prefix}Page has been added!"
+  add_failed: "{prefix}Page has been added!"
+  inserted: "{prefix}Page has been inserted!"
+  insert_failed: "{prefix}Page has been inserted!"
+  deleted: "{prefix}Page has been deleted!"
+  swapped: "{prefix}Pages swapped!"
+  swap_self: "{prefix}&cCannot swap a page with itself!"
+  swap_failed: "{prefix}&cFailed to swap pages."
+  does_not_exist: "{prefix}&cThat page doesn't exist."
+action:
+  click_type_does_not_exist: "{prefix}&cThat click type doesn't exist."
+  does_not_exist: "{prefix}&cThat action doesn't exist."
+  added: "{prefix}Action has been added."
+  removed: "{prefix}Action has been removed."
+  cleared: "{prefix}Actions have been cleared."
+  no_actions: "{prefix}There are no actions set on that click type."
+line:
+  added: "{prefix}Line has been added!"
+  add_failed: "{prefix}&cFailed to add line."
+  set: "{prefix}Line has been set!"
+  edit: "{prefix}&a&l&nClick to edit the line!"
+  edit_hover: "&r%1$s"
+  inserted: "{prefix}Line has been inserted!"
+  insert_failed: "{prefix}&cFailed to insert line."
+  removed: "{prefix}Line has been removed!"
+  swapped: "{prefix}Lines has been swapped!"
+  swap_self: "{prefix}&cCannot swap a line with itself!"
+  swap_failed: "{prefix}&cFailed to swap lines."
+  aligned: "{prefix}Line has been aligned!"
+  align_self: "{prefix}Cannot align a Line to itself!"
+  align_axis: "{prefix}That axis does not exist!"
+  height_set: "{prefix}Line height has been set!"
+  offsetx_set: "{prefix}Line OffsetX has been set!"
+  offsetz_set: "{prefix}Line OffsetZ has been set!"
+  flag_added: '{prefix}Flag &b"%1$s"&7 has been added!'
+  flag_removed: '{prefix}Flag &b"%1$s"&7 has been removed!'
+  does_not_exist: "{prefix}&cThat line doesn't exist."
+  permission_set: "{prefix}Permission has been set!"
+  permission_removed: "{prefix}Permission has been removed!"
+  facing_set: "{prefix}Facing has been set!"
+feature:
+  does_not_exist: '{prefix}&cFeature "%1$s" does not exist.'
+  enabled: '{prefix}Feature &b"%1$s"&7 has been enabled!'
+  already_enabled: '{prefix}&cFeature "%1$s" is already enabled!'
+  disabled: '{prefix}Feature &b"%1$s"&7 has been disabled!'
+  already_disabled: '{prefix}&cFeature "%1$s" is already disabled!'
+  reloaded: '{prefix}Feature &b"%1$s"&7 has been reloaded!'

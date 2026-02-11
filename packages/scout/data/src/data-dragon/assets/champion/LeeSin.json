@@ -1,0 +1,399 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "LeeSin": {
+      "id": "LeeSin",
+      "key": "64",
+      "name": "Lee Sin",
+      "title": "the Blind Monk",
+      "image": {
+        "full": "LeeSin.png",
+        "sprite": "champion2.png",
+        "group": "champion",
+        "x": 0,
+        "y": 48,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "64000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "64001",
+          "num": 1,
+          "name": "Traditional Lee Sin",
+          "chromas": false
+        },
+        {
+          "id": "64002",
+          "num": 2,
+          "name": "Acolyte Lee Sin",
+          "chromas": false
+        },
+        {
+          "id": "64003",
+          "num": 3,
+          "name": "Dragon Fist Lee Sin",
+          "chromas": true
+        },
+        {
+          "id": "64004",
+          "num": 4,
+          "name": "Muay Thai Lee Sin",
+          "chromas": true
+        },
+        {
+          "id": "64005",
+          "num": 5,
+          "name": "Pool Party Lee Sin",
+          "chromas": false
+        },
+        {
+          "id": "64006",
+          "num": 6,
+          "name": "SKT T1 Lee Sin",
+          "chromas": false
+        },
+        {
+          "id": "64010",
+          "num": 10,
+          "name": "Knockout Lee Sin",
+          "chromas": false
+        },
+        {
+          "id": "64011",
+          "num": 11,
+          "name": "God Fist Lee Sin",
+          "chromas": false
+        },
+        {
+          "id": "64012",
+          "num": 12,
+          "name": "Playmaker Lee Sin",
+          "chromas": true
+        },
+        {
+          "id": "64027",
+          "num": 27,
+          "name": "Nightbringer Lee Sin",
+          "chromas": false
+        },
+        {
+          "id": "64028",
+          "num": 28,
+          "name": "Prestige Nightbringer Lee Sin",
+          "chromas": false
+        },
+        {
+          "id": "64029",
+          "num": 29,
+          "name": "FPX Lee Sin",
+          "chromas": false
+        },
+        {
+          "id": "64031",
+          "num": 31,
+          "name": "Storm Dragon Lee Sin",
+          "chromas": false
+        },
+        {
+          "id": "64039",
+          "num": 39,
+          "name": "Prestige Nightbringer Lee Sin (2022)",
+          "chromas": false
+        },
+        {
+          "id": "64041",
+          "num": 41,
+          "name": "Zenith Games Lee Sin",
+          "chromas": false
+        },
+        {
+          "id": "64051",
+          "num": 51,
+          "name": "Heavenscale Lee Sin",
+          "chromas": false
+        },
+        {
+          "id": "64052",
+          "num": 52,
+          "name": "Divine Heavenscale Lee Sin",
+          "chromas": false
+        },
+        {
+          "id": "64068",
+          "num": 68,
+          "name": "T1 Lee Sin",
+          "chromas": false
+        },
+        {
+          "id": "64072",
+          "num": 72,
+          "name": "Inkshadow Lee Sin",
+          "chromas": false
+        }
+      ],
+      "lore": "A master of Ionia's ancient martial arts, Lee Sin is a principled fighter who channels the essence of the dragon spirit to face any challenge. Though he lost his sight many years ago, the warrior-monk has devoted his life to protecting his homeland against any who would dare upset its sacred balance. Enemies who underestimate his meditative demeanor will endure his fabled burning fists and blazing roundhouse kicks.",
+      "blurb": "A master of Ionia's ancient martial arts, Lee Sin is a principled fighter who channels the essence of the dragon spirit to face any challenge. Though he lost his sight many years ago, the warrior-monk has devoted his life to protecting his homeland...",
+      "allytips": [
+        "Use Sonic Wave before Dragon's Rage so you can chase the target with Resonating Strike.",
+        "Take advantage of Flurry by weaving in basic attacks between spell casts - this maximizes damage output and minimizes Energy loss.",
+        "Self-casting Safeguard and using Iron Will are powerful tools for killing neutral monsters (in the jungle)."
+      ],
+      "enemytips": [
+        "Stay spread out to minimize the impact of Lee Sin's ultimate, Dragon's Rage.",
+        "Lee Sin has powerful tools to combat physical damage in Iron Will and Cripple but he is still vulnerable to magic damage.",
+        "Lee Sin relies heavily on following up with his abilities. Use disables to prevent him from chaining together his abilities and attacks."
+      ],
+      "tags": ["Fighter", "Assassin"],
+      "partype": "Energy",
+      "info": {
+        "attack": 8,
+        "defense": 5,
+        "magic": 3,
+        "difficulty": 6
+      },
+      "stats": {
+        "hp": 645,
+        "hpperlevel": 108,
+        "mp": 200,
+        "mpperlevel": 0,
+        "movespeed": 345,
+        "armor": 36,
+        "armorperlevel": 4.5,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
+        "attackrange": 125,
+        "hpregen": 7.5,
+        "hpregenperlevel": 0.7,
+        "mpregen": 50,
+        "mpregenperlevel": 0,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 66,
+        "attackdamageperlevel": 3.7,
+        "attackspeedperlevel": 3,
+        "attackspeed": 0.651
+      },
+      "spells": [
+        {
+          "id": "LeeSinQOne",
+          "name": "Sonic Wave / Resonating Strike",
+          "description": "Sonic Wave: Lee Sin projects a discordant wave of sound to locate his enemies, dealing physical damage to the first enemy it encounters. If Sonic Wave hits, Lee Sin can cast Resonating Strike for the next 3 seconds.<br>Resonating Strike: Lee Sin dashes to the enemy hit by Sonic Wave, dealing physical damage based on the target's missing Health.",
+          "tooltip": "Lee Sin projects a discordant wave of sound, dealing <physicalDamage>{{ initialdamage }} physical damage</physicalDamage> to the first enemy hit, granting <keywordStealth>True Sight</keywordStealth> of them, and allows Lee Sin to <recast>Recast</recast> for the next {{ reactivatetime }} seconds.<br /><br /><recast>Recast:</recast> Lee Sin dashes to the enemy hit by the sound wave, dealing between <physicalDamage>{{ recastdamage }} to {{ empowereddamage }} physical damage</physicalDamage> scaling with the target's missing Health. {{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Sonic Wave Damage",
+              "Resonating Strike Minimum Base Damage",
+              "Resonating Strike Maximum Base Damage",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ q1basedamage }} -> {{ q1basedamageNL }}",
+              "{{ q2basedamage }} -> {{ q2basedamageNL }}",
+              "{{ q2basedamage*2.000000 }} -> {{ q2basedamagenl*2.000000 }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [10, 9, 8, 7, 6],
+          "cooldownBurn": "10/9/8/7/6",
+          "cost": [50, 50, 50, 50, 50],
+          "costBurn": "50",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [1100, 1100, 1100, 1100, 1100],
+          "rangeBurn": "1100",
+          "image": {
+            "full": "LeeSinQOne.png",
+            "sprite": "spell7.png",
+            "group": "spell",
+            "x": 384,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "LeeSinWOne",
+          "name": "Safeguard / Iron Will",
+          "description": "Safeguard: Lee Sin rushes to target ally, shielding himself from damage. If the ally is a champion, they are also shielded. After using Safeguard, Lee Sin can cast Iron Will.<br>Iron Will: Lee Sin's intense training allows him to thrive in battle. Lee Sin gains Life Steal and Spell Vamp.",
+          "tooltip": "Lee Sin dashes to an ally or ward. If the target is a champion, Lee Sin grants them and himself <shield>{{ shieldamount }} Shield</shield> for {{ shieldduration }} seconds and reduces this Ability's Cooldown by {{ w1cooldownrecovered*100 }}%. Lee Sin may <recast>Recast</recast> for the next {{ w1reactivatetime }} seconds.<br /><br /><recast>Recast:</recast> Lee Sin gains {{ lifestealandspellvamp }}% Life Steal and Spell Vamp for {{ lifestealandspellvamptime }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Safeguard Shield Absorption", "Iron Will Lifesteal / Spell Vamp %"],
+            "effect": [
+              "{{ shieldvalue }} -> {{ shieldvalueNL }}",
+              "{{ lifestealandspellvamp }}% -> {{ lifestealandspellvampNL }}%"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [12, 12, 12, 12, 12],
+          "cooldownBurn": "12",
+          "cost": [50, 50, 50, 50, 50],
+          "costBurn": "50",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [700, 700, 700, 700, 700],
+          "rangeBurn": "700",
+          "image": {
+            "full": "LeeSinWOne.png",
+            "sprite": "spell7.png",
+            "group": "spell",
+            "x": 432,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "LeeSinEOne",
+          "name": "Tempest / Cripple",
+          "description": "Tempest: Lee Sin smashes the ground, sending out a shockwave that deals magic damage and reveals enemy units hit. If Tempest hits an enemy, Lee Sin can cast cripple.<br>Cripple: Lee Sin cripples nearby enemies damaged by Tempest, reducing their Move Speed. Move Speed recovers gradually over the duration.",
+          "tooltip": "Lee Sin smashes the ground, sending out a shockwave that deals <magicDamage>{{ initialdamage }} magic damage</magicDamage> and reveals them for {{ slowduration }} seconds. If this hits an enemy, Lee Sin can <recast>Recast</recast> for the next {{ reactivatetime }} seconds.<br /><br /><recast>Recast:</recast> Lee Sin <status>Slows</status> nearby enemies struck by the shockwave by {{ slowamount }}% decaying over {{ slowduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Tempest Damage", "Cripple Slow"],
+            "effect": ["{{ e1damage }} -> {{ e1damageNL }}", "{{ slowamount }}% -> {{ slowamountNL }}%"]
+          },
+          "maxrank": 5,
+          "cooldown": [8, 8, 8, 8, 8],
+          "cooldownBurn": "8",
+          "cost": [50, 50, 50, 50, 50],
+          "costBurn": "50",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [450, 450, 450, 450, 450],
+          "rangeBurn": "450",
+          "image": {
+            "full": "LeeSinEOne.png",
+            "sprite": "spell7.png",
+            "group": "spell",
+            "x": 0,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "LeeSinR",
+          "name": "Dragon's Rage",
+          "description": "Lee Sin performs a powerful roundhouse kick launching his target back, dealing physical damage to the target and any enemies they collide with. Enemies the target collides with are knocked into the air for a short duration. This technique was taught to him by Jesse Perring, although Lee Sin does not kick players off the map.",
+          "tooltip": "Lee Sin performs a powerful roundhouse kick <status>Knocking Back</status> an enemy champion and dealing <physicalDamage>{{ damage }} physical damage</physicalDamage>.<br /><br />Enemies the target collides with are briefly <status>Knocked Up</status> and take <physicalDamage>{{ damage }} plus {{ percenthpcarrythrough }}% of the kicked enemy's bonus Health as physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Bonus Health Damage", "Cooldown"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ percenthpcarrythrough }}% -> {{ percenthpcarrythroughNL }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [110, 85, 60],
+          "cooldownBurn": "110/85/60",
+          "cost": [0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [375, 375, 375],
+          "rangeBurn": "375",
+          "image": {
+            "full": "LeeSinR.png",
+            "sprite": "spell7.png",
+            "group": "spell",
+            "x": 48,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        }
+      ],
+      "passive": {
+        "name": "Flurry",
+        "description": "After Lee Sin uses an ability, his next 2 basic attacks gain Attack Speed and return Energy.",
+        "image": {
+          "full": "LeeSinPassive.png",
+          "sprite": "passive2.png",
+          "group": "passive",
+          "x": 0,
+          "y": 48,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

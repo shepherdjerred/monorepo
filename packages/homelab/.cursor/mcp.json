@@ -1,0 +1,37 @@
+{
+  "mcpServers": {
+    "grafana": {
+      "command": "go",
+      "args": [
+        "run",
+        "github.com/grafana/mcp-grafana/cmd/mcp-grafana@latest",
+        "--disable-oncall",
+        "--disable-incident",
+        "--disable-admin",
+        "--disable-navigation",
+        "--disable-pyroscope"
+      ],
+      "env": {
+        "GRAFANA_URL": "http://prometheus-grafana.prometheus"
+      }
+    },
+    "pagerduty-mcp": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": ["pagerduty-mcp"]
+    },
+    "Home Assistant": {
+      "command": "uvx",
+      "args": [
+        "mcp-proxy",
+        "--transport=streamablehttp",
+        "--stateless",
+        "https://homeassistant.tailnet-1a49.ts.net/api/mcp"
+      ]
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"]
+    }
+  }
+}

@@ -1,0 +1,25 @@
+!jest.config.js
+node_modules
+.idea
+*.iml
+dist/
+*.tar
+*.tsbuildinfo
+.eslintcache
+
+# MCP credentials cache
+.cursor/cache/
+.claude/settings.local.json
+
+# Worktree initialization marker
+.git/worktree-initialized
+
+# Secrets
+.env
+
+# OpenTofu / Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfplan

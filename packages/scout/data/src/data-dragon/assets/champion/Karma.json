@@ -1,0 +1,382 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Karma": {
+      "id": "Karma",
+      "key": "43",
+      "name": "Karma",
+      "title": "the Enlightened One",
+      "image": {
+        "full": "Karma.png",
+        "sprite": "champion1.png",
+        "group": "champion",
+        "x": 336,
+        "y": 96,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "43000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "43001",
+          "num": 1,
+          "name": "Sun Goddess Karma",
+          "chromas": false
+        },
+        {
+          "id": "43002",
+          "num": 2,
+          "name": "Sakura Karma",
+          "chromas": false
+        },
+        {
+          "id": "43003",
+          "num": 3,
+          "name": "Traditional Karma",
+          "chromas": false
+        },
+        {
+          "id": "43004",
+          "num": 4,
+          "name": "Order of the Lotus Karma",
+          "chromas": false
+        },
+        {
+          "id": "43005",
+          "num": 5,
+          "name": "Warden Karma",
+          "chromas": false
+        },
+        {
+          "id": "43006",
+          "num": 6,
+          "name": "Winter Wonder Karma",
+          "chromas": false
+        },
+        {
+          "id": "43007",
+          "num": 7,
+          "name": "Conqueror Karma",
+          "chromas": true
+        },
+        {
+          "id": "43008",
+          "num": 8,
+          "name": "Dark Star Karma",
+          "chromas": true
+        },
+        {
+          "id": "43019",
+          "num": 19,
+          "name": "Dawnbringer Karma",
+          "chromas": false
+        },
+        {
+          "id": "43026",
+          "num": 26,
+          "name": "Odyssey Karma",
+          "chromas": false
+        },
+        {
+          "id": "43027",
+          "num": 27,
+          "name": "Ruined Karma",
+          "chromas": true
+        },
+        {
+          "id": "43044",
+          "num": 44,
+          "name": "Tranquility Dragon Karma",
+          "chromas": false
+        },
+        {
+          "id": "43054",
+          "num": 54,
+          "name": "Faerie Queen Karma",
+          "chromas": false
+        },
+        {
+          "id": "43061",
+          "num": 61,
+          "name": "Infernal Karma",
+          "chromas": false
+        },
+        {
+          "id": "43070",
+          "num": 70,
+          "name": "Spirit Blossom Karma",
+          "chromas": false
+        }
+      ],
+      "lore": "No mortal exemplifies the spiritual traditions of Ionia more than Karma. She is the living embodiment of an ancient soul reincarnated countless times, carrying all her accumulated memories into each new life, and blessed with power that few can comprehend. She has done her best to guide her people in recent times of crisis, though she knows that peace and harmony may come only at a considerable cost—both to her, and to the land she holds most dear.",
+      "blurb": "No mortal exemplifies the spiritual traditions of Ionia more than Karma. She is the living embodiment of an ancient soul reincarnated countless times, carrying all her accumulated memories into each new life, and blessed with power that few can...",
+      "allytips": [
+        "Gathering Fire rewards aggressive play. Look to land abilities and basic attacks on your opponent to lower Mantra's cooldown and stay on the offensive.",
+        "When using Focused Resolve, slow your opponents with Inner Flame or speed yourself up with Inspire if you're having trouble sticking to a target. ",
+        "Don't be too conservative with Mantra. Gathering Fire is strongest in teamfights, making it easy to recharge Mantra multiple times."
+      ],
+      "enemytips": [
+        "Karma's passive lowers her Mantra cooldown when she hits enemy champions with abilities and basic attacks. Deny her from getting free hits on you.",
+        "Karma's Soulflare erupts for bonus damage in the area in which it's placed. React quickly and escape the circle to avoid taking heavy damage.",
+        "Focused Resolve is a strong disengage tool. Create distance to avoid being rooted and seek to engage afterwards."
+      ],
+      "tags": ["Mage", "Support"],
+      "partype": "Mana",
+      "info": {
+        "attack": 1,
+        "defense": 7,
+        "magic": 8,
+        "difficulty": 5
+      },
+      "stats": {
+        "hp": 630,
+        "hpperlevel": 109,
+        "mp": 374,
+        "mpperlevel": 40,
+        "movespeed": 335,
+        "armor": 28,
+        "armorperlevel": 5,
+        "spellblock": 30,
+        "spellblockperlevel": 1.3,
+        "attackrange": 525,
+        "hpregen": 5.5,
+        "hpregenperlevel": 0.55,
+        "mpregen": 13,
+        "mpregenperlevel": 0.8,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 51,
+        "attackdamageperlevel": 3.3,
+        "attackspeedperlevel": 2.3,
+        "attackspeed": 0.625
+      },
+      "spells": [
+        {
+          "id": "KarmaQ",
+          "name": "Inner Flame",
+          "description": "Karma sends forth a ball of spirit energy that explodes and deals damage upon hitting an enemy unit.<br><br>Mantra Bonus: In addition to the explosion, Mantra increases the destructive power of her Inner Flame, creating a cataclysm which deals damage after a short delay.",
+          "tooltip": "Karma fires a blast of energy, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to the first target hit and surrounding enemies, and <status>Slowing</status> them by {{ slowamount*-100 }}% for {{ slowduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [9, 8, 7, 6, 5],
+          "cooldownBurn": "9/8/7/6/5",
+          "cost": [40, 50, 60, 70, 80],
+          "costBurn": "40/50/60/70/80",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [950, 950, 950, 950, 950],
+          "rangeBurn": "950",
+          "image": {
+            "full": "KarmaQ.png",
+            "sprite": "spell6.png",
+            "group": "spell",
+            "x": 288,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "KarmaSpiritBind",
+          "name": "Focused Resolve",
+          "description": "Karma creates a tether between herself and a targeted enemy, dealing damage and revealing them. If the tether is not broken, the enemy will be rooted and damaged again.<br><br>Mantra Bonus: Karma strengthens the link, healing herself and extending the root duration.",
+          "tooltip": "Karma tethers herself to a champion or jungle monster, dealing <magicDamage>{{ initialdamage }} magic damage</magicDamage> and revealing them for {{ tetherduration }}s. If the tether remains unbroken, the target takes <magicDamage>{{ initialdamage }} magic damage</magicDamage> again and is <status>Rooted</status> for {{ rootduration }}s.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Root Duration", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ rootduration }} -> {{ rootdurationNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [12, 12, 12, 12, 12],
+          "cooldownBurn": "12",
+          "cost": [50, 55, 60, 65, 70],
+          "costBurn": "50/55/60/65/70",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [675, 675, 675, 675, 675],
+          "rangeBurn": "675",
+          "image": {
+            "full": "KarmaSpiritBind.png",
+            "sprite": "spell6.png",
+            "group": "spell",
+            "x": 336,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "KarmaSolKimShield",
+          "name": "Inspire",
+          "description": "Karma summons a protective shield that absorbs incoming damage and increases the Move Speed of the protected ally.<br><br>Mantra Bonus: Energy radiates out from her target, strengthening the initial shield and applying Inspire to nearby allied champions.",
+          "tooltip": "Karma grants an allied champion <shield>{{ totalshield }} Shield</shield> for {{ shieldduration }}s and <speed>{{ movespeed*100 }}% Move Speed</speed> for {{ movespeedduration }}s.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Shield Amount", "Cooldown", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ baseshield }} -> {{ baseshieldNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [10, 9.5, 9, 8.5, 8],
+          "cooldownBurn": "10/9.5/9/8.5/8",
+          "cost": [50, 55, 60, 65, 70],
+          "costBurn": "50/55/60/65/70",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [800, 800, 800, 800, 800],
+          "rangeBurn": "800",
+          "image": {
+            "full": "KarmaSolKimShield.png",
+            "sprite": "spell6.png",
+            "group": "spell",
+            "x": 384,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "KarmaMantra",
+          "name": "Mantra",
+          "description": "Karma empowers her next ability to do an additional effect. Mantra is available at level 1 and does not require a skill point.",
+          "tooltip": "Karma empowers her next Ability used within 8 seconds.<br /><li><spellName>Inner Flame</spellName>: Deals an additional <magicDamage>{{ rqimpactdamage }} magic damage</magicDamage> and leaves behind a circle of flame, <status>Slowing</status> enemies and dealing an additional <magicDamage>{{ rqfielddamage }} magic damage</magicDamage>.<li><spellName>Focused Resolve</spellName>: Karma will restore <healing>{{ rwhealamount }} missing Health</healing> at the beginning and end of the tether, and <status>Root</status> for {{ rwbonusroot }}s longer.<li><spellName>Inspire</spellName>: Karma shields her target for <shield>{{ rebonusshield }} more Shield</shield>, and also shields allies near her target, granting them <shield>{{ rebonusshieldarea }} Shield</shield> and <speed>{{ removespeed*100 }}% Move Speed</speed>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Soulflare Impact",
+              "Soulflare Circle Damage",
+              "Renewal Root Extension",
+              "Defiance Shield",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ qbonusdamage }} -> {{ qbonusdamageNL }}",
+              "{{ qdetonationdamage }} -> {{ qdetonationdamageNL }}",
+              "{{ rwbonusroot }} -> {{ rwbonusrootNL }}",
+              "{{ ebonusshield }} -> {{ ebonusshieldNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 4,
+          "cooldown": [40, 38, 36, 34],
+          "cooldownBurn": "40/38/36/34",
+          "cost": [0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [1100, 1100, 1100, 1100],
+          "rangeBurn": "1100",
+          "image": {
+            "full": "KarmaMantra.png",
+            "sprite": "spell6.png",
+            "group": "spell",
+            "x": 432,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        }
+      ],
+      "passive": {
+        "name": "Gathering Fire",
+        "description": "Karma's damaging abilities will reduce the cooldown of Mantra.",
+        "image": {
+          "full": "Karma_Passive.png",
+          "sprite": "passive1.png",
+          "group": "passive",
+          "x": 336,
+          "y": 96,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

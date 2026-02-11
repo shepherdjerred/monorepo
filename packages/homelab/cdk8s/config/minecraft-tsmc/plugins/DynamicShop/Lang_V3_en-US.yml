@@ -1,0 +1,533 @@
+START_PAGE:
+  EDITOR_TITLE: §3Edit icon
+  EDIT_NAME: §fRename
+  EDIT_LORE: §fChange lore
+  EDIT_ICON: §fChange icon
+  EDIT_ACTION: §fChange command
+  SHOP_SHORTCUT: §fCreate shop button
+  CREATE_DECO: §fCreate decorative button
+  ENTER_SHOP_NAME: Please enter shop name
+  DEFAULT_SHOP_LORE: "§f§nClick: go to shop"
+  ITEM_MOVE_LORE: "§eRMB: Move"
+  ITEM_COPY_LORE: "§eRMB: Copy"
+  ITEM_REMOVE_LORE: "§eShift LMB: Remove"
+  ITEM_EDIT_LORE: "§eShift RMB: Edit"
+  REMOVE: §fRemove
+  REMOVE_LORE: §fRemove this button from the start page.
+  ENTER_NAME: Enter a new name for the button.
+  ENTER_LORE: Enter a new description for the button.
+  ENTER_ICON: Enter the name of the item to be used as the icon for the button. (English,
+    case insensitive)
+  ENTER_ACTION: Enter the command without '/'. This command is executed when the button
+    is pressed.
+  ENTER_COLOR: Enter a color for the decorative button. (English)
+  SHOP_LIST_TITLE: §3Shop List
+  SHOP_LIST:
+    PAGE_TITLE: §f{curPage}/{maxPage} Page
+    PAGE_LORE: |-
+      §eLMB: Previous page
+      §eRMB: Next page
+COLOR_PICKER_TITLE: §3Color Picker
+SHOP:
+  TRADE_LORE: "§f§nClick: Trade"
+  BUY_PRICE: "§fBuy: {num}"
+  SELL_PRICE: "§fSell: {num}"
+  BUY_PRICE_DISCOUNTED: "§fBuy: §8§m{num}§r §a{num2}"
+  SELL_PRICE_DISCOUNTED: "§fSell: §8§m{num}§r §c{num2}"
+  BUY_PRICE_EXP: "§fBuy: {num}Exp"
+  SELL_PRICE_EXP: "§fSell: {num}Exp"
+  BUY_PRICE_DISCOUNTED_EXP: "§fBuy: §8§m{num}Exp§r §a{num2}Exp"
+  SELL_PRICE_DISCOUNTED_EXP: "§fSell: §8§m{num}Exp§r §c{num2}Exp"
+  BUY_PRICE_PP: "§fBuy: {num}PP"
+  SELL_PRICE_PP: "§fSell: {num}PP"
+  BUY_PRICE_DISCOUNTED_PP: "§fBuy: §8§m{num}PP§r §a{num2}PP"
+  SELL_PRICE_DISCOUNTED_PP: "§fSell: §8§m{num}PP§r §c{num2}PP"
+  BUY_PRICE_JP: "§fBuy: {num}JP"
+  SELL_PRICE_JP: "§fSell: {num}JP"
+  BUY_PRICE_DISCOUNTED_JP: "§fBuy: §8§m{num}JP§r §a{num2}JP"
+  SELL_PRICE_DISCOUNTED_JP: "§fSell: §8§m{num}JP§r §c{num2}JP"
+  STOCK: "§8Stock: {num}"
+  STOCK_2: "§8Stock: {stock}/{max_stock}"
+  INF_STOCK: §8Infinite
+  STATIC_PRICE: §8[Fixed price]
+  STACKS: §8{num} Stacks
+  ITEM_MOVE_LORE: "§eRMB: Move"
+  ITEM_COPY_LORE: "§eRMB: Copy"
+  ITEM_EDIT_LORE: "§eShiftRMB: Edit"
+  DECO_DELETE_LORE: "§eShiftRMB: Remove"
+  PAGE_TITLE: §f{curPage}/{maxPage} Page
+  PAGE_LORE_V2: |-
+    §f§nLMB: Previous page
+    §f§nRMB: Next page
+    §7Clicking on your item will
+    §7take you to the page where
+    §7that item is located.
+  GO_TO_PAGE_EDITOR: "§eShift RMB: Page Editor"
+  ITEM_MOVE_SELECTED: Item selected. Right-click on an empty field to move it.
+  PERMISSION: "§fPermission:"
+  PERMISSION_ITEM: §7 - {permission}
+  FLAGS: "§eFlag:"
+  FLAGS_ITEM: §e - {flag}
+  SHOP_BAL_INF: §fUnlimited
+  SHOP_BAL: §fShop account balance
+  SHOP_LOCATION: "§fShop location: x {x}, y {y}, z {z}"
+  SHOP_LOCATION_B: "§fShop location: "
+  SHOP_INFO_DASH: "§7 - "
+  DISABLED: §cDisabled§8|§f
+  INCOMPLETE_DATA: INCOMPLETE DATA
+  INCOMPLETE_DATA_Lore: "This item is not visible\nto non-op users.\nIndex: "
+  TRADE_LIMIT_BUY: "§aPurchase limit: {num}left"
+  TRADE_LIMIT_SELL: "§aSales limit: {num}left"
+  TRADE_LIMIT_TIMER: "§aNext reset: {time}"
+  CLICK_TO_ADD: "§eClick: Add"
+SHOP_SETTING_TITLE: §3Shop Settings
+SHOP_SETTING:
+  LOG_TOGGLE_LORE: "§eRMB: Log Viewer"
+  LOG_PRINT_CONSOLE: §fPrint log to console
+  LOG_PRINT_ADMIN: §fPrint log to admin
+  MAX_PAGE: §fMax page
+  MAX_PAGE_LORE: §fSets the maximum page for the shop.
+  BACKGROUND: §fBackground color
+  BACKGROUND_LORE: "§eClick: Change color"
+  L_R_SHIFT: "§eLMB: -1 RMB: +1 Shift: x5"
+  FLAG: §fFlag
+  SHOP_SETTINGS_LORE: "§eRMB: Shop Settings"
+  SIGN_SHOP_LORE: §fOnly accessible via sign.
+  LOCAL_SHOP_LORE: §fMust visit actual store locations.
+  DELIVERY_CHARGE_LORE: "§fYou can pay for delivery without \n§fhaving to go to the\
+    \ shop location to transact."
+  SELECTED: §2Selected
+  CURRENCY: "§fCurrency Type: "
+  VAULT_LORE: §fThis is the default.
+  EXP_LORE: §fTrade with the player's experience points.
+  JOB_POINT_LORE: "§fTrade with job points. \n§fRequires 'Jobs Reborn' plugin"
+  PLAYER_POINT_LORE: "§fTrade with player points. \n§fRequires 'Player point' plugin"
+  SHOW_VALUE_CHANGE_LORE: §fShows the amount of change in price.
+  HIDE_STOCK: §fHide stock.
+  HIDE_PRICING_TYPE: §fHide price type.
+  HIDE_SHOP_BALANCE: §fHide shop account balance.
+  SHOW_MAX_STOCK: §fShow max stock.
+  HIDDEN_IN_COMMAND: |-
+    §fDon't show this store
+    §fin command autocomplete.
+  INTEGER_ONLY: |-
+    §fThe purchase price will be rounded up.
+    §fThe sale price will be rounded down.
+  PERMISSION: §fPermission
+  STATE: §fState
+  STATE_ENABLE: §aEnable
+  STATE_DISABLE: §cDisable
+  ROTATION_EDITOR: "§fRotation: "
+  ROTATION_EDITOR_LORE: "§eClick: Rotation editor"
+  COMMAND_TOGGLE: §fCommand
+  COMMAND_TOGGLE_LORE: |-
+    §fExecutes server commands
+    §fwhen a store transaction occurs.
+  COMMAND_SELL: §fSell Command
+  COMMAND_BUY: §fBuy Command
+  COMMAND_LORE1: "§eLMB: Set"
+  COMMAND_LORE3: "§eShift RMB: Delete last item"
+ROTATION_EDITOR_TITLE: §3Rotation Editor
+ROTATION_EDITOR:
+  ENABLED: §aEnabled
+  DISABLED: §cDisabled
+  CLICK_TO_ENABLE: "§eLMB: Enable"
+  CLICK_TO_DISABLE: "§eLMB: Disable"
+  CURRENT_TIME: "§fCurrent time: "
+  CURRENTLY_IN_USE: §a[Currently in use]
+  NEXT_ROTATION: "§fNext rotation: "
+  PERIOD: §fPeriod
+  PERIOD_LORE_V2: "§eLMB: -1h, RMB: +1h, Shift: x10"
+  TIMER: §fTimer adjustment
+  TIMER_LORE_V2: "§eLMB: -10m, RMB: +10m, Shift: x6"
+  HOUR: §f{0}hours
+  UNSAVED_CHANGES: §c§oUnsaved changes
+  APPLY_CHANGES: §fApply changes
+  APPLY_CHANGES_LORE: |-
+    §eLMB: Save changes
+    §eRMB: Reset Changes
+  APPLY_ROTATION: "§eLMB: Apply now"
+  OPEN: "§eLMB: Open"
+  CREATE: "§eLMB: Create empty"
+  COPY_AS_NEW: "§eRMB: Copy as new"
+  DELETE: "§eShift RMB: §cDelete"
+  REAPPLY: "§eShift LMB: Reapply"
+  MOVE: "§eRMB: Move"
+ITEM_SETTING_TITLE: §3Item Settings
+ITEM_SETTING:
+  VALUE_BUY: "§fPurchase value: "
+  VALUE_SELL: "§fSales value: "
+  PRICE: "§fBuy: "
+  SELL_PRICE: "§fSell: "
+  PRICE_MIN: "§fMinimum price: "
+  PRICE_MAX: "§fMaximum price: "
+  MEDIAN: "§fMedian: "
+  STOCK: "§fStock: "
+  MAX_STOCK: "§fMax stock: "
+  MAX_STOCK_LORE: |-
+    §fIf the stock exceeds this,
+    §fthe shop will refuse to purchase.
+  INF_STOCK: Infinite stock
+  STATIC_PRICE: Fixed price
+  UNLIMITED: Unlimited
+  MEDIAN_HELP: |-
+    §fThe smaller the median,
+    §fthe steeper the price change.
+  TAX_IGNORED: Sales tax settings are ignored.
+  RECOMMEND: §fApply recommended values
+  DISCOUNT: §fDiscount
+  DISCOUNT_LORE: |-
+    §fDiscount rate: {num}%
+    §eLMB: +10, RMB: -10
+  DISCOUNT_LORE_2: |-
+    §fDiscount rate: {num}%
+    §eLMB: -10, RMB: +10
+  DONE: §fDone
+  DONE_LORE: §fDone!
+  ROUND_DOWN: §fRound down
+  SET_TO_MEDIAN: §fSet to median
+  SET_TO_STOCK: §fSet to stock
+  SET_TO_VALUE: §fSet to value
+  CLOSE: §fClose
+  CLOSE_LORE: "§f§nClick: Close"
+  REMOVE: §cRemove
+  REMOVE_LORE: §fRemove this item from the shop.
+  BUY: "§3§lBuy: {num}"
+  SELL: "§3§lSell: {num}"
+  TRADE_LIMIT_SELL: §fSales limit per player
+  TRADE_LIMIT_SELL_LORE: |-
+    §f{num}
+    §eLMB: -1, RMB: +1, Shift = x10
+  TRADE_LIMIT_BUY: §fPurchase limit per player
+  TRADE_LIMIT_BUY_LORE: |-
+    §f{num}
+    §eLMB: -1, RMB: +1, Shift = x10
+  TRADE_LIMIT_INTERVAL: §fTrading volume limit reset cycle
+  TRADE_LIMIT_INTERVAL_LORE: |-
+    §fInterval: {interval}
+    §fNext reset: {time}
+    §eLMB: -1h, RMB: +1h, Shift = x12
+  TRADE_LIMIT_TIMER: §fAdjust Timer
+  TRADE_LIMIT_TIMER_LORE: |-
+    §f{num}
+    §fNext reset: {time}
+    §eLMB: -1h, RMB: +1h, Shift = x12
+TRADE_TITLE: §3Trade
+TRADE:
+  TOGGLE_SELLABLE: "§eClick: Sale only toggle"
+  TOGGLE_BUYABLE: "§eClick: Purchase Only Toggle"
+  BUY_ONLY_LORE: §fThis item cannot be sold.
+  SELL_ONLY_LORE: §fThis item cannot be purchased.
+  BALANCE: §3My balance
+  PRICE: "§fBuy: {num}"
+  SELL_PRICE: "§fSell: {num}"
+  PRICE_DISCOUNTED: "§fBuy: §8§m{num}§r §a{num2}"
+  SELL_PRICE_DISCOUNTED: "§fSell: §8§m{num}§r §c{num2}"
+  PRICE_EXP: "§fBuy: {num}EXP"
+  SELL_PRICE_EXP: "§fSell: {num}EXP"
+  PRICE_DISCOUNTED_EXP: "§fBuy: §8§m{num}EXP§r §a{num2}EXP"
+  SELL_PRICE_DISCOUNTED_EXP: "§fSell: §8§m{num}EXP§r §c{num2}EXP"
+  PRICE_PP: "§fBuy: {num}PP"
+  SELL_PRICE_PP: "§fSell: {num}PP"
+  PRICE_DISCOUNTED_PP: "§fBuy: §8§m{num}PP§r §a{num2}PP"
+  SELL_PRICE_DISCOUNTED_PP: "§fSell: §8§m{num}PP§r §c{num2}PP"
+  PRICE_JP: "§fBuy: {num}JP"
+  SELL_PRICE_JP: "§fSell: {num}JP"
+  PRICE_DISCOUNTED_JP: "§fBuy: §8§m{num}JP§r §a{num2}JP"
+  SELL_PRICE_DISCOUNTED_JP: "§fSell: §8§m{num}JP§r §c{num2}JP"
+  BUY: §cBuy
+  SELL: §2Sell
+  STOCK: "§8Stock: "
+  STACKS: §8{num} Stacks
+  INF_STOCK: §8Infinite
+  SHOP_BAL_INF: §fUnlimited
+  SHOP_BAL: "§3Shop account balance \n§f{num}"
+  CLICK_TO_BUY: "§c§nClick: Buy {amount}"
+  CLICK_TO_SELL: "§2§nClick: Sell {amount}"
+  PURCHASE_LIMIT_PER_PLAYER: |-
+    §aPurchase limit: {num}left
+    §aNext reset: {time}
+  SALES_LIMIT_PER_PLAYER: |-
+    §aSales limit: {num}left
+    §aNext reset: {time}
+PAGE_EDITOR_TITLE: §3Page Editor
+PAGE_EDITOR:
+  PREV: §f<<
+  NEXT: §f>>
+  PAGE_SWAP_SUCCESS: §fThe page has been replaced.
+  PAGE_SWAP_FAIL: §fPage replacement failed.
+  PAGE_SWAP_SELECTED: §fPage has been selected. Right-click on the other pages to
+    be replaced.
+  PAGE_LORE_PREMIUM: |-
+    §eLMB: Open page
+    §eRMB: Swap
+    §eShift LMB: Insert
+    §eShift RMB: Delete
+  PRICE: "§fBuy: {num}"
+  SELL_PRICE: "§fSell: {num}"
+  STOCK: "§8Stock: {num}"
+  STACKS: §8{num} Stakcs
+  STATIC_PRICE: §8[Fixed price]
+  EMPTY: §8(empty)
+  EMPTY_SLOT_LORE: |-
+    §eLMB,RMB: Push
+    §e+Shift: Pull
+LOG_VIEWER_TITLE: §3Log Viewer
+LOG_VIEWER:
+  DATE: "§fDate: "
+  TIME: "§fTime: "
+  CURRENCY: "§fCurrency: "
+  PRICE: "§fPrice: "
+  EXPAND: §fExpand
+  COLLAPSE: §fCollapse
+  PAGE_TITLE: §f{curPage}/{maxPage} Page
+  PAGE_LORE: |-
+    §eLMB: Prev
+    §eRMB: Next
+  FILE_LORE: |-
+    §eLMB: Open
+    §eShift RMB: §cDelete
+LOG:
+  LOG: §fLog
+  CLEAR: §fLog deleted
+  SAVE: §fLog saved
+  DELETE: §4Delete log
+  SELL: §f{player} sells {amount} {item} to {shop}
+  BUY: §f{player} buys {amount} {item} from {shop}
+STOCK_SIMULATOR_TITLE: §3Stock Simulator
+STOCK_SIMULATOR:
+  CHANGE_SAMPLE_LORE: "§eLMB, RMB: Change Item"
+  SIMULATOR_BUTTON_LORE: "§eRMB: Simulator"
+  RUN_TITLE: §fRun
+  RUN_LORE: |-
+    §eLMB: Run simulation
+    §eRMB: Apply the settings to the shop
+    §fItems are not affected.
+  REAL_TIME: §a(real time)
+  AFTER_S: §aAfter {0} seconds
+  AFTER_M: §aAfter {0} minutes
+  AFTER_H: §aAfter {0} hours
+  AFTER_D: §aAfter {0} days
+  L_R_SHIFT: "§eLMB: -1 RMB: +1 Shift: x5"
+  PRICE: "§fPurchase price: {num}"
+  MEDIAN: "§fMedian: {num}"
+  STOCK: "§fStock: {num}"
+PALETTE_TITLE: §3Select item to sell
+PALETTE_TITLE2: §3Select item
+PALETTE:
+  LORE_PREMIUM: |-
+    §eLMB: Add
+    §eShift LMB: Add after setting
+    §eRMB: Add as decoration
+    §eShift RMB: Search '{item}'
+  LORE2: |-
+    §eLMB: Select
+    §eShift RMB: Search '{item}'
+  SEARCH: §fSearch
+  ADD_ALL: §fAdd all
+  ADD_ALL_LORE_LOCKED: |-
+    §eLMB: Add all
+    §7Shift LMB: Add all and apply recommended values
+  PAGE_TITLE: §f{curPage}/{maxPage} page
+  PAGE_LORE: |-
+    §f§nLMB: Prev
+    §f§nRMB: Next
+  FILTER_APPLIED: "§fFilter Applied : "
+  FILTER_LORE: |-
+    §eLMB: Search
+    §eRMB: Clear filter
+
+    §7Example for finding "BLUE_WOOL":
+    §7 b w
+    §7 wool
+    §7 blue wool
+QUICK_SELL_TITLE: §3Quick Sell
+QUICK_SELL:
+  GUIDE_TITLE: §3§lQuick Sell Guide
+  GUIDE_LORE: |-
+    §aLeft-click the item you want to sell.
+    §aShift left click to sell all items of the same type.
+    §aRight-click to go to the item shop.
+ARROW:
+  UP: §a⬆
+  DOWN: §c⬇
+  UP_2: §c⬆
+  DOWN_2: §a⬇
+TIME:
+  OPEN: Open
+  CLOSE: Close
+  OPEN_LORE: §fSet opening time
+  CLOSE_LORE: §fSet closing time
+  SHOPHOURS: §fOpening hours
+  OPEN24: Open 24 hours
+  SHOP_IS_CLOSED: §fThe shop is closed. It opens at {time} o'clock. {curTime} o'clock
+    now.
+  SET_SHOPHOURS: Set business hours
+  CUR: "§fCurrent time: {time}h"
+STOCK_STABILIZING:
+  SS: §fStock stabilization
+  L_R_SHIFT: "§eLMB: -0.1 RMB: +0.1 Shift: x5"
+  STRENGTH_LORE_A: §fn% of median
+  STRENGTH_LORE_B: §fn% of the gap with median
+FLUCTUATION:
+  FLUCTUATION: §fStock fluctuation
+  INTERVAL: §fInterval
+  INTERVAL_LORE: §f1h = 1000ticks = real time 50s
+  STRENGTH: §fStrength
+  STRENGTH_LORE: §fn% of median
+TAX:
+  SALES_TAX: §fSales tax
+  USE_GLOBAL: Use global settings ({tax}%)
+  USE_LOCAL: Set separately
+MESSAGE:
+  SEARCH_ITEM: §fEnter the name of the item you are looking for.
+  SEARCH_CANCELED: §fSearch Canceled.
+  INPUT_CANCELED: §fInput canceled.
+  DELETE_CONFIRM: §fAre you sure you want to delete the page? Enter 'delete' to delete.
+  CANT_DELETE_LAST_PAGE: §fThe last remaining page cannot be deleted.
+  SHOP_BAL_LOW: §fThe shop doesn't have enough money.
+  SHOP_CREATED: §fShop created!
+  SHOP_DELETED: §fShop deleted!
+  OUT_OF_STOCK: §fOut of stock!
+  BUY_SUCCESS: "§fBought {item} x{amount} for {price}. Balance: {bal}"
+  SELL_SUCCESS: "§fSold {item} x{amount} for {price}. Balance: {bal}"
+  BUY_SUCCESS_EXP: "§fBought {item} x{amount} for {price}Exp Points. Balance: {bal}"
+  SELL_SUCCESS_EXP: "§fSold {item} x{amount} for {price}Exp Points. Balance: {bal}"
+  BUY_SUCCESS_JP: "§fBought {item} x{amount} for {price}points. Remaining points:
+    {bal}"
+  SELL_SUCCESS_JP: "§fSold {item} x{amount} for {price}points. Remaining points: {bal}"
+  BUY_SUCCESS_PP: "§fBought {item} x{amount} for {price}points. Remaining points:
+    {bal}"
+  SELL_SUCCESS_PP: "§fSold {item} x{amount} for {price}points. Remaining points: {bal}"
+  QSELL_NA: §fThere is no shop that handles this item.
+  DELIVERY_CHARGE: "§fDelivery fee: {fee}"
+  DELIVERY_CHARGE_NA: §fIt cannot be delivered to another world.
+  NOT_ENOUGH_MONEY: "§fNot enough money. balance: {bal}"
+  NOT_ENOUGH_POINT: "§fNot enough points. balance: {bal}"
+  NOT_ENOUGH_PLAYER_POINT: "§fNot enough player points. balance: {bal}"
+  NOT_ENOUGH_EXP_POINT: "§fNot enough Exp points. balance: {bal}"
+  NO_ITEM_TO_SELL: §fThere are no items for sale.
+  NO_ITEM_TO_SELL_2: §fThere are no items available for sale.
+  INVENTORY_FULL: §4There are no empty spaces in your inventory!
+  IRREVERSIBLE: §fThis action is irreversible!
+  ITEM_ADDED: Item added!
+  ITEM_UPDATED: Item updated!
+  ITEM_DELETED: Item deleted!
+  CHANGES_APPLIED: "Changes applied. New values:"
+  CHANGES_APPLIED_2: Changes applied
+  RECOMMEND_APPLIED: Recommended value applied. It is based on {playerNum}players.
+    You can change this value in the config file.
+  TRANSFER_SUCCESS: Remittance completed
+  PURCHASE_REJECTED: There are too many of these items in the shop. Can't sell it
+    now.
+  CLICK_YOUR_ITEM_START_PAGE: |-
+    Click on an item in your inventory to find the shop with the best deal.
+    LMB: Buy   RMB: Sell
+  MOVE_TO_BEST_SHOP_BUY: Moved to the shop where you can buy {item} at the lowest
+    price.
+  MOVE_TO_BEST_SHOP_SELL: Moved to the shop where you can sell {item} at the highest
+    price.
+  SHOP_IS_CLOSED_BY_ADMIN: This shop is currently closed by the server administrator.
+  SHOP_DISABLED: This shop is currently disabled. Non-admin users cannot use it. You
+    can enable it in the shop settings.
+  ROTATION_SHARED_DATA_MISSING: §e[ ! ]§fThe required data could not be found in '{0}/SharedData.yml'
+    for {1} items. These items have been added as decoration.
+  ENTER_COMMAND: Enter the command without '/'.
+  ENTER_COMMAND_2: Enter in the form of 'index/command'.
+  SELL_COMMAND_CUR: "Sell commands currently in effect:"
+  BUY_COMMAND_CUR: "Buy commands currently in effect:"
+  Q_SEARCH_FAIL_CURRENCY: This item is being traded in several currencies.
+  SIGN_SHOP_CREATED: §aSign Shop created!
+HELP:
+  TITLE: "§fHelp: {command} --------------------"
+  SHOP: Open shop
+  CMD: Toggle display of command help.
+  CREATE_SHOP: Create a new shop.
+  CREATE_SHOP_2: |-
+    Permissions (can be changed later)
+       true: dshop.user.shop.shopName
+       false: Anyone can access (default)
+       Arbitrary value: Requires permission
+  DELETE_SHOP: Remove existing stores.
+  SHOP_ADD_HAND: Adds the item in hand to the shop.
+  SHOP_ADD_ITEM: Add item to the shop.
+  SHOP_EDIT: Edit item in the store.
+  PRICE: "§7Price calculation formula: median*value/stock"
+  INF_STATIC: §7median<0 == Fixed price     stock<0 == Infinite stock
+  EDIT_ALL: Modify all items in the shop at once.
+  RELOAD: Reload the plugin.
+  RELOADED: Plugin reloaded
+  USAGE: Usage
+  ITEM_ALREADY_EXIST: |-
+    §7§o{item} is already on sale.
+       {info}
+       Entering a command modifies the value.
+  ITEM_INFO: |-
+    §7§o{item}'s current settings:
+       {info}
+  REMOVE_ITEM: §fEntering an argument of 0 will §4remove§f this item from the store.
+  QSELL: §fSell items quickly.
+  DELETE_OLD_USER: Delete long-term inactive user data
+  ACCOUNT: Sets the account balance of the shop. -1 = unlimited
+  SET_TO_REC_ALL: §cResets§e all item settings in the store to the recommended values.
+  SHOP_ENABLE: Enables or disables the shop.
+  ITEMINFO_USAGE: §fHold an item in your hand to learn about it.
+  ITEMINFO_REALNAME: "§7Real name: §3{item_realname}"
+  ITEMINFO_SIGN_NAME: "§7Sign name: §3{item_signname}"
+ERR:
+  NO_USER_ID: §6Player uuid not found. Shop unavailable.
+  ITEM_NOT_EXIST: The item does not exist in the store.
+  ITEM_FORBIDDEN: This is a prohibited item.
+  NO_PERMISSION: §eYou do not have permission.
+  WRONG_USAGE: Incorrect command usage.
+  NO_EMPTY_SLOT: There is no empty space in the shop.
+  WRONG_DATATYPE: Invalid argument type
+  VALUE_ZERO: The argument value must be greater than 0.
+  WRONG_ITEM_NAME: Invalid item name.
+  HAND_EMPTY: You must hold the item in your hand.
+  HAND_EMPTY2: §c§oYou must have the item in your hand!
+  SHOP_NOT_FOUND: §fThe shop could not be found.
+  SHOP_EXIST: A store with that name already exists.
+  SHOP_NOT_EXIST: No shop with that name.
+  SIGN_SHOP_REMOTE_ACCESS: The shop is only accessible via sign.
+  LOCAL_SHOP_REMOTE_ACCESS: The shop can only be used by visiting it in person.
+  MAX_LOWER_THAN_MIN: The maximum price must be greater than the minimum price.
+  DEFAULT_VALUE_OUT_OF_RANGE: The base price must be between the minimum price and
+    the maximum price.
+  NO_RECOMMEND_DATA: There is no information for this item in the Worth.yml file.
+  JOBS_REBORN_NOT_FOUND: Could not find 'Jobs reborn'.
+  PLAYER_POINTS_NOT_FOUND: Could not find 'Player points'.
+  SHOP_HAS_INF_BAL: "{shop} is an infinite account store."
+  SHOP_DIFF_CURRENCY: The two stores use different currencies.
+  PLAYER_NOT_EXIST: The player could not be found.
+  SHOP_LINK_FAIL: Either store must be a real account.
+  SHOP_LINK_TARGET_ERR: The target store must have a real account.
+  NESTED_STRUCTURE: It is forbidden to build hierarchies. (ex. aa-bb, bb-cc)
+  CREATIVE: §eYou cannot use this command in Creative mode. You do not have permission.
+  FILE_CREATE_FAIL: §eFile creation failed
+  INVALID_TRANSACTION: This transaction is no longer valid. If this problem recurs,
+    contact your server administrator
+  SIGN_WALL: Sign must be placed on wall.
+  SHOP_NULL: §eShop name cannot be null.
+  ITEMINFO_HAND_EMPTY: You need to hold an item.
+  SIGN_ITEM_INVALID: Invalid item. Use /ds iteminfo to find the name of the item on
+    the sign.
+  SIGN_ITEM_NOT_FOR_SALE: First you must add the item in the shop and then use it
+    on the sign.
+"ON": "ON"
+"OFF": "OFF"
+SET: SET
+UNSET: UNSET
+NULL(OPEN): None (open to all)
+CUR_STATE: Current Status
+CLICK: Click
+LMB: LMB
+RMB: RMB
+CLOSE: §fClose
+CLOSE_LORE: "§f§nClick: Close"
+EXP_POINTS: Exp Points
+JOB_POINTS: Job Points
+PLAYER_POINTS: Player Points
+PAID_VERSION:
+  DESC: "§fAvailable in paid version. "
+  GET_PREMIUM: Get Premium

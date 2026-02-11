@@ -1,0 +1,345 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Pyke": {
+      "id": "Pyke",
+      "key": "555",
+      "name": "Pyke",
+      "title": "the Bloodharbor Ripper",
+      "image": {
+        "full": "Pyke.png",
+        "sprite": "champion3.png",
+        "group": "champion",
+        "x": 48,
+        "y": 48,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "555000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "555001",
+          "num": 1,
+          "name": "Sand Wraith Pyke",
+          "chromas": true
+        },
+        {
+          "id": "555009",
+          "num": 9,
+          "name": "Blood Moon Pyke",
+          "chromas": true
+        },
+        {
+          "id": "555016",
+          "num": 16,
+          "name": "PROJECT: Pyke",
+          "chromas": true
+        },
+        {
+          "id": "555025",
+          "num": 25,
+          "name": "PsyOps Pyke",
+          "chromas": true
+        },
+        {
+          "id": "555034",
+          "num": 34,
+          "name": "Sentinel Pyke",
+          "chromas": true
+        },
+        {
+          "id": "555044",
+          "num": 44,
+          "name": "Ashen Knight Pyke",
+          "chromas": true
+        },
+        {
+          "id": "555045",
+          "num": 45,
+          "name": "Empyrean Pyke",
+          "chromas": true
+        },
+        {
+          "id": "555053",
+          "num": 53,
+          "name": "Soul Fighter Pyke",
+          "chromas": true
+        },
+        {
+          "id": "555054",
+          "num": 54,
+          "name": "Prestige Soul Fighter Pyke",
+          "chromas": false
+        },
+        {
+          "id": "555064",
+          "num": 64,
+          "name": "Fright Night Pyke",
+          "chromas": true
+        },
+        {
+          "id": "555074",
+          "num": 74,
+          "name": "Inkshadow Pyke",
+          "chromas": true
+        },
+        {
+          "id": "555075",
+          "num": 75,
+          "name": "T1 Pyke",
+          "chromas": true
+        }
+      ],
+      "lore": "A renowned harpooner from the slaughter docks of Bilgewater, Pyke should have met his death in the belly of a gigantic jaull-fish… and yet, he returned. Now, stalking the dank alleys and backways of his former hometown, he uses his new supernatural gifts to bring a swift and gruesome end to those who make their fortune by exploiting others—and a city that prides itself on hunting monsters now finds a monster hunting them.",
+      "blurb": "A renowned harpooner from the slaughter docks of Bilgewater, Pyke should have met his death in the belly of a gigantic jaull-fish… and yet, he returned. Now, stalking the dank alleys and backways of his former hometown, he uses his new supernatural...",
+      "allytips": [
+        "Pyke is very fragile so don't be afraid to temporarily run from a fight. You can regenerate a significant amount of health from Gift of the Drowned Ones when enemies can't see you.",
+        "Hitting an enemy with the Hold version of Bone Skewer will always pull them the same distance. Use it in melee range to throw targets behind you.",
+        "The Tap version of Bone Skewer is much faster and deals additional damage.",
+        "A lot of your agressive spells are also your escapes. Make sure you always have a plan to get out of the fight."
+      ],
+      "enemytips": [
+        "Pyke regenerates a significant amount of damage he has taken from enemy champions, but only when you can't see him!",
+        "When Pyke is hidden nearby in his Ghostwater Dive, sharks will circle underneath your feet.",
+        "Try not to stand near low health allies. If Pyke executes them using Death From Below, you might be next on the list."
+      ],
+      "tags": ["Support", "Assassin"],
+      "partype": "Mana",
+      "info": {
+        "attack": 9,
+        "defense": 3,
+        "magic": 1,
+        "difficulty": 7
+      },
+      "stats": {
+        "hp": 670,
+        "hpperlevel": 110,
+        "mp": 415,
+        "mpperlevel": 50,
+        "movespeed": 330,
+        "armor": 43,
+        "armorperlevel": 4.7,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
+        "attackrange": 150,
+        "hpregen": 7,
+        "hpregenperlevel": 0.5,
+        "mpregen": 8,
+        "mpregenperlevel": 1,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 62,
+        "attackdamageperlevel": 2,
+        "attackspeedperlevel": 2.5,
+        "attackspeed": 0.667
+      },
+      "spells": [
+        {
+          "id": "PykeQ",
+          "name": "Bone Skewer",
+          "description": "Pyke either stabs an enemy in front of him or pulls an enemy towards him.",
+          "tooltip": "<tap>Tap:</tap> Pyke stabs, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> to the first enemy hit, preferring champions. They are then <status>Slowed</status> by {{ slowamount*100 }}% for {{ slowduration }} second.<br /><br /><hold>Hold: </hold>Pyke throws his harpoon, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> to the first enemy hit and <status>Pulling</status> them towards him. They are then <status>Slowed</status> by {{ slowamount*100 }}% for {{ slowduration }} second.<br /><br />If Pyke successfully hits an enemy champion or the channel does not complete successfully, {{ manarefund*100 }}% of the Mana cost is refunded.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [10, 9.5, 9, 8.5, 8],
+          "cooldownBurn": "10/9.5/9/8.5/8",
+          "cost": [70, 75, 80, 85, 90],
+          "costBurn": "70/75/80/85/90",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [400, 400, 400, 400, 400],
+          "rangeBurn": "400",
+          "image": {
+            "full": "PykeQ.png",
+            "sprite": "spell10.png",
+            "group": "spell",
+            "x": 96,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "PykeW",
+          "name": "Ghostwater Dive",
+          "description": "Pyke enters Camouflage and gains significant Move Speed that decays over time.",
+          "tooltip": "Pyke gains <keywordStealth>Camouflage</keywordStealth> and <speed>{{ movespeed }}% Move Speed</speed> decaying over {{ e0 }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Cooldown"],
+            "effect": ["{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [14, 13, 12, 11, 10],
+          "cooldownBurn": "14/13/12/11/10",
+          "cost": [65, 65, 65, 65, 65],
+          "costBurn": "65",
+          "datavalues": {},
+          "effect": [
+            null,
+            [45, 45, 45, 45, 45],
+            [0, 0, 0, 0, 0],
+            [0.3, 0.3, 0.3, 0.3, 0.3],
+            [0.03, 0.03, 0.03, 0.03, 0.03],
+            [80, 80, 80, 80, 80],
+            [0.55, 0.55, 0.55, 0.55, 0.55],
+            [8, 8, 8, 8, 8],
+            [0.01, 0.01, 0.01, 0.01, 0.01],
+            [1.15, 1.15, 1.15, 1.15, 1.15],
+            [5, 5, 5, 5, 5]
+          ],
+          "effectBurn": [null, "45", "0", "0.3", "0.03", "80", "0.55", "8", "0.01", "1.15", "5"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [600, 600, 600, 600, 600],
+          "rangeBurn": "600",
+          "image": {
+            "full": "PykeW.png",
+            "sprite": "spell10.png",
+            "group": "spell",
+            "x": 144,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "PykeE",
+          "name": "Phantom Undertow",
+          "description": "Pyke dashes and leaves behind a phantom that will return to him, stunning enemy champions along its path.",
+          "tooltip": "Pyke dashes, leaving a drowned phantom behind him that returns to him shortly. The phantom <status>Stuns</status> for {{ stunduration }} seconds and deals <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> to champions.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Cooldown"],
+            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [15, 14, 13, 12, 11],
+          "cooldownBurn": "15/14/13/12/11",
+          "cost": [40, 40, 40, 40, 40],
+          "costBurn": "40",
+          "datavalues": {},
+          "effect": [
+            null,
+            [100, 150, 200, 250, 300],
+            [1.25, 1.25, 1.25, 1.25, 1.25],
+            [550, 550, 550, 550, 550],
+            [1, 1, 1, 1, 1],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "100/150/200/250/300", "1.25", "550", "1", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [550, 550, 550, 550, 550],
+          "rangeBurn": "550",
+          "image": {
+            "full": "PykeE.png",
+            "sprite": "spell10.png",
+            "group": "spell",
+            "x": 192,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "PykeR",
+          "name": "Death From Below",
+          "description": "Pyke blinks to and executes low health enemies, allowing him to cast this spell again and granting additional gold to an ally who assists.",
+          "tooltip": "Pyke strikes all enemy champions in an X, teleporting to and <danger>executing</danger> targets below <scaleAD>{{ rdamage }}</scaleAD> Health. Champions above the threshold and non-champions instead take physical damage equal to {{ reduceddamage*100 }}% of that amount (<physicalDamage>{{ reduceddamagefinal }}</physicalDamage>). <br /><br />When an enemy champion dies inside the X, Pyke can <recast>Recast</recast> this Ability for free within {{ rrecastduration }} seconds. If he executed that champion, the last assisting ally will also get kill gold. If he did not, he will still get kill gold as if he did.<br />{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Cooldown"],
+            "effect": ["{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 3,
+          "cooldown": [100, 85, 70],
+          "cooldownBurn": "100/85/70",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [750, 750, 750],
+          "rangeBurn": "750",
+          "image": {
+            "full": "PykeR.png",
+            "sprite": "spell10.png",
+            "group": "spell",
+            "x": 240,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Gift of the Drowned Ones",
+        "description": "When Pyke is hidden from enemies, he regenerates damage that he has recently taken from champions. Pyke also cannot gain extra Maximum Health from any source, and instead gains Bonus AD.",
+        "image": {
+          "full": "PykePassive.png",
+          "sprite": "passive3.png",
+          "group": "passive",
+          "x": 48,
+          "y": 48,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

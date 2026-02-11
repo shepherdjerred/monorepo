@@ -1,0 +1,33 @@
+---
+import { Icon } from 'astro-icon/components';
+import { badgeColors, type ColorVariant } from '../lib/colors';
+
+interface Props {
+  text: string;
+  color?: ColorVariant;
+  icon?: string; // astro-icon name
+  iconHtml?: string; // Raw HTML for custom icons
+  size?: 'sm' | 'md';
+  rounded?: 'pill' | 'lg' | 'md';
+}
+
+const {
+  text,
+  color = 'indigo',
+  icon,
+  iconHtml,
+  size = 'md',
+} = Astro.props;
+
+const sizeClasses = size === 'sm' ? 'px-2 py-0.5 text-xs' : 'px-2.5 py-0.5 text-xs';
+---
+
+<span class:list={[
+  "inline-flex items-center rounded-full font-semibold",
+  sizeClasses,
+  badgeColors[color]
+]}>
+  {icon && <Icon name={icon} class="h-4 w-4 mr-1" />}
+  {iconHtml && <div set:html={iconHtml} class="h-4 w-4 mr-1" />}
+  {text}
+</span>

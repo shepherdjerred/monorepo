@@ -1,0 +1,45 @@
+#
+# ____       _   _            ____  _                    _                       _  _
+#| __ )  ___| |_| |_ ___ _ __/ ___|| |    ___  ___ _ __ (_)_ __   __ _    __   _| || |
+#|  _ \ / _ \ __| __/ _ \ '__\___ \| |   / _ \/ _ \ '_ \| | '_ \ / _` |   \ \ / / || |_
+#| |_) |  __/ |_| ||  __/ |   ___) | |__|  __/  __/ |_) | | | | | (_| |    \ V /|__   _|
+#|____/ \___|\__|\__\___|_|  |____/|_____\___|\___| .__/|_|_| |_|\__, |     \_/    |_|
+#                                                 |_|            |___/
+
+# To reset a BetterSleeping config file, you can simply delete it and perform /bs reload or restart the server
+
+# Default values:       https://github.com/Nuytemans-Dieter/BetterSleeping/blob/BetterSleeping-v4/src/main/resources/buffs.yml
+# Config template:      https://github.com/Nuytemans-Dieter/BetterSleeping/blob/BetterSleeping-v4/src/main/resources/templates/buffs.yml
+# All default config files can be found here:  https://github.com/Nuytemans-Dieter/BetterSleeping/tree/BetterSleeping-v4/src/main/resources
+
+# These are effects that will be applied after sleeping, only on the players that have slept
+# The idea is to give a well rested bonus so sleeping is encouraged and more people will try to sleep
+
+# CONFIGURATION GUIDE:
+
+# Not working? Try copy/pasting the contents of this file into http://www.yamllint.com/ to check for errors
+# To disable an effect, simply remove it from the list
+
+# For a list of possible buffs, check: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/potion/PotionEffectType.html
+# regeneration, absorption, jump, speed, damage_resistance, fast_digging, increase_damage, saturation
+
+# time: The time in seconds for which the effect will be applied
+# level: The level of the effect (may be an OP level but >90 may work in unintended ways)
+# chance: The chance [0, 100] of this effect being given to everyone
+
+# The commands in the list below are executed in the console for EACH (non-)sleeper
+# One tag is supported at this time: <user>, which will be replaced by each user's name
+# Uncomment the blocks below to enable them, you can add your own commands too!
+
+#sleeper_commands:
+#  - money give <user> 5
+
+#non_sleeper_commands:
+#  - say <user> did not sleep, pfuhhh!
+
+# Sleeper_buffs are given for every sleeping player
+# Non_sleepers_debuffs are given for every non-sleeping player
+sleeper_buffs:
+  speed:
+    level: 1
+    time: 180

@@ -1,0 +1,259 @@
+---
+description: Common TypeScript pitfalls and how to avoid them
+globs: "*.ts,*.tsx"
+alwaysApply: false
+---
+
+# TypeScript Common Pitfalls
+
+## Type vs Interface
+
+**ALWAYS use `type` instead of `interface` in this codebase.**
+
+```typescript
+// ✅ CORRECT:
+type User = {
+  id: string;
+  name: string;
+};
+
+type Result = {
+  success: boolean;
+  data?: unknown;
+};
+
+// ❌ WRONG:
+interface User {
+  id: string;
+  name: string;
+}
+```
+
+## Template Literal Type Safety
+
+**Never use `any`, `unknown`, or complex objects in template literals without validation.**
+
+```typescript
+// ❌ WRONG:
+console.log(`Error: ${error}`);  // error is unknown
+console.log(`Data: ${data}`);    // data might be an object
+
+// ✅ CORRECT:
+const ErrorSchema = z.object({ message: z.string() });
+const result = ErrorSchema.safeParse(error);
+if (result.success) {
+  console.log(`Error: ${result.data.message}`);
+}
+
+// OR extract to variable first:
+const errorMessage = getErrorMessage(error);
+console.log(`Error: ${errorMessage}`);
+```
+
+## Number to String Conversion
+
+Always call `.toString()` explicitly on numbers in template literals:
+
+```typescript
+// ✅ CORRECT:
+console.log(`Port: ${port.toString()}`);
+console.log(`Count: ${items.length.toString()}`);
+
+// ❌ WRONG (can trigger linter warnings):
+console.log(`Port: ${port}`);
+```
+
+## Handling Unknown Types
+
+Never assume the type of `unknown` - always validate or check:
+
+```typescript
+// ❌ WRONG:
+function process(data: unknown) {
+  return data.field;  // Error! Can't access property on unknown
+}
+
+// ✅ CORRECT:
+function process(data: unknown) {
+  const Schema = z.object({ field: z.string() });
+  const validated = Schema.parse(data);
+  return validated.field;
+}
+```
+
+## Function Return Types
+
+Always specify return types for exported functions:
+
+```typescript
+// ✅ CORRECT:
+export function getUser(id: string): Promise<User> {
+  return fetchUser(id);
+}
+
+export function isValid(data: unknown): boolean {
+  return Schema.safeParse(data).success;
+}
+
+// ❌ WRONG (return type inferred):
+export function getUser(id: string) {
+  return fetchUser(id);
+}
+```
+
+## Array Method Type Safety
+
+When using array methods with filtering, preserve types:
+
+```typescript
+// ❌ WRONG (loses type information):
+const active = users.filter(u => u.status === "active");
+
+// ✅ CORRECT:
+const active = users.filter((u): u is ActiveUser =>
+  u.status === "active"
+);
+
+// OR better - use type guards:
+function isActiveUser(user: User): user is ActiveUser {
+  return user.status === "active";
+}
+const active = users.filter(isActiveUser);
+```
+
+## Destructuring with Validation
+
+Validate before destructuring unknown objects:
+
+```typescript
+// ❌ WRONG:
+const { id, name } = unknownObject;  // Unsafe!
+
+// ✅ CORRECT:
+const Schema = z.object({ id: z.string(), name: z.string() });
+const validated = Schema.parse(unknownObject);
+const { id, name } = validated;  // Safe!
+```
+
+## Async Function Error Handling
+
+Always handle promise rejections:
+
+```typescript
+// ❌ WRONG:
+async function fetchData() {
+  const response = await fetch(url);
+  return response.json();  // Can throw!
+}
+
+// ✅ CORRECT:
+async function fetchData(): Promise<Data> {
+  try {
+    const response = await fetch(url);
+    const json: unknown = await response.json();
+    return DataSchema.parse(json);
+  } catch (error) {
+    throw new Error(`Fetch failed: ${getErrorMessage(error)}`);
+  }
+}
+```
+
+## Exhaustive Type Checking
+
+**See:** `exhaustive-case-handling.mdc` for discriminated union handling patterns.
+
+## Null vs Undefined
+
+Be explicit about null and undefined:
+
+```typescript
+// ❌ AMBIGUOUS:
+function getValue(): string | null | undefined { ... }
+
+// ✅ EXPLICIT:
+function getValue(): string | null { ... }  // Null means "no value"
+function getValue(): string | undefined { ... }  // Undefined means "not set"
+
+// Check appropriately:
+if (value === null) { /* explicitly no value */ }
+if (value === undefined) { /* not set */ }
+if (value == null) { /* both null and undefined */ }
+```
+
+## Optional Chaining vs Non-Null Assertion
+
+Never use non-null assertion (`!`). Use optional chaining instead:
+
+```typescript
+// ❌ WRONG:
+const name = user!.profile!.name;  // Dangerous!
+
+// ✅ CORRECT:
+const name = user?.profile?.name;
+
+// ✅ BETTER (with default):
+const name = user?.profile?.name ?? "Unknown";
+
+// ✅ BEST (with validation):
+const ProfileSchema = z.object({ name: z.string() });
+const profile = user?.profile;
+const name = profile ? ProfileSchema.parse(profile).name : "Unknown";
+```
+
+## Type Predicates
+
+Use type predicates for reusable type guards:
+
+```typescript
+// ✅ CORRECT:
+function isString(value: unknown): value is string {
+  return typeof value === "string";
+}
+
+function hasMessage(error: unknown): error is { message: string } {
+  const Schema = z.object({ message: z.string() });
+  return Schema.safeParse(error).success;
+}
+
+// Usage:
+if (hasMessage(error)) {
+  console.log(error.message);  // TypeScript knows message exists
+}
+```
+
+## Const Assertions
+
+Use `as const` for literal types:
+
+```typescript
+// ✅ CORRECT:
+const CONFIG = {
+  type: "production" as const,
+  version: 1 as const,
+} as const;
+
+type ConfigType = typeof CONFIG.type;  // "production", not string
+
+// For arrays:
+const STATUSES = ["pending", "success", "error"] as const;
+type Status = typeof STATUSES[number];  // "pending" | "success" | "error"
+```
+
+## Discriminated Union Best Practices
+
+Always include a discriminator field:
+
+```typescript
+// ✅ CORRECT:
+type Result =
+  | { status: "success"; data: Data }
+  | { status: "error"; error: Error };
+
+function handleResult(result: Result) {
+  if (result.status === "success") {
+    console.log(result.data);  // TypeScript knows data exists
+  } else {
+    console.error(result.error);  // TypeScript knows error exists
+  }
+}
+```

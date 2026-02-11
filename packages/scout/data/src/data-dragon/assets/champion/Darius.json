@@ -1,0 +1,374 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Darius": {
+      "id": "Darius",
+      "key": "122",
+      "name": "Darius",
+      "title": "the Hand of Noxus",
+      "image": {
+        "full": "Darius.png",
+        "sprite": "champion0.png",
+        "group": "champion",
+        "x": 240,
+        "y": 96,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "122000",
+          "num": 0,
+          "name": "default",
+          "chromas": true
+        },
+        {
+          "id": "122001",
+          "num": 1,
+          "name": "Lord Darius",
+          "chromas": false
+        },
+        {
+          "id": "122002",
+          "num": 2,
+          "name": "Bioforge Darius",
+          "chromas": false
+        },
+        {
+          "id": "122003",
+          "num": 3,
+          "name": "Woad King Darius",
+          "chromas": false
+        },
+        {
+          "id": "122004",
+          "num": 4,
+          "name": "Dunkmaster Darius",
+          "chromas": true
+        },
+        {
+          "id": "122008",
+          "num": 8,
+          "name": "Academy Darius",
+          "chromas": false
+        },
+        {
+          "id": "122014",
+          "num": 14,
+          "name": "Dreadnova Darius",
+          "chromas": false
+        },
+        {
+          "id": "122015",
+          "num": 15,
+          "name": "God-King Darius",
+          "chromas": false
+        },
+        {
+          "id": "122016",
+          "num": 16,
+          "name": "High Noon Darius",
+          "chromas": true
+        },
+        {
+          "id": "122024",
+          "num": 24,
+          "name": "Lunar Beast Darius",
+          "chromas": true
+        },
+        {
+          "id": "122033",
+          "num": 33,
+          "name": "Crime City Nightmare Darius",
+          "chromas": false
+        },
+        {
+          "id": "122043",
+          "num": 43,
+          "name": "Spirit Blossom Darius",
+          "chromas": false
+        },
+        {
+          "id": "122054",
+          "num": 54,
+          "name": "Porcelain Darius",
+          "chromas": false
+        },
+        {
+          "id": "122064",
+          "num": 64,
+          "name": "Divine God-King Darius",
+          "chromas": false
+        },
+        {
+          "id": "122065",
+          "num": 65,
+          "name": "Prestige Triumphant General Darius",
+          "chromas": false
+        },
+        {
+          "id": "122067",
+          "num": 67,
+          "name": "Mecha Kingdoms Darius",
+          "chromas": false
+        }
+      ],
+      "lore": "There is no greater symbol of Noxian might than Darius, the nation's most feared and battle-hardened commander. Rising from humble origins to become the Hand of Noxus, he cleaves through the empire's enemies—many of them Noxians themselves. Knowing that he never doubts his cause is just, and never hesitates once his axe is raised, those who stand against the leader of the Trifarian Legion can expect no mercy.",
+      "blurb": "There is no greater symbol of Noxian might than Darius, the nation's most feared and battle-hardened commander. Rising from humble origins to become the Hand of Noxus, he cleaves through the empire's enemies—many of them Noxians themselves. Knowing that...",
+      "allytips": [
+        "Decimate is a powerful harassment ability. Strike an enemy from maximum range for the greatest effect.",
+        "Noxian Guillotine does more damage the more attacks you can land prior to it. Use Noxian Might to deal maximum damage.",
+        "Darius benefits greatly from enhanced survivability. The longer you can prolong a fight, the more powerful he becomes."
+      ],
+      "enemytips": [
+        "When Darius's axe grab is on cooldown, he is vulnerable to harassment attacks.",
+        "Darius's ability to escape from fights is limited. If you have an advantage against him, press your lead."
+      ],
+      "tags": ["Fighter", "Tank"],
+      "partype": "Mana",
+      "info": {
+        "attack": 9,
+        "defense": 5,
+        "magic": 1,
+        "difficulty": 2
+      },
+      "stats": {
+        "hp": 652,
+        "hpperlevel": 114,
+        "mp": 263,
+        "mpperlevel": 58,
+        "movespeed": 340,
+        "armor": 37,
+        "armorperlevel": 5.2,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
+        "attackrange": 175,
+        "hpregen": 10,
+        "hpregenperlevel": 0.95,
+        "mpregen": 6.6,
+        "mpregenperlevel": 0.35,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 64,
+        "attackdamageperlevel": 5,
+        "attackspeedperlevel": 1,
+        "attackspeed": 0.625
+      },
+      "spells": [
+        {
+          "id": "DariusCleave",
+          "name": "Decimate",
+          "description": "Darius winds up and swings his axe in a wide circle. Enemies struck by the blade take more damage than those struck by the handle. Darius heals based on enemy champions and large monsters hit by the blade.",
+          "tooltip": "Darius hefts his axe then swings it around, dealing <physicalDamage>{{ bladedamage }} physical damage</physicalDamage> with the edge and <physicalDamage>{{ handledamage }} damage</physicalDamage> with the handle. Enemies hit with the handle do not take a <keywordMajor>Hemorrhage</keywordMajor> stack.<br /><br />Darius restores <healing>{{ e5 }}% missing Health</healing> per enemy champion and large jungle monster hit with the edge, up to a max of <healing>{{ e7 }}%</healing>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Total AD Ratio", "Cooldown", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ e2 }} -> {{ e2NL }}",
+              "{{ e1 }}% -> {{ e1NL }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [9, 8, 7, 6, 5],
+          "cooldownBurn": "9/8/7/6/5",
+          "cost": [25, 30, 35, 40, 45],
+          "costBurn": "25/30/35/40/45",
+          "datavalues": {},
+          "effect": [
+            null,
+            [100, 110, 120, 130, 140],
+            [50, 80, 110, 140, 170],
+            [99, 99, 99, 99, 99],
+            [0.1, 0.1, 0.1, 0.1, 0.1],
+            [17, 17, 17, 17, 17],
+            [35, 35, 35, 35, 35],
+            [51, 51, 51, 51, 51],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [
+            null,
+            "100/110/120/130/140",
+            "50/80/110/140/170",
+            "99",
+            "0.1",
+            "17",
+            "35",
+            "51",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [1, 1, 1, 1, 1],
+          "rangeBurn": "1",
+          "image": {
+            "full": "DariusCleave.png",
+            "sprite": "spell2.png",
+            "group": "spell",
+            "x": 384,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "DariusNoxianTacticsONH",
+          "name": "Crippling Strike",
+          "description": "Darius's next attack strikes an enemy's crucial artery. As they bleed out, their Move Speed is slowed.",
+          "tooltip": "Darius' next Attack deals <physicalDamage>{{ empoweredattackdamage }} physical damage</physicalDamage> and <status>Slows</status> by {{ e2 }}% for {{ e5 }} second.<br /><br />This Ability refunds its Mana cost and reduces its Cooldown by {{ e3 }}% if it kills the target.<br /><br /><rules>This Ability triggers spell effects upon dealing damage.</rules>{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Total AD Ratio"],
+            "effect": ["{{ effect4amount*100.000000 }} -> {{ effect4amountnl*100.000000 }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [5, 5, 5, 5, 5],
+          "cooldownBurn": "5",
+          "cost": [40, 40, 40, 40, 40],
+          "costBurn": "40",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [90, 90, 90, 90, 90],
+            [50, 50, 50, 50, 50],
+            [1.4, 1.45, 1.5, 1.55, 1.6],
+            [1, 1, 1, 1, 1],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "90", "50", "1.4/1.45/1.5/1.55/1.6", "1", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [300, 300, 300, 300, 300],
+          "rangeBurn": "300",
+          "image": {
+            "full": "DariusNoxianTacticsONH.png",
+            "sprite": "spell2.png",
+            "group": "spell",
+            "x": 432,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "DariusAxeGrabCone",
+          "name": "Apprehend",
+          "description": "Darius hones his axe, passively causing his physical damage to ignore a percentage of his target's Armor. When activated, Darius sweeps up his enemies with his axe's hook and pulls them to him.",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Darius gains {{ e1 }}% Armor Penetration.<br /><br /><spellActive>Active:</spellActive> Darius hooks with his axe, <status>Pulling</status>, and <status>Knocking Up</status> and <status>Slowing</status> by {{ e2 }}% for {{ e3 }} second.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Percent Armor Penetration", "@AbilityResourceName@ Cost", "Cooldown"],
+            "effect": ["{{ e1 }} -> {{ e1NL }}", "{{ cost }} -> {{ costNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [26, 23.5, 21, 18.5, 16],
+          "cooldownBurn": "26/23.5/21/18.5/16",
+          "cost": [70, 60, 50, 40, 30],
+          "costBurn": "70/60/50/40/30",
+          "datavalues": {},
+          "effect": [
+            null,
+            [20, 25, 30, 35, 40],
+            [40, 40, 40, 40, 40],
+            [1, 1, 1, 1, 1],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "20/25/30/35/40", "40", "1", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [535, 535, 535, 535, 535],
+          "rangeBurn": "535",
+          "image": {
+            "full": "DariusAxeGrabCone.png",
+            "sprite": "spell3.png",
+            "group": "spell",
+            "x": 0,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "DariusExecute",
+          "name": "Noxian Guillotine",
+          "description": "Darius leaps to an enemy champion and strikes a lethal blow, dealing true damage. This damage is increased for each stack of Hemorrhage on the target. If Noxian Guillotine is a killing blow, its cooldown is refreshed for a brief duration.",
+          "tooltip": "Darius leaps to an enemy and strikes a lethal blow, dealing <trueDamage>{{ damage }} true damage</trueDamage>. For each <keywordMajor>Hemorrhage</keywordMajor> on the target, this Ability deals an additional {{ rdamagepercentperhemostack*100 }}% damage, up to a max of <trueDamage>{{ maximumdamage }} damage</trueDamage>.<br /><br />If this kills the target, Darius may <recast>Recast</recast> this Ability once within {{ rrecastduration }} seconds. At rank 3, this Ability has no Mana cost and kills refresh the Cooldown completely.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Cooldown"],
+            "effect": ["{{ rbasedamage }} -> {{ rbasedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 3,
+          "cooldown": [120, 100, 80],
+          "cooldownBurn": "120/100/80",
+          "cost": [100, 100, 0],
+          "costBurn": "100/100/0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [460, 460, 460],
+          "rangeBurn": "460",
+          "image": {
+            "full": "DariusExecute.png",
+            "sprite": "spell3.png",
+            "group": "spell",
+            "x": 48,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Hemorrhage",
+        "description": "Darius' attacks and damaging abilities cause enemies to bleed for physical damage over 5 seconds, stacking up to 5 times. Darius enrages and gains massive Attack Damage when his target reaches max stacks.",
+        "image": {
+          "full": "Darius_Icon_Hemorrhage.png",
+          "sprite": "passive0.png",
+          "group": "passive",
+          "x": 240,
+          "y": 96,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "dependencies": {
+    "@sentry/browser": "^10.0.0",
+    "@astrojs/mdx": "^4.1.1",
+    "@astrojs/react": "^4.3.1",
+    "@astrojs/tailwind": "^6.0.0",
+    "@aws-sdk/client-s3": "^3.728.0",
+    "@google/generative-ai": "^0.24.0",
+    "@iconify-json/heroicons": "^1.2.1",
+    "@iconify-json/simple-icons": "^1.2.7",
+    "@radix-ui/react-dialog": "^1.1.15",
+    "@radix-ui/react-navigation-menu": "^1.2.14",
+    "@radix-ui/react-slot": "^1.2.4",
+    "@shepherdjerred/scout-data": "workspace:*",
+    "@shepherdjerred/scout-report": "workspace:*",
+    "@tailwindcss/postcss": "^4.1.11",
+    "@trpc/client": "^11.8.0",
+    "astro": "^5.0.9",
+    "astro-icon": "^1.1.1",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
+    "fuse.js": "^7.1.0",
+    "lucide-react": "^0.563.0",
+    "openai": "^6.9.1",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "tailwind-merge": "^3.4.0",
+    "tailwindcss": "^4.0.0",
+    "tailwindcss-animate": "^1.0.7",
+    "zod": "^4.0.0"
+  },
+  "name": "@shepherdjerred/scout-frontend",
+  "scripts": {
+    "astro": "astro",
+    "build": "astro build",
+    "dev": "astro dev",
+    "format": "prettier --check .",
+    "lint": "astro check && eslint src",
+    "preview": "astro preview",
+    "test": "echo 'Playwright tests disabled'",
+    "test:ui": "echo 'Playwright tests disabled'",
+    "test:headed": "echo 'Playwright tests disabled'",
+    "test:report": "echo 'Playwright tests disabled'",
+    "test:install": "echo 'Playwright tests disabled'",
+    "typecheck": "astro check && bunx tsc --noEmit"
+  },
+  "type": "module",
+  "version": "0.0.1",
+  "devDependencies": {
+    "@astrojs/check": "^0.9.4",
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
+    "bun-types": "latest",
+    "typescript": "^5.9.3"
+  },
+  "description": "Web frontend for Scout for League of Legends",
+  "keywords": [
+    "league-of-legends",
+    "frontend",
+    "astro",
+    "web"
+  ],
+  "license": "GPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shepherdjerred/scout-for-lol.git"
+  },
+  "homepage": "https://github.com/shepherdjerred/scout-for-lol",
+  "bugs": {
+    "url": "https://github.com/shepherdjerred/scout-for-lol/issues"
+  }
+}

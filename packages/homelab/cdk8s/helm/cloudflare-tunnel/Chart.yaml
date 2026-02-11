@@ -1,0 +1,6 @@
+apiVersion: v2
+name: cloudflare-tunnel
+description: Cloudflare Tunnel configuration
+type: application
+version: "$version"
+appVersion: "$appVersion"

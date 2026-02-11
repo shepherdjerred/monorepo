@@ -1,0 +1,353 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Nocturne": {
+      "id": "Nocturne",
+      "key": "56",
+      "name": "Nocturne",
+      "title": "the Eternal Nightmare",
+      "image": {
+        "full": "Nocturne.png",
+        "sprite": "champion3.png",
+        "group": "champion",
+        "x": 192,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "56000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "56001",
+          "num": 1,
+          "name": "Frozen Terror Nocturne",
+          "chromas": false
+        },
+        {
+          "id": "56002",
+          "num": 2,
+          "name": "Void Nocturne",
+          "chromas": false
+        },
+        {
+          "id": "56003",
+          "num": 3,
+          "name": "Ravager Nocturne",
+          "chromas": false
+        },
+        {
+          "id": "56004",
+          "num": 4,
+          "name": "Haunting Nocturne",
+          "chromas": false
+        },
+        {
+          "id": "56005",
+          "num": 5,
+          "name": "Eternum Nocturne",
+          "chromas": false
+        },
+        {
+          "id": "56006",
+          "num": 6,
+          "name": "Cursed Revenant Nocturne",
+          "chromas": false
+        },
+        {
+          "id": "56007",
+          "num": 7,
+          "name": "Old God Nocturne",
+          "chromas": true
+        },
+        {
+          "id": "56016",
+          "num": 16,
+          "name": "Hextech Nocturne",
+          "chromas": false
+        },
+        {
+          "id": "56017",
+          "num": 17,
+          "name": "Broken Covenant Nocturne",
+          "chromas": true
+        },
+        {
+          "id": "56026",
+          "num": 26,
+          "name": "Empyrean Nocturne",
+          "chromas": true
+        }
+      ],
+      "lore": "A demonic amalgamation drawn from the nightmares that haunt every sentient mind, the thing known as Nocturne has become a primordial force of pure evil. It is liquidly chaotic in aspect, a faceless shadow with cold eyes and armed with wicked-looking blades. After freeing itself from the spirit realm, Nocturne descended upon the waking world, to feed upon the kind of terror that can only thrive in true darkness.",
+      "blurb": "A demonic amalgamation drawn from the nightmares that haunt every sentient mind, the thing known as Nocturne has become a primordial force of pure evil. It is liquidly chaotic in aspect, a faceless shadow with cold eyes and armed with wicked-looking...",
+      "allytips": [
+        "Using Paranoia at a critical moment is well worth it even if you cannot use the dash.",
+        "Duskbringer isn't only an offensive ability. It can be used to close distance out of combat or escape from certain death.",
+        "Use Shroud of Darkness in tandem with Paranoia's dash. Your opponents may panic and waste a critical disable on your spell shield."
+      ],
+      "enemytips": [
+        "Stay close to your allies when Paranoia is cast - there is strength in numbers!",
+        "Nocturne's Unspeakable Horror is broken with range, so try to save your movement abilities for when he casts it."
+      ],
+      "tags": ["Fighter", "Assassin"],
+      "partype": "Mana",
+      "info": {
+        "attack": 9,
+        "defense": 5,
+        "magic": 2,
+        "difficulty": 4
+      },
+      "stats": {
+        "hp": 655,
+        "hpperlevel": 109,
+        "mp": 275,
+        "mpperlevel": 35,
+        "movespeed": 345,
+        "armor": 38,
+        "armorperlevel": 4.2,
+        "spellblock": 32,
+        "spellblockperlevel": 1.55,
+        "attackrange": 125,
+        "hpregen": 7,
+        "hpregenperlevel": 0.75,
+        "mpregen": 7,
+        "mpregenperlevel": 0.45,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 62,
+        "attackdamageperlevel": 2.6,
+        "attackspeedperlevel": 2.7,
+        "attackspeed": 0.721
+      },
+      "spells": [
+        {
+          "id": "NocturneDuskbringer",
+          "name": "Duskbringer",
+          "description": "Nocturne throws a shadow blade that deals damage, leaves a Dusk Trail, and causes champions to leave a Dusk Trail. While on the trail, Nocturne can move through units and has increased Move Speed and Attack Damage.",
+          "tooltip": "Nocturne throws a shadow blade, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and leaving a dusk trail for {{ e3 }} seconds. Enemy champions hit also leave a trail. <br /><br />While on the trail, Nocturne is Ghosted and gains <speed>{{ movespeed }}% Move Speed</speed> and <physicalDamage>{{ bonustrailad }} Attack Damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Move Speed", "Bonus Attack Damage", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ movespeed }}% -> {{ movespeedNL }}%",
+              "{{ bonustrailad }} -> {{ bonustrailadNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [8, 8, 8, 8, 8],
+          "cooldownBurn": "8",
+          "cost": [60, 65, 70, 75, 80],
+          "costBurn": "60/65/70/75/80",
+          "datavalues": {},
+          "effect": [
+            null,
+            [15, 20, 25, 30, 35],
+            [65, 110, 155, 200, 245],
+            [5, 5, 5, 5, 5],
+            [15, 25, 35, 45, 55],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [
+            null,
+            "15/20/25/30/35",
+            "65/110/155/200/245",
+            "5",
+            "15/25/35/45/55",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [1125, 1125, 1125, 1125, 1125],
+          "rangeBurn": "1125",
+          "image": {
+            "full": "NocturneDuskbringer.png",
+            "sprite": "spell9.png",
+            "group": "spell",
+            "x": 192,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "NocturneShroudofDarkness",
+          "name": "Shroud of Darkness",
+          "description": "Nocturne empowers his blades, passively gaining Attack Speed. Activating Shroud of Darkness allows Nocturne to fade into the shadows, creating a magical barrier which blocks a single enemy ability and doubles his passive Attack Speed if successful.",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Nocturne gains <attackSpeed>{{ e1 }}% Attack Speed</attackSpeed>.<br /><br /><spellActive>Active:</spellActive> Nocturne creates a shadow barrier for 1.5 seconds that blocks the next enemy Ability. If an Ability is blocked, this Ability's passive effect is increased to <attackSpeed>{{ e1 }}% Attack Speed</attackSpeed> for {{ e4 }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Bonus Attack Speed", "Cooldown"],
+            "effect": ["{{ e1 }}% -> {{ e1NL }}%", "{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [20, 18, 16, 14, 12],
+          "cooldownBurn": "20/18/16/14/12",
+          "cost": [50, 50, 50, 50, 50],
+          "costBurn": "50",
+          "datavalues": {},
+          "effect": [
+            null,
+            [60, 70, 80, 90, 100],
+            [0.3, 0.05, 0.05, 0.05, 0.05],
+            [1.5, 1.5, 1.5, 1.5, 1.5],
+            [5, 5, 5, 5, 5],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "60/70/80/90/100", "0.3/0.05/0.05/0.05/0.05", "1.5", "5", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [20, 20, 20, 20, 20],
+          "rangeBurn": "20",
+          "image": {
+            "full": "NocturneShroudofDarkness.png",
+            "sprite": "spell9.png",
+            "group": "spell",
+            "x": 240,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "NocturneUnspeakableHorror",
+          "name": "Unspeakable Horror",
+          "description": "Nocturne plants a nightmare into his target's mind, dealing damage each second and applying fear to the target if they do not get out of range by the end of the duration.",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Nocturne gains <speed>{{ tooltipfearms*100 }}% Move Speed</speed> toward <status>Feared</status> enemies.<br /><br /><spellActive>Active:</spellActive> Nocturne plants a nightmare tether into his target, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> over {{ e3 }} seconds. If the tether remains unbroken, the target is <status>Feared</status> for {{ e2 }} second(s).{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Fear Duration", "Cooldown", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ e1 }} -> {{ e1NL }}",
+              "{{ e2 }} -> {{ e2NL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [15, 14, 13, 12, 11],
+          "cooldownBurn": "15/14/13/12/11",
+          "cost": [60, 65, 70, 75, 80],
+          "costBurn": "60/65/70/75/80",
+          "datavalues": {},
+          "effect": [
+            null,
+            [80, 125, 170, 215, 260],
+            [1.25, 1.5, 1.75, 2, 2.25],
+            [2, 2, 2, 2, 2],
+            [465, 465, 465, 465, 465],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "80/125/170/215/260", "1.25/1.5/1.75/2/2.25", "2", "465", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [425, 425, 425, 425, 425],
+          "rangeBurn": "425",
+          "image": {
+            "full": "NocturneUnspeakableHorror.png",
+            "sprite": "spell9.png",
+            "group": "spell",
+            "x": 288,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "NocturneParanoia",
+          "name": "Paranoia",
+          "description": "Nocturne reduces the sight radius of all enemy champions and removes their ally vision in the process. He can then launch himself at a nearby enemy champion.",
+          "tooltip": "Nocturne darkens the map, reducing the sight radius of all enemy champions and removing their vision of allies for {{ paranoiaduration }} seconds. Nocturne can <recast>Recast</recast> this Ability during the duration to launch himself at an enemy champion dealing <physicalDamage>{{ damage }} physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Range", "Cooldown"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ castrange }} -> {{ castrangeNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [140, 115, 90],
+          "cooldownBurn": "140/115/90",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [2500, 3250, 4000],
+          "rangeBurn": "2500/3250/4000",
+          "image": {
+            "full": "NocturneParanoia.png",
+            "sprite": "spell9.png",
+            "group": "spell",
+            "x": 336,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Umbra Blades",
+        "description": "Every few seconds, Nocturne's next attack strikes surrounding enemies for bonus physical damage and heals himself. <br><br>Nocturne's basic attacks reduce this cooldown.",
+        "image": {
+          "full": "Nocturne_UmbraBlades.png",
+          "sprite": "passive3.png",
+          "group": "passive",
+          "x": 192,
+          "y": 0,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

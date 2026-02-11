@@ -1,0 +1,89 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "ignoreExportsUsedInFile": {
+    "interface": true,
+    "type": true
+  },
+  "tags": ["-lintignore"],
+  "ignore": [
+    "packages/backend/generated/**",
+    "**/*.snap",
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/.astro/**",
+    "**/*-stub.ts",
+    "**/postcss.config.js",
+    "eslint-rules/eslint-plugin-eslint-comments.d.ts",
+    "packages/backend/src/database/migrate.ts",
+    "packages/backend/src/health.ts"
+  ],
+  "ignoreDependencies": ["@commitlint/cli", "bun-types"],
+  "rules": {
+    "files": "warn",
+    "dependencies": "warn",
+    "devDependencies": "warn",
+    "exports": "warn",
+    "duplicates": "off",
+    "types": "off",
+    "nsExports": "off",
+    "nsTypes": "off",
+    "enumMembers": "off",
+    "classMembers": "off",
+    "unlisted": "off",
+    "binaries": "off"
+  },
+  "workspaces": {
+    ".": {
+      "entry": ["scripts/*.ts", ".husky/commit-msg", ".husky/pre-commit", "eslint-rules/**/*.test.ts"],
+      "project": ["scripts/**/*.ts", "eslint-rules/**/*.ts"]
+    },
+    ".dagger": {
+      "entry": ["src/index.ts"],
+      "project": ["src/index.ts"]
+    },
+    "packages/backend": {
+      "project": ["src/**/*.ts", "prisma/**/*.prisma"],
+      "ignore": ["generated/**", "scripts/**"],
+      "ignoreDependencies": [
+        "@prisma/client",
+        "react",
+        "satori",
+        "@resvg/resvg-js",
+        "yoga-wasm-web",
+        "uuid",
+        "@types/uuid",
+        "glob"
+      ]
+    },
+    "packages/data": {
+      "project": ["src/**/*.ts"]
+    },
+    "packages/report": {
+      "project": ["src/**/*.ts", "src/**/*.tsx"],
+      "ignoreDependencies": ["react", "yoga-wasm-web", "@types/react"]
+    },
+    "packages/frontend": {
+      "entry": [
+        "src/pages/**/*.astro",
+        "dev/report-ui/src/main.tsx",
+        "dev/report-ui/src/arena-example.ts",
+        "dev/review-dev-tool/src/pages/**/*.astro"
+      ],
+      "project": [
+        "src/**/*.ts",
+        "src/**/*.tsx",
+        "src/**/*.astro",
+        "dev/**/*.ts",
+        "dev/**/*.tsx",
+        "dev/**/*.astro",
+        "astro.config.mjs"
+      ],
+      "ignoreDependencies": [
+        "@tailwindcss/postcss",
+        "@astrojs/tailwind",
+        "@iconify-json/heroicons",
+        "@iconify-json/simple-icons"
+      ]
+    }
+  }
+}

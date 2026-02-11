@@ -1,0 +1,85 @@
+{
+  "compilerOptions": {
+    // Environment setup & latest features
+    "lib": [
+      "ESNext"
+    ],
+    "target": "ESNext",
+    "allowImportingTsExtensions": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "downlevelIteration": true,
+    "checkJs": false,
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
+    // Workspace path mappings
+    "baseUrl": ".",
+    "paths": {
+      "@shepherdjerred/scout-backend/*": [
+        "./backend/src/*"
+      ],
+      "@shepherdjerred/scout-frontend/*": [
+        "./frontend/src/*"
+      ],
+      "@shepherdjerred/scout-data/*": [
+        "./data/src/*"
+      ],
+      "@shepherdjerred/scout-data": [
+        "./data/src/index.ts"
+      ],
+      "@shepherdjerred/scout-report/*": [
+        "./report/src/*"
+      ],
+      "@shepherdjerred/scout-report": [
+        "./report/src/index.ts"
+      ],
+      "@shepherdjerred/scout-desktop/*": [
+        "./desktop/src/*"
+      ],
+      "@shepherdjerred/scout-ui/*": [
+        "./ui/src/*"
+      ],
+      "@shepherdjerred/scout-ui": [
+        "./ui/src/index.ts"
+      ]
+    },
+    "types": [
+      "bun-types"
+    ],
+    // Best practices
+    "strict": true,
+    "skipLibCheck": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "resolveJsonModule": true,
+    "noImplicitOverride": true,
+    "strictNullChecks": true,
+    // Maximum strictness for safety
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitReturns": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "useUnknownInCatchVariables": true,
+    "noUncheckedSideEffectImports": true,
+    "noEmitOnError": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "isolatedDeclarations": false,
+    "strictBuiltinIteratorReturn": true,
+    "noErrorTruncation": true,
+    // Performance - enable incremental compilation
+    "incremental": true,
+    "noEmit": true
+  },
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/node_modules",
+    "**/dist"
+  ]
+}

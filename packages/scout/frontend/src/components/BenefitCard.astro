@@ -1,0 +1,25 @@
+---
+import Card from './Card.astro';
+import type { ColorVariant } from '../lib/colors';
+
+interface Props {
+  title: string;
+  description: string;
+  icon: string;
+  color?: ColorVariant;
+}
+
+const { title, description, icon, color = 'green' } = Astro.props;
+
+// Determine if icon is an astro-icon name or HTML
+const isIconName = icon && !icon.includes('<');
+---
+
+<Card
+  title={title}
+  description={description}
+  icon={isIconName ? icon : undefined}
+  iconHtml={!isIconName ? icon : undefined}
+  color={color}
+  layout="centered"
+/>

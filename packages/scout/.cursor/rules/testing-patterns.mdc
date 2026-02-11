@@ -1,0 +1,602 @@
+---
+description: Testing patterns and best practices
+globs: "*.test.ts,*.integration.test.ts,*.spec.ts,*.test.tsx,*.spec.tsx"
+---
+
+# Testing Patterns
+
+## Import Types in Tests
+
+Use proper imports for test utilities vs runtime code:
+
+```typescript
+// ✅ CORRECT:
+import { describe, test, expect, beforeEach } from "bun:test";
+import { createCompetition, type CreateCompetitionInput } from "./queries.ts";
+import type { Competition } from "./types.ts";
+
+// ❌ WRONG:
+import type { createCompetition } from "./queries.ts";  // Function used at runtime!
+```
+
+## Test Data Patterns
+
+Create helper functions for test data:
+
+```typescript
+// ✅ CORRECT:
+function createTestUser(name: string, discordId: string) {
+  return prisma.user.create({
+    data: {
+      discordId,
+      discordUsername: name,
+      // ... other fields
+    },
+  });
+}
+
+test("user creation", async () => {
+  const user = await createTestUser("TestUser", "123456789");
+  expect(user.discordUsername).toBe("TestUser");
+});
+
+// ❌ WRONG (duplicated test data):
+test("user creation", async () => {
+  const user = await prisma.user.create({
+    data: {
+      discordId: "123456789",
+      discordUsername: "TestUser",
+      // ... repeated in every test
+    },
+  });
+});
+```
+
+## Reusable Error Schema
+
+Define the error schema once per test file:
+
+```typescript
+import { z } from "zod";
+
+const ErrorSchema = z.object({ message: z.string() });
+
+// Use throughout the file:
+test("handles error case 1", async () => {
+  let error: unknown = null;
+  try {
+    await operation1();
+  } catch (e) {
+    error = e;
+  }
+
+  const result = ErrorSchema.safeParse(error);
+  if (result.success) {
+    expect(result.data.message).toContain("error 1");
+  }
+});
+
+test("handles error case 2", async () => {
+  let error: unknown = null;
+  try {
+    await operation2();
+  } catch (e) {
+    error = e;
+  }
+
+  const result = ErrorSchema.safeParse(error);
+  if (result.success) {
+    expect(result.data.message).toContain("error 2");
+  }
+});
+```
+
+## Database Test Setup
+
+### Pattern for Integration Tests
+
+Create isolated test database once, clean between tests:
+
+```typescript
+import { execSync } from "node:child_process";
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { afterEach, beforeEach } from "bun:test";
+import { PrismaClient } from "generated/prisma/client";
+
+// Create test database ONCE (outside beforeEach)
+const testDir = mkdtempSync(join(tmpdir(), "test-"));
+const testDbPath = join(testDir, "test.db");
+const testDbUrl = `file:${testDbPath}`;
+
+// ✅ CORRECT: Use bun run db:push (NOT prisma migrate)
+execSync(`DATABASE_URL="${testDbUrl}" bun run db:push`, {
+  cwd: join(import.meta.dir, "../../.."),
+  env: { ...process.env, DATABASE_URL: testDbUrl },
+});
+
+const prisma = new PrismaClient({
+  datasources: { db: { url: testDbUrl } },
+});
+
+beforeEach(async () => {
+  // Clean up in dependency order (child tables first)
+  await prisma.competitionSnapshot.deleteMany();
+  await prisma.competitionParticipant.deleteMany();
+  await prisma.competition.deleteMany();
+});
+
+afterEach(async () => {
+  await prisma.$disconnect();  // Required! Prevents connection leaks
+});
+```
+
+**Why `db:push` not `migrate`?**
+
+- Faster (no migration history)
+- Works with temporary databases
+- Syncs schema directly from schema.prisma
+- Handles schema changes easily
+
+**See:** `prisma-patterns.mdc` for Prisma-specific patterns.
+
+## Testing Async Functions
+
+Always await async operations and handle errors:
+
+```typescript
+// ✅ CORRECT:
+test("async operation", async () => {
+  const result = await asyncOperation();
+  expect(result).toBeDefined();
+});
+
+test("async error", async () => {
+  let error: unknown = null;
+  try {
+    await operationThatFails();
+  } catch (e) {
+    error = e;
+  }
+  expect(error).not.toBeNull();
+});
+
+// ❌ WRONG (not awaiting):
+test("async operation", () => {
+  const result = asyncOperation();  // Promise, not result!
+  expect(result).toBeDefined();
+});
+```
+
+## Testing Validation Functions
+
+Test both success and failure cases:
+
+```typescript
+describe("validation function", () => {
+  test("accepts valid input", () => {
+    const result = Schema.safeParse(validInput);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.field).toBe(expectedValue);
+    }
+  });
+
+  test("rejects invalid input", () => {
+    const result = Schema.safeParse(invalidInput);
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0]?.message).toContain("expected error");
+    }
+  });
+});
+```
+
+## Integration Test Patterns
+
+For integration tests with database:
+
+```typescript
+describe("Feature Integration", () => {
+  test("complete flow", async () => {
+    // 1. Setup
+    const user = await createTestUser("Test", "123");
+    const competition = await createTestCompetition();
+
+    // 2. Execute
+    await addParticipant(prisma, competition.id, user.id, "JOINED");
+
+    // 3. Verify
+    const participants = await getParticipants(prisma, competition.id);
+    expect(participants).toHaveLength(1);
+    expect(participants[0]?.playerId).toBe(user.id);
+
+    // 4. Verify side effects
+    const status = await getParticipantStatus(prisma, competition.id, user.id);
+    expect(status).toBe("JOINED");
+  });
+});
+```
+
+## Snapshot Testing
+
+Use snapshots for complex output:
+
+```typescript
+test("generates correct report", () => {
+  const report = generateReport(data);
+  expect(report).toMatchSnapshot();
+});
+
+// Update snapshots when output intentionally changes:
+// bun test --update-snapshots
+```
+
+## Test Organization
+
+Group related tests with describe blocks:
+
+```typescript
+describe("Feature Name", () => {
+  describe("sub-feature or method", () => {
+    test("specific behavior 1", () => {
+      // ...
+    });
+
+    test("specific behavior 2", () => {
+      // ...
+    });
+  });
+
+  describe("error cases", () => {
+    test("handles error A", async () => {
+      // ...
+    });
+
+    test("handles error B", async () => {
+      // ...
+    });
+  });
+});
+```
+
+## Test Naming
+
+Use descriptive test names that explain the behavior:
+
+```typescript
+// ✅ CORRECT:
+test("throws error when adding participant to full competition", async () => {});
+test("allows adding participant after another leaves", async () => {});
+test("returns only JOINED participants when status filter applied", async () => {});
+
+// ❌ WRONG:
+test("test 1", async () => {});
+test("works", async () => {});
+test("participant", async () => {});
+```
+
+## Avoid Test Interdependence
+
+Each test should be independent:
+
+```typescript
+// ❌ WRONG (tests depend on each other):
+test("step 1", async () => {
+  globalState.value = await setup();
+});
+
+test("step 2", async () => {
+  await process(globalState.value);  // Depends on step 1!
+});
+
+// ✅ CORRECT (independent tests):
+test("complete flow", async () => {
+  const state = await setup();
+  await process(state);
+  expect(state).toBeDefined();
+});
+```
+
+## Running Tests
+
+### Basic Test Commands
+
+```bash
+# Run all tests (includes eslint-rules tests)
+bun test
+bun run test              # Root: eslint-rules + all packages
+
+# Package-specific
+cd packages/backend && bun test
+cd packages/data && bun test
+
+# Specific test file
+bun test src/database/competition.test.ts
+
+# Watch mode (re-run on changes)
+bun test --watch
+
+# Coverage
+bun test --coverage
+bun test --coverage --bail  # With threshold check
+
+# CI mode
+bun test --bail --reporter=junit
+
+# Fast mode (bail after 3 failures)
+bun test --bail=3
+
+# Debug mode (randomize test order)
+bun test --randomize
+
+# Update snapshots
+bun test --update-snapshots
+```
+
+### Test Scripts in Backend
+
+```bash
+cd packages/backend
+
+bun run test              # All tests
+bun run test:watch        # Watch mode
+bun run test:coverage     # With coverage report
+bun run test:ci           # CI mode (junit output)
+bun run test:fast         # Bail after 3 failures
+bun run test:debug        # Randomized test order
+```
+
+### Test Output
+
+#### ✅ All Tests Pass
+
+```
+✓ src/user.test.ts (3 tests)
+✓ src/database/competition.integration.test.ts (5 tests)
+
+8 pass (234.5ms)
+```
+
+#### ❌ Test Failures
+
+```
+✗ src/user.test.ts
+  ✗ should create user
+    error: Expected 200 but got 404
+
+1 fail (123.45ms)
+```
+
+**Fix:** Debug the failing test and check its setup/teardown
+
+## Test-Specific ESLint Rules
+
+Tests have relaxed ESLint rules to allow testing patterns:
+
+### Allowed in Test Files
+
+Test files (`*.test.ts`, `*.integration.test.ts`, `*.spec.ts`) allow:
+
+```typescript
+// ✅ Allowed in tests only
+const data: any = {}; // 'any' type allowed for mocks
+
+// ✅ Type assertions allowed for test doubles
+const mock = createObject() as SomeType;
+
+// ✅ More complex code allowed
+function setupComplexMockData() {
+  // Complex setup is OK in tests
+}
+```
+
+### Rules Still Enforced in Tests
+
+Even in test files, these rules apply:
+
+```typescript
+// ❌ Still not allowed - use proper names
+const schema = z.object({ });  // Should be Schema
+
+// ❌ Still not allowed - don't re-export
+export * from "./helpers";
+
+// ❌ Integration tests must disconnect Prisma
+// afterEach(async () => {
+//   await prisma.$disconnect();
+// });
+```
+
+### ESLint Configuration for Tests
+
+```bash
+# ESLint is more lenient for tests
+bun run lint  # Tests have fewer restrictions
+
+# Type checking still strict
+bun run typecheck  # Same rules everywhere
+
+# Tests can use any and type assertions
+# but should still validate with Zod when possible
+```
+
+## Integration Test Specific Rules
+
+Integration tests (`*.integration.test.ts`) enforce the `prisma-client-disconnect` rule:
+
+### Rule: `prisma-client-disconnect`
+
+**Enforces:** All Prisma clients must disconnect after tests
+
+```typescript
+// ✅ CORRECT
+const prisma = new PrismaClient();
+
+afterEach(async () => {
+  await prisma.$disconnect();  // Always disconnect
+});
+
+test("creates user", async () => {
+  await prisma.user.create({ /* ... */ });
+});
+
+// ❌ WRONG (triggers linter)
+const prisma = new PrismaClient();
+
+test("creates user", async () => {
+  await prisma.user.create({ /* ... */ });
+  // Missing disconnect!
+});
+```
+
+**Why:** Without disconnect:
+
+- Connections leak
+- Tests hang or timeout
+- Can't run many tests in sequence
+- CI environment fails
+
+**Related:** See `prisma-patterns.mdc` for full Prisma testing guide
+
+## Test Organization Best Practices
+
+### File Structure
+
+```
+packages/backend/src/
+├── user/
+│   ├── index.ts
+│   ├── queries.ts
+│   ├── queries.test.ts          # Unit tests
+│   └── queries.integration.test.ts  # Integration tests
+├── database/
+│   ├── competition.ts
+│   ├── competition.test.ts
+│   └── competition.integration.test.ts
+└── league/
+    ├── tasks/
+    │   ├── match.ts
+    │   └── match.test.ts
+```
+
+### Naming Pattern
+
+| Type | Suffix | Purpose |
+|------|--------|---------|
+| Unit | `.test.ts` | Single function/module |
+| Integration | `.integration.test.ts` | Multiple components + database |
+| Spec | `.spec.ts` | Component specifications (React) |
+
+### Test Organization
+
+```typescript
+describe("Module", () => {
+  describe("specific feature", () => {
+    test("behavior 1", () => {});
+    test("behavior 2", () => {});
+  });
+
+  describe("error handling", () => {
+    test("handles error A", () => {});
+    test("handles error B", () => {});
+  });
+});
+```
+
+## Running Verification
+
+### Local Testing
+
+```bash
+# Run tests locally (mise way)
+mise run test
+
+# Run tests with Bun directly
+bun test
+
+# Watch mode for development
+bun test --watch
+
+# Specific test file
+bun test src/database/competition.integration.test.ts
+```
+
+### CI Environment Testing
+
+```bash
+# Run exact CI environment checks
+dagger call check
+
+# Or full CI pipeline
+dagger call ci --version="1.0.0" --git-sha="abc123"
+```
+
+### Pre-Commit Testing
+
+```bash
+# Complete verification
+mise check  # Includes tests
+
+# Then commit if all pass
+```
+
+## Common Test Failures
+
+### Error: "Prisma client not connected"
+
+**Cause:** Missing or incorrect database setup
+
+**Fix:**
+
+```typescript
+// Ensure test database is created
+const testDir = mkdtempSync(join(tmpdir(), "test-"));
+const testDbPath = join(testDir, "test.db");
+const testDbUrl = `file:${testDbPath}`;
+
+execSync(`DATABASE_URL="${testDbUrl}" bun run db:push`);
+```
+
+### Error: "Test timeout"
+
+**Cause:** Prisma client not disconnected or slow operation
+
+**Fix:**
+
+```typescript
+// Add disconnect in afterEach
+afterEach(async () => {
+  await prisma.$disconnect();
+});
+
+// Or increase timeout
+test("slow operation", async () => {
+  // ...
+}, { timeout: 10000 });  // 10 second timeout
+```
+
+### Error: "Database locked"
+
+**Cause:** Multiple tests running against same database
+
+**Fix:**
+
+```typescript
+// Create unique database per test suite
+const testDbPath = join(tmpdir(), `test-${Date.now()}.db`);
+
+// Or use beforeEach to clean state
+beforeEach(async () => {
+  await prisma.user.deleteMany();
+});
+```
+
+## Related Documentation
+
+- **Prisma Patterns:** See `prisma-patterns.mdc`
+- **Error Handling:** See `error-handling-patterns.mdc`
+- **ESLint Rules:** See `eslint-custom-rules.mdc`
+- **Code Quality:** See `code-quality-checklist.mdc`
+- **Verification:** See `mise-and-dagger-usage.mdc`

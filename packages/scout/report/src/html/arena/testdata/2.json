@@ -1,0 +1,2254 @@
+{
+  "durationInSeconds": 1354,
+  "players": [
+    {
+      "champion": {
+        "arenaMetrics": {
+          "playerScore0": 3,
+          "playerScore1": 13,
+          "playerScore2": 1291.400146484375,
+          "playerScore3": 0.40740740299224854,
+          "playerScore4": 6.850000381469727,
+          "playerScore5": 3720.82080078125,
+          "playerScore6": 3857.16845703125,
+          "playerScore7": 1754.0001220703125,
+          "playerScore8": 5.61513614654541
+        },
+        "assists": 5,
+        "augments": [
+          {
+            "apiName": "DualWield",
+            "calculations": {
+              "{84eb6ffe}": {
+                "__type": "GameCalculation",
+                "mFormulaParts": [
+                  {
+                    "__type": "StatByNamedDataValueCalculationPart",
+                    "mDataValue": "AttackReduction",
+                    "mStat": 2
+                  }
+                ]
+              }
+            },
+            "dataValues": {
+              "AttackReduction": 0.4000000059604645,
+              "AttackSpeed": 0.25,
+              "OnHitMod": 0.4000000059604645,
+              "SecondMissileDelay": 0.15000000596046448
+            },
+            "desc": "When you Attack, fire a secondary bolt that deals @AttackReduction*100@% damage and applies your {{ Item_Keyword_OnHit }} effects at @OnHitMod*100@% effectiveness. Gain <attackSpeed>@AttackSpeed*100@% total Attack Speed</attackSpeed>.",
+            "iconLarge": "assets/ux/cherry/augments/icons/dualwield_large.png",
+            "iconSmall": "assets/ux/cherry/augments/icons/dualwield_small.png",
+            "id": 225,
+            "name": "Dual Wield",
+            "rarity": "gold",
+            "tooltip": "When you Attack, fire a secondary bolt that deals @AttackReduction*100@% damage and applies your {{ Item_Keyword_OnHit }} effects at @OnHitMod*100@% effectiveness. Gain <attackSpeed>@AttackSpeed*100@% total Attack Speed</attackSpeed>.",
+            "type": "full"
+          },
+          {
+            "apiName": "SymphonyofWar",
+            "calculations": {
+              "ASMelee": {
+                "__type": "GameCalculation",
+                "mFormulaParts": [
+                  {
+                    "__type": "ByCharLevelBreakpointsCalculationPart",
+                    "mBreakpoints": [
+                      {
+                        "__type": "Breakpoint",
+                        "mAdditionalBonusAtThisLevel": 0.009999999776482582,
+                        "mLevel": 3
+                      },
+                      {
+                        "__type": "Breakpoint",
+                        "mAdditionalBonusAtThisLevel": 0.009999999776482582,
+                        "mLevel": 6
+                      },
+                      {
+                        "__type": "Breakpoint",
+                        "mAdditionalBonusAtThisLevel": 0.009999999776482582,
+                        "mLevel": 9
+                      },
+                      {
+                        "__type": "Breakpoint",
+                        "mAdditionalBonusAtThisLevel": 0.009999999776482582,
+                        "mLevel": 12
+                      },
+                      {
+                        "__type": "Breakpoint",
+                        "mAdditionalBonusAtThisLevel": 0.009999999776482582,
+                        "mLevel": 15
+                      }
+                    ],
+                    "mLevel1Value": 0.12999999523162842
+                  }
+                ]
+              },
+              "ASRanged": {
+                "__type": "GameCalculation",
+                "mFormulaParts": [
+                  {
+                    "__type": "ByCharLevelBreakpointsCalculationPart",
+                    "mBreakpoints": [
+                      {
+                        "__type": "Breakpoint",
+                        "mAdditionalBonusAtThisLevel": 0.009999999776482582,
+                        "mLevel": 3
+                      },
+                      {
+                        "__type": "Breakpoint",
+                        "mAdditionalBonusAtThisLevel": 0.009999999776482582,
+                        "mLevel": 6
+                      },
+                      {
+                        "__type": "Breakpoint",
+                        "mAdditionalBonusAtThisLevel": 0.009999999776482582,
+                        "mLevel": 9
+                      },
+                      {
+                        "__type": "Breakpoint",
+                        "mAdditionalBonusAtThisLevel": 0.009999999776482582,
+                        "mLevel": 12
+                      }
+                    ],
+                    "mLevel1Value": 0.07999999821186066
+                  }
+                ]
+              }
+            },
+            "dataValues": {
+              "ASCap": 10,
+              "BuffDuration": 5,
+              "Duration": 6,
+              "HealingPercent": 0.10000000149011612,
+              "MaxAdaptivePerStack": 5.5,
+              "MaxStacks": 12,
+              "MinAdaptivePerStack": 3,
+              "PerCastIDLockout": 10,
+              "RangeBonus": 50,
+              "RangedHealingPercent": 0.07999999821186066,
+              "StackCap": 6,
+              "TimeUntilNextStackFromSameSpell": 5
+            },
+            "desc": "Gain the <spellName>Lethal Tempo</spellName> and <spellName>Conqueror</spellName> Keystone Runes.",
+            "iconLarge": "assets/ux/cherry/augments/icons/symphonyofwar_large.png",
+            "iconSmall": "assets/ux/cherry/augments/icons/symphonyofwar_small.png",
+            "id": 79,
+            "name": "Symphony of War",
+            "rarity": "gold",
+            "tooltip": "Gain the <spellName>Lethal Tempo</spellName> and <spellName>Conqueror</spellName> Keystone Runes.",
+            "type": "full"
+          },
+          {
+            "apiName": "OutlawsGrit",
+            "calculations": {
+              "MaxResistTooltipOnly": {
+                "__type": "GameCalculation",
+                "mFormulaParts": [
+                  {
+                    "__type": "ProductOfSubPartsCalculationPart",
+                    "mPart1": {
+                      "__type": "NamedDataValueCalculationPart",
+                      "mDataValue": "ResistsPerStack"
+                    },
+                    "mPart2": {
+                      "__type": "NamedDataValueCalculationPart",
+                      "mDataValue": "MaxStacks"
+                    }
+                  }
+                ]
+              }
+            },
+            "dataValues": {
+              "MaxStacks": 5,
+              "ResistsPerStack": 12
+            },
+            "desc": "After using a dash, blink, or teleport you gain <scaleArmor>@ResistsPerStack@ Armor</scaleArmor> and <scaleMR>Magic Resist</scaleMR> up to @MaxResistTooltipOnly@ at @MaxStacks@ stacks.",
+            "iconLarge": "assets/ux/cherry/augments/icons/outlawsgrit_large.png",
+            "iconSmall": "assets/ux/cherry/augments/icons/outlawsgrit_small.png",
+            "id": 63,
+            "name": "Outlaw's Grit",
+            "rarity": "prismatic",
+            "tooltip": "After using a dash, leap, blink, or teleport Ability you gain <scaleArmor>@ResistsPerStack@ Armor</scaleArmor> and <scaleMR>Magic Resist</scaleMR> up to @MaxResistTooltipOnly@ at @MaxStacks@ stacks.",
+            "type": "full"
+          },
+          {
+            "apiName": "DefensiveManeuvers",
+            "calculations": {
+              "BarrierAmount": {
+                "__type": "GameCalculation",
+                "mFormulaParts": [
+                  {
+                    "__type": "ByCharLevelInterpolationCalculationPart",
+                    "mEndValue": 440,
+                    "mStartValue": 110
+                  }
+                ]
+              },
+              "HealAmount": {
+                "__type": "GameCalculation",
+                "mFormulaParts": [
+                  {
+                    "__type": "ByCharLevelInterpolationCalculationPart",
+                    "mEndValue": 318,
+                    "mStartValue": 80
+                  }
+                ]
+              }
+            },
+            "dataValues": {
+              "AllyRange": 835,
+              "MoveSpeed": 0.30000001192092896,
+              "ShieldDuration": 2.5
+            },
+            "desc": "Gain the <spellName>Defensive Maneuvers</spellName> Summoner Spell.<br><br><rules><spellName>Defensive Maneuvers</spellName> Casts both Summoner <spellName>Barrier</spellName> and <spellName>Heal</spellName> on you and your teammate.</rules>",
+            "iconLarge": "assets/ux/cherry/augments/icons/defensivemaneuvers_large.png",
+            "iconSmall": "assets/ux/cherry/augments/icons/defensivemaneuvers_small.png",
+            "id": 21,
+            "name": "Defensive Maneuvers",
+            "rarity": "prismatic",
+            "tooltip": "Cast Summoner <abilityName>Barrier</abilityName> and <abilityName>Heal</abilityName> on you and your ally. Grants <shield>@BarrierAmount@ Shield</shield>, restores <healing>@HealAmount@ Health</healing>, and gives <speed>30% Move Speed</speed> for 1 second.<br><br>Healing Done Total: @f1@<br>Shields Created Total: @f2@",
+            "type": "full"
+          }
+        ],
+        "championName": "Gwen",
+        "damage": 48370,
+        "deaths": 7,
+        "gold": 15765,
+        "items": [223124, 443193, 447104, 444637, 224633, 223158, 3348],
+        "kills": 11,
+        "level": 18,
+        "riotIdGameName": "Azure22000",
+        "teamSupport": {
+          "damageShieldedOnTeammate": 0,
+          "damageTakenPercentage": 0.1494017366203054,
+          "healsOnTeammate": 281
+        }
+      },
+      "placement": 3,
+      "playerConfig": {
+        "alias": "RealDataUser",
+        "discordAccount": null,
+        "league": {
+          "leagueAccount": {
+            "puuid": "bL9pahyX3LbriXUwyIlEgbsz8xppWHmfFsly7T2s4fM4ENMQvpfly4-Z8CsiZ0kZRkcR42ld1cKmQQ",
+            "region": "PBE"
+          }
+        }
+      },
+      "teamId": 8,
+      "teammate": {
+        "arenaMetrics": {
+          "playerScore0": 3,
+          "playerScore1": 13,
+          "playerScore2": 1291.400146484375,
+          "playerScore3": 0.40740740299224854,
+          "playerScore4": 6.200000286102295,
+          "playerScore5": 2586.505615234375,
+          "playerScore6": 1845.8271484375,
+          "playerScore7": 223.1538543701172,
+          "playerScore8": 7.853437900543213
+        },
+        "assists": 9,
+        "augments": [
+          {
+            "apiName": "Eureka",
+            "calculations": {
+              "APToHasteConversionCalc": {
+                "__type": "GameCalculation",
+                "mFormulaParts": [
+                  {
+                    "__type": "StatByNamedDataValueCalculationPart",
+                    "mDataValue": "APToHasteConversion"
+                  }
+                ]
+              }
+            },
+            "dataValues": {
+              "APToHasteConversion": 0.30000001192092896
+            },
+            "desc": "Gain Ability Haste equal to <scaleAP>@APToHasteConversion*100@% Ability Power</scaleAP>.",
+            "iconLarge": "assets/ux/cherry/augments/icons/eureka_large.png",
+            "iconSmall": "assets/ux/cherry/augments/icons/eureka_small.png",
+            "id": 30,
+            "name": "Eureka",
+            "rarity": "gold",
+            "tooltip": "Gain @APToHasteConversionCalc@ Ability Haste.",
+            "type": "full"
+          },
+          {
+            "apiName": "AcceleratingSorcery",
+            "calculations": {},
+            "dataValues": {
+              "HastePerCast": 12
+            },
+            "desc": "Using Abilities grant you infinitely stacking Ability Haste, this resets each round.",
+            "iconLarge": "assets/ux/cherry/augments/icons/acceleratingsorcery_large.png",
+            "iconSmall": "assets/ux/cherry/augments/icons/acceleratingsorcery_small.png",
+            "id": 1,
+            "name": "Accelerating Sorcery",
+            "rarity": "gold",
+            "tooltip": "Using an Ability grants <scaleBonus>@HastePerCast@ Ability Haste</scaleBonus>, stacking infinitely, this resets each round.",
+            "type": "full"
+          },
+          {
+            "apiName": "Marksmage",
+            "calculations": {
+              "APDamage": {
+                "__type": "GameCalculation",
+                "mFormulaParts": [
+                  {
+                    "__type": "StatByNamedDataValueCalculationPart",
+                    "mDataValue": "APRatio"
+                  }
+                ],
+                "mMultiplier": {
+                  "__type": "NamedDataValueCalculationPart",
+                  "mDataValue": "APRatio"
+                }
+              }
+            },
+            "dataValues": {
+              "APRatio": 1
+            },
+            "desc": "Your Attacks deal additional <physicalDamage>physical damage</physicalDamage> equal to <scaleAP>@APRatio*100@% Ability Power</scaleAP>.",
+            "iconLarge": "assets/ux/cherry/augments/icons/marksmage_large.png",
+            "iconSmall": "assets/ux/cherry/augments/icons/marksmage_small.png",
+            "id": 129,
+            "name": "Marksmage",
+            "rarity": "prismatic",
+            "tooltip": "Your Attacks deal additional <physicalDamage>@APDamage@ physical damage</physicalDamage>.<br><br>Damage Dealt This Round: @f1@<br>Damage Dealt Total: @f2@",
+            "type": "full"
+          },
+          {
+            "apiName": "ItsKillingTime",
+            "calculations": {},
+            "dataValues": {
+              "Cooldown": 8,
+              "DamageStorePercentage": 0.4000000059604645,
+              "MarkDuration": 5,
+              "VFXHighDamageThreshold": 500
+            },
+            "desc": "After casting your Ultimate, mark all enemy champions for death. While marked, store a percentage of damage dealt to them, and detonate the damage when the mark ends.",
+            "iconLarge": "assets/ux/cherry/augments/icons/itskillingtime_large.png",
+            "iconSmall": "assets/ux/cherry/augments/icons/itskillingtime_small.png",
+            "id": 211,
+            "name": "It's Killing Time",
+            "rarity": "prismatic",
+            "tooltip": "After casting your Ultimate, mark all enemy champions for death. The mark stores @DamageStorePercentage*100@% of damage dealt to them, then detonates for the stored damage after @MarkDuration@ seconds. (@Cooldown@ second Cooldown).<br><br>Damage Dealt This Round: @f1@<br>Damage Dealt Total: @f2@",
+            "type": "full"
+          }
+        ],
+        "championName": "Veigar",
+        "damage": 33624,
+        "deaths": 4,
+        "gold": 18266,
+        "items": [223009, 223135, 223157, 223089, 447106, 443080, 3348],
+        "kills": 6,
+        "level": 18,
+        "riotIdGameName": "xRARESTx",
+        "teamSupport": {
+          "damageShieldedOnTeammate": 0,
+          "damageTakenPercentage": 0.0714953953277693,
+          "healsOnTeammate": 0
+        }
+      }
+    }
+  ],
+  "queueType": "arena",
+  "teams": [
+    {
+      "placement": 7,
+      "players": [
+        {
+          "arenaMetrics": {
+            "playerScore0": 7,
+            "playerScore1": 8,
+            "playerScore2": 918.9318237304688,
+            "playerScore3": 0.65625,
+            "playerScore4": 1.5,
+            "playerScore5": 2864.638427734375,
+            "playerScore6": 4646.291015625,
+            "playerScore7": 1036.625,
+            "playerScore8": 13.718281745910645
+          },
+          "assists": 3,
+          "augments": [
+            {
+              "apiName": "GambaAnvil",
+              "calculations": {},
+              "dataValues": {
+                "GoldBonus": 1000,
+                "LegendaryCostReduction": -500,
+                "LegendaryGoldBasisDiscount": 1000,
+                "PrismaticCostReduction": -1500,
+                "PrismaticGoldBasisDiscount": 1250,
+                "StatCostReduction": -250
+              },
+              "desc": "Gain @GoldBonus@ gold and reduce the price of all anvils.<br><br>Prismatic Anvils: @PrismaticCostReduction@<br>Legendary Anvils: @LegendaryCostReduction@<br>Stat Anvils: @StatCostReduction@<br><br><rules>Items acquired from anvils resell for 500 gold less.</rules>",
+              "iconLarge": "assets/ux/cherry/augments/icons/thiefsgloves_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/thiefsgloves_small.png",
+              "id": 234,
+              "name": "Gamba Anvil",
+              "rarity": "gold",
+              "tooltip": "Gain @GoldBonus@ gold and reduce the price of all anvils.<br><br>Prismatic Anvils: @PrismaticCostReduction@<br>Legendary Anvils: @LegendaryCostReduction@<br>Stat Anvils: @StatCostReduction@<br><br><rules>Items acquired from anvils resell for 500 gold less.</rules>",
+              "type": "full"
+            },
+            {
+              "apiName": "OmniSoul",
+              "calculations": {},
+              "dataValues": {
+                "SoulsToAdd": 3
+              },
+              "desc": "Gain 3 random Dragon Souls.",
+              "iconLarge": "assets/ux/cherry/augments/icons/omnisoul_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/omnisoul_small.png",
+              "id": 62,
+              "name": "Omni Soul",
+              "rarity": "gold",
+              "tooltip": "Gain 3 random Dragon Souls.",
+              "type": "full"
+            },
+            {
+              "apiName": "DefensiveManeuvers",
+              "calculations": {
+                "BarrierAmount": {
+                  "__type": "GameCalculation",
+                  "mFormulaParts": [
+                    {
+                      "__type": "ByCharLevelInterpolationCalculationPart",
+                      "mEndValue": 440,
+                      "mStartValue": 110
+                    }
+                  ]
+                },
+                "HealAmount": {
+                  "__type": "GameCalculation",
+                  "mFormulaParts": [
+                    {
+                      "__type": "ByCharLevelInterpolationCalculationPart",
+                      "mEndValue": 318,
+                      "mStartValue": 80
+                    }
+                  ]
+                }
+              },
+              "dataValues": {
+                "AllyRange": 835,
+                "MoveSpeed": 0.30000001192092896,
+                "ShieldDuration": 2.5
+              },
+              "desc": "Gain the <spellName>Defensive Maneuvers</spellName> Summoner Spell.<br><br><rules><spellName>Defensive Maneuvers</spellName> Casts both Summoner <spellName>Barrier</spellName> and <spellName>Heal</spellName> on you and your teammate.</rules>",
+              "iconLarge": "assets/ux/cherry/augments/icons/defensivemaneuvers_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/defensivemaneuvers_small.png",
+              "id": 21,
+              "name": "Defensive Maneuvers",
+              "rarity": "prismatic",
+              "tooltip": "Cast Summoner <abilityName>Barrier</abilityName> and <abilityName>Heal</abilityName> on you and your ally. Grants <shield>@BarrierAmount@ Shield</shield>, restores <healing>@HealAmount@ Health</healing>, and gives <speed>30% Move Speed</speed> for 1 second.<br><br>Healing Done Total: @f1@<br>Shields Created Total: @f2@",
+              "type": "full"
+            }
+          ],
+          "championName": "Sett",
+          "damage": 22917,
+          "deaths": 6,
+          "gold": 8253,
+          "items": [443079, 447119, 447106, 223084, 443060, 0, 3348],
+          "kills": 3,
+          "level": 14,
+          "riotIdGameName": "Kíng Of Ohio",
+          "teamSupport": {
+            "damageShieldedOnTeammate": 0,
+            "damageTakenPercentage": 0.1620018748973241,
+            "healsOnTeammate": 262
+          }
+        },
+        {
+          "arenaMetrics": {
+            "playerScore0": 7,
+            "playerScore1": 8,
+            "playerScore2": 918.9318237304688,
+            "playerScore3": 0.65625,
+            "playerScore4": 1.5,
+            "playerScore5": 1935.879150390625,
+            "playerScore6": 2706.902587890625,
+            "playerScore7": 558.375,
+            "playerScore8": 4.895382881164551
+          },
+          "assists": 3,
+          "augments": [
+            {
+              "apiName": "ScopiestWeapons",
+              "calculations": {},
+              "dataValues": {
+                "MeleeRangeIncrease": 250,
+                "RangedRangeIncrease": 150
+              },
+              "desc": "Gain @MeleeRangeIncrease@ Attack Range, reduced to @RangedRangeIncrease@ if you are Ranged.",
+              "iconLarge": "assets/ux/cherry/augments/icons/scopiestweapons_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/scopiestweapons_small.png",
+              "id": 115,
+              "name": "Scopiest Weapons",
+              "rarity": "gold",
+              "tooltip": "Gain @MeleeRangeIncrease@ Attack Range, reduced to @RangedRangeIncrease@ if you are Ranged.",
+              "type": "full"
+            },
+            {
+              "apiName": "Cerberus",
+              "calculations": {},
+              "dataValues": {
+                "APRatio": 0,
+                "ASBoostMax": 1.399999976158142,
+                "ASBoostMin": 1.399999976158142,
+                "ASBoostRanged": 0.800000011920929,
+                "AmpDuration": 5,
+                "AmpPotencyMaxOthers": 0.15000000596046448,
+                "AmpPotencyMaxSelf": 0.15000000596046448,
+                "AmpPotencyStartOthers": 0.15000000596046448,
+                "AmpPotencyStartSelf": 0.15000000596046448,
+                "BonusADRatio": 0,
+                "BonusPercentDamage": 0.15000000596046448,
+                "Cooldown": 6,
+                "Duration": 3,
+                "HitsRequired": 3,
+                "MaxDamage": 360,
+                "MinDamage": 120,
+                "NumHits": 3,
+                "OutOfCombatTimer": 5,
+                "TimeBetweenHits": 4
+              },
+              "desc": "Gain the <spellName>Hail of Blades</spellName> and <spellName>Press the Attack</spellName> Keystone Runes.",
+              "iconLarge": "assets/ux/cherry/augments/icons/cerberus_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/cerberus_small.png",
+              "id": 323,
+              "name": "Cerberus",
+              "rarity": "gold",
+              "tooltip": "Gain the <spellName>Hail of Blades</spellName> and <spellName>Press the Attack</spellName> Keystone Runes.",
+              "type": "full"
+            },
+            {
+              "apiName": "DieAnotherDay",
+              "calculations": {},
+              "dataValues": {
+                "HealFlatTooltip": 250
+              },
+              "desc": "Gain the <spellName>Die Another Day</spellName> Summoner Spell.<br><br><rules><spellName>Die Another Day</spellName> creates a zone where no unit can die for 4 seconds.</rules>",
+              "iconLarge": "assets/ux/cherry/augments/icons/dieanotherday_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/dieanotherday_small.png",
+              "id": 24,
+              "name": "Die Another Day",
+              "rarity": "prismatic",
+              "tooltip": "Bless the ground under you for 4s, preventing any unit inside from falling <scaleHealth>below 10% of their max Health</scaleHealth>. At the end, units inside are healed for <healing>@HealFlatTooltip@ Health</healing>. ",
+              "type": "full"
+            }
+          ],
+          "championName": "MissFortune",
+          "damage": 15487,
+          "deaths": 6,
+          "gold": 7643,
+          "items": [223006, 223184, 223033, 226676, 223031, 0, 3348],
+          "kills": 3,
+          "level": 14,
+          "riotIdGameName": "Selin Milk",
+          "teamSupport": {
+            "damageShieldedOnTeammate": 0,
+            "damageTakenPercentage": 0.0943813663259557,
+            "healsOnTeammate": 150
+          }
+        }
+      ],
+      "teamId": 1
+    },
+    {
+      "placement": 8,
+      "players": [
+        {
+          "arenaMetrics": {
+            "playerScore0": 8,
+            "playerScore1": 8,
+            "playerScore2": 918.9318237304688,
+            "playerScore3": 0.3576388955116272,
+            "playerScore4": 1.1000001430511475,
+            "playerScore5": 2842.532958984375,
+            "playerScore6": 2198.454833984375,
+            "playerScore7": 310.75,
+            "playerScore8": 6.3080949783325195
+          },
+          "assists": 2,
+          "augments": [
+            {
+              "apiName": "Quest_WoogletsWitchcap",
+              "calculations": {},
+              "dataValues": {},
+              "desc": "Immediate: Gain Needlessly Large Rod.<br><br>Requirement: Possess Rabadon's Deathcap and Zhonya's Hourglass.<br><br>Reward: Gain Wooglet's Witchcap",
+              "iconLarge": "assets/ux/cherry/augments/icons/quest_woogletswitchcap_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/quest_woogletswitchcap_small.png",
+              "id": 156,
+              "name": "Quest: Wooglet's Witchcap",
+              "rarity": "gold",
+              "tooltip": "Immediate: Gain Needlessly Large Rod.<br><br>Requirement: Possess Rabadon's Deathcap and Zhonya's Hourglass.<br><br>Reward: Gain Wooglet's Witchcap",
+              "type": "full"
+            },
+            {
+              "apiName": "GiantSlayer",
+              "calculations": {},
+              "dataValues": {
+                "LargeBonusDamage": 0.25,
+                "MedBonusDamage": 0.15000000596046448,
+                "MovespeedMod": 0.30000001192092896,
+                "SizeMod": 0.25,
+                "SmallBonusDamage": 0.10000000149011612,
+                "XLargeBonusDamage": 0.30000001192092896
+              },
+              "desc": "Become tiny, gain <speed>Move Speed</speed>, and bonus damage to champions based on how much larger they are than you.",
+              "iconLarge": "assets/ux/cherry/augments/icons/giantslayer_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/giantslayer_small.png",
+              "id": 195,
+              "name": "Giant Slayer",
+              "rarity": "gold",
+              "tooltip": "Become tiny, gain <speed>@MovespeedMod*100@% Move Speed</speed>, and deal between @SmallBonusDamage*100@% and @XLargeBonusDamage*100@% bonus damage to champions based on how much larger they are than you.<br><br>Damage this Round: @f1@<br>Damage this Game: @f2@",
+              "type": "full"
+            },
+            {
+              "apiName": "SoulSiphon",
+              "calculations": {},
+              "dataValues": {
+                "CritChance": 0.25,
+                "HealPercentage": 0.11999999731779099
+              },
+              "desc": "Gain <crit>@CritChance*100@% Crit Chance</crit> and <lifeSteal>@HealPercentage*100@% lifesteal on <crit>Critical Strikes</crit></lifeSteal>.",
+              "iconLarge": "assets/ux/cherry/augments/icons/soulsiphon_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/soulsiphon_small.png",
+              "id": 77,
+              "name": "Soul Siphon",
+              "rarity": "prismatic",
+              "tooltip": "Gain <crit>@CritChance*100@% Crit Chance</crit> and <lifeSteal>@HealPercentage*100@% lifesteal on <crit>Critical Strikes</crit></lifeSteal>.<br><br>Healing Done This Round: @f1@<br>Healing Done Total: @f2@",
+              "type": "full"
+            }
+          ],
+          "championName": "TwistedFate",
+          "damage": 22740,
+          "deaths": 6,
+          "gold": 8756,
+          "items": [223020, 223112, 228002, 447108, 0, 0, 3348],
+          "kills": 3,
+          "level": 14,
+          "riotIdGameName": "jlokes",
+          "teamSupport": {
+            "damageShieldedOnTeammate": 0,
+            "damageTakenPercentage": 0.07665335722296461,
+            "healsOnTeammate": 0
+          }
+        },
+        {
+          "arenaMetrics": {
+            "playerScore0": 8,
+            "playerScore1": 8,
+            "playerScore2": 918.9318237304688,
+            "playerScore3": 0.3576388955116272,
+            "playerScore4": 0.9000000953674316,
+            "playerScore5": 2559.4873046875,
+            "playerScore6": 3837.586669921875,
+            "playerScore7": 1072.625,
+            "playerScore8": 5.534259796142578
+          },
+          "assists": 3,
+          "augments": [
+            {
+              "apiName": "PrismaticEgg",
+              "calculations": {},
+              "dataValues": {
+                "KillStackCredit": 1,
+                "RequiredKillCount": 5,
+                "RerollsToGrant": 1
+              },
+              "desc": "Gain @KillStackCredit@ stack on takedown, once per champion per round.<br><br>Every @RequiredKillCount@ stacks, this hatches into a Prismatic Anvil and @RerollsToGrant@ bonus reroll.",
+              "iconLarge": "assets/ux/cherry/augments/icons/quest_prismaticegg_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/quest_prismaticegg_small.png",
+              "id": 224,
+              "name": "Prismatic Egg",
+              "rarity": "gold",
+              "tooltip": "{{Cherry_PrismaticEgg_Summary}}<br><br>Current Stacks: @f1@<br>Total Stacks: @f2@",
+              "type": "full"
+            },
+            {
+              "apiName": "JeweledGauntlet",
+              "calculations": {
+                "APToCritConversion": {
+                  "__type": "GameCalculation",
+                  "mDisplayAsPercent": true,
+                  "mFormulaParts": [
+                    {
+                      "__type": "StatByNamedDataValueCalculationPart",
+                      "mDataValue": "{a1904faf}"
+                    }
+                  ]
+                }
+              },
+              "dataValues": {
+                "CritChance": 0.25,
+                "CritConverRatio": 0.00044999999227002263,
+                "CritDamage": 1.5499999523162842
+              },
+              "desc": "Your Abilities can Critically Strike. Gain @CritChance*100@% Crit Chance.",
+              "iconLarge": "assets/ux/cherry/augments/icons/jeweledgauntlet_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/jeweledgauntlet_small.png",
+              "id": 48,
+              "name": "Jeweled Gauntlet",
+              "rarity": "gold",
+              "tooltip": "Your Abilities can Critically Strike for @CritDamage*100@% total damage. Gain @CritChance*100@% Crit Chance. Gain an additional @APToCritConversion@ Crit Chance.<br><br>Bonus Damage This Round: @f1@<br>Bonus Damage Total: @f2@",
+              "type": "full"
+            },
+            {
+              "apiName": "ItsCritical",
+              "calculations": {},
+              "dataValues": {
+                "CritChance": 0.5
+              },
+              "desc": "Gain <crit>@CritChance*100@% Crit Chance</crit>.",
+              "iconLarge": "assets/ux/cherry/augments/icons/itscritical_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/itscritical_small.png",
+              "id": 47,
+              "name": "It's Critical",
+              "rarity": "prismatic",
+              "tooltip": "Gain <crit>@CritChance*100@% Crit Chance</crit>.",
+              "type": "full"
+            }
+          ],
+          "championName": "Illaoi",
+          "damage": 20475,
+          "deaths": 6,
+          "gold": 7118,
+          "items": [222051, 223047, 447106, 223071, 226610, 2145, 3348],
+          "kills": 2,
+          "level": 14,
+          "riotIdGameName": "RoranSHSL",
+          "teamSupport": {
+            "damageShieldedOnTeammate": 0,
+            "damageTakenPercentage": 0.1338048420810538,
+            "healsOnTeammate": 0
+          }
+        }
+      ],
+      "teamId": 2
+    },
+    {
+      "placement": 6,
+      "players": [
+        {
+          "arenaMetrics": {
+            "playerScore0": 6,
+            "playerScore1": 9,
+            "playerScore2": 998.5513305664062,
+            "playerScore3": 0.26234567165374756,
+            "playerScore4": 3.0999999046325684,
+            "playerScore5": 3034.179931640625,
+            "playerScore6": 4045.627685546875,
+            "playerScore7": 689.458251953125,
+            "playerScore8": 26.44915008544922
+          },
+          "assists": 7,
+          "augments": [
+            {
+              "apiName": "CourageoftheColossus",
+              "calculations": {
+                "TotalShield": {
+                  "__type": "GameCalculation",
+                  "mFormulaParts": [
+                    {
+                      "__type": "ByCharLevelInterpolationCalculationPart",
+                      "mEndValue": 300,
+                      "mStartValue": 100
+                    },
+                    {
+                      "__type": "StatByNamedDataValueCalculationPart",
+                      "mDataValue": "HealthScalar",
+                      "mStat": 12
+                    }
+                  ]
+                }
+              },
+              "dataValues": {
+                "HealthScalar": 0.05000000074505806,
+                "SpellIDCD": 5
+              },
+              "desc": "Gain <shield>@TotalShield@ Shield</shield> after <status>Immobilizing</status> or <status>Grounding</status> an enemy champion.<br>",
+              "iconLarge": "assets/ux/cherry/augments/icons/courageofthecolossus_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/courageofthecolossus_small.png",
+              "id": 18,
+              "name": "Courage of the Colossus",
+              "rarity": "gold",
+              "tooltip": "Gain <shield>@TotalShield@ Shield</shield> after <status>Immobilizing</status> or <status>Grounding</status> an enemy champion.<br><br>Shields Generated This Round: @f1@<br>Shields Generated Total: @f2@",
+              "type": "full"
+            },
+            {
+              "apiName": "StatsOnStatsOnStats",
+              "calculations": {},
+              "dataValues": {
+                "AmountOfStatAnvils": 4
+              },
+              "desc": "Gain @AmountOfStatAnvils@ Stat Anvils!",
+              "iconLarge": "assets/ux/cherry/augments/icons/statsonstatsonstats_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/statsonstatsonstats_small.png",
+              "id": 228,
+              "name": "Stats on Stats on Stats!",
+              "rarity": "gold",
+              "tooltip": "Gain @AmountOfStatAnvils@ Stat Anvils!",
+              "type": "full"
+            },
+            {
+              "apiName": "Impassable",
+              "calculations": {},
+              "dataValues": {
+                "BeamPosIndent": 100,
+                "BonusResistsMax": 150,
+                "BonusResistsMin": 80,
+                "CCCarryOverRatio": 1,
+                "Cooldown": 15,
+                "DamageRadius": 350,
+                "DamageRatioAD": 0,
+                "DamageRatioAP": 0,
+                "DelayBeforeBurst": 2.5,
+                "DmgReduction": 0.15000000596046448,
+                "FlatResists": 35,
+                "FlatResistsMax": 35,
+                "HealthRatio": 8,
+                "MRRatio": 0,
+                "MaxBaseDamage": 120,
+                "PercentBonusResists": 0.800000011920929,
+                "RayCount": 3,
+                "ResistInc": 0,
+                "SizeInc": 0.25,
+                "SlowAmount": 0.15000000596046448,
+                "SlowDuration": 2.5,
+                "SlowZoneDuration": 3,
+                "SlowZoneLength": 700,
+                "SlowZoneSlowAPRatio": 0.05999999865889549,
+                "SlowZoneSlowBase": 0.20000000298023224,
+                "SlowZoneSlowHealShieldRatio": 0.09000000357627869,
+                "SlowZoneSlowbADRatio": 0.07000000029802322,
+                "SlowZoneWidth": 80,
+                "StartingBaseDamage": 25
+              },
+              "desc": "Gain the <spellName>Aftershock</spellName> and <spellName>Glacial Augment</spellName> Keystone Runes.",
+              "iconLarge": "assets/ux/cherry/augments/icons/impassable_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/impassable_small.png",
+              "id": 149,
+              "name": "Impassable",
+              "rarity": "prismatic",
+              "tooltip": "Gain the <spellName>Aftershock</spellName> and <spellName>Glacial Augment</spellName> Keystone Runes.",
+              "type": "full"
+            }
+          ],
+          "championName": "Thresh",
+          "damage": 27307,
+          "deaths": 6,
+          "gold": 10053,
+          "items": [446667, 223111, 447118, 447104, 443061, 0, 3348],
+          "kills": 3,
+          "level": 15,
+          "riotIdGameName": "ShawnD",
+          "teamSupport": {
+            "damageShieldedOnTeammate": 1401,
+            "damageTakenPercentage": 0.15869091317316222,
+            "healsOnTeammate": 206
+          }
+        },
+        {
+          "arenaMetrics": {
+            "playerScore0": 6,
+            "playerScore1": 9,
+            "playerScore2": 998.5513305664062,
+            "playerScore3": 0.26234567165374756,
+            "playerScore4": 2.750000476837158,
+            "playerScore5": 2307.783935546875,
+            "playerScore6": 2957.473876953125,
+            "playerScore7": 450.1111145019531,
+            "playerScore8": 0
+          },
+          "assists": 2,
+          "augments": [
+            {
+              "apiName": "GiantSlayer",
+              "calculations": {},
+              "dataValues": {
+                "LargeBonusDamage": 0.25,
+                "MedBonusDamage": 0.15000000596046448,
+                "MovespeedMod": 0.30000001192092896,
+                "SizeMod": 0.25,
+                "SmallBonusDamage": 0.10000000149011612,
+                "XLargeBonusDamage": 0.30000001192092896
+              },
+              "desc": "Become tiny, gain <speed>Move Speed</speed>, and bonus damage to champions based on how much larger they are than you.",
+              "iconLarge": "assets/ux/cherry/augments/icons/giantslayer_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/giantslayer_small.png",
+              "id": 195,
+              "name": "Giant Slayer",
+              "rarity": "gold",
+              "tooltip": "Become tiny, gain <speed>@MovespeedMod*100@% Move Speed</speed>, and deal between @SmallBonusDamage*100@% and @XLargeBonusDamage*100@% bonus damage to champions based on how much larger they are than you.<br><br>Damage this Round: @f1@<br>Damage this Game: @f2@",
+              "type": "full"
+            },
+            {
+              "apiName": "TransmuteChaos",
+              "calculations": {},
+              "dataValues": {
+                "Augment1GoldChance": 70,
+                "Augment1SilverChance": 30,
+                "Augment2GoldChance": 70,
+                "Augment2SilverChance": 30
+              },
+              "desc": "Gain 2 random Augments.",
+              "iconLarge": "assets/ux/cherry/augments/icons/transmutechaos_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/transmutechaos_small.png",
+              "id": 243,
+              "name": "Transmute: Chaos",
+              "rarity": "gold",
+              "tooltip": "Gain 2 random Augments.",
+              "type": "full"
+            },
+            {
+              "apiName": "BreadAndButter",
+              "calculations": {},
+              "dataValues": {
+                "QAbilityHaste": 200,
+                "QReducedAbilityHaste": 200
+              },
+              "desc": "Your Q gains @QAbilityHaste@ Ability Haste.",
+              "iconLarge": "assets/ux/cherry/augments/icons/breadandbutter_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/breadandbutter_small.png",
+              "id": 103,
+              "name": "Bread And Butter",
+              "rarity": "prismatic",
+              "tooltip": "Your Q gains @QAbilityHaste@ Ability Haste.",
+              "type": "full"
+            }
+          ],
+          "championName": "Kaisa",
+          "damage": 20770,
+          "deaths": 9,
+          "gold": 10059,
+          "items": [446671, 223006, 223184, 447106, 223124, 447120, 3348],
+          "kills": 7,
+          "level": 15,
+          "riotIdGameName": "ZantWilz",
+          "teamSupport": {
+            "damageShieldedOnTeammate": 0,
+            "damageTakenPercentage": 0.11600777161259174,
+            "healsOnTeammate": 0
+          }
+        }
+      ],
+      "teamId": 3
+    },
+    {
+      "placement": 4,
+      "players": [
+        {
+          "arenaMetrics": {
+            "playerScore0": 4,
+            "playerScore1": 12,
+            "playerScore2": 1225.3885498046875,
+            "playerScore3": 0.7146463990211487,
+            "playerScore4": 3.8500003814697266,
+            "playerScore5": 1347.890380859375,
+            "playerScore6": 3537.82666015625,
+            "playerScore7": 510.91668701171875,
+            "playerScore8": 15.859596252441406
+          },
+          "assists": 8,
+          "augments": [
+            {
+              "apiName": "SpiritLink",
+              "calculations": {},
+              "dataValues": {
+                "DamageRedirectPercentage": 0.15000000596046448,
+                "HealCopyPercentage": 0.5
+              },
+              "desc": "@DamageRedirectPercentage*100@% of damage dealt to your ally is redirected to you, and <healing>@HealCopyPercentage*100@% of healing</healing> they receive is also given to you.",
+              "iconLarge": "assets/ux/cherry/augments/icons/spiritlink_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/spiritlink_small.png",
+              "id": 78,
+              "name": "Spirit Link",
+              "rarity": "gold",
+              "tooltip": "@DamageRedirectPercentage*100@% of damage dealt to your ally is redirected to you, and <healing>@HealCopyPercentage*100@% of healing they receive</healing> is also given to you.<br><br>Damage Redirected Total: @f1@<br>Healing Done Total: @f2@<br>",
+              "type": "full"
+            },
+            {
+              "apiName": "GiantSlayer",
+              "calculations": {},
+              "dataValues": {
+                "LargeBonusDamage": 0.25,
+                "MedBonusDamage": 0.15000000596046448,
+                "MovespeedMod": 0.30000001192092896,
+                "SizeMod": 0.25,
+                "SmallBonusDamage": 0.10000000149011612,
+                "XLargeBonusDamage": 0.30000001192092896
+              },
+              "desc": "Become tiny, gain <speed>Move Speed</speed>, and bonus damage to champions based on how much larger they are than you.",
+              "iconLarge": "assets/ux/cherry/augments/icons/giantslayer_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/giantslayer_small.png",
+              "id": 195,
+              "name": "Giant Slayer",
+              "rarity": "gold",
+              "tooltip": "Become tiny, gain <speed>@MovespeedMod*100@% Move Speed</speed>, and deal between @SmallBonusDamage*100@% and @XLargeBonusDamage*100@% bonus damage to champions based on how much larger they are than you.<br><br>Damage this Round: @f1@<br>Damage this Game: @f2@",
+              "type": "full"
+            },
+            {
+              "apiName": "Perseverance",
+              "calculations": {},
+              "dataValues": {
+                "AmpedHPThreshold": 0.25,
+                "AmpedRegen": 16,
+                "BaseRegen": 8
+              },
+              "desc": "Gain hugely increased <healing>Health Regen</healing>, even further increased at low <scaleHealth>Health</scaleHealth>.",
+              "iconLarge": "assets/ux/cherry/augments/icons/perseverance_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/perseverance_small.png",
+              "id": 64,
+              "name": "Perseverance",
+              "rarity": "prismatic",
+              "tooltip": "Gain <healing>@BaseRegen*100@% base Health Regen</healing>, increased to <healing>@AmpedRegen*100@% base Health Regen</healing> below <scaleHealth>25% Health</scaleHealth>.<br><br>Healing Done This Round: @f1@<br>Healing Done Total: @f2@",
+              "type": "full"
+            },
+            {
+              "apiName": "DarkBlessing",
+              "calculations": {},
+              "dataValues": {
+                "AbilityHasteRatio": 0.33000001311302185,
+                "BleedDuration": 5,
+                "Cooldown": 1.5,
+                "CurseCounter": 5,
+                "Radius": 25000
+              },
+              "desc": "Healing/Shielding grants you permanent <keywordMajor>Cursed Power</keywordMajor>. Gain Ability Haste based on your <keywordMajor>Cursed Power</keywordMajor>.<br><br>The max <keywordMajor>Cursed Power</keywordMajor> you can gain per round scales with total <keywordMajor>Curse</keywordMajor> sources between you and your ally.",
+              "iconLarge": "assets/ux/cherry/augments/icons/darkblessing_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/darkblessing_small.png",
+              "id": 215,
+              "name": "Dark Blessing",
+              "rarity": "prismatic",
+              "tooltip": "When you Heal/Shield an allied champion, gain @CurseCounter@ <keywordMajor>Cursed Power</keywordMajor>.<br><br>Gain @f1@ Ability Haste (@AbilityHasteRatio*100@% of your <keywordMajor>Cursed Power</keywordMajor>).<br><br>{{ Cherry_CurseShared }}",
+              "type": "full"
+            }
+          ],
+          "championName": "Braum",
+          "damage": 16174,
+          "deaths": 7,
+          "gold": 13425,
+          "items": [443054, 443193, 447122, 223084, 447107, 223111, 3348],
+          "kills": 4,
+          "level": 18,
+          "riotIdGameName": "Elvynya",
+          "teamSupport": {
+            "damageShieldedOnTeammate": 0,
+            "damageTakenPercentage": 0.12649154126604414,
+            "healsOnTeammate": 0
+          }
+        },
+        {
+          "arenaMetrics": {
+            "playerScore0": 4,
+            "playerScore1": 12,
+            "playerScore2": 1225.3885498046875,
+            "playerScore3": 0.7146463990211487,
+            "playerScore4": 5.25,
+            "playerScore5": 3004.65478515625,
+            "playerScore6": 2356.26953125,
+            "playerScore7": 500,
+            "playerScore8": 37.93574905395508
+          },
+          "assists": 4,
+          "augments": [
+            {
+              "apiName": "TapDancer",
+              "calculations": {
+                "MSToASConversionCalc": {
+                  "__type": "GameCalculation",
+                  "mDisplayAsPercent": true,
+                  "mFormulaParts": [
+                    {
+                      "__type": "StatByNamedDataValueCalculationPart",
+                      "mDataValue": "MSToASConversion",
+                      "mStat": 7
+                    }
+                  ]
+                }
+              },
+              "dataValues": {
+                "MSPerHit": 10,
+                "MSToASConversion": 0.0010000000474974513
+              },
+              "desc": "Your Attacks grant you <speed>@MSPerHit@ Move Speed</speed>, stacking infinitely. Gain <attackSpeed>Attack Speed</attackSpeed> equal to @MSToASConversion*10000@% of your <speed>Move Speed</speed>.",
+              "iconLarge": "assets/ux/cherry/augments/icons/tapdancer_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/tapdancer_small.png",
+              "id": 81,
+              "name": "Tap Dancer",
+              "rarity": "gold",
+              "tooltip": "Your Attacks grant you <speed>@MSPerHit@ Move Speed</speed>, stacking infinitely. Gain <attackSpeed>@MSToASConversionCalc@ Attack Speed</attackSpeed>.",
+              "type": "full"
+            },
+            {
+              "apiName": "Doomsayer",
+              "calculations": {},
+              "dataValues": {
+                "AdaptiveForceRatio": 1.25,
+                "BleedDuration": 5,
+                "Cooldown": 3,
+                "CurseCounter": 2,
+                "PercentMaxHPDamagePer5Seconds": 0.029999999329447746
+              },
+              "desc": "Hitting enemy champions with abilities grants you permanent <keywordMajor>Cursed Power</keywordMajor>. Gain <font color = '#8347ff'>Adaptive Force</font> based on your <keywordMajor>Cursed Power</keywordMajor>.<br><br>The max <keywordMajor>Cursed Power</keywordMajor> you can gain per round scales with total <keywordMajor>Curse</keywordMajor> sources between you and your ally.",
+              "iconLarge": "assets/ux/cherry/augments/icons/doomsayer_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/doomsayer_small.png",
+              "id": 219,
+              "name": "Doomsayer",
+              "rarity": "gold",
+              "tooltip": "Hitting enemy champions with abilities grants you @CurseCounter@ <keywordMajor>Cursed Power</keywordMajor>.<br><br>Gain @f1@ <font color = '#8347ff'>Adaptive Force</font> (@AdaptiveForceRatio*100@% of your <keywordMajor>Cursed Power</keywordMajor>).<br><br>{{ Cherry_CurseShared }}",
+              "type": "full"
+            },
+            {
+              "apiName": "ShrinkRay",
+              "calculations": {},
+              "dataValues": {
+                "DamageReduction": 0.15000000596046448
+              },
+              "desc": "Your Attacks reduce an enemy's damage by @DamageReduction*100@% for 3 seconds.",
+              "iconLarge": "assets/ux/cherry/augments/icons/shrinkray_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/shrinkray_small.png",
+              "id": 74,
+              "name": "Shrink Ray",
+              "rarity": "prismatic",
+              "tooltip": "Your Attacks reduce an enemy's damage by @DamageReduction*100@% for 3 seconds.<br><br>Damage Reduced This Round: @f1@<br>Damage Reduced Total: @f2@",
+              "type": "full"
+            },
+            {
+              "apiName": "LightningStrikes",
+              "calculations": {},
+              "dataValues": {
+                "Breakpoint1": 4,
+                "OnHitDamage": 40,
+                "SlowResistValue": 1,
+                "TotalASValue": 0.20000000298023224
+              },
+              "desc": "Gain <attackSpeed>@TotalASValue*100@% total Attack Speed</attackSpeed>. <br><br>At @Breakpoint1@ <attackSpeed>Attacks per second</attackSpeed>, deal additional <magicDamage>magic damage</magicDamage> {{ Item_Keyword_OnHit }}.",
+              "iconLarge": "assets/ux/cherry/augments/icons/lightningstrikes_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/lightningstrikes_small.png",
+              "id": 52,
+              "name": "Lightning Strikes",
+              "rarity": "prismatic",
+              "tooltip": "Gain <attackSpeed>@TotalASValue*100@% total Attack Speed</attackSpeed>.<br><br>At @Breakpoint1@ <attackSpeed>Attacks per second</attackSpeed>, gain @OnHitDamage@ <magicDamage>magic damage</magicDamage> {{ Item_Keyword_OnHit }}.<br><br><rules><attackSpeed>Total Attack Speed</attackSpeed> is calculated as a multiplier of your <attackSpeed>Bonus Attack Speed</attackSpeed></rules><br><br>On-hit Magic Damage Dealt: @f1@",
+              "type": "full"
+            }
+          ],
+          "championName": "Ashe",
+          "damage": 36055,
+          "deaths": 7,
+          "gold": 14957,
+          "items": [223153, 223006, 447121, 223115, 223124, 223302, 3348],
+          "kills": 9,
+          "level": 18,
+          "riotIdGameName": "Funkyz",
+          "teamSupport": {
+            "damageShieldedOnTeammate": 0,
+            "damageTakenPercentage": 0.08424612254598206,
+            "healsOnTeammate": 0
+          }
+        }
+      ],
+      "teamId": 4
+    },
+    {
+      "placement": 2,
+      "players": [
+        {
+          "arenaMetrics": {
+            "playerScore0": 2,
+            "playerScore1": 14,
+            "playerScore2": 1348.904541015625,
+            "playerScore3": 0.591269850730896,
+            "playerScore4": 9.100000381469727,
+            "playerScore5": 5081.66796875,
+            "playerScore6": 4756.23779296875,
+            "playerScore7": 1691.357177734375,
+            "playerScore8": 4.4207000732421875
+          },
+          "assists": 10,
+          "augments": [
+            {
+              "apiName": "DualWield",
+              "calculations": {
+                "{84eb6ffe}": {
+                  "__type": "GameCalculation",
+                  "mFormulaParts": [
+                    {
+                      "__type": "StatByNamedDataValueCalculationPart",
+                      "mDataValue": "AttackReduction",
+                      "mStat": 2
+                    }
+                  ]
+                }
+              },
+              "dataValues": {
+                "AttackReduction": 0.4000000059604645,
+                "AttackSpeed": 0.25,
+                "OnHitMod": 0.4000000059604645,
+                "SecondMissileDelay": 0.15000000596046448
+              },
+              "desc": "When you Attack, fire a secondary bolt that deals @AttackReduction*100@% damage and applies your {{ Item_Keyword_OnHit }} effects at @OnHitMod*100@% effectiveness. Gain <attackSpeed>@AttackSpeed*100@% total Attack Speed</attackSpeed>.",
+              "iconLarge": "assets/ux/cherry/augments/icons/dualwield_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/dualwield_small.png",
+              "id": 225,
+              "name": "Dual Wield",
+              "rarity": "gold",
+              "tooltip": "When you Attack, fire a secondary bolt that deals @AttackReduction*100@% damage and applies your {{ Item_Keyword_OnHit }} effects at @OnHitMod*100@% effectiveness. Gain <attackSpeed>@AttackSpeed*100@% total Attack Speed</attackSpeed>.",
+              "type": "full"
+            },
+            {
+              "apiName": "MasterofDuality",
+              "calculations": {
+                "ADGained": {
+                  "__type": "GameCalculation",
+                  "mFormulaParts": [
+                    {
+                      "__type": "ByCharLevelInterpolationCalculationPart",
+                      "mEndValue": 9,
+                      "mStartValue": 3
+                    }
+                  ]
+                },
+                "APGained": {
+                  "__type": "GameCalculation",
+                  "mFormulaParts": [
+                    {
+                      "__type": "ByCharLevelInterpolationCalculationPart",
+                      "mEndValue": 18,
+                      "mStartValue": 6
+                    }
+                  ]
+                }
+              },
+              "dataValues": {},
+              "desc": "Your Attacks grant you stacking <scaleAP>Ability Power</scaleAP> and your Abilities grant you <scaleAD>Attack Damage</scaleAD>.",
+              "iconLarge": "assets/ux/cherry/augments/icons/masterofduality_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/masterofduality_small.png",
+              "id": 54,
+              "name": "Master of Duality",
+              "rarity": "gold",
+              "tooltip": "Your Attacks grant you <scaleAP>@APGained@ Ability Power</scaleAP> and your Abilities grant you <scaleAD>@ADGained@ Attack Damage</scaleAD>, stacking infinitely until the end of the round.",
+              "type": "full"
+            },
+            {
+              "apiName": "TransmutePrismatic",
+              "calculations": {},
+              "dataValues": {},
+              "desc": "Gain a random Prismatic Augment.",
+              "iconLarge": "assets/ux/cherry/augments/icons/transmuteprismatic_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/transmuteprismatic_small.png",
+              "id": 238,
+              "name": "Transmute: Prismatic",
+              "rarity": "prismatic",
+              "tooltip": "Gain a random Prismatic Augment.",
+              "type": "full"
+            },
+            {
+              "apiName": "CelestialBody",
+              "calculations": {},
+              "dataValues": {
+                "DamageReduction": 0.10000000149011612,
+                "Health": 1250
+              },
+              "desc": "Gain <scaleHealth>@Health@ Health</scaleHealth>, but you deal @DamageReduction*100@% less damage.",
+              "iconLarge": "assets/ux/cherry/augments/icons/celestialbody_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/celestialbody_small.png",
+              "id": 13,
+              "name": "Celestial Body",
+              "rarity": "prismatic",
+              "tooltip": "Gain <scaleHealth>@Health@ Health</scaleHealth>, but you deal @DamageReduction*100@% less damage.",
+              "type": "full"
+            }
+          ],
+          "championName": "Vi",
+          "damage": 71143,
+          "deaths": 6,
+          "gold": 19126,
+          "items": [223039, 226630, 443069, 447115, 443090, 443081, 3348],
+          "kills": 11,
+          "level": 18,
+          "riotIdGameName": "sjerred",
+          "teamSupport": {
+            "damageShieldedOnTeammate": 0,
+            "damageTakenPercentage": 0.19839708951053628,
+            "healsOnTeammate": 0
+          }
+        },
+        {
+          "arenaMetrics": {
+            "playerScore0": 2,
+            "playerScore1": 14,
+            "playerScore2": 1348.904541015625,
+            "playerScore3": 0.591269850730896,
+            "playerScore4": 8.399999618530273,
+            "playerScore5": 2123.12353515625,
+            "playerScore6": 2793.847412109375,
+            "playerScore7": 2381.4501953125,
+            "playerScore8": 1.021270751953125
+          },
+          "assists": 11,
+          "augments": [
+            {
+              "apiName": "InfernalConduit",
+              "calculations": {
+                "BleedDamageTooltip": {
+                  "__type": "GameCalculationModified",
+                  "mModifiedGameCalculation": "{0a242b94}",
+                  "mMultiplier": {
+                    "__type": "NumberCalculationPart",
+                    "mNumber": 0.20000000298023224
+                  }
+                },
+                "{0a242b94}": {
+                  "__type": "GameCalculation",
+                  "mFormulaParts": [
+                    {
+                      "__type": "ByCharLevelInterpolationCalculationPart",
+                      "mEndValue": 60,
+                      "mStartValue": 6
+                    },
+                    {
+                      "__type": "StatByCoefficientCalculationPart",
+                      "mCoefficient": 0.05999999865889549
+                    },
+                    {
+                      "__type": "StatByCoefficientCalculationPart",
+                      "mCoefficient": 0.14000000059604645,
+                      "mStat": 2,
+                      "mStatFormula": 2
+                    }
+                  ]
+                }
+              },
+              "dataValues": {
+                "BleedDuration": 5,
+                "FlatCooldownRefundPerTick": 0.07999999821186066,
+                "ProcCooldown": 1
+              },
+              "desc": "Your Abilities apply an infinitely stacking <keywordMajor>Burn</keywordMajor>, dealing <magicDamage>magic damage</magicDamage> over time.<br><br>Your <keywordMajor>Burn</keywordMajor> effects reduce your basic Ability Cooldowns.",
+              "iconLarge": "assets/ux/cherry/augments/icons/infernalconduit_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/infernalconduit_small.png",
+              "id": 45,
+              "name": "Infernal Conduit",
+              "rarity": "gold",
+              "tooltip": "Your Abilities apply an infinitely stacking <keywordMajor>Burn</keywordMajor>, dealing <magicDamage>@BleedDamageTooltip@ magic damage</magicDamage> per second for @BleedDuration@ seconds.<br><br>All your <keywordMajor>Burn</keywordMajor> effects lower your basic Ability Cooldowns by @FlatCooldownRefundPerTick@ seconds when they damage enemies.<br><br>Damage Dealt This Round: @f1@<br>Damage Dealt Total: @f2@<br>",
+              "type": "full"
+            },
+            {
+              "apiName": "NestingDoll",
+              "calculations": {},
+              "dataValues": {
+                "ReviveArmTime": 2,
+                "ReviveDuration": 1.5,
+                "ReviveMod": 0.4000000059604645,
+                "SecondReviveMod": 0.1599999964237213,
+                "SecondSizeMod": -0.4000000059604645,
+                "SelfReviveTimerModMax": 0.5,
+                "SelfReviveTimerModMin": 0.4000000059604645,
+                "SizeMod": -0.20000000298023224
+              },
+              "desc": "You automatically begin Reviving yourself after @ReviveArmTime@ seconds and you can be Revived an additional time. Each time you Revive, come back smaller and with reduced <scaleHealth>max Health</scaleHealth>.<br><br>When you revive, <status>Knockback</status> enemies around you.",
+              "iconLarge": "assets/ux/cherry/augments/icons/nestingdoll_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/nestingdoll_small.png",
+              "id": 177,
+              "name": "Nesting Doll",
+              "rarity": "gold",
+              "tooltip": "You automatically begin Reviving yourself after @ReviveArmTime@ seconds and you can be Revived an additional time. Each time you Revive, come back smaller and with <scaleHealth>@ReviveMod*100@% max Health</scaleHealth>.<br><br>When you revive, <status>Knockback</status> enemies around you.",
+              "type": "full"
+            },
+            {
+              "apiName": "ApexInventor",
+              "calculations": {},
+              "dataValues": {
+                "ItemHaste": 300,
+                "TooltipCDR": 75
+              },
+              "desc": "Gain <scaleBonus>@ItemHaste@ Item Haste</scaleBonus> (equivalent to @TooltipCDR@% Item CDR).<br><br><rules>Item Haste reduces the cooldown %i:cooldown% of all Item Abilities.</rules>",
+              "iconLarge": "assets/ux/cherry/augments/icons/apexinventor_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/apexinventor_small.png",
+              "id": 2,
+              "name": "Apex Inventor",
+              "rarity": "prismatic",
+              "tooltip": "Gain <scaleBonus>@ItemHaste@ Item Haste</scaleBonus> (equivalent to @TooltipCDR@% Item CDR).<br><br><rules>Item Haste reduces the cooldown %i:cooldown% of all Item Abilities.</rules>",
+              "type": "full"
+            },
+            {
+              "apiName": "ComboMaster",
+              "calculations": {
+                "Cooldown": {
+                  "__type": "GameCalculation",
+                  "mFormulaParts": [
+                    {
+                      "__type": "ByCharLevelInterpolationCalculationPart",
+                      "mEndValue": 10,
+                      "mStartValue": 20
+                    }
+                  ]
+                },
+                "{4120d321}": {
+                  "__type": "GameCalculation",
+                  "mFormulaParts": [
+                    {
+                      "__type": "ByCharLevelInterpolationCalculationPart",
+                      "mEndValue": 300,
+                      "mStartValue": 60
+                    },
+                    {
+                      "__type": "StatByCoefficientCalculationPart",
+                      "mCoefficient": 0.550000011920929,
+                      "mStat": 2,
+                      "mStatFormula": 2
+                    },
+                    {
+                      "__type": "StatByCoefficientCalculationPart",
+                      "mCoefficient": 0.4000000059604645
+                    }
+                  ]
+                }
+              },
+              "dataValues": {
+                "HasteBase": 0.30000001192092896,
+                "HasteBaseMelee": 0.4000000059604645,
+                "HasteDuration": 3,
+                "HasteMax": 0.800000011920929,
+                "HasteMaxMelee": 0.800000011920929,
+                "MaxBonusSeconds": 4,
+                "NumberToProc": 3,
+                "SlowResist": 0.75,
+                "WindowDuration": 4
+              },
+              "desc": "Gain the <spellName>Electrocute</spellName> and <spellName>Phase Rush</spellName> Keystone Runes.",
+              "iconLarge": "assets/ux/cherry/augments/icons/combomaster_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/combomaster_small.png",
+              "id": 16,
+              "name": "Combo Master",
+              "rarity": "prismatic",
+              "tooltip": "Gain the <spellName>Electrocute</spellName> and <spellName>Phase Rush</spellName> Keystone Runes.<br><br>Electrocute Damage This Round: @f1@<br>Electrocute Damage Total: @f2@",
+              "type": "full"
+            }
+          ],
+          "championName": "AurelionSol",
+          "damage": 29723,
+          "deaths": 8,
+          "gold": 23115,
+          "items": [223089, 444644, 447105, 444636, 446667, 447104, 3348],
+          "kills": 10,
+          "level": 18,
+          "riotIdGameName": "madden kid15",
+          "teamSupport": {
+            "damageShieldedOnTeammate": 6392,
+            "damageTakenPercentage": 0.11653984103320011,
+            "healsOnTeammate": 256
+          }
+        }
+      ],
+      "teamId": 5
+    },
+    {
+      "placement": 5,
+      "players": [
+        {
+          "arenaMetrics": {
+            "playerScore0": 5,
+            "playerScore1": 12,
+            "playerScore2": 1225.3885498046875,
+            "playerScore3": 0.4060605764389038,
+            "playerScore4": 3.950000286102295,
+            "playerScore5": 2163.84375,
+            "playerScore6": 2180.63232421875,
+            "playerScore7": 176.25,
+            "playerScore8": 3.7687506675720215
+          },
+          "assists": 5,
+          "augments": [
+            {
+              "apiName": "JeweledGauntlet",
+              "calculations": {
+                "APToCritConversion": {
+                  "__type": "GameCalculation",
+                  "mDisplayAsPercent": true,
+                  "mFormulaParts": [
+                    {
+                      "__type": "StatByNamedDataValueCalculationPart",
+                      "mDataValue": "{a1904faf}"
+                    }
+                  ]
+                }
+              },
+              "dataValues": {
+                "CritChance": 0.25,
+                "CritConverRatio": 0.00044999999227002263,
+                "CritDamage": 1.5499999523162842
+              },
+              "desc": "Your Abilities can Critically Strike. Gain @CritChance*100@% Crit Chance.",
+              "iconLarge": "assets/ux/cherry/augments/icons/jeweledgauntlet_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/jeweledgauntlet_small.png",
+              "id": 48,
+              "name": "Jeweled Gauntlet",
+              "rarity": "gold",
+              "tooltip": "Your Abilities can Critically Strike for @CritDamage*100@% total damage. Gain @CritChance*100@% Crit Chance. Gain an additional @APToCritConversion@ Crit Chance.<br><br>Bonus Damage This Round: @f1@<br>Bonus Damage Total: @f2@",
+              "type": "full"
+            },
+            {
+              "apiName": "PrismaticEgg",
+              "calculations": {},
+              "dataValues": {
+                "KillStackCredit": 1,
+                "RequiredKillCount": 5,
+                "RerollsToGrant": 1
+              },
+              "desc": "Gain @KillStackCredit@ stack on takedown, once per champion per round.<br><br>Every @RequiredKillCount@ stacks, this hatches into a Prismatic Anvil and @RerollsToGrant@ bonus reroll.",
+              "iconLarge": "assets/ux/cherry/augments/icons/quest_prismaticegg_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/quest_prismaticegg_small.png",
+              "id": 224,
+              "name": "Prismatic Egg",
+              "rarity": "gold",
+              "tooltip": "{{Cherry_PrismaticEgg_Summary}}<br><br>Current Stacks: @f1@<br>Total Stacks: @f2@",
+              "type": "full"
+            },
+            {
+              "apiName": "ThreadtheNeedle",
+              "calculations": {},
+              "dataValues": {
+                "PercentPen": 0.20000000298023224
+              },
+              "desc": "Gain @PercentPen*100@% <physicalDamage>Armor Penetration</physicalDamage> and <magicDamage>Magic Penetration</magicDamage>.",
+              "iconLarge": "assets/ux/cherry/augments/icons/threadtheneedle_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/threadtheneedle_small.png",
+              "id": 84,
+              "name": "Thread the Needle",
+              "rarity": "prismatic",
+              "tooltip": "Gain @PercentPen*100@% <physicalDamage>Armor Penetration</physicalDamage> and <magicDamage>Magic Penetration</magicDamage>.",
+              "type": "full"
+            },
+            {
+              "apiName": "EtherealWeapon",
+              "calculations": {},
+              "dataValues": {
+                "Cooldown": 1.5
+              },
+              "desc": "Your Abilities apply {{ Item_Keyword_OnHit }} effects. 1 second cooldown per target.",
+              "iconLarge": "assets/ux/cherry/augments/icons/etherealweapon_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/etherealweapon_small.png",
+              "id": 29,
+              "name": "Ethereal Weapon",
+              "rarity": "prismatic",
+              "tooltip": "Your Abilities apply {{ Item_Keyword_OnHit }} effects. 1 second cooldown per target.<br><br>Times Triggered This Round: @f1@<br>Times Triggered Total: @f2@",
+              "type": "full"
+            }
+          ],
+          "championName": "MonkeyKing",
+          "damage": 25966,
+          "deaths": 9,
+          "gold": 13910,
+          "items": [446671, 446691, 223073, 223031, 443069, 223814, 3348],
+          "kills": 7,
+          "level": 18,
+          "riotIdGameName": "KhalidTheUnlucky",
+          "teamSupport": {
+            "damageShieldedOnTeammate": 0,
+            "damageTakenPercentage": 0.11404790318653805,
+            "healsOnTeammate": 0
+          }
+        },
+        {
+          "arenaMetrics": {
+            "playerScore0": 5,
+            "playerScore1": 12,
+            "playerScore2": 1225.3885498046875,
+            "playerScore3": 0.4060605764389038,
+            "playerScore4": 6.800000190734863,
+            "playerScore5": 3811.9052734375,
+            "playerScore6": 2761.202880859375,
+            "playerScore7": 461.66668701171875,
+            "playerScore8": 36.60352325439453
+          },
+          "assists": 7,
+          "augments": [
+            {
+              "apiName": "GambaAnvil",
+              "calculations": {},
+              "dataValues": {
+                "GoldBonus": 1000,
+                "LegendaryCostReduction": -500,
+                "LegendaryGoldBasisDiscount": 1000,
+                "PrismaticCostReduction": -1500,
+                "PrismaticGoldBasisDiscount": 1250,
+                "StatCostReduction": -250
+              },
+              "desc": "Gain @GoldBonus@ gold and reduce the price of all anvils.<br><br>Prismatic Anvils: @PrismaticCostReduction@<br>Legendary Anvils: @LegendaryCostReduction@<br>Stat Anvils: @StatCostReduction@<br><br><rules>Items acquired from anvils resell for 500 gold less.</rules>",
+              "iconLarge": "assets/ux/cherry/augments/icons/thiefsgloves_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/thiefsgloves_small.png",
+              "id": 234,
+              "name": "Gamba Anvil",
+              "rarity": "gold",
+              "tooltip": "Gain @GoldBonus@ gold and reduce the price of all anvils.<br><br>Prismatic Anvils: @PrismaticCostReduction@<br>Legendary Anvils: @LegendaryCostReduction@<br>Stat Anvils: @StatCostReduction@<br><br><rules>Items acquired from anvils resell for 500 gold less.</rules>",
+              "type": "full"
+            },
+            {
+              "apiName": "Spellwake",
+              "calculations": {
+                "Damage": {
+                  "__type": "GameCalculation",
+                  "mFormulaParts": [
+                    {
+                      "__type": "ByCharLevelInterpolationCalculationPart",
+                      "mEndValue": 250,
+                      "mStartValue": 100
+                    },
+                    {
+                      "__type": "StatByNamedDataValueCalculationPart",
+                      "mDataValue": "APRatio"
+                    },
+                    {
+                      "__type": "StatByNamedDataValueCalculationPart",
+                      "mDataValue": "BonusADRatio",
+                      "mStat": 2,
+                      "mStatFormula": 2
+                    }
+                  ]
+                }
+              },
+              "dataValues": {
+                "APRatio": 0.30000001192092896,
+                "BonusADRatio": 1.649999976158142,
+                "Cooldown": 6,
+                "ExplosionDelayTime": 0.75,
+                "ExplosionRadius": 100,
+                "PerwaveDamageCD": 0.5
+              },
+              "desc": "Hitting enemies with Abilities creates a blast that deals <magicDamage>magic damage</magicDamage> from you to the location you hit them.",
+              "iconLarge": "assets/ux/cherry/augments/icons/spellwake_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/spellwake_small.png",
+              "id": 135,
+              "name": "Spellwake",
+              "rarity": "gold",
+              "tooltip": "Hitting enemies with Abilities creates a blast that deals <magicDamage>@Damage@ magic damage</magicDamage> from you to the location you hit them.<br><br>Damage Dealt This Round: @f1@<br>Damage Dealt Total: @f2@",
+              "type": "full"
+            },
+            {
+              "apiName": "ApexInventor",
+              "calculations": {},
+              "dataValues": {
+                "ItemHaste": 300,
+                "TooltipCDR": 75
+              },
+              "desc": "Gain <scaleBonus>@ItemHaste@ Item Haste</scaleBonus> (equivalent to @TooltipCDR@% Item CDR).<br><br><rules>Item Haste reduces the cooldown %i:cooldown% of all Item Abilities.</rules>",
+              "iconLarge": "assets/ux/cherry/augments/icons/apexinventor_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/apexinventor_small.png",
+              "id": 2,
+              "name": "Apex Inventor",
+              "rarity": "prismatic",
+              "tooltip": "Gain <scaleBonus>@ItemHaste@ Item Haste</scaleBonus> (equivalent to @TooltipCDR@% Item CDR).<br><br><rules>Item Haste reduces the cooldown %i:cooldown% of all Item Abilities.</rules>",
+              "type": "full"
+            },
+            {
+              "apiName": "SkilledSniper",
+              "calculations": {},
+              "dataValues": {
+                "PeriodicReductionAmount": 3,
+                "ReducedCooldown": 0.5,
+                "SnipeDistance": 700
+              },
+              "desc": "Hitting an enemy with a non-Ultimate Ability at far range reduces its Cooldown to @ReducedCooldown@ seconds (@PeriodicReductionAmount@ for periodic Abilities).",
+              "iconLarge": "assets/ux/cherry/augments/icons/skilledsniper_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/skilledsniper_small.png",
+              "id": 113,
+              "name": "Skilled Sniper",
+              "rarity": "prismatic",
+              "tooltip": "Hitting an enemy with a non-Ultimate Ability at over @SnipeDistance@ range reduces its Cooldown to @ReducedCooldown@ seconds, periodic abilities are instead reset to @PeriodicReductionAmount@ seconds.",
+              "type": "full"
+            }
+          ],
+          "championName": "Zyra",
+          "damage": 45742,
+          "deaths": 8,
+          "gold": 16410,
+          "items": [446656, 447104, 447108, 447109, 443055, 444636, 3348],
+          "kills": 10,
+          "level": 18,
+          "riotIdGameName": "Medeis",
+          "teamSupport": {
+            "damageShieldedOnTeammate": 0,
+            "damageTakenPercentage": 0.1444119715004098,
+            "healsOnTeammate": 0
+          }
+        }
+      ],
+      "teamId": 6
+    },
+    {
+      "placement": 1,
+      "players": [
+        {
+          "arenaMetrics": {
+            "playerScore0": 1,
+            "playerScore1": 14,
+            "playerScore2": 1348.904541015625,
+            "playerScore3": 0.38717949390411377,
+            "playerScore4": 7.450000762939453,
+            "playerScore5": 3553.29541015625,
+            "playerScore6": 3381.3818359375,
+            "playerScore7": 851.7142944335938,
+            "playerScore8": 4.651575565338135
+          },
+          "assists": 2,
+          "augments": [
+            {
+              "apiName": "WisdomofAges",
+              "calculations": {},
+              "dataValues": {},
+              "desc": "Gain 1 level now, and 1 bonus level every other round. Your level cap is removed.<br><br>If taken as your second Augment, instead gain 3 levels.",
+              "iconLarge": "assets/ux/cherry/augments/icons/wisdomofages_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/wisdomofages_small.png",
+              "id": 96,
+              "name": "Wisdom of Ages",
+              "rarity": "gold",
+              "tooltip": "Gain 1 level now, and 1 bonus level every other round. Your level cap is removed.<br><br>If taken as your second Augment, instead gain 3 levels.",
+              "type": "full"
+            },
+            {
+              "apiName": "BacktoBasics",
+              "calculations": {},
+              "dataValues": {
+                "DamageAmp": 0.3499999940395355,
+                "Haste": 70,
+                "HealingAmp": 0.3499999940395355,
+                "ShieldingAmp": 0.3499999940395355
+              },
+              "desc": "Gain increased Ability Damage, <healing>Healing</healing>, <shield>Shielding</shield>, and Ability Haste, but you <keywordMajor>cannot use your Ultimate Ability</keywordMajor>.",
+              "iconLarge": "assets/ux/cherry/augments/icons/backtobasics_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/backtobasics_small.png",
+              "id": 4,
+              "name": "Back To Basics",
+              "rarity": "gold",
+              "tooltip": "Your Ultimate Ability is sealed. Gain @DamageAmp*100@% Ability Damage, <healing>Healing</healing>, <shield>Shielding</shield>, and @Haste@ Ability Haste.",
+              "type": "full"
+            },
+            {
+              "apiName": "RabbleRousing",
+              "calculations": {
+                "HealAmount": {
+                  "__type": "GameCalculation",
+                  "mFormulaParts": [
+                    {
+                      "__type": "StatByNamedDataValueCalculationPart",
+                      "mDataValue": "MaxHealthPercentageHeal",
+                      "mStat": 12
+                    },
+                    {
+                      "__type": "ByCharLevelInterpolationCalculationPart",
+                      "mEndValue": 60,
+                      "mStartValue": 5
+                    }
+                  ]
+                }
+              },
+              "dataValues": {
+                "MaxHealthPercentageHeal": 0.009999999776482582
+              },
+              "desc": "Using an Ability restores <healing>@HealAmount@ Health</healing>.",
+              "iconLarge": "assets/ux/cherry/augments/icons/rabblerousing_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/rabblerousing_small.png",
+              "id": 67,
+              "name": "Rabble Rousing",
+              "rarity": "prismatic",
+              "tooltip": "Using an Ability restores <healing>@HealAmount@ Health</healing>.<br><br>Healing Done This Round: @f1@<br>Healing Done Total: @f2@",
+              "type": "full"
+            },
+            {
+              "apiName": "ThreadtheNeedle",
+              "calculations": {},
+              "dataValues": {
+                "PercentPen": 0.20000000298023224
+              },
+              "desc": "Gain @PercentPen*100@% <physicalDamage>Armor Penetration</physicalDamage> and <magicDamage>Magic Penetration</magicDamage>.",
+              "iconLarge": "assets/ux/cherry/augments/icons/threadtheneedle_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/threadtheneedle_small.png",
+              "id": 84,
+              "name": "Thread the Needle",
+              "rarity": "prismatic",
+              "tooltip": "Gain @PercentPen*100@% <physicalDamage>Armor Penetration</physicalDamage> and <magicDamage>Magic Penetration</magicDamage>.",
+              "type": "full"
+            }
+          ],
+          "championName": "Smolder",
+          "damage": 49746,
+          "deaths": 7,
+          "gold": 22603,
+          "items": [223033, 444644, 447120, 223072, 223161, 223158, 3348],
+          "kills": 14,
+          "level": 28,
+          "riotIdGameName": "Feed Me",
+          "teamSupport": {
+            "damageShieldedOnTeammate": 0,
+            "damageTakenPercentage": 0.1410476780463069,
+            "healsOnTeammate": 0
+          }
+        },
+        {
+          "arenaMetrics": {
+            "playerScore0": 1,
+            "playerScore1": 14,
+            "playerScore2": 1348.904541015625,
+            "playerScore3": 0.38717949390411377,
+            "playerScore4": 6.700000762939453,
+            "playerScore5": 4288.89697265625,
+            "playerScore6": 2694.136474609375,
+            "playerScore7": 688.7142944335938,
+            "playerScore8": 12.55395793914795
+          },
+          "assists": 13,
+          "augments": [
+            {
+              "apiName": "BacktoBasics",
+              "calculations": {},
+              "dataValues": {
+                "DamageAmp": 0.3499999940395355,
+                "Haste": 70,
+                "HealingAmp": 0.3499999940395355,
+                "ShieldingAmp": 0.3499999940395355
+              },
+              "desc": "Gain increased Ability Damage, <healing>Healing</healing>, <shield>Shielding</shield>, and Ability Haste, but you <keywordMajor>cannot use your Ultimate Ability</keywordMajor>.",
+              "iconLarge": "assets/ux/cherry/augments/icons/backtobasics_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/backtobasics_small.png",
+              "id": 4,
+              "name": "Back To Basics",
+              "rarity": "gold",
+              "tooltip": "Your Ultimate Ability is sealed. Gain @DamageAmp*100@% Ability Damage, <healing>Healing</healing>, <shield>Shielding</shield>, and @Haste@ Ability Haste.",
+              "type": "full"
+            },
+            {
+              "apiName": "CourageoftheColossus",
+              "calculations": {
+                "TotalShield": {
+                  "__type": "GameCalculation",
+                  "mFormulaParts": [
+                    {
+                      "__type": "ByCharLevelInterpolationCalculationPart",
+                      "mEndValue": 300,
+                      "mStartValue": 100
+                    },
+                    {
+                      "__type": "StatByNamedDataValueCalculationPart",
+                      "mDataValue": "HealthScalar",
+                      "mStat": 12
+                    }
+                  ]
+                }
+              },
+              "dataValues": {
+                "HealthScalar": 0.05000000074505806,
+                "SpellIDCD": 5
+              },
+              "desc": "Gain <shield>@TotalShield@ Shield</shield> after <status>Immobilizing</status> or <status>Grounding</status> an enemy champion.<br>",
+              "iconLarge": "assets/ux/cherry/augments/icons/courageofthecolossus_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/courageofthecolossus_small.png",
+              "id": 18,
+              "name": "Courage of the Colossus",
+              "rarity": "gold",
+              "tooltip": "Gain <shield>@TotalShield@ Shield</shield> after <status>Immobilizing</status> or <status>Grounding</status> an enemy champion.<br><br>Shields Generated This Round: @f1@<br>Shields Generated Total: @f2@",
+              "type": "full"
+            },
+            {
+              "apiName": "TankEngine",
+              "calculations": {},
+              "dataValues": {
+                "MaxHPIncrement": 0.05000000074505806,
+                "SizeIncrement": 0.15000000596046448
+              },
+              "desc": "Gain @SizeIncrement*100@% increase in size and <scaleHealth>@MaxHPIncrement*100@% max Health</scaleHealth> per takedown.",
+              "iconLarge": "assets/ux/cherry/augments/icons/tank_engine_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/tank_engine_small.png",
+              "id": 310,
+              "name": "Tank Engine",
+              "rarity": "prismatic",
+              "tooltip": "Gain @SizeIncrement*100@% increase in size and <scaleHealth>@f2@ Bonus Health</scaleHealth> (<scaleHealth>@MaxHPIncrement*100@% (@f1@)</scaleHealth> per takedown).<br><br>Takedowns: @f3@",
+              "type": "full"
+            },
+            {
+              "apiName": "CriticalHealing",
+              "calculations": {},
+              "dataValues": {
+                "CritChance": 0.25,
+                "CritHeal": 0.4000000059604645
+              },
+              "desc": "Your <healing>Heals</healing> and <shield>Shields</shield> can Critically Strike for @CritHeal*100@% bonus amount. Gain @CritChance*100@% Crit Chance. ",
+              "iconLarge": "assets/ux/cherry/augments/icons/criticalhealing_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/criticalhealing_small.png",
+              "id": 118,
+              "name": "Critical Healing",
+              "rarity": "prismatic",
+              "tooltip": "{{Cherry_CriticalHealing_Summary}}<br><br>Bonus Healing: @f1@<br>Bonus Shielding: @f2@",
+              "type": "full"
+            }
+          ],
+          "championName": "Galio",
+          "damage": 60044,
+          "deaths": 6,
+          "gold": 23848,
+          "items": [444637, 223039, 0, 226665, 444644, 223009, 3348],
+          "kills": 5,
+          "level": 18,
+          "riotIdGameName": "ExtraLargeDonger",
+          "teamSupport": {
+            "damageShieldedOnTeammate": 0,
+            "damageTakenPercentage": 0.11238059564985582,
+            "healsOnTeammate": 0
+          }
+        }
+      ],
+      "teamId": 7
+    },
+    {
+      "placement": 3,
+      "players": [
+        {
+          "arenaMetrics": {
+            "playerScore0": 3,
+            "playerScore1": 13,
+            "playerScore2": 1291.400146484375,
+            "playerScore3": 0.40740740299224854,
+            "playerScore4": 6.850000381469727,
+            "playerScore5": 3720.82080078125,
+            "playerScore6": 3857.16845703125,
+            "playerScore7": 1754.0001220703125,
+            "playerScore8": 5.61513614654541
+          },
+          "assists": 5,
+          "augments": [
+            {
+              "apiName": "DualWield",
+              "calculations": {
+                "{84eb6ffe}": {
+                  "__type": "GameCalculation",
+                  "mFormulaParts": [
+                    {
+                      "__type": "StatByNamedDataValueCalculationPart",
+                      "mDataValue": "AttackReduction",
+                      "mStat": 2
+                    }
+                  ]
+                }
+              },
+              "dataValues": {
+                "AttackReduction": 0.4000000059604645,
+                "AttackSpeed": 0.25,
+                "OnHitMod": 0.4000000059604645,
+                "SecondMissileDelay": 0.15000000596046448
+              },
+              "desc": "When you Attack, fire a secondary bolt that deals @AttackReduction*100@% damage and applies your {{ Item_Keyword_OnHit }} effects at @OnHitMod*100@% effectiveness. Gain <attackSpeed>@AttackSpeed*100@% total Attack Speed</attackSpeed>.",
+              "iconLarge": "assets/ux/cherry/augments/icons/dualwield_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/dualwield_small.png",
+              "id": 225,
+              "name": "Dual Wield",
+              "rarity": "gold",
+              "tooltip": "When you Attack, fire a secondary bolt that deals @AttackReduction*100@% damage and applies your {{ Item_Keyword_OnHit }} effects at @OnHitMod*100@% effectiveness. Gain <attackSpeed>@AttackSpeed*100@% total Attack Speed</attackSpeed>.",
+              "type": "full"
+            },
+            {
+              "apiName": "SymphonyofWar",
+              "calculations": {
+                "ASMelee": {
+                  "__type": "GameCalculation",
+                  "mFormulaParts": [
+                    {
+                      "__type": "ByCharLevelBreakpointsCalculationPart",
+                      "mBreakpoints": [
+                        {
+                          "__type": "Breakpoint",
+                          "mAdditionalBonusAtThisLevel": 0.009999999776482582,
+                          "mLevel": 3
+                        },
+                        {
+                          "__type": "Breakpoint",
+                          "mAdditionalBonusAtThisLevel": 0.009999999776482582,
+                          "mLevel": 6
+                        },
+                        {
+                          "__type": "Breakpoint",
+                          "mAdditionalBonusAtThisLevel": 0.009999999776482582,
+                          "mLevel": 9
+                        },
+                        {
+                          "__type": "Breakpoint",
+                          "mAdditionalBonusAtThisLevel": 0.009999999776482582,
+                          "mLevel": 12
+                        },
+                        {
+                          "__type": "Breakpoint",
+                          "mAdditionalBonusAtThisLevel": 0.009999999776482582,
+                          "mLevel": 15
+                        }
+                      ],
+                      "mLevel1Value": 0.12999999523162842
+                    }
+                  ]
+                },
+                "ASRanged": {
+                  "__type": "GameCalculation",
+                  "mFormulaParts": [
+                    {
+                      "__type": "ByCharLevelBreakpointsCalculationPart",
+                      "mBreakpoints": [
+                        {
+                          "__type": "Breakpoint",
+                          "mAdditionalBonusAtThisLevel": 0.009999999776482582,
+                          "mLevel": 3
+                        },
+                        {
+                          "__type": "Breakpoint",
+                          "mAdditionalBonusAtThisLevel": 0.009999999776482582,
+                          "mLevel": 6
+                        },
+                        {
+                          "__type": "Breakpoint",
+                          "mAdditionalBonusAtThisLevel": 0.009999999776482582,
+                          "mLevel": 9
+                        },
+                        {
+                          "__type": "Breakpoint",
+                          "mAdditionalBonusAtThisLevel": 0.009999999776482582,
+                          "mLevel": 12
+                        }
+                      ],
+                      "mLevel1Value": 0.07999999821186066
+                    }
+                  ]
+                }
+              },
+              "dataValues": {
+                "ASCap": 10,
+                "BuffDuration": 5,
+                "Duration": 6,
+                "HealingPercent": 0.10000000149011612,
+                "MaxAdaptivePerStack": 5.5,
+                "MaxStacks": 12,
+                "MinAdaptivePerStack": 3,
+                "PerCastIDLockout": 10,
+                "RangeBonus": 50,
+                "RangedHealingPercent": 0.07999999821186066,
+                "StackCap": 6,
+                "TimeUntilNextStackFromSameSpell": 5
+              },
+              "desc": "Gain the <spellName>Lethal Tempo</spellName> and <spellName>Conqueror</spellName> Keystone Runes.",
+              "iconLarge": "assets/ux/cherry/augments/icons/symphonyofwar_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/symphonyofwar_small.png",
+              "id": 79,
+              "name": "Symphony of War",
+              "rarity": "gold",
+              "tooltip": "Gain the <spellName>Lethal Tempo</spellName> and <spellName>Conqueror</spellName> Keystone Runes.",
+              "type": "full"
+            },
+            {
+              "apiName": "OutlawsGrit",
+              "calculations": {
+                "MaxResistTooltipOnly": {
+                  "__type": "GameCalculation",
+                  "mFormulaParts": [
+                    {
+                      "__type": "ProductOfSubPartsCalculationPart",
+                      "mPart1": {
+                        "__type": "NamedDataValueCalculationPart",
+                        "mDataValue": "ResistsPerStack"
+                      },
+                      "mPart2": {
+                        "__type": "NamedDataValueCalculationPart",
+                        "mDataValue": "MaxStacks"
+                      }
+                    }
+                  ]
+                }
+              },
+              "dataValues": {
+                "MaxStacks": 5,
+                "ResistsPerStack": 12
+              },
+              "desc": "After using a dash, blink, or teleport you gain <scaleArmor>@ResistsPerStack@ Armor</scaleArmor> and <scaleMR>Magic Resist</scaleMR> up to @MaxResistTooltipOnly@ at @MaxStacks@ stacks.",
+              "iconLarge": "assets/ux/cherry/augments/icons/outlawsgrit_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/outlawsgrit_small.png",
+              "id": 63,
+              "name": "Outlaw's Grit",
+              "rarity": "prismatic",
+              "tooltip": "After using a dash, leap, blink, or teleport Ability you gain <scaleArmor>@ResistsPerStack@ Armor</scaleArmor> and <scaleMR>Magic Resist</scaleMR> up to @MaxResistTooltipOnly@ at @MaxStacks@ stacks.",
+              "type": "full"
+            },
+            {
+              "apiName": "DefensiveManeuvers",
+              "calculations": {
+                "BarrierAmount": {
+                  "__type": "GameCalculation",
+                  "mFormulaParts": [
+                    {
+                      "__type": "ByCharLevelInterpolationCalculationPart",
+                      "mEndValue": 440,
+                      "mStartValue": 110
+                    }
+                  ]
+                },
+                "HealAmount": {
+                  "__type": "GameCalculation",
+                  "mFormulaParts": [
+                    {
+                      "__type": "ByCharLevelInterpolationCalculationPart",
+                      "mEndValue": 318,
+                      "mStartValue": 80
+                    }
+                  ]
+                }
+              },
+              "dataValues": {
+                "AllyRange": 835,
+                "MoveSpeed": 0.30000001192092896,
+                "ShieldDuration": 2.5
+              },
+              "desc": "Gain the <spellName>Defensive Maneuvers</spellName> Summoner Spell.<br><br><rules><spellName>Defensive Maneuvers</spellName> Casts both Summoner <spellName>Barrier</spellName> and <spellName>Heal</spellName> on you and your teammate.</rules>",
+              "iconLarge": "assets/ux/cherry/augments/icons/defensivemaneuvers_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/defensivemaneuvers_small.png",
+              "id": 21,
+              "name": "Defensive Maneuvers",
+              "rarity": "prismatic",
+              "tooltip": "Cast Summoner <abilityName>Barrier</abilityName> and <abilityName>Heal</abilityName> on you and your ally. Grants <shield>@BarrierAmount@ Shield</shield>, restores <healing>@HealAmount@ Health</healing>, and gives <speed>30% Move Speed</speed> for 1 second.<br><br>Healing Done Total: @f1@<br>Shields Created Total: @f2@",
+              "type": "full"
+            }
+          ],
+          "championName": "Gwen",
+          "damage": 48370,
+          "deaths": 7,
+          "gold": 15765,
+          "items": [223124, 443193, 447104, 444637, 224633, 223158, 3348],
+          "kills": 11,
+          "level": 18,
+          "riotIdGameName": "Azure22000",
+          "teamSupport": {
+            "damageShieldedOnTeammate": 0,
+            "damageTakenPercentage": 0.1494017366203054,
+            "healsOnTeammate": 281
+          }
+        },
+        {
+          "arenaMetrics": {
+            "playerScore0": 3,
+            "playerScore1": 13,
+            "playerScore2": 1291.400146484375,
+            "playerScore3": 0.40740740299224854,
+            "playerScore4": 6.200000286102295,
+            "playerScore5": 2586.505615234375,
+            "playerScore6": 1845.8271484375,
+            "playerScore7": 223.1538543701172,
+            "playerScore8": 7.853437900543213
+          },
+          "assists": 9,
+          "augments": [
+            {
+              "apiName": "Eureka",
+              "calculations": {
+                "APToHasteConversionCalc": {
+                  "__type": "GameCalculation",
+                  "mFormulaParts": [
+                    {
+                      "__type": "StatByNamedDataValueCalculationPart",
+                      "mDataValue": "APToHasteConversion"
+                    }
+                  ]
+                }
+              },
+              "dataValues": {
+                "APToHasteConversion": 0.30000001192092896
+              },
+              "desc": "Gain Ability Haste equal to <scaleAP>@APToHasteConversion*100@% Ability Power</scaleAP>.",
+              "iconLarge": "assets/ux/cherry/augments/icons/eureka_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/eureka_small.png",
+              "id": 30,
+              "name": "Eureka",
+              "rarity": "gold",
+              "tooltip": "Gain @APToHasteConversionCalc@ Ability Haste.",
+              "type": "full"
+            },
+            {
+              "apiName": "AcceleratingSorcery",
+              "calculations": {},
+              "dataValues": {
+                "HastePerCast": 12
+              },
+              "desc": "Using Abilities grant you infinitely stacking Ability Haste, this resets each round.",
+              "iconLarge": "assets/ux/cherry/augments/icons/acceleratingsorcery_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/acceleratingsorcery_small.png",
+              "id": 1,
+              "name": "Accelerating Sorcery",
+              "rarity": "gold",
+              "tooltip": "Using an Ability grants <scaleBonus>@HastePerCast@ Ability Haste</scaleBonus>, stacking infinitely, this resets each round.",
+              "type": "full"
+            },
+            {
+              "apiName": "Marksmage",
+              "calculations": {
+                "APDamage": {
+                  "__type": "GameCalculation",
+                  "mFormulaParts": [
+                    {
+                      "__type": "StatByNamedDataValueCalculationPart",
+                      "mDataValue": "APRatio"
+                    }
+                  ],
+                  "mMultiplier": {
+                    "__type": "NamedDataValueCalculationPart",
+                    "mDataValue": "APRatio"
+                  }
+                }
+              },
+              "dataValues": {
+                "APRatio": 1
+              },
+              "desc": "Your Attacks deal additional <physicalDamage>physical damage</physicalDamage> equal to <scaleAP>@APRatio*100@% Ability Power</scaleAP>.",
+              "iconLarge": "assets/ux/cherry/augments/icons/marksmage_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/marksmage_small.png",
+              "id": 129,
+              "name": "Marksmage",
+              "rarity": "prismatic",
+              "tooltip": "Your Attacks deal additional <physicalDamage>@APDamage@ physical damage</physicalDamage>.<br><br>Damage Dealt This Round: @f1@<br>Damage Dealt Total: @f2@",
+              "type": "full"
+            },
+            {
+              "apiName": "ItsKillingTime",
+              "calculations": {},
+              "dataValues": {
+                "Cooldown": 8,
+                "DamageStorePercentage": 0.4000000059604645,
+                "MarkDuration": 5,
+                "VFXHighDamageThreshold": 500
+              },
+              "desc": "After casting your Ultimate, mark all enemy champions for death. While marked, store a percentage of damage dealt to them, and detonate the damage when the mark ends.",
+              "iconLarge": "assets/ux/cherry/augments/icons/itskillingtime_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/itskillingtime_small.png",
+              "id": 211,
+              "name": "It's Killing Time",
+              "rarity": "prismatic",
+              "tooltip": "After casting your Ultimate, mark all enemy champions for death. The mark stores @DamageStorePercentage*100@% of damage dealt to them, then detonates for the stored damage after @MarkDuration@ seconds. (@Cooldown@ second Cooldown).<br><br>Damage Dealt This Round: @f1@<br>Damage Dealt Total: @f2@",
+              "type": "full"
+            }
+          ],
+          "championName": "Veigar",
+          "damage": 33624,
+          "deaths": 4,
+          "gold": 18266,
+          "items": [223009, 223135, 223157, 223089, 447106, 443080, 3348],
+          "kills": 6,
+          "level": 18,
+          "riotIdGameName": "xRARESTx",
+          "teamSupport": {
+            "damageShieldedOnTeammate": 0,
+            "damageTakenPercentage": 0.0714953953277693,
+            "healsOnTeammate": 0
+          }
+        }
+      ],
+      "teamId": 8
+    }
+  ]
+}

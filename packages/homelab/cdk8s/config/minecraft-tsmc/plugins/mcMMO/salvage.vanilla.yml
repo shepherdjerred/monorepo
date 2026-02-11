@@ -1,0 +1,292 @@
+#
+#  Salvage configuration
+#  Last updated on 2.1.217-b${BUILD_NUMBER}
+#
+# Any file named salvage.*.yml in the mcmmmo folder will be loaded as a salvage config
+# All salvage configs have a main section titled "Salvageables"
+# Afterwards, all sub-items are considered a Salvageable to be loaded. The names of each subitem should be the exact material name.
+# The bare minimum of a Salvageable is that it has a minimumLevel and XpMultiplier.
+#
+# ItemType: This is the type of item to be repaired, this is only important to permissions.
+# # Valid values are ARMOR, TOOL, and OTHER.
+# # This defaults to OTHER.
+#
+# MaterialType: This is the type of the material of the item to be salvaged, this is only important for permissions.
+# # Valid values are STRING, LEATHER, WOOD, STONE, IRON, GOLD, DIAMOND, NETHER, and OTHER
+# # This defaults to OTHER.
+#
+# SalvageMaterial: This is the material name of the item used to salvage this item.
+# # This is required to be set for non craftable items, if not set mcMMO checks the crafting recipe to see which items
+# # should be dropped when salvaging the item.
+#
+# SalvageMaterialMetadata: This is the metadata of the item used to salvage this item.
+# # A value of -1 means to ignore all metadata when repairing.
+# # This defaults to -1
+#
+# MaximumDurability: This is the maximum durability of the item.
+#
+# MinimumLevel: This is the minimum repair level needed to salvage this item.
+# # Valid values are => 0
+# # This defaults to 0
+#
+# MaximumQuantity: This is the maximum number of items yield after salvaging the item, ignoring all other salvage bonuses.
+# # This is typically the number of the salvage material needed to create a new item, for example for a sword it is 2, for an axe it is 3
+# # This defaults to 2
+#
+# XpMultiplier: This is the amount to multiply the xp bonus by.
+# # This defaults to 1
+#
+#
+# The following is the default salvage config that ships with mcMMO, it contains all vanilla items that are salvageable.
+#
+#
+# ##
+Salvageables:
+  #
+  # Wooden salvageables
+  # ##
+  # Tools
+  WOODEN_SWORD:
+    MinimumLevel: 0
+    XpMultiplier: 0.25
+    MaximumQuantity: 2
+  WOODEN_SHOVEL:
+    MinimumLevel: 0
+    XpMultiplier: 0.16
+    MaximumQuantity: 1
+  WOODEN_PICKAXE:
+    MinimumLevel: 0
+    XpMultiplier: 0.5
+    MaximumQuantity: 3
+  WOODEN_AXE:
+    MinimumLevel: 0
+    XpMultiplier: 0.5
+    MaximumQuantity: 3
+  WOODEN_HOE:
+    MinimumLevel: 0
+    XpMultiplier: 0.25
+    MaximumQuantity: 2
+  #
+  # Stone salvageables
+  # ##
+  # Tools
+  STONE_SWORD:
+    MinimumLevel: 0
+    XpMultiplier: 0.25
+    MaximumQuantity: 2
+  STONE_SHOVEL:
+    MinimumLevel: 0
+    XpMultiplier: 0.16
+    MaximumQuantity: 1
+  STONE_PICKAXE:
+    MinimumLevel: 0
+    XpMultiplier: 0.5
+    MaximumQuantity: 3
+  STONE_AXE:
+    MinimumLevel: 0
+    XpMultiplier: 0.5
+    MaximumQuantity: 3
+  STONE_HOE:
+    MinimumLevel: 0
+    XpMultiplier: 0.25
+    MaximumQuantity: 2
+  #
+  # Iron salvageables
+  # ##
+  # Tools
+  IRON_SWORD:
+    MinimumLevel: 0
+    XpMultiplier: 0.5
+    MaximumQuantity: 2
+  IRON_SHOVEL:
+    MinimumLevel: 0
+    XpMultiplier: 0.3
+    MaximumQuantity: 1
+  IRON_PICKAXE:
+    MinimumLevel: 0
+    XpMultiplier: 1
+    MaximumQuantity: 3
+  IRON_AXE:
+    MinimumLevel: 0
+    XpMultiplier: 1
+    MaximumQuantity: 3
+  IRON_HOE:
+    MinimumLevel: 0
+    XpMultiplier: 0.5
+    MaximumQuantity: 2
+  SHEARS:
+    MinimumLevel: 0
+    XpMultiplier: 0.5
+  FLINT_AND_STEEL:
+    MinimumLevel: 0
+    XpMultiplier: 0.3
+  # Armor
+  IRON_HELMET:
+    MinimumLevel: 0
+    XpMultiplier: 2
+    MaximumQuantity: 5
+  IRON_CHESTPLATE:
+    MinimumLevel: 0
+    XpMultiplier: 2
+    MaximumQuantity: 8
+  IRON_LEGGINGS:
+    MinimumLevel: 0
+    XpMultiplier: 2
+    MaximumQuantity: 7
+  IRON_BOOTS:
+    MinimumLevel: 0
+    XpMultiplier: 2
+    MaximumQuantity: 4
+  #
+  # Gold salvageables
+  # ##
+  # Tools
+  GOLDEN_SWORD:
+    MinimumLevel: 0
+    XpMultiplier: 4
+    MaximumQuantity: 2
+  GOLDEN_SHOVEL:
+    MinimumLevel: 0
+    XpMultiplier: 2.6
+    MaximumQuantity: 1
+  GOLDEN_PICKAXE:
+    MinimumLevel: 0
+    XpMultiplier: 8
+    MaximumQuantity: 3
+  GOLDEN_AXE:
+    MinimumLevel: 0
+    XpMultiplier: 8
+    MaximumQuantity: 3
+  GOLDEN_HOE:
+    MinimumLevel: 0
+    XpMultiplier: 4
+    MaximumQuantity: 2
+  # Armor
+  GOLDEN_HELMET:
+    MinimumLevel: 0
+    XpMultiplier: 4
+    MaximumQuantity: 5
+  GOLDEN_CHESTPLATE:
+    MinimumLevel: 0
+    XpMultiplier: 4
+    MaximumQuantity: 8
+  GOLDEN_LEGGINGS:
+    MinimumLevel: 0
+    XpMultiplier: 4
+    MaximumQuantity: 7
+  GOLDEN_BOOTS:
+    MinimumLevel: 0
+    XpMultiplier: 4
+    MaximumQuantity: 4
+  #
+  # Diamond salvageables
+  # ##
+  # Tools
+  DIAMOND_SWORD:
+    MinimumLevel: 50
+    XpMultiplier: 0.5
+    MaximumQuantity: 2
+  DIAMOND_SHOVEL:
+    MinimumLevel: 50
+    XpMultiplier: 0.3
+    MaximumQuantity: 1
+  DIAMOND_PICKAXE:
+    MinimumLevel: 50
+    XpMultiplier: 1
+    MaximumQuantity: 3
+  DIAMOND_AXE:
+    MinimumLevel: 50
+    XpMultiplier: 1
+    MaximumQuantity: 3
+  DIAMOND_HOE:
+    MinimumLevel: 50
+    XpMultiplier: 0.5
+    MaximumQuantity: 2
+  # Armor
+  DIAMOND_HELMET:
+    MinimumLevel: 50
+    XpMultiplier: 6
+    MaximumQuantity: 5
+  DIAMOND_CHESTPLATE:
+    MinimumLevel: 50
+    XpMultiplier: 6
+    MaximumQuantity: 8
+  DIAMOND_LEGGINGS:
+    MinimumLevel: 50
+    XpMultiplier: 6
+    MaximumQuantity: 7
+  DIAMOND_BOOTS:
+    MinimumLevel: 50
+    XpMultiplier: 6
+    MaximumQuantity: 4
+
+  NETHERITE_SWORD:
+    MinimumLevel: 100
+    XpMultiplier: 0.5
+    MaximumQuantity: 4
+  NETHERITE_SHOVEL:
+    MinimumLevel: 100
+    XpMultiplier: 0.3
+    MaximumQuantity: 4
+  NETHERITE_PICKAXE:
+    MinimumLevel: 100
+    XpMultiplier: 1
+    MaximumQuantity: 4
+  NETHERITE_AXE:
+    MinimumLevel: 100
+    XpMultiplier: 1
+    MaximumQuantity: 4
+  NETHERITE_HOE:
+    MinimumLevel: 100
+    XpMultiplier: 0.5
+    MaximumQuantity: 4
+  # Armor
+  NETHERITE_HELMET:
+    MinimumLevel: 100
+    XpMultiplier: 6
+    MaximumQuantity: 4
+  NETHERITE_CHESTPLATE:
+    MinimumLevel: 100
+    XpMultiplier: 6
+    MaximumQuantity: 4
+  NETHERITE_LEGGINGS:
+    MinimumLevel: 100
+    XpMultiplier: 6
+    MaximumQuantity: 4
+  NETHERITE_BOOTS:
+    MinimumLevel: 100
+    XpMultiplier: 6
+    MaximumQuantity: 4
+  #
+  # Leather salvageables
+  # ##
+  # Armor
+  LEATHER_HELMET:
+    MinimumLevel: 0
+    XpMultiplier: 1
+    MaximumQuantity: 5
+  LEATHER_CHESTPLATE:
+    MinimumLevel: 0
+    XpMultiplier: 1
+    MaximumQuantity: 8
+  LEATHER_LEGGINGS:
+    MinimumLevel: 0
+    XpMultiplier: 1
+    MaximumQuantity: 7
+  LEATHER_BOOTS:
+    MinimumLevel: 0
+    XpMultiplier: 1
+    MaximumQuantity: 4
+  #
+  # String salvageables
+  # ##
+  # Tools
+  FISHING_ROD:
+    MinimumLevel: 0
+    XpMultiplier: 0.5
+  BOW:
+    MinimumLevel: 0
+    XpMultiplier: 0.5
+  CARROT_ON_A_STICK:
+    MinimumLevel: 0
+    XpMultiplier: 0.5

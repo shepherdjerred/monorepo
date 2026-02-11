@@ -1,0 +1,325 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Bard": {
+      "id": "Bard",
+      "key": "432",
+      "name": "Bard",
+      "title": "the Wandering Caretaker",
+      "image": {
+        "full": "Bard.png",
+        "sprite": "champion0.png",
+        "group": "champion",
+        "x": 192,
+        "y": 48,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "432000",
+          "num": 0,
+          "name": "default",
+          "chromas": true
+        },
+        {
+          "id": "432001",
+          "num": 1,
+          "name": "Elderwood Bard",
+          "chromas": false
+        },
+        {
+          "id": "432005",
+          "num": 5,
+          "name": "Snow Day Bard",
+          "chromas": true
+        },
+        {
+          "id": "432006",
+          "num": 6,
+          "name": "Bard Bard",
+          "chromas": false
+        },
+        {
+          "id": "432008",
+          "num": 8,
+          "name": "Astronaut Bard",
+          "chromas": true
+        },
+        {
+          "id": "432017",
+          "num": 17,
+          "name": "Cafe Cuties Bard",
+          "chromas": true
+        },
+        {
+          "id": "432026",
+          "num": 26,
+          "name": "Shan Hai Scrolls Bard",
+          "chromas": true
+        },
+        {
+          "id": "432035",
+          "num": 35,
+          "name": "T1 Bard",
+          "chromas": true
+        },
+        {
+          "id": "432037",
+          "num": 37,
+          "name": "Spirit Blossom Bard",
+          "chromas": true
+        }
+      ],
+      "lore": "A traveler from beyond the stars, Bard is an agent of serendipity who fights to maintain a balance where life can endure the indifference of chaos. Many Runeterrans sing songs that ponder his extraordinary nature, yet they all agree that the cosmic vagabond is drawn to artifacts of great magical power. Surrounded by a jubilant choir of helpful spirit meeps, it is impossible to mistake his actions as malevolent, as Bard always serves the greater good... in his own odd way.",
+      "blurb": "A traveler from beyond the stars, Bard is an agent of serendipity who fights to maintain a balance where life can endure the indifference of chaos. Many Runeterrans sing songs that ponder his extraordinary nature, yet they all agree that the cosmic...",
+      "allytips": [
+        "It's important to collect chimes to improve your meep's attacks, but don't neglect your lane partner! Try to make a big entrance by bringing an ally into the lane with you with Magical Journey.",
+        "Let your Caretaker's Shrines charge up - they heal for a lot more when at full power.",
+        "Don't forget that enemies can also use your Magical Journey doorways, and that your ultimate can also hit your allies!"
+      ],
+      "enemytips": [
+        "Bard's opponents can also travel through his Magical Journey doorways. You can follow him, if you think it's safe.",
+        "You can crush Bard's healing shrines just by walking over them. Don't let his allies take them without a fight.",
+        "Bard's ultimate, Tempered Fate, affects allies, enemies, monsters, and turrets alike. Sometimes it can be to your advantage to jump into it!"
+      ],
+      "tags": ["Support", "Mage"],
+      "partype": "Mana",
+      "info": {
+        "attack": 4,
+        "defense": 4,
+        "magic": 5,
+        "difficulty": 9
+      },
+      "stats": {
+        "hp": 630,
+        "hpperlevel": 103,
+        "mp": 350,
+        "mpperlevel": 50,
+        "movespeed": 335,
+        "armor": 34,
+        "armorperlevel": 5,
+        "spellblock": 30,
+        "spellblockperlevel": 1.3,
+        "attackrange": 500,
+        "hpregen": 5.5,
+        "hpregenperlevel": 0.55,
+        "mpregen": 6,
+        "mpregenperlevel": 0.45,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 52,
+        "attackdamageperlevel": 3,
+        "attackspeedperlevel": 2,
+        "attackspeed": 0.658
+      },
+      "spells": [
+        {
+          "id": "BardQ",
+          "name": "Cosmic Binding",
+          "description": "Bard fires a missile which will slow the first enemy struck, and continue onward. If it strikes a wall, it will stun the initial target; if it strikes another enemy, it will stun them both.",
+          "tooltip": "Bard fires an energy bolt, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to the first two enemies hit. The first target hit is <status>Slowed</status> by {{ slowamountpercentage }}% for {{ slowduration }}s.<br /><br />If the bolt hits a second enemy or a wall, any enemies hit are <status>Stunned</status> for {{ stunduration }}s.<br />{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Slow Duration", "Stun Duration:", "Cooldown"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ slowduration }} -> {{ slowdurationNL }}",
+              "{{ stunduration }} -> {{ stundurationNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [11, 10, 9, 8, 7],
+          "cooldownBurn": "11/10/9/8/7",
+          "cost": [60, 60, 60, 60, 60],
+          "costBurn": "60",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [25000, 25000, 25000, 25000, 25000],
+          "rangeBurn": "25000",
+          "image": {
+            "full": "BardQ.png",
+            "sprite": "spell1.png",
+            "group": "spell",
+            "x": 192,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "BardW",
+          "name": "Caretaker's Shrine",
+          "description": "Reveals a Health shrine which powers up over a short time, disappearing after healing and speeding up the first ally that touches it.",
+          "tooltip": "Bard creates a Health shrine that grants <speed>{{ calc_movespeed }} Move Speed</speed> decaying over {{ movespeed_duration }} seconds and restores at least <healing>{{ initialheal }} Health</healing> to the first ally to enter. The shrine grows to restore <healing>{{ maxheal }} Health</healing> after existing for {{ chargeuptime }} seconds.<br /><br />Bard can have up to {{ maxpacks }} shrines at once. If an enemy champion enters a shrine, it is destroyed.<br /><br />This ability has {{ ammo_limit }} charges.<br /><br />Current Active Shrines: {{ f1 }} / {{ f2 }}{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Base Heal", "Max Heal", "Move Speed"],
+            "effect": [
+              "{{ minimumheal }} -> {{ minimumhealNL }}",
+              "{{ maximumheal }} -> {{ maximumhealNL }}",
+              "{{ movespeed_base*100.000000 }}% -> {{ movespeed_basenl*100.000000 }}%"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [0, 0, 0, 0, 0],
+          "cooldownBurn": "0",
+          "cost": [70, 70, 70, 70, 70],
+          "costBurn": "70",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [3, 3, 3, 3, 3],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [5, 5, 5, 5, 5],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "3", "0", "0", "0", "0", "5", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "2",
+          "range": [800, 800, 800, 800, 800],
+          "rangeBurn": "800",
+          "image": {
+            "full": "BardW.png",
+            "sprite": "spell1.png",
+            "group": "spell",
+            "x": 240,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "BardE",
+          "name": "Magical Journey",
+          "description": "Bard opens a portal in nearby terrain. Allies and enemies alike can take a one-way trip through that terrain by moving into the portal.",
+          "tooltip": "Bard opens a one-way portal through Terrain for {{ e1 }} seconds. Any champion can enter the portal by moving onto it while near the entrance.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Cooldown"],
+            "effect": ["{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 5,
+          "cooldown": [22, 20.5, 19, 17.5, 16],
+          "cooldownBurn": "22/20.5/19/17.5/16",
+          "cost": [30, 30, 30, 30, 30],
+          "costBurn": "30",
+          "datavalues": {},
+          "effect": [
+            null,
+            [10, 10, 10, 10, 10],
+            [33, 33, 33, 33, 33],
+            [900, 900, 900, 900, 900],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "10", "33", "900", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [900, 900, 900, 900, 900],
+          "rangeBurn": "900",
+          "image": {
+            "full": "BardE.png",
+            "sprite": "spell1.png",
+            "group": "spell",
+            "x": 288,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "BardR",
+          "name": "Tempered Fate",
+          "description": "Bard sends spirit energy arcing to a location, putting all champions, minions, monsters, and turrets hit into stasis for a brief time.",
+          "tooltip": "Bard hurls magical protective energy to an area, placing all units and structures hit into Stasis for {{ rstasisduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Cooldown"],
+            "effect": ["{{ cooldown }} -> {{ cooldownNL }}"]
+          },
+          "maxrank": 3,
+          "cooldown": [110, 95, 80],
+          "cooldownBurn": "110/95/80",
+          "cost": [100, 100, 100],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [3400, 3400, 3400],
+          "rangeBurn": "3400",
+          "image": {
+            "full": "BardR.png",
+            "sprite": "spell1.png",
+            "group": "spell",
+            "x": 336,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Traveler's Call",
+        "description": "<font color='#FF9900'>Meeps:</font> Bard attracts lesser spirits that assist with his basic attacks to deal extra magic damage. When Bard has collected enough  <font color='#cccc00'>Chimes</font>, his meeps will also deal damage in an area and slow enemies hit.<br><br><font color='#FF9900'>Chimes:</font> Ancient <font color='#cccc00'>chimes</font> randomly appear for Bard to collect. These grant experience, restore mana, and provide out of combat Move Speed.",
+        "image": {
+          "full": "Bard_Passive.png",
+          "sprite": "passive0.png",
+          "group": "passive",
+          "x": 192,
+          "y": 48,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

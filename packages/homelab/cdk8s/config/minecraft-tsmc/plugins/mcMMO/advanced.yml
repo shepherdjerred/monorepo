@@ -1,0 +1,608 @@
+#
+#  Advanced configuration
+#  Last updated on 2.1.217-b${BUILD_NUMBER}
+#
+#  For advanced users only! There is no need to change anything here.
+#
+#  You can customize almost every aspect of every skill here.
+#  Its mainly here if you've customized the experience formula.
+#  Configure at what level you get better with certain abilities.
+#
+# ####
+
+#
+#  Settings for the Skills
+# ##
+# Enables anonymous statistics
+Metrics:
+  bstats: true
+Feedback:
+  PlayerTips: true
+  SkillCommand:
+    BlankLinesAboveHeader: true
+  # If sendtitles is true messages will be sent using the title api (BIG TEXT ON SCREEN)
+  Events:
+    XP:
+      SendTitles: true
+    # Send notifications to the chat or actionbar of other nearby players when a user activates an ability
+    AbilityActivation:
+      SendNotificationToOtherPlayers: true
+  # The actionbar is the message location right above the health bar
+  # # If you disable the action bar messages, mcMMO will send the message to the chat system instead
+  ActionBarNotifications:
+    AbilityOff:
+      Enabled: true
+      SendCopyOfMessageToChat: false
+    HardcoreMode:
+      Enabled: true
+      SendCopyOfMessageToChat: true
+    RequirementsNotMet:
+      Enabled: true
+      SendCopyOfMessageToChat: false
+    AbilityCoolDown:
+      Enabled: true
+      SendCopyOfMessageToChat: false
+    LevelUps:
+      Enabled: true
+      SendCopyOfMessageToChat: true
+    Holiday:
+      Enabled: true
+      SendCopyOfMessageToChat: true
+    ToolReady:
+      Enabled: true
+      SendCopyOfMessageToChat: false
+    SubSkillInteraction:
+      Enabled: true
+      SendCopyOfMessageToChat: false
+    SubSkillFailed:
+      Enabled: false
+      SendCopyOfMessageToChat: true
+    SubSkillUnlocked:
+      Enabled: true
+      SendCopyOfMessageToChat: true
+    SuperAbilityInteraction:
+      Enabled: true
+      SendCopyOfMessageToChat: false
+    SuperAbilityAlertOthers:
+      Enabled: true
+      SendCopyOfMessageToChat: true
+    ExperienceGain:
+      Enabled: true
+      SendCopyOfMessageToChat: false
+    ItemMessage:
+      Enabled: true
+      SendCopyOfMessageToChat: false
+    NoPermission:
+      Enabled: true
+      SendCopyOfMessageToChat: true
+    PartyMessage:
+      Enabled: true
+      SendCopyOfMessageToChat: true
+    AbilityRefreshed:
+      Enabled: true
+      SendCopyOfMessageToChat: false
+Skills:
+  General:
+    LimitBreak:
+      AllowPVE: false
+    StartingLevel: 0
+    Ability:
+      Length:
+        Standard:
+          CapLevel: 100
+          IncreaseLevel: 5
+        RetroMode:
+          CapLevel: 1000
+          IncreaseLevel: 50
+      EnchantBuff: 5
+  # IncreaseLevel: This setting will determine when the length of every ability gets longer with 1 second
+  # EnchantBuff: This setting determines how many enchant levels to use when buffing Super Breaker & Giga Drill Breaker
+
+  #
+  #  Settings for Acrobatics
+  # ##
+  Acrobatics:
+    Dodge:
+      # ChanceMax: Maximum chance of dodging when on <MaxBonusLevel> or higher
+      # MaxBonusLevel: On this level or higher, the dodge chance will not go higher than <ChanceMax>
+      # DamageModifier: Dodge damage will be divided by this modifier
+      ChanceMax: 20.0
+      MaxBonusLevel:
+        Standard: 100
+        RetroMode: 1000
+      DamageModifier: 2.0
+
+    Roll:
+      # ChanceMax: Maximum chance of rolling when on <MaxBonusLevel> or higher
+      # MaxBonusLevel: On this level or higher, the roll chance will not go higher than <ChanceMax>
+      # DamageThreshold: The max damage a player can negate with a roll, graceful roll doubles this number
+      ChanceMax: 100.0
+      MaxBonusLevel:
+        Standard: 100
+        RetroMode: 1000
+      DamageThreshold: 7.0
+  #
+  #  Settings for Alchemy
+  # ##
+  Alchemy:
+    Catalysis:
+      # MaxBonusLevel: Maximum bonus level of Catalysis, when a player reaches this level his brewing speed will be <MaxSpeed>
+      # MinSpeed: Minimum brewing speed allowed when at <UnlockLevel> or lower
+      # MaxSpeed: Maximum brewing speed allowed when at <MaxBonusLevel> or higher
+      MaxBonusLevel:
+        Standard: 100
+        RetroMode: 1000
+      MinSpeed: 1.0
+      MaxSpeed: 4.0
+  #
+  #  Settings for Archery
+  # ##
+  Archery:
+    SkillShot:
+      # RankDamageMultiplier: The current rank of this subskill is multiplied by this value to determine the bonus damage, rank 20 would result in 200% damage increase with a value of 10.0 for RankDamageMultiplier
+      # RankDamageMultiplier is a percentage
+      RankDamageMultiplier: 10.0
+      # MaxDamage: After adding bonus damage, the total damage dealt by the player will not exceed this number
+      # You should be careful to not set this too low
+      MaxDamage: 9.0
+    Daze:
+      # ChanceMax: Maximum chance of causing daze to opponents when on <MaxBonusLevel> or higher
+      # MaxBonusLevel: Maximum bonus level of Daze, when a player reaches this level his chance of causing a daze will be <ChanceMax>
+      # Modifier: Extra damage for arrows that cause a daze (2 damage = 1 heart)
+      ChanceMax: 50.0
+      MaxBonusLevel:
+        Standard: 100
+        RetroMode: 1000
+      BonusDamage: 4.0
+
+    ArrowRetrieval:
+      # ChanceMax: Maximum chance of retrieving arrows when on <MaxBonusLevel> or higher
+      # MaxBonusLevel: Maximum bonus level for Arrow retrieval, at this level the chance of retrieving arrows from mobs is <ChanceMax>
+      ChanceMax: 100.0
+      MaxBonusLevel:
+        Standard: 100
+        RetroMode: 1000
+
+    # ForceMultiplier: Multiply the force of the bow by this for an XP boost.
+    ForceMultiplier: 2.0
+  #
+  #  Settings for Axes
+  # ##
+  Axes:
+    AxeMastery:
+      # This number is multiplied by the current rank the player has in this subskill to find the amount of additional damage to apply
+      # With the default config value of 1.0, at rank 4 a player will deal 4.0 extra damage with Axes (1.0 * 4)
+      RankDamageMultiplier: 1.0
+    CriticalStrikes:
+      # ChanceMax: Maximum chance of causing a critical hit when on <MaxBonusLevel> or higher
+      # MaxBonusLevel: Level where <ChanceMax> of causing critical hits is reached
+      ChanceMax: 37.5
+      MaxBonusLevel:
+        Standard: 100
+        RetroMode: 1000
+      # Damage modifier of critical hits for PVP / PVE, when causing a critical hit the damage gets multiplied by the modifier
+      PVP_Modifier: 1.5
+      PVE_Modifier: 2.0
+
+    GreaterImpact:
+      # Chance: Chance of hitting with GreaterImpact, mobs are knocked backwards when successful
+      # KnockbackModifier: Velocity modifier of GreaterImpact hits, this determines how great the knockback is
+      # BonusDamage: Extra damage for GreaterImpact hits
+      Chance: 25.0
+      KnockbackModifier: 1.5
+      BonusDamage: 2.0
+
+    ArmorImpact:
+      # Multiplied against the skill rank to determine how much damage to do
+      DamagePerRank: 6.5
+      # IncreaseLevel: Every <IncreaseLevel> the durability damage goes up with 1
+      # Chance: Chance of hitting with ArmorImpact
+      # MaxPercentageDurabilityDamage: Durability damage cap for ArmorImpact, 20% means that you can never destroy a piece of armor in less than 5 hits
+      Chance: 25.0
+    SkullSplitter:
+      # DamageModifier: Damage will get divided by this modifier
+      DamageModifier: 2.0
+  #
+  #  Settings for Fishing
+  # ##
+  Fishing:
+    ShakeChance:
+      Rank_1: 30
+
+    # VanillaXPMultiplier: Vanilla XP gained from fishing is multiplied by these values.
+    VanillaXPMultiplier:
+      Rank_1: 1
+      Rank_2: 2
+      Rank_3: 3
+      Rank_4: 3
+      Rank_5: 4
+      Rank_6: 4
+      Rank_7: 5
+      Rank_8: 5
+
+    FishermansDiet:
+      # This determines when Fisherman's Diet adds extra hunger recovery to food
+      RankChange: 20
+
+    MasterAngler:
+      Boat_Tick_Reduction:
+        Min_Wait: 10
+        Max_Wait: 30
+      Tick_Reduction_Per_Rank:
+        Min_Wait: 10
+        Max_Wait: 30
+      Tick_Reduction_Caps:
+        # Don't modify these two unless you fully understand what you are doing
+        Min_Wait: 40
+        Max_Wait: 100
+  #
+  #  Settings for Herbalism
+  # ##
+  Herbalism:
+    GreenThumb:
+      # ChanceMax: Maximum chance of GreenThumb when on <MaxBonusLevel> or higher
+      # MaxBonusLevel: On this level, GreenThumb chance will be <ChanceMax>
+      ChanceMax: 100.0
+      MaxBonusLevel:
+        Standard: 100
+        RetroMode: 1000
+
+    DoubleDrops:
+      # ChanceMax: Maximum chance of receiving double drops when on <MaxBonusLevel> or higher
+      # MaxBonusLevel: Level when <ChanceMax> of receiving double drops is reached
+      ChanceMax: 100.0
+      MaxBonusLevel:
+        Standard: 100
+        RetroMode: 1000
+
+    HylianLuck:
+      # ChanceMax: Maximum chance of Hylian Luck when on <MaxBonusLevel> or higher
+      # MaxBonusLevel: On this level, Hylian Luck chance will be <ChanceMax>
+      ChanceMax: 10.0
+      MaxBonusLevel:
+        Standard: 100
+        RetroMode: 1000
+
+    ShroomThumb:
+      # ChanceMax: Maximum chance of ShroomThumb when on <MaxBonusLevel> or higher
+      # MaxBonusLevel: On this level, ShroomThumb chance will be <ChanceMax>
+      ChanceMax: 50.0
+      MaxBonusLevel:
+        Standard: 100
+        RetroMode: 1000
+  #
+  #  Settings for Mining
+  # ##
+  Mining:
+    SuperBreaker:
+      AllowTripleDrops: true
+    DoubleDrops:
+      SilkTouch: true
+      # ChanceMax: Maximum chance of receiving double drops when on <MaxBonusLevel> or higher
+      # MaxBonusLevel: Level when <ChanceMax> of receiving double drops is reached
+      ChanceMax: 100.0
+      MaxBonusLevel:
+        Standard: 100
+        RetroMode: 1000
+
+    BlastMining:
+      # BlastDamageDecrease Ranks: % of damage reduced from TNT explosions
+      BlastDamageDecrease:
+        Rank_1: 0.0
+        Rank_2: 0.0
+        Rank_3: 0.0
+        Rank_4: 25.0
+        Rank_5: 25.0
+        Rank_6: 50.0
+        Rank_7: 50.0
+        Rank_8: 100.0
+
+      # OreBonus Ranks: % of extra ores received when Blast Mining
+      OreBonus:
+        Rank_1: 35.0
+        Rank_2: 40.0
+        Rank_3: 45.0
+        Rank_4: 50.0
+        Rank_5: 55.0
+        Rank_6: 60.0
+        Rank_7: 65.0
+        Rank_8: 70.0
+
+      # DebrisReduction_Rank: % of fewer non-ores received when Blast Mining
+      DebrisReduction:
+        Rank_1: 10.0
+        Rank_2: 20.0
+        Rank_3: 30.0
+        Rank_4: 30.0
+        Rank_5: 30.0
+        Rank_6: 30.0
+        Rank_7: 30.0
+        Rank_8: 30.0
+
+      # DropMultiplier Ranks: # of times each ore will drop
+      DropMultiplier:
+        Rank_1: 1
+        Rank_2: 1
+        Rank_3: 1
+        Rank_4: 1
+        Rank_5: 2
+        Rank_6: 2
+        Rank_7: 3
+        Rank_8: 3
+
+      # BlastRadiusModifier Ranks: Increases the blast radius by this amount
+      BlastRadiusModifier:
+        Rank_1: 1.0
+        Rank_2: 1.0
+        Rank_3: 2.0
+        Rank_4: 2.0
+        Rank_5: 3.0
+        Rank_6: 3.0
+        Rank_7: 4.0
+        Rank_8: 4.0
+      Bonus_Drops:
+        Enabled: true
+  #
+  #  Settings for Repair
+  # ##
+  Repair:
+    RepairMastery:
+      # MaxBonusPercentage: Maximum bonus percentage for Repair Mastery
+      # MaxBonusLevel: On this level, the maximum bonus is reached
+      MaxBonusPercentage: 200.0
+      MaxBonusLevel:
+        Standard: 100
+        RetroMode: 1000
+
+    SuperRepair:
+      # ChanceMax: Maximum chance of Super Repair when on <MaxBonusLevel> or higher
+      # MaxBonusLevel: On this level, Super Repair chance will be <ChanceMax>
+      ChanceMax: 100.0
+      MaxBonusLevel:
+        Standard: 100
+        RetroMode: 1000
+
+    ArcaneForging:
+      May_Lose_Enchants: true
+      Keep_Enchants_Chance:
+        Rank_1: 10.0
+        Rank_2: 20.0
+        Rank_3: 30.0
+        Rank_4: 40.0
+        Rank_5: 50.0
+        Rank_6: 50.0
+        Rank_7: 60.0
+        Rank_8: 60.0
+      Downgrades_Enabled: true
+      Downgrades_Chance:
+        Rank_1: 75.0
+        Rank_2: 50.0
+        Rank_3: 40.0
+        Rank_4: 30.0
+        Rank_5: 25.0
+        Rank_6: 20.0
+        Rank_7: 15.0
+        Rank_8: 10.0
+  #
+  #  Settings for Salvage
+  # ##
+  Salvage:
+    ArcaneSalvage:
+      # EnchantLossEnabled: When salvaging enchanted items, the enchants may be lost
+      # EnchantDowngradeEnabled: When salvaging enchanted items, the enchants may be downgraded
+      EnchantLossEnabled: true
+      EnchantDowngradeEnabled: true
+
+      # ExtractFullEnchant: Chance to extract the full enchant at each ArcaneSalvage rank
+      ExtractFullEnchant:
+        Rank_1: 2.5
+        Rank_2: 5.0
+        Rank_3: 7.5
+        Rank_4: 10.0
+        Rank_5: 12.5
+        Rank_6: 17.5
+        Rank_7: 25.0
+        Rank_8: 32.5
+
+      # ExtractPartialEnchant: Chance to extract the partial enchant at each ArcaneSalvage rank
+      ExtractPartialEnchant:
+        Rank_1: 2.0
+        Rank_2: 2.5
+        Rank_3: 5.0
+        Rank_4: 7.5
+        Rank_5: 10.0
+        Rank_6: 12.5
+        Rank_7: 15.0
+        Rank_8: 17.5
+  #
+  #  Settings for Smelting
+  # ##
+  Smelting:
+    SecondSmelt:
+      # ChanceMax: Maximum chance of triggering Second Smelt
+      # MaxBonusLevel: On this level, the chance to cause Second Smelt will be <ChanceMax>
+      ChanceMax: 50.0
+      MaxBonusLevel:
+        Standard: 100
+        RetroMode: 1000
+
+    FluxMining:
+      # Chance: Chance for Flux Mining to activate
+      Chance: 33.0
+      MaxBonusLevel:
+        Standard: 100
+        RetroMode: 1000
+
+    # VanillaXPMultiplier: Vanilla XP gained from smelting ores is multiplied by these values.
+    VanillaXPMultiplier:
+      Rank_1: 1
+      Rank_2: 2
+      Rank_3: 3
+      Rank_4: 3
+      Rank_5: 4
+      Rank_6: 4
+      Rank_7: 5
+      Rank_8: 5
+
+  #
+  #  Settings for Swords
+  # ##
+  Swords:
+    Rupture:
+      Rupture_Mechanics:
+        # This is % chance, 15 would mean 15% percent of the time
+        Chance_To_Apply_On_Hit:
+          Rank_1: 15
+          Rank_2: 33
+          Rank_3: 40
+          Rank_4: 66
+        Duration_In_Seconds:
+          Against_Players: 5
+          Against_Mobs: 5
+        # Tick interval damage is applied twice a second during rupture, it is "pure" and does not get lowered from armor or absorption etc
+        Tick_Interval_Damage:
+          Against_Players:
+            Rank_1: 0.1
+            Rank_2: 0.15
+            Rank_3: 0.2
+            Rank_4: 0.3
+          Against_Mobs:
+            Rank_1: 0.5
+            Rank_2: 0.75
+            Rank_3: 0.9
+            Rank_4: 1
+        # If Rupture runs for 5 seconds without being reapplied, it explodes
+        # this damage is **NOT** pure and is reduced dramatically vs armor/absorption/etc
+        Explosion_Damage:
+          Against_Players:
+            Rank_1: 10
+            Rank_2: 20
+            Rank_3: 30
+            Rank_4: 40
+          Against_Mobs:
+            Rank_1: 10
+            Rank_2: 20
+            Rank_3: 30
+            Rank_4: 40
+    CounterAttack:
+      # ChanceMax: Maximum chance of triggering a counter attack
+      # MaxBonusLevel: On this level, the chance to Counter will be <ChanceMax>
+      ChanceMax: 30.0
+      MaxBonusLevel:
+        Standard: 100
+        RetroMode: 1000
+
+      # DamageModifier: Damaged caused by the damager will get divided by this modifier and dealt back to the damager
+      DamageModifier: 2.0
+
+    SerratedStrikes:
+      # DamageModifier: Damage will get divided by this modifier
+      # BleedTicks: This determines how long the bleeding effect of SerratedStrikes lasts
+      DamageModifier: 4.0
+      BleedTicks: 5
+  #
+  #  Settings for Taming
+  # ##
+  Taming:
+    Gore:
+      # ChanceMax: Maximum chance of triggering gore
+      # MaxBonusLevel: On this level, the chance to cause Gore will be <ChanceMax>
+      ChanceMax: 100.0
+      MaxBonusLevel:
+        Standard: 100
+        RetroMode: 1000
+      # Modifier: Damage will get multiplied by this modifier
+      Modifier: 2.0
+    FastFoodService:
+      # Chance: The chance for wolves to heal hp when inflicting damage
+      Chance: 50.0
+    ThickFur:
+      # Modifier: Damage will get divided by this modifier
+      Modifier: 2.0
+    ShockProof:
+      # Modifier: Damage will get divided by this modifier
+      Modifier: 6.0
+    SharpenedClaws:
+      # Bonus: This bonus will get added to the damage caused
+      Bonus: 2.0
+    CallOfTheWild:
+      # MinHorseJumpStrength: The minimum jump strength a summoned horse must have
+      # MaxHorseJumpStrength: The maximum jump strength a summoned horse can have
+      MinHorseJumpStrength: 0.7
+      MaxHorseJumpStrength: 2.0
+    Pummel:
+      # ChanceMax: Maximum chance of triggering pummel
+      Chance: 10.0
+  #
+  #  Settings for Unarmed
+  # ##
+  Unarmed:
+    Disarm:
+      # ChanceMax: Maximum chance of disarming other players
+      # MaxBonusLevel: Level when the maximum chance to disarm is reached
+      # AntiTheft: Determines if only the disarmed player can retrieve disarmed items
+      ChanceMax: 33.0
+      MaxBonusLevel:
+        Standard: 100
+        RetroMode: 1000
+      AntiTheft: false
+
+    ArrowDeflect:
+      # ChanceMax: Maximum chance of deflecting arrows
+      # MaxBonusLevel: Level when the maximum chance to deflect is reached
+      ChanceMax: 50.0
+      MaxBonusLevel:
+        Standard: 100
+        RetroMode: 1000
+
+    IronGrip:
+      # ChanceMax: Maximum chance of preventing being disarmed
+      # MaxBonusLevel: Level when the maximum chance to prevent being disarmed is reached
+      ChanceMax: 100.0
+      MaxBonusLevel:
+        Standard: 100
+        RetroMode: 1000
+
+    SteelArmStyle:
+      # BonusMin: Minimum bonus damage for unarmed
+      # BonusMax: Maximum bonus damage for unarmed
+      # IncreaseLevel: Bonus damage increases every increase level
+      Damage_Override: false
+      Override:
+        Rank_1: 1
+        Rank_2: 1.5
+        Rank_3: 2.0
+        Rank_4: 2.5
+        Rank_5: 3.0
+        Rank_6: 3.5
+        Rank_7: 4.0
+        Rank_8: 4.5
+        Rank_9: 5.0
+        Rank_10: 5.5
+        Rank_11: 6.0
+        Rank_12: 6.5
+        Rank_13: 7.0
+        Rank_14: 7.5
+        Rank_15: 8.0
+        Rank_16: 8.5
+        Rank_17: 9.0
+        Rank_18: 10.5
+        Rank_19: 12.0
+        Rank_20: 13.5
+  #
+  #  Settings for Woodcutting
+  # ##
+  Woodcutting:
+    TreeFeller:
+      Knock_On_Wood:
+        Add_XP_Orbs_To_Drops: true
+
+    # Double Drops
+    HarvestLumber:
+      # ChanceMax & MaxBonusLevel are only used for Classic, I'll make that more clear in the future.
+      # ChanceMax: Maximum chance of receiving double drops (100 = 100%)
+      # MaxBonusLevel: Level when the maximum chance of receiving double drops is reached
+      ChanceMax: 100.0
+      MaxBonusLevel:
+        Standard: 100
+        RetroMode: 1000

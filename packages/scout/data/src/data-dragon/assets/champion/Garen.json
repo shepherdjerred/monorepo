@@ -1,0 +1,380 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.3.1",
+  "data": {
+    "Garen": {
+      "id": "Garen",
+      "key": "86",
+      "name": "Garen",
+      "title": "The Might of Demacia",
+      "image": {
+        "full": "Garen.png",
+        "sprite": "champion1.png",
+        "group": "champion",
+        "x": 384,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "86000",
+          "num": 0,
+          "name": "default",
+          "chromas": true
+        },
+        {
+          "id": "86001",
+          "num": 1,
+          "name": "Sanguine Garen",
+          "chromas": false
+        },
+        {
+          "id": "86002",
+          "num": 2,
+          "name": "Desert Trooper Garen",
+          "chromas": false
+        },
+        {
+          "id": "86003",
+          "num": 3,
+          "name": "Commando Garen",
+          "chromas": false
+        },
+        {
+          "id": "86004",
+          "num": 4,
+          "name": "Dreadknight Garen",
+          "chromas": false
+        },
+        {
+          "id": "86005",
+          "num": 5,
+          "name": "Rugged Garen",
+          "chromas": false
+        },
+        {
+          "id": "86006",
+          "num": 6,
+          "name": "Steel Legion Garen",
+          "chromas": false
+        },
+        {
+          "id": "86010",
+          "num": 10,
+          "name": "Rogue Admiral Garen",
+          "chromas": false
+        },
+        {
+          "id": "86011",
+          "num": 11,
+          "name": "Warring Kingdoms Garen",
+          "chromas": true
+        },
+        {
+          "id": "86013",
+          "num": 13,
+          "name": "God-King Garen",
+          "chromas": false
+        },
+        {
+          "id": "86014",
+          "num": 14,
+          "name": "Demacia Vice Garen",
+          "chromas": true
+        },
+        {
+          "id": "86022",
+          "num": 22,
+          "name": "Mecha Kingdoms Garen",
+          "chromas": false
+        },
+        {
+          "id": "86023",
+          "num": 23,
+          "name": "Prestige Mecha Kingdoms Garen",
+          "chromas": false
+        },
+        {
+          "id": "86024",
+          "num": 24,
+          "name": "Battle Academia Garen",
+          "chromas": true
+        },
+        {
+          "id": "86033",
+          "num": 33,
+          "name": "Mythmaker Garen",
+          "chromas": true
+        },
+        {
+          "id": "86044",
+          "num": 44,
+          "name": "Fallen God-King Garen",
+          "chromas": false
+        },
+        {
+          "id": "86046",
+          "num": 46,
+          "name": "Visions of the Fallen Garen",
+          "chromas": false
+        }
+      ],
+      "lore": "A proud and noble warrior, Garen fights as one of the Dauntless Vanguard. He is popular among his fellows, and respected well enough by his enemies—not least as a scion of the prestigious Crownguard family, entrusted with defending Demacia and its ideals. Clad in magic-resistant armor and bearing a mighty broadsword, Garen stands ready to confront mages and sorcerers on the field of battle, in a veritable whirlwind of righteous steel.",
+      "blurb": "A proud and noble warrior, Garen fights as one of the Dauntless Vanguard. He is popular among his fellows, and respected well enough by his enemies—not least as a scion of the prestigious Crownguard family, entrusted with defending Demacia and its...",
+      "allytips": [
+        "Garen's regeneration greatly increases if he can avoid receiving damage for several seconds.",
+        "Judgment deals maximum damage when only hitting a single target. For effective trading, try to position such that only the enemy champion is hit.",
+        "Garen is only constrained by cooldowns, making items such as Black Cleaver very effective for him."
+      ],
+      "enemytips": [
+        "Stack armor items to lower the large amount of physical damage that Garen deals out.",
+        "Try to run away from Garen as your health gets lower, as he can execute you quickly with Demacian Justice.",
+        "Be careful about attacking Garen in brush. It often will lead to taking full damage from Judgment.",
+        "Judgment deals maximum damage when only hitting a single target. If getting out of its radius isn't possible, move through allied minions to reduce damage taken."
+      ],
+      "tags": ["Fighter", "Tank"],
+      "partype": "None",
+      "info": {
+        "attack": 7,
+        "defense": 7,
+        "magic": 1,
+        "difficulty": 5
+      },
+      "stats": {
+        "hp": 690,
+        "hpperlevel": 98,
+        "mp": 0,
+        "mpperlevel": 0,
+        "movespeed": 340,
+        "armor": 38,
+        "armorperlevel": 4.2,
+        "spellblock": 32,
+        "spellblockperlevel": 1.55,
+        "attackrange": 175,
+        "hpregen": 8,
+        "hpregenperlevel": 0.5,
+        "mpregen": 0,
+        "mpregenperlevel": 0,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 69,
+        "attackdamageperlevel": 4.5,
+        "attackspeedperlevel": 3.65,
+        "attackspeed": 0.625
+      },
+      "spells": [
+        {
+          "id": "GarenQ",
+          "name": "Decisive Strike",
+          "description": "Garen gains a burst of Move Speed, breaking free of all slows affecting him. His next attack strikes a vital area of his foe, dealing bonus damage and silencing them.",
+          "tooltip": "Garen removes all <status>Slowing</status> effects on him and gains <speed>{{ movementspeedamount*100 }}% Move Speed</speed> for {{ movementspeedduration }} second(s).<br /><br />His next Attack <status>Silences</status> for {{ silenceduration }} seconds and does <physicalDamage>{{ totaldamage }} physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Damage", "Move Speed Duration"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ movementspeedduration }} -> {{ movementspeeddurationNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [8, 8, 8, 8, 8],
+          "cooldownBurn": "8",
+          "cost": [0, 0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [300, 300, 300, 300, 300],
+          "rangeBurn": "300",
+          "image": {
+            "full": "GarenQ.png",
+            "sprite": "spell4.png",
+            "group": "spell",
+            "x": 0,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        },
+        {
+          "id": "GarenW",
+          "name": "Courage",
+          "description": "Garen passively increases his Armor and Magic Resist by killing enemies. He may also activate this ability to give him a shield and tenacity for a brief moment followed by a lesser amount of damage reduction for a longer duration.",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Garen has <scaleArmor>{{ resistsfortooltip }} bonus Armor</scaleArmor> and <scaleMR>{{ resistsfortooltip }} bonus Magic Resist</scaleMR>. Killing units permanently grants <attention>{{ resistgainonkilltooltip }} resists</attention>, up to a max of <attention>{{ resistmax }}</attention>.<br /><br /><spellActive>Active:</spellActive> Garen steels his courage for {{ drduration }} seconds, reducing incoming damage by {{ drpercent*100 }}%. He also gains <shield>{{ totalshield }} Shield</shield> and <slow>{{ upfronttenacity*100 }}% Tenacity</slow> for {{ upfrontduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Shield Amount", "Damage Reduction", "Cooldown"],
+            "effect": [
+              "{{ baseshield }} -> {{ baseshieldNL }}",
+              "{{ drpercent*100.000000 }}% -> {{ drpercentnl*100.000000 }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [22, 19.5, 17, 14.5, 12],
+          "cooldownBurn": "22/19.5/17/14.5/12",
+          "cost": [0, 0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [0, 0, 0, 0, 0],
+          "rangeBurn": "0",
+          "image": {
+            "full": "GarenW.png",
+            "sprite": "spell4.png",
+            "group": "spell",
+            "x": 48,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        },
+        {
+          "id": "GarenE",
+          "name": "Judgment",
+          "description": "Garen rapidly spins his sword around his body, dealing physical damage to nearby enemies.",
+          "tooltip": "Garen rapidly spins his sword for {{ duration }} seconds, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> {{ f1 }} times over the duration. The nearest enemy takes <physicalDamage>{{ nearestenemybonus*100 }}% increased damage</physicalDamage>. Champions hit by {{ stackstoshred }} strikes lose <scaleArmor>{{ shredamount*100 }}% Armor</scaleArmor> for {{ shredduration }} seconds.<br /><br /><recast>Recast</recast>: Garen ends this Ability early.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Base Damage Per Spin", "Attack Damage Scaling Per Spin", "Cooldown"],
+            "effect": [
+              "{{ basedamagepertick }} -> {{ basedamagepertickNL }}",
+              "{{ adratiopertick*100.000000 }}% -> {{ adratioperticknl*100.000000 }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [9, 8.25, 7.5, 6.75, 6],
+          "cooldownBurn": "9/8.25/7.5/6.75/6",
+          "cost": [0, 0, 0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [325, 325, 325, 325, 325],
+          "rangeBurn": "325",
+          "image": {
+            "full": "GarenE.png",
+            "sprite": "spell4.png",
+            "group": "spell",
+            "x": 96,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        },
+        {
+          "id": "GarenR",
+          "name": "Demacian Justice",
+          "description": "Garen calls upon the might of Demacia to attempt to execute an enemy champion.",
+          "tooltip": "Garen calls upon the might of Demacia to slay his enemy, dealing <trueDamage>{{ basedamage }} plus {{ executedamage*100 }}% missing Health true damage</trueDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": ["Cooldown", "Damage", "Percent Missing Health Damage"],
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ executedamage*100.000000 }}% -> {{ executedamagenl*100.000000 }}%"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [120, 100, 80],
+          "cooldownBurn": "120/100/80",
+          "cost": [0, 0, 0],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [400, 400, 400],
+          "rangeBurn": "400",
+          "image": {
+            "full": "GarenR.png",
+            "sprite": "spell4.png",
+            "group": "spell",
+            "x": 144,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        }
+      ],
+      "passive": {
+        "name": "Perseverance",
+        "description": "If Garen has not recently been struck by damage or enemy abilities, he regenerates a percentage of his total health each second.",
+        "image": {
+          "full": "Garen_Passive.png",
+          "sprite": "passive1.png",
+          "group": "passive",
+          "x": 384,
+          "y": 0,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}
