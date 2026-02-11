@@ -82,6 +82,9 @@ function installWorkspaceDeps(source: Directory): Container {
     .withMountedFile("/workspace/packages/eslint-config/package.json", source.file("packages/eslint-config/package.json"))
     .withMountedFile("/workspace/packages/resume/package.json", source.file("packages/resume/package.json"))
     .withMountedFile("/workspace/packages/tools/package.json", source.file("packages/tools/package.json"))
+    .withMountedFile("/workspace/packages/anki/package.json", source.file("packages/anki/package.json"))
+    .withMountedFile("/workspace/packages/castle-casters/package.json", source.file("packages/castle-casters/package.json"))
+    .withMountedFile("/workspace/packages/macos-cross-compiler/package.json", source.file("packages/macos-cross-compiler/package.json"))
     // Clauderon web packages (nested workspace with own lockfile)
     .withMountedFile("/workspace/packages/clauderon/web/package.json", source.file("packages/clauderon/web/package.json"))
     .withMountedFile("/workspace/packages/clauderon/web/bun.lock", source.file("packages/clauderon/web/bun.lock"))
@@ -386,7 +389,7 @@ for dir in /workspace/packages/*/; do
   PKG=$(basename "$dir")
   # Skip exempt packages
   case "$PKG" in
-    resume|eslint-config|clauderon|claude-plugin|a2ui-poc|discord-claude|fonts) continue ;;
+    resume|eslint-config|clauderon|claude-plugin|a2ui-poc|discord-claude|fonts|anki|castle-casters|macos-cross-compiler) continue ;;
   esac
 
   echo "Checking $PKG..."

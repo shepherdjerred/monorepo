@@ -1,0 +1,11 @@
+{
+  "name": "@shepherdjerred/anki",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Anki flashcard decks",
+  "scripts": {
+    "build": "true",
+    "test": "true",
+    "typecheck": "true"
+  }
+}

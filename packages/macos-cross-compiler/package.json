@@ -1,0 +1,11 @@
+{
+  "name": "@shepherdjerred/macos-cross-compiler",
+  "version": "1.0.0",
+  "private": true,
+  "description": "macOS cross-compilation toolchain",
+  "scripts": {
+    "build": "true",
+    "test": "true",
+    "typecheck": "true"
+  }
+}

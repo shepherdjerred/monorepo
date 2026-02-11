@@ -1,0 +1,11 @@
+{
+  "name": "@shepherdjerred/castle-casters",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Castle Casters game (Maven/Java)",
+  "scripts": {
+    "build": "true",
+    "test": "true",
+    "typecheck": "true"
+  }
+}

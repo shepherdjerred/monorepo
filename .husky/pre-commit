@@ -117,7 +117,7 @@ if has_changes '^packages/.*/package\.json$|^packages/.*/eslint\.config\.|^packa
     for dir in packages/*/; do
       PKG=$(basename "$dir")
       case "$PKG" in
-        resume|eslint-config|clauderon|claude-plugin|a2ui-poc|discord-claude|fonts) continue ;;
+        resume|eslint-config|clauderon|claude-plugin|a2ui-poc|discord-claude|fonts|anki|castle-casters|macos-cross-compiler) continue ;;
       esac
 
       # Check for eslint config

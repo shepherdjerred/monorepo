@@ -1,0 +1,90 @@
+<Configuration status="info">
+    <Appenders>
+        <Console name="STDOUT" target="SYSTEM_OUT">
+            <PatternLayout>
+                <Pattern>%d{HH:mm:ss,SSS} %p %c{1.} [%t] %m%n</Pattern>
+            </PatternLayout>
+        </Console>
+        <RollingFile name="File" fileName="logs/engine.log"
+                     filePattern="logs/$${date:yyyy-M}/app-%d{MM-dd-yyyy}-%i.log.gz">
+            <PatternLayout>
+                <Pattern>%d{HH:mm:ss,SSS} %p %c{1.} [%t] %m%n</Pattern>
+            </PatternLayout>
+            <DefaultRolloverStrategy max="10"/>
+            <Policies>
+                <OnStartupTriggeringPolicy/>
+                <SizeBasedTriggeringPolicy size="100 MB"/>
+            </Policies>
+        </RollingFile>
+        <RollingFile name="Events" fileName="logs/events.log"
+                     filePattern="logs/$${date:yyyy-M}/app-%d{MM-dd-yyyy}-%i.log.gz">
+            <PatternLayout>
+                <Pattern>%d{HH:mm:ss,SSS} %p %c{1.} [%t] %m%n</Pattern>
+            </PatternLayout>
+            <DefaultRolloverStrategy max="10"/>
+            <Policies>
+                <OnStartupTriggeringPolicy/>
+                <SizeBasedTriggeringPolicy size="100 MB"/>
+            </Policies>
+        </RollingFile>
+        <RollingFile name="Resources" fileName="logs/resources.log"
+                     filePattern="logs/$${date:yyyy-M}/app-%d{MM-dd-yyyy}-%i.log.gz">
+            <PatternLayout>
+                <Pattern>%d{HH:mm:ss,SSS} %p %c{1.} [%t] %m%n</Pattern>
+            </PatternLayout>
+            <DefaultRolloverStrategy max="10"/>
+            <Policies>
+                <OnStartupTriggeringPolicy/>
+                <SizeBasedTriggeringPolicy size="100 MB"/>
+            </Policies>
+        </RollingFile>
+        <RollingFile name="Server" fileName="logs/server.log"
+                     filePattern="logs/$${date:yyyy-M}/app-%d{MM-dd-yyyy}-%i.log.gz">
+            <PatternLayout>
+                <Pattern>%d{HH:mm:ss,SSS} %p %c{1.} [%t] %m%n</Pattern>
+            </PatternLayout>
+            <DefaultRolloverStrategy max="10"/>
+            <Policies>
+                <OnStartupTriggeringPolicy/>
+                <SizeBasedTriggeringPolicy size="100 MB"/>
+            </Policies>
+        </RollingFile>
+        <RollingFile name="Network" fileName="logs/network.log"
+                     filePattern="logs/$${date:yyyy-M}/app-%d{MM-dd-yyyy}-%i.log.gz">
+            <PatternLayout>
+                <Pattern>%d{HH:mm:ss,SSS} %p %c{1.} [%t] %m%n</Pattern>
+            </PatternLayout>
+            <DefaultRolloverStrategy max="10"/>
+            <Policies>
+                <OnStartupTriggeringPolicy/>
+                <SizeBasedTriggeringPolicy size="100 MB"/>
+            </Policies>
+        </RollingFile>
+    </Appenders>
+    <Loggers>
+        <Root level="trace">
+            <AppenderRef ref="File"/>
+            <AppenderRef ref="STDOUT" level="info"/>
+        </Root>
+        <Logger name="com.shepherdjerred.castlecasters.events" additivity="false" level="trace">
+            <AppenderRef ref="Events"/>
+            <AppenderRef ref="STDOUT"/>
+        </Logger>
+        <Logger name="com.shepherdjerred.castlecasters.engine.resource" additivity="false" level="info">
+            <AppenderRef ref="Resources"/>
+            <AppenderRef ref="STDOUT"/>
+        </Logger>
+        <Logger name="com.shepherdjerred.castlecasters.game.network" additivity="false" level="trace">
+            <AppenderRef ref="Network"/>
+            <AppenderRef ref="STDOUT"/>
+        </Logger>
+        <Logger name="com.shepherdjerred.castlecasters.server" additivity="false" level="trace">
+            <AppenderRef ref="Server"/>
+            <AppenderRef ref="STDOUT"/>
+        </Logger>
+        <Logger name="com.github.bentorfs.ai" level="info" additivity="false">
+            <AppenderRef ref="File"/>
+            <AppenderRef ref="STDOUT"/>
+        </Logger>
+    </Loggers>
+</Configuration>

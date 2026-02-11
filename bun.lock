@@ -13,6 +13,10 @@
         "typescript": "^5.9.3",
       },
     },
+    "packages/anki": {
+      "name": "@shepherdjerred/anki",
+      "version": "1.0.0",
+    },
     "packages/birmel": {
       "name": "@shepherdjerred/birmel",
       "version": "0.0.1",
@@ -77,6 +81,10 @@
         "eslint": "^9.39.2",
         "typescript": "^5.7.2",
       },
+    },
+    "packages/castle-casters": {
+      "name": "@shepherdjerred/castle-casters",
+      "version": "1.0.0",
     },
     "packages/clauderon/docs": {
       "name": "@clauderon/docs",
@@ -202,6 +210,10 @@
         "eslint": "^9.0.0",
         "typescript": "^5.0.0",
       },
+    },
+    "packages/macos-cross-compiler": {
+      "name": "@shepherdjerred/macos-cross-compiler",
+      "version": "1.0.0",
     },
     "packages/resume": {
       "name": "@shepherdjerred/resume",
@@ -988,13 +1000,19 @@
 
     "@sentry/react": ["@sentry/react@9.47.1", "", { "dependencies": { "@sentry/browser": "9.47.1", "@sentry/core": "9.47.1", "hoist-non-react-statics": "^3.3.2" }, "peerDependencies": { "react": "^16.14.0 || 17.x || 18.x || 19.x" } }, "sha512-Anqt0hG1R+nktlwEiDc2FmD+6DUGMJOLuArgr7q1cSCdPbK2Gb1eZ2rF57Ui+CDo9XLvlX9QP2is/M08rrVe3w=="],
 
+    "@shepherdjerred/anki": ["@shepherdjerred/anki@workspace:packages/anki"],
+
     "@shepherdjerred/birmel": ["@shepherdjerred/birmel@workspace:packages/birmel"],
 
     "@shepherdjerred/bun-decompile": ["@shepherdjerred/bun-decompile@workspace:packages/bun-decompile"],
 
+    "@shepherdjerred/castle-casters": ["@shepherdjerred/castle-casters@workspace:packages/castle-casters"],
+
     "@shepherdjerred/dagger-utils": ["@shepherdjerred/dagger-utils@workspace:packages/dagger-utils"],
 
     "@shepherdjerred/eslint-config": ["@shepherdjerred/eslint-config@workspace:packages/eslint-config"],
+
+    "@shepherdjerred/macos-cross-compiler": ["@shepherdjerred/macos-cross-compiler@workspace:packages/macos-cross-compiler"],
 
     "@shepherdjerred/resume": ["@shepherdjerred/resume@workspace:packages/resume"],
 
