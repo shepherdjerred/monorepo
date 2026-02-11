@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title>brr</title>
+        <description>Observations on Antarctic infrastructure. Anecdotes from daily life for support staff. Focused on McMurdo Station and Amundsen-Scott South Pole Station.</description>
+        <link>https://brr.fyi/</link>
+        <atom:link href="https://brr.fyi/feed.xml" rel="self" type="application/rss+xml"/>
+        
+        <pubDate>Fri, 07 Jun 2024 21:30:00 -0700</pubDate>
+        <lastBuildDate>Fri, 07 Jun 2024 21:30:00 -0700</lastBuildDate>
+        
+            <item>
+                <title>South Pole Water Infrastructure</title>
+                <description>Fresh water from snow, at 70 below!</description>
+                <pubDate>Fri, 07 Jun 2024 21:30:00 -0700</pubDate>
+                <link>https://brr.fyi/posts/south-pole-water-infrastructure</link>
+                <guid isPermaLink="true">https://brr.fyi/posts/south-pole-water-infrastructure</guid>
+                <category>infrastructure</category>
+                <category>south pole</category>
+            </item>
+        
+            <item>
+                <title>Engineering for Slow Internet</title>
+                <description>How to minimize user frustration in Antarctica.</description>
+                <pubDate>Thu, 30 May 2024 19:30:00 -0700</pubDate>
+                <link>https://brr.fyi/posts/engineering-for-slow-internet</link>
+                <guid isPermaLink="true">https://brr.fyi/posts/engineering-for-slow-internet</guid>
+                <category>technology</category>
+                <category>south pole</category>
+            </item>
+        
+            <item>
+                <title>Redeployment Part Three</title>
+                <description>Off-continent after 446 days!</description>
+                <pubDate>Thu, 18 Jan 2024 13:30:00 -0800</pubDate>
+                <link>https://brr.fyi/posts/redeployment-part-three</link>
+                <guid isPermaLink="true">https://brr.fyi/posts/redeployment-part-three</guid>
+                <category>redeployment</category>
+                <category>travel</category>
+                <category>south pole</category>
+                <category>mcmurdo</category>
+                <category>christchurch</category>
+            </item>
+        
+            <item>
+                <title>Redeployment Part Two</title>
+                <description>Station opening, and my flight out of Pole!</description>
+                <pubDate>Sat, 13 Jan 2024 08:00:00 -0800</pubDate>
+                <link>https://brr.fyi/posts/redeployment-part-two</link>
+                <guid isPermaLink="true">https://brr.fyi/posts/redeployment-part-two</guid>
+                <category>redeployment</category>
+                <category>travel</category>
+                <category>south pole</category>
+                <category>mcmurdo</category>
+            </item>
+        
+            <item>
+                <title>Redeployment Part One</title>
+                <description>Emerging from winter and preparing for our first flight!</description>
+                <pubDate>Tue, 09 Jan 2024 18:30:00 -0800</pubDate>
+                <link>https://brr.fyi/posts/redeployment-part-one</link>
+                <guid isPermaLink="true">https://brr.fyi/posts/redeployment-part-one</guid>
+                <category>redeployment</category>
+                <category>travel</category>
+                <category>south pole</category>
+            </item>
+        
+            <item>
+                <title>South Pole Electrical Infrastructure</title>
+                <description>Power generation and distribution at the South Pole.</description>
+                <pubDate>Sun, 20 Aug 2023 23:00:00 -0700</pubDate>
+                <link>https://brr.fyi/posts/south-pole-electrical-infrastructure</link>
+                <guid isPermaLink="true">https://brr.fyi/posts/south-pole-electrical-infrastructure</guid>
+                <category>infrastructure</category>
+                <category>south pole</category>
+            </item>
+        
+            <item>
+                <title>Snowdrifts</title>
+                <description>4 days of blown snow into a doorway.</description>
+                <pubDate>Sat, 12 Aug 2023 17:15:00 -0700</pubDate>
+                <link>https://brr.fyi/posts/snowdrifts</link>
+                <guid isPermaLink="true">https://brr.fyi/posts/snowdrifts</guid>
+                <category>infrastructure</category>
+                <category>weather</category>
+                <category>south pole</category>
+            </item>
+        
+            <item>
+                <title>Pressure Altitude</title>
+                <description>Day-to-day variability at the South Pole.</description>
+                <pubDate>Sat, 05 Aug 2023 22:00:00 -0700</pubDate>
+                <link>https://brr.fyi/posts/pressure-altitude</link>
+                <guid isPermaLink="true">https://brr.fyi/posts/pressure-altitude</guid>
+                <category>station life</category>
+                <category>south pole</category>
+            </item>
+        
+            <item>
+                <title>South Pole Signage</title>
+                <description>Please close doors quietly!</description>
+                <pubDate>Sat, 22 Jul 2023 22:30:00 -0700</pubDate>
+                <link>https://brr.fyi/posts/south-pole-signage</link>
+                <guid isPermaLink="true">https://brr.fyi/posts/south-pole-signage</guid>
+                <category>station life</category>
+                <category>south pole</category>
+            </item>
+        
+            <item>
+                <title>The Last Egg</title>
+                <description>Five more months until freshies...</description>
+                <pubDate>Fri, 09 Jun 2023 05:15:00 -0700</pubDate>
+                <link>https://brr.fyi/posts/the-last-egg</link>
+                <guid isPermaLink="true">https://brr.fyi/posts/the-last-egg</guid>
+                <category>station life</category>
+                <category>south pole</category>
+            </item>
+        
+    </channel>
+</rss>

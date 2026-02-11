@@ -9,7 +9,7 @@ import {
 } from "./birmel.js";
 import { reviewPr, handleInteractive } from "./code-review.js";
 
-const PACKAGES = ["eslint-config", "dagger-utils", "bun-decompile"] as const;
+const PACKAGES = ["eslint-config", "dagger-utils", "bun-decompile", "webring", "astro-opengraph-images"] as const;
 const REPO_URL = "shepherdjerred/monorepo";
 
 const BUN_VERSION = "1.3.6";
@@ -85,6 +85,8 @@ function installWorkspaceDeps(source: Directory): Container {
     .withMountedFile("/workspace/packages/anki/package.json", source.file("packages/anki/package.json"))
     .withMountedFile("/workspace/packages/castle-casters/package.json", source.file("packages/castle-casters/package.json"))
     .withMountedFile("/workspace/packages/macos-cross-compiler/package.json", source.file("packages/macos-cross-compiler/package.json"))
+    .withMountedFile("/workspace/packages/webring/package.json", source.file("packages/webring/package.json"))
+    .withMountedFile("/workspace/packages/astro-opengraph-images/package.json", source.file("packages/astro-opengraph-images/package.json"))
     // Clauderon web packages (nested workspace with own lockfile)
     .withMountedFile("/workspace/packages/clauderon/web/package.json", source.file("packages/clauderon/web/package.json"))
     .withMountedFile("/workspace/packages/clauderon/web/bun.lock", source.file("packages/clauderon/web/bun.lock"))
@@ -106,6 +108,8 @@ function installWorkspaceDeps(source: Directory): Container {
     .withMountedDirectory("/workspace/packages/dagger-utils", source.directory("packages/dagger-utils"))
     .withMountedDirectory("/workspace/packages/eslint-config", source.directory("packages/eslint-config"))
     .withMountedDirectory("/workspace/packages/tools", source.directory("packages/tools"))
+    .withMountedDirectory("/workspace/packages/webring", source.directory("packages/webring"))
+    .withMountedDirectory("/workspace/packages/astro-opengraph-images", source.directory("packages/astro-opengraph-images"))
     // Clauderon web packages
     .withMountedDirectory("/workspace/packages/clauderon/web/shared", source.directory("packages/clauderon/web/shared"))
     .withMountedDirectory("/workspace/packages/clauderon/web/client", source.directory("packages/clauderon/web/client"))
@@ -777,10 +781,10 @@ export class Monorepo {
               .withExec(["bun", "publish", "--access", "public", "--tag", "latest", "--registry", "https://registry.npmjs.org"])
               .stdout();
 
-            outputs.push(`✓ Published @shepherdjerred/${pkg}`);
+            outputs.push(`✓ Published ${pkg}`);
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : String(error);
-            const failureMsg = `Failed to publish @shepherdjerred/${pkg}: ${errorMessage}`;
+            const failureMsg = `Failed to publish ${pkg}: ${errorMessage}`;
             outputs.push(`✗ ${failureMsg}`);
             releaseErrors.push(failureMsg);
           }

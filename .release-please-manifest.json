@@ -2,5 +2,7 @@
   "packages/bun-decompile": "0.2.1",
   "packages/dagger-utils": "0.6.0",
   "packages/eslint-config": "0.2.0",
-  "packages/clauderon": "0.1.0"
+  "packages/clauderon": "0.1.0",
+  "packages/webring": "1.5.0",
+  "packages/astro-opengraph-images": "1.14.2"
 }

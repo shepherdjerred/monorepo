@@ -1,0 +1,53 @@
+{
+  "name": "webring",
+  "description": "Collect the latest RSS items from your favorite feeds.",
+  "author": {
+    "name": "Jerred Shepherd",
+    "email": "npm@sjer.red",
+    "url": "https://sjer.red"
+  },
+  "homepage": "https://github.com/shepherdjerred/monorepo/tree/main/packages/webring",
+  "license": "GPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shepherdjerred/monorepo.git",
+    "directory": "packages/webring"
+  },
+  "bugs": {
+    "url": "https://github.com/shepherdjerred/monorepo/issues"
+  },
+  "type": "module",
+  "version": "1.5.0",
+  "scripts": {
+    "lint": "bunx eslint .",
+    "build": "tsc",
+    "test": "vitest --disable-console-intercept --run",
+    "typecheck": "tsc --noEmit"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "dependencies": {
+    "remeda": "^2.21.2",
+    "rss-parser": "^3.13.0",
+    "sanitize-html": "^2.14.0",
+    "truncate-html": "^1.2.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@shepherdjerred/eslint-config": "workspace:*",
+    "@types/express": "^5.0.0",
+    "@types/sanitize-html": "^2.13.0",
+    "eslint": "^9.39.2",
+    "express": "^5.0.0",
+    "typescript": "^5.9.3",
+    "vitest": "^3.0.8"
+  },
+  "files": [
+    "dist",
+    "src",
+    "package.json",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ]
+}

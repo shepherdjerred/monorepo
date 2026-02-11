@@ -1,0 +1,62 @@
+{
+  "name": "astro-opengraph-images",
+  "description": "Generate Open Graph images for your Astro site.",
+  "author": {
+    "name": "Jerred Shepherd",
+    "email": "npm@sjer.red",
+    "url": "https://sjer.red"
+  },
+  "homepage": "https://github.com/shepherdjerred/monorepo/tree/main/packages/astro-opengraph-images",
+  "license": "GPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shepherdjerred/monorepo.git",
+    "directory": "packages/astro-opengraph-images"
+  },
+  "bugs": {
+    "url": "https://github.com/shepherdjerred/monorepo/issues"
+  },
+  "type": "module",
+  "version": "1.14.2",
+  "scripts": {
+    "lint": "bunx eslint .",
+    "build": "tsc",
+    "test": "vitest --run",
+    "typecheck": "tsc --noEmit"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "keywords": [
+    "astro-integration",
+    "withastro",
+    "seo",
+    "ui",
+    "renderer"
+  ],
+  "dependencies": {
+    "@resvg/resvg-js": "^2.6.2",
+    "jsdom": "^28.0.0",
+    "react": "^19.0.0",
+    "satori": "^0.19.0"
+  },
+  "peerDependencies": {
+    "tw-to-css": "^0.0.12"
+  },
+  "devDependencies": {
+    "@shepherdjerred/eslint-config": "workspace:*",
+    "@types/jsdom": "^27.0.0",
+    "@types/react": "^19.0.10",
+    "astro": "^5.4.3",
+    "eslint": "^9.39.2",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.0"
+  },
+  "files": [
+    "dist",
+    "src",
+    "package.json",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ]
+}

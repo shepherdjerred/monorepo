@@ -73,6 +73,14 @@ if has_changes '^packages/tools/.*\.(ts|tsx)$'; then
   run_check "tools typecheck" bun run --filter='./packages/tools' typecheck
 fi
 
+if has_changes '^packages/webring/.*\.(ts|tsx)$'; then
+  run_check "webring typecheck" bun run --filter='./packages/webring' typecheck
+fi
+
+if has_changes '^packages/astro-opengraph-images/.*\.(ts|tsx)$'; then
+  run_check "astro-opengraph-images typecheck" bun run --filter='./packages/astro-opengraph-images' typecheck
+fi
+
 # --- Clauderon web packages ---
 if has_changes '^packages/clauderon/web/shared/.*\.(ts|tsx)$'; then
   run_check "web/shared typecheck" sh -c 'cd packages/clauderon/web/shared && bun run typecheck'

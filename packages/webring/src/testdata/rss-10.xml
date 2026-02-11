@@ -1,0 +1,1029 @@
+<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"
+	xmlns:content="http://purl.org/rss/1.0/modules/content/"
+	xmlns:wfw="http://wellformedweb.org/CommentAPI/"
+	xmlns:dc="http://purl.org/dc/elements/1.1/"
+	xmlns:atom="http://www.w3.org/2005/Atom"
+	xmlns:sy="http://purl.org/rss/1.0/modules/syndication/"
+	xmlns:slash="http://purl.org/rss/1.0/modules/slash/"
+	>
+
+<channel>
+	<title>The Old New Thing</title>
+	<atom:link href="https://devblogs.microsoft.com/oldnewthing/feed" rel="self" type="application/rss+xml" />
+	<link>https://devblogs.microsoft.com/oldnewthing</link>
+	<description></description>
+	<lastBuildDate>Mon, 24 Jun 2024 17:38:17 +0000</lastBuildDate>
+	<language>en-US</language>
+	<sy:updatePeriod>
+	hourly	</sy:updatePeriod>
+	<sy:updateFrequency>
+	1	</sy:updateFrequency>
+	
+
+<image>
+	<url>https://devblogs.microsoft.com/oldnewthing/wp-content/uploads/sites/38/2021/03/Microsoft-Favicon.png</url>
+	<title>The Old New Thing</title>
+	<link>https://devblogs.microsoft.com/oldnewthing</link>
+	<width>32</width>
+	<height>32</height>
+</image> 
+	<item>
+		<title>Creating an already-completed asynchronous activity in C++/WinRT, part 4</title>
+		<link>https://devblogs.microsoft.com/oldnewthing/20240712-00/?p=109967</link>
+					<comments>https://devblogs.microsoft.com/oldnewthing/20240712-00/?p=109967#comments</comments>
+		
+		<dc:creator><![CDATA[Raymond Chen]]></dc:creator>
+		<pubDate>Fri, 12 Jul 2024 14:00:00 +0000</pubDate>
+				<category><![CDATA[Old New Thing]]></category>
+		<category><![CDATA[Code]]></category>
+		<guid isPermaLink="false">https://devblogs.microsoft.com/oldnewthing/?p=109967</guid>
+
+					<description><![CDATA[<p>Failing is easy. Failing correctly is hard.</p>
+<p>The post <a href="https://devblogs.microsoft.com/oldnewthing/20240712-00/?p=109967">Creating an already-completed asynchronous activity in C++/WinRT, part 4</a> appeared first on <a href="https://devblogs.microsoft.com/oldnewthing">The Old New Thing</a>.</p>
+]]></description>
+										<content:encoded><![CDATA[<p>Last time, we <a title="Creating an already-completed asynchronous activity in C++/WinRT, part 3" href="https://devblogs.microsoft.com/oldnewthing/20240711-00/?p=109965"> created a generalized <code>Make­Completed</code> for creating an already-completed asynchronous activity in C++/WinRT</a>. Today, we&#8217;ll try to do the same for <code>Make­Failed</code>.</p>
+<p>In one sense, <code>Make­Failed</code> is easier because the body is the same regardless of which of the four types of asynchronous activities you&#8217;re making.</p>
+<pre>winrt::Windows::Foundation::IAsyncAction
+MakeFailedAsyncAction(winrt::hresult_error error)
+{
+    (void) co_await winrt::get_cancellation_token();
+    throw error;
+}
+
+template&lt;typename Progress&gt;
+winrt::Windows::Foundation::IAsyncActionWithProgress&lt;Progress&gt;
+MakeFailedAsyncActionWithProgress(winrt::hresult_error error)
+{
+    (void) co_await winrt::get_cancellation_token();
+    throw error;
+}
+
+template&lt;typename Result, typename Progress&gt;
+winrt::Windows::Foundation::IAsyncOperation&lt;Result&gt;
+MakeFailedAsyncOperation(winrt::hresult_error error)
+{
+    (void) co_await winrt::get_cancellation_token();
+    throw error;
+}
+
+template&lt;typename Result, typename Progress&gt;
+winrt::Windows::Foundation::IAsyncOperationWithProgress&lt;Result, Progress&gt;
+MakeFailedAsyncOperationWithProgress(winrt::hresult_error error)
+{
+    (void) co_await winrt::get_cancellation_token();
+    throw error;
+}
+
+// Sample usage
+winrt::Windows::Foundation::IAsyncOperation&lt;int&gt;
+GetSizeAsync()
+{
+    return MakeFailedAsyncOperation&lt;int&gt;(
+        winrt::hresult_not_implemented());
+}
+</pre>
+<p>This easily generalizes:</p>
+<pre>template&lt;typename Async&gt;
+Async MakeFailed(winrt::hresult_error error)
+{
+    (void) co_await winrt::get_cancellation_token();
+    throw error;
+}
+</pre>
+<p>Unfortunately, it&#8217;s also wrong.</p>
+<p>Since we receive the exception in the form of a <code>hresult_<wbr />error</code> by value, anybody who passes a derived exception like <code>hresult_<wbr />access_<wbr />denied</code> will be subjected to <a href="https://en.wikipedia.org/wiki/Object_slicing"> slicing</a>. You might think to avoid slicing by taking the parameter by reference, but that runs into two problems. First, you are carrying a reference across a <code>co_await</code>, which may cause static analysis tools to get upset at you. Worse is that receiving the parameter as a reference doesn&#8217;t resolve the slicing because the <code>throw</code> throws only the <code>hresult_<wbr />error</code> portion of the exception. Fortunately, this second problem is a non-issue in this specific case because it is captured and reported at the ABI to the coroutine consumer as an <code>HRESULT</code> failure code from the <code>GetResults()</code> method, and the consumer will realize that the <code>HRESULT</code> is, say, <code>E_INVALIDARG</code> and reconstruct a <code>hresult_<wbr />invalid_<wbr />argument</code>.¹</p>
+<p>The real problem is that <!-- backref: C++/WinRT gotcha: Not all exceptions derive from hresult_error --> not all C++/WinRT exceptions derive from <code>hresult_error</code>. What if somebody wants to make a <code>IAsyncAction</code> that failed with <code>std::<wbr />bad_<wbr />alloc</code>?</p>
+<p>So we&#8217;ll accept anything that C++/WinRT supports, which is anything derived from <code>std::<wbr />exception</code> or <code>winrt::<wbr />hresult_<wbr />error</code>.</p>
+<pre>template&lt;typename Async, typename Error,
+    typename = std::enable_if_t&lt;
+        std::is_base_of_v&lt;std::exception, Error&gt; ||
+        std::is_base_of_v&lt;winrt::hresult_error, Error&gt;&gt;&gt;
+Async MakeFailed(Error error)
+{
+    (void) co_await winrt::get_cancellation_token();
+    throw error;
+}
+</pre>
+<p>When dealing with coroutines or exceptions (and especially in our case here, which is coroutines <i>and</i> exceptions), you need to think about debuggability. Exceptions are nonlocal transfer, so it can be difficult to debug where an exception originated. And coroutines break up function execution into chunks, and most of the chunks run after the original call stack is lost, so that makes it even more frustrating. We&#8217;ll look into this next time.</p>
+<p>¹ Related reading: <a href="https://devblogs.microsoft.com/oldnewthing/20231116-00/?p=109023"> What happened to the custom exception description I threw from a C++/WinRT <code>IAsyncAction</code></a>? <a href="https://devblogs.microsoft.com/oldnewthing/20231102-00/?p=108956"> How come my custom exception message is lost when it is thrown from a <code>IAsyncAction</code>^</a>?</p>
+<p>The post <a href="https://devblogs.microsoft.com/oldnewthing/20240712-00/?p=109967">Creating an already-completed asynchronous activity in C++/WinRT, part 4</a> appeared first on <a href="https://devblogs.microsoft.com/oldnewthing">The Old New Thing</a>.</p>
+]]></content:encoded>
+					
+					<wfw:commentRss>https://devblogs.microsoft.com/oldnewthing/20240712-00/?p=109967/feed</wfw:commentRss>
+			<slash:comments>1</slash:comments>
+		
+		
+			</item>
+		<item>
+		<title>Creating an already-completed asynchronous activity in C++/WinRT, part 3</title>
+		<link>https://devblogs.microsoft.com/oldnewthing/20240711-00/?p=109965</link>
+					<comments>https://devblogs.microsoft.com/oldnewthing/20240711-00/?p=109965#respond</comments>
+		
+		<dc:creator><![CDATA[Raymond Chen]]></dc:creator>
+		<pubDate>Thu, 11 Jul 2024 14:00:00 +0000</pubDate>
+				<category><![CDATA[Old New Thing]]></category>
+		<category><![CDATA[Code]]></category>
+		<guid isPermaLink="false">https://devblogs.microsoft.com/oldnewthing/?p=109965</guid>
+
+					<description><![CDATA[<p>Generalizing to the four kinds of Windows Runtime asynchronous activities.</p>
+<p>The post <a href="https://devblogs.microsoft.com/oldnewthing/20240711-00/?p=109965">Creating an already-completed asynchronous activity in C++/WinRT, part 3</a> appeared first on <a href="https://devblogs.microsoft.com/oldnewthing">The Old New Thing</a>.</p>
+]]></description>
+										<content:encoded><![CDATA[<p>Last time, we figured out how to <a title="Creating an already-completed asynchronous activity in C++/WinRT, part 2" href="https://devblogs.microsoft.com/oldnewthing/20240710-00/?p=109963"> create an already-completed asynchronous activity in C++/WinRT</a>. Today we&#8217;ll try to generalize it to cover the four kinds of Windows Runtime asynchronous activities.</p>
+<table class="cp3" style="border-collapse: collapse;" border="1" cellspacing="0" cellpadding="3">
+<tbody>
+<tr>
+<td>&nbsp;</td>
+<th>No progress</th>
+<th>Progres</th>
+</tr>
+<tr>
+<th>No result</th>
+<td><code>IAsyncAction</code></td>
+<td><code>IAsyncActionWithProgress&lt;P&gt;</code></td>
+</tr>
+<tr>
+<th>Result</th>
+<td><code>IAsyncOperation</code></td>
+<td><code>IAsyncOperationWithProgress&lt;T, P&gt;</code></td>
+</tr>
+</tbody>
+</table>
+<p>One way to do this is to write four different functions for each category, similar to how we dealt with <i>cv</i>-qualifiers before we had <a title="C++23's Deducing this: what it is, why it is, how to use it" href="https://devblogs.microsoft.com/cppblog/cpp23-deducing-this/"> deducing this</a>.</p>
+<pre>winrt::Windows::Foundation::IAsyncAction
+MakeCompletedAsyncAction()
+{
+    co_return;
+}
+
+template&lt;typename Progress&gt;
+winrt::Windows::Foundation::IAsyncActionWithProgress&lt;Progress&gt;
+MakeCompletedAsyncActionWithProgress()
+{
+    co_return;
+}
+
+template&lt;typename Result, typename Progress&gt;
+winrt::Windows::Foundation::IAsyncOperation&lt;Result&gt;
+MakeCompletedAsyncOperation(Result result)
+{
+    co_return result;
+}
+
+template&lt;typename Result, typename Progress&gt;
+winrt::Windows::Foundation::IAsyncOperationWithProgress&lt;Result, Progress&gt;
+MakeCompletedAsyncOperationWithProgress(Result result)
+{
+    co_return result;
+}
+
+// Sample usage:
+
+winrt::Windows::Foundation::IAsyncOperation&lt;int&gt;
+GetHeightAsync()
+{
+    return MakeCompletedAsyncOperation(42);
+}
+
+winrt::Windows::Foundation::
+    IAsyncOperationWithProgress&lt;int, HeightProgress&gt;
+GetHeightAsync()
+{
+    return MakeCompletedAsyncOperationWithProgress&lt;
+        int, HeightProgress&gt;(42);
+}
+</pre>
+<p>Explicit specialization is required for the <code>WithProgress</code> versions, since there is no opportunity to deduce the progress type.</p>
+<p>We could combine the four flavors into a single function, though this means that specialization is mandatory.</p>
+<pre>template&lt;typename Async, typename... Result&gt;
+Async MakeCompleted(Result... result)
+{
+    if constexpr (sizeof...(Result) == 0) {
+        co_return;
+    } else {
+        static_assert(sizeof...(Result) == 1);
+        co_return std::get&lt;0&gt;(
+            std::forward_as_tuple(result...));
+    }
+}
+</pre>
+<p>We use a trick in <code>Make­Completed</code> by formally accepting any number of arguments, although we check inside the function body that it is zero or one. In the case where there is one parameter, we use the <code>forward_<wbr />as_<wbr />tuple</code> + <code>get</code> technique to <a title="Pulling a single item from a C++ parameter pack by its index" href="https://devblogs.microsoft.com/oldnewthing/20240516-00/?p=109771"> pull a single item from a parameter pack</a>.</p>
+<p>Next time, we&#8217;ll try to write <code>MakeFailed</code>.</p>
+<p>The post <a href="https://devblogs.microsoft.com/oldnewthing/20240711-00/?p=109965">Creating an already-completed asynchronous activity in C++/WinRT, part 3</a> appeared first on <a href="https://devblogs.microsoft.com/oldnewthing">The Old New Thing</a>.</p>
+]]></content:encoded>
+					
+					<wfw:commentRss>https://devblogs.microsoft.com/oldnewthing/20240711-00/?p=109965/feed</wfw:commentRss>
+			<slash:comments>0</slash:comments>
+		
+		
+			</item>
+		<item>
+		<title>Creating an already-completed asynchronous activity in C++/WinRT, part 2</title>
+		<link>https://devblogs.microsoft.com/oldnewthing/20240710-00/?p=109963</link>
+					<comments>https://devblogs.microsoft.com/oldnewthing/20240710-00/?p=109963#comments</comments>
+		
+		<dc:creator><![CDATA[Raymond Chen]]></dc:creator>
+		<pubDate>Wed, 10 Jul 2024 14:00:00 +0000</pubDate>
+				<category><![CDATA[Old New Thing]]></category>
+		<category><![CDATA[Code]]></category>
+		<guid isPermaLink="false">https://devblogs.microsoft.com/oldnewthing/?p=109963</guid>
+
+					<description><![CDATA[<p>Making our function a coroutine.</p>
+<p>The post <a href="https://devblogs.microsoft.com/oldnewthing/20240710-00/?p=109963">Creating an already-completed asynchronous activity in C++/WinRT, part 2</a> appeared first on <a href="https://devblogs.microsoft.com/oldnewthing">The Old New Thing</a>.</p>
+]]></description>
+										<content:encoded><![CDATA[<p>Last time, we tried to <a title="Creating an already-completed asynchronous activity in C++/WinRT, part 1" href="https://devblogs.microsoft.com/oldnewthing/20240709-00/?p=109961"> create an already-completed asynchronous activity in C++/WinRT</a>. We were able to create a coroutine that represented a successful already-completed operation:</p>
+<pre>winrt::Windows::Foundation::IAsyncOperation&lt;int&gt;
+    ComputeAsync()
+{
+    co_return 42;
+}
+</pre>
+<p>But the analogous function for creating a failed already-completed operation didn&#8217;t work because its lack of any <code>co_await</code> or <code>co_return</code> statement means that it wasn&#8217;t a coroutine at all!</p>
+<pre>winrt::Windows::Foundation::IAsyncOperation&lt;int&gt;
+    ComputeAsync()
+{
+    throw winrt::hresult_access_denied();
+}
+</pre>
+<p>To make the function a coroutine, we need to put a <code>co_await</code> or <code>co_return</code> in the body somewhere. We have a few options.</p>
+<p>One is to put the <code>co_await</code> after the <code>throw</code>, so it is physically present in the function body (thereby making it a coroutine), but is unreachable. A safe thing to await is <code>std::suspend_never()</code>, which is a built-in awaitable that never awaits.</p>
+<pre>winrt::Windows::Foundation::IAsyncOperation&lt;int&gt;
+    ComputeAsync()
+{
+    throw winrt::hresult_access_denied();
+    <span style="border: solid 1px currentcolor;">co_await std::suspend_never();</span>
+}
+</pre>
+<p>Perhaps a more reasonable thing is to actually try to <code>co_return</code> something.</p>
+<pre>winrt::Windows::Foundation::IAsyncOperation&lt;int&gt;
+    ComputeAsync()
+{
+    throw winrt::hresult_access_denied();
+    <span style="border: solid 1px currentcolor;">co_return 0;</span>
+}
+</pre>
+<p>Both of these work, and it appears that the major compilers (gcc, clang, msvc) all optimize out the code that follows a <code>throw</code>. And as of this writing, they also do not raise a dead code diagnostic, though that&#8217;s the thing that worries me: It&#8217;s possible that a future version of the compiler will decide to produce dead code diagnostics, and then this code will cause problems when used in code bases that treat warnings as errors.</p>
+<p>We can put a <code>co_await</code> in front of the <code>throw</code>, but again, if we put it in a dead code block, we risk a diagnostic:</p>
+<pre>winrt::Windows::Foundation::IAsyncOperation&lt;int&gt;
+    ComputeAsync()
+{
+    <span style="border: solid 1px currentcolor;">if (false) co_return 0;</span>
+    throw winrt::hresult_access_denied();
+}
+</pre>
+<p>So maybe the thing to do is actually <code>co_await</code> something, but await something that does nothing. That&#8217;s where we can use the built-in <code>suspend_never</code>.</p>
+<pre>winrt::Windows::Foundation::IAsyncOperation&lt;int&gt;
+    ComputeAsync()
+{
+    <span style="border: solid 1px currentcolor;">co_await std::suspend_never{};</span>
+    throw winrt::hresult_access_denied();
+}
+</pre>
+<p>The major compilers recognize this pattern, and it&#8217;s not dead code, so we don&#8217;t risk an unreachable code diagnostic.</p>
+<p>But wait, it&#8217;s still a problem, thanks to our pal <code>await_<wbr />transform</code>. The C++/WinRT implementation of <code>await_<wbr />transform</code> for Windows Runtime <code>IAsyncXxx</code> interfaces wraps all awaitables inside an awaiter that check whether the <code>IAsyncXxx</code> has been cancelled and throws an <code>hresult_canceled</code> exception if so.</p>
+<p>Now, we know that the coroutine is never cancelled before it completes, but the compilers&#8217; escape analysis can&#8217;t see that, so in practice, they will include that extra check. The <code>co_await std::suspend_never{}</code> cannot be optimized out entirely.</p>
+<p>At this point, you have to go looking for a rabbit to pull out of your hat. And in this case, the rabbit is <code>winrt::<wbr />cancellation_<wbr />token</code>.</p>
+<p>The <code>winrt::<wbr />cancellation_<wbr />token</code> is a sentinel object that is not generally awaitable, but C++/WinRT&#8217;s implementation of <code>IAsyncXxx</code> recognizes it as as a special awaitable in its <code>await_<wbr />transform</code> and (here&#8217;s where the rabbit comes from) the custom awaiter returns an object (which is just a wrapper around a pointer to the promise) without any other fanfare.</p>
+<p>The trick, therefore, is to await the cancellation token and <a title="How can I tell C++ that I want to discard a nodiscard value?" href="https://devblogs.microsoft.com/oldnewthing/20240329-00/?p=109592"> discard the resulting object</a>.</p>
+<pre>winrt::Windows::Foundation::IAsyncOperation&lt;int&gt;
+    ComputeAsync()
+{
+    <span style="border: solid 1px currentcolor;">(void)co_await winrt::get_cancellation_token();</span>
+
+    throw winrt::hresult_access_denied();
+}
+</pre>
+<p>We explicitly discard the result of the <code>co_await</code>, just in case some future version of C++/WinRT adds the <code>[[nodiscard]]</code> attribute.</p>
+<p>Now that we know how to code up this specific case, we&#8217;ll work on generalizing it next time.</p>
+<p>The post <a href="https://devblogs.microsoft.com/oldnewthing/20240710-00/?p=109963">Creating an already-completed asynchronous activity in C++/WinRT, part 2</a> appeared first on <a href="https://devblogs.microsoft.com/oldnewthing">The Old New Thing</a>.</p>
+]]></content:encoded>
+					
+					<wfw:commentRss>https://devblogs.microsoft.com/oldnewthing/20240710-00/?p=109963/feed</wfw:commentRss>
+			<slash:comments>2</slash:comments>
+		
+		
+			</item>
+		<item>
+		<title>Creating an already-completed asynchonous activity in C++/WinRT, part 1</title>
+		<link>https://devblogs.microsoft.com/oldnewthing/20240709-00/?p=109961</link>
+					<comments>https://devblogs.microsoft.com/oldnewthing/20240709-00/?p=109961#comments</comments>
+		
+		<dc:creator><![CDATA[Raymond Chen]]></dc:creator>
+		<pubDate>Tue, 09 Jul 2024 14:00:00 +0000</pubDate>
+				<category><![CDATA[Old New Thing]]></category>
+		<category><![CDATA[Code]]></category>
+		<guid isPermaLink="false">https://devblogs.microsoft.com/oldnewthing/?p=109961</guid>
+
+					<description><![CDATA[<p>The simplest version.</p>
+<p>The post <a href="https://devblogs.microsoft.com/oldnewthing/20240709-00/?p=109961">Creating an already-completed asynchonous activity in C++/WinRT, part 1</a> appeared first on <a href="https://devblogs.microsoft.com/oldnewthing">The Old New Thing</a>.</p>
+]]></description>
+										<content:encoded><![CDATA[<p>When working with asynchronous code, you may need to create an asynchronous activity that has already completed, because you already know the answer. For example, you may be implementing a method whose signature is</p>
+<pre>IAsyncOperation&lt;int&gt; ComputeAsync();
+</pre>
+<p>but you already have the result and don&#8217;t need to compute it. How can you return an <code>IAsyncOperation&lt;int&gt;</code> that represents the already-computed result?</p>
+<p>C# has <code>Task.FromResult()</code> and <code>Task.CompletedTask</code>. JavaScript has <code>Promise.resolve()</code>. The Parallel Patterns Library (PPL) has <code>task_<wbr />from_<wbr />result()</code>. What about C++/WinRT?</p>
+<p>The simplest way is to just <code>co_return</code> the result into a coroutine.</p>
+<pre>winrt::Windows::Foundation::IAsyncOperation&lt;int&gt;
+    ComputeAsync()
+{
+    co_return 42;
+}
+</pre>
+<p>Similarly, C# has <code>Task.FromException()</code>, JavaScript has <code>Promise.reject()</code>, and PPL has <code>task_<wbr />from_<wbr />exception()</code>. The simple C++/WinRT version is to throw the exception from the coroutine.</p>
+<p>But wait, this doesn&#8217;t do what you think:</p>
+<pre>winrt::Windows::Foundation::IAsyncOperation&lt;int&gt;
+    ComputeAsync()
+{
+    throw winrt::hresult_access_denied();
+}
+</pre>
+<p>There is no <code>co_await</code> or <code>co_return</code> statement in the function body, so this is not a coroutine: Instead of returning a failed coroutine, this function fails to return a coroutine! When you call it, it throws an exception.</p>
+<p>We&#8217;ll look at ways of making this a coroutine next time.</p>
+<p>The post <a href="https://devblogs.microsoft.com/oldnewthing/20240709-00/?p=109961">Creating an already-completed asynchonous activity in C++/WinRT, part 1</a> appeared first on <a href="https://devblogs.microsoft.com/oldnewthing">The Old New Thing</a>.</p>
+]]></content:encoded>
+					
+					<wfw:commentRss>https://devblogs.microsoft.com/oldnewthing/20240709-00/?p=109961/feed</wfw:commentRss>
+			<slash:comments>2</slash:comments>
+		
+		
+			</item>
+		<item>
+		<title>What&#8217;s the point of std::monostate? You can&#8217;t do anything with it!</title>
+		<link>https://devblogs.microsoft.com/oldnewthing/20240708-00/?p=109959</link>
+					<comments>https://devblogs.microsoft.com/oldnewthing/20240708-00/?p=109959#comments</comments>
+		
+		<dc:creator><![CDATA[Raymond Chen]]></dc:creator>
+		<pubDate>Mon, 08 Jul 2024 14:00:00 +0000</pubDate>
+				<category><![CDATA[Old New Thing]]></category>
+		<category><![CDATA[Code]]></category>
+		<guid isPermaLink="false">https://devblogs.microsoft.com/oldnewthing/?p=109959</guid>
+
+					<description><![CDATA[<p>Not doing anything with it is exactly the point.</p>
+<p>The post <a href="https://devblogs.microsoft.com/oldnewthing/20240708-00/?p=109959">What&#8217;s the point of &lt;CODE&gt;std::&lt;WBR&gt;monostate&lt;/CODE&gt;? You can&#8217;t do anything with it!</a> appeared first on <a href="https://devblogs.microsoft.com/oldnewthing">The Old New Thing</a>.</p>
+]]></description>
+										<content:encoded><![CDATA[<p>C++17 introduced <code>std::<wbr />monostate</code>, and I used it <a title="In C++/WinRT, how can I await multiple coroutines and capture the results?, part 3" href="https://devblogs.microsoft.com/oldnewthing/20240112-00/?p=109267"> as a placeholder to represent the results of a coroutine that produces nothing</a>. In the comments, Neil Rashbrook asked <a href="https://devblogs.microsoft.com/oldnewthing/20240112-00/?p=109267#comment-141049"> what you are expected to do with a <code>std::<wbr />monostate</code></a>, seeing as has no members and only trivial member functions.</p>
+<p>The answer is &#8220;nothing&#8221;.</p>
+<p>The purpose of <code>std::<wbr />monostate</code> is to be a dummy type that does nothing. All instances are considered equal to each other. It is basically this:</p>
+<pre>struct monostate {};
+// plus relational operators and a hash specialization
+</pre>
+<p>You can see it in <a href="https://github.com/llvm/llvm-project/blob/22f6e97d24f6e7190a447fd60e11e8ea03fd8356/libcxx/include/__variant/monostate.h#L26C42-L26C42"> libcxx (LLVM/clang)</a>, <a href="https://github.com/gcc-mirror/gcc/blob/5d2a360f0a541646abb11efdbabc33c6a04de7ee/libstdc%2B%2B-v3/include/std/variant#L1237"> libstdc++ (gcc)</a>, and <a href="https://github.com/microsoft/STL/blob/3eac329d1f614ecf138d96c22a3b02f87076bc4a/stl/inc/xutility#L7126"> stl (msvc)</a>.</p>
+<p>But what&#8217;s the point of a class that does nothing, and which you can do nothing with?</p>
+<p>You don&#8217;t use <code>monostate</code> because you want to do something. You use <code>monostate</code> when you <i>don&#8217;t want to do anything</i>.</p>
+<p>Its original purpose was to be used as the initial type in a <code>std::<wbr />variant</code> to allow it to be default-constructed in an empty state.</p>
+<pre>struct Widget
+{
+    // no default constructor
+    Widget(std::string const&amp; id);
+
+    ⟦ other members ⟧
+};
+
+struct PortListener
+{
+    // default constructor has unwanted side effects
+    PortListener(int port = 80);
+
+    ⟦ other members ⟧
+};
+
+std::variant&lt;Widget, PortListener&gt; thingie; // can't do this
+</pre>
+<p>The <code>std::variant</code>&#8216;s default constructor default-constructs its first alternative. Since <code>Widget</code> doesn&#8217;t have a default constructor, you can&#8217;t put it first. And <code>Port­Listener</code>&#8216;s default constructor has unwanted side effects, so we don&#8217;t want to put it first.</p>
+<p>Enter <code>std::<wbr />monostate</code>. You can put that guy first.</p>
+<pre>std::variant&lt;std::monostate, Widget, PortListener&gt; thingie;
+</pre>
+<p>The <code>thingie</code> default-constructs into a <code>monostate</code>. What can you do with a <code>monostate</code>? Nothing! Its job is just to be a dummy type that you can use when you are forced to provide a default-constructible type but don&#8217;t want to.</p>
+<p>In the case of a <code>std::<wbr />variant</code>, you can think of inserting <code>std::<wbr />monostate</code> as a way to add an &#8220;empty&#8221; state to a <code>variant</code>,¹ saving you the trouble of having to create a <code>std::<wbr />optional&lt;std::<wbr />variant&lt;...&gt;&gt;</code>. You can treat the <code>std::<wbr />monostate</code> as the &#8220;empty&#8221; state.</p>
+<p>In our usage of <code>std::<wbr />monostate</code>, we used it as just a dummy type that stands in for <code>void</code>.²</p>
+<p>¹ More precisely, a way to add <i>another</i> &#8220;empty&#8221; state to a <code>variant</code>. There is already an &#8220;empty&#8221; state for a <code>std::<wbr />variant</code>, known as <code>valueless_<wbr />by_<wbr />exception</code>. This state is wacky, though, so you want to avoid it as much as possible. Another topic for another day.</p>
+<p>² Bonus reading: <a href="https://wg21.link/p0146r1"> Regular Void</a>, which has stalled.</p>
+<p>The post <a href="https://devblogs.microsoft.com/oldnewthing/20240708-00/?p=109959">What&#8217;s the point of &lt;CODE&gt;std::&lt;WBR&gt;monostate&lt;/CODE&gt;? You can&#8217;t do anything with it!</a> appeared first on <a href="https://devblogs.microsoft.com/oldnewthing">The Old New Thing</a>.</p>
+]]></content:encoded>
+					
+					<wfw:commentRss>https://devblogs.microsoft.com/oldnewthing/20240708-00/?p=109959/feed</wfw:commentRss>
+			<slash:comments>5</slash:comments>
+		
+		
+			</item>
+		<item>
+		<title>How do I produce a Windows Runtime asynchronous activity from C++/WinRT?</title>
+		<link>https://devblogs.microsoft.com/oldnewthing/20240705-00/?p=109957</link>
+					<comments>https://devblogs.microsoft.com/oldnewthing/20240705-00/?p=109957#respond</comments>
+		
+		<dc:creator><![CDATA[Raymond Chen]]></dc:creator>
+		<pubDate>Fri, 05 Jul 2024 14:00:00 +0000</pubDate>
+				<category><![CDATA[Old New Thing]]></category>
+		<category><![CDATA[Code]]></category>
+		<guid isPermaLink="false">https://devblogs.microsoft.com/oldnewthing/?p=109957</guid>
+
+					<description><![CDATA[<p>Somebody that deals with them natively.</p>
+<p>The post <a href="https://devblogs.microsoft.com/oldnewthing/20240705-00/?p=109957">How do I produce a Windows Runtime asynchronous activity from C++/WinRT?</a> appeared first on <a href="https://devblogs.microsoft.com/oldnewthing">The Old New Thing</a>.</p>
+]]></description>
+										<content:encoded><![CDATA[<p>We&#8217;ve looked at how to produce a Windows Runtime asynchronous activity <a title="How do I produce a Windows Runtime asynchronous activity from C++/CX?" href="https://devblogs.microsoft.com/oldnewthing/?p=109953"> in C++/CX</a> and <a title="How" href="https://devblogs.microsoft.com/oldnewthing/?p=109955"> in C#</a>, and they both involved passing a lambda to a helper function, where the lambda received special parameters for detecting cancellation and report progress. Fortunately, C++/WinRT integrates Windows Runtime asynchrony natively. You just write a function or method that returns an <code>IAsyncSomething</code>, and inside the body, you can <code>co_await</code> and <code>co_return</code>. If you want to check for cancellation, you can request a cancellation token, and if you want to report progress, you can request a progress token.</p>
+<pre>winrt::IAsyncOperation&lt;winrt::Widget&gt; GetWidgetAsync(winrt::hstring);
+winrt::IAsyncAction EnableWidgetAsync(winrt::Widget, bool);
+
+winrt::IAsyncActionWithProgress&lt;int&gt;
+    EnableWidgetByIdAsync(winrt::hstring id, bool enable)
+{
+    // If this is an instance member function
+    auto lifetime = get_strong();
+    // If this is a global function or static member function
+    auto lifetime = wil::winrt_module_reference();
+
+    <span style="border: solid 1px currentcolor; border-bottom: none;">auto cancel = co_await winrt::get_cancellation_token();</span>
+    <span style="border: solid 1px currentcolor; border-top: none;">auto progress = co_await winrt::get_progress_token();  </span>
+
+    <span style="border: solid 1px currentcolor;">progress(0);</span>
+    auto widget = co_await GetWidgetAsync(id);
+    <span style="border: solid 1px currentcolor; border-bottom: none;">progress(1);                                  </span>
+    <span style="border: 1px currentcolor; border-style: none solid;">if (cancel()) throw winrt::hresult_canceled();</span>
+    <span style="border: solid 1px currentcolor; border-top: none;">if (!widget) co_return false;                 </span>
+    co_await EnableWidgetAsync(widget, enable);
+    co_return true;
+}
+</pre>
+<p>C++/WinRT automatically checks for cancellation after every <code>co_await</code>,¹ so we didn&#8217;t really need a cancellation token in this example, but I showed it for completeness.</p>
+<p>¹ Except the special awaitables <code>co_await winrt::<wbr />get_<wbr />cancellation_<wbr />token()</code> and <code>co_await winrt::<wbr />get_<wbr />progress_<wbr />token()</code>.</p>
+<p>The post <a href="https://devblogs.microsoft.com/oldnewthing/20240705-00/?p=109957">How do I produce a Windows Runtime asynchronous activity from C++/WinRT?</a> appeared first on <a href="https://devblogs.microsoft.com/oldnewthing">The Old New Thing</a>.</p>
+]]></content:encoded>
+					
+					<wfw:commentRss>https://devblogs.microsoft.com/oldnewthing/20240705-00/?p=109957/feed</wfw:commentRss>
+			<slash:comments>0</slash:comments>
+		
+		
+			</item>
+		<item>
+		<title>How do I produce a Windows Runtime asynchronous activity from C#?</title>
+		<link>https://devblogs.microsoft.com/oldnewthing/20240704-00/?p=109955</link>
+					<comments>https://devblogs.microsoft.com/oldnewthing/20240704-00/?p=109955#comments</comments>
+		
+		<dc:creator><![CDATA[Raymond Chen]]></dc:creator>
+		<pubDate>Thu, 04 Jul 2024 14:00:00 +0000</pubDate>
+				<category><![CDATA[Old New Thing]]></category>
+		<category><![CDATA[Code]]></category>
+		<guid isPermaLink="false">https://devblogs.microsoft.com/oldnewthing/?p=109955</guid>
+
+					<description><![CDATA[<p>The AsyncInfo helper class converts Tasks to Windows Runtime asynchronous activities.</p>
+<p>The post <a href="https://devblogs.microsoft.com/oldnewthing/20240704-00/?p=109955">How do I produce a Windows Runtime asynchronous activity from C#?</a> appeared first on <a href="https://devblogs.microsoft.com/oldnewthing">The Old New Thing</a>.</p>
+]]></description>
+										<content:encoded><![CDATA[<p>Last time, we looked at <a title="How do I produce a Windows Runtime asynchronous activity from C++/CX?" href="https://devblogs.microsoft.com/oldnewthing/?p=109953"> how to produce a Windows Runtime asynchronous activity in C++/CX</a>. Doing it in C# is similar: The method that converts a C# <code>Task</code> to a Windows Runtime asynchronous activity is <code>AsyncInfo.<wbr />Run</code>, and just like PPL&#8217;s <code>create_<wbr />async</code>, it infers the resulting asynchronous activity from the signature of the object you pass to it.</p>
+<p>Given a lambda that returns a type <code>R</code> and takes the parameters <code>Params...</code>, the <code>AsyncInfo.<wbr />Run</code> method returns the following Windows Runtime interface:</p>
+<table class="cp3" style="border-collapse: collapse;" border="1" cellspacing="0" cellpadding="3">
+<tbody>
+<tr>
+<th rowspan="2"> </th>
+<th colspan="2">Params&#8230;</th>
+</tr>
+<tr>
+<td><code>(Cancellation­Token)</code></td>
+<td><code>(Cancellation­Token, IProgress&lt;P&gt;)</code></td>
+</tr>
+<tr>
+<td><code>R</code> = <code>Task</code></td>
+<td><code>IAsyncAction</code></td>
+<td><code>IAsyncActionWithProgress&lt;P&gt;</code></td>
+</tr>
+<tr>
+<td><code>R</code> = <code>Task&lt;T&gt;</code></td>
+<td><code>IAsyncOperation&lt;T&gt;</code></td>
+<td><code>IAsyncOperationWithProgress&lt;T, P&gt;</code></td>
+</tr>
+</tbody>
+</table>
+<p>This is basically the same table that we had for <code>create_<wbr />async</code>, but with three significant changes:</p>
+<ol>
+<li>The lambda must accept at least a <code>Cancellation­Token</code>. (It was optional for <code>create_<wbr />async</code>.)</li>
+<li>The lambda must return a <code>Task</code> or <code>Task&lt;T&gt;</code>. (The <code>create_<wbr />async</code> allowed you to return <code>void</code> or <code>T</code>.)</li>
+<li>The lambda&#8217;s cancellation token and progress reporter parameters are in opposite order!</li>
+</ol>
+<p>As with <code>create_<wbr />async</code>, the lambda can use the <code>IProgress&lt;P&amp;gt</code> <code>progress_<wbr />reporter&lt;P&gt;</code> to produce progress reports, and the <code>Cancellation­Token</code> to detect whether the asynchronous activity has been canceled.</p>
+<p>Here&#8217;s the simplest case: An <code>IAsyncAction</code>.</p>
+<pre>Task&lt;Widget&gt; GetWidgetAsync(string id);
+Task EnableWidgetAsync(Widget widget, bool enable);
+
+IAsyncAction EnableWidgetByIdAsync(string id, bool enable)
+{
+    return AsyncInfo.Run(async (cancel) =&gt; {
+        var widget = await GetWidgetAsync(id);
+        cancel.ThrowIfCancellationRequested();
+        await EnableWidgetAsync(widget, enable);
+    });
+}
+</pre>
+<p>And with progress:</p>
+<pre>IAsyncActionWithProgress&lt;int&gt; EnableWidgetByIdAsync(string id, bool enable)
+{
+    return AsyncInfo.Run(async (CancellationToken cancel,
+                                IProgress&lt;int&gt; progress) =&gt; {
+        progress.Report(0);
+        var widget = await GetWidgetAsync(id);
+        cancel.ThrowIfCancellationRequested();
+        progress.Report(1);
+        await EnableWidgetAsync(widget, enable);
+    });
+}
+</pre>
+<p>The compiler can&#8217;t infer what the <code>P</code> is for the <code>IProgress&lt;P&gt;</code> parameter, so you have to specify it explicitly. And then you run into another rule that says that if you provide an explicit type for one lambda parameter, you must do so for all of them, so we&#8217;re stuck typing <code>Cancellation­Token</code> again.</p>
+<p>But wait, there&#8217;s an easier way: Instead of helping the compiler infer <code>IProgress&lt;P&gt;</code>, we explicitly specialize the <code>Run</code> method.</p>
+<pre>IAsyncActionWithProgress&lt;int&gt; EnableWidgetByIdAsync(string id, bool enable)
+{
+    return AsyncInfo.Run<span style="border: solid 1px currentcolor;">&lt;int&gt;</span>(async (cancel, progress) =&gt; {
+        progress.Report(0);
+        var widget = await GetWidgetAsync(id);
+        cancel.ThrowIfCancellationRequested();
+        progress.Report(1);
+        await EnableWidgetAsync(widget, enable);
+    });
+}
+</pre>
+<p>May as well do the async operations, too.</p>
+<pre>IAsyncOperation&lt;bool&gt; EnableWidgetByIdAsync(string id, bool enable)
+{
+    return AsyncInfo.Run(async (cancel) =&gt; {
+        var widget = await GetWidgetAsync(id);
+        cancel.ThrowIfCancellationRequested();
+        <span style="border: solid 1px currentcolor; border-bottom: none;">if (widget == null) return false;       </span>
+        <span style="border: 1px currentcolor; border-style: none solid;">await EnableWidgetAsync(widget, enable);</span>
+        <span style="border: solid 1px currentcolor; border-top: none;">return true;                            </span>
+    });
+}
+
+IAsyncOperationWithProgress&lt;bool, int&gt; EnableWidgetByIdAsync(string id, bool enable)
+{
+    return AsyncInfo.Run&lt;bool, int&gt;(async (cancel, progress) =&gt; {
+        progress.Report(0);
+        var widget = await GetWidgetAsync(id);
+        cancel.ThrowIfCancellationRequested();
+        progress.Report(1);
+        <span style="border: solid 1px currentcolor; border-bottom: none;">if (widget == null) return false;       </span>
+        <span style="border: 1px currentcolor; border-style: none solid;">await EnableWidgetAsync(widget, enable);</span>
+        <span style="border: solid 1px currentcolor; border-top: none;">return true;                            </span>
+    });
+}
+</pre>
+<p>Now, in the case where you don&#8217;t support cancellation or progress, you have an alternative: For the case of <code>IAsyncAction</code>, you can create a <code>Task</code> and then call its <code>AsAsyncAction</code> method, and in the case of <code>IAsyncOperation&lt;T&gt;</code>, you call its its <code>AsAsyncOperation</code> method. These aren&#8217;t true methods on <code>Task</code> but rather extension methods provided by the <code>System.<wbr />Windows­Runtime­System­Extensions</code> namespace, so you may need to add a <code>using System.<wbr />Windows­Runtime­System­Extensions;</code> to your file.</p>
+<pre>using System.WindowsRuntimeSystemExtensions;
+
+IAsyncAction EnableWidgetByIdAsync(string id, bool enable)
+{
+    Func&lt;Task&gt; taskMaker = async () =&gt; {
+        var widget = await GetWidgetAsync(id);
+        await EnableWidgetAsync(widget, enable);
+    };
+    return taskMaker().AsAsyncAction();
+}
+
+IAsyncOperation&lt;int&gt; EnableWidgetByIdAsync(string id, bool enable)
+{
+    Func&lt;Task&lt;int&gt;&gt; taskMaker = async () =&gt; {
+        var widget = await GetWidgetAsync(id);
+        if (widget == null) return false;
+        await EnableWidgetAsync(widget, enable);
+        return true;
+    };
+    return taskMaker().AsAsyncOperation();
+}
+</pre>
+<p>These conversions are more convenient to use if you just turn the lambda into its own named function:</p>
+<pre>// IAsyncAction version
+async Task EnableWidgetByIdTaskAsync(string id, bool enable)
+{
+    var widget = await GetWidgetAsync(id);
+    await EnableWidgetAsync(widget, enable);
+}
+
+IAsyncAction EnableWidgetByIdAsync(string id, bool enable)
+{
+    return EnableWidgetByIdTaskAsync(id, enable).AsAsyncAction();
+}
+
+// IAsyncOperation version
+async Task&lt;bool&gt; EnableWidgetByIdTaskAsync(string id, bool enable)
+{
+    var widget = await GetWidgetAsync(id);
+    if (widget == null) return false;
+    await EnableWidgetAsync(widget, enable);
+    return true;
+}
+
+IAsyncOperation&lt;int&gt; EnableWidgetByIdAsync(string id, bool enable)
+{
+    return EnableWidgetByIdTaskAsync(id, enable).AsAsyncOperation();
+}
+</pre>
+<p>The post <a href="https://devblogs.microsoft.com/oldnewthing/20240704-00/?p=109955">How do I produce a Windows Runtime asynchronous activity from C#?</a> appeared first on <a href="https://devblogs.microsoft.com/oldnewthing">The Old New Thing</a>.</p>
+]]></content:encoded>
+					
+					<wfw:commentRss>https://devblogs.microsoft.com/oldnewthing/20240704-00/?p=109955/feed</wfw:commentRss>
+			<slash:comments>2</slash:comments>
+		
+		
+			</item>
+		<item>
+		<title>How do I produce a Windows Runtime asynchronous activity from C++/CX?</title>
+		<link>https://devblogs.microsoft.com/oldnewthing/20240703-00/?p=109953</link>
+					<comments>https://devblogs.microsoft.com/oldnewthing/20240703-00/?p=109953#respond</comments>
+		
+		<dc:creator><![CDATA[Raymond Chen]]></dc:creator>
+		<pubDate>Wed, 03 Jul 2024 14:00:00 +0000</pubDate>
+				<category><![CDATA[Old New Thing]]></category>
+		<category><![CDATA[Code]]></category>
+		<guid isPermaLink="false">https://devblogs.microsoft.com/oldnewthing/?p=109953</guid>
+
+					<description><![CDATA[<p>The Parallel Patterns Library has special support for C++/CX.</p>
+<p>The post <a href="https://devblogs.microsoft.com/oldnewthing/20240703-00/?p=109953">How do I produce a Windows Runtime asynchronous activity from C++/CX?</a> appeared first on <a href="https://devblogs.microsoft.com/oldnewthing">The Old New Thing</a>.</p>
+]]></description>
+										<content:encoded><![CDATA[<p>You might be working in a code base written in C++/CX.</p>
+<p>First, I&#8217;m sorry.</p>
+<p>Second, maybe you need to produce an <code>IAsyncAction^</code> or one of its relatives. How do you do that?</p>
+<p>You <a href="https://learn.microsoft.com/archive/msdn-magazine/2012/february/asynchronous-programming-asynchronous-programming-in-c-using-ppl"> use the <code>Concurrency::<wbr />create_<wbr />async</code> method</a>.</p>
+<p>The <code>Concurrency::<wbr />create_<wbr />async</code> method studies its parameter and infers what kind of Windows Runtime asynchronous activity to produce based on the signature of the lambda.</p>
+<p>Given a lambda whose function call operator has the signature <code>R(Params...)</code>, the <code>create_<wbr />async</code> function returns the following Windows Runtime interface:</p>
+<table class="cp3" style="border-collapse: collapse;" border="1" cellspacing="0" cellpadding="3">
+<tbody>
+<tr>
+<th rowspan="2"> </th>
+<th colspan="2">Params&#8230;</th>
+</tr>
+<tr>
+<td><code>()</code><br />
+<code>(cancellation_token)</code></td>
+<td><code>(progress_reporter&lt;P&gt;)</code><br />
+<code>(progress_reporter&lt;P&gt;, cancellation_token)</code></td>
+</tr>
+<tr>
+<td><code>R</code> = <code>void</code><br />
+<code>R</code> = <code>task&lt;void&gt;</code></td>
+<td><code>IAsyncAction^</code></td>
+<td><code>IAsyncActionWithProgress&lt;P&gt;^</code></td>
+</tr>
+<tr>
+<td><code>R</code> = <code>T</code><br />
+<code>R</code> = <code>task&lt;T&gt;</code></td>
+<td><code>IAsyncOperation&lt;T&gt;^</code></td>
+<td><code>IAsyncOperationWithProgress&lt;T, P&gt;^</code></td>
+</tr>
+</tbody>
+</table>
+<p>Inside the lambda, you can use the <code>progress_<wbr />reporter&lt;P&gt;</code> to produce progress reports, and you can use the optional <code>cancellation_<wbr />token</code> to detect whether the asynchronous activity has been canceled.</p>
+<p>Here&#8217;s the simplest case: An <code>IAsyncAction^</code> with no cancellation.</p>
+<pre>task&lt;Widget^&gt; GetWidgetAsync(String^);
+task&lt;void&gt; EnableWidgetAsync(Widget^, bool);
+
+// Old school: Task chain
+IAsyncAction^ EnableWidgetByIdAsync(String^ id, bool enable)
+{
+    return create_async([=]()
+        -&gt; task&lt;void&gt; {
+        return GetWidgetAsync(id).then(
+        [=](Widget^ widget) {
+            return EnableWidgetAsync(widget, enable);
+        });
+    });
+}
+
+// New hotness: co_await
+IAsyncAction^ EnableWidgetByIdAsync(String^ id, bool enable)
+{
+    return create_async([=]()
+        -&gt; task&lt;void&gt; {
+        Widget^ widget = co_await GetWidgetAsync(id);
+        co_await EnableWidgetAsync(widget, enable);
+    });
+}
+</pre>
+<p>With cancellation but no progress:</p>
+<pre>void ThrowIfCanceled(cancellation_token const&amp; cancel)
+{
+    if (cancel.is_canceled()) cancel_current_task();
+}
+
+// Old school: Task chain
+IAsyncAction^ EnableWidgetByIdAsync(String^ id, bool enable)
+{
+    return create_async([=](<span style="border: solid 1px currentcolor;">cancellation_token cancel</span>)
+        -&gt; task&lt;void&gt; {
+        return GetWidgetAsync(id).then(
+        [=](Widget^ widget) { // explicitly: [enable, <span style="border: solid 1px currentcolor;">cancel</span>]
+            <span style="border: solid 1px currentcolor;">ThrowIfCanceled(cancel);</span>
+            return EnableWidgetAsync(widget, enable);
+        });
+    });
+}
+
+// New hotness: co_await
+IAsyncAction^ EnableWidgetByIdAsync(String^ id, bool enable)
+{
+    return create_async([=](<span style="border: solid 1px currentcolor;">cancellation_token cancel</span>)
+        -&gt; task&lt;void&gt; {
+        Widget^ widget = co_await GetWidgetAsync(id);
+        <span style="border: solid 1px currentcolor;">ThrowIfCanceled(cancel);</span>
+        co_await EnableWidgetAsync(widget, enable);
+    });
+}
+</pre>
+<p>With progress but no cancellation:</p>
+<pre>// Old school: Task chain
+IAsyncActionWithProgress&lt;int&gt;^
+    EnableWidgetByIdAsync(String^ id, bool enable)
+{
+    return create_async([=](<span style="border: solid 1px currentcolor;">progress_reporter&lt;int&gt; progress</span>)
+        -&gt; task&lt;void&gt; {
+        <span style="border: solid 1px currentcolor;">progress.report(0);</span>
+        return GetWidgetAsync(id).then(
+        [=](Widget^ widget) { // explicitly: [enable, <span style="border: solid 1px currentcolor;">progress</span>]
+            <span style="border: solid 1px currentcolor;">progress.report(1);</span>
+            return EnableWidgetAsync(widget, enable);
+        });
+    });
+}
+
+// New hotness: co_await
+IAsyncAction^ EnableWidgetByIdAsync(String^ id, bool enable)
+{
+    return create_async([=](<span style="border: solid 1px currentcolor;">progress_reporter&lt;int&gt; progress</span>))
+        -&gt; task&lt;void&gt; {
+        <span style="border: solid 1px currentcolor;">progress.report(0);</span>
+        Widget^ widget = co_await GetWidgetAsync(id);
+        <span style="border: solid 1px currentcolor;">progress.report(1);</span>
+        co_await EnableWidgetAsync(widget, enable);
+    });
+}
+</pre>
+<p>And with both progress and cancellation:</p>
+<pre>// Old school: Task chain
+IAsyncActionWithProgress&lt;int&gt;^
+    EnableWidgetByIdAsync(String^ id, bool enable)
+{
+    return create_async([=](<span style="border: 1px currentcolor; border-style: solid none none solid;">progress_reporter&lt;int&gt; pr</span><span style="border: 1px currentcolor; border-style: solid solid solid none;">ogress,</span>
+                           <span style="border: solid 1px currentcolor; border-top: none;">cancellation_token cancel</span>)
+        -&gt; task&lt;void&gt; {
+        <span style="border: solid 1px currentcolor;">progress.report(0);</span>
+        return GetWidgetAsync(id).then(
+        [=](Widget^ widget) { // explicitly: [enable, <span style="border: solid 1px currentcolor;">progress, cancel</span>]
+            <span style="border: solid 1px currentcolor; border-bottom: none;">ThrowIfCanceled(cancel);</span>
+            <span style="border: solid 1px currentcolor; border-top: none;">progress.report(1);     </span>
+            return EnableWidgetAsync(widget, enable);
+        });
+    });
+}
+
+// New hotness: co_await
+IAsyncAction^ EnableWidgetByIdAsync(String^ id, bool enable)
+{
+    return create_async([=](<span style="border: 1px currentcolor; border-style: solid none none solid;">progress_reporter&lt;int&gt; pr</span><span style="border: 1px currentcolor; border-style: solid solid solid none;">ogress,</span>
+                           <span style="border: solid 1px currentcolor; border-top: none;">cancellation_token cancel</span>)
+        -&gt; task&lt;void&gt; {
+        <span style="border: solid 1px currentcolor;">progress.report(0);</span>
+        Widget^ widget = co_await GetWidgetAsync(id);
+        <span style="border: solid 1px currentcolor; border-bottom: none;">ThrowIfCanceled(cancel);</span>
+        <span style="border: solid 1px currentcolor; border-top: none;">progress.report(1);     </span>
+        co_await EnableWidgetAsync(widget, enable);
+    });
+}
+</pre>
+<p>We can generalize into a single pattern:</p>
+<pre>IAsyncSomething^
+    DoSomethingAsync(Arg1 arg1, Arg2, arg2, ...)
+{
+    return create_async([=](
+        progress_reporter&lt;P&gt; progress<sub>[optional]</sub>,
+        cancellation_token cancel<sub>[optional]</sub>)
+        -&gt; task&lt;P&gt; {
+        ⟦ async stuff which may include...
+            progress.report(value);<sub>[optional]</sub>
+            ThrowIfCanceled(cancel);<sub>[optional]</sub>
+        ⟧
+    });
+}
+</pre>
+<p>You can also register a callback function on the <code>cancellation_<wbr />token</code> that will be invoked when the activity is canceled. I leave using the cancellation callback as an exercise.</p>
+<p>There are also variants for <code>IAsync­Operation</code>. I&#8217;ll show just one of them and let you figure out the others:</p>
+<pre>// Old school: Task chain
+IAsyncOperationWithProgress&lt;bool, int&gt;^
+    EnableWidgetByIdAsync(String^ id, bool enable)
+{
+    return create_async([=](progress_reporter&lt;int&gt; progress,
+                           cancellation_token cancel)
+        -&gt; task&lt;<span style="border: solid 1px currentcolor;">bool</span>&gt; {
+        progress.report(0);
+        return GetWidgetAsync(id).then(
+        [=](Widget^ widget) { // explicitly: [enable, progress, cancel]
+            ThrowIfCanceled(cancel);
+            progress.report(1);
+            <span style="border: solid 1px currentcolor; border-bottom: none;">if (!widget) {                                         </span>
+            <span style="border: 1px currentcolor; border-style: none solid;">    return task_from_result(false); // widget not found</span>
+            <span style="border: 1px currentcolor; border-style: none solid;">}                                                      </span>
+            <span style="border: 1px currentcolor; border-style: none solid;">return EnableWidgetAsync(widget, enable).then(         </span>
+            <span style="border: solid 1px currentcolor; border-top: none;">    []() { return true; });                            </span>
+        });
+    });
+}
+
+// New hotness: co_await
+IAsyncAction^ EnableWidgetByIdAsync(String^ id, bool enable)
+{
+    return create_async([=](progress_reporter&lt;int&gt; progress,
+                           cancellation_token cancel)
+        -&gt; task&lt;<span style="border: solid 1px currentcolor;">bool</span>&gt; {
+        progress.report(0);
+        Widget^ widget = co_await GetWidgetAsync(id);
+        ThrowIfCanceled(cancel);
+        progress.report(1);
+        <span style="border: solid 1px currentcolor; border-bottom: none;">if (!widget) {                             </span>
+        <span style="border: 1px currentcolor; border-style: none solid;">    co_return false;                       </span>
+        <span style="border: 1px currentcolor; border-style: none solid;">}                                          </span>
+        <span style="border: 1px currentcolor; border-style: none solid;">co_await EnableWidgetAsync(widget, enable);</span>
+        <span style="border: solid 1px currentcolor; border-top: none;">co_return true;                            </span>
+    });
+}
+</pre>
+<p>The post <a href="https://devblogs.microsoft.com/oldnewthing/20240703-00/?p=109953">How do I produce a Windows Runtime asynchronous activity from C++/CX?</a> appeared first on <a href="https://devblogs.microsoft.com/oldnewthing">The Old New Thing</a>.</p>
+]]></content:encoded>
+					
+					<wfw:commentRss>https://devblogs.microsoft.com/oldnewthing/20240703-00/?p=109953/feed</wfw:commentRss>
+			<slash:comments>0</slash:comments>
+		
+		
+			</item>
+		<item>
+		<title>The history of Alt+number sequences, and why Alt+9731 sometimes gives you a heart and sometimes a snowman</title>
+		<link>https://devblogs.microsoft.com/oldnewthing/20240702-00/?p=109951</link>
+					<comments>https://devblogs.microsoft.com/oldnewthing/20240702-00/?p=109951#comments</comments>
+		
+		<dc:creator><![CDATA[Raymond Chen]]></dc:creator>
+		<pubDate>Tue, 02 Jul 2024 14:00:00 +0000</pubDate>
+				<category><![CDATA[Old New Thing]]></category>
+		<category><![CDATA[Tips/Support]]></category>
+		<guid isPermaLink="false">https://devblogs.microsoft.com/oldnewthing/?p=109951</guid>
+
+					<description><![CDATA[<p>Code pages and custom keyboard handling.</p>
+<p>The post <a href="https://devblogs.microsoft.com/oldnewthing/20240702-00/?p=109951">The history of &lt;KBD&gt;Alt&lt;/KBD&gt;+number sequences, and why &lt;KBD&gt;Alt&lt;/KBD&gt;+&lt;KBD&gt;9731&lt;/KBD&gt; sometimes gives you a heart and sometimes a snowman</a> appeared first on <a href="https://devblogs.microsoft.com/oldnewthing">The Old New Thing</a>.</p>
+]]></description>
+										<content:encoded><![CDATA[<p>Once upon a time, the IBM PC was released.</p>
+<p>In the IBM PC BIOS, you could enter characters that weren&#8217;t present on the keyboard by holding the <kbd>Alt</kbd> key and typing the decimal value on the numeric keypad. For example, you could enter ñ by holding <kbd>Alt</kbd> and typing <kbd>Numpad1</kbd> <kbd>Numpad6</kbd> <kbd>Numpad4</kbd>, then releasing the <kbd>Alt</kbd> key.</p>
+<p>For expository simplicity, I will henceforth use the notation <kbd>Alt</kbd>+<kbd>164</kbd> to indicate that you press the <kbd>Alt</kbd> key, then type the specified digits in sequence on the numeric keypad, then release the <kbd>Alt</kbd> key.</p>
+<p>Okay, so in the IBM PC BIOS, when you typed <kbd>Alt</kbd>+<kbd>…</kbd>, the code numbers were treated as decimal byte values, and the result on the screen came from your video card&#8217;s character generator. In the United States, the character generator&#8217;s ROM showed what we today call <a href="https://en.wikipedia.org/wiki/Code_page_437"> Code Page 437</a>.</p>
+<p>When it was introduced, Windows in the United States used <a href="https://en.wikipedia.org/wiki/Windows-1252"> Code Page 1252</a> as its 8-bit character set, which it called the &#8220;ANSI character set&#8221;; the old BIOS character set was retroactively named the OEM character set. To preserve compatibility with MS-DOS, if you used the <kbd>Alt</kbd> key in conjunction with the numeric keypad, the number you typed was still looked up in OEM character set, so that your muscle-memory code numbers still worked. You could still type <kbd>Alt</kbd>+<kbd>164</kbd> to get your ñ, even though the code number for ñ in Code Page 1252 is 241, not 164.</p>
+<p>If you wanted to type a character that had no OEM equivalent, you could prefix a numeric keypad <kbd>0</kbd> to indicate that you wanted the value looked up in the ANSI code page. Therefore, you could type <kbd>Alt</kbd>+<kbd>0169</kbd> to get a ©, which did not exist in the OEM code page. You could also type <kbd>Alt</kbd>+<kbd>0241</kbd> to get your precious ñ, using the ANSI code point number rather than the OEM code point number.</p>
+<p>If you entered a number larger than 255, both Windows and the IBM PC BIOS took your value mod 256, so typing <kbd>Alt</kbd>+<kbd>259</kbd> was the same as typing <kbd>Alt</kbd>+<kbd>3</kbd>. Both gave you OEM code point 3, which for Code Page 437 is a heart <img src="https://s.w.org/images/core/emoji/15.0.3/72x72/2665.png" alt="♥" class="wp-smiley" style="height: 1em; max-height: 1em;" />.</p>
+<p>If you ask the Internet how to type some of these non-ASCII characters on Windows, you may see people (and large language models) that tell you to type, say, <kbd>Alt</kbd>+<kbd>9731</kbd> to get a Unicode snowman <img src="https://s.w.org/images/core/emoji/15.0.3/72x72/2603.png" alt="☃" class="wp-smiley" style="height: 1em; max-height: 1em;" />. Unfortunately, from what we&#8217;ve learned above, this doesn&#8217;t work. You instead get the OEM character whose value is 9731 mod 256 = 3, or the aforementioned heart <img src="https://s.w.org/images/core/emoji/15.0.3/72x72/2665.png" alt="♥" class="wp-smiley" style="height: 1em; max-height: 1em;" />.</p>
+<p>A customer reported that a recent Windows update broke their ability to type a snowman by using <kbd>Alt</kbd>+<kbd>9731</kbd>. We explained that the update was not at fault; rather, <kbd>Alt</kbd>+<kbd>9731</kbd> was never supposed to produce a snowman at all! But the customer insisted that it used to work.</p>
+<p>A closer investigation of the issue revealed the reason.</p>
+<p>You see, while it&#8217;s true that the <kbd>Alt</kbd>+<kbd>…</kbd> decimal value is taken mod 256, that is just the default behavior of the Windows input system. But some controls (most notably the RichEdit control) override the default handling of the <kbd>Alt</kbd>+<kbd>…</kbd> sequence and parse out the decimal value <i>mod 65536</i> rather than <i>mod 256</i>.</p>
+<p>This means that whether the <kbd>Alt</kbd>+<kbd>…</kbd> value is taken mod 256 depends on what kind of control you are typing into.</p>
+<p>By default, the value is taken mod 256, and <kbd>Alt</kbd>+<kbd>9731</kbd> gives you a heart.</p>
+<p>But if you happen to be using a RichEdit control, then the <kbd>Alt</kbd>+<kbd>…</kbd> value is taken mod 65536, and <kbd>Alt</kbd>+<kbd>9731</kbd> gives you a snowman.</p>
+<p>(I don&#8217;t know of anybody who takes the value mod 2097151, to support direct entry of code points outside the Basic Multilingual Plane.)</p>
+<p>The post <a href="https://devblogs.microsoft.com/oldnewthing/20240702-00/?p=109951">The history of &lt;KBD&gt;Alt&lt;/KBD&gt;+number sequences, and why &lt;KBD&gt;Alt&lt;/KBD&gt;+&lt;KBD&gt;9731&lt;/KBD&gt; sometimes gives you a heart and sometimes a snowman</a> appeared first on <a href="https://devblogs.microsoft.com/oldnewthing">The Old New Thing</a>.</p>
+]]></content:encoded>
+					
+					<wfw:commentRss>https://devblogs.microsoft.com/oldnewthing/20240702-00/?p=109951/feed</wfw:commentRss>
+			<slash:comments>22</slash:comments>
+		
+		
+			</item>
+		<item>
+		<title>If I register the same shell extension as both a context menu extension and a drag/drop extension, how do I know which one the system is using?</title>
+		<link>https://devblogs.microsoft.com/oldnewthing/20240701-00/?p=109947</link>
+					<comments>https://devblogs.microsoft.com/oldnewthing/20240701-00/?p=109947#comments</comments>
+		
+		<dc:creator><![CDATA[Raymond Chen]]></dc:creator>
+		<pubDate>Mon, 01 Jul 2024 14:00:00 +0000</pubDate>
+				<category><![CDATA[Old New Thing]]></category>
+		<category><![CDATA[Code]]></category>
+		<guid isPermaLink="false">https://devblogs.microsoft.com/oldnewthing/?p=109947</guid>
+
+					<description><![CDATA[<p>Who forced you to register the same shell extension for both?</p>
+<p>The post <a href="https://devblogs.microsoft.com/oldnewthing/20240701-00/?p=109947">If I register the same shell extension as both a context menu extension and a drag/drop extension, how do I know which one the system is using?</a> appeared first on <a href="https://devblogs.microsoft.com/oldnewthing">The Old New Thing</a>.</p>
+]]></description>
+										<content:encoded><![CDATA[<p>A customer was developing a shell extension that implemented <code>IContextMenu</code>. This extension interface is used for both context menu extensions and drag/drop extensions, and they registered their extension&#8217;s CLSID in both places. When the user right-clicked on a file, their extension was called to add menu items to the file&#8217;s context menu. And when the user did a right-mouse drag/drop, their extension was called to add menu items to the drag/drop context menu.</p>
+<p>But they wanted their shell extension to know whether it is being used as a context menu extension or a drag/drop extension. How can their extension detect which scenario is active? Other combination shell extensions can detect the scenario by seeing which interface&#8217;s methods are called. For example, if <code>IShellPropSheetExt::<wbr />AddPages</code> is called, then it knows that it&#8217;s being used as a property sheet extension. But both context menu extensions and drag/drop extensions use the same interface <code>IContextMenu</code>, so they can&#8217;t use that to detect the scenario.</p>
+<p>My kids have a pretend store called &#8220;Fred Tire&#8221;, a pun on <a title="Fred Meyer" href="https://en.wikipedia.org/wiki/Fred_Meyer"> Fred Meyer</a>, a local chain of grocery/department stores. When you call Fred Tire, you can order automobile tires, or you can order a pizza.¹</p>
+<p>This customer basically wrote their own Fred Tire.</p>
+<p>When a customer calls the store, you can answer the phone &#8220;Hello, this is Fred Tire. How can I help you?&#8221; If the customer says, &#8220;I&#8217;d like to buy some tires,&#8221; then you take down their tire order. If they say, &#8220;I&#8217;d like to order a pizza,&#8221; then you take down their pizza order. This is the Fred Tire version of using the interface to detect which scenario is being used. Furthermore, after the customer places their tire order, they might say, &#8220;And I&#8217;d also like to order a pizza,&#8221; and you can take their pizza order too. The same order-taker can handle both tires and pizzas. They just follow the customer&#8217;s lead as to which order form to fill out.</p>
+<p>This customer, however, wanted to answer the phone in a different way depending on what the customer wants. They want to know whether to say &#8220;Hello, this is Fred Tire, what kind of tire do you need?&#8221; Or whether they should say, &#8220;Hello, this is Fred Tire, what kind of pizza would you like?&#8221; How can they answer the phone correctly?</p>
+<p>If you want to answer the phone differently, what you can do is get two telephone numbers. Put one phone number on your tire flyers and another number on your pizza flyers. Both numbers ring the same phone, but you can see which line is ringing. That way, when somebody calls the tire number, you say, &#8220;Hello, this is Fred Tire, what kind of tire do you need?&#8221; And if somebody calls the pizzeria number, you say, &#8220;Hello, this is Fred Tire, what kind of pizza would you like?&#8221;</p>
+<p>For shell extensions, this means that you register two different CLSIDs, one for the context menu extension and another for the drag/drop extension. Creating either of the CLSIDs produces the same object, but also passes the CLSID to the constructor so that the object knows which scenario is active.</p>
+<pre>// sketch
+class MyShellExtension : IContextMenu, ⟦ other interfaces ⟧
+{
+    MyShellExtension(<span style="border: solid 1px currentcolor;">REFCLSID clsid</span>) :
+        <span style="border: solid 1px currentcolor;">m_clsid(clsid)</span> {}
+
+    CLSID const m_clsid;
+
+    bool IsCreatedForContextMenu()
+        { return m_clsid == CLSID_MyContextMenu; }
+    bool IsCreatedForDragDrop()
+        { return m_clsid == CLSID_MyDragDrop; }
+
+    ⟦ ... other methods ... ⟧
+};
+
+class MyShellExtensionFactory : IClassFactory
+{
+    MyShellExtensionFactory(<span style="border: solid 1px currentcolor;">REFCLSID clsid</span>) :
+        <span style="border: solid 1px currentcolor;">m_clsid(clsid)</span> {}
+
+    <span style="border: solid 1px currentcolor;">CLSID const m_clsid;</span>
+
+    STDMETHODIMP CreateInstance(IUnknown* outer, REFIID iid, void** ppv)
+    {
+        *ppv = nullptr;
+        if (outer) return CLASS_E_NOAGGREGATION;
+        auto instance = new (std::nothrow) MyShellExtension(<span style="border: solid 1px currentcolor;">clsid</span>);
+        if (!instance) return E_OUTOFMEMORY;
+        auto hr = instance-&gt;QueryInterface(iid, ppv);
+        factory-&gt;Release();
+        return hr;
+    }
+
+    ⟦ ... other methods ... ⟧
+};
+
+STDAPI DllGetClassObject(REFCLSID clsid, REFIID iid, void** ppv)
+{
+    *ppv = nullptr;
+    if (clsid == CLSID_MyContextMenu || clsid == CLSID_MyDragDrop)
+    {
+        auto factory = new(std::nothrow) MyShellExtensionFactory(<span style="border: solid 1px currentcolor;">clsid</span>);
+        if (!factory) return E_OUTOFMEMORY;
+        auto hr = factory-&gt;QueryInterface(iid, ppv);
+        factory-&gt;Release();
+        return hr;
+    }
+    return REGDB_E_CLASSNOTREG;
+}
+</pre>
+<p>You can pass the <code>clsid</code> to the factory, who in turn passes it to the <code>MyShellExtension</code>, who can then use it to figure out which kind of shell extension it was created for.</p>
+<p>If your framework doesn&#8217;t let you pass parameters to factories, you can just create separate factories.</p>
+<pre><span style="border: solid 1px currentcolor; border-bottom: none;">enum class ExtensionKind</span>
+<span style="border: 1px currentcolor; border-style: none solid;">{                       </span>
+<span style="border: 1px currentcolor; border-style: none solid;">    ContextMenu,        </span>
+<span style="border: 1px currentcolor; border-style: none solid;">    DragDrop,           </span>
+<span style="border: solid 1px currentcolor; border-top: none;">};                      </span>
+
+class MyShellExtension : IContextMenu, ⟦ other interfaces ⟧
+{
+    MyShellExtension(<span style="border: solid 1px currentcolor;">ExtensionKind kind</span>) : <span style="border: solid 1px currentcolor;">m_kind(kind)</span> {}
+
+    <span style="border: solid 1px currentcolor; border-bottom: none;">ExtensionKind const m_kind = kind;                  </span>
+                                                        
+    <span style="border: 1px currentcolor; border-style: none solid;">bool IsCreatedForContextMenu()                      </span>
+    <span style="border: 1px currentcolor; border-style: none solid;">    { return m_kind == ExtensionKind::ContextMenu; }</span>
+    <span style="border: 1px currentcolor; border-style: none solid;">bool IsCreatedForDragDrop()                         </span>
+    <span style="border: solid 1px currentcolor; border-top: none;">    { return m_clsid == ExtensionKind::DragDrop; }  </span>
+
+    ⟦ ... other methods ... ⟧
+};
+
+class MyContextMenuShellExtension : MyShellExtension
+{
+    MyContextMenuShellExtension() :
+        <span style="border: solid 1px currentcolor;">MyShellExtension(ExtensionKind::ContextMenu)</span> {}
+};
+
+class MyDragDropShellExtension : MyShellExtension
+{
+    MyDragDropShellExtension() :
+        <span style="border: solid 1px currentcolor;">MyShellExtension(ExtensionKind::DragDrop)</span> {}
+};
+
+CoCreatableClass(MyContextMenuShellExtension)
+CoCreatableClass(MyDragDropShellExtension)
+</pre>
+<p>If your framework doesn&#8217;t even allow that, then you could templatize the class.</p>
+<pre>template&lt;ExtensionKind kind&gt;
+class MyShellExtension : IContextMenu, ⟦ other interfaces ⟧
+{
+    MyShellExtension() = default;
+
+    <span style="border: solid 1px currentcolor; border-bottom: none;">ExtensionKind const m_kind = kind;                  </span>
+    <span style="border: 1px currentcolor; border-style: none solid;">                                                    </span>
+    <span style="border: 1px currentcolor; border-style: none solid;">bool IsCreatedForContextMenu()                      </span>
+    <span style="border: 1px currentcolor; border-style: none solid;">    { return m_kind == ExtensionKind::ContextMenu; }</span>
+    <span style="border: 1px currentcolor; border-style: none solid;">bool IsCreatedForDragDrop()                         </span>
+    <span style="border: solid 1px currentcolor; border-top: none;">    { return m_clsid == ExtensionKind::DragDrop; }  </span>
+
+    ⟦ ... other methods ... ⟧
+};
+
+
+<span style="border: solid 1px currentcolor; border-bottom: none;">using MyContextMenuShellExtension =             </span>
+<span style="border: 1px currentcolor; border-style: none solid;">    MyShellExtension&lt;ExtensionKind::ContextMenu&gt;</span>
+<span style="border: 1px currentcolor; border-style: none solid;">using MyDragDropShellExtension =                </span>
+<span style="border: solid 1px currentcolor; border-top: none;">    MyShellExtension&lt;ExtensionKind::DragDrop&gt;   </span>
+</pre>
+<p>¹Or (and this is where things get fun) you can order a &#8220;tire pizza&#8221;. I always order the pineapple tire pizza.</p>
+<p>The post <a href="https://devblogs.microsoft.com/oldnewthing/20240701-00/?p=109947">If I register the same shell extension as both a context menu extension and a drag/drop extension, how do I know which one the system is using?</a> appeared first on <a href="https://devblogs.microsoft.com/oldnewthing">The Old New Thing</a>.</p>
+]]></content:encoded>
+					
+					<wfw:commentRss>https://devblogs.microsoft.com/oldnewthing/20240701-00/?p=109947/feed</wfw:commentRss>
+			<slash:comments>5</slash:comments>
+		
+		
+			</item>
+	</channel>
+</rss>

@@ -17,6 +17,14 @@
       "release-type": "rust",
       "package-name": "clauderon",
       "component": "clauderon"
+    },
+    "packages/webring": {
+      "release-type": "node",
+      "package-name": "webring"
+    },
+    "packages/astro-opengraph-images": {
+      "release-type": "node",
+      "package-name": "astro-opengraph-images"
     }
   }
 }
