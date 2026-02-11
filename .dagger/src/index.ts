@@ -90,6 +90,11 @@ function installWorkspaceDeps(source: Directory): Container {
     .withMountedFile("/workspace/packages/better-skill-capped/package.json", source.file("packages/better-skill-capped/package.json"))
     .withMountedFile("/workspace/packages/starlight-karma-bot/package.json", source.file("packages/starlight-karma-bot/package.json"))
     .withMountedFile("/workspace/packages/sjer.red/package.json", source.file("packages/sjer.red/package.json"))
+    // Discord Plays Pokemon sub-packages
+    .withExec(["mkdir", "-p", "/workspace/packages/dpp"])
+    .withMountedFile("/workspace/packages/dpp/common/package.json", source.file("packages/dpp/common/package.json"))
+    .withMountedFile("/workspace/packages/dpp/backend/package.json", source.file("packages/dpp/backend/package.json"))
+    .withMountedFile("/workspace/packages/dpp/frontend/package.json", source.file("packages/dpp/frontend/package.json"))
     // Clauderon web packages (nested workspace with own lockfile)
     .withMountedFile("/workspace/packages/clauderon/web/package.json", source.file("packages/clauderon/web/package.json"))
     .withMountedFile("/workspace/packages/clauderon/web/bun.lock", source.file("packages/clauderon/web/bun.lock"))
@@ -116,6 +121,10 @@ function installWorkspaceDeps(source: Directory): Container {
     .withMountedDirectory("/workspace/packages/better-skill-capped", source.directory("packages/better-skill-capped"))
     .withMountedDirectory("/workspace/packages/starlight-karma-bot", source.directory("packages/starlight-karma-bot"))
     .withMountedDirectory("/workspace/packages/sjer.red", source.directory("packages/sjer.red"))
+    // Discord Plays Pokemon sub-packages
+    .withMountedDirectory("/workspace/packages/dpp/common", source.directory("packages/dpp/common"))
+    .withMountedDirectory("/workspace/packages/dpp/backend", source.directory("packages/dpp/backend"))
+    .withMountedDirectory("/workspace/packages/dpp/frontend", source.directory("packages/dpp/frontend"))
     // Clauderon web packages
     .withMountedDirectory("/workspace/packages/clauderon/web/shared", source.directory("packages/clauderon/web/shared"))
     .withMountedDirectory("/workspace/packages/clauderon/web/client", source.directory("packages/clauderon/web/client"))
@@ -399,7 +408,7 @@ for dir in /workspace/packages/*/; do
   PKG=$(basename "$dir")
   # Skip exempt packages
   case "$PKG" in
-    resume|eslint-config|clauderon|claude-plugin|a2ui-poc|discord-claude|fonts|anki|castle-casters|macos-cross-compiler) continue ;;
+    resume|eslint-config|clauderon|claude-plugin|a2ui-poc|discord-claude|fonts|anki|castle-casters|macos-cross-compiler|dpp) continue ;;
   esac
 
   echo "Checking $PKG..."

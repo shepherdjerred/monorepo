@@ -1,0 +1,35 @@
+{
+  "name": "@shepherdjerred/dpp-common",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "bunx tsc",
+    "watch": "bunx tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "bunx eslint .",
+    "test": "true"
+  },
+  "dependencies": {
+    "lodash": "4.17.23",
+    "ts-pattern": "^5.7.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@shepherdjerred/eslint-config": "workspace:*",
+    "@types/lodash": "^4.17.16",
+    "@types/node": "^25.0.0",
+    "typescript": "5.9.3"
+  },
+  "exports": {
+    ".": "./dist/index.js",
+    "./*": "./dist/*"
+  },
+  "typesVersions": {
+    "*": {
+      "*": [
+        "dist/*"
+      ]
+    }
+  }
+}

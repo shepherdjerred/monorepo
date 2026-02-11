@@ -69,6 +69,30 @@ export default {
     const relativeFiles = filenames.map(f => path.relative(docsDir, f)).join(" ");
     return [`cd ${docsDir} && bunx eslint --fix ${relativeFiles}`];
   },
+  // Discord Plays Pokemon sub-packages
+  "packages/dpp/*/src/**/*.{ts,tsx,js,jsx}": (filenames) => {
+    const packageMap = new Map();
+
+    for (const filename of filenames) {
+      const match = filename.match(/^packages\/dpp\/([^/]+)\//);
+      if (match) {
+        const packageName = match[1];
+        if (!packageMap.has(packageName)) {
+          packageMap.set(packageName, []);
+        }
+        packageMap.get(packageName).push(filename);
+      }
+    }
+
+    const commands = [];
+    for (const [packageName, files] of packageMap) {
+      const packageDir = `packages/dpp/${packageName}`;
+      const relativeFiles = files.map(f => path.relative(packageDir, f)).join(" ");
+      commands.push(`cd ${packageDir} && bunx eslint --fix ${relativeFiles}`);
+    }
+
+    return commands;
+  },
   // .dagger CI pipeline
   ".dagger/src/**/*.ts": (filenames) => {
     const daggerDir = ".dagger";

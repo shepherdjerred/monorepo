@@ -1,0 +1,105 @@
+# Follow the setup guide to configure this file: https://docs.discord-plays-pokemon.com/user/
+# Most of these settings should not be changed by most users
+
+# the Discord server ID that you want to connect to
+server_id = ""
+
+[bot]
+# should the Discord bot component be enabled
+enabled = true
+# your Discord bot's token
+discord_token = ""
+# your Discord bot's application ID
+application_id = ""
+
+[bot.commands]
+# should slash commands be enabled
+enabled = true
+# controls whether or not commands should be registered at startup
+update = true
+
+[bot.commands.screenshot]
+# should screenshot be enabled
+enabled = true
+
+[bot.notifications]
+# should the bot send notifications
+enabled = true
+channel_id = ""
+
+[stream]
+# should the bot stream video to Discord
+enabled = true
+# the Discord video channel ID to stream to
+channel_id = ""
+# only stream if there is someone in the channel
+dynamic_streaming = true
+# there must be at least this many people watching
+# for commands to be processed
+minimum_in_channel = 2
+# only those watching the stream can send commands
+require_watching = true
+
+[stream.userbot]
+# the Discord user ID of the account that will stream video
+id = ""
+# username for the Discord account that will stream video
+username = ""
+# password for the Discord account that will stream video
+password = ""
+
+[game]
+# should components like the emulator, browser, etc. be enabled
+enabled = true
+# the game emulator URL
+# can accept any URL that points to Emulator JS (https://www.emulatorjs.com/)
+# use the built-in emulator (http://localhost:${config.web.port}/emulator.html) by default
+emulator_url = "built_in"
+
+# These are required for the application to work properly
+[game.browser.preferences]
+"media.navigator.permission.disabled" = true
+"media.autoplay.block-webaudio" = false
+"privacy.webrtc.legacyGlobalIndicator" = false
+"privacy.webrtc.hideGlobalIndicator" = true
+"browser.download.folderlist" = 1
+"browser.download.alwaysOpenPanel" = false
+
+[game.commands]
+# should chat commands be enabled
+# these chat commands are how the game is normally played
+enabled = true
+# the Discord text channel ID to listen for commands
+channel_id = ""
+max_actions_per_command = 20
+max_quantity_per_action = 10
+key_press_duration_in_milliseconds = 15
+delay_between_actions_in_milliseconds = 5
+
+[game.commands.burst]
+duration_in_milliseconds = 15
+delay_in_milliseconds = 5
+quantity = 3
+
+[game.commands.chord]
+duration_in_milliseconds = 15
+max_commands = 10
+max_total = 10
+delay = 5
+
+[game.commands.hold]
+duration_in_milliseconds = 150
+
+[web]
+# enable the built-in webserver
+enabled = true
+# enable cors
+cors = true
+# the port to run the webserver on
+port = 8081
+# the path to the UI assets, such as the emulator page and web UI
+assets = "packages/frontend/dist/"
+
+[web.api]
+# should the web API be enabled
+enabled = true

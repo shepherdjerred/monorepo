@@ -1,0 +1,50 @@
+{
+  "name": "@shepherdjerred/dpp-frontend",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
+    "lint": "bunx eslint .",
+    "preview": "vite preview",
+    "test": "true"
+  },
+  "dependencies": {
+    "@sentry/react": "^10.0.0",
+    "@shepherdjerred/dpp-common": "workspace:*",
+    "@tailwindcss/vite": "^4.0.17",
+    "@tanstack/react-query": "^5.70.0",
+    "keyboardjs": "^2.7.0",
+    "lodash": "^4.17.21",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-use": "^17.6.0",
+    "socket.io-client": "^4.8.1",
+    "ts-pattern": "^5.7.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@shepherdjerred/eslint-config": "workspace:*",
+    "@iconify-json/carbon": "^1.2.8",
+    "@iconify-json/mdi": "^1.2.3",
+    "@iconify/json": "^2.2.321",
+    "@svgr/core": "^8.1.0",
+    "@svgr/plugin-jsx": "^8.1.0",
+    "@tailwindcss/forms": "^0.5.10",
+    "@tanstack/eslint-plugin-query": "^5.68.0",
+    "@types/lodash": "^4.17.16",
+    "@types/react": "^19.0.12",
+    "@types/react-dom": "^19.0.4",
+    "@vitejs/plugin-react": "^5.0.0",
+    "@vitejs/plugin-react-swc": "^4.0.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.5.0",
+    "tailwindcss": "^4.0.17",
+    "typescript": "^5.8.2",
+    "unplugin-fonts": "^1.3.1",
+    "unplugin-icons": "^23.0.0",
+    "vite": "^7.0.0"
+  }
+}

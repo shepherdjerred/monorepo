@@ -40,6 +40,18 @@
     "packages/sjer.red": {
       "entry": ["src/**/*.astro", "src/**/*.ts", "src/**/*.tsx"],
       "project": ["src/**/*.{ts,tsx,astro}"]
+    },
+    "packages/dpp/common": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/dpp/backend": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/dpp/frontend": {
+      "entry": ["src/main.tsx"],
+      "project": ["src/**/*.{ts,tsx}"]
     }
   },
   "ignore": ["**/generated/**", "**/dist/**", "archive/**"]

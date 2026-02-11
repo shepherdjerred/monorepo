@@ -93,6 +93,10 @@ if has_changes '^packages/sjer.red/.*\.(ts|tsx)$'; then
   run_check "sjer.red typecheck" bun run --filter='./packages/sjer.red' typecheck
 fi
 
+if has_changes '^packages/dpp/.*\.(ts|tsx)$'; then
+  run_check "dpp typecheck" sh -c 'for pkg in common backend frontend; do bun run --filter="./packages/dpp/$pkg" typecheck; done'
+fi
+
 # --- Clauderon web packages ---
 if has_changes '^packages/clauderon/web/shared/.*\.(ts|tsx)$'; then
   run_check "web/shared typecheck" sh -c 'cd packages/clauderon/web/shared && bun run typecheck'
@@ -137,7 +141,7 @@ if has_changes '^packages/.*/package\.json$|^packages/.*/eslint\.config\.|^packa
     for dir in packages/*/; do
       PKG=$(basename "$dir")
       case "$PKG" in
-        resume|eslint-config|clauderon|claude-plugin|a2ui-poc|discord-claude|fonts|anki|castle-casters|macos-cross-compiler) continue ;;
+        resume|eslint-config|clauderon|claude-plugin|a2ui-poc|discord-claude|fonts|anki|castle-casters|macos-cross-compiler|dpp) continue ;;
       esac
 
       # Check for eslint config
