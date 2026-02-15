@@ -43,10 +43,21 @@ fn default_limit() -> f64 {
     100.0
 }
 
-/// Client for Claude.ai API operations
+/// Client for Claude.ai API operations.
 pub struct ClaudeApiClient {
+    /// HTTP client for making API requests.
     http_client: Client,
+    /// Base URL for Claude.ai API.
     base_url: String,
+}
+
+impl std::fmt::Debug for ClaudeApiClient {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ClaudeApiClient")
+            .field("http_client", &self.http_client)
+            .field("base_url", &self.base_url)
+            .finish()
+    }
 }
 
 impl ClaudeApiClient {
@@ -57,6 +68,7 @@ impl ClaudeApiClient {
     /// Panics if the HTTP client cannot be built with the default configuration.
     #[must_use]
     pub fn new() -> Self {
+        #[expect(clippy::expect_used, reason = "reqwest Client::builder().build() only fails with TLS misconfiguration")]
         let http_client = Client::builder()
             .timeout(Duration::from_secs(10))
             .build()
@@ -64,7 +76,7 @@ impl ClaudeApiClient {
 
         Self {
             http_client,
-            base_url: "https://claude.ai".to_string(),
+            base_url: "https://claude.ai".to_owned(),
         }
     }
 
@@ -241,7 +253,7 @@ impl ClaudeApiClient {
             .ok_or_else(|| anyhow::anyhow!("Missing seven_day usage data in API response"))?;
 
         Ok(crate::api::protocol::ClaudeUsage {
-            organization_id: org_id.to_string(),
+            organization_id: org_id.to_owned(),
             organization_name: None, // Will be filled by caller if available
             five_hour: crate::api::protocol::UsageWindow {
                 current: five_hour.current,

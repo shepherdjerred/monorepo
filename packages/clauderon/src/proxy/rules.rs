@@ -39,7 +39,7 @@ pub enum AuthEncoding {
 }
 
 /// Auth injection rule for a service.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct Rule {
     /// Host pattern to match (e.g., "api.github.com").
     pub host_pattern: &'static str,
@@ -98,7 +98,7 @@ impl Rule {
 }
 
 /// All auth injection rules.
-pub static RULES: &[Rule] = &[
+pub(super) static RULES: &[Rule] = &[
     // GitHub API
     Rule {
         host_pattern: "api.github.com",

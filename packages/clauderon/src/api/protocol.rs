@@ -16,26 +16,46 @@ pub enum Request {
     /// List all sessions
     ListSessions,
 
-    /// Get a specific session by ID or name
-    GetSession { id: String },
+    /// Get a specific session by ID or name.
+    GetSession {
+        /// Session ID or name.
+        id: String,
+    },
 
-    /// Create a new session
+    /// Create a new session.
     CreateSession(CreateSessionRequest),
 
-    /// Delete a session
-    DeleteSession { id: String },
+    /// Delete a session.
+    DeleteSession {
+        /// Session ID or name.
+        id: String,
+    },
 
-    /// Archive a session
-    ArchiveSession { id: String },
+    /// Archive a session.
+    ArchiveSession {
+        /// Session ID or name.
+        id: String,
+    },
 
-    /// Unarchive a session
-    UnarchiveSession { id: String },
+    /// Unarchive a session.
+    UnarchiveSession {
+        /// Session ID or name.
+        id: String,
+    },
 
-    /// Get the attach command for a session
-    AttachSession { id: String },
+    /// Get the attach command for a session.
+    AttachSession {
+        /// Session ID or name.
+        id: String,
+    },
 
-    /// Update session access mode
-    UpdateAccessMode { id: String, access_mode: AccessMode },
+    /// Update session access mode.
+    UpdateAccessMode {
+        /// Session ID or name.
+        id: String,
+        /// New access mode.
+        access_mode: AccessMode,
+    },
 
     /// Reconcile state with reality
     Reconcile,
@@ -46,14 +66,25 @@ pub enum Request {
     /// Get recent repositories
     GetRecentRepos,
 
-    /// Send a prompt to a session (for hotkey triggers)
-    SendPrompt { session: String, prompt: String },
+    /// Send a prompt to a session (for hotkey triggers).
+    SendPrompt {
+        /// Session name.
+        session: String,
+        /// Prompt text to send.
+        prompt: String,
+    },
 
-    /// Get session ID by name (for hook scripts)
-    GetSessionIdByName { name: String },
+    /// Get session ID by name (for hook scripts).
+    GetSessionIdByName {
+        /// Session name.
+        name: String,
+    },
 
-    /// Refresh a session (pull latest image and recreate container)
-    RefreshSession { id: String },
+    /// Refresh a session (pull latest image and recreate container).
+    RefreshSession {
+        /// Session ID or name.
+        id: String,
+    },
 
     /// Get current feature flags
     GetFeatureFlags,
@@ -61,28 +92,49 @@ pub enum Request {
     /// Get health status of all sessions
     GetHealth,
 
-    /// Get health status of a single session
-    GetSessionHealth { id: String },
-
-    /// Start a stopped session (container/pod)
-    StartSession { id: String },
-
-    /// Wake a hibernated session (sprites)
-    WakeSession { id: String },
-
-    /// Recreate a session (delete and recreate backend)
-    RecreateSession { id: String },
-
-    /// Cleanup a session (remove from database, worktree already missing)
-    CleanupSession { id: String },
-
-    /// Recreate a session fresh (delete worktree and re-clone, data lost)
-    RecreateSessionFresh { id: String },
-
-    /// Merge a pull request for a session
-    MergePr {
+    /// Get health status of a single session.
+    GetSessionHealth {
+        /// Session ID.
         id: String,
+    },
+
+    /// Start a stopped session (container/pod).
+    StartSession {
+        /// Session ID.
+        id: String,
+    },
+
+    /// Wake a hibernated session (sprites).
+    WakeSession {
+        /// Session ID.
+        id: String,
+    },
+
+    /// Recreate a session (delete and recreate backend).
+    RecreateSession {
+        /// Session ID.
+        id: String,
+    },
+
+    /// Cleanup a session (remove from database, worktree already missing).
+    CleanupSession {
+        /// Session ID.
+        id: String,
+    },
+
+    /// Recreate a session fresh (delete worktree and re-clone, data lost).
+    RecreateSessionFresh {
+        /// Session ID.
+        id: String,
+    },
+
+    /// Merge a pull request for a session.
+    MergePr {
+        /// Session ID or name.
+        id: String,
+        /// Merge method to use.
         method: crate::core::MergeMethod,
+        /// Whether to delete the branch after merge.
         delete_branch: bool,
     },
 }
@@ -167,7 +219,7 @@ pub struct CreateRepositoryInput {
 /// Request to create a new session
 #[typeshare]
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[allow(clippy::struct_excessive_bools)] // Independent configuration flags
+#[expect(clippy::struct_excessive_bools, reason = "independent configuration flags")]
 pub struct CreateSessionRequest {
     /// Path to the repository (LEGACY: used when repositories is None)
     pub repo_path: String,
@@ -333,7 +385,7 @@ pub struct UploadResponse {
 #[typeshare]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type", content = "payload")]
-#[allow(clippy::large_enum_variant)]
+#[expect(clippy::large_enum_variant, reason = "Session variant is large by design")]
 pub enum Response {
     /// List of sessions
     Sessions(Vec<Session>),
@@ -344,9 +396,11 @@ pub enum Response {
     /// Progress update during long operation
     Progress(ProgressStep),
 
-    /// Session created successfully
+    /// Session created successfully.
     Created {
+        /// Session ID.
         id: String,
+        /// Optional warnings generated during creation.
         warnings: Option<Vec<String>>,
     },
 
@@ -362,8 +416,11 @@ pub enum Response {
     /// Session refreshed successfully
     Refreshed,
 
-    /// Command to attach to a session
-    AttachReady { command: Vec<String> },
+    /// Command to attach to a session.
+    AttachReady {
+        /// Shell command arguments to attach.
+        command: Vec<String>,
+    },
 
     /// Reconciliation report
     ReconcileReport(ReconcileReportDto),
@@ -377,11 +434,15 @@ pub enum Response {
     /// Access mode updated successfully
     AccessModeUpdated,
 
-    /// Session ID returned
-    SessionId { session_id: String },
+    /// Session ID returned.
+    SessionId {
+        /// The session ID.
+        session_id: String,
+    },
 
-    /// Current feature flags
+    /// Current feature flags.
     FeatureFlags {
+        /// Feature flag values.
         flags: crate::feature_flags::FeatureFlags,
     },
 
@@ -400,17 +461,28 @@ pub enum Response {
     /// Session woken successfully
     Woken,
 
-    /// Session recreated successfully
-    Recreated { new_backend_id: Option<String> },
+    /// Session recreated successfully.
+    Recreated {
+        /// New backend ID if applicable.
+        new_backend_id: Option<String>,
+    },
 
     /// Session cleaned up successfully
     CleanedUp,
 
-    /// Action blocked error (e.g., recreate blocked for sprites with auto_destroy)
-    ActionBlocked { reason: String },
+    /// Action blocked error (e.g., recreate blocked for sprites with auto_destroy).
+    ActionBlocked {
+        /// Human-readable reason the action was blocked.
+        reason: String,
+    },
 
-    /// Error response
-    Error { code: String, message: String },
+    /// Error response.
+    Error {
+        /// Error code.
+        code: String,
+        /// Human-readable error message.
+        message: String,
+    },
 }
 
 /// Real-time events from the server
@@ -424,21 +496,37 @@ pub enum Event {
     /// A session was updated
     SessionUpdated(Session),
 
-    /// A session was deleted
-    SessionDeleted { id: String },
-
-    /// Session status changed
-    StatusChanged {
+    /// A session was deleted.
+    SessionDeleted {
+        /// Deleted session ID.
         id: String,
+    },
+
+    /// Session status changed.
+    StatusChanged {
+        /// Session ID.
+        id: String,
+        /// Previous status.
         old: SessionStatus,
+        /// New status.
         new: SessionStatus,
     },
 
-    /// Progress update during async operation
-    SessionProgress { id: String, progress: ProgressStep },
+    /// Progress update during async operation.
+    SessionProgress {
+        /// Session ID.
+        id: String,
+        /// Progress step details.
+        progress: ProgressStep,
+    },
 
-    /// Session operation failed
-    SessionFailed { id: String, error: String },
+    /// Session operation failed.
+    SessionFailed {
+        /// Session ID.
+        id: String,
+        /// Error description.
+        error: String,
+    },
 }
 
 /// Credential availability status
@@ -510,9 +598,9 @@ pub struct UpdateCredentialRequest {
     pub value: String,
 }
 
-/// Request to merge a pull request
+/// Request to merge a pull request.
 #[typeshare]
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct MergePrRequest {
     /// Merge method to use
     pub method: crate::core::MergeMethod,
@@ -586,7 +674,7 @@ pub struct ClaudeUsage {
 
 /// Feature flags response for the frontend
 #[typeshare]
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct FeatureFlagsResponse {
     /// Current feature flag values
     pub flags: crate::feature_flags::FeatureFlags,

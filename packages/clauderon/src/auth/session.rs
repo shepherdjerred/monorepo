@@ -10,6 +10,12 @@ pub struct SessionStore {
     pool: SqlitePool,
 }
 
+impl std::fmt::Debug for SessionStore {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("SessionStore").finish()
+    }
+}
+
 impl SessionStore {
     /// Create a new session store
     #[must_use]
@@ -105,7 +111,7 @@ impl SessionStore {
             .execute(&self.pool)
             .await?;
 
-        #[allow(clippy::cast_possible_truncation)]
+        #[expect(clippy::cast_possible_truncation, reason = "expired session count fits in usize")]
         Ok(result.rows_affected() as usize)
     }
 }

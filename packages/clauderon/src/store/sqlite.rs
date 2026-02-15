@@ -11,6 +11,7 @@ use super::{RecentRepo, Store};
 use crate::core::{Event, Session};
 
 /// SQLite-based session store
+#[derive(Debug)]
 pub struct SqliteStore {
     pool: SqlitePool,
     /// Maximum number of recent repositories to track
@@ -1150,7 +1151,7 @@ impl Store for SqliteStore {
                         subdirectory: session.subdirectory.clone(),
                         worktree_path: session.worktree_path.clone(),
                         branch_name: session.branch_name.clone(),
-                        mount_name: "primary".to_string(),
+                        mount_name: "primary".to_owned(),
                         is_primary: true,
                         base_branch: None,
                     }]);
@@ -1167,7 +1168,7 @@ impl Store for SqliteStore {
                         subdirectory: session.subdirectory.clone(),
                         worktree_path: session.worktree_path.clone(),
                         branch_name: session.branch_name.clone(),
-                        mount_name: "primary".to_string(),
+                        mount_name: "primary".to_owned(),
                         is_primary: true,
                         base_branch: None,
                     }]);
@@ -1207,7 +1208,7 @@ impl Store for SqliteStore {
                             subdirectory: session.subdirectory.clone(),
                             worktree_path: session.worktree_path.clone(),
                             branch_name: session.branch_name.clone(),
-                            mount_name: "primary".to_string(),
+                            mount_name: "primary".to_owned(),
                             is_primary: true,
                             base_branch: None,
                         }]);
@@ -1223,7 +1224,7 @@ impl Store for SqliteStore {
                             subdirectory: session.subdirectory.clone(),
                             worktree_path: session.worktree_path.clone(),
                             branch_name: session.branch_name.clone(),
-                            mount_name: "primary".to_string(),
+                            mount_name: "primary".to_owned(),
                             is_primary: true,
                             base_branch: None,
                         }]);
@@ -1512,8 +1513,8 @@ impl Store for SqliteStore {
 
         // Insert new repositories
         for (index, repo) in repositories.iter().enumerate() {
-            #[allow(clippy::cast_possible_wrap)]
-            let display_order = index as i64; // Safe: max 5 repos per session
+            #[expect(clippy::cast_possible_wrap, reason = "max 5 repos per session")]
+            let display_order = index as i64;
             sqlx::query(
                 r"
                 INSERT INTO session_repositories (
@@ -1569,7 +1570,7 @@ const fn event_type_name(event_type: &crate::core::events::EventType) -> &'stati
 
 /// Row type for sessions table
 #[derive(sqlx::FromRow)]
-#[allow(clippy::struct_excessive_bools)]
+#[expect(clippy::struct_excessive_bools, reason = "mirrors database schema with boolean columns")]
 struct SessionRow {
     id: String,
     name: String,
@@ -1832,11 +1833,11 @@ impl TryFrom<SessionRow> for Session {
                 .and_then(|json| serde_json::from_str(json).ok()),
             access_mode: row.access_mode.parse().unwrap_or_default(),
             // Safe cast: port numbers are always within u16 range (0-65535)
-            #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+            #[expect(clippy::cast_possible_truncation, clippy::cast_sign_loss, reason = "port numbers are always within u16 range")]
             proxy_port: row.proxy_port.map(|p| p as u16),
             history_file_path: row.history_file_path.map(PathBuf::from),
             // Safe cast: reconcile attempts are bounded by application logic
-            #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+            #[expect(clippy::cast_possible_truncation, clippy::cast_sign_loss, reason = "reconcile attempts bounded by application logic")]
             reconcile_attempts: row.reconcile_attempts as u32,
             last_reconcile_error: row.last_reconcile_error,
             last_reconcile_at,
@@ -1854,7 +1855,7 @@ impl TryFrom<SessionRow> for Session {
 struct EventRow {
     id: i64,
     session_id: String,
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "mapped from DB column but payload is used for deserialization")]
     event_type: String,
     payload: String,
     timestamp: String,

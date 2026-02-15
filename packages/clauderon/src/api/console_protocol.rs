@@ -1,18 +1,28 @@
 use serde::{Deserialize, Serialize};
 
+/// Messages exchanged over the console WebSocket connection.
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum ConsoleMessage {
+    /// Request to attach to a session's terminal.
     Attach {
+        /// Session identifier.
         session_id: String,
+        /// Terminal rows.
         rows: u16,
+        /// Terminal columns.
         cols: u16,
     },
+    /// Confirmation that the client is attached.
     Attached,
+    /// Error message from the server.
     Error {
+        /// Human-readable error description.
         message: String,
     },
+    /// Terminal output data from the session.
     Output {
+        /// Raw terminal output data.
         data: String,
     },
     /// Initial snapshot of terminal state when connecting.
@@ -29,14 +39,21 @@ pub enum ConsoleMessage {
         /// Current cursor column (0-indexed).
         cursor_col: u16,
     },
+    /// Terminal input data from the client.
     Input {
+        /// Raw terminal input data.
         data: String,
     },
+    /// Terminal resize event.
     Resize {
+        /// New terminal rows.
         rows: u16,
+        /// New terminal columns.
         cols: u16,
     },
+    /// Signal to send to the PTY process.
     Signal {
+        /// Signal type to send.
         signal: SignalType,
     },
 }

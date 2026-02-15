@@ -1,3 +1,10 @@
+#![allow(clippy::allow_attributes, reason = "test files use allow for non-guaranteed lints")]
+#![allow(clippy::expect_used, reason = "test code")]
+#![allow(clippy::unwrap_used, reason = "test code")]
+#![allow(clippy::print_stdout, reason = "test output")]
+#![allow(clippy::print_stderr, reason = "test output")]
+#![allow(clippy::unused_result_ok, reason = "test code")]
+
 //! TUI screenshot tests - generates PNG images from TestBackend for documentation
 //!
 //! These tests are marked with `#[ignore]` so they don't run in regular CI.
@@ -47,10 +54,11 @@ fn ratatui_color_to_rgb(color: Color) -> Rgb<u8> {
 }
 
 /// Convert a ratatui TestBackend buffer to a PNG image
-#[allow(
+#[expect(
     clippy::cast_possible_truncation,
     clippy::cast_possible_wrap,
-    clippy::cast_sign_loss
+    clippy::cast_sign_loss,
+    reason = "pixel coordinate math requires numeric casts"
 )]
 fn buffer_to_png(
     buffer: &ratatui::buffer::Buffer,
@@ -310,9 +318,9 @@ async fn generate_create_dialog_screenshot() {
     app.open_create_dialog();
 
     // Fill in some sample data to show what the dialog looks like
-    app.create_dialog.prompt = "Implement user authentication".to_string();
-    app.create_dialog.repo_path = "/Users/dev/myproject".to_string();
-    app.create_dialog.base_branch = "main".to_string();
+    app.create_dialog.prompt = "Implement user authentication".to_owned();
+    app.create_dialog.repo_path = "/Users/dev/myproject".to_owned();
+    app.create_dialog.base_branch = "main".to_owned();
     app.create_dialog.backend = BackendType::Docker;
     app.create_dialog.focus = CreateDialogFocus::Prompt;
 

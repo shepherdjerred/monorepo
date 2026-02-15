@@ -27,6 +27,12 @@ pub struct HealthService {
     sprites: Arc<dyn ExecutionBackend>,
 }
 
+impl std::fmt::Debug for HealthService {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("HealthService").finish_non_exhaustive()
+    }
+}
+
 impl HealthService {
     /// Create a new health service with backend references
     pub fn new(
@@ -131,7 +137,7 @@ impl HealthService {
                     },
                     available_actions: vec![AvailableAction::Recreate],
                     recommended_action: Some(AvailableAction::Recreate),
-                    description: "Could not determine backend status.".to_string(),
+                    description: "Could not determine backend status.".to_owned(),
                     details: format!("Health check error: {e}"),
                     data_safe: true, // Assume safe by default
                 }
@@ -166,8 +172,8 @@ impl HealthService {
                     state: ResourceState::Healthy,
                     available_actions: actions,
                     recommended_action: None,
-                    description: "Session is running normally.".to_string(),
-                    details: capabilities.data_preservation_description.to_string(),
+                    description: "Session is running normally.".to_owned(),
+                    details: capabilities.data_preservation_description.to_owned(),
                     data_safe: true,
                 }
             }
@@ -188,7 +194,7 @@ impl HealthService {
                     state: ResourceState::Stopped,
                     available_actions: actions.clone(),
                     recommended_action: actions.first().copied(),
-                    description: "The container/resource is stopped.".to_string(),
+                    description: "The container/resource is stopped.".to_owned(),
                     details: format!(
                         "{}\n\nYou can start it again or recreate it.",
                         capabilities.data_preservation_description
@@ -213,7 +219,7 @@ impl HealthService {
                     state: ResourceState::Hibernated,
                     available_actions: actions.clone(),
                     recommended_action: actions.first().copied(),
-                    description: "The sprite is hibernated.".to_string(),
+                    description: "The sprite is hibernated.".to_owned(),
                     details: format!(
                         "{}\n\nWaking will restore the sprite to its previous state.",
                         capabilities.data_preservation_description
@@ -229,8 +235,8 @@ impl HealthService {
                 state: ResourceState::Pending,
                 available_actions: vec![],
                 recommended_action: None,
-                description: "The resource is starting up.".to_string(),
-                details: "Please wait for the resource to become ready.".to_string(),
+                description: "The resource is starting up.".to_owned(),
+                details: "Please wait for the resource to become ready.".to_owned(),
                 data_safe: true,
             },
 
@@ -251,7 +257,7 @@ impl HealthService {
                     available_actions: actions,
                     recommended_action: Some(AvailableAction::Recreate),
                     description: format!("The resource is in an error state: {message}"),
-                    details: capabilities.data_preservation_description.to_string(),
+                    details: capabilities.data_preservation_description.to_owned(),
                     data_safe: capabilities.preserves_data_on_recreate,
                 }
             }
@@ -270,7 +276,7 @@ impl HealthService {
                     state: ResourceState::CrashLoop,
                     available_actions: actions,
                     recommended_action: Some(AvailableAction::Recreate),
-                    description: "The pod is in a crash loop.".to_string(),
+                    description: "The pod is in a crash loop.".to_owned(),
                     details: format!(
                         "{}\n\nThe container keeps crashing and restarting. Recreation may fix the issue.",
                         capabilities.data_preservation_description
@@ -292,7 +298,7 @@ impl HealthService {
                         state: ResourceState::Missing,
                         available_actions: actions,
                         recommended_action: Some(AvailableAction::Recreate),
-                        description: "The backend resource is missing.".to_string(),
+                        description: "The backend resource is missing.".to_owned(),
                         details: format!(
                             "{}\n\nThe container/pod was deleted but your data is preserved.",
                             capabilities.data_preservation_description
@@ -311,10 +317,9 @@ impl HealthService {
                             AvailableAction::RecreateFresh,
                         ],
                         recommended_action: Some(AvailableAction::Cleanup),
-                        description: "The resource was deleted externally.".to_string(),
+                        description: "The resource was deleted externally.".to_owned(),
                         details: "The backend resource was deleted outside clauderon. \
-                            Any uncommitted work and Claude conversation history has been lost."
-                            .to_string(),
+                            Any uncommitted work and Claude conversation history has been lost.".to_owned(),
                         data_safe: false,
                     }
                 }
@@ -331,7 +336,7 @@ impl HealthService {
             state: ResourceState::WorktreeMissing,
             available_actions: vec![AvailableAction::Cleanup],
             recommended_action: Some(AvailableAction::Cleanup),
-            description: "The git worktree was deleted.".to_string(),
+            description: "The git worktree was deleted.".to_owned(),
             details: format!(
                 "The worktree at {} no longer exists. \
                 The session should be cleaned up.",
@@ -360,7 +365,7 @@ impl HealthService {
             available_actions: actions,
             recommended_action: Some(AvailableAction::Recreate),
             description: format!("Backend resource missing: {reason}"),
-            details: capabilities.data_preservation_description.to_string(),
+            details: capabilities.data_preservation_description.to_owned(),
             data_safe: capabilities.preserves_data_on_recreate,
         }
     }
@@ -397,7 +402,7 @@ mod tests {
     fn create_test_session(name: &str, backend: BackendType, status: SessionStatus) -> Session {
         Session {
             id: Uuid::new_v4(),
-            name: name.to_string(),
+            name: name.to_owned(),
             title: None,
             description: None,
             status,
@@ -407,10 +412,10 @@ mod tests {
             repo_path: PathBuf::from("/test/repo"),
             worktree_path: PathBuf::from("/test/worktree"),
             subdirectory: PathBuf::new(),
-            branch_name: "test-branch".to_string(),
+            branch_name: "test-branch".to_owned(),
             repositories: None,
-            backend_id: Some("test-container".to_string()),
-            initial_prompt: "test".to_string(),
+            backend_id: Some("test-container".to_owned()),
+            initial_prompt: "test".to_owned(),
             dangerous_skip_checks: false,
             dangerous_copy_creds: false,
             pr_url: None,
@@ -442,18 +447,18 @@ mod tests {
     #[tokio::test]
     async fn test_healthy_session_returns_ok() {
         let git = Arc::new(MockGitBackend::new());
-        let mock_backend = Arc::new(MockExecutionBackend::new());
+        let mock_backend: Arc<dyn ExecutionBackend> = Arc::new(MockExecutionBackend::new());
 
         // Register the worktree so health check doesn't return WorktreeMissing
         git.register_worktree("/test/worktree").await;
 
         let health_service = HealthService::new(
-            git.clone(),
-            mock_backend.clone(),
-            mock_backend.clone(),
-            mock_backend.clone(),
+            git as Arc<dyn GitOperations>,
+            Arc::clone(&mock_backend),
+            Arc::clone(&mock_backend),
+            Arc::clone(&mock_backend),
             #[cfg(target_os = "macos")]
-            mock_backend.clone(),
+            Arc::clone(&mock_backend),
             mock_backend,
         );
 
@@ -466,16 +471,16 @@ mod tests {
 
     #[tokio::test]
     async fn test_archived_session_always_ok() {
-        let git = Arc::new(MockGitBackend::new());
-        let mock_backend = Arc::new(MockExecutionBackend::new());
+        let git: Arc<dyn GitOperations> = Arc::new(MockGitBackend::new());
+        let mock_backend: Arc<dyn ExecutionBackend> = Arc::new(MockExecutionBackend::new());
 
         let health_service = HealthService::new(
-            git.clone(),
-            mock_backend.clone(),
-            mock_backend.clone(),
-            mock_backend.clone(),
+            git,
+            Arc::clone(&mock_backend),
+            Arc::clone(&mock_backend),
+            Arc::clone(&mock_backend),
             #[cfg(target_os = "macos")]
-            mock_backend.clone(),
+            Arc::clone(&mock_backend),
             mock_backend,
         );
 
@@ -490,18 +495,18 @@ mod tests {
         let git = Arc::new(MockGitBackend::new());
         let mut mock_backend = MockExecutionBackend::new();
         mock_backend.set_exists(false);
-        let mock_backend = Arc::new(mock_backend);
+        let mock_backend: Arc<dyn ExecutionBackend> = Arc::new(mock_backend);
 
         // Register the worktree so health check proceeds to check backend state
         git.register_worktree("/test/worktree").await;
 
         let health_service = HealthService::new(
-            git.clone(),
-            mock_backend.clone(),
-            mock_backend.clone(),
-            mock_backend.clone(),
+            git as Arc<dyn GitOperations>,
+            Arc::clone(&mock_backend),
+            Arc::clone(&mock_backend),
+            Arc::clone(&mock_backend),
             #[cfg(target_os = "macos")]
-            mock_backend.clone(),
+            Arc::clone(&mock_backend),
             mock_backend,
         );
 

@@ -29,42 +29,63 @@ pub struct Event {
 pub enum EventType {
     /// A new session was created
     SessionCreated {
+        /// Session name.
         name: String,
+        /// Repository path.
         repo_path: String,
+        /// Backend type used.
         backend: BackendType,
+        /// Initial prompt text.
         initial_prompt: String,
     },
 
     /// Session status changed
     StatusChanged {
+        /// Previous status.
         old_status: SessionStatus,
+        /// New status.
         new_status: SessionStatus,
     },
 
     /// Backend ID was set
-    BackendIdSet { backend_id: String },
+    BackendIdSet {
+        /// The backend resource identifier.
+        backend_id: String,
+    },
 
     /// PR was linked to session
-    PrLinked { pr_url: String },
+    PrLinked {
+        /// The pull request URL.
+        pr_url: String,
+    },
 
     /// PR check status changed
     CheckStatusChanged {
+        /// Previous check status.
         old_status: Option<super::session::CheckStatus>,
+        /// New check status.
         new_status: super::session::CheckStatus,
     },
 
     /// Claude working status changed
     ClaudeStatusChanged {
+        /// Previous working status.
         old_status: ClaudeWorkingStatus,
+        /// New working status.
         new_status: ClaudeWorkingStatus,
     },
 
     /// Merge conflict status changed
-    ConflictStatusChanged { has_conflict: bool },
+    ConflictStatusChanged {
+        /// Whether the branch has merge conflicts.
+        has_conflict: bool,
+    },
 
     /// Working tree status changed (dirty/clean)
     WorktreeStatusChanged {
+        /// Whether the worktree has uncommitted changes.
         is_dirty: bool,
+        /// List of changed files, if available.
         changed_files: Option<Vec<crate::utils::git::ChangedFile>>,
     },
 
@@ -72,7 +93,10 @@ pub enum EventType {
     SessionArchived,
 
     /// Session was deleted
-    SessionDeleted { reason: Option<String> },
+    SessionDeleted {
+        /// Reason for deletion.
+        reason: Option<String>,
+    },
 
     /// Session was restored from archive
     SessionRestored,

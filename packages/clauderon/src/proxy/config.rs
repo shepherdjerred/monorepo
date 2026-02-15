@@ -26,7 +26,7 @@ pub struct OnePasswordConfig {
 }
 
 fn default_op_path() -> String {
-    "op".to_string()
+    "op".to_owned()
 }
 
 impl Default for OnePasswordConfig {
@@ -174,17 +174,29 @@ pub struct CodexTokenUpdate {
 /// Credentials for various services.
 #[derive(Debug, Clone)]
 pub struct Credentials {
+    /// GitHub personal access token.
     pub github_token: Option<String>,
+    /// Anthropic OAuth token for Claude API.
     pub anthropic_oauth_token: Option<String>,
+    /// OpenAI API key.
     pub openai_api_key: Option<String>,
+    /// Codex tokens (access, refresh, id, account).
     pub codex_tokens: Arc<RwLock<CodexTokens>>,
+    /// PagerDuty API token.
     pub pagerduty_token: Option<String>,
+    /// Sentry authentication token.
     pub sentry_auth_token: Option<String>,
+    /// Grafana API key.
     pub grafana_api_key: Option<String>,
+    /// npm registry token.
     pub npm_token: Option<String>,
+    /// Docker registry token.
     pub docker_token: Option<String>,
+    /// Kubernetes API token.
     pub k8s_token: Option<String>,
+    /// Talos API token.
     pub talos_token: Option<String>,
+    /// Path to the Codex `auth.json` file for persistence.
     pub codex_auth_json_path: Option<PathBuf>,
 }
 
@@ -246,7 +258,7 @@ impl Credentials {
             let path = secrets_dir.join(name);
             std::fs::read_to_string(&path)
                 .ok()
-                .map(|s| s.trim().to_string())
+                .map(|s| s.trim().to_owned())
         };
 
         Self {
@@ -294,6 +306,7 @@ impl Credentials {
             }
             Err(_) => {
                 // No runtime available, create a new one just for this operation
+                #[expect(clippy::expect_used, reason = "runtime creation is infallible in practice; unrecoverable if it fails")]
                 let rt = tokio::runtime::Runtime::new()
                     .expect("Failed to create tokio runtime for credential loading");
                 rt.block_on(Self::load_with_priority(config))
@@ -399,7 +412,7 @@ impl Credentials {
             if let Ok(value) = std::env::var(env_key) {
                 if Self::is_op_reference(&value) {
                     if let Ok(op_ref) = OpReference::parse(&value) {
-                        references.insert(credential_key.to_string(), op_ref);
+                        references.insert(credential_key.to_owned(), op_ref);
                     }
                 }
             }
@@ -585,6 +598,7 @@ impl Credentials {
         }
     }
 
+    /// Get the Codex access token if available.
     #[must_use]
     pub fn codex_access_token(&self) -> Option<String> {
         self.codex_tokens
@@ -593,6 +607,7 @@ impl Credentials {
             .and_then(|t| t.access_token.clone())
     }
 
+    /// Get the Codex refresh token if available.
     #[must_use]
     pub fn codex_refresh_token(&self) -> Option<String> {
         self.codex_tokens
@@ -601,6 +616,7 @@ impl Credentials {
             .and_then(|t| t.refresh_token.clone())
     }
 
+    /// Get the Codex account ID if available.
     #[must_use]
     pub fn codex_account_id(&self) -> Option<String> {
         self.codex_tokens
@@ -617,6 +633,7 @@ impl Credentials {
             .unwrap_or_default()
     }
 
+    /// Update Codex tokens and persist to `auth.json` if configured.
     pub fn update_codex_tokens(&self, update: CodexTokenUpdate) {
         let mut updated_tokens = None;
         if let Ok(mut guard) = self.codex_tokens.write() {
@@ -715,15 +732,15 @@ fn persist_codex_auth_json(
         id_token: tokens
             .id_token
             .clone()
-            .unwrap_or_else(|| "invalid.invalid.invalid".to_string()),
+            .unwrap_or_else(|| "invalid.invalid.invalid".to_owned()),
         access_token: tokens
             .access_token
             .clone()
-            .unwrap_or_else(|| "missing-access-token".to_string()),
+            .unwrap_or_else(|| "missing-access-token".to_owned()),
         refresh_token: tokens
             .refresh_token
             .clone()
-            .unwrap_or_else(|| "missing-refresh-token".to_string()),
+            .unwrap_or_else(|| "missing-refresh-token".to_owned()),
         account_id: tokens.account_id.clone(),
     };
     auth_json.openai_api_key = openai_api_key.cloned();

@@ -94,6 +94,16 @@ pub struct AppleContainerBackend {
 }
 
 #[cfg(target_os = "macos")]
+impl std::fmt::Debug for AppleContainerBackend {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("AppleContainerBackend")
+            .field("clauderon_dir", &self.clauderon_dir)
+            .field("config", &self.config)
+            .finish()
+    }
+}
+
+#[cfg(target_os = "macos")]
 impl AppleContainerBackend {
     /// Create a new Apple Container backend.
     ///
@@ -285,7 +295,7 @@ impl AppleContainerBackend {
     /// # Errors
     ///
     /// Returns an error if the proxy CA certificate is required but missing.
-    #[allow(clippy::too_many_arguments)]
+    #[expect(clippy::too_many_arguments, reason = "Apple Container CLI requires many configuration parameters")]
     pub fn build_create_args(
         name: &str,
         workdir: &Path,
@@ -333,22 +343,22 @@ impl AppleContainerBackend {
             )
         };
 
-        let mut args = vec!["run".to_string()];
+        let mut args = vec!["run".to_owned()];
 
         // Add pull policy flag if not default (IfNotPresent is the default)
         // Apple Container supports the same --pull flag as Docker
         if let Some(pull_flag) = pull_policy.to_docker_flag() {
-            args.push("--pull".to_string());
-            args.push(pull_flag.to_string());
+            args.push("--pull".to_owned());
+            args.push(pull_flag.to_owned());
         }
 
-        args.extend(["-d".to_string(), "-i".to_string(), "-t".to_string()]);
+        args.extend(["-d".to_owned(), "-i".to_owned(), "-t".to_owned()]);
 
         // Set container name
-        args.extend(["--name".to_string(), container_name]);
+        args.extend(["--name".to_owned(), container_name]);
 
         // Set user
-        args.extend(["--user".to_string(), uid.to_string()]);
+        args.extend(["--user".to_owned(), uid.to_string()]);
 
         // Add resource limits if configured
         let resource_limits = resource_override.or(config.resources.as_ref());
@@ -356,24 +366,24 @@ impl AppleContainerBackend {
             resources.validate()?;
             // Convert to Apple container format
             if let Some(ref cpu) = resources.cpu {
-                args.extend(["--cpus".to_string(), cpu.clone()]);
+                args.extend(["--cpus".to_owned(), cpu.clone()]);
             }
             if let Some(ref memory) = resources.memory {
-                args.extend(["--memory".to_string(), memory.clone()]);
+                args.extend(["--memory".to_owned(), memory.clone()]);
             }
         }
 
         // Mount workspace
         args.extend([
-            "-v".to_string(),
+            "-v".to_owned(),
             format!("{display}:/workspace", display = workdir.display()),
         ]);
 
         // Set working directory
         args.extend([
-            "-w".to_string(),
+            "-w".to_owned(),
             if initial_workdir.as_os_str().is_empty() {
-                "/workspace".to_string()
+                "/workspace".to_owned()
             } else {
                 format!("/workspace/{}", initial_workdir.display())
             },
@@ -381,60 +391,60 @@ impl AppleContainerBackend {
 
         // Environment variables
         args.extend([
-            "-e".to_string(),
-            "TERM=xterm-256color".to_string(),
-            "-e".to_string(),
-            "COLORTERM=truecolor".to_string(),
-            "-e".to_string(),
-            "HOME=/workspace".to_string(),
+            "-e".to_owned(),
+            "TERM=xterm-256color".to_owned(),
+            "-e".to_owned(),
+            "COLORTERM=truecolor".to_owned(),
+            "-e".to_owned(),
+            "HOME=/workspace".to_owned(),
         ]);
 
         if agent == AgentType::Codex {
-            args.extend(["-e".to_string(), "CODEX_HOME=/workspace/.codex".to_string()]);
+            args.extend(["-e".to_owned(), "CODEX_HOME=/workspace/.codex".to_owned()]);
         }
 
         // Mount shared Rust cargo and sccache cache volumes
         args.extend([
-            "-v".to_string(),
-            "clauderon-cargo-registry:/workspace/.cargo/registry".to_string(),
-            "-v".to_string(),
-            "clauderon-cargo-git:/workspace/.cargo/git".to_string(),
-            "-v".to_string(),
-            "clauderon-sccache:/workspace/.cache/sccache".to_string(),
+            "-v".to_owned(),
+            "clauderon-cargo-registry:/workspace/.cargo/registry".to_owned(),
+            "-v".to_owned(),
+            "clauderon-cargo-git:/workspace/.cargo/git".to_owned(),
+            "-v".to_owned(),
+            "clauderon-sccache:/workspace/.cache/sccache".to_owned(),
         ]);
 
         // Configure sccache
         args.extend([
-            "-e".to_string(),
-            "CARGO_HOME=/workspace/.cargo".to_string(),
-            "-e".to_string(),
-            "RUSTC_WRAPPER=sccache".to_string(),
-            "-e".to_string(),
-            "SCCACHE_DIR=/workspace/.cache/sccache".to_string(),
+            "-e".to_owned(),
+            "CARGO_HOME=/workspace/.cargo".to_owned(),
+            "-e".to_owned(),
+            "RUSTC_WRAPPER=sccache".to_owned(),
+            "-e".to_owned(),
+            "SCCACHE_DIR=/workspace/.cache/sccache".to_owned(),
         ]);
 
         // Add hook communication environment variables
         if let (Some(sid), Some(port)) = (session_id, http_port) {
             args.extend([
-                "-e".to_string(),
+                "-e".to_owned(),
                 format!("CLAUDERON_SESSION_ID={sid}"),
-                "-e".to_string(),
+                "-e".to_owned(),
                 format!("CLAUDERON_HTTP_PORT={port}"),
             ]);
         }
 
         // Mount .clauderon directory
-        let home_dir = std::env::var("HOME").unwrap_or_else(|_| "/root".to_string());
+        let home_dir = std::env::var("HOME").unwrap_or_else(|_| "/root".to_owned());
         let clauderon_dir = format!("{home_dir}/.clauderon");
         args.extend([
-            "-v".to_string(),
+            "-v".to_owned(),
             format!("{clauderon_dir}:/workspace/.clauderon"),
         ]);
 
         // Mount uploads directory
         let uploads_dir = format!("{home_dir}/.clauderon/uploads");
         args.extend([
-            "-v".to_string(),
+            "-v".to_owned(),
             format!("{uploads_dir}:/workspace/.clauderon/uploads"),
         ]);
 
@@ -447,7 +457,7 @@ impl AppleContainerBackend {
                     "Detected git worktree, mounting parent .git directory"
                 );
                 args.extend([
-                    "-v".to_string(),
+                    "-v".to_owned(),
                     format!(
                         "{display1}:{display2}",
                         display1 = parent_git_dir.display(),
@@ -513,59 +523,58 @@ impl AppleContainerBackend {
             // (not host.docker.internal which is Docker-specific).
             // See: https://github.com/apple/container/blob/main/docs/technical-overview.md
             args.extend([
-                "-e".to_string(),
+                "-e".to_owned(),
                 format!("HTTP_PROXY=http://192.168.64.1:{port}"),
-                "-e".to_string(),
+                "-e".to_owned(),
                 format!("HTTPS_PROXY=http://192.168.64.1:{port}"),
-                "-e".to_string(),
-                "NO_PROXY=localhost,127.0.0.1".to_string(),
+                "-e".to_owned(),
+                "NO_PROXY=localhost,127.0.0.1".to_owned(),
             ]);
 
             // Set dummy tokens
             args.extend([
-                "-e".to_string(),
-                "GH_TOKEN=clauderon-proxy".to_string(),
-                "-e".to_string(),
-                "GITHUB_TOKEN=clauderon-proxy".to_string(),
+                "-e".to_owned(),
+                "GH_TOKEN=clauderon-proxy".to_owned(),
+                "-e".to_owned(),
+                "GITHUB_TOKEN=clauderon-proxy".to_owned(),
             ]);
 
             match agent {
                 AgentType::ClaudeCode => {
                     args.extend([
-                        "-e".to_string(),
-                        "CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-clauderon-proxy-placeholder"
-                            .to_string(),
+                        "-e".to_owned(),
+                        "CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-clauderon-proxy-placeholder".to_owned(),
                     ]);
                 }
                 AgentType::Codex => {
                     args.extend([
-                        "-e".to_string(),
-                        "OPENAI_API_KEY=sk-openai-clauderon-proxy-placeholder".to_string(),
-                        "-e".to_string(),
-                        "CODEX_API_KEY=sk-openai-clauderon-proxy-placeholder".to_string(),
+                        "-e".to_owned(),
+                        "OPENAI_API_KEY=sk-openai-clauderon-proxy-placeholder".to_owned(),
+                        "-e".to_owned(),
+                        "CODEX_API_KEY=sk-openai-clauderon-proxy-placeholder".to_owned(),
                     ]);
                 }
                 AgentType::Gemini => {
                     args.extend([
-                        "-e".to_string(),
-                        "GEMINI_API_KEY=sk-gemini-clauderon-proxy-placeholder".to_string(),
+                        "-e".to_owned(),
+                        "GEMINI_API_KEY=sk-gemini-clauderon-proxy-placeholder".to_owned(),
                     ]);
                 }
             }
 
             // SSL/TLS environment variables
             args.extend([
-                "-e".to_string(),
-                "NODE_EXTRA_CA_CERTS=/etc/clauderon/proxy-ca.pem".to_string(),
-                "-e".to_string(),
-                "SSL_CERT_FILE=/etc/clauderon/proxy-ca.pem".to_string(),
-                "-e".to_string(),
-                "REQUESTS_CA_BUNDLE=/etc/clauderon/proxy-ca.pem".to_string(),
+                "-e".to_owned(),
+                "NODE_EXTRA_CA_CERTS=/etc/clauderon/proxy-ca.pem".to_owned(),
+                "-e".to_owned(),
+                "SSL_CERT_FILE=/etc/clauderon/proxy-ca.pem".to_owned(),
+                "-e".to_owned(),
+                "REQUESTS_CA_BUNDLE=/etc/clauderon/proxy-ca.pem".to_owned(),
             ]);
 
             // Mount proxy configs
             args.extend([
-                "-v".to_string(),
+                "-v".to_owned(),
                 format!(
                     "{display}:/etc/clauderon/proxy-ca.pem:ro",
                     display = ca_cert_path.display()
@@ -573,7 +582,7 @@ impl AppleContainerBackend {
             ]);
             if codex_dir.exists() {
                 args.extend([
-                    "-v".to_string(),
+                    "-v".to_owned(),
                     format!(
                         "{display}:/etc/clauderon/codex:ro",
                         display = codex_dir.display()
@@ -583,13 +592,13 @@ impl AppleContainerBackend {
 
             if has_talos_config {
                 args.extend([
-                    "-v".to_string(),
+                    "-v".to_owned(),
                     format!(
                         "{display}:/etc/clauderon/talos:ro",
                         display = talos_config_dir.display()
                     ),
-                    "-e".to_string(),
-                    "TALOSCONFIG=/etc/clauderon/talos/config".to_string(),
+                    "-e".to_owned(),
+                    "TALOSCONFIG=/etc/clauderon/talos/config".to_owned(),
                 ]);
             }
         }
@@ -597,17 +606,17 @@ impl AppleContainerBackend {
         // Git user configuration
         if let Some(name) = git_user_name {
             args.extend([
-                "-e".to_string(),
+                "-e".to_owned(),
                 format!("GIT_AUTHOR_NAME={name}"),
-                "-e".to_string(),
+                "-e".to_owned(),
                 format!("GIT_COMMITTER_NAME={name}"),
             ]);
         }
         if let Some(email) = git_user_email {
             args.extend([
-                "-e".to_string(),
+                "-e".to_owned(),
                 format!("GIT_AUTHOR_EMAIL={email}"),
-                "-e".to_string(),
+                "-e".to_owned(),
                 format!("GIT_COMMITTER_EMAIL={email}"),
             ]);
         }
@@ -654,7 +663,7 @@ impl AppleContainerBackend {
                     );
                 } else {
                     args.extend([
-                        "-v".to_string(),
+                        "-v".to_owned(),
                         format!(
                             "{display}:/workspace/.claude.json",
                             display = claude_json_path.display()
@@ -670,7 +679,7 @@ impl AppleContainerBackend {
                         let plugin_config_path = config_dir.join("plugins/known_marketplaces.json");
                         if plugin_config_path.exists() {
                             args.extend([
-                                "-v".to_string(),
+                                "-v".to_owned(),
                                 format!(
                                     "{}:/workspace/.claude/plugins/known_marketplaces.json:ro",
                                     plugin_config_path.display()
@@ -684,7 +693,7 @@ impl AppleContainerBackend {
 
                         if host_plugins_dir.exists() {
                             args.extend([
-                                "-v".to_string(),
+                                "-v".to_owned(),
                                 format!(
                                     "{}:/workspace/.claude/plugins/marketplaces:ro",
                                     host_plugins_dir.display()
@@ -709,7 +718,7 @@ impl AppleContainerBackend {
 }"#;
                     if std::fs::write(&managed_settings_path, managed_settings).is_ok() {
                         args.extend([
-                            "-v".to_string(),
+                            "-v".to_owned(),
                             format!(
                                 "{}:/etc/claude-code/managed-settings.json:ro",
                                 managed_settings_path.display()
@@ -735,7 +744,7 @@ impl AppleContainerBackend {
                     let escaped = arg.replace('\'', "'\\''");
                     format!("'{escaped}'")
                 } else {
-                    arg.to_string()
+                    arg.to_owned()
                 }
             };
 
@@ -757,14 +766,14 @@ impl AppleContainerBackend {
                     );
 
                     if print_mode {
-                        cmd_vec.insert(1, "--print".to_string());
-                        cmd_vec.insert(2, "--verbose".to_string());
+                        cmd_vec.insert(1, "--print".to_owned());
+                        cmd_vec.insert(2, "--verbose".to_owned());
                     }
 
                     if let Some(sid) = session_id {
                         let session_id_str = sid.to_string();
-                        let mut create_cmd = vec!["claude".to_string()];
-                        create_cmd.push("--session-id".to_string());
+                        let mut create_cmd = vec!["claude".to_owned()];
+                        create_cmd.push("--session-id".to_owned());
                         create_cmd.push(session_id_str.clone());
                         create_cmd.extend(cmd_vec.iter().skip(1).cloned());
                         let create_cmd_str = create_cmd
@@ -786,7 +795,7 @@ impl AppleContainerBackend {
                         };
 
                         let project_path = if initial_workdir.as_os_str().is_empty() {
-                            "-workspace".to_string()
+                            "-workspace".to_owned()
                         } else {
                             format!(
                                 "-workspace-{}",
@@ -828,13 +837,13 @@ if [ -f /etc/clauderon/codex/config.toml ]; then
     cp /etc/clauderon/codex/config.toml "$CODEX_HOME/config.toml"
 fi"#;
                     if print_mode {
-                        let mut cmd_vec = vec!["codex".to_string()];
+                        let mut cmd_vec = vec!["codex".to_owned()];
                         if dangerous_skip_checks {
-                            cmd_vec.push("--full-auto".to_string());
+                            cmd_vec.push("--full-auto".to_owned());
                         }
-                        cmd_vec.push("exec".to_string());
+                        cmd_vec.push("exec".to_owned());
                         for image in &translated_images {
-                            cmd_vec.push("--image".to_string());
+                            cmd_vec.push("--image".to_owned());
                             cmd_vec.push(image.clone());
                         }
                         if !escaped_prompt.is_empty() {
@@ -873,8 +882,8 @@ fi"#;
                     );
 
                     if print_mode {
-                        cmd_vec.insert(1, "--print".to_string());
-                        cmd_vec.insert(2, "--verbose".to_string());
+                        cmd_vec.insert(1, "--print".to_owned());
+                        cmd_vec.insert(2, "--verbose".to_owned());
                     }
 
                     cmd_vec
@@ -892,9 +901,9 @@ fi"#;
         }
 
         // Add image and command
-        args.push(image_str.to_string());
-        args.push("sh".to_string());
-        args.push("-c".to_string());
+        args.push(image_str.to_owned());
+        args.push("sh".to_owned());
+        args.push("-c".to_owned());
         args.push(agent_cmd);
 
         Ok(args)
@@ -904,8 +913,8 @@ fi"#;
     #[must_use]
     pub fn build_attach_args(name: &str) -> Vec<String> {
         vec![
-            "bash".to_string(),
-            "-c".to_string(),
+            "bash".to_owned(),
+            "-c".to_owned(),
             // Apple containers don't have attach, so we use exec with bash
             format!("container start {name} 2>/dev/null; container exec -i -t {name} bash"),
         ]
@@ -998,7 +1007,7 @@ impl ExecutionBackend for AppleContainerBackend {
             anyhow::bail!("Failed to create Apple container: {stderr}");
         }
 
-        let container_id = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        let container_id = String::from_utf8_lossy(&output.stdout).trim().to_owned();
 
         tracing::info!(
             container_id = %container_id,

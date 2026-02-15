@@ -3,8 +3,11 @@
 //! Zero-trust credential management for containers. The container has no credentials -
 //! the proxy intercepts requests and injects auth headers.
 
-// Allow missing documentation for internal proxy implementations
-#![allow(clippy::missing_errors_doc, clippy::missing_panics_doc)]
+#![expect(
+    clippy::missing_errors_doc,
+    clippy::missing_panics_doc,
+    reason = "internal proxy module; error/panic docs are not required"
+)]
 
 mod audit;
 mod ca;

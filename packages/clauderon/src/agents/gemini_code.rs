@@ -2,6 +2,7 @@ use super::common::CommonAgentLogic;
 use super::traits::{Agent, AgentState};
 
 /// Gemini Code agent adapter
+#[derive(Debug, Copy, Clone)]
 pub struct GeminiCodeAgent {
     /// Common agent logic
     common_logic: CommonAgentLogic,
@@ -47,33 +48,33 @@ impl Agent for GeminiCodeAgent {
         session_id: Option<&uuid::Uuid>,
         model: Option<&str>,
     ) -> Vec<String> {
-        let mut cmd = vec!["gemini".to_string()];
+        let mut cmd = vec!["gemini".to_owned()];
 
         // Add session ID first if provided
         if let Some(id) = session_id {
-            cmd.push("--session-id".to_string());
+            cmd.push("--session-id".to_owned());
             cmd.push(id.to_string());
         }
 
         // Add model flag if provided
         if let Some(model_name) = model {
-            cmd.push("--model".to_string());
-            cmd.push(model_name.to_string());
+            cmd.push("--model".to_owned());
+            cmd.push(model_name.to_owned());
         }
 
         // Only add flag if dangerous_skip_checks is enabled
         if dangerous_skip_checks {
-            cmd.push("--dangerously-skip-permissions".to_string());
+            cmd.push("--dangerously-skip-permissions".to_owned());
         }
 
         // Add image arguments
         for image in images {
-            cmd.push("--image".to_string());
+            cmd.push("--image".to_owned());
             cmd.push(image.clone());
         }
 
         // Add prompt last
-        cmd.push(prompt.to_string());
+        cmd.push(prompt.to_owned());
 
         cmd
     }

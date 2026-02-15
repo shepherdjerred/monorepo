@@ -111,7 +111,7 @@ pub async fn handle_paste_event(app: &mut App, text: &str) -> anyhow::Result<()>
                     // Check if pasted text is an image file path (drag-and-drop support)
                     let trimmed = text.trim();
                     if is_image_path(trimmed) {
-                        app.create_dialog.images.push(trimmed.to_string());
+                        app.create_dialog.images.push(trimmed.to_owned());
                         app.status_message = Some(format!("Image attached: {}", trimmed));
                         return Ok(());
                     }
@@ -123,7 +123,7 @@ pub async fn handle_paste_event(app: &mut App, text: &str) -> anyhow::Result<()>
                         for line in lines {
                             let line = line.trim();
                             if is_image_path(line) {
-                                app.create_dialog.images.push(line.to_string());
+                                app.create_dialog.images.push(line.to_owned());
                                 added_images += 1;
                             }
                         }
@@ -254,7 +254,7 @@ async fn handle_session_list_key(app: &mut App, key: KeyEvent) -> anyhow::Result
             if let Err(e) = app.refresh_sessions().await {
                 app.status_message = Some(format!("Refresh failed: {e}"));
             } else {
-                app.status_message = Some("Refreshed session list".to_string());
+                app.status_message = Some("Refreshed session list".to_owned());
             }
         }
         // Filter switching with number keys
@@ -295,7 +295,7 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
     {
         let last_idx = app.create_dialog.images.len() - 1;
         app.create_dialog.remove_image(last_idx);
-        app.status_message = Some("Image removed".to_string());
+        app.status_message = Some("Image removed".to_owned());
         return Ok(());
     }
 
@@ -414,7 +414,7 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                     // Don't allow creation while deletion is in progress
                     if app.delete_task.is_some() {
                         app.status_message =
-                            Some("Cannot create while deleting a session".to_string());
+                            Some("Cannot create while deleting a session".to_owned());
                         return Ok(());
                     }
 
@@ -449,7 +449,7 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                         initial_prompt: app.create_dialog.prompt.clone(),
                         backend: app.create_dialog.backend,
                         agent: app.create_dialog.agent,
-                        model: app.create_dialog.model.clone(), // Use selected model from dialog
+                        model: app.create_dialog.model, // Use selected model from dialog
                         dangerous_skip_checks: app.create_dialog.skip_checks,
                         dangerous_copy_creds: app.create_dialog.dangerous_copy_creds,
                         print_mode: false, // TUI always uses interactive mode
@@ -516,7 +516,7 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                     });
 
                     app.create_task = Some(task);
-                    app.loading_message = Some("Creating session...".to_string());
+                    app.loading_message = Some("Creating session...".to_owned());
                 } else {
                     app.close_create_dialog();
                 }
@@ -975,7 +975,7 @@ async fn handle_reconcile_error_key(app: &mut App, key: KeyEvent) -> anyhow::Res
         }
         KeyCode::Char('R' | 'r') => {
             // Retry reconciliation for this session
-            app.status_message = Some("Retrying container recreation...".to_string());
+            app.status_message = Some("Retrying container recreation...".to_owned());
             app.close_reconcile_error();
             if let Err(e) = app.reconcile().await {
                 app.status_message = Some(format!("Retry failed: {e}"));
@@ -1027,7 +1027,7 @@ async fn handle_recreate_confirm_key(app: &mut App, key: KeyEvent) -> anyhow::Re
                         if let Err(e) = app.start_session(id).await {
                             app.status_message = Some(format!("Start failed: {e}"));
                         } else {
-                            app.status_message = Some("Session started".to_string());
+                            app.status_message = Some("Session started".to_owned());
                         }
                         app.close_recreate_dialog();
                     }
@@ -1042,7 +1042,7 @@ async fn handle_recreate_confirm_key(app: &mut App, key: KeyEvent) -> anyhow::Re
                         if let Err(e) = app.wake_session(id).await {
                             app.status_message = Some(format!("Wake failed: {e}"));
                         } else {
-                            app.status_message = Some("Session woken".to_string());
+                            app.status_message = Some("Session woken".to_owned());
                         }
                         app.close_recreate_dialog();
                     }
@@ -1060,7 +1060,7 @@ async fn handle_recreate_confirm_key(app: &mut App, key: KeyEvent) -> anyhow::Re
                         if let Err(e) = app.recreate_session(id).await {
                             app.status_message = Some(format!("Recreate failed: {e}"));
                         } else {
-                            app.status_message = Some("Session recreating...".to_string());
+                            app.status_message = Some("Session recreating...".to_owned());
                         }
                         app.close_recreate_dialog();
                     }
@@ -1078,7 +1078,7 @@ async fn handle_recreate_confirm_key(app: &mut App, key: KeyEvent) -> anyhow::Re
                         if let Err(e) = app.recreate_session_fresh(id).await {
                             app.status_message = Some(format!("Recreate fresh failed: {e}"));
                         } else {
-                            app.status_message = Some("Session recreating fresh...".to_string());
+                            app.status_message = Some("Session recreating fresh...".to_owned());
                         }
                         app.close_recreate_dialog();
                     }
@@ -1096,7 +1096,7 @@ async fn handle_recreate_confirm_key(app: &mut App, key: KeyEvent) -> anyhow::Re
                         if let Err(e) = app.update_session_image(id).await {
                             app.status_message = Some(format!("Update image failed: {e}"));
                         } else {
-                            app.status_message = Some("Updating image...".to_string());
+                            app.status_message = Some("Updating image...".to_owned());
                         }
                         app.close_recreate_dialog();
                     }
@@ -1111,7 +1111,7 @@ async fn handle_recreate_confirm_key(app: &mut App, key: KeyEvent) -> anyhow::Re
                         if let Err(e) = app.cleanup_session(id).await {
                             app.status_message = Some(format!("Cleanup failed: {e}"));
                         } else {
-                            app.status_message = Some("Session cleaned up".to_string());
+                            app.status_message = Some("Session cleaned up".to_owned());
                         }
                         app.close_recreate_dialog();
                     }
@@ -1224,13 +1224,13 @@ async fn handle_attached_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()>
         match key.code {
             KeyCode::Char('p') => {
                 if app.switch_to_previous_session().await? {
-                    app.status_message = Some("Switched to previous session".to_string());
+                    app.status_message = Some("Switched to previous session".to_owned());
                 }
                 return Ok(());
             }
             KeyCode::Char('n') => {
                 if app.switch_to_next_session().await? {
-                    app.status_message = Some("Switched to next session".to_string());
+                    app.status_message = Some("Switched to next session".to_owned());
                 }
                 return Ok(());
             }

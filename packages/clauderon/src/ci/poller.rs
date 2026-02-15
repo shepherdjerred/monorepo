@@ -9,6 +9,7 @@ use crate::core::{
 };
 
 /// CI status poller - polls GitHub PR checks for sessions with PRs
+#[derive(Debug)]
 pub struct CIPoller {
     manager: Arc<SessionManager>,
     ci_poll_interval: Duration,
@@ -153,10 +154,10 @@ impl CIPoller {
                     pr_url = %url,
                     "Discovered PR for session"
                 );
-                self.manager.link_pr(*session_id, url.to_string()).await?;
+                self.manager.link_pr(*session_id, url.to_owned()).await?;
 
                 // Fetch merge methods and repository settings once when PR is discovered
-                self.poll_pr_merge_methods(session_id, repo_path).await.ok(); // Don't fail if merge methods fetch fails
+                let _ = self.poll_pr_merge_methods(session_id, repo_path).await; // Don't fail if merge methods fetch fails
             }
         }
 
@@ -249,9 +250,8 @@ impl CIPoller {
             .ok_or_else(|| anyhow::anyhow!("Invalid PR URL: {}", pr_url))?;
 
         // First, get PR review status (from incoming merge button feature)
-        self.poll_pr_review_status(session_id, pr_number, repo_path)
-            .await
-            .ok(); // Don't fail if review status fetch fails
+        let _ = self.poll_pr_review_status(session_id, pr_number, repo_path)
+            .await; // Don't fail if review status fetch fails
 
         // Get CI check status using gh pr checks
         let checks_output = tokio::process::Command::new("gh")

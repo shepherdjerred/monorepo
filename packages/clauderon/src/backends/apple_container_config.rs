@@ -154,7 +154,7 @@ mod tests {
 
         for image in dangerous_images {
             let config = AppleContainerConfig {
-                container_image: Some(image.to_string()),
+                container_image: Some(image.to_owned()),
                 ..Default::default()
             };
             assert!(
@@ -168,7 +168,7 @@ mod tests {
     #[test]
     fn test_validate_valid_image() {
         let config = AppleContainerConfig {
-            container_image: Some("ghcr.io/anthropics/claude-code:latest".to_string()),
+            container_image: Some("ghcr.io/anthropics/claude-code:latest".to_owned()),
             ..Default::default()
         };
         assert!(config.validate().is_ok());

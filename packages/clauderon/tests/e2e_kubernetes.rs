@@ -1,3 +1,9 @@
+#![allow(clippy::allow_attributes, reason = "test files use allow for non-guaranteed lints")]
+#![allow(clippy::expect_used, reason = "test code")]
+#![allow(clippy::unwrap_used, reason = "test code")]
+#![allow(clippy::print_stdout, reason = "test output")]
+#![allow(clippy::print_stderr, reason = "test output")]
+
 //! End-to-end tests for Kubernetes backend
 //!
 //! These tests require a Kubernetes cluster to be accessible via kubectl.
@@ -145,18 +151,18 @@ async fn test_kubernetes_attach_command() {
     assert_eq!(cmd[2], "-it", "Should attach interactively");
 
     // Should include namespace flag
-    assert!(cmd.contains(&"-n".to_string()), "Should include -n flag");
+    assert!(cmd.contains(&"-n".to_owned()), "Should include -n flag");
 
     // Should reference pod name
     assert!(
-        cmd.contains(&"test-pod".to_string()),
+        cmd.contains(&"test-pod".to_owned()),
         "Should reference pod name"
     );
 
     // Should specify container
-    assert!(cmd.contains(&"-c".to_string()), "Should include -c flag");
+    assert!(cmd.contains(&"-c".to_owned()), "Should include -c flag");
     assert!(
-        cmd.contains(&"claude".to_string()),
+        cmd.contains(&"claude".to_owned()),
         "Should specify claude container"
     );
 }

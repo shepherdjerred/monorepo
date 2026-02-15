@@ -1,3 +1,9 @@
+#![allow(clippy::allow_attributes, reason = "test files use allow for non-guaranteed lints")]
+#![allow(clippy::expect_used, reason = "test code")]
+#![allow(clippy::unwrap_used, reason = "test code")]
+#![allow(clippy::print_stdout, reason = "test output")]
+#![allow(clippy::print_stderr, reason = "test output")]
+
 //! Integration Lifecycle Tests
 //!
 //! These tests verify the complete user flow works end-to-end:

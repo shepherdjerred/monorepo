@@ -1,3 +1,7 @@
+#![allow(clippy::allow_attributes, reason = "test files use allow for non-guaranteed lints")]
+#![allow(clippy::expect_used, reason = "test code")]
+#![allow(clippy::unwrap_used, reason = "test code")]
+
 //! Integration tests for per-session proxy filtering and access modes.
 //!
 //! These tests verify the complete lifecycle of session-specific proxies:
@@ -223,7 +227,7 @@ async fn test_create_session_with_read_only_mode() {
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
             None,
-            "Test prompt".to_string(),
+            "Test prompt".to_owned(),
             BackendType::Docker,
             AgentType::ClaudeCode,
             None, // model
@@ -261,7 +265,7 @@ async fn test_create_session_with_read_write_mode() {
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
             None,
-            "Test prompt".to_string(),
+            "Test prompt".to_owned(),
             BackendType::Docker,
             AgentType::ClaudeCode,
             None, // model
@@ -295,7 +299,7 @@ async fn test_zellij_backend_ignores_proxy_port() {
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
             None,
-            "Test prompt".to_string(),
+            "Test prompt".to_owned(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
             None, // model
@@ -331,7 +335,7 @@ async fn test_update_access_mode_by_name() {
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
             None,
-            "Test prompt".to_string(),
+            "Test prompt".to_owned(),
             BackendType::Docker,
             AgentType::ClaudeCode,
             None, // model
@@ -377,7 +381,7 @@ async fn test_update_access_mode_by_id() {
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
             None,
-            "Test prompt".to_string(),
+            "Test prompt".to_owned(),
             BackendType::Docker,
             AgentType::ClaudeCode,
             None, // model
@@ -548,7 +552,7 @@ async fn test_access_mode_persists_across_restarts() {
             .create_session(
                 repo_dir.path().to_string_lossy().to_string(),
                 None,
-                "Test".to_string(),
+                "Test".to_owned(),
                 BackendType::Zellij, // Changed from Docker to avoid proxy requirement
                 AgentType::ClaudeCode,
                 None, // model
@@ -636,14 +640,14 @@ async fn test_proxy_port_persists_in_database() {
 
         // Manually create and update a session to set proxy_port
         let mut session = clauderon::core::Session::new(clauderon::core::SessionConfig {
-            name: "proxy-port-test-abc123".to_string(),
+            name: "proxy-port-test-abc123".to_owned(),
             title: None,
             description: None,
             repo_path: "/tmp/repo".into(),
             worktree_path: "/tmp/worktree".into(),
             subdirectory: std::path::PathBuf::new(),
-            branch_name: "test-branch".to_string(),
-            initial_prompt: "test".to_string(),
+            branch_name: "test-branch".to_owned(),
+            initial_prompt: "test".to_owned(),
             backend: BackendType::Docker,
             agent: AgentType::ClaudeCode,
             dangerous_skip_checks: true,
@@ -655,7 +659,7 @@ async fn test_proxy_port_persists_in_database() {
 
         session.set_proxy_port(18234);
         session.set_status(SessionStatus::Running);
-        session.set_backend_id("container-123".to_string());
+        session.set_backend_id("container-123".to_owned());
 
         store
             .save_session(&session)
@@ -699,7 +703,7 @@ async fn test_delete_session_cleans_up_proxy() {
         .create_session(
             repo_dir.path().to_string_lossy().to_string(),
             None,
-            "Test prompt".to_string(),
+            "Test prompt".to_owned(),
             BackendType::Docker,
             AgentType::ClaudeCode,
             None, // model

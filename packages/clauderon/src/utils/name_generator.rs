@@ -16,9 +16,9 @@ pub struct SessionMetadata {
 impl Default for SessionMetadata {
     fn default() -> Self {
         Self {
-            title: "New Session".to_string(),
-            description: "AI coding session".to_string(),
-            branch_name: "session".to_string(),
+            title: "New Session".to_owned(),
+            description: "AI coding session".to_owned(),
+            branch_name: "session".to_owned(),
         }
     }
 }
@@ -130,7 +130,7 @@ async fn generate_with_timeout(
         call_claude_cli(repo_path, initial_prompt),
     )
     .await
-    .map_err(|_| {
+    .map_err(|_elapsed| {
         tracing::error!(
             timeout_secs = TIMEOUT_SECS,
             repo_path = %repo_path,
@@ -261,14 +261,12 @@ async fn call_claude_cli(repo_path: &str, initial_prompt: &str) -> anyhow::Resul
     let title = structured_output
         .get("title")
         .and_then(|v| v.as_str())
-        .unwrap_or("New Session")
-        .to_string();
+        .unwrap_or("New Session").to_owned();
 
     let description = structured_output
         .get("description")
         .and_then(|v| v.as_str())
-        .unwrap_or("AI coding session")
-        .to_string();
+        .unwrap_or("AI coding session").to_owned();
 
     // branch_name is REQUIRED (only field we can't have a good fallback for)
     let branch_name_raw = structured_output

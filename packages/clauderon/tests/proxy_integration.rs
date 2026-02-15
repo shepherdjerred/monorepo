@@ -1,3 +1,7 @@
+#![allow(clippy::allow_attributes, reason = "test files use allow for non-guaranteed lints")]
+#![allow(clippy::expect_used, reason = "test code")]
+#![allow(clippy::unwrap_used, reason = "test code")]
+
 //! Integration tests for proxy configuration flow.
 //!
 //! These tests verify that proxy configuration properly flows through
@@ -18,8 +22,8 @@ fn test_proxy_config_flows_to_container_args() {
     // Create kube and talos directories
     let kube_dir = clauderon_dir.path().join("kube");
     let talos_dir = clauderon_dir.path().join("talos");
-    std::fs::create_dir(&kube_dir).expect("Failed to create kube dir");
-    std::fs::create_dir(&talos_dir).expect("Failed to create talos dir");
+    std::fs::create_dir_all(&kube_dir).expect("Failed to create kube dir");
+    std::fs::create_dir_all(&talos_dir).expect("Failed to create talos dir");
     std::fs::write(kube_dir.join("config"), "dummy").expect("Failed to write kube config");
     std::fs::write(talos_dir.join("config"), "dummy").expect("Failed to write talos config");
 
@@ -250,7 +254,7 @@ fn test_clauderon_dir_in_volume_mounts() {
 
     // Create kube directory
     let kube_dir = clauderon_dir.path().join("kube");
-    std::fs::create_dir(&kube_dir).expect("Failed to create kube dir");
+    std::fs::create_dir_all(&kube_dir).expect("Failed to create kube dir");
     std::fs::write(kube_dir.join("config"), "dummy").expect("Failed to write kube config");
 
     let proxy_config = DockerProxyConfig::new(18080, clauderon_dir.path().to_path_buf());

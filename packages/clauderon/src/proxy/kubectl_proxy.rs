@@ -17,6 +17,15 @@ pub struct KubectlProxy {
     process: Option<Child>,
 }
 
+impl std::fmt::Debug for KubectlProxy {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("KubectlProxy")
+            .field("port", &self.port)
+            .field("running", &self.process.is_some())
+            .finish()
+    }
+}
+
 impl KubectlProxy {
     /// Create a new kubectl proxy instance.
     #[must_use]

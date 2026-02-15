@@ -78,10 +78,10 @@ async fn rewrite_refresh_request(
     let collected = body
         .collect()
         .await
-        .map_err(|_| build_error_response("INVALID_REFRESH_BODY"))?;
+        .map_err(|_err| build_error_response("INVALID_REFRESH_BODY"))?;
     let body_bytes = collected.to_bytes();
     let mut json: Value = serde_json::from_slice(&body_bytes)
-        .map_err(|_| build_error_response("INVALID_REFRESH_PAYLOAD"))?;
+        .map_err(|_err| build_error_response("INVALID_REFRESH_PAYLOAD"))?;
 
     let Some(token_value) = json.get_mut("refresh_token") else {
         return Err(build_error_response("MISSING_REFRESH_TOKEN_FIELD"));
@@ -89,7 +89,7 @@ async fn rewrite_refresh_request(
     *token_value = Value::String(refresh_token);
 
     let updated_body =
-        serde_json::to_vec(&json).map_err(|_| build_error_response("INVALID_REFRESH_PAYLOAD"))?;
+        serde_json::to_vec(&json).map_err(|_err| build_error_response("INVALID_REFRESH_PAYLOAD"))?;
     let updated_body = String::from_utf8(updated_body).unwrap_or_default();
     *req.body_mut() = Body::from(updated_body);
     Ok(())
@@ -132,7 +132,7 @@ async fn rewrite_refresh_response(
         "id_token": dummy_id_token(credentials.codex_account_id().as_deref()),
     });
     let dummy_bytes = serde_json::to_vec(&dummy_body).unwrap_or_else(|_| b"{}".to_vec());
-    let dummy_body = String::from_utf8(dummy_bytes).unwrap_or_else(|_| "{}".to_string());
+    let dummy_body = String::from_utf8(dummy_bytes).unwrap_or_else(|_| "{}".to_owned());
 
     // Remove Content-Length header since we've replaced the body
     let mut parts = parts;
@@ -142,6 +142,7 @@ async fn rewrite_refresh_response(
 }
 
 /// HTTP auth proxy that intercepts HTTPS and injects auth headers.
+#[expect(missing_debug_implementations, reason = "contains non-Debug fields (RcgenAuthority, Arc<RwLock>)")]
 pub struct HttpAuthProxy {
     /// Listen address.
     addr: SocketAddr,
@@ -280,6 +281,7 @@ fn classify_client_error(err: &ClientError) -> &'static str {
 
 /// Build an error response with proper fallback handling.
 fn build_error_response(error_type: &'static str) -> Response<Body> {
+    #[expect(clippy::expect_used, reason = "building a response with valid constant parts cannot fail")]
     Response::builder()
         .status(502)
         .header("X-Proxy-Error-Type", error_type)
@@ -326,9 +328,9 @@ impl HttpHandler for AuthInjector {
             .unwrap_or_default();
 
         let method = req.method().to_string();
-        let path = req.uri().path().to_string();
+        let path = req.uri().path().to_owned();
         let version = req.version();
-        let host_match = normalize_host(&host).to_string();
+        let host_match = normalize_host(&host).to_owned();
 
         // Determine if this is a refresh request (needed for response rewriting)
         let auth_refresh = is_refresh_request(&host_match, &path, req.method());
@@ -440,7 +442,7 @@ impl HttpHandler for AuthInjector {
 
             if let Some(pending) = pending {
                 // Safe cast: duration in milliseconds unlikely to exceed u64::MAX
-                #[allow(clippy::cast_possible_truncation)]
+                #[expect(clippy::cast_possible_truncation, reason = "duration in ms will not exceed u64::MAX")]
                 let duration_ms = pending.start_time.elapsed().as_millis() as u64;
                 should_rewrite_refresh = pending.auth_refresh;
 
@@ -506,7 +508,7 @@ impl HttpHandler for AuthInjector {
 
             if let Some(pending) = pending {
                 // Safe cast: duration in milliseconds unlikely to exceed u64::MAX
-                #[allow(clippy::cast_possible_truncation)]
+                #[expect(clippy::cast_possible_truncation, reason = "duration in ms will not exceed u64::MAX")]
                 let duration_ms = pending.start_time.elapsed().as_millis() as u64;
 
                 // Log full error details for debugging (not sent to client)
@@ -591,9 +593,9 @@ impl HttpHandler for FilteringHandler {
             .unwrap_or_default();
 
         let method = req.method().to_string();
-        let path = req.uri().path().to_string();
+        let path = req.uri().path().to_owned();
         let version = req.version();
-        let host_match = normalize_host(&host).to_string();
+        let host_match = normalize_host(&host).to_owned();
 
         // Determine if this is a refresh request (needed for response rewriting)
         let auth_refresh = is_refresh_request(&host_match, &path, req.method());
@@ -638,6 +640,7 @@ impl HttpHandler for FilteringHandler {
                         "Blocked Kubernetes API write operation in read-only mode"
                     );
 
+                    #[expect(clippy::unwrap_used, reason = "building a response with valid constant parts cannot fail")]
                     return RequestOrResponse::Response(
                         Response::builder()
                             .status(403)
@@ -657,6 +660,7 @@ impl HttpHandler for FilteringHandler {
                         "Blocked write operation in read-only mode"
                     );
 
+                    #[expect(clippy::unwrap_used, reason = "building a response with valid constant parts cannot fail")]
                     return RequestOrResponse::Response(
                         Response::builder()
                             .status(403)
@@ -751,7 +755,7 @@ impl HttpHandler for FilteringHandler {
 
             if let Some(pending) = pending {
                 // Safe cast: duration in milliseconds unlikely to exceed u64::MAX
-                #[allow(clippy::cast_possible_truncation)]
+                #[expect(clippy::cast_possible_truncation, reason = "duration in ms will not exceed u64::MAX")]
                 let duration_ms = pending.start_time.elapsed().as_millis() as u64;
                 should_rewrite_refresh = pending.auth_refresh;
 
@@ -821,7 +825,7 @@ impl HttpHandler for FilteringHandler {
 
             if let Some(pending) = pending {
                 // Safe cast: duration in milliseconds unlikely to exceed u64::MAX
-                #[allow(clippy::cast_possible_truncation)]
+                #[expect(clippy::cast_possible_truncation, reason = "duration in ms will not exceed u64::MAX")]
                 let duration_ms = pending.start_time.elapsed().as_millis() as u64;
 
                 // Log full error details for debugging (not sent to client)

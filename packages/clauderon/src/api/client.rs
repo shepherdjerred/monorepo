@@ -12,9 +12,16 @@ use super::types::ReconcileReportDto;
 /// Callback type for progress updates
 pub type ProgressCallback = Box<dyn Fn(ProgressStep) + Send + Sync>;
 
-/// Client for communicating with the clauderon daemon
+/// Client for communicating with the clauderon daemon.
 pub struct Client {
+    /// Unix socket connection to the daemon.
     stream: UnixStream,
+}
+
+impl std::fmt::Debug for Client {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Client").finish()
+    }
 }
 
 impl Client {
@@ -113,7 +120,7 @@ impl Client {
     /// Returns an error if the session is not found or the request fails.
     pub async fn get_session(&mut self, id: &str) -> anyhow::Result<Session> {
         let response = self
-            .send_request(Request::GetSession { id: id.to_string() })
+            .send_request(Request::GetSession { id: id.to_owned() })
             .await?;
 
         match response {
@@ -200,7 +207,7 @@ impl Client {
     /// Returns an error if the session is not found or the request fails.
     pub async fn delete_session(&mut self, id: &str) -> anyhow::Result<()> {
         let response = self
-            .send_request(Request::DeleteSession { id: id.to_string() })
+            .send_request(Request::DeleteSession { id: id.to_owned() })
             .await?;
 
         match response {
@@ -219,7 +226,7 @@ impl Client {
     /// Returns an error if the session is not found or the request fails.
     pub async fn archive_session(&mut self, id: &str) -> anyhow::Result<()> {
         let response = self
-            .send_request(Request::ArchiveSession { id: id.to_string() })
+            .send_request(Request::ArchiveSession { id: id.to_owned() })
             .await?;
 
         match response {
@@ -238,7 +245,7 @@ impl Client {
     /// Returns an error if the session is not found, not archived, or the request fails.
     pub async fn unarchive_session(&mut self, id: &str) -> anyhow::Result<()> {
         let response = self
-            .send_request(Request::UnarchiveSession { id: id.to_string() })
+            .send_request(Request::UnarchiveSession { id: id.to_owned() })
             .await?;
 
         match response {
@@ -257,7 +264,7 @@ impl Client {
     /// Returns an error if the session is not found or refresh fails.
     pub async fn refresh_session(&mut self, id: &str) -> anyhow::Result<()> {
         let response = self
-            .send_request(Request::RefreshSession { id: id.to_string() })
+            .send_request(Request::RefreshSession { id: id.to_owned() })
             .await?;
 
         match response {
@@ -276,7 +283,7 @@ impl Client {
     /// Returns an error if the session is not found or the request fails.
     pub async fn attach_session(&mut self, id: &str) -> anyhow::Result<Vec<String>> {
         let response = self
-            .send_request(Request::AttachSession { id: id.to_string() })
+            .send_request(Request::AttachSession { id: id.to_owned() })
             .await?;
 
         match response {
@@ -336,7 +343,7 @@ impl Client {
     ) -> anyhow::Result<()> {
         let response = self
             .send_request(Request::UpdateAccessMode {
-                id: id.to_string(),
+                id: id.to_owned(),
                 access_mode,
             })
             .await?;
@@ -358,8 +365,8 @@ impl Client {
     pub async fn send_prompt(&mut self, session_name: &str, prompt: &str) -> anyhow::Result<()> {
         let response = self
             .send_request(Request::SendPrompt {
-                session: session_name.to_string(),
-                prompt: prompt.to_string(),
+                session: session_name.to_owned(),
+                prompt: prompt.to_owned(),
             })
             .await?;
 
@@ -535,7 +542,7 @@ impl Client {
     ) -> anyhow::Result<()> {
         let response = self
             .send_request(Request::MergePr {
-                id: id.to_string(),
+                id: id.to_owned(),
                 method,
                 delete_branch,
             })
@@ -605,45 +612,27 @@ impl ApiClient for Client {
     }
 
     async fn start_session(&mut self, id: uuid::Uuid) -> anyhow::Result<()> {
-        #[allow(clippy::needless_borrow)]
-        {
-            Self::start_session(self, id).await
-        }
+        Self::start_session(self, id).await
     }
 
     async fn wake_session(&mut self, id: uuid::Uuid) -> anyhow::Result<()> {
-        #[allow(clippy::needless_borrow)]
-        {
-            Self::wake_session(self, id).await
-        }
+        Self::wake_session(self, id).await
     }
 
     async fn recreate_session(&mut self, id: uuid::Uuid) -> anyhow::Result<()> {
-        #[allow(clippy::needless_borrow)]
-        {
-            Self::recreate_session(self, id).await
-        }
+        Self::recreate_session(self, id).await
     }
 
     async fn recreate_session_fresh(&mut self, id: uuid::Uuid) -> anyhow::Result<()> {
-        #[allow(clippy::needless_borrow)]
-        {
-            Self::recreate_session_fresh(self, id).await
-        }
+        Self::recreate_session_fresh(self, id).await
     }
 
     async fn update_session_image(&mut self, id: uuid::Uuid) -> anyhow::Result<()> {
-        #[allow(clippy::needless_borrow)]
-        {
-            Self::update_session_image(self, id).await
-        }
+        Self::update_session_image(self, id).await
     }
 
     async fn cleanup_session(&mut self, id: uuid::Uuid) -> anyhow::Result<()> {
-        #[allow(clippy::needless_borrow)]
-        {
-            Self::cleanup_session(self, id).await
-        }
+        Self::cleanup_session(self, id).await
     }
 
     async fn merge_pr(

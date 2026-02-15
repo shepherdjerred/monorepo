@@ -9,7 +9,9 @@ fn main() {
     let output_dir = PathBuf::from("web/shared/src/generated");
 
     // Ensure output directory exists
-    std::fs::create_dir_all(&output_dir).expect("Failed to create output directory");
+    if let Err(e) = std::fs::create_dir_all(&output_dir) {
+        panic!("Failed to create output directory: {e}");
+    }
 
     // Run TypeShare CLI to generate TypeScript types
     // This requires 'typeshare' to be installed: cargo install typeshare-cli

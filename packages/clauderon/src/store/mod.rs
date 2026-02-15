@@ -1,3 +1,6 @@
+//! Persistence layer for sessions and events.
+
+/// SQLite storage implementation.
 pub mod sqlite;
 
 use async_trait::async_trait;
@@ -12,8 +15,11 @@ pub use sqlite::SqliteStore;
 /// Recent repository entry
 #[derive(Debug, Clone)]
 pub struct RecentRepo {
+    /// Absolute path to the repository root.
     pub repo_path: PathBuf,
+    /// Subdirectory within the repository.
     pub subdirectory: PathBuf,
+    /// When this repository was last used.
     pub last_used: DateTime<Utc>,
 }
 

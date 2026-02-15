@@ -7,6 +7,7 @@ use std::path::PathBuf;
 /// Panics if the home directory cannot be determined.
 #[must_use]
 pub fn base_dir() -> PathBuf {
+    #[expect(clippy::expect_used, reason = "home directory is required for operation")]
     dirs::home_dir()
         .expect("Could not find home directory")
         .join(".clauderon")
@@ -96,7 +97,7 @@ pub fn config_path() -> PathBuf {
 /// ```
 #[must_use]
 pub fn translate_image_path_to_container(host_path: &str) -> String {
-    let home = std::env::var("HOME").unwrap_or_else(|_| "/root".to_string());
+    let home = std::env::var("HOME").unwrap_or_else(|_| "/root".to_owned());
     let host_uploads_prefix = format!("{home}/.clauderon/uploads");
 
     if host_path.starts_with(&host_uploads_prefix) {
@@ -104,6 +105,6 @@ pub fn translate_image_path_to_container(host_path: &str) -> String {
         host_path.replace(&host_uploads_prefix, "/workspace/.clauderon/uploads")
     } else {
         // Path not in uploads dir - pass through unchanged (e.g., relative paths to workspace)
-        host_path.to_string()
+        host_path.to_owned()
     }
 }

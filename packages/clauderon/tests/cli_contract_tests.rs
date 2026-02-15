@@ -1,3 +1,7 @@
+#![allow(clippy::allow_attributes, reason = "test files use allow for non-guaranteed lints")]
+#![allow(clippy::expect_used, reason = "test code")]
+#![allow(clippy::unwrap_used, reason = "test code")]
+
 //! CLI Contract Tests (Tier 2)
 //!
 //! These tests validate that generated CLI commands follow the expected
@@ -244,7 +248,7 @@ fn test_zellij_create_background_schema() {
 
     // Must have --create-background flag
     assert!(
-        args.contains(&"--create-background".to_string()),
+        args.contains(&"--create-background".to_owned()),
         "Must have --create-background flag: {args:?}"
     );
 

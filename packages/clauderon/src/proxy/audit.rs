@@ -48,6 +48,14 @@ pub struct AuditLogger {
     path: PathBuf,
 }
 
+impl std::fmt::Debug for AuditLogger {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("AuditLogger")
+            .field("path", &self.path)
+            .finish_non_exhaustive()
+    }
+}
+
 impl AuditLogger {
     /// Create a new audit logger.
     pub fn new(path: PathBuf) -> anyhow::Result<Self> {
@@ -121,9 +129,9 @@ mod tests {
             timestamp: Utc::now(),
             correlation_id: Some(Uuid::new_v4()),
             session_id: None,
-            service: "github".to_string(),
-            method: "GET".to_string(),
-            path: "/user".to_string(),
+            service: "github".to_owned(),
+            method: "GET".to_owned(),
+            path: "/user".to_owned(),
             auth_injected: true,
             response_code: Some(200),
             duration_ms: 150,
@@ -146,9 +154,9 @@ mod tests {
             timestamp: Utc::now(),
             correlation_id: Some(Uuid::new_v4()),
             session_id: Some(Uuid::new_v4()),
-            service: "anthropic".to_string(),
-            method: "POST".to_string(),
-            path: "/v1/messages".to_string(),
+            service: "anthropic".to_owned(),
+            method: "POST".to_owned(),
+            path: "/v1/messages".to_owned(),
             auth_injected: true,
             response_code: Some(200),
             duration_ms: 500,

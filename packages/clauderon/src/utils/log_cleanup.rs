@@ -64,7 +64,7 @@ pub fn cleanup_old_logs(
                         if std::fs::remove_file(&path).is_ok() {
                             result.removed += 1;
                         } else {
-                            result.failed.push(name.to_string());
+                            result.failed.push(name.to_owned());
                         }
                     }
                 }

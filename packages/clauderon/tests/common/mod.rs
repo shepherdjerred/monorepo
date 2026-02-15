@@ -291,6 +291,7 @@ pub fn init_git_repo_with_branch(path: &Path, remote_url: &str, branch_name: &st
 ///
 /// Uses `sprite -s <name> destroy --force` for reliable cleanup.
 /// This should be used instead of the backend's delete method for test cleanup.
+#[allow(clippy::print_stdout, clippy::print_stderr, reason = "test cleanup output")]
 pub fn force_destroy_sprite(name: &str) {
     if name.is_empty() {
         return;
@@ -380,7 +381,7 @@ impl IsolatedEnv {
     pub fn no_kubeconfig() -> anyhow::Result<Self> {
         let temp_dir = tempfile::TempDir::new()?;
         let home_dir = temp_dir.path().join("home");
-        std::fs::create_dir(&home_dir)?;
+        std::fs::create_dir_all(&home_dir)?;
 
         Ok(Self {
             temp_dir,

@@ -10,7 +10,7 @@ use rcgen::{
 use rustls::crypto::aws_lc_rs::default_provider;
 
 /// Proxy CA for generating certificates for HTTPS interception.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ProxyCa {
     /// Path where CA cert PEM is stored.
     cert_path: PathBuf,
@@ -139,9 +139,19 @@ impl ProxyCa {
 
         // Add localhost and common IPs as subject alternative names
         server_params.subject_alt_names = vec![
-            rcgen::SanType::DnsName("localhost".to_string().try_into().unwrap()),
+            rcgen::SanType::DnsName(
+                "localhost"
+                    .to_owned()
+                    .try_into()
+                    .map_err(|e| anyhow::anyhow!("invalid DNS name 'localhost': {e}"))?,
+            ),
             rcgen::SanType::IpAddress(std::net::IpAddr::V4(std::net::Ipv4Addr::LOCALHOST)),
-            rcgen::SanType::DnsName("host.docker.internal".to_string().try_into().unwrap()),
+            rcgen::SanType::DnsName(
+                "host.docker.internal"
+                    .to_owned()
+                    .try_into()
+                    .map_err(|e| anyhow::anyhow!("invalid DNS name 'host.docker.internal': {e}"))?,
+            ),
         ];
 
         // Valid for 1 year

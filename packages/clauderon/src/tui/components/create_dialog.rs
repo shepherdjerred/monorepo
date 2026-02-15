@@ -43,7 +43,7 @@ pub fn is_k8s_proxy_configured() -> bool {
 /// Calculate layout for the create dialog.
 /// Returns (total_height, constraints) for consistent sizing between ui.rs and render().
 #[must_use]
-#[allow(clippy::cast_possible_truncation)]
+#[expect(clippy::cast_possible_truncation, reason = "layout values are small and clamped within u16 range")]
 pub fn calculate_layout(dialog: &CreateDialogState) -> (u16, Vec<Constraint>) {
     // Dynamic prompt height: min 5 lines, max 15
     let prompt_lines = dialog.prompt.lines().count().max(1);
@@ -107,7 +107,7 @@ pub fn calculate_layout(dialog: &CreateDialogState) -> (u16, Vec<Constraint>) {
 }
 
 /// Render the create session dialog
-pub fn render(frame: &mut Frame, app: &App, area: Rect) {
+pub fn render(frame: &mut Frame<'_>, app: &App, area: Rect) {
     let block = Block::default()
         .title(" New Session ")
         .borders(Borders::ALL)
@@ -535,7 +535,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
     }
 }
 
-fn render_text_field(frame: &mut Frame, label: &str, value: &str, focused: bool, area: Rect) {
+fn render_text_field(frame: &mut Frame<'_>, label: &str, value: &str, focused: bool, area: Rect) {
     let style = if focused {
         Style::default().fg(Color::Yellow)
     } else {
@@ -551,9 +551,9 @@ fn render_text_field(frame: &mut Frame, label: &str, value: &str, focused: bool,
     let display_value = if focused {
         format!("{value}▏")
     } else if value.is_empty() {
-        "(not set)".to_string()
+        "(not set)".to_owned()
     } else {
-        value.to_string()
+        value.to_owned()
     };
 
     let value_style = if value.is_empty() && !focused {
@@ -566,7 +566,7 @@ fn render_text_field(frame: &mut Frame, label: &str, value: &str, focused: bool,
     frame.render_widget(paragraph, area);
 }
 
-fn render_repo_path_field(frame: &mut Frame, label: &str, value: &str, focused: bool, area: Rect) {
+fn render_repo_path_field(frame: &mut Frame<'_>, label: &str, value: &str, focused: bool, area: Rect) {
     let style = if focused {
         Style::default().fg(Color::Yellow)
     } else {
@@ -580,12 +580,12 @@ fn render_repo_path_field(frame: &mut Frame, label: &str, value: &str, focused: 
 
     let display_value = if value.is_empty() {
         if focused {
-            "(Press Enter to browse)".to_string()
+            "(Press Enter to browse)".to_owned()
         } else {
-            "(no directory)".to_string()
+            "(no directory)".to_owned()
         }
     } else {
-        value.to_string()
+        value.to_owned()
     };
 
     let value_style = if value.is_empty() {
@@ -598,14 +598,14 @@ fn render_repo_path_field(frame: &mut Frame, label: &str, value: &str, focused: 
     frame.render_widget(paragraph, area);
 }
 
-fn render_images_field(frame: &mut Frame, images: &[String], area: Rect) {
+fn render_images_field(frame: &mut Frame<'_>, images: &[String], area: Rect) {
     let block = Block::default()
         .title(" 📎 Attached Images (Ctrl+Backspace to remove last) ")
         .borders(Borders::ALL)
         .border_style(Style::default().fg(Color::Blue));
 
     // Create list of image file names
-    let image_lines: Vec<Line> = images
+    let image_lines: Vec<Line<'_>> = images
         .iter()
         .enumerate()
         .map(|(i, path)| {
@@ -630,7 +630,7 @@ fn render_images_field(frame: &mut Frame, images: &[String], area: Rect) {
 }
 
 fn render_multiline_field(
-    frame: &mut Frame,
+    frame: &mut Frame<'_>,
     label: &str,
     value: &str,
     focused: bool,
@@ -698,7 +698,7 @@ fn render_multiline_field(
 
     let display_value = if visible_lines_vec.is_empty() && focused {
         // Empty prompt with cursor
-        "▏".to_string()
+        "▏".to_owned()
     } else if visible_lines_vec.is_empty() {
         String::new()
     } else {
@@ -712,7 +712,7 @@ fn render_multiline_field(
 }
 
 fn render_radio_field(
-    frame: &mut Frame,
+    frame: &mut Frame<'_>,
     label: &str,
     options: &[(&str, bool)],
     focused: bool,
@@ -724,7 +724,7 @@ fn render_radio_field(
         Style::default()
     };
 
-    let spans: Vec<Span> = options
+    let spans: Vec<Span<'_>> = options
         .iter()
         .enumerate()
         .flat_map(|(i, (name, selected))| {
@@ -758,7 +758,7 @@ fn render_radio_field(
 /// Render backend selection field with availability status
 /// Options format: (label, selected, available)
 fn render_backend_field(
-    frame: &mut Frame,
+    frame: &mut Frame<'_>,
     label: &str,
     options: &[(&str, bool, bool)],
     focused: bool,
@@ -770,7 +770,7 @@ fn render_backend_field(
         Style::default()
     };
 
-    let spans: Vec<Span> = options
+    let spans: Vec<Span<'_>> = options
         .iter()
         .enumerate()
         .flat_map(|(i, (name, selected, available))| {
@@ -809,7 +809,7 @@ fn render_backend_field(
     frame.render_widget(paragraph, area);
 }
 
-fn render_checkbox_field(frame: &mut Frame, label: &str, checked: bool, focused: bool, area: Rect) {
+fn render_checkbox_field(frame: &mut Frame<'_>, label: &str, checked: bool, focused: bool, area: Rect) {
     let style = if focused {
         Style::default().fg(Color::Yellow)
     } else {
@@ -828,7 +828,7 @@ fn render_checkbox_field(frame: &mut Frame, label: &str, checked: bool, focused:
     frame.render_widget(paragraph, area);
 }
 
-fn render_buttons(frame: &mut Frame, focused: bool, create_focused: bool, area: Rect) {
+fn render_buttons(frame: &mut Frame<'_>, focused: bool, create_focused: bool, area: Rect) {
     let cancel_style = if focused && !create_focused {
         Style::default()
             .fg(Color::Black)
@@ -859,7 +859,7 @@ fn render_buttons(frame: &mut Frame, focused: bool, create_focused: bool, area: 
 }
 
 fn render_loading(
-    frame: &mut Frame,
+    frame: &mut Frame<'_>,
     message: &str,
     progress: Option<&(u32, u32, String)>,
     tick: u64,
@@ -883,7 +883,7 @@ fn render_loading(
     let display_msg = if let Some((step, total, step_msg)) = progress {
         format!("Step {step}/{total}: {step_msg}")
     } else {
-        message.to_string()
+        message.to_owned()
     };
 
     let text = vec![

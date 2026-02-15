@@ -6,10 +6,12 @@ use tokio::sync::RwLock;
 use uuid::Uuid;
 
 /// Allocates unique proxy ports for sessions
+#[derive(Debug)]
 pub struct PortAllocator {
     state: RwLock<AllocatorState>,
 }
 
+#[derive(Debug)]
 struct AllocatorState {
     base_port: u16,
     next_port: u16,

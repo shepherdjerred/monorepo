@@ -7,6 +7,12 @@ pub struct WebAuthnHandler {
     webauthn: Arc<Webauthn>,
 }
 
+impl std::fmt::Debug for WebAuthnHandler {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("WebAuthnHandler").finish()
+    }
+}
+
 impl WebAuthnHandler {
     /// Create a new WebAuthn handler
     ///

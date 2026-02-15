@@ -25,6 +25,12 @@ pub struct MockGitBackend {
     error_message: RwLock<String>,
 }
 
+impl std::fmt::Debug for MockGitBackend {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("MockGitBackend").finish_non_exhaustive()
+    }
+}
+
 impl MockGitBackend {
     /// Create a new mock git backend
     #[must_use]
@@ -32,7 +38,7 @@ impl MockGitBackend {
         Self {
             worktrees: RwLock::new(HashSet::new()),
             should_fail: AtomicBool::new(false),
-            error_message: RwLock::new("Mock failure".to_string()),
+            error_message: RwLock::new("Mock failure".to_owned()),
         }
     }
 
@@ -125,7 +131,7 @@ impl GitOperations for MockGitBackend {
         }
 
         // Return a mock branch name
-        Ok("mock-branch".to_string())
+        Ok("mock-branch".to_owned())
     }
 }
 
@@ -152,6 +158,14 @@ pub struct MockExecutionBackend {
     health_state: RwLock<super::traits::BackendResourceHealth>,
 }
 
+impl std::fmt::Debug for MockExecutionBackend {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("MockExecutionBackend")
+            .field("name_prefix", &self.name_prefix)
+            .finish_non_exhaustive()
+    }
+}
+
 impl MockExecutionBackend {
     /// Create a new mock execution backend with default prefix
     #[must_use]
@@ -165,7 +179,7 @@ impl MockExecutionBackend {
         Self {
             sessions: RwLock::new(HashSet::new()),
             should_fail: AtomicBool::new(false),
-            error_message: RwLock::new("Mock failure".to_string()),
+            error_message: RwLock::new("Mock failure".to_owned()),
             name_prefix: name_prefix.into(),
             exists_result: AtomicBool::new(true),
             health_state: RwLock::new(super::traits::BackendResourceHealth::Running),
@@ -290,8 +304,8 @@ impl ExecutionBackend for MockExecutionBackend {
     fn attach_command(&self, id: &str) -> Vec<String> {
         vec![
             self.name_prefix.clone(),
-            "attach".to_string(),
-            id.to_string(),
+            "attach".to_owned(),
+            id.to_owned(),
         ]
     }
 
@@ -301,7 +315,7 @@ impl ExecutionBackend for MockExecutionBackend {
             anyhow::bail!("{msg}");
         }
 
-        Ok("Mock output".to_string())
+        Ok("Mock output".to_owned())
     }
 
     fn capabilities(&self) -> super::traits::BackendCapabilities {

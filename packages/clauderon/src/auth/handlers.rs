@@ -21,21 +21,29 @@ use super::{
     webauthn::WebAuthnHandler,
 };
 
-/// Shared state for auth handlers
-#[derive(Clone)]
+/// Shared state for auth handlers.
+#[derive(Clone, Debug)]
 pub struct AuthState {
+    /// Database connection pool.
     pub pool: SqlitePool,
+    /// WebAuthn handler for passkey operations.
     pub webauthn: WebAuthnHandler,
+    /// Session store for managing auth sessions.
     pub session_store: SessionStore,
+    /// Whether authentication is required for this instance.
     pub requires_auth: bool,
 }
 
-/// Custom error type for auth handlers
+/// Custom error type for auth handlers.
 #[derive(Debug)]
 pub enum AuthError {
+    /// Internal database or infrastructure error.
     Database(anyhow::Error),
+    /// Resource not found.
     NotFound(String),
+    /// Invalid request parameters.
     BadRequest(String),
+    /// Authentication required or failed.
     Unauthorized(String),
 }
 
@@ -156,7 +164,7 @@ pub async fn register_start(
         .await?;
 
     if existing.is_some() {
-        return Err(AuthError::BadRequest("Username already exists".to_string()));
+        return Err(AuthError::BadRequest("Username already exists".to_owned()));
     }
 
     // Generate new user ID
@@ -218,7 +226,7 @@ pub async fn register_finish(
 
     let Some(challenge_row) = challenge_row else {
         return Err(AuthError::BadRequest(
-            "No registration challenge found".to_string(),
+            "No registration challenge found".to_owned(),
         ));
     };
 
@@ -231,7 +239,7 @@ pub async fn register_finish(
             .execute(&state.pool)
             .await?;
         return Err(AuthError::BadRequest(
-            "Registration challenge expired".to_string(),
+            "Registration challenge expired".to_owned(),
         ));
     }
 
@@ -340,7 +348,7 @@ pub async fn login_start(
     .await?;
 
     let Some(user_row) = user_row else {
-        return Err(AuthError::NotFound("User not found".to_string()));
+        return Err(AuthError::NotFound("User not found".to_owned()));
     };
 
     // Get user's passkeys
@@ -352,7 +360,7 @@ pub async fn login_start(
     .await?;
 
     if passkey_rows.is_empty() {
-        return Err(AuthError::BadRequest("User has no passkeys".to_string()));
+        return Err(AuthError::BadRequest("User has no passkeys".to_owned()));
     }
 
     // Convert to Passkey objects
@@ -362,7 +370,7 @@ pub async fn login_start(
         .collect();
 
     if passkeys.is_empty() {
-        return Err(AuthError::BadRequest("Failed to load passkeys".to_string()));
+        return Err(AuthError::BadRequest("Failed to load passkeys".to_owned()));
     }
 
     // Start WebAuthn authentication
@@ -419,7 +427,7 @@ pub async fn login_finish(
 
     let Some(challenge_row) = challenge_row else {
         return Err(AuthError::BadRequest(
-            "No authentication challenge found".to_string(),
+            "No authentication challenge found".to_owned(),
         ));
     };
 
@@ -432,7 +440,7 @@ pub async fn login_finish(
             .execute(&state.pool)
             .await?;
         return Err(AuthError::BadRequest(
-            "Authentication challenge expired".to_string(),
+            "Authentication challenge expired".to_owned(),
         ));
     }
 
@@ -463,7 +471,7 @@ pub async fn login_finish(
     .await?;
 
     let Some(user_row) = user_row else {
-        return Err(AuthError::NotFound("User not found".to_string()));
+        return Err(AuthError::NotFound("User not found".to_owned()));
     };
 
     let user_id = Uuid::parse_str(&user_row.id)?;

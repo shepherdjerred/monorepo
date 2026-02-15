@@ -1,3 +1,7 @@
+#![allow(clippy::allow_attributes, reason = "test files use allow for non-guaranteed lints")]
+#![allow(clippy::expect_used, reason = "test code")]
+#![allow(clippy::unwrap_used, reason = "test code")]
+
 //! Main flow integration tests
 //!
 //! Tests the core data flow: Store + Event sourcing without external dependencies
@@ -12,15 +16,15 @@ use tempfile::TempDir;
 /// Create a test session with default values
 fn create_test_session(name: &str) -> Session {
     Session::new(SessionConfig {
-        name: name.to_string(),
+        name: name.to_owned(),
         title: None,
         description: None,
         repo_path: "/tmp/test-repo".into(),
         worktree_path: format!("/tmp/worktrees/{name}").into(),
         subdirectory: std::path::PathBuf::new(),
-        branch_name: name.to_string(),
+        branch_name: name.to_owned(),
         repositories: None,
-        initial_prompt: "Test prompt".to_string(),
+        initial_prompt: "Test prompt".to_owned(),
         backend: BackendType::Zellij,
         agent: AgentType::ClaudeCode,
         dangerous_skip_checks: false,
@@ -112,14 +116,14 @@ async fn test_session_update() {
 
     // Update the session status
     session.set_status(SessionStatus::Running);
-    session.set_backend_id("zellij-session-123".to_string());
+    session.set_backend_id("zellij-session-123".to_owned());
 
     store.save_session(&session).await.unwrap();
 
     // Retrieve and verify
     let retrieved = store.get_session(session_id).await.unwrap().unwrap();
     assert_eq!(retrieved.status, SessionStatus::Running);
-    assert_eq!(retrieved.backend_id, Some("zellij-session-123".to_string()));
+    assert_eq!(retrieved.backend_id, Some("zellij-session-123".to_owned()));
 }
 
 #[tokio::test]
@@ -153,7 +157,7 @@ async fn test_event_recording() {
     let event3 = Event::new(
         session_id,
         EventType::BackendIdSet {
-            backend_id: "zellij-xyz".to_string(),
+            backend_id: "zellij-xyz".to_owned(),
         },
     );
     store.record_event(&event3).await.unwrap();
@@ -277,7 +281,7 @@ async fn test_event_replay_with_pr() {
         .record_event(&Event::new(
             session_id,
             EventType::PrLinked {
-                pr_url: "https://github.com/user/repo/pull/123".to_string(),
+                pr_url: "https://github.com/user/repo/pull/123".to_owned(),
             },
         ))
         .await
@@ -288,7 +292,7 @@ async fn test_event_replay_with_pr() {
     let replayed = replay_events(&events).unwrap();
     assert_eq!(
         replayed.pr_url,
-        Some("https://github.com/user/repo/pull/123".to_string())
+        Some("https://github.com/user/repo/pull/123".to_owned())
     );
 }
 
@@ -318,7 +322,7 @@ async fn test_event_replay_deleted_session() {
         .record_event(&Event::new(
             session_id,
             EventType::SessionDeleted {
-                reason: Some("Test deletion".to_string()),
+                reason: Some("Test deletion".to_owned()),
             },
         ))
         .await
@@ -396,7 +400,7 @@ async fn test_full_session_lifecycle_via_store() {
 
     // 4. Transition to Running
     session.set_status(SessionStatus::Running);
-    session.set_backend_id("backend-123".to_string());
+    session.set_backend_id("backend-123".to_owned());
     store.save_session(&session).await.unwrap();
     store
         .record_event(&Event::new(
@@ -410,13 +414,13 @@ async fn test_full_session_lifecycle_via_store() {
         .unwrap();
 
     // 5. Link PR
-    session.set_pr_url("https://github.com/test/repo/pull/1".to_string());
+    session.set_pr_url("https://github.com/test/repo/pull/1".to_owned());
     store.save_session(&session).await.unwrap();
     store
         .record_event(&Event::new(
             session_id,
             EventType::PrLinked {
-                pr_url: "https://github.com/test/repo/pull/1".to_string(),
+                pr_url: "https://github.com/test/repo/pull/1".to_owned(),
             },
         ))
         .await
@@ -435,7 +439,7 @@ async fn test_full_session_lifecycle_via_store() {
     assert_eq!(final_session.status, SessionStatus::Archived);
     assert_eq!(
         final_session.pr_url,
-        Some("https://github.com/test/repo/pull/1".to_string())
+        Some("https://github.com/test/repo/pull/1".to_owned())
     );
 
     // 8. Verify event log

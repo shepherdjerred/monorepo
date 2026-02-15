@@ -1,7 +1,12 @@
+/// HTTP handlers for authentication endpoints.
 pub mod handlers;
+/// Authentication middleware for protecting routes.
 pub mod middleware;
+/// Session store for managing auth sessions.
 pub mod session;
+/// Auth type definitions and database models.
 pub mod types;
+/// WebAuthn handler for passkey operations.
 pub mod webauthn;
 
 // Re-export commonly used types

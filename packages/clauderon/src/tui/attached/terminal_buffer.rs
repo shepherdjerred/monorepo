@@ -26,6 +26,12 @@ pub struct TerminalBuffer {
     user_scrolled: bool,
 }
 
+impl std::fmt::Debug for TerminalBuffer {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("TerminalBuffer").finish()
+    }
+}
+
 impl TerminalBuffer {
     /// Create a new terminal buffer with the given dimensions.
     #[must_use]

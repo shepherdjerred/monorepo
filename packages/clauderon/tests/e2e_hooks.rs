@@ -1,3 +1,10 @@
+#![allow(clippy::allow_attributes, reason = "test files use allow for non-guaranteed lints")]
+#![allow(clippy::expect_used, reason = "test code")]
+#![allow(clippy::unwrap_used, reason = "test code")]
+#![allow(clippy::print_stdout, reason = "test output")]
+#![allow(clippy::print_stderr, reason = "test output")]
+#![allow(clippy::unused_result_ok, reason = "test code")]
+
 //! End-to-end tests for Docker hook HTTP communication
 //!
 //! These tests verify that:

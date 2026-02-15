@@ -40,6 +40,12 @@ struct ConsoleSession {
     writer_task: JoinHandle<()>,
 }
 
+impl std::fmt::Debug for ConsoleSession {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ConsoleSession").finish_non_exhaustive()
+    }
+}
+
 impl ConsoleSession {
     async fn spawn_docker(backend_id: &str) -> anyhow::Result<Self> {
         // Create PTY and spawn docker attach
@@ -256,7 +262,7 @@ impl ConsoleSession {
         self.write_tx
             .send(WriteRequest::Bytes(data))
             .await
-            .map_err(|_| anyhow::anyhow!("Console PTY write channel closed"))
+            .map_err(|_err| anyhow::anyhow!("Console PTY write channel closed"))
     }
 
     async fn resize(&self, rows: u16, cols: u16) {
@@ -272,7 +278,7 @@ impl ConsoleSession {
         self.write_tx
             .send(WriteRequest::Signal { signal })
             .await
-            .map_err(|_| anyhow::anyhow!("Console PTY write channel closed"))
+            .map_err(|_err| anyhow::anyhow!("Console PTY write channel closed"))
     }
 
     async fn shutdown(&self) {
@@ -410,18 +416,24 @@ impl ConsoleSession {
     }
 }
 
-#[derive(Default)]
+/// Manages console PTY sessions for the web terminal.
+#[derive(Debug, Default)]
 pub struct ConsoleManager {
     sessions: Mutex<HashMap<Uuid, Arc<ConsoleSession>>>,
 }
 
 impl ConsoleManager {
+    /// Create a new console manager.
     #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
-    #[allow(clippy::missing_errors_doc)]
+    /// Ensure a console session exists for the given session, creating one if needed.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the console session cannot be spawned.
     pub async fn ensure_session(
         &self,
         session_id: Uuid,
@@ -460,6 +472,7 @@ impl ConsoleManager {
         Ok(handle)
     }
 
+    /// Remove and shut down a console session.
     pub async fn remove_session(&self, session_id: Uuid) {
         let session = self.sessions.lock().await.remove(&session_id);
         if let Some(session) = session {
@@ -468,7 +481,8 @@ impl ConsoleManager {
     }
 }
 
-#[derive(Clone)]
+/// Handle to an active console session.
+#[derive(Debug, Clone)]
 pub struct ConsoleSessionHandle {
     session: Arc<ConsoleSession>,
 }
@@ -478,6 +492,7 @@ impl ConsoleSessionHandle {
         Self { session }
     }
 
+    /// Subscribe to terminal output.
     #[must_use]
     pub fn subscribe(&self) -> broadcast::Receiver<Vec<u8>> {
         self.session.subscribe()
@@ -493,16 +508,25 @@ impl ConsoleSessionHandle {
         self.session.snapshot_and_subscribe().await
     }
 
-    #[allow(clippy::missing_errors_doc)]
+    /// Send input bytes to the console PTY.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the PTY write channel is closed.
     pub async fn send_input(&self, data: Vec<u8>) -> anyhow::Result<()> {
         self.session.send_input(data).await
     }
 
+    /// Resize the console terminal.
     pub async fn resize(&self, rows: u16, cols: u16) {
         self.session.resize(rows, cols).await;
     }
 
-    #[allow(clippy::missing_errors_doc)]
+    /// Send a signal to the console process.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the PTY write channel is closed.
     #[tracing::instrument(skip(self), fields(signal = ?signal))]
     pub async fn send_signal(&self, signal: SignalType) -> anyhow::Result<()> {
         self.session.send_signal(signal).await

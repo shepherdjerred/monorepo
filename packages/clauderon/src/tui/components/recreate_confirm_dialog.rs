@@ -10,7 +10,7 @@ use crate::core::session::{AvailableAction, ResourceState};
 use crate::tui::app::App;
 
 /// Render the recreate confirmation dialog
-pub fn render(frame: &mut Frame, app: &App, area: Rect) {
+pub fn render(frame: &mut Frame<'_>, app: &App, area: Rect) {
     let Some(session) = app.get_recreate_session() else {
         return;
     };

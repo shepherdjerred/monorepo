@@ -15,6 +15,7 @@ pub struct ConsoleState {
 }
 
 impl ConsoleState {
+    /// Create a new empty console state.
     #[must_use]
     pub fn new() -> Self {
         Self::default()
@@ -24,7 +25,7 @@ impl ConsoleState {
     pub async fn register_client(&self, session_id: &str, client_id: Uuid) -> bool {
         let mut sessions = self.sessions.lock().await;
         let session = sessions
-            .entry(session_id.to_string())
+            .entry(session_id.to_owned())
             .or_insert_with(SessionConsoleState::default);
         session.clients.insert(client_id);
         if session.active_client_id.is_none() {
@@ -40,7 +41,7 @@ impl ConsoleState {
     pub async fn set_active(&self, session_id: &str, client_id: Uuid) {
         let mut sessions = self.sessions.lock().await;
         let session = sessions
-            .entry(session_id.to_string())
+            .entry(session_id.to_owned())
             .or_insert_with(SessionConsoleState::default);
         session.clients.insert(client_id);
         session.active_client_id = Some(client_id);
@@ -51,7 +52,7 @@ impl ConsoleState {
     pub async fn set_active_if_none(&self, session_id: &str, client_id: Uuid) -> bool {
         let mut sessions = self.sessions.lock().await;
         let session = sessions
-            .entry(session_id.to_string())
+            .entry(session_id.to_owned())
             .or_insert_with(SessionConsoleState::default);
         session.clients.insert(client_id);
         if session.active_client_id.is_none() {

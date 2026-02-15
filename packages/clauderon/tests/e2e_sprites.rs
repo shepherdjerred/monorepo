@@ -1,3 +1,10 @@
+#![allow(clippy::allow_attributes, reason = "test files use allow for non-guaranteed lints")]
+#![allow(clippy::expect_used, reason = "test code")]
+#![allow(clippy::unwrap_used, reason = "test code")]
+#![allow(clippy::print_stdout, reason = "test output")]
+#![allow(clippy::print_stderr, reason = "test output")]
+#![allow(clippy::unused_result_ok, reason = "test code")]
+
 //! End-to-end tests for Sprites backend
 //!
 //! These tests require SPRITES_TOKEN environment variable to be set.
@@ -14,6 +21,7 @@ use clauderon::backends::sprites_config::{SpritesConfig, SpritesGit, SpritesLife
 use clauderon::backends::{CreateOptions, ExecutionBackend, SpritesBackend};
 use clauderon::core::console_manager::ConsoleManager;
 use clauderon::core::session::BackendType;
+use std::sync::Arc;
 use std::time::Duration;
 use uuid::Uuid;
 
@@ -383,8 +391,8 @@ async fn test_sprites_multi_repo_session() {
             repo_path: primary_dir.path().to_path_buf(),
             subdirectory: std::path::PathBuf::new(),
             worktree_path: primary_dir.path().to_path_buf(),
-            branch_name: "master".to_string(),
-            mount_name: "primary".to_string(),
+            branch_name: "master".to_owned(),
+            mount_name: "primary".to_owned(),
             is_primary: true,
             base_branch: None,
         },
@@ -392,8 +400,8 @@ async fn test_sprites_multi_repo_session() {
             repo_path: secondary_dir.path().to_path_buf(),
             subdirectory: std::path::PathBuf::new(),
             worktree_path: secondary_dir.path().to_path_buf(),
-            branch_name: "main".to_string(),
-            mount_name: "secondary-lib".to_string(),
+            branch_name: "main".to_owned(),
+            mount_name: "secondary-lib".to_owned(),
             is_primary: false,
             base_branch: None,
         },
@@ -499,7 +507,7 @@ async fn test_sprites_new_branch_creation() {
         subdirectory: std::path::PathBuf::new(),
         worktree_path: temp_dir.path().to_path_buf(),
         branch_name: unique_branch.clone(),
-        mount_name: "primary".to_string(),
+        mount_name: "primary".to_owned(),
         is_primary: true,
         base_branch: None,
     }];
@@ -537,7 +545,7 @@ async fn test_sprites_new_branch_creation() {
         .output();
 
     if let Ok(output) = branch_check {
-        let current_branch = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        let current_branch = String::from_utf8_lossy(&output.stdout).trim().to_owned();
         assert_eq!(
             current_branch, unique_branch,
             "Should be on the newly created branch"
@@ -584,8 +592,8 @@ async fn test_sprites_existing_remote_branch_tracking() {
         repo_path: temp_dir.path().to_path_buf(),
         subdirectory: std::path::PathBuf::new(),
         worktree_path: temp_dir.path().to_path_buf(),
-        branch_name: "test".to_string(),
-        mount_name: "primary".to_string(),
+        branch_name: "test".to_owned(),
+        mount_name: "primary".to_owned(),
         is_primary: true,
         base_branch: None,
     }];
@@ -623,7 +631,7 @@ async fn test_sprites_existing_remote_branch_tracking() {
         .output();
 
     if let Ok(output) = branch_check {
-        let current_branch = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        let current_branch = String::from_utf8_lossy(&output.stdout).trim().to_owned();
         assert_eq!(
             current_branch, "test",
             "Should be on the 'test' tracking branch"
@@ -664,9 +672,9 @@ async fn test_sprites_base_branch_workflow() {
         subdirectory: std::path::PathBuf::new(),
         worktree_path: temp_dir.path().to_path_buf(),
         branch_name: feature_branch.clone(),
-        mount_name: "primary".to_string(),
+        mount_name: "primary".to_owned(),
         is_primary: true,
-        base_branch: Some("master".to_string()), // Clone from master, create feature branch
+        base_branch: Some("master".to_owned()), // Clone from master, create feature branch
     }];
 
     let options = CreateOptions {
@@ -702,7 +710,7 @@ async fn test_sprites_base_branch_workflow() {
         .output();
 
     if let Ok(output) = branch_check {
-        let current_branch = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        let current_branch = String::from_utf8_lossy(&output.stdout).trim().to_owned();
         assert_eq!(
             current_branch, feature_branch,
             "Should be on the feature branch"
@@ -905,7 +913,7 @@ async fn test_sprites_claude_installation_verified() {
             output.status.success(),
             "Claude should be installed and in PATH"
         );
-        let path = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        let path = String::from_utf8_lossy(&output.stdout).trim().to_owned();
         assert!(!path.is_empty(), "Claude path should not be empty");
         println!("Claude installed at: {path}");
     }
@@ -957,7 +965,7 @@ async fn test_sprites_abduco_installation_verified() {
             output.status.success(),
             "Abduco should be installed and in PATH"
         );
-        let path = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        let path = String::from_utf8_lossy(&output.stdout).trim().to_owned();
         assert!(!path.is_empty(), "Abduco path should not be empty");
         println!("Abduco installed at: {path}");
     }
@@ -1380,7 +1388,7 @@ async fn test_sprites_get_output_empty_when_no_log() {
 async fn test_sprites_parallel_creation() {
     skip_if_no_sprites!();
 
-    let sprites = std::sync::Arc::new(test_sprites_backend());
+    let sprites = Arc::new(test_sprites_backend());
 
     // Create 3 temp directories
     let temp_dir1 = tempfile::TempDir::new().expect("Failed to create temp dir 1");
@@ -1410,9 +1418,9 @@ async fn test_sprites_parallel_creation() {
     let _cleanup2 = common::SpriteCleanupGuard::new(format!("clauderon-{name2}"));
     let _cleanup3 = common::SpriteCleanupGuard::new(format!("clauderon-{name3}"));
 
-    let sprites1 = sprites.clone();
-    let sprites2 = sprites.clone();
-    let sprites3 = sprites.clone();
+    let sprites1 = Arc::clone(&sprites);
+    let sprites2 = Arc::clone(&sprites);
+    let sprites3 = Arc::clone(&sprites);
 
     let path1 = temp_dir1.path().to_path_buf();
     let path2 = temp_dir2.path().to_path_buf();

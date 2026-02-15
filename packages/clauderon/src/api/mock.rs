@@ -21,17 +21,23 @@ use super::types::ReconcileReportDto;
 ///
 /// Stores sessions in memory and provides configurable responses and failures.
 pub struct MockApiClient {
-    /// In-memory session storage
+    /// In-memory session storage.
     sessions: RwLock<HashMap<Uuid, Session>>,
 
-    /// If true, all operations will fail
+    /// If true, all operations will fail.
     should_fail: AtomicBool,
 
-    /// Error message to return when should_fail is true
+    /// Error message to return when should_fail is true.
     error_message: RwLock<String>,
 
-    /// Counter for generating unique session names
+    /// Counter for generating unique session names.
     session_counter: RwLock<u32>,
+}
+
+impl std::fmt::Debug for MockApiClient {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("MockApiClient").finish()
+    }
 }
 
 impl MockApiClient {
@@ -41,7 +47,7 @@ impl MockApiClient {
         Self {
             sessions: RwLock::new(HashMap::new()),
             should_fail: AtomicBool::new(false),
-            error_message: RwLock::new("Mock API failure".to_string()),
+            error_message: RwLock::new("Mock API failure".to_owned()),
             session_counter: RwLock::new(0),
         }
     }
@@ -80,7 +86,7 @@ impl MockApiClient {
     #[must_use]
     pub fn create_mock_session(name: &str, status: SessionStatus) -> Session {
         let config = SessionConfig {
-            name: name.to_string(),
+            name: name.to_owned(),
             title: None,
             description: None,
             repo_path: PathBuf::from("/mock/repo"),
@@ -88,7 +94,7 @@ impl MockApiClient {
             subdirectory: PathBuf::new(),
             branch_name: format!("feature/{name}"),
             repositories: None, // Mock session uses legacy single-repo mode
-            initial_prompt: "Mock prompt".to_string(),
+            initial_prompt: "Mock prompt".to_owned(),
             backend: BackendType::Zellij,
             agent: AgentType::ClaudeCode,
             model: None, // Mock uses default model
@@ -176,7 +182,7 @@ impl ApiClient for MockApiClient {
             initial_prompt: request.initial_prompt,
             backend: request.backend,
             agent: request.agent,
-            model: request.model.clone(),
+            model: request.model,
             dangerous_skip_checks: request.dangerous_skip_checks,
             dangerous_copy_creds: request.dangerous_copy_creds,
             access_mode: request.access_mode,
@@ -332,8 +338,8 @@ impl ApiClient for MockApiClient {
                 let backend_id = s
                     .backend_id
                     .clone()
-                    .unwrap_or_else(|| "mock-session".to_string());
-                Ok(vec!["zellij".to_string(), "attach".to_string(), backend_id])
+                    .unwrap_or_else(|| "mock-session".to_owned());
+                Ok(vec!["zellij".to_owned(), "attach".to_owned(), backend_id])
             }
             None => anyhow::bail!("Session not found: {id}"),
         }
@@ -366,13 +372,13 @@ impl ApiClient for MockApiClient {
         use chrono::Utc;
         Ok(vec![
             super::protocol::RecentRepoDto {
-                repo_path: "/home/user/projects/repo1".to_string(),
+                repo_path: "/home/user/projects/repo1".to_owned(),
                 subdirectory: String::new(),
                 last_used: Utc::now().to_rfc3339(),
             },
             super::protocol::RecentRepoDto {
-                repo_path: "/home/user/projects/repo2".to_string(),
-                subdirectory: "packages/foo".to_string(),
+                repo_path: "/home/user/projects/repo2".to_owned(),
+                subdirectory: "packages/foo".to_owned(),
                 last_used: (Utc::now() - chrono::Duration::hours(1)).to_rfc3339(),
             },
         ])
@@ -395,7 +401,7 @@ impl ApiClient for MockApiClient {
 
         // Return mock health status - all sessions healthy
         let sessions = self.sessions.read().await;
-        #[expect(clippy::cast_possible_truncation)]
+        #[expect(clippy::cast_possible_truncation, reason = "session count fits in u32")]
         let healthy_count = sessions.len() as u32;
         let reports: Vec<SessionHealthReport> = sessions
             .values()
@@ -406,7 +412,7 @@ impl ApiClient for MockApiClient {
                 state: ResourceState::Healthy,
                 available_actions: vec![],
                 recommended_action: None,
-                description: "Session is healthy".to_string(),
+                description: "Session is healthy".to_owned(),
                 details: String::new(),
                 data_safe: true,
             })
@@ -477,9 +483,9 @@ mod tests {
         let mut client = MockApiClient::new();
 
         let request = CreateSessionRequest {
-            repo_path: "/tmp/repo".to_string(),
+            repo_path: "/tmp/repo".to_owned(),
             repositories: None, // Test uses legacy single-repo mode
-            initial_prompt: "Test prompt".to_string(),
+            initial_prompt: "Test prompt".to_owned(),
             backend: BackendType::Zellij,
             agent: AgentType::ClaudeCode,
             model: None, // Test uses default model

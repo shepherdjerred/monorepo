@@ -24,13 +24,18 @@ use std::sync::Arc;
 use tower_http::cors::{Any, CorsLayer};
 use uuid::Uuid;
 
-/// Shared state for HTTP handlers
-#[derive(Clone)]
+/// Shared state for HTTP handlers.
+#[derive(Clone, Debug)]
 pub struct AppState {
+    /// Session manager for managing coding sessions.
     pub session_manager: Arc<SessionManager>,
+    /// Event broadcaster for real-time WebSocket updates.
     pub event_broadcaster: EventBroadcaster,
+    /// Authentication state (None if auth is disabled).
     pub auth_state: Option<AuthState>,
+    /// Console state for tracking active terminal clients.
     pub console_state: Arc<crate::api::console_state::ConsoleState>,
+    /// Feature flags for the application.
     pub feature_flags: Arc<crate::feature_flags::FeatureFlags>,
 }
 
@@ -279,7 +284,7 @@ async fn create_session(
         && !state.feature_flags.enable_readonly_mode
     {
         return Err(AppError::BadRequest(
-            "Read-only mode is not available. This feature is experimental and must be explicitly enabled.".to_string()
+            "Read-only mode is not available. This feature is experimental and must be explicitly enabled.".to_owned()
         ));
     }
 
@@ -550,7 +555,7 @@ async fn update_access_mode(
         && !state.feature_flags.enable_readonly_mode
     {
         return Err(AppError::BadRequest(
-            "Read-only mode is not available. This feature is experimental and must be explicitly enabled.".to_string()
+            "Read-only mode is not available. This feature is experimental and must be explicitly enabled.".to_owned()
         ));
     }
 
@@ -742,7 +747,7 @@ async fn get_storage_classes(
     let k8s_backend = state
         .session_manager
         .kubernetes_backend()
-        .ok_or_else(|| AppError::BadRequest("Kubernetes backend not available".to_string()))?;
+        .ok_or_else(|| AppError::BadRequest("Kubernetes backend not available".to_owned()))?;
 
     let storage_classes = k8s_backend
         .list_storage_classes()
@@ -802,7 +807,7 @@ async fn upload_file(
         .await
         .map_err(|e| AppError::BadRequest(format!("Failed to read multipart field: {e}")))?
     {
-        let name = field.name().unwrap_or("").to_string();
+        let name = field.name().unwrap_or("").to_owned();
 
         if name == "file" {
             content_type = field.content_type().map(std::string::ToString::to_string);
@@ -819,9 +824,9 @@ async fn upload_file(
 
     // Validate we got a file
     let file_name =
-        file_name.ok_or_else(|| AppError::BadRequest("No file provided".to_string()))?;
+        file_name.ok_or_else(|| AppError::BadRequest("No file provided".to_owned()))?;
     let file_data =
-        file_data.ok_or_else(|| AppError::BadRequest("No file data provided".to_string()))?;
+        file_data.ok_or_else(|| AppError::BadRequest("No file data provided".to_owned()))?;
 
     // Validate the image file
     crate::uploads::validate_image_file(&file_name, content_type.as_deref(), file_data.len())
@@ -844,7 +849,7 @@ async fn upload_file(
         "Image uploaded successfully"
     );
 
-    #[allow(clippy::cast_possible_truncation)]
+    #[expect(clippy::cast_possible_truncation, reason = "image uploads are always < 4GB")]
     Ok(Json(crate::api::protocol::UploadResponse {
         path: file_path.to_string_lossy().to_string(),
         size: file_data.len() as u32, // Files >4GB are not expected for image uploads
@@ -878,13 +883,13 @@ async fn get_session_history(
         AgentType::ClaudeCode => {
             // Use cached path for Claude Code
             let path = session.history_file_path.ok_or_else(|| {
-                AppError::NotFound("History file path not configured".to_string())
+                AppError::NotFound("History file path not configured".to_owned())
             })?;
 
             // Security: Validate path is within worktree bounds and matches expected pattern
             if !path.starts_with(&session.worktree_path) {
                 return Err(AppError::BadRequest(
-                    "Invalid history file path: outside worktree".to_string(),
+                    "Invalid history file path: outside worktree".to_owned(),
                 ));
             }
 
@@ -896,7 +901,7 @@ async fn get_session_history(
             );
             if path != expected_path {
                 return Err(AppError::BadRequest(
-                    "Invalid history file path: pattern mismatch".to_string(),
+                    "Invalid history file path: pattern mismatch".to_owned(),
                 ));
             }
 
@@ -912,7 +917,7 @@ async fn get_session_history(
                     &session.id,
                 ) {
                     return Err(AppError::BadRequest(
-                        "Invalid Codex history path".to_string(),
+                        "Invalid Codex history path".to_owned(),
                     ));
                 }
                 cached_path.clone()
@@ -923,7 +928,7 @@ async fn get_session_history(
                     &session.id,
                 )
                 .ok_or_else(|| {
-                    AppError::NotFound("Codex history file not found yet".to_string())
+                    AppError::NotFound("Codex history file not found yet".to_owned())
                 })?;
 
                 // Validate the found path
@@ -933,12 +938,12 @@ async fn get_session_history(
                     &session.id,
                 ) {
                     return Err(AppError::BadRequest(
-                        "Invalid Codex history path".to_string(),
+                        "Invalid Codex history path".to_owned(),
                     ));
                 }
 
                 // Cache the discovered path (fire-and-forget)
-                let session_manager = state.session_manager.clone();
+                let session_manager = Arc::clone(&state.session_manager);
                 let session_id = session.id;
                 let path_to_cache = found_path.clone();
                 tokio::spawn(async move {
@@ -959,7 +964,7 @@ async fn get_session_history(
         }
         AgentType::Gemini => {
             return Err(AppError::NotFound(
-                "Gemini history not yet supported".to_string(),
+                "Gemini history not yet supported".to_owned(),
             ));
         }
     };
@@ -1027,21 +1032,21 @@ fn validate_session_id(id: &str) -> Result<(), AppError> {
     // Check length (reasonable bounds)
     if id.is_empty() || id.len() > 128 {
         return Err(AppError::BadRequest(
-            "Invalid session ID length".to_string(),
+            "Invalid session ID length".to_owned(),
         ));
     }
 
     // Check for path traversal attempts
     if id.contains("..") || id.contains('/') || id.contains('\\') || id.contains('\0') {
         return Err(AppError::BadRequest(
-            "Invalid session ID format".to_string(),
+            "Invalid session ID format".to_owned(),
         ));
     }
 
     // Check for control characters
     if id.chars().any(char::is_control) {
         return Err(AppError::BadRequest(
-            "Invalid session ID format".to_string(),
+            "Invalid session ID format".to_owned(),
         ));
     }
 
@@ -1051,22 +1056,27 @@ fn validate_session_id(id: &str) -> Result<(), AppError> {
         .all(|c| c.is_alphanumeric() || c == '-' || c == '_')
     {
         return Err(AppError::BadRequest(
-            "Invalid session ID format".to_string(),
+            "Invalid session ID format".to_owned(),
         ));
     }
 
     Ok(())
 }
 
-/// Custom error type for HTTP handlers
+/// Custom error type for HTTP handlers.
 #[derive(Debug)]
 pub enum AppError {
+    /// Internal session manager error.
     SessionManager(anyhow::Error),
+    /// Resource not found.
     NotFound(String),
+    /// Feature not yet implemented.
     NotImplemented(String),
+    /// Invalid request parameters.
     BadRequest(String),
-    /// Action was blocked (e.g., recreate blocked for safety reasons)
+    /// Action was blocked (e.g., recreate blocked for safety reasons).
     ActionBlocked {
+        /// Human-readable reason the action was blocked.
         reason: String,
     },
 }
@@ -1142,7 +1152,7 @@ async fn receive_hook(
 async fn get_feature_flags(
     State(state): State<AppState>,
 ) -> Result<Json<crate::api::protocol::FeatureFlagsResponse>, AppError> {
-    let flags = (*state.feature_flags).clone();
+    let flags = *state.feature_flags;
 
     Ok(Json(crate::api::protocol::FeatureFlagsResponse {
         flags,

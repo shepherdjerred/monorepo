@@ -1,3 +1,7 @@
+#![allow(clippy::allow_attributes, reason = "test files use allow for non-guaranteed lints")]
+#![allow(clippy::expect_used, reason = "test code")]
+#![allow(clippy::unwrap_used, reason = "test code")]
+
 //! API health endpoint tests
 //!
 //! These tests verify the health check types and their serialization.
@@ -63,7 +67,7 @@ fn test_resource_state_missing_serialization() {
 #[test]
 fn test_resource_state_error_serialization() {
     let state = ResourceState::Error {
-        message: "Container crashed".to_string(),
+        message: "Container crashed".to_owned(),
     };
     let json = serde_json::to_string(&state).unwrap();
     assert!(json.contains("Error"));
@@ -101,7 +105,7 @@ fn test_resource_state_deleted_externally_serialization() {
 #[test]
 fn test_resource_state_data_lost_serialization() {
     let state = ResourceState::DataLost {
-        reason: "PVC was deleted".to_string(),
+        reason: "PVC was deleted".to_owned(),
     };
     let json = serde_json::to_string(&state).unwrap();
     assert!(json.contains("DataLost"));
@@ -135,7 +139,7 @@ fn test_resource_state_is_healthy() {
     assert!(!ResourceState::Missing.is_healthy());
     assert!(
         !ResourceState::Error {
-            message: "test".to_string()
+            message: "test".to_owned()
         }
         .is_healthy()
     );
@@ -171,13 +175,13 @@ fn test_available_action_serialization() {
 fn create_test_health_report() -> SessionHealthReport {
     SessionHealthReport {
         session_id: Uuid::new_v4(),
-        session_name: "test-session".to_string(),
+        session_name: "test-session".to_owned(),
         backend_type: BackendType::Docker,
         state: ResourceState::Healthy,
         available_actions: vec![AvailableAction::Recreate, AvailableAction::UpdateImage],
         recommended_action: None,
-        description: "Container is running".to_string(),
-        details: "Docker container abc123 is healthy".to_string(),
+        description: "Container is running".to_owned(),
+        details: "Docker container abc123 is healthy".to_owned(),
         data_safe: true,
     }
 }
@@ -326,7 +330,7 @@ fn test_hibernated_sprite_actions() {
 fn test_data_lost_actions() {
     let mut report = create_test_health_report();
     report.state = ResourceState::DataLost {
-        reason: "PVC deleted".to_string(),
+        reason: "PVC deleted".to_owned(),
     };
     report.available_actions = vec![AvailableAction::Cleanup, AvailableAction::RecreateFresh];
     report.data_safe = false;
@@ -384,7 +388,7 @@ fn test_kubernetes_pvc_deleted_data_lost() {
     let mut report = create_test_health_report();
     report.backend_type = BackendType::Kubernetes;
     report.state = ResourceState::DataLost {
-        reason: "PVC was deleted".to_string(),
+        reason: "PVC was deleted".to_owned(),
     };
     report.data_safe = false;
 

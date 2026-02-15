@@ -10,24 +10,31 @@ use uuid::Uuid;
 
 use super::session::SessionStore;
 
-/// Extension key for storing the authenticated user ID
-#[derive(Clone)]
+/// Extension key for storing the authenticated user ID.
+#[derive(Clone, Copy, Debug)]
 pub struct AuthenticatedUserId(pub Uuid);
 
-/// Auth middleware state
+/// Auth middleware state.
 #[derive(Clone)]
 pub struct AuthMiddlewareState {
+    /// Session store for validating auth sessions.
     pub session_store: SessionStore,
 }
 
-/// Middleware to require authentication
+impl std::fmt::Debug for AuthMiddlewareState {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("AuthMiddlewareState").finish()
+    }
+}
+
+/// Middleware to require authentication.
 ///
-/// Validates the `clauderon_session` cookie and inserts the user ID into request extensions
+/// Validates the `clauderon_session` cookie and inserts the user ID into request extensions.
 ///
-/// Returns 401 if the session is invalid or missing
+/// Returns 401 if the session is invalid or missing.
 ///
 /// # Errors
-/// Returns a 401 status code if the session cookie is missing, invalid, or expired
+/// Returns a 401 status code if the session cookie is missing, invalid, or expired.
 pub async fn auth_middleware(
     State(state): State<AuthMiddlewareState>,
     jar: CookieJar,
@@ -40,8 +47,8 @@ pub async fn auth_middleware(
         .ok_or(StatusCode::UNAUTHORIZED)?;
 
     // Parse session ID
-    let session_id = Uuid::parse_str(session_cookie.value()).map_err(|_| {
-        tracing::warn!("Invalid session ID format");
+    let session_id = Uuid::parse_str(session_cookie.value()).map_err(|e| {
+        tracing::warn!("Invalid session ID format: {e}");
         StatusCode::UNAUTHORIZED
     })?;
 

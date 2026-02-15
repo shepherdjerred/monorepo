@@ -237,8 +237,8 @@ mod tests {
                 }
             }),
             installed_plugins: vec![DiscoveredPlugin {
-                name: "test-plugin".to_string(),
-                marketplace: "test-marketplace".to_string(),
+                name: "test-plugin".to_owned(),
+                marketplace: "test-marketplace".to_owned(),
                 path: PathBuf::from(
                     "/home/user/.claude/plugins/marketplaces/test-marketplace/plugins/test-plugin",
                 ),

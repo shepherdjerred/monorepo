@@ -4,13 +4,13 @@ use axum::{
 };
 use include_dir::{Dir, include_dir};
 
-/// Embedded frontend build directory
-static DIST_DIR: Dir = include_dir!("$CARGO_MANIFEST_DIR/web/frontend/dist");
+/// Embedded frontend build directory.
+static DIST_DIR: Dir<'_> = include_dir!("$CARGO_MANIFEST_DIR/web/frontend/dist");
 
-/// Embedded docs build directory
-static DOCS_DIR: Dir = include_dir!("$CARGO_MANIFEST_DIR/docs/dist");
+/// Embedded docs build directory.
+static DOCS_DIR: Dir<'_> = include_dir!("$CARGO_MANIFEST_DIR/docs/dist");
 
-/// Serve static files from the embedded frontend build
+/// Serve static files from the embedded frontend build.
 pub async fn serve_static(uri: Uri) -> Response {
     let path = uri.path().trim_start_matches('/');
 
@@ -28,7 +28,7 @@ pub async fn serve_static(uri: Uri) -> Response {
     (StatusCode::NOT_FOUND, "Not found").into_response()
 }
 
-/// Serve static files from the embedded docs build
+/// Serve static files from the embedded docs build.
 pub async fn serve_docs(uri: Uri) -> Response {
     let path = uri
         .path()
@@ -49,8 +49,8 @@ pub async fn serve_docs(uri: Uri) -> Response {
     (StatusCode::NOT_FOUND, "Not found").into_response()
 }
 
-/// Serve a specific file with appropriate content type
-fn serve_file(file: &include_dir::File) -> Response {
+/// Serve a specific file with appropriate content type.
+fn serve_file(file: &include_dir::File<'_>) -> Response {
     let mime = mime_guess::from_path(file.path()).first_or_octet_stream();
     let mime_type = mime.as_ref();
 
@@ -59,7 +59,9 @@ fn serve_file(file: &include_dir::File) -> Response {
     let mut response = contents.into_response();
     response
         .headers_mut()
-        .insert(header::CONTENT_TYPE, mime_type.parse().unwrap());
+        .insert(header::CONTENT_TYPE, mime_type.parse().unwrap_or_else(|_| {
+            header::HeaderValue::from_static("application/octet-stream")
+        }));
 
     response
 }

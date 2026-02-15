@@ -113,7 +113,7 @@ impl ColumnWidths {
             let pr_text = session
                 .pr_url
                 .as_ref()
-                .map_or_else(|| session.branch_name.clone(), |_| "PR".to_string());
+                .map_or_else(|| session.branch_name.clone(), |_| "PR".to_owned());
             max_branch = max_branch.max(pr_text.width()).min(Self::BRANCH_PR_RANGE.1);
         }
 
@@ -188,62 +188,69 @@ impl ColumnWidths {
         }
 
         // Calculate shrink ratio
-        #[allow(clippy::cast_precision_loss)]
+        #[expect(clippy::cast_precision_loss, reason = "column widths are small; precision loss is acceptable for proportional sizing")]
         let shrink_ratio = available_for_columns as f64 / total_current as f64;
 
         // Apply proportional shrinking, respecting minimums
-        #[allow(
+        #[expect(
             clippy::cast_possible_truncation,
             clippy::cast_sign_loss,
-            clippy::cast_precision_loss
+            clippy::cast_precision_loss,
+            reason = "proportional column sizing; values are small and clamped"
         )]
         let name_shrunk = (self.name as f64 * shrink_ratio).max(0.0).round() as usize;
         self.name = name_shrunk.max(Self::NAME_RANGE.0);
 
-        #[allow(
+        #[expect(
             clippy::cast_possible_truncation,
             clippy::cast_sign_loss,
-            clippy::cast_precision_loss
+            clippy::cast_precision_loss,
+            reason = "proportional column sizing; values are small and clamped"
         )]
         let repo_shrunk = (self.repository as f64 * shrink_ratio).max(0.0).round() as usize;
         self.repository = repo_shrunk.max(Self::REPO_RANGE.0);
 
-        #[allow(
+        #[expect(
             clippy::cast_possible_truncation,
             clippy::cast_sign_loss,
-            clippy::cast_precision_loss
+            clippy::cast_precision_loss,
+            reason = "proportional column sizing; values are small and clamped"
         )]
         let status_shrunk = (self.status as f64 * shrink_ratio).max(0.0).round() as usize;
         self.status = status_shrunk.max(Self::STATUS_RANGE.0);
 
-        #[allow(
+        #[expect(
             clippy::cast_possible_truncation,
             clippy::cast_sign_loss,
-            clippy::cast_precision_loss
+            clippy::cast_precision_loss,
+            reason = "proportional column sizing; values are small and clamped"
         )]
         let stage_shrunk = (self.stage as f64 * shrink_ratio).max(0.0).round() as usize;
         self.stage = stage_shrunk.max(Self::STAGE_RANGE.0);
 
-        #[allow(
+        #[expect(
             clippy::cast_possible_truncation,
             clippy::cast_sign_loss,
-            clippy::cast_precision_loss
+            clippy::cast_precision_loss,
+            reason = "proportional column sizing; values are small and clamped"
         )]
         let backend_shrunk = (self.backend as f64 * shrink_ratio).max(0.0).round() as usize;
         self.backend = backend_shrunk.max(Self::BACKEND_RANGE.0);
 
-        #[allow(
+        #[expect(
             clippy::cast_possible_truncation,
             clippy::cast_sign_loss,
-            clippy::cast_precision_loss
+            clippy::cast_precision_loss,
+            reason = "proportional column sizing; values are small and clamped"
         )]
         let health_shrunk = (self.health as f64 * shrink_ratio).max(0.0).round() as usize;
         self.health = health_shrunk.max(Self::HEALTH_RANGE.0);
 
-        #[allow(
+        #[expect(
             clippy::cast_possible_truncation,
             clippy::cast_sign_loss,
-            clippy::cast_precision_loss
+            clippy::cast_precision_loss,
+            reason = "proportional column sizing; values are small and clamped"
         )]
         let branch_pr_shrunk = (self.branch_pr as f64 * shrink_ratio).max(0.0).round() as usize;
         self.branch_pr = branch_pr_shrunk.max(Self::BRANCH_PR_RANGE.0);
@@ -280,7 +287,7 @@ fn truncate_with_ellipsis(text: &str, max_width: usize) -> String {
     let text_width = text.width();
 
     if text_width <= max_width {
-        return text.to_string();
+        return text.to_owned();
     }
 
     // Need to truncate
@@ -288,7 +295,7 @@ fn truncate_with_ellipsis(text: &str, max_width: usize) -> String {
     const ELLIPSIS_WIDTH: usize = 1;
 
     if max_width <= ELLIPSIS_WIDTH {
-        return ELLIPSIS.to_string();
+        return ELLIPSIS.to_owned();
     }
 
     let target_width = max_width - ELLIPSIS_WIDTH;
@@ -311,7 +318,7 @@ fn truncate_with_ellipsis(text: &str, max_width: usize) -> String {
 fn pad_to_width(text: &str, width: usize) -> String {
     let text_width = text.width();
     if text_width >= width {
-        text.to_string()
+        text.to_owned()
     } else {
         format!("{}{}", text, " ".repeat(width - text_width))
     }
@@ -334,7 +341,7 @@ fn health_display(state: &ResourceState) -> (&'static str, Color) {
 }
 
 /// Render the session list
-pub fn render(frame: &mut Frame, app: &App, area: Rect) {
+pub fn render(frame: &mut Frame<'_>, app: &App, area: Rect) {
     // Split area vertically: filter header (1 line) + session list
     let layout = Layout::vertical([Constraint::Length(1), Constraint::Min(0)]).split(area);
     let filter_area = layout[0];
@@ -425,7 +432,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
     ]);
     frame.render_widget(Paragraph::new(header), header_area);
 
-    let items: Vec<ListItem> = filtered_sessions
+    let items: Vec<ListItem<'_>> = filtered_sessions
         .iter()
         .map(|session| {
             let status_style = match session.status {
@@ -454,7 +461,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
                 ClaudeWorkingStatus::Working => {
                     // Animate based on spinner tick
                     // Safe cast: SPINNER_FRAMES.len() is small, modulo result fits in usize
-                    #[allow(clippy::cast_possible_truncation)]
+                    #[expect(clippy::cast_possible_truncation, reason = "SPINNER_FRAMES.len() is small; modulo result fits in usize")]
                     let spinner_idx = (app.spinner_tick % SPINNER_FRAMES.len() as u64) as usize;
                     let spinner = SPINNER_FRAMES[spinner_idx];
                     Span::styled(spinner, Style::default().fg(Color::Green))
@@ -505,7 +512,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
             let pr_text = session
                 .pr_url
                 .as_ref()
-                .map_or_else(|| session.branch_name.clone(), |_| "PR".to_string());
+                .map_or_else(|| session.branch_name.clone(), |_| "PR".to_owned());
 
             let repo_name = session
                 .repo_path
@@ -524,7 +531,7 @@ pub fn render(frame: &mut Frame, app: &App, area: Rect) {
             // Add deletion indicator if deleting
             if is_deleting {
                 // Safe cast: SPINNER_FRAMES.len() is small, modulo result fits in usize
-                #[allow(clippy::cast_possible_truncation)]
+                #[expect(clippy::cast_possible_truncation, reason = "SPINNER_FRAMES.len() is small; modulo result fits in usize")]
                 let spinner_idx = (app.spinner_tick % SPINNER_FRAMES.len() as u64) as usize;
                 let spinner = SPINNER_FRAMES[spinner_idx];
                 spans.push(Span::styled(
