@@ -17,7 +17,7 @@ const PLAYWRIGHT_VERSION = "1.57.0";
 // Pin release-please version for reproducible builds
 const RELEASE_PLEASE_VERSION = "17.1.3";
 // Rust version for clauderon
-const RUST_VERSION = "1.93";
+const RUST_VERSION = "1.93.1";
 // LaTeX image for resume builds
 const LATEX_IMAGE = "blang/latex:ubuntu";
 // sccache version for Rust compilation caching
