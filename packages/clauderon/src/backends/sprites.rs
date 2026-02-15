@@ -179,7 +179,8 @@ impl SpritesBackend {
 
         let url = String::from_utf8(output.stdout)
             .map_err(|e| anyhow::anyhow!("Invalid UTF-8 in git remote URL: {}", e))?
-            .trim().to_owned();
+            .trim()
+            .to_owned();
 
         if url.is_empty() {
             anyhow::bail!("No git remote configured for {}", workdir.display());
@@ -221,7 +222,8 @@ impl SpritesBackend {
 
         let branch = String::from_utf8(output.stdout)
             .map_err(|e| anyhow::anyhow!("Invalid UTF-8 in branch name: {}", e))?
-            .trim().to_owned();
+            .trim()
+            .to_owned();
 
         Ok(branch)
     }

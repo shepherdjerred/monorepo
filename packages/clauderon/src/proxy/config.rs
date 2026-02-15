@@ -306,7 +306,10 @@ impl Credentials {
             }
             Err(_) => {
                 // No runtime available, create a new one just for this operation
-                #[expect(clippy::expect_used, reason = "runtime creation is infallible in practice; unrecoverable if it fails")]
+                #[expect(
+                    clippy::expect_used,
+                    reason = "runtime creation is infallible in practice; unrecoverable if it fails"
+                )]
                 let rt = tokio::runtime::Runtime::new()
                     .expect("Failed to create tokio runtime for credential loading");
                 rt.block_on(Self::load_with_priority(config))

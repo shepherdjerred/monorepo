@@ -250,7 +250,8 @@ impl CIPoller {
             .ok_or_else(|| anyhow::anyhow!("Invalid PR URL: {}", pr_url))?;
 
         // First, get PR review status (from incoming merge button feature)
-        let _ = self.poll_pr_review_status(session_id, pr_number, repo_path)
+        let _ = self
+            .poll_pr_review_status(session_id, pr_number, repo_path)
             .await; // Don't fail if review status fetch fails
 
         // Get CI check status using gh pr checks

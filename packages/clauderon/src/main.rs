@@ -1,5 +1,11 @@
-#![expect(clippy::print_stdout, reason = "CLI binary uses stdout for user output")]
-#![expect(clippy::print_stderr, reason = "CLI binary uses stderr for error output")]
+#![expect(
+    clippy::print_stdout,
+    reason = "CLI binary uses stdout for user output"
+)]
+#![expect(
+    clippy::print_stderr,
+    reason = "CLI binary uses stderr for error output"
+)]
 
 use clap::{Parser, Subcommand};
 use tracing_subscriber::{Layer, layer::SubscriberExt, util::SubscriberInitExt};
@@ -539,7 +545,10 @@ async fn main() -> anyhow::Result<()> {
 
     // Install the ring crypto provider for rustls before any TLS operations
     // This is required because multiple dependencies enable conflicting crypto providers
-    #[expect(clippy::expect_used, reason = "must panic on startup if TLS provider fails")]
+    #[expect(
+        clippy::expect_used,
+        reason = "must panic on startup if TLS provider fails"
+    )]
     {
         rustls::crypto::ring::default_provider()
             .install_default()

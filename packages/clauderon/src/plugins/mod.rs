@@ -156,7 +156,8 @@ impl PluginDiscovery {
             let marketplace_name = marketplace_dir
                 .file_name()
                 .and_then(|n| n.to_str())
-                .unwrap_or("unknown").to_owned();
+                .unwrap_or("unknown")
+                .to_owned();
 
             debug!(
                 "Scanning marketplace: {} at {}",
@@ -203,7 +204,8 @@ impl PluginDiscovery {
                 let plugin_name = plugin_path
                     .file_name()
                     .and_then(|n| n.to_str())
-                    .unwrap_or("unknown").to_owned();
+                    .unwrap_or("unknown")
+                    .to_owned();
 
                 // Verify this is a valid plugin by checking for manifest
                 let manifest_path = plugin_path.join(".claude-plugin/plugin.json");

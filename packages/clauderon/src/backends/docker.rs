@@ -555,7 +555,10 @@ echo "Git setup complete: branch ${{BRANCH_NAME}}"
     /// # Errors
     ///
     /// Returns an error if the proxy CA certificate is required but missing.
-    #[expect(clippy::too_many_arguments, reason = "Docker CLI requires many configuration parameters")]
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "Docker CLI requires many configuration parameters"
+    )]
     pub fn build_create_args(
         name: &str,
         workdir: &Path,
@@ -922,7 +925,8 @@ echo "Git setup complete: branch ${{BRANCH_NAME}}"
                     // The proxy will intercept API requests and inject the real OAuth token
                     args.extend([
                         "-e".to_owned(),
-                        "CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-clauderon-proxy-placeholder".to_owned(),
+                        "CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-clauderon-proxy-placeholder"
+                            .to_owned(),
                     ]);
                 }
                 AgentType::Codex => {
@@ -1737,7 +1741,10 @@ impl ExecutionBackend for DockerBackend {
 }
 
 // Legacy method names for backward compatibility during migration
-#[expect(clippy::multiple_inherent_impl, reason = "legacy compatibility shim kept separate for clarity")]
+#[expect(
+    clippy::multiple_inherent_impl,
+    reason = "legacy compatibility shim kept separate for clarity"
+)]
 impl DockerBackend {
     /// Create a new Docker container (legacy name)
     ///

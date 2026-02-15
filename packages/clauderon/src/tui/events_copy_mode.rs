@@ -20,7 +20,10 @@ pub(super) async fn handle_copy_mode_key(app: &mut App, key: KeyEvent) -> anyhow
         })
         .unwrap_or(app.terminal_size);
 
-    #[expect(clippy::expect_used, reason = "copy mode handler is only called when copy_mode_state is Some")]
+    #[expect(
+        clippy::expect_used,
+        reason = "copy mode handler is only called when copy_mode_state is Some"
+    )]
     let state = app.copy_mode_state.as_mut().expect("copy mode state");
 
     match key.code {
@@ -124,7 +127,10 @@ pub(super) async fn handle_copy_mode_key(app: &mut App, key: KeyEvent) -> anyhow
 fn copy_selection_to_clipboard(app: &App) -> anyhow::Result<()> {
     use arboard::Clipboard;
 
-    #[expect(clippy::expect_used, reason = "copy handler is only called when copy_mode_state is Some")]
+    #[expect(
+        clippy::expect_used,
+        reason = "copy handler is only called when copy_mode_state is Some"
+    )]
     let state = app.copy_mode_state.as_ref().expect("copy mode state");
 
     if let (Some(start), Some(end)) = (state.selection_start, state.selection_end) {

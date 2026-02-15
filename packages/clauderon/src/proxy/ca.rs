@@ -138,21 +138,19 @@ impl ProxyCa {
         server_params.distinguished_name = dn;
 
         // Add localhost and common IPs as subject alternative names
-        server_params.subject_alt_names = vec![
-            rcgen::SanType::DnsName(
-                "localhost"
-                    .to_owned()
-                    .try_into()
-                    .map_err(|e| anyhow::anyhow!("invalid DNS name 'localhost': {e}"))?,
-            ),
-            rcgen::SanType::IpAddress(std::net::IpAddr::V4(std::net::Ipv4Addr::LOCALHOST)),
-            rcgen::SanType::DnsName(
-                "host.docker.internal"
-                    .to_owned()
-                    .try_into()
-                    .map_err(|e| anyhow::anyhow!("invalid DNS name 'host.docker.internal': {e}"))?,
-            ),
-        ];
+        server_params.subject_alt_names =
+            vec![
+                rcgen::SanType::DnsName(
+                    "localhost"
+                        .to_owned()
+                        .try_into()
+                        .map_err(|e| anyhow::anyhow!("invalid DNS name 'localhost': {e}"))?,
+                ),
+                rcgen::SanType::IpAddress(std::net::IpAddr::V4(std::net::Ipv4Addr::LOCALHOST)),
+                rcgen::SanType::DnsName("host.docker.internal".to_owned().try_into().map_err(
+                    |e| anyhow::anyhow!("invalid DNS name 'host.docker.internal': {e}"),
+                )?),
+            ];
 
         // Valid for 1 year
         server_params.not_before = time::OffsetDateTime::now_utc();

@@ -1,4 +1,7 @@
-#![expect(clippy::missing_errors_doc, reason = "internal TUI module; error docs are not required")]
+#![expect(
+    clippy::missing_errors_doc,
+    reason = "internal TUI module; error docs are not required"
+)]
 
 /// Main application state and logic.
 pub mod app;

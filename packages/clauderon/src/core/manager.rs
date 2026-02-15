@@ -893,7 +893,11 @@ impl SessionManager {
     /// # Returns
     ///
     /// Returns the UUID of the newly created session (in Creating status)
-    #[expect(clippy::too_many_arguments, clippy::fn_params_excessive_bools, reason = "session creation requires many independent parameters")]
+    #[expect(
+        clippy::too_many_arguments,
+        clippy::fn_params_excessive_bools,
+        reason = "session creation requires many independent parameters"
+    )]
     pub async fn start_session_creation(
         self: &Arc<Self>,
         repo_path: String,
@@ -1201,7 +1205,11 @@ impl SessionManager {
     /// Complete session creation in background (spawned by start_session_creation)
     ///
     /// This method should not be called directly - it's spawned as a background task.
-    #[expect(clippy::too_many_arguments, clippy::fn_params_excessive_bools, reason = "session creation requires many independent parameters")]
+    #[expect(
+        clippy::too_many_arguments,
+        clippy::fn_params_excessive_bools,
+        reason = "session creation requires many independent parameters"
+    )]
     async fn complete_session_creation(
         &self,
         session_id: Uuid,
@@ -1763,7 +1771,11 @@ impl SessionManager {
             image_count = images.len()
         )
     )]
-    #[expect(clippy::too_many_arguments, clippy::fn_params_excessive_bools, reason = "session creation requires many independent parameters")]
+    #[expect(
+        clippy::too_many_arguments,
+        clippy::fn_params_excessive_bools,
+        reason = "session creation requires many independent parameters"
+    )]
     pub async fn create_session(
         &self,
         repo_path: String,
@@ -4526,7 +4538,10 @@ impl SessionManager {
 
             // Count session-specific proxies
             // Safe to cast to u32: unlikely to have more than 4 billion sessions
-            #[expect(clippy::cast_possible_truncation, reason = "session count will never exceed u32::MAX")]
+            #[expect(
+                clippy::cast_possible_truncation,
+                reason = "session count will never exceed u32::MAX"
+            )]
             {
                 active_session_proxies = pm.active_session_proxy_count().await as u32;
             }
@@ -4643,7 +4658,8 @@ impl SessionManager {
                 message: "OAuth token has invalid format".to_owned(),
                 details: Some(e.to_string()),
                 suggestion: Some(
-                    "Set CLAUDE_CODE_OAUTH_TOKEN to a valid token starting with 'sk-ant-'".to_owned(),
+                    "Set CLAUDE_CODE_OAUTH_TOKEN to a valid token starting with 'sk-ant-'"
+                        .to_owned(),
                 ),
             });
         }
@@ -4709,9 +4725,7 @@ impl SessionManager {
                         error_type: "unauthorized".to_owned(),
                         message: "Not authorized to access usage data".to_owned(),
                         details: Some(error_str),
-                        suggestion: Some(
-                            "Verify token has access to this organization".to_owned(),
-                        ),
+                        suggestion: Some("Verify token has access to this organization".to_owned()),
                     });
                 } else if error_str.contains("404") {
                     return Err(UsageError {

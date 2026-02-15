@@ -57,11 +57,12 @@ fn serve_file(file: &include_dir::File<'_>) -> Response {
     // Convert borrowed slice to owned Vec to satisfy lifetime requirements
     let contents = file.contents().to_vec();
     let mut response = contents.into_response();
-    response
-        .headers_mut()
-        .insert(header::CONTENT_TYPE, mime_type.parse().unwrap_or_else(|_| {
-            header::HeaderValue::from_static("application/octet-stream")
-        }));
+    response.headers_mut().insert(
+        header::CONTENT_TYPE,
+        mime_type
+            .parse()
+            .unwrap_or_else(|_| header::HeaderValue::from_static("application/octet-stream")),
+    );
 
     response
 }

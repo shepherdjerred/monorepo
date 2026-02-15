@@ -188,7 +188,10 @@ impl ColumnWidths {
         }
 
         // Calculate shrink ratio
-        #[expect(clippy::cast_precision_loss, reason = "column widths are small; precision loss is acceptable for proportional sizing")]
+        #[expect(
+            clippy::cast_precision_loss,
+            reason = "column widths are small; precision loss is acceptable for proportional sizing"
+        )]
         let shrink_ratio = available_for_columns as f64 / total_current as f64;
 
         // Apply proportional shrinking, respecting minimums
@@ -461,7 +464,10 @@ pub fn render(frame: &mut Frame<'_>, app: &App, area: Rect) {
                 ClaudeWorkingStatus::Working => {
                     // Animate based on spinner tick
                     // Safe cast: SPINNER_FRAMES.len() is small, modulo result fits in usize
-                    #[expect(clippy::cast_possible_truncation, reason = "SPINNER_FRAMES.len() is small; modulo result fits in usize")]
+                    #[expect(
+                        clippy::cast_possible_truncation,
+                        reason = "SPINNER_FRAMES.len() is small; modulo result fits in usize"
+                    )]
                     let spinner_idx = (app.spinner_tick % SPINNER_FRAMES.len() as u64) as usize;
                     let spinner = SPINNER_FRAMES[spinner_idx];
                     Span::styled(spinner, Style::default().fg(Color::Green))
@@ -531,7 +537,10 @@ pub fn render(frame: &mut Frame<'_>, app: &App, area: Rect) {
             // Add deletion indicator if deleting
             if is_deleting {
                 // Safe cast: SPINNER_FRAMES.len() is small, modulo result fits in usize
-                #[expect(clippy::cast_possible_truncation, reason = "SPINNER_FRAMES.len() is small; modulo result fits in usize")]
+                #[expect(
+                    clippy::cast_possible_truncation,
+                    reason = "SPINNER_FRAMES.len() is small; modulo result fits in usize"
+                )]
                 let spinner_idx = (app.spinner_tick % SPINNER_FRAMES.len() as u64) as usize;
                 let spinner = SPINNER_FRAMES[spinner_idx];
                 spans.push(Span::styled(

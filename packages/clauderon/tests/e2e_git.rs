@@ -1,4 +1,7 @@
-#![allow(clippy::allow_attributes, reason = "test files use allow for non-guaranteed lints")]
+#![allow(
+    clippy::allow_attributes,
+    reason = "test files use allow for non-guaranteed lints"
+)]
 #![allow(clippy::expect_used, reason = "test code")]
 #![allow(clippy::unwrap_used, reason = "test code")]
 #![allow(clippy::print_stdout, reason = "test output")]

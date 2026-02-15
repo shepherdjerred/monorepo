@@ -823,8 +823,7 @@ async fn upload_file(
     }
 
     // Validate we got a file
-    let file_name =
-        file_name.ok_or_else(|| AppError::BadRequest("No file provided".to_owned()))?;
+    let file_name = file_name.ok_or_else(|| AppError::BadRequest("No file provided".to_owned()))?;
     let file_data =
         file_data.ok_or_else(|| AppError::BadRequest("No file data provided".to_owned()))?;
 
@@ -849,7 +848,10 @@ async fn upload_file(
         "Image uploaded successfully"
     );
 
-    #[expect(clippy::cast_possible_truncation, reason = "image uploads are always < 4GB")]
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "image uploads are always < 4GB"
+    )]
     Ok(Json(crate::api::protocol::UploadResponse {
         path: file_path.to_string_lossy().to_string(),
         size: file_data.len() as u32, // Files >4GB are not expected for image uploads
@@ -882,9 +884,9 @@ async fn get_session_history(
     let history_path = match session.agent {
         AgentType::ClaudeCode => {
             // Use cached path for Claude Code
-            let path = session.history_file_path.ok_or_else(|| {
-                AppError::NotFound("History file path not configured".to_owned())
-            })?;
+            let path = session
+                .history_file_path
+                .ok_or_else(|| AppError::NotFound("History file path not configured".to_owned()))?;
 
             // Security: Validate path is within worktree bounds and matches expected pattern
             if !path.starts_with(&session.worktree_path) {
@@ -927,9 +929,7 @@ async fn get_session_history(
                     &session.worktree_path,
                     &session.id,
                 )
-                .ok_or_else(|| {
-                    AppError::NotFound("Codex history file not found yet".to_owned())
-                })?;
+                .ok_or_else(|| AppError::NotFound("Codex history file not found yet".to_owned()))?;
 
                 // Validate the found path
                 if !crate::core::session::validate_codex_history_path(
@@ -1031,23 +1031,17 @@ async fn get_session_history(
 fn validate_session_id(id: &str) -> Result<(), AppError> {
     // Check length (reasonable bounds)
     if id.is_empty() || id.len() > 128 {
-        return Err(AppError::BadRequest(
-            "Invalid session ID length".to_owned(),
-        ));
+        return Err(AppError::BadRequest("Invalid session ID length".to_owned()));
     }
 
     // Check for path traversal attempts
     if id.contains("..") || id.contains('/') || id.contains('\\') || id.contains('\0') {
-        return Err(AppError::BadRequest(
-            "Invalid session ID format".to_owned(),
-        ));
+        return Err(AppError::BadRequest("Invalid session ID format".to_owned()));
     }
 
     // Check for control characters
     if id.chars().any(char::is_control) {
-        return Err(AppError::BadRequest(
-            "Invalid session ID format".to_owned(),
-        ));
+        return Err(AppError::BadRequest("Invalid session ID format".to_owned()));
     }
 
     // Session IDs should only contain alphanumeric, hyphens, and underscores
@@ -1055,9 +1049,7 @@ fn validate_session_id(id: &str) -> Result<(), AppError> {
         .chars()
         .all(|c| c.is_alphanumeric() || c == '-' || c == '_')
     {
-        return Err(AppError::BadRequest(
-            "Invalid session ID format".to_owned(),
-        ));
+        return Err(AppError::BadRequest("Invalid session ID format".to_owned()));
     }
 
     Ok(())

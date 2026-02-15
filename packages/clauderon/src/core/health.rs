@@ -319,7 +319,8 @@ impl HealthService {
                         recommended_action: Some(AvailableAction::Cleanup),
                         description: "The resource was deleted externally.".to_owned(),
                         details: "The backend resource was deleted outside clauderon. \
-                            Any uncommitted work and Claude conversation history has been lost.".to_owned(),
+                            Any uncommitted work and Claude conversation history has been lost."
+                            .to_owned(),
                         data_safe: false,
                     }
                 }

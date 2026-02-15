@@ -111,7 +111,10 @@ impl SessionStore {
             .execute(&self.pool)
             .await?;
 
-        #[expect(clippy::cast_possible_truncation, reason = "expired session count fits in usize")]
+        #[expect(
+            clippy::cast_possible_truncation,
+            reason = "expired session count fits in usize"
+        )]
         Ok(result.rows_affected() as usize)
     }
 }

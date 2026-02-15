@@ -298,7 +298,10 @@ impl ExecutionBackend for ZellijBackend {
 }
 
 // Legacy method names for backward compatibility during migration
-#[expect(clippy::multiple_inherent_impl, reason = "legacy compatibility shim kept separate for clarity")]
+#[expect(
+    clippy::multiple_inherent_impl,
+    reason = "legacy compatibility shim kept separate for clarity"
+)]
 impl ZellijBackend {
     /// Create a new Zellij session (legacy name)
     ///

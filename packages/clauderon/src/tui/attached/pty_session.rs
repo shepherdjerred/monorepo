@@ -56,7 +56,10 @@ pub enum SessionStatus {
 }
 
 /// A console session with background reader.
-#[expect(missing_debug_implementations, reason = "contains non-Debug fields (mpsc channels, JoinHandle)")]
+#[expect(
+    missing_debug_implementations,
+    reason = "contains non-Debug fields (mpsc channels, JoinHandle)"
+)]
 pub struct PtySession {
     /// Session identifier (matches clauderon session ID).
     session_id: uuid::Uuid,

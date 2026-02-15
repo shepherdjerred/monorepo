@@ -1,4 +1,7 @@
-#![allow(clippy::allow_attributes, reason = "test files use allow for non-guaranteed lints")]
+#![allow(
+    clippy::allow_attributes,
+    reason = "test files use allow for non-guaranteed lints"
+)]
 #![allow(clippy::expect_used, reason = "test code")]
 #![allow(clippy::unwrap_used, reason = "test code")]
 
@@ -884,11 +887,7 @@ async fn test_update_metadata_by_uuid() {
 
     // Update by UUID instead of name
     manager
-        .update_metadata(
-            &session.id.to_string(),
-            Some("UUID Title".to_owned()),
-            None,
-        )
+        .update_metadata(&session.id.to_string(), Some("UUID Title".to_owned()), None)
         .await
         .unwrap();
 

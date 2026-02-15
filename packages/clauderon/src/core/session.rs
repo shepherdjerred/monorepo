@@ -40,7 +40,10 @@ pub struct SessionRepository {
 /// Represents a single AI coding session
 #[typeshare]
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[expect(clippy::struct_excessive_bools, reason = "session has many independent boolean flags")]
+#[expect(
+    clippy::struct_excessive_bools,
+    reason = "session has many independent boolean flags"
+)]
 pub struct Session {
     /// Unique identifier
     #[typeshare(serialized_as = "String")]
@@ -622,7 +625,10 @@ impl ClaudeModel {
     }
 }
 
-#[expect(clippy::derivable_impls, reason = "explicit default makes the chosen variant clear")]
+#[expect(
+    clippy::derivable_impls,
+    reason = "explicit default makes the chosen variant clear"
+)]
 impl Default for ClaudeModel {
     fn default() -> Self {
         Self::Sonnet4_5
@@ -1218,7 +1224,10 @@ pub struct HealthCheckResult {
 impl HealthCheckResult {
     /// Create a new health check result from a list of reports
     #[must_use]
-    #[expect(clippy::cast_possible_truncation, reason = "session count will never exceed u32::MAX")]
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "session count will never exceed u32::MAX"
+    )]
     pub fn new(sessions: Vec<SessionHealthReport>) -> Self {
         let healthy_count = sessions.iter().filter(|r| r.state.is_healthy()).count() as u32;
         let needs_attention_count = sessions.iter().filter(|r| r.needs_attention()).count() as u32;

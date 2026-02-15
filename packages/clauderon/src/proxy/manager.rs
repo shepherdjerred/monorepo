@@ -20,7 +20,10 @@ use crate::core::session::AccessMode;
 use crate::plugins::PluginDiscovery;
 
 /// Manages all proxy services.
-#[expect(missing_debug_implementations, reason = "contains many non-Debug fields (JoinHandle, RwLock)")]
+#[expect(
+    missing_debug_implementations,
+    reason = "contains many non-Debug fields (JoinHandle, RwLock)"
+)]
 pub struct ProxyManager {
     /// Configuration.
     config: ProxyConfig,

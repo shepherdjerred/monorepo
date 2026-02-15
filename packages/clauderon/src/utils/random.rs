@@ -65,7 +65,8 @@ pub fn sanitize_branch_name(name: &str) -> String {
 
     // Remove leading/trailing special characters
     let mut sanitized = sanitized
-        .trim_matches(|c| c == '-' || c == '.' || c == '/').to_owned();
+        .trim_matches(|c| c == '-' || c == '.' || c == '/')
+        .to_owned();
 
     // Remove .lock suffix (reserved by git)
     while std::path::Path::new(&sanitized)
@@ -77,7 +78,8 @@ pub fn sanitize_branch_name(name: &str) -> String {
 
     // Final trim in case .lock removal left trailing special chars
     let result = sanitized
-        .trim_matches(|c| c == '-' || c == '.' || c == '/').to_owned();
+        .trim_matches(|c| c == '-' || c == '.' || c == '/')
+        .to_owned();
 
     // Handle empty result (e.g., input was all special chars like "..." or "@@@")
     if result.is_empty() {

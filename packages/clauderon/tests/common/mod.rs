@@ -291,7 +291,11 @@ pub fn init_git_repo_with_branch(path: &Path, remote_url: &str, branch_name: &st
 ///
 /// Uses `sprite -s <name> destroy --force` for reliable cleanup.
 /// This should be used instead of the backend's delete method for test cleanup.
-#[allow(clippy::print_stdout, clippy::print_stderr, reason = "test cleanup output")]
+#[allow(
+    clippy::print_stdout,
+    clippy::print_stderr,
+    reason = "test cleanup output"
+)]
 pub fn force_destroy_sprite(name: &str) {
     if name.is_empty() {
         return;

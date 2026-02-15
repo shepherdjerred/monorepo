@@ -88,8 +88,8 @@ async fn rewrite_refresh_request(
     };
     *token_value = Value::String(refresh_token);
 
-    let updated_body =
-        serde_json::to_vec(&json).map_err(|_err| build_error_response("INVALID_REFRESH_PAYLOAD"))?;
+    let updated_body = serde_json::to_vec(&json)
+        .map_err(|_err| build_error_response("INVALID_REFRESH_PAYLOAD"))?;
     let updated_body = String::from_utf8(updated_body).unwrap_or_default();
     *req.body_mut() = Body::from(updated_body);
     Ok(())
@@ -142,7 +142,10 @@ async fn rewrite_refresh_response(
 }
 
 /// HTTP auth proxy that intercepts HTTPS and injects auth headers.
-#[expect(missing_debug_implementations, reason = "contains non-Debug fields (RcgenAuthority, Arc<RwLock>)")]
+#[expect(
+    missing_debug_implementations,
+    reason = "contains non-Debug fields (RcgenAuthority, Arc<RwLock>)"
+)]
 pub struct HttpAuthProxy {
     /// Listen address.
     addr: SocketAddr,
@@ -281,7 +284,10 @@ fn classify_client_error(err: &ClientError) -> &'static str {
 
 /// Build an error response with proper fallback handling.
 fn build_error_response(error_type: &'static str) -> Response<Body> {
-    #[expect(clippy::expect_used, reason = "building a response with valid constant parts cannot fail")]
+    #[expect(
+        clippy::expect_used,
+        reason = "building a response with valid constant parts cannot fail"
+    )]
     Response::builder()
         .status(502)
         .header("X-Proxy-Error-Type", error_type)
@@ -442,7 +448,10 @@ impl HttpHandler for AuthInjector {
 
             if let Some(pending) = pending {
                 // Safe cast: duration in milliseconds unlikely to exceed u64::MAX
-                #[expect(clippy::cast_possible_truncation, reason = "duration in ms will not exceed u64::MAX")]
+                #[expect(
+                    clippy::cast_possible_truncation,
+                    reason = "duration in ms will not exceed u64::MAX"
+                )]
                 let duration_ms = pending.start_time.elapsed().as_millis() as u64;
                 should_rewrite_refresh = pending.auth_refresh;
 
@@ -508,7 +517,10 @@ impl HttpHandler for AuthInjector {
 
             if let Some(pending) = pending {
                 // Safe cast: duration in milliseconds unlikely to exceed u64::MAX
-                #[expect(clippy::cast_possible_truncation, reason = "duration in ms will not exceed u64::MAX")]
+                #[expect(
+                    clippy::cast_possible_truncation,
+                    reason = "duration in ms will not exceed u64::MAX"
+                )]
                 let duration_ms = pending.start_time.elapsed().as_millis() as u64;
 
                 // Log full error details for debugging (not sent to client)
@@ -640,7 +652,10 @@ impl HttpHandler for FilteringHandler {
                         "Blocked Kubernetes API write operation in read-only mode"
                     );
 
-                    #[expect(clippy::unwrap_used, reason = "building a response with valid constant parts cannot fail")]
+                    #[expect(
+                        clippy::unwrap_used,
+                        reason = "building a response with valid constant parts cannot fail"
+                    )]
                     return RequestOrResponse::Response(
                         Response::builder()
                             .status(403)
@@ -660,7 +675,10 @@ impl HttpHandler for FilteringHandler {
                         "Blocked write operation in read-only mode"
                     );
 
-                    #[expect(clippy::unwrap_used, reason = "building a response with valid constant parts cannot fail")]
+                    #[expect(
+                        clippy::unwrap_used,
+                        reason = "building a response with valid constant parts cannot fail"
+                    )]
                     return RequestOrResponse::Response(
                         Response::builder()
                             .status(403)
@@ -755,7 +773,10 @@ impl HttpHandler for FilteringHandler {
 
             if let Some(pending) = pending {
                 // Safe cast: duration in milliseconds unlikely to exceed u64::MAX
-                #[expect(clippy::cast_possible_truncation, reason = "duration in ms will not exceed u64::MAX")]
+                #[expect(
+                    clippy::cast_possible_truncation,
+                    reason = "duration in ms will not exceed u64::MAX"
+                )]
                 let duration_ms = pending.start_time.elapsed().as_millis() as u64;
                 should_rewrite_refresh = pending.auth_refresh;
 
@@ -825,7 +846,10 @@ impl HttpHandler for FilteringHandler {
 
             if let Some(pending) = pending {
                 // Safe cast: duration in milliseconds unlikely to exceed u64::MAX
-                #[expect(clippy::cast_possible_truncation, reason = "duration in ms will not exceed u64::MAX")]
+                #[expect(
+                    clippy::cast_possible_truncation,
+                    reason = "duration in ms will not exceed u64::MAX"
+                )]
                 let duration_ms = pending.start_time.elapsed().as_millis() as u64;
 
                 // Log full error details for debugging (not sent to client)

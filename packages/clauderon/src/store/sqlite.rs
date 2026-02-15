@@ -1570,7 +1570,10 @@ const fn event_type_name(event_type: &crate::core::events::EventType) -> &'stati
 
 /// Row type for sessions table
 #[derive(sqlx::FromRow)]
-#[expect(clippy::struct_excessive_bools, reason = "mirrors database schema with boolean columns")]
+#[expect(
+    clippy::struct_excessive_bools,
+    reason = "mirrors database schema with boolean columns"
+)]
 struct SessionRow {
     id: String,
     name: String,
@@ -1833,11 +1836,19 @@ impl TryFrom<SessionRow> for Session {
                 .and_then(|json| serde_json::from_str(json).ok()),
             access_mode: row.access_mode.parse().unwrap_or_default(),
             // Safe cast: port numbers are always within u16 range (0-65535)
-            #[expect(clippy::cast_possible_truncation, clippy::cast_sign_loss, reason = "port numbers are always within u16 range")]
+            #[expect(
+                clippy::cast_possible_truncation,
+                clippy::cast_sign_loss,
+                reason = "port numbers are always within u16 range"
+            )]
             proxy_port: row.proxy_port.map(|p| p as u16),
             history_file_path: row.history_file_path.map(PathBuf::from),
             // Safe cast: reconcile attempts are bounded by application logic
-            #[expect(clippy::cast_possible_truncation, clippy::cast_sign_loss, reason = "reconcile attempts bounded by application logic")]
+            #[expect(
+                clippy::cast_possible_truncation,
+                clippy::cast_sign_loss,
+                reason = "reconcile attempts bounded by application logic"
+            )]
             reconcile_attempts: row.reconcile_attempts as u32,
             last_reconcile_error: row.last_reconcile_error,
             last_reconcile_at,
@@ -1855,7 +1866,10 @@ impl TryFrom<SessionRow> for Session {
 struct EventRow {
     id: i64,
     session_id: String,
-    #[expect(dead_code, reason = "mapped from DB column but payload is used for deserialization")]
+    #[expect(
+        dead_code,
+        reason = "mapped from DB column but payload is used for deserialization"
+    )]
     event_type: String,
     payload: String,
     timestamp: String,
