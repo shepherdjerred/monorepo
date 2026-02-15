@@ -259,8 +259,10 @@ jq -n \\
   '{shouldSkip: $shouldSkip, maxTurns: $maxTurns, complexity: $complexity, isRereview: $isRereview, previousState: $previousState, previousWasApproved: $previousWasApproved, totalChanges: $totalChanges, changedFiles: $changedFiles}'
 `;
 
-  // Run analysis in a container
+  // Run analysis in a container (ensure jq is available)
   const container = getGitHubContainer()
+    .withExec(["apt-get", "update"])
+    .withExec(["apt-get", "install", "-y", "jq"])
     .withSecretVariable("GH_TOKEN", githubToken)
     .withMountedDirectory("/workspace", source)
     .withWorkdir("/workspace")
