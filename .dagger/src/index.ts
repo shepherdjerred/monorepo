@@ -1113,8 +1113,10 @@ export class Monorepo {
       container = container.withMountedDirectory("/workspace/web/frontend/dist", frontendDist);
     }
 
-    // Format check
-    container = container.withExec(["cargo", "fmt", "--check"]);
+    // Format check — print rustfmt version for debugging, then check
+    container = container
+      .withExec(["rustfmt", "--version"])
+      .withExec(["cargo", "fmt", "--check"]);
     await container.sync();
     outputs.push("✓ Format check passed");
 
